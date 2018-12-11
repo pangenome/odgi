@@ -8,7 +8,15 @@
 #ifndef dynamic_structs_hpp
 #define dynamic_structs_hpp
 
-#include <stdio.h>
+#include <cstdio>
+#include <cstdint>
+#include "sdsl/bit_vectors.hpp"
+#include "sdsl/enc_vector.hpp"
+#include "sdsl/dac_vector.hpp"
+#include "sdsl/vlc_vector.hpp"
+#include "sdsl/wavelet_trees.hpp"
+#include "sdsl/csa_wt.hpp"
+#include "sdsl/suffix_arrays.hpp"
 
 namespace dankgraph {
     class SuccinctDynamicVector {
@@ -33,14 +41,14 @@ namespace dankgraph {
         sdsl::int_vector<> vec;
         size_t filled = 0;
         double factor = 1.25;
-    }
+    };
     
     
     class SuccinctSplayTree {
-        
+
     public:
-        SuccinctSplayTree();
-        ~SuccintSplayTree();
+        SuccinctSplayTree(void) { };
+        ~SuccinctSplayTree(void) { };
         
         void insert(const size_t& key, const size_t& value);
         
@@ -104,7 +112,7 @@ namespace dankgraph {
         size_t add_node(const size_t& key, const size_t& value);
         
         void delete_node(size_t x);
-    }
+    };
     
     
     
@@ -115,14 +123,14 @@ namespace dankgraph {
         assert(i < filled);
         
         uint8_t width = vec.width();
-        uint64_t mask = numeric_limits<uint64_t>::max() << width;
+        uint64_t mask = std::numeric_limits<uint64_t>::max() << width;
         while (mask & value) {
             width++;
-            mask = numeric_limits<uint64_t>::max() << width;
+            mask = std::numeric_limits<uint64_t>::max() << width;
         }
         
         if (width > vec.width()) {
-            vec.width(width)
+            vec.width(width);
         }
         
         vec[i] = value;
@@ -162,11 +170,11 @@ namespace dankgraph {
             }
             vec = move(tmp);
         }
-    }'
+    }
     
     inline size_t SuccinctDynamicVector::size() const {
         return filled;
-    }'
+    }
     
     inline bool SuccinctDynamicVector::empty() const {
         return filled == 0;

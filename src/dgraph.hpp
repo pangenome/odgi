@@ -7,8 +7,10 @@
 #ifndef dgraph_hpp
 #define dgraph_hpp
 
-#include <stdio.h>
-#include <stdint.h>
+#include <cstdio>
+#include <cstdint>
+#include <vector>
+#include <utility>
 #include "sdsl/bit_vectors.hpp"
 #include "sdsl/enc_vector.hpp"
 #include "sdsl/dac_vector.hpp"
@@ -41,12 +43,12 @@ namespace dankgraph {
         sdsl::int_vector<> seq_iv;
         
         /// Same length as seq_iv. 1's indicate the beginning of a node's sequence.
-        sdsl::bit_vector<> boundary_bv;
+        sdsl::bit_vector boundary_bv;
         
         /// Same length as seq_iv. 0's indicate that a base is still touched by some
         /// node or some path. 1's indicate that all nodes or paths that touch this
         /// base have been deleted.
-        sdsl::bit_vector<> dead_bv;
+        sdsl::bit_vector dead_bv;
         
         /// Encodes a self-balancing binary tree as integers. Consists of fixed-width
         /// records that have the following structure:
@@ -75,7 +77,7 @@ namespace dankgraph {
         /// is past-the-last.
         /// The strand of this interval is given by the corresponding bit in the bit vector, with
         /// a 1 indicating reverse strand.
-        vector<pair<sdsl::int_vector<>, sdsl::bit_vector<>>> paths;
+        std::vector<std::pair<sdsl::int_vector<>, sdsl::bit_vector>> paths;
         
         size_t dead_bases = 0;
         size_t deleted_nodes = 0;
