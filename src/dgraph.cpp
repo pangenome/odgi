@@ -6,3 +6,7 @@
 //
 
 #include "dgraph.hpp"
+
+namespace dankgraph {
+    
+}

@@ -17,7 +17,7 @@
 #include "sdsl/csa_wt.hpp"
 #include "sdsl/suffix_arrays.hpp"
 
-namespace dgram {
+namespace dankgraph {
     
     class SuccinctDynamicSequenceGraph {
         
