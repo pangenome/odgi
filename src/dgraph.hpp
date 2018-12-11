@@ -8,6 +8,14 @@
 #define dgraph_hpp
 
 #include <stdio.h>
+#include <stdint.h>
+#include "sdsl/bit_vectors.hpp"
+#include "sdsl/enc_vector.hpp"
+#include "sdsl/dac_vector.hpp"
+#include "sdsl/vlc_vector.hpp"
+#include "sdsl/wavelet_trees.hpp"
+#include "sdsl/csa_wt.hpp"
+#include "sdsl/suffix_arrays.hpp"
 
 namespace dankgraph {
     
