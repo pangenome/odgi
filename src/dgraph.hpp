@@ -9,7 +9,7 @@
 
 #include <stdio.h>
 
-namespace dgram {
+namespace dankgraph {
     
     class SuccinctDynamicSequenceGraph {
         
