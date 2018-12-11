@@ -57,7 +57,7 @@ namespace dankgraph {
         // tracker for number of values
         size_t filled = 0;
         // geometric expansion factor
-        static const double factor = 1.25;
+        static const double factor;
     };
     
     

@@ -7,6 +7,8 @@
 
 namespace dankgraph {
     
+    const double SuccinctDynamicVector::factor = 1.25;
+    
     SuccinctDynamicVector::SuccinctDynamicVector() {
         vec.width(1);
         vec.resize(1);
