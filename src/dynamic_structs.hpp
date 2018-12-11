@@ -19,28 +19,45 @@
 #include "sdsl/suffix_arrays.hpp"
 
 namespace dankgraph {
+    
+    /*
+     * A dynamic integer vector that maintains integers in bit-compressed form.
+     * Automatically adjusts bit-width for entries depending on input data.
+     */
     class SuccinctDynamicVector {
     public:
+        /// Constructor (starts empty)
         SuccinctDynamicVector();
+        
+        /// Destructor
         ~SuccinctDynamicVector();
         
+        /// Set the i-th value
         inline void set(const size_t& i, const uint64_t& value);
         
+        /// Returns the i-th value
         inline uint64_t get(const size_t& i) const;
         
+        /// Add a value to the end
         inline void append(const uint64_t& value);
         
+        /// Remove the last value
         inline void pop();
         
+        /// Returns the number of values
         inline size_t size() const;
         
+        /// Returns true if there are no entries and false otherwise
         inline bool empty() const;
         
     private:
         
+        // the underlying vector representation
         sdsl::int_vector<> vec;
+        // tracker for number of values
         size_t filled = 0;
-        double factor = 1.25;
+        // geometric expansion factor
+        static const double factor = 1.25;
     };
     
     
@@ -130,7 +147,13 @@ namespace dankgraph {
         }
         
         if (width > vec.width()) {
-            vec.width(width);
+            sdsl::int_vector<> wider_vec;
+            wider_vec.width(width);
+            wider_vec.resize(vec.size());
+            for (size_t i = 0; i < filled; i++) {
+                wider_vec[i] = vec[i];
+            }
+            vec = std::move(wider_vec);
         }
         
         vec[i] = value;
@@ -161,11 +184,11 @@ namespace dankgraph {
     inline void SuccinctDynamicVector::pop() {
         filled--;
         size_t shrink_capacity = vec.size() / (factor * factor);
-        if (filled <= shrink_capacity) {
+        if (filled < shrink_capacity) {
             sdsl::int_vector<> tmp;
             tmp.width(vec.width());
             tmp.resize(shrink_capacity);
-            for (size_t i = 0; i < vec.size(); i++) {
+            for (size_t i = 0; i < filled; i++) {
                 tmp[i] = vec[i];
             }
             vec = std::move(tmp);
