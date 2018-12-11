@@ -11,7 +11,7 @@ namespace dankgraph {
 const double SuccinctDynamicVector::factor = 1.25;
     
 SuccinctDynamicVector::SuccinctDynamicVector() {
-    vec.width(1);
+    vec.width(1); // by default we start as a bitvector
     vec.resize(1);
 }
     
