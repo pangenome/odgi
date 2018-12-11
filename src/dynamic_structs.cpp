@@ -54,8 +54,14 @@ void SuccinctSplayTree::insert(const size_t& key, const size_t& value) {
         set_left(p, z);
     }
     
+    std::cerr << "before splay" << std::endl;
+    print_vector(std::cerr);
+    
     splay(z);
     num_nodes++;
+    
+    std::cerr << "after splay" << std::endl;
+    print_vector(std::cerr);
 }
 
 size_t SuccinctSplayTree::find(const size_t& key) const {
@@ -142,6 +148,7 @@ void SuccinctSplayTree::erase(const size_t& key) {
 }
     
 void SuccinctSplayTree::left_rotate(size_t x) {
+    std::cerr << "left rotate on " << x << std::endl;
         
     size_t y = get_right(x);
     size_t x_parent = get_parent(x);
@@ -171,7 +178,7 @@ void SuccinctSplayTree::left_rotate(size_t x) {
 }
     
 void SuccinctSplayTree::right_rotate(size_t x) {
-        
+    std::cerr << "right rotate on " << x << std::endl;
     size_t y = get_left(x);
     size_t x_parent = get_parent(x);
     if (y != 0) {
@@ -183,7 +190,7 @@ void SuccinctSplayTree::right_rotate(size_t x) {
         set_parent(y, x_parent);
     }
         
-    if (x_parent != 0) {
+    if (x_parent == 0) {
         root = y;
     }
     else if (x == get_left(x_parent)) {
@@ -200,31 +207,44 @@ void SuccinctSplayTree::right_rotate(size_t x) {
 }
     
 void SuccinctSplayTree::splay(size_t x) {
+    std::cerr << "entering splay" << std::endl;
     while (get_parent(x) != 0) {
         size_t x_parent = get_parent(x);
         if (get_parent(x_parent) == 0) {
             if (get_left(x_parent) == x) {
+                std::cerr << "R" << std::endl;
                 right_rotate(x_parent);
             }
             else {
+                std::cerr << "L" << std::endl;
                 left_rotate(x_parent);
             }
+            std::cerr << "operation 1" << std::endl;
+            print_vector(std::cerr);
         }
         else if (get_left(x_parent) == x && get_left(get_parent(x_parent)) == x_parent) {
             right_rotate(get_parent(x_parent));
             right_rotate(x_parent);
+            std::cerr << "operation 2" << std::endl;
+            print_vector(std::cerr);
         }
         else if (get_right(x_parent) == x && get_right(get_parent(x_parent)) == x_parent) {
             left_rotate(get_parent(x_parent));
             left_rotate(x_parent);
+            std::cerr << "operation 3" << std::endl;
+            print_vector(std::cerr);
         }
         else if (get_left(x_parent) == x && get_right(get_parent(x_parent)) == x_parent) {
             right_rotate(x_parent);
             left_rotate(x_parent);
+            std::cerr << "operation 4" << std::endl;
+            print_vector(std::cerr);
         }
         else {
             left_rotate(x_parent);
             right_rotate(x_parent);
+            std::cerr << "operation 5" << std::endl;
+            print_vector(std::cerr);
         }
     }
 }
@@ -305,5 +325,49 @@ void SuccinctSplayTree::delete_node(size_t x) {
     for (size_t i = 0; i < NODE_SIZE; i++) {
         tree.pop();
     }
+}
+    
+void SuccinctSplayTree::print_topology(std::ostream& out) const {
+    std::function<void(std::ostream&,size_t, int, bool)> internal = [&](std::ostream& out, size_t x, int depth, bool right_child) {
+        if (!right_child) {
+            for (int i = 0; i < depth - 1; i++) {
+                out << "\t\t";
+            }
+        }
+        
+        out << "\t->\t";
+        
+        if (x == 0) {
+            out << "." << std::endl;
+        }
+        else {
+            out << get_key(x) << " " << get_value(x);
+            internal(out, get_right(x), depth + 1, true);
+            internal(out, get_left(x), depth + 1, false);
+        }
+    };
+    
+    if (root == 0) {
+        out << "." << std::endl;
+    }
+    else {
+        out << get_key(root) << " " << get_value(root);
+        internal(out, get_right(root), 1, true);
+        internal(out, get_left(root), 1, false);
+    }
+}
+    
+void SuccinctSplayTree::print_vector(std::ostream& out) const {
+    out << "root: " << root << std::endl;
+    for (size_t i = 0; i < tree.size(); i++) {
+        if (i % NODE_SIZE == 0 && i != 0) {
+            out << "| ";
+        }
+        if (i % NODE_SIZE == 0) {
+            out << "(" << i + 1 << "): ";
+        }
+        out << tree.get(i) << " ";
+    }
+    out << std::endl;
 }
 }

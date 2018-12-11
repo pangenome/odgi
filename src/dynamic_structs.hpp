@@ -85,6 +85,9 @@ public:
     
     inline size_t get_value(size_t x) const;
 
+    void print_topology(std::ostream& out) const;
+    
+    void print_vector(std::ostream& out) const;
         
 private:
     const static size_t NODE_SIZE = 5;
@@ -204,11 +207,11 @@ inline bool SuccinctDynamicVector::empty() const {
     return filled == 0;
 }
     
-inline bool SuccinctSplayTree::empty( ) const {
+inline bool SuccinctSplayTree::empty() const {
     return root == 0;
 }
     
-inline size_t SuccinctSplayTree::size( ) const {
+inline size_t SuccinctSplayTree::size() const {
     return num_nodes;
 }
     
