@@ -68,4 +68,8 @@ target_link_libraries(dankgraph
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort64.a"
   )
-set(CMAKE_EXE_LINKER_FLAGS "-static")
+
+if (APPLE)
+elseif (TRUE)
+  set(CMAKE_EXE_LINKER_FLAGS "-static")
+endif()
