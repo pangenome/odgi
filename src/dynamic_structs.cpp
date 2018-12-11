@@ -5,11 +5,6 @@
 
 #include "dynamic_structs.hpp"
 
-/*
-
-This is a succinct dynamic 
-
- */
 
 namespace dankgraph {
     
