@@ -94,8 +94,17 @@ namespace dankgraph {
             return subtree_minimum(get_right(x));
         }
         else {
-            size_t z = x;
-            // TODO: need to walk up the tree, but not sure how
+            size_t c = x;
+            size_t z = get_parent(x);
+            while (z != 0) {
+                if (c == get_left(z)) {
+                    break;
+                }
+                
+                c = z;
+                z = get_parent(z);
+            }
+            return z;
         }
     }
     
