@@ -52,17 +52,17 @@ namespace dankgraph {
         
         void insert(const size_t& key, const size_t& value);
         
-        size_t find(const size_t& key);
-        
-        size_t lower_bound(const size_t& key);
-        
-        size_t next(const size_t& x);
-        
         void erase(const size_t& key);
         
         bool empty() const;
         
         size_t size() const;
+        
+        size_t find(const size_t& key);
+        
+        size_t lower_bound(const size_t& key);
+        
+        size_t next(const size_t& x);
         
         inline size_t get_key(size_t x);
         
