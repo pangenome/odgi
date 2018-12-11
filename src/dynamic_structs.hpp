@@ -49,6 +49,9 @@ public:
         
     /// Returns true if there are no entries and false otherwise
     inline bool empty() const;
+
+    /// Clears the backing vector
+    inline void clear();
         
 private:
         
@@ -202,6 +205,11 @@ inline size_t SuccinctDynamicVector::size() const {
     
 inline bool SuccinctDynamicVector::empty() const {
     return filled == 0;
+}
+
+inline void SuccinctDynamicVector::clear() {
+    vec.resize(0);
+    filled = 0;
 }
     
 inline bool SuccinctSplayTree::empty( ) const {

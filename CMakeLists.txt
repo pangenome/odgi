@@ -58,6 +58,7 @@ set(CMAKE_BUILD_TYPE Debug)
 add_executable(dankgraph
   ${CMAKE_SOURCE_DIR}/src/dgraph.cpp
   ${CMAKE_SOURCE_DIR}/src/dynamic_structs.cpp
+  ${CMAKE_SOURCE_DIR}/src/path.cpp
   ${CMAKE_SOURCE_DIR}/src/main.cpp
   )
 add_dependencies(dankgraph sdsl-lite)
