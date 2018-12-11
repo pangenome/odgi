@@ -75,15 +75,15 @@ namespace dankgraph {
         
         size_t size() const;
         
-        size_t find(const size_t& key);
+        size_t find(const size_t& key) const;
         
-        size_t lower_bound(const size_t& key);
+        size_t lower_bound(const size_t& key) const;
         
-        size_t next(const size_t& x);
+        size_t next(const size_t& x) const;
         
-        inline size_t get_key(size_t x);
+        inline size_t get_key(size_t x) const;
         
-        inline size_t get_value(size_t x);
+        inline size_t get_value(size_t x) const;
         
     private:
         const static size_t NODE_SIZE = 5;
@@ -98,11 +98,11 @@ namespace dankgraph {
         size_t root = 0;
         size_t num_nodes = 0;
         
-        inline size_t get_parent(size_t x);
+        inline size_t get_parent(size_t x) const;
         
-        inline size_t get_left(size_t x);
+        inline size_t get_left(size_t x) const;
         
-        inline size_t get_right(size_t x);
+        inline size_t get_right(size_t x) const;
         
         inline void set_key(size_t x, size_t val);
         
@@ -122,9 +122,9 @@ namespace dankgraph {
         
         void replace(size_t u, size_t v );
         
-        size_t subtree_minimum(size_t u);
+        size_t subtree_minimum(size_t u) const;
         
-        size_t subtree_maximum(size_t u);
+        size_t subtree_maximum(size_t u) const;
         
         size_t add_node(const size_t& key, const size_t& value);
         
@@ -211,23 +211,23 @@ namespace dankgraph {
         return num_nodes;
     }
     
-    inline size_t SuccinctSplayTree::get_key(size_t x) {
+    inline size_t SuccinctSplayTree::get_key(size_t x) const {
         return tree.get(x + KEY_OFFSET);
     }
     
-    inline size_t SuccinctSplayTree::get_value(size_t x) {
+    inline size_t SuccinctSplayTree::get_value(size_t x) const {
         return tree.get(x + VALUE_OFFSET);
     }
     
-    inline size_t SuccinctSplayTree::get_parent(size_t x) {
+    inline size_t SuccinctSplayTree::get_parent(size_t x) const {
         return tree.get(x + PARENT_OFFSET);
     }
     
-    inline size_t SuccinctSplayTree::get_left(size_t x) {
+    inline size_t SuccinctSplayTree::get_left(size_t x) const {
         return tree.get(x + LEFT_CHILD_OFFSET);
     }
     
-    inline size_t SuccinctSplayTree::get_right(size_t x) {
+    inline size_t SuccinctSplayTree::get_right(size_t x) const {
         return tree.get(x + RIGHT_CHILD_OFFSET);
     }
     

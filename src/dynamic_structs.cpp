@@ -57,7 +57,7 @@ namespace dankgraph {
         num_nodes++;
     }
     
-    size_t SuccinctSplayTree::find(const size_t& key) {
+    size_t SuccinctSplayTree::find(const size_t& key) const {
         size_t z = root;
         while (z != 0) {
             if (get_key(z) < key) {
@@ -73,7 +73,7 @@ namespace dankgraph {
         return 0;
     }
     
-    size_t SuccinctSplayTree::lower_bound(const size_t& key) {
+    size_t SuccinctSplayTree::lower_bound(const size_t& key) const {
         size_t p = 0;
         size_t z = root;
         while (z != 0) {
@@ -91,7 +91,7 @@ namespace dankgraph {
         return p;
     }
     
-    size_t SuccinctSplayTree::next(const size_t& x) {
+    size_t SuccinctSplayTree::next(const size_t& x) const {
         if (get_right(x) != 0) {
             return subtree_minimum(get_right(x));
         }
@@ -245,14 +245,14 @@ namespace dankgraph {
         }
     }
     
-    size_t SuccinctSplayTree::subtree_minimum(size_t u) {
+    size_t SuccinctSplayTree::subtree_minimum(size_t u) const {
         while (get_left(u) != 0) {
             u = get_left(u);
         }
         return u;
     }
     
-    size_t SuccinctSplayTree::subtree_maximum(size_t u) {
+    size_t SuccinctSplayTree::subtree_maximum(size_t u) const {
         while (get_right(u) != 0) {
             u = get_right(u);
         }

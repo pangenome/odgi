@@ -26,18 +26,6 @@ void test_dynamic_vector() {
         
         for (size_t j = 0; j < num_ops; j++) {
             
-//            std::cerr << "iter " << j << std::endl;
-//            std::cerr << "\t";
-//            for (size_t k = 0; k < std_vec.size(); k++) {
-//                std::cerr << std_vec[k] << " ";
-//            }
-//            std::cerr << std::endl;
-//            std::cerr << "\t";
-//            for (size_t k = 0; k < dyn_vec.size(); k++) {
-//                std::cerr << dyn_vec.get(k) << " ";
-//            }
-//            std::cerr << std::endl;
-            
             vec_op_t op = (vec_op_t) op_distr(prng);
             switch (op) {
                 case SET:
