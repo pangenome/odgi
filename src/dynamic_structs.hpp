@@ -26,7 +26,7 @@ namespace dankgraph {
         
         inline void set(const size_t& i, const uint64_t& value);
         
-        inline void get(const size_t& i) const;
+        inline uint64_t get(const size_t& i) const;
         
         inline void append(const uint64_t& value);
         
@@ -47,8 +47,8 @@ namespace dankgraph {
     class SuccinctSplayTree {
 
     public:
-        SuccinctSplayTree(void) { };
-        ~SuccinctSplayTree(void) { };
+        SuccinctSplayTree(void);
+        ~SuccinctSplayTree(void);
         
         void insert(const size_t& key, const size_t& value);
         
@@ -136,7 +136,7 @@ namespace dankgraph {
         vec[i] = value;
     }
     
-    inline void SuccinctDynamicVector::get(const size_t& i) const {
+    inline uint64_t SuccinctDynamicVector::get(const size_t& i) const {
         assert(i < filled);
         return vec[i];
     }
@@ -151,7 +151,7 @@ namespace dankgraph {
             for (size_t i = 0; i < filled; i++) {
                 tmp[i] = vec[i];
             }
-            vec = move(tmp);
+            vec = std::move(tmp);
         }
         
         filled++;
@@ -160,7 +160,7 @@ namespace dankgraph {
     
     inline void SuccinctDynamicVector::pop() {
         filled--;
-        size_t shrink_capacity = vec.size() / (factor * factor)
+        size_t shrink_capacity = vec.size() / (factor * factor);
         if (filled <= shrink_capacity) {
             sdsl::int_vector<> tmp;
             tmp.width(vec.width());
@@ -168,7 +168,7 @@ namespace dankgraph {
             for (size_t i = 0; i < vec.size(); i++) {
                 tmp[i] = vec[i];
             }
-            vec = move(tmp);
+            vec = std::move(tmp);
         }
     }
     
