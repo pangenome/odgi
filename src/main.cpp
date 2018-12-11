@@ -1,62 +1,85 @@
 #include "dgraph.hpp"
 #include "dynamic_structs.hpp"
 
+using namespace dankgraph;
+
 void test_dynamic_vector() {
     
     enum vec_op_t {SET = 0, GET = 1, APPEND = 2, POP = 3};
-    std::default_random_engine prng(std::random_device()());
+    std::random_device rd;
+    std::default_random_engine prng(rd());
     std::uniform_int_distribution<int> op_distr(0, 3);
     
     int num_runs = 10000;
-    int num_ops = 500;
-    int mods_per_op = 5;
-    
+    int num_ops = 300;
+    int gets_per_op = 5;
+    int sets_per_op = 5;
+    int appends_per_op = 3;
+    int pops_per_op = 1;
     
     for (size_t i = 0; i < num_runs; i++) {
         
         uint64_t next_val = 0;
         
-        vector<uint64_t> std_vec;
+        std::vector<uint64_t> std_vec;
         SuccinctDynamicVector dyn_vec;
         
         for (size_t j = 0; j < num_ops; j++) {
             
+//            std::cerr << "iter " << j << std::endl;
+//            std::cerr << "\t";
+//            for (size_t k = 0; k < std_vec.size(); k++) {
+//                std::cerr << std_vec[k] << " ";
+//            }
+//            std::cerr << std::endl;
+//            std::cerr << "\t";
+//            for (size_t k = 0; k < dyn_vec.size(); k++) {
+//                std::cerr << dyn_vec.get(k) << " ";
+//            }
+//            std::cerr << std::endl;
+            
             vec_op_t op = (vec_op_t) op_distr(prng);
             switch (op) {
                 case SET:
-                    
-                    for (size_t k = 0; k < mods_per_op; k++) {
-                        size_t idx = prng() % dyn_vec.size();
-                        std_vec[idx] = next_val;
-                        dyn_vec[idx] = next_val;
-                        next_val++;
+                    if (!std_vec.empty()) {
+                        for (size_t k = 0; k < sets_per_op; k++) {
+                            size_t idx = prng() % dyn_vec.size();
+                            std_vec[idx] = next_val;
+                            dyn_vec.set(idx, next_val);
+                            next_val++;
+                        }
                     }
                     
                     break;
                     
                 case GET:
-                    
-                    for (size_t k = 0; k < mods_per_op; k++) {
-                        size_t idx = prng() % dyn_vec.size();
-                        assert(std_vec[idx] == dyn_vec[idx]);
-                        next_val++;
+                    if (!std_vec.empty()) {
+                        for (size_t k = 0; k < gets_per_op; k++) {
+                            size_t idx = prng() % dyn_vec.size();
+                            assert(std_vec[idx] == dyn_vec.get(idx));
+                            next_val++;
+                        }
                     }
                     
                     break;
                     
                 case APPEND:
-                    
-                    std_vec.push_back(next_val);
-                    dyn_vec.append(next_val);
-                    next_val++;
+                    for (size_t k = 0; k < appends_per_op; k++) {
+                        std_vec.push_back(next_val);
+                        dyn_vec.append(next_val);
+                        next_val++;
+                    }
                     
                     break;
                     
                 case POP:
-                    
-                    std_vec.pop_back();
-                    dyn_vec.pop();
-                    
+                    if (!std_vec.empty()) {
+                        for (size_t k = 0; k < pops_per_op; k++) {
+                            std_vec.pop_back();
+                            dyn_vec.pop();
+                        }
+                    }
+                        
                     break;
                     
                 default:
