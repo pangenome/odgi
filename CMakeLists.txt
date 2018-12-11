@@ -52,6 +52,21 @@ set(sdsl-lite-divsufsort_INCLUDE "${INSTALL_DIR}/src/sdsl-lite-build/external/li
 set(sdsl-lite_LIB "${INSTALL_DIR}/src/sdsl-lite-build/lib")
 set(sdsl-lite-divsufsort_LIB "${INSTALL_DIR}/src/sdsl-lite-build/external/libdivsufsort/lib")
 
+# gfakluge (full build using its cmake config)
+ExternalProject_Add(gfakluge
+  GIT_REPOSITORY "https://github.com/edawson/gfakluge.git"
+  GIT_TAG "8c30259b86fcfd592477e5f21e3999ddac850fdd"
+  BUILD_IN_SOURCE TRUE
+  CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR} # TODO ADD static build flag
+  UPDATE_COMMAND ""
+  INSTALL_COMMAND ""
+  BUILD_COMMAND ""
+  CONFIGURE_COMMAND "")
+ExternalProject_Get_property(gfakluge INSTALL_DIR)
+set(gfakluge_INCLUDE "${INSTALL_DIR}/src/gfakluge")
+set(gfakluge_LIB "${INSTALL_DIR}/src/gfakluge")
+
+
 set(CMAKE_BUILD_TYPE Debug) 
 
 # set up our target executable and specify its dependencies and includes
