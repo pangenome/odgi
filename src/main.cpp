@@ -73,7 +73,7 @@ void test_dynamic_vector() {
                 default:
                     break;
             }
-            
+                        
             assert(std_vec.empty() == dyn_vec.empty());
             assert(std_vec.size() == dyn_vec.size());
         }
