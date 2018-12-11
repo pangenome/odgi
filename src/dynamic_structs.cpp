@@ -197,11 +197,10 @@ namespace dankgraph {
     }
     
     void SuccinctSplayTree::splay(size_t x) {
-        
         while (get_parent(x) != 0) {
             size_t x_parent = get_parent(x);
-            if( !get_parent(x_parent); ) {
-                if (get_left(x_parent) == x ) {
+            if (get_parent(x_parent) == 0) {
+                if (get_left(x_parent) == x) {
                     right_rotate(x_parent);
                 }
                 else {
