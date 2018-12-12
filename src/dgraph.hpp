@@ -128,6 +128,30 @@ public:
         // Use that
         for_each_handle(lambda, parallel);
     }
+
+    void for_each_edge(const std::function<bool(const edge_t&)>& iteratee, bool parallel = false){
+        for_each_handle([&](const handle_t& handle){
+            bool keep_going = true;
+            // filter to edges where this node is lower ID or any rightward self-loops
+            follow_edges(handle, false, [&](const handle_t& next) {
+                if (get_id(handle) <= get_id(next)) {
+                        keep_going = iteratee(edge_handle(handle, next));
+                    }
+                return keep_going;
+            });
+            if (keep_going) {
+                // filter to edges where this node is lower ID or leftward reversing
+                // self-loop
+                follow_edges(handle, true, [&](const handle_t& prev) {
+                    if (get_id(handle) < get_id(prev) ||
+                        (get_id(handle) == get_id(prev) && !get_is_reverse(prev))) {
+                        keep_going = iteratee(edge_handle(prev, handle));
+                    }
+                    return keep_going;
+                });
+            }
+        }, parallel);
+    };
     
     /// Get a handle from a Visit Protobuf object.
     /// Must be using'd to avoid shadowing.
