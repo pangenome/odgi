@@ -70,17 +70,17 @@ set(gfakluge_LIB "${INSTALL_DIR}/src/gfakluge")
 set(CMAKE_BUILD_TYPE Debug) 
 
 # set up our target executable and specify its dependencies and includes
-add_executable(dg
+add_executable(dankgraph
   ${CMAKE_SOURCE_DIR}/src/dgraph.cpp
   ${CMAKE_SOURCE_DIR}/src/dynamic_structs.cpp
   ${CMAKE_SOURCE_DIR}/src/path.cpp
   ${CMAKE_SOURCE_DIR}/src/main.cpp
   )
-add_dependencies(dg sdsl-lite)
-target_include_directories(dg PUBLIC
+add_dependencies(dankgraph sdsl-lite)
+target_include_directories(dankgraph PUBLIC
   "${sdsl-lite_INCLUDE}"
   "${sdsl-lite-divsufsort_INCLUDE}")
-target_link_libraries(dg
+target_link_libraries(dankgraph
   "${sdsl-lite_LIB}/libsdsl.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort64.a"
