@@ -63,7 +63,8 @@ ExternalProject_Add(gfakluge
   BUILD_COMMAND ""
   CONFIGURE_COMMAND "")
 ExternalProject_Get_property(gfakluge INSTALL_DIR)
-set(gfakluge_INCLUDE "${INSTALL_DIR}/src/gfakluge")
+set(gfakluge_INCLUDE "${INSTALL_DIR}/src/gfakluge/src")
+set(gfakluge_tinyFA_INCLUDE "${INSTALL_DIR}/src/gfakluge/src/tinyFA")
 set(gfakluge_LIB "${INSTALL_DIR}/src/gfakluge")
 
 
@@ -78,8 +79,8 @@ ExternalProject_Add(sparsepp
   BUILD_COMMAND ""
   CONFIGURE_COMMAND "")
 ExternalProject_Get_property(sparsepp INSTALL_DIR)
-set(gfakluge_INCLUDE "${INSTALL_DIR}/src/sparsepp")
-set(gfakluge_LIB "${INSTALL_DIR}/src/sparsepp")
+set(sparsepp_INCLUDE "${INSTALL_DIR}/src/sparsepp/sparsepp/")
+set(sparsepp_LIB "${INSTALL_DIR}/src/sparsepp/sparsepp/")
 
 set(CMAKE_BUILD_TYPE Debug) 
 
@@ -89,11 +90,15 @@ add_executable(dankgraph
   ${CMAKE_SOURCE_DIR}/src/dynamic_structs.cpp
   ${CMAKE_SOURCE_DIR}/src/path.cpp
   ${CMAKE_SOURCE_DIR}/src/main.cpp
+  ${CMAKE_SOURCE_DIR}/src/bgraph.cpp
   )
 add_dependencies(dankgraph sdsl-lite)
 target_include_directories(dankgraph PUBLIC
   "${sdsl-lite_INCLUDE}"
-  "${sdsl-lite-divsufsort_INCLUDE}")
+  "${sdsl-lite-divsufsort_INCLUDE}"
+  "${gfakluge_INCLUDE}"
+  "${gfakluge_tinyFA_INCLUDE}"
+  "${sparsepp_INCLUDE}")
 target_link_libraries(dankgraph
   "${sdsl-lite_LIB}/libsdsl.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort.a"

@@ -1,6 +1,7 @@
 #ifndef dgraph_handle_helper
 #define dgraph_handle_helper
 #include <cstdint>
+#include <cassert>
 #include "handle_types.hpp"
 
 namespace dankgraph{
