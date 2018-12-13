@@ -362,7 +362,7 @@ bool graph_t::has_previous_occurrence(const occurrence_handle_t& occurrence_hand
     assert(path.occurrence_count());
     return occ_handle[1] > 0;
 }
-    
+
 /// Returns a handle to the next occurrence on the path
 occurrence_handle_t graph_t::get_next_occurrence(const occurrence_handle_t& occurrence_handle) const {
     const int64_t* occ_handle = as_integers(occurrence_handle);
@@ -374,7 +374,7 @@ occurrence_handle_t graph_t::get_next_occurrence(const occurrence_handle_t& occu
     next_i[1] = rank+1;
     return next_occ_handle;
 }
-    
+
 /// Returns a handle to the previous occurrence on the path
 occurrence_handle_t graph_t::get_previous_occurrence(const occurrence_handle_t& occurrence_handle) const {
     const int64_t* occ_handle = as_integers(occurrence_handle);
@@ -415,6 +415,13 @@ bool graph_t::is_empty(const path_handle_t& path_handle) const {
 
 /// Loop over all the occurrences along a path, from first through last
 void graph_t::for_each_occurrence_in_path(const path_handle_t& path, const std::function<void(const occurrence_handle_t&)>& iteratee) const {
+    if (is_empty(path)) return;
+    occurrence_handle_t occ = get_first_occurrence(path);
+    iteratee(occ); // run the first time
+    while (has_next_occurrence(occ)) {
+        occ = get_next_occurrence(occ);
+        iteratee(occ);
+    }
 }
 
 /**
