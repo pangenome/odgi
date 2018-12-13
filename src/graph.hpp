@@ -380,9 +380,10 @@ private:
     dyn::suc_bv boundary_bv;
 
     /// Same length as seq_wt. 0's indicate that a base is still touched by some
-    /// node or some path. 1's indicate that all nodes or paths that touch this
-    /// base have been deleted.
-    dyn::suc_bv dead_bv;
+    /// node or some path. 1's indicate that this base has been deleted from the
+    /// public topology of the graph. 2's indicate that all nodes or paths that touch
+    /// this base have been deleted.
+    dyn::wt_string<dyn::rle_str> dead_wt;
 
     /// Ordered across the bases in seq_wt, stores the path ids (1-based) at each
     /// segment in seq_wt, delimited by 0
