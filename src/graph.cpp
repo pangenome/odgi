@@ -11,32 +11,72 @@ graph_t::~graph_t(void) { }
 
 /// Look up the handle for the node with the given ID in the given orientation
 handle_t graph_t::get_handle(const id_t& node_id, bool is_reverse) const {
+    return handle_helper::pack(graph_id_wt.select(1, node_id), is_reverse);
 }
     
 /// Get the ID from a handle
 id_t graph_t::get_id(const handle_t& handle) const {
+    return graph_id_wt.at(handle_helper::unpack_number(handle));
 }
     
 /// Get the orientation of a handle
 bool graph_t::get_is_reverse(const handle_t& handle) const {
+    return handle_helper::unpack_bit(handle);
 }
     
 /// Invert the orientation of a handle (potentially without getting its ID)
 handle_t graph_t::flip(const handle_t& handle) const {
+    return handle_helper::toggle_bit(handle);
 }
     
 /// Get the length of a node
 size_t graph_t::get_length(const handle_t& handle) const {
+    uint64_t offset = handle_helper::unpack_number(handle);
+    return boundary_bv.select(offset+1) - boundary_bv.select(offset);
 }
     
 /// Get the sequence of a node, presented in the handle's local forward orientation.
 std::string graph_t::get_sequence(const handle_t& handle) const {
+    std::string seq;
+    uint64_t offset = handle_helper::unpack_number(handle);
+    uint64_t start = boundary_bv.select(offset);
+    uint64_t end = boundary_bv.select(offset+1);
+    for (uint64_t i = start; i < end; ++i) {
+        seq += (char)seq_wt.at(i);
+    }
+    return seq;
 }
     
 /// Loop over all the handles to next/previous (right/left) nodes. Passes
 /// them to a callback which returns false to stop iterating and true to
 /// continue. Returns true if we finished and false if we stopped early.
 bool graph_t::follow_edges(const handle_t& handle, bool go_left, const std::function<bool(const handle_t&)>& iteratee) const {
+    bool result = true;
+    bool offset = handle_helper::unpack_number(handle);
+    bool is_rev = handle_helper::unpack_bit(handle);
+    if (!go_left && !is_rev || go_left && is_rev) {
+        uint64_t edges_begin = edge_fwd_wt.select(offset, 0);
+        for (uint64_t i = edges_begin+1; ; ++i) {
+            id_t id = edge_fwd_wt.at(i);
+            if (!id) break; // end of record
+            bool inv = edge_fwd_inv_bv.at(i);
+            handle_t handle = handle_helper::pack(id, (inv ? !is_rev : is_rev));
+            result &= iteratee(handle);
+            if (!result) break;
+        }
+    } else {
+        assert(go_left && !is_rev || !go_left && is_rev);
+        uint64_t edges_begin = edge_rev_wt.select(offset, 0);
+        for (uint64_t i = edges_begin+1; ; ++i) {
+            id_t id = edge_rev_wt.at(i);
+            if (!id) break; // end of record
+            bool inv = edge_rev_inv_bv.at(i);
+            handle_t handle = handle_helper::pack(id, (inv ? !is_rev : is_rev));
+            result &= iteratee(handle);
+            if (!result) break;
+        }
+    }
+    return result;
 }
     
 /// Loop over all the nodes in the graph in their local forward
@@ -45,21 +85,38 @@ bool graph_t::follow_edges(const handle_t& handle, bool go_left, const std::func
 /// after a false return value is on a best-effort basis and iteration
 /// order is not defined.
 void graph_t::for_each_handle(const std::function<bool(const handle_t&)>& iteratee, bool parallel) const {
+    if (parallel) {
+        volatile bool flag=false;
+#pragma omp parallel for
+        for (uint64_t i = 0; i < graph_id_wt.size(); ++i) {
+            if (flag) continue;
+            bool result = iteratee(handle_helper::pack(i,false));
+#pragma omp atomic
+            flag &= result;
+        }
+    } else {
+        for (uint64_t i = 0; i < graph_id_wt.size(); ++i) {
+            if (!iteratee(handle_helper::pack(i,false))) break;
+        }
+    }
 }
     
 /// Return the number of nodes in the graph
 /// TODO: can't be node_count because XG has a field named node_count.
 size_t graph_t::node_size(void) const {
+    graph_id_wt.size() - graph_id_wt.rank(graph_id_wt.size(), 0);
 }
     
 /// Return the smallest ID in the graph, or some smaller number if the
 /// smallest ID is unavailable. Return value is unspecified if the graph is empty.
 id_t graph_t::min_node_id(void) const {
+    return _min_node_id;
 }
     
 /// Return the largest ID in the graph, or some larger number if the
 /// largest ID is unavailable. Return value is unspecified if the graph is empty.
 id_t graph_t::max_node_id(void) const {
+    return _max_node_id;
 }
     
 ////////////////////////////////////////////////////////////////////////////
@@ -160,6 +217,13 @@ void graph_t::for_each_edge(const std::function<bool(const edge_t&)>& iteratee, 
 /// the number of edges returned, but graph implementations that track this
 /// information more efficiently can override this method.
 size_t graph_t::get_degree(const handle_t& handle, bool go_left) const {
+    uint64_t offset = handle_helper::unpack_number(handle);
+    bool is_rev = handle_helper::unpack_bit(handle);
+    if (!go_left && !is_rev || go_left && is_rev) {
+        return edge_fwd_wt.select(offset+1, 0) - edge_fwd_wt.select(offset, 0);
+    } else {
+        return edge_rev_wt.select(offset+1, 0) - edge_rev_wt.select(offset, 0);
+    }
 }
     
 ////////////////////////////////////////////////////////////////////////////
@@ -171,17 +235,23 @@ size_t graph_t::get_degree(const handle_t& handle, bool go_left) const {
     
 /// Get the locally forward version of a handle
 handle_t graph_t::forward(const handle_t& handle) const {
+    handle_t handle_fwd = handle;
+    if (handle_helper::unpack_bit(handle)) handle_helper::toggle_bit(handle_fwd);
+    return handle_fwd;
 }
-    
+
+/*
 /// A pair of handles can be used as an edge. When so used, the handles have a
 /// canonical order and orientation.
 edge_t graph_t::edge_handle(const handle_t& left, const handle_t& right) const {
+    make_pair(left, right);
 }
     
 /// Such a pair can be viewed from either inward end handle and produce the
 /// outward handle you would arrive at.
 handle_t graph_t::traverse_edge_handle(const edge_t& edge, const handle_t& left) const {
 }
+*/
     
 /**
  * This is the interface for a handle graph that stores embedded paths.
@@ -193,66 +263,140 @@ handle_t graph_t::traverse_edge_handle(const edge_t& edge, const handle_t& left)
     
 /// Determine if a path name exists and is legal to get a path handle for.
 bool graph_t::has_path(const std::string& path_name) const {
+    std::string query_s = "$" + path_name + "$";
+    std::vector<uint64_t> query_v(query_s.begin(), query_s.end());
+    return path_name_fmi.locate(query_v).size() > 0;
 }
     
 /// Look up the path handle for the given path name.
 /// The path with that name must exist.
 path_handle_t graph_t::get_path_handle(const std::string& path_name) const {
+    std::string query_s = "$" + path_name + "$";
+    std::vector<uint64_t> query_v(query_s.begin(), query_s.end());
+    std::vector<uint64_t> occs = path_name_fmi.locate(query_v);
+    assert(occs.size() == 1);
+    uint64_t offset = occs.front();
+    return as_path_handle(path_name_bv.rank1(offset));
 }
     
 /// Look up the name of a path from a handle to it
 std::string graph_t::get_path_name(const path_handle_t& path_handle) const {
+    return paths.at(as_integer(path_handle)).name;
 }
     
 /// Returns the number of node occurrences in the path
 size_t graph_t::get_occurrence_count(const path_handle_t& path_handle) const {
+    return paths.at(as_integer(path_handle)).occurrence_count();
 }
 
 /// Returns the number of paths stored in the graph
 size_t graph_t::get_path_count(void) const {
+    return _path_count;
 }
     
 /// Execute a function on each path in the graph
 // TODO: allow stopping early?
 void graph_t::for_each_path_handle(const std::function<void(const path_handle_t&)>& iteratee) const {
+    for (uint64_t i = 0; i < paths.size(); ++i) {
+        if (paths.at(i).occurrence_count()) {
+            iteratee(as_path_handle(i));
+        }
+    }
 }
     
 /// Get a node handle (node ID and orientation) from a handle to an occurrence on a path
 handle_t graph_t::get_occurrence(const occurrence_handle_t& occurrence_handle) const {
+    const int64_t* occ_handle = as_integers(occurrence_handle);
+    //path_handle_t = as_path_handle(occ_handle[0]);
+    auto& path = paths.at(occ_handle[0]);
+    // get the step
+    step_t step = path.get_occurrence(occ_handle[1]);
+    // compute the handle
+    handle_t handle = as_handle(boundary_bv.rank1(step.start));
+    // check if it's fully live
+    size_t length = get_length(handle);
+    for (uint64_t i = as_integer(handle); i < as_integer(handle)+length; ++i) {
+        if (dead_wt.at(i) != 0) {
+            return as_handle(0);
+        }
+    }
+    // if it is, we return it
+    return handle;
 }
-    
+
 /// Get a handle to the first occurrence in a path.
 /// The path MUST be nonempty.
 occurrence_handle_t graph_t::get_first_occurrence(const path_handle_t& path_handle) const {
+    auto& path = paths.at(as_integer(path_handle));
+    assert(path.occurrence_count());
+    occurrence_handle_t result;
+    int64_t* r_ints = as_integers(result);
+    r_ints[0] = as_integer(path_handle);
+    r_ints[1] = 0;
+    return result;
 }
     
 /// Get a handle to the last occurrence in a path
 /// The path MUST be nonempty.
 occurrence_handle_t graph_t::get_last_occurrence(const path_handle_t& path_handle) const {
+    auto& path = paths.at(as_integer(path_handle));
+    assert(path.occurrence_count());
+    occurrence_handle_t result;
+    int64_t* r_ints = as_integers(result);
+    r_ints[0] = as_integer(path_handle);
+    r_ints[1] = path.occurrence_count()-1;
+    return result;
 }
     
 /// Returns true if the occurrence is not the last occurence on the path, else false
 bool graph_t::has_next_occurrence(const occurrence_handle_t& occurrence_handle) const {
+    const int64_t* occ_handle = as_integers(occurrence_handle);
+    auto& path = paths.at(occ_handle[0]);
+    return occ_handle[1] < path.occurrence_count()-1;
 }
     
 /// Returns true if the occurrence is not the first occurence on the path, else false
 bool graph_t::has_previous_occurrence(const occurrence_handle_t& occurrence_handle) const {
+    const int64_t* occ_handle = as_integers(occurrence_handle);
+    auto& path = paths.at(occ_handle[0]);
+    assert(path.occurrence_count());
+    return occ_handle[1] > 0;
 }
     
 /// Returns a handle to the next occurrence on the path
 occurrence_handle_t graph_t::get_next_occurrence(const occurrence_handle_t& occurrence_handle) const {
+    const int64_t* occ_handle = as_integers(occurrence_handle);
+    auto& path = paths.at(occ_handle[0]);
+    assert(path.occurrence_count());
+    uint64_t rank = occ_handle[1];
+    occurrence_handle_t next_occ_handle = occurrence_handle;
+    int64_t* next_i = as_integers(next_occ_handle);
+    next_i[1] = rank+1;
+    return next_occ_handle;
 }
     
 /// Returns a handle to the previous occurrence on the path
 occurrence_handle_t graph_t::get_previous_occurrence(const occurrence_handle_t& occurrence_handle) const {
+    const int64_t* occ_handle = as_integers(occurrence_handle);
+    auto& path = paths.at(occ_handle[0]);
+    assert(path.occurrence_count());
+    uint64_t rank = occ_handle[1];
+    occurrence_handle_t prev_occ_handle = occurrence_handle;
+    int64_t* prev_i = as_integers(prev_occ_handle);
+    prev_i[1] = rank-1;
+    return prev_occ_handle;
 }
     
 /// Returns a handle to the path that an occurrence is on
 path_handle_t graph_t::get_path_handle_of_occurrence(const occurrence_handle_t& occurrence_handle) const {
+    const int64_t* occ_handle = as_integers(occurrence_handle);
+    return as_path_handle(occ_handle[0]);
 }
     
 /// Returns the 0-based ordinal rank of a occurrence on a path
 size_t graph_t::get_ordinal_rank_of_occurrence(const occurrence_handle_t& occurrence_handle) const {
+    const int64_t* occ_handle = as_integers(occurrence_handle);
+    return occ_handle[1];
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -261,6 +405,8 @@ size_t graph_t::get_ordinal_rank_of_occurrence(const occurrence_handle_t& occurr
 
 /// Returns true if the given path is empty, and false otherwise
 bool graph_t::is_empty(const path_handle_t& path_handle) const {
+    auto& path = paths.at(as_integer(path_handle));
+    return path.occurrence_count() == 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////

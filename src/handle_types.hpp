@@ -4,6 +4,7 @@
 #include <utility>
 
 namespace dankgraph{
+
 /// represents an id
 typedef int64_t id_t;
 /// represents an offset
@@ -18,6 +19,7 @@ typedef std::pair<handle_t, handle_t> edge_t;
 struct path_handle_t { char data[sizeof(int64_t)]; };
 /// An occurrence handle is an opaque reference to an occurrence of an oriented node along a path in a graph
 struct occurrence_handle_t { char data[2 * sizeof(int64_t)]; };
+
 }
 
 #endif

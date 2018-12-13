@@ -61,6 +61,64 @@ struct handle_helper{
     }
 };
 
+///
+/// Path handles
+///
+
+/// View a path handle as an integer
+inline uint64_t& as_integer(path_handle_t& handle) {
+    return reinterpret_cast<uint64_t&>(handle);
+}
+
+/// View a const path handle as a const integer
+inline const uint64_t& as_integer(const path_handle_t& handle) {
+    return reinterpret_cast<const uint64_t&>(handle);
+}
+
+/// View an integer as a path handle
+inline path_handle_t& as_path_handle(uint64_t& value) {
+    return reinterpret_cast<path_handle_t&>(value);
+}
+
+/// View a const integer as a const path handle
+inline const path_handle_t& as_path_handle(const uint64_t& value) {
+    return reinterpret_cast<const path_handle_t&>(value);
+}
+
+/// Define equality on path handles
+inline bool operator==(const path_handle_t& a, const path_handle_t& b) {
+    return as_integer(a) == as_integer(b);
+}
+
+/// Define inequality on path handles
+inline bool operator!=(const path_handle_t& a, const path_handle_t& b) {
+    return as_integer(a) != as_integer(b);
+}
+
+///
+/// Occurrence handles
+///
+
+/// View an occurrence handle as an integer
+inline int64_t* as_integers(occurrence_handle_t& occurrence_handle) {
+    return reinterpret_cast<int64_t*>(&occurrence_handle);
+}
+
+/// View a const occurrence handle as a const integer
+inline const int64_t* as_integers(const occurrence_handle_t& occurrence_handle) {
+    return reinterpret_cast<const int64_t*>(&occurrence_handle);
+}
+
+/// Define equality on occurrence handles
+inline bool operator==(const occurrence_handle_t& a, const occurrence_handle_t& b) {
+    return as_integers(a)[0] == as_integers(b)[0] && as_integers(a)[1] == as_integers(b)[1];
+}
+
+/// Define inequality on occurrence handles
+inline bool operator!=(const occurrence_handle_t& a, const occurrence_handle_t& b) {
+    return !(a == b);
+}
+
 }
 
 

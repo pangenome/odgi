@@ -358,7 +358,10 @@ public:
 private:
 
     /// Records node ids to allow for random access and random order
+    /// Use the special value "0" to indicate deleted nodes
     dyn::wt_string<dyn::suc_bv> graph_id_wt;
+    id_t _max_node_id = 0;
+    id_t _min_node_id = 0;
 
     /// Records edges of the 3' end on the forward strand, delimited by 0
     dyn::wt_string<dyn::suc_bv> edge_fwd_wt;
@@ -379,17 +382,25 @@ private:
     /// Same length as seq_wt. 1's indicate the beginning of a node's sequence.
     dyn::suc_bv boundary_bv;
 
-    /// Same length as seq_wt. 0's indicate that a base is still touched by some
-    /// node or some path. 1's indicate that this base has been deleted from the
-    /// public topology of the graph. 2's indicate that all nodes or paths that touch
-    /// this base have been deleted.
+    /// Same length as seq_wt. 0's indicate that a base is still in the public graph.
+    /// 1's indicate that this base has been deleted from the public topology of the graph.
+    /// 2's indicate that all nodes or paths that touch this base have been deleted,
+    /// and it may be collected in the next compaction cycle.
     dyn::wt_string<dyn::rle_str> dead_wt;
 
     /// Ordered across the bases in seq_wt, stores the path ids (1-based) at each
     /// segment in seq_wt, delimited by 0
     dyn::wt_string<dyn::suc_bv> path_id_wt;
+
     /// Stores the path step ranks at each segment in seq_wt, delemited by 0
+    /// Note that these can be redundant, in the case of a node division.
     dyn::wt_string<dyn::suc_bv> path_rank_wt;
+
+    /// Stores path names in their internal order, delimited by '$'
+    dyn::wt_fmi path_name_fmi;
+
+    /// Marks the beginning of each path name
+    dyn::suc_bv path_name_bv;
 
     /// Encodes the embedded paths of the graph. Each path is represented as three vectors
     /// starts, lengths, orientations
@@ -398,6 +409,13 @@ private:
     /// The strand of this interval is given by the corresponding bit in orientations, with 1
     /// indicating reverse strand.
     std::vector<path_t> paths;
+
+    /// A helper to record the number of live nodes
+    uint64_t _node_count = 0;
+    /// A helper to record the number of live edges
+    uint64_t _edge_count = 0;
+    /// A helper to record the number of live paths
+    uint64_t _path_count = 0;
 
 };
 
