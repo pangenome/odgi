@@ -36,8 +36,12 @@ void SuccinctSplayTree::insert(const size_t& key, const size_t& value) {
         if (get_key(z) < key) {
             z = get_right(z);
         }
-        else {
+        else if (get_key(z) > key) {
             z = get_left(z);
+        }
+        else {
+            set_value(z, value);
+            return;
         }
     }
     

@@ -69,28 +69,40 @@ class SuccinctSplayTree {
 public:
     SuccinctSplayTree(void);
     ~SuccinctSplayTree(void);
-        
+    
+    /// Insert a key-value pair. If the key already exists, the current value
+    /// will be replaced with the given value.
     void insert(const size_t& key, const size_t& value);
-        
+    
+    /// Erase the key-value pair associated with the key. If the key does not
+    /// exist, do nothing.
     void erase(const size_t& key);
-        
+    
+    /// Returns true if there are no entries, otherwise false.
     bool empty() const;
-        
+    
+    /// Returns the number of entries.
     size_t size() const;
-        
+    
+    /// Returns a handle to the key-value pair associated with a key, or 0 if
+    /// there the key does not exist.
     size_t find(const size_t& key) const;
     
+    /// Returns a handle to the key-value pair with the largest key that is less-than
+    /// or equal to the given key, or 0 if the given key is less than the minimum or
+    /// the tree is empty.
     size_t first_lower(const size_t& key) const;
     
+    /// Returns the handle to the key-value pair with the next-smallest key to the
+    /// given handle.
     size_t next(const size_t& x) const;
     
-    inline size_t get_key(size_t x) const;
+    /// Returns the key of a handle.
+    inline size_t get_key(const size_t& x) const;
     
-    inline size_t get_value(size_t x) const;
+    /// Returns the value of a handle.
+    inline size_t get_value(const size_t& x) const;
 
-    void print_topology(std::ostream& out) const;
-    
-    void print_vector(std::ostream& out) const;
         
 private:
     const static size_t NODE_SIZE = 5;
@@ -135,6 +147,9 @@ private:
     size_t add_node(const size_t& key, const size_t& value);
         
     void delete_node(size_t x);
+    
+    void print_topology(std::ostream& out) const;
+    void print_vector(std::ostream& out) const;
 };
     
     
@@ -222,11 +237,11 @@ inline size_t SuccinctSplayTree::size() const {
     return num_nodes;
 }
     
-inline size_t SuccinctSplayTree::get_key(size_t x) const {
+inline size_t SuccinctSplayTree::get_key(const size_t& x) const {
     return tree.get((x - 1) * NODE_SIZE + KEY_OFFSET);
 }
 
-inline size_t SuccinctSplayTree::get_value(size_t x) const {
+inline size_t SuccinctSplayTree::get_value(const size_t& x) const {
     return tree.get((x - 1) * NODE_SIZE + VALUE_OFFSET);
 }
 
