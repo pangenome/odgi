@@ -16,6 +16,7 @@
 #include "handle_types.hpp"
 #include "handle_helper.hpp"
 #include "sdsl/bit_vectors.hpp"
+#include "dynamic.hpp"
 //#include "sdsl/enc_vector.hpp"
 //#include "sdsl/dac_vector.hpp"
 //#include "sdsl/vlc_vector.hpp"
@@ -364,26 +365,43 @@ public:
 /// These are the backing data structures that we use to fulfill the above functions
 
 private:
-        
-    /// Encodes the topology of the graph.
-    /// {ID, start edge list index, end edge list index, seq index}
-    SuccinctDynamicVector graph_iv;
 
-    /// Encodes a series of edges lists of nodes.
-    /// {relative offset, orientation, next edge index}
-    SuccinctDynamicVector edge_lists_iv;
+    /// Encodes the topology of the graph.
+    //dyn::wt_string<dyn::suc_bv> graph_wt;
+
+    /// delimits records in graph_iv
+    //dyn::suc_bv graph_bv;
+
+    /// records node ids to allow for random access and random order
+    dyn::wt_string<dyn::suc_bv> graph_id_wt;
+
+    /// records edges of the 3' end on the forward strand, delimited by 0
+    dyn::wt_string<dyn::suc_bv> edge_fwd_wt;
+    /// delimits the records in edge_fwd_wt
+    //dyn::suc_bv edge_fwd_bv;
+    /// marks inverting edges in edge_fwd_wt
+    dyn::suc_bv edge_fwd_inv_bv;
+    /// records edges of the 3' end on the reverse strand, delimited by 0
+    dyn::wt_string<dyn::suc_bv> edge_rev_wt;
+    /// delimits the records in edge_rev_wt
+    //dyn::suc_bv edge_rev_bv;
+    /// marks inverting edges in edge_rev_wt
+    dyn::suc_bv edge_rev_inv_bv;
 
     /// Encodes all of the sequences of all nodes and all paths in the graph.
     /// The node sequences occur in the same order as in graph_iv;
-    SuccinctDynamicVector seq_iv;
+    dyn::wt_string<dyn::suc_bv> seq_wt;
+    //SuccinctDynamicVector seq_iv;
 
     /// Same length as seq_iv. 1's indicate the beginning of a node's sequence.
-    SuccinctDynamicVector boundary_bv;
+    //SuccinctDynamicVector boundary_bv;
+    dyn::suc_bv boundary_bv;
 
     /// Same length as seq_iv. 0's indicate that a base is still touched by some
     /// node or some path. 1's indicate that all nodes or paths that touch this
     /// base have been deleted.
-    SuccinctDynamicVector dead_bv;
+    //SuccinctDynamicVector dead_bv;
+    dyn::suc_bv dead_bv;
 
     /// Encodes a self-balancing binary tree as integers. Consists of fixed-width
     /// records that have the following structure:

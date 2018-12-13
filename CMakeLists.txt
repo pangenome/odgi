@@ -52,6 +52,17 @@ set(sdsl-lite-divsufsort_INCLUDE "${INSTALL_DIR}/src/sdsl-lite-build/external/li
 set(sdsl-lite_LIB "${INSTALL_DIR}/src/sdsl-lite-build/lib")
 set(sdsl-lite-divsufsort_LIB "${INSTALL_DIR}/src/sdsl-lite-build/external/libdivsufsort/lib")
 
+# DYNAMIC (full build using its cmake config)
+ExternalProject_Add(dynamic
+  GIT_REPOSITORY "https://github.com/xxsds/DYNAMIC.git"
+  GIT_TAG "e46c0245bafb9d5b157c72be7dc71142c8ae9239"
+  # we don't actually install dynamic... it's header only
+  #CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
+  UPDATE_COMMAND ""
+  INSTALL_COMMAND "")
+ExternalProject_Get_property(dynamic INSTALL_DIR)
+set(dynamic_INCLUDE "${INSTALL_DIR}/src/dynamic/include")
+
 # gfakluge (full build using its cmake config)
 ExternalProject_Add(gfakluge
   GIT_REPOSITORY "https://github.com/edawson/gfakluge.git"
@@ -77,9 +88,12 @@ add_executable(dankgraph
   ${CMAKE_SOURCE_DIR}/src/main.cpp
   )
 add_dependencies(dankgraph sdsl-lite)
+add_dependencies(dankgraph dynamic)
 target_include_directories(dankgraph PUBLIC
   "${sdsl-lite_INCLUDE}"
-  "${sdsl-lite-divsufsort_INCLUDE}")
+  "${sdsl-lite-divsufsort_INCLUDE}"
+  "${dynamic_INCLUDE}"
+  )
 target_link_libraries(dankgraph
   "${sdsl-lite_LIB}/libsdsl.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort.a"
