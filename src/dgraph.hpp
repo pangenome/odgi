@@ -74,163 +74,71 @@ public:
     /// largest ID is unavailable. Return value is unspecified if the graph is empty.
     id_t max_node_id(void) const;
     
-    ////////////////////////////////////////////////////////////////////////////
-    // Interface that needs to be using'd
-    ////////////////////////////////////////////////////////////////////////////
-    
-    /// Loop over all the handles to next/previous (right/left) nodes. Works
-    /// with a callback that just takes all the handles and returns void.
-    /// Has to be a template because we can't overload on the types of std::function arguments otherwise.
-    /// MUST be pulled into implementing classes with `using` in order to work!
-    template <typename T>
-    auto follow_edges(const handle_t& handle, bool go_left, T&& iteratee) const
-        -> typename std::enable_if<std::is_void<decltype(iteratee(get_handle(0, false)))>::value>::type {
-        // Implementation only for void-returning iteratees
-        // We ought to just overload on the std::function but that's not allowed until C++14.
-        // See <https://stackoverflow.com/q/13811180>
-        
-        // We also can't use result_of<T(handle_t)>::type to sniff the return
-        // type out because that ::type would not exist (since that's what you
-        // get for a void apparently?) and we couldn't check if it's bool or
-        // void.
-        
-        // So we do this nonsense thing with a trailing return type (to get the
-        // actual arg into scope) and a decltype (which is allowed to resolve to
-        // void) and is_void (which is allowed to take void) and a fake
-        // get_handle call (which is the shortest handle_t-typed expression I
-        // could think of).
-        
-        // Make a wrapper that puts a bool return type on.
-        std::function<bool(const handle_t&)> lambda = [&](const handle_t& found) {
-            iteratee(found);
-            return true;
-        };
-        
-        // Use that
-        follow_edges(handle, go_left, lambda);
-        
-        // During development I managed to get earlier versions of this template to build infinitely recursive functions.
-        static_assert(!std::is_void<decltype(lambda(get_handle(0, false)))>::value, "can't take our own lambda");
-    }
-    
-    /// Loop over all the nodes in the graph in their local forward
-    /// orientations, in their internal stored order. Works with void-returning iteratees.
-    /// MUST be pulled into implementing classes with `using` in order to work!
-    template <typename T>
-    auto for_each_handle(T&& iteratee, bool parallel = false) const
-    -> typename std::enable_if<std::is_void<decltype(iteratee(get_handle(0, false)))>::value>::type {
-        // Make a wrapper that puts a bool return type on.
-        std::function<bool(const handle_t&)> lambda = [&](const handle_t& found) {
-            iteratee(found);
-            return true;
-        };
-        
-        // Use that
-        for_each_handle(lambda, parallel);
-    }
-    
-    /// Get a handle from a Visit Protobuf object.
-    /// Must be using'd to avoid shadowing.
-    //handle_t get_handle(const Visit& visit) const;
-    
-    ////////////////////////////////////////////////////////////////////////////
-    // Additional optional interface with a default implementation
-    ////////////////////////////////////////////////////////////////////////////
-    
-    /// Get the number of edges on the right (go_left = false) or left (go_left
-    /// = true) side of the given handle. The default implementation is O(n) in
-    /// the number of edges returned, but graph implementations that track this
-    /// information more efficiently can override this method.
-    size_t get_degree(const handle_t& handle, bool go_left) const;
-    
-    ////////////////////////////////////////////////////////////////////////////
-    // Concrete utility methods
-    ////////////////////////////////////////////////////////////////////////////
-    
-    /// Get a Protobuf Visit from a handle.
-    //Visit to_visit(const handle_t& handle) const;
-    
-    /// Get the locally forward version of a handle
-    handle_t forward(const handle_t& handle) const;
-    
-    /// A pair of handles can be used as an edge. When so used, the handles have a
-    /// canonical order and orientation.
-    edge_t edge_handle(const handle_t& left, const handle_t& right) const;
-    
-    /// Such a pair can be viewed from either inward end handle and produce the
-    /// outward handle you would arrive at.
-    handle_t traverse_edge_handle(const edge_t& edge, const handle_t& left) const;
     
 /**
  * This is the interface for a handle graph that stores embedded paths.
  */
     
-    ////////////////////////////////////////////////////////////////////////////
-    // Path handle interface that needs to be implemented
-    ////////////////////////////////////////////////////////////////////////////
-    
-    /// Determine if a path name exists and is legal to get a path handle for.
-    bool has_path(const std::string& path_name) const;
-    
-    /// Look up the path handle for the given path name.
-    /// The path with that name must exist.
-    path_handle_t get_path_handle(const std::string& path_name) const;
-    
-    /// Look up the name of a path from a handle to it
-    std::string get_path_name(const path_handle_t& path_handle) const;
-    
-    /// Returns the number of node occurrences in the path
-    size_t get_occurrence_count(const path_handle_t& path_handle) const;
+//    ////////////////////////////////////////////////////////////////////////////
+//    // Path handle interface that needs to be implemented
+//    ////////////////////////////////////////////////////////////////////////////
+//
+//    /// Determine if a path name exists and is legal to get a path handle for.
+//    bool has_path(const std::string& path_name) const;
+//
+//    /// Look up the path handle for the given path name.
+//    /// The path with that name must exist.
+//    path_handle_t get_path_handle(const std::string& path_name) const;
+//
+//    /// Look up the name of a path from a handle to it
+//    std::string get_path_name(const path_handle_t& path_handle) const;
+//
+//    /// Returns the number of node occurrences in the path
+//    size_t get_occurrence_count(const path_handle_t& path_handle) const;
+//
+//    /// Returns the number of paths stored in the graph
+//    size_t get_path_count() const;
+//
+//    /// Execute a function on each path in the graph
+//    // TODO: allow stopping early?
+//    void for_each_path_handle(const std::function<void(const path_handle_t&)>& iteratee) const;
+//
+//    /// Get a node handle (node ID and orientation) from a handle to an occurrence on a path
+//    handle_t get_occurrence(const occurrence_handle_t& occurrence_handle) const;
+//
+//    /// Get a handle to the first occurrence in a path.
+//    /// The path MUST be nonempty.
+//    occurrence_handle_t get_first_occurrence(const path_handle_t& path_handle) const;
+//
+//    /// Get a handle to the last occurrence in a path
+//    /// The path MUST be nonempty.
+//    occurrence_handle_t get_last_occurrence(const path_handle_t& path_handle) const;
+//
+//    /// Returns true if the occurrence is not the last occurence on the path, else false
+//    bool has_next_occurrence(const occurrence_handle_t& occurrence_handle) const;
+//
+//    /// Returns true if the occurrence is not the first occurence on the path, else false
+//    bool has_previous_occurrence(const occurrence_handle_t& occurrence_handle) const;
+//
+//    /// Returns a handle to the next occurrence on the path
+//    occurrence_handle_t get_next_occurrence(const occurrence_handle_t& occurrence_handle) const;
+//
+//    /// Returns a handle to the previous occurrence on the path
+//    occurrence_handle_t get_previous_occurrence(const occurrence_handle_t& occurrence_handle) const;
+//
+//    /// Returns a handle to the path that an occurrence is on
+//    path_handle_t get_path_handle_of_occurrence(const occurrence_handle_t& occurrence_handle) const;
+//
+//    /// Returns the 0-based ordinal rank of a occurrence on a path
+//    size_t get_ordinal_rank_of_occurrence(const occurrence_handle_t& occurrence_handle) const;
+//
+//    ////////////////////////////////////////////////////////////////////////////
+//    // Additional optional interface with a default implementation
+//    ////////////////////////////////////////////////////////////////////////////
+//
+//    /// Returns true if the given path is empty, and false otherwise
+//    bool is_empty(const path_handle_t& path_handle) const;
 
-    /// Returns the number of paths stored in the graph
-    size_t get_path_count() const;
-    
-    /// Execute a function on each path in the graph
-    // TODO: allow stopping early?
-    void for_each_path_handle(const std::function<void(const path_handle_t&)>& iteratee) const;
-    
-    /// Get a node handle (node ID and orientation) from a handle to an occurrence on a path
-    handle_t get_occurrence(const occurrence_handle_t& occurrence_handle) const;
-    
-    /// Get a handle to the first occurrence in a path.
-    /// The path MUST be nonempty.
-    occurrence_handle_t get_first_occurrence(const path_handle_t& path_handle) const;
-    
-    /// Get a handle to the last occurrence in a path
-    /// The path MUST be nonempty.
-    occurrence_handle_t get_last_occurrence(const path_handle_t& path_handle) const;
-    
-    /// Returns true if the occurrence is not the last occurence on the path, else false
-    bool has_next_occurrence(const occurrence_handle_t& occurrence_handle) const;
-    
-    /// Returns true if the occurrence is not the first occurence on the path, else false
-    bool has_previous_occurrence(const occurrence_handle_t& occurrence_handle) const;
-    
-    /// Returns a handle to the next occurrence on the path
-    occurrence_handle_t get_next_occurrence(const occurrence_handle_t& occurrence_handle) const;
-    
-    /// Returns a handle to the previous occurrence on the path
-    occurrence_handle_t get_previous_occurrence(const occurrence_handle_t& occurrence_handle) const;
-    
-    /// Returns a handle to the path that an occurrence is on
-    path_handle_t get_path_handle_of_occurrence(const occurrence_handle_t& occurrence_handle) const;
-    
-    /// Returns the 0-based ordinal rank of a occurrence on a path
-    size_t get_ordinal_rank_of_occurrence(const occurrence_handle_t& occurrence_handle) const;
-
-    ////////////////////////////////////////////////////////////////////////////
-    // Additional optional interface with a default implementation
-    ////////////////////////////////////////////////////////////////////////////
-
-    /// Returns true if the given path is empty, and false otherwise
-    bool is_empty(const path_handle_t& path_handle) const;
-
-    ////////////////////////////////////////////////////////////////////////////
-    // Concrete utility methods
-    ////////////////////////////////////////////////////////////////////////////
-
-    /// Loop over all the occurrences along a path, from first through last
-    void for_each_occurrence_in_path(const path_handle_t& path, const std::function<void(const occurrence_handle_t&)>& iteratee) const;
 
 /**
  * This is the interface for a handle graph that supports modification.
@@ -302,12 +210,6 @@ public:
     /// passed in.
     /// Updates stored paths.
     std::vector<handle_t> divide_handle(const handle_t& handle, const std::vector<size_t>& offsets);
-    
-    /// Specialization of divide_handle for a single division point
-    inline std::pair<handle_t, handle_t> divide_handle(const handle_t& handle, size_t offset) {
-        auto parts = divide_handle(handle, std::vector<size_t>{offset});
-        return std::make_pair(parts.front(), parts.back());
-    }
 
 /**
  * This is the interface for a handle graph with embedded paths where the paths can be modified.
@@ -317,37 +219,64 @@ public:
  * TODO: This is a very limited interface at the moment. It will probably need to be extended.
  */
     
-    /**
-     * Destroy the given path. Invalidates handles to the path and its node occurrences.
-     */
-    void destroy_path(const path_handle_t& path);
-
-    /**
-     * Create a path with the given name. The caller must ensure that no path
-     * with the given name exists already, or the behavior is undefined.
-     * Returns a handle to the created empty path. Handles to other paths must
-     * remain valid.
-     */
-    path_handle_t create_path_handle(const std::string& name);
-    
-    /**
-     * Append a visit to a node to the given path. Returns a handle to the new
-     * final occurrence on the path which is appended. Handles to prior
-     * occurrences on the path, and to other paths, must remain valid.
-     */
-    occurrence_handle_t append_occurrence(const path_handle_t& path, const handle_t& to_append);
+//    /**
+//     * Destroy the given path. Invalidates handles to the path and its node occurrences.
+//     */
+//    void destroy_path(const path_handle_t& path);
+//
+//    /**
+//     * Create a path with the given name. The caller must ensure that no path
+//     * with the given name exists already, or the behavior is undefined.
+//     * Returns a handle to the created empty path. Handles to other paths must
+//     * remain valid.
+//     */
+//    path_handle_t create_path_handle(const std::string& name);
+//
+//    /**
+//     * Append a visit to a node to the given path. Returns a handle to the new
+//     * final occurrence on the path which is appended. Handles to prior
+//     * occurrences on the path, and to other paths, must remain valid.
+//     */
+//    occurrence_handle_t append_occurrence(const path_handle_t& path, const handle_t& to_append);
 
 /// These are the backing data structures that we use to fulfill the above functions
 
 private:
-        
+    
+    id_t max_id = 0;
+    id_t min_id = std::numeric_limits<id_t>::max();
+    
+    inline uint8_t encode_nucleotide(const char& nt);
+    inline char decode_nucleotide(const uint64_t& val);
+    inline uint64_t complement_encoded_nucleotide(const uint64_t& val);
+    inline size_t graph_iv_index(const handle_t& handle);
+    inline uint64_t encode_edge_target(const handle_t& handle);
+    inline handle decode_edge_target(const handle_t& handle);
+    
+    const static size_t GRAPH_RECORD_SIZE = 5;
+    
+    const static size_t GRAPH_ID_OFFSET = 0;
+    const static size_t GRAPH_START_EDGES_OFFSET = 1;
+    const static size_t GRAPH_END_EDGES_OFFSET = 2;
+    const static size_t GRAPH_SEQ_START_OFFSET = 3;
+    const static size_t GRAPH_SEQ_LENGTH_OFFSET = 4;
+    
+    const static size_t EDGE_RECORD_SIZE = 2;
+    
+    const static size_t EDGE_TRAV_OFFSET = 0;
+    const static size_t EDGE_NEXT_OFFSET = 1;
+    
     /// Encodes the topology of the graph.
-    /// {ID, start edge list index, end edge list index, seq index}
+    /// {ID, start edge list index, end edge list index, seq index, seq length}
     SuccinctDynamicVector graph_iv;
 
     /// Encodes a series of edges lists of nodes.
-    /// {relative offset, orientation, next edge index}
+    /// {ID|orientation, next edge index}
     SuccinctDynamicVector edge_lists_iv;
+    
+    /// Encodes the 1-based offset of an ID in graph_iv in units of GRAPH_RECORD_SIZE.
+    /// If no node with that ID exists, contains a 0.
+    SuccinctDeque id_to_graph_iv;
 
     /// Encodes all of the sequences of all nodes and all paths in the graph.
     /// The node sequences occur in the same order as in graph_iv;
@@ -392,6 +321,69 @@ private:
     size_t deleted_nodes;
     size_t deleted_edges;
 };
+    
+inline uint8_t SuccinctDynamicSequenceGraph::encode_nucleotide(const char& nt) {
+    if (nt == 'a' || nt == 'A') {
+        return 0;
+    }
+    else if (nt == 'c' || nt == 'C') {
+        return 1;
+    }
+    else if (nt == 'g' || nt == 'G') {
+        return 2;
+    }
+    else if (nt == 't' || nt == 'T') {
+        return 3;
+    }
+    else {
+        // all others, but probably N's
+        return 4;
+    }
+}
+    
+inline uint64_t SuccinctDynamicSequenceGraph::complement_encoded_nucleotide(const uint64_t& val) {
+    return val == 4 ? 4 : 3 - val;
+}
+    
+inline uint8_t SuccinctDynamicSequenceGraph::decode_nucleotide(const uint64_t& val) {
+    static const char* alphabet = "ACGTN";
+    return alphabet[val];
+}
+    
+inline size_t SuccinctDynamicSequenceGraph::graph_iv_index(const handle_t& handle) {
+    return (id_to_graph_iv.get(get_id(handle)) - 1) * GRAPH_RECORD_SIZE;
+}
+    
+inline uint64_t SuccinctDynamicSequenceGraph::encode_edge_target(const handle_t& handle) {
+    return reinterpret_cast<uint64_t>(handle);
+}
+    
+inline handle_t SuccinctDynamicSequenceGraph::decode_edge_target(const uint64_t& val) {
+    return reinterpret_cast<handle_t>(val);
+}
+    
+std::string reverse_complement(const std::string& seq) {
+    std::string rev_comp(seq.size());
+    for (size_t i = 0; i < seq.size(); i++) {
+        char nt = seq.at(i);
+        if (nt == 'a' || nt == 'A') {
+            rev_comp[rev_comp.size() - i - 1] = 'T';
+        }
+        else if (nt == 'c' || nt == 'C') {
+            rev_comp[rev_comp.size() - i - 1] = 'G';
+        }
+        else if (nt == 'g' || nt == 'G') {
+            rev_comp[rev_comp.size() - i - 1] = 'C';
+        }
+        else if (nt == 't' || nt == 'T') {
+            rev_comp[rev_comp.size() - i - 1] = 'A';
+        }
+        else {
+            rev_comp[rev_comp.size() - i - 1] = 'N';
+        }
+    }
+    return rev_comp;
+}
 
 } // end dankness
 
