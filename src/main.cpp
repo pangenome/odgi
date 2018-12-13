@@ -124,11 +124,8 @@ void test_splay_tree() {
             switch (op) {
                 case INSERT:
                     for (size_t k = 0; k < inserts_per_op; k++) {
-                        std::cerr << "inserting " << bank[bank_idx] << std::endl;
                         std_map[bank[bank_idx]] = bank_idx;
                         suc_map.insert(bank[bank_idx], bank_idx);
-                        std::cerr << "inserting finished" << std::endl;
-                        suc_map.print_topology(std::cerr);
                         bank_idx++;
                     }
                     
@@ -137,7 +134,6 @@ void test_splay_tree() {
                 case ERASE:
                     if (!std_map.empty()) {
                         for (size_t k = 0; k < erases_per_op; k++) {
-                            std::cerr << "erasing " << bank[erase_idx] << std::endl;
                             std_map.erase(bank[erase_idx]);
                             suc_map.erase(bank[erase_idx]);
                             erased.insert(bank[erase_idx]);
@@ -151,9 +147,10 @@ void test_splay_tree() {
                     if (!std_map.empty()) {
                         for (size_t k = 0; k < accesses_per_op; k++) {
                             size_t access_val = bank[prng() % bank_idx];
-                            std::cerr << "accessing " << access_val << std::endl;
                             size_t x = suc_map.find(access_val);
                             auto xi = std_map.find(access_val);
+                            
+                            
                             
                             if (erased.count(access_val)) {
                                 assert(x == 0);
@@ -163,7 +160,8 @@ void test_splay_tree() {
                                 assert(suc_map.get_value(x) == xi->second);
                             }
                             
-                            size_t y = suc_map.lower_bound(access_val);
+                            
+                            size_t y = suc_map.first_lower(access_val);
                             auto yi = std_map.lower_bound(access_val);
                             
                             if (!erased.count(access_val)) {
@@ -171,10 +169,11 @@ void test_splay_tree() {
                                 assert(suc_map.get_value(y) == yi->second);
                             }
                             
-                            size_t z = suc_map.lower_bound(access_val + 1);
+                            size_t z = suc_map.first_lower(access_val + 1);
                             auto zi = std_map.lower_bound(access_val + 1);
                             
                             if (!erased.count(access_val)) {
+                                zi--;
                                 assert(suc_map.get_key(z) == zi->first);
                                 assert(suc_map.get_value(z) == zi->second);
                             }

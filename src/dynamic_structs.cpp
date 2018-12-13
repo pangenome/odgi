@@ -54,14 +54,8 @@ void SuccinctSplayTree::insert(const size_t& key, const size_t& value) {
         set_left(p, z);
     }
     
-    std::cerr << "before splay" << std::endl;
-    print_vector(std::cerr);
-    
     splay(z);
     num_nodes++;
-    
-    std::cerr << "after splay" << std::endl;
-    print_vector(std::cerr);
 }
 
 size_t SuccinctSplayTree::find(const size_t& key) const {
@@ -80,7 +74,7 @@ size_t SuccinctSplayTree::find(const size_t& key) const {
     return 0;
 }
 
-size_t SuccinctSplayTree::lower_bound(const size_t& key) const {
+size_t SuccinctSplayTree::first_lower(const size_t& key) const {
     size_t p = 0;
     size_t z = root;
     while (z != 0) {
@@ -133,7 +127,7 @@ void SuccinctSplayTree::erase(const size_t& key) {
     }
     else {
         size_t y = subtree_minimum(get_right(z));
-        if (get_parent(y) != z ) {
+        if (get_parent(y) != z) {
             replace(y, get_right(y));
             set_right(y, get_right(z));
             set_parent(get_right(y), y);
@@ -142,14 +136,13 @@ void SuccinctSplayTree::erase(const size_t& key) {
         set_left(y, get_left(z));
         set_parent(get_left(y), y);
     }
-        
+    
     delete_node(z);
     num_nodes--;
 }
     
 void SuccinctSplayTree::left_rotate(size_t x) {
-    std::cerr << "left rotate on " << x << std::endl;
-        
+    
     size_t y = get_right(x);
     size_t x_parent = get_parent(x);
     if (y != 0) {
@@ -178,7 +171,6 @@ void SuccinctSplayTree::left_rotate(size_t x) {
 }
     
 void SuccinctSplayTree::right_rotate(size_t x) {
-    std::cerr << "right rotate on " << x << std::endl;
     size_t y = get_left(x);
     size_t x_parent = get_parent(x);
     if (y != 0) {
@@ -207,51 +199,37 @@ void SuccinctSplayTree::right_rotate(size_t x) {
 }
     
 void SuccinctSplayTree::splay(size_t x) {
-    std::cerr << "entering splay" << std::endl;
     while (get_parent(x) != 0) {
-        size_t x_parent = get_parent(x);
-        if (get_parent(x_parent) == 0) {
-            if (get_left(x_parent) == x) {
-                std::cerr << "R" << std::endl;
-                right_rotate(x_parent);
+        if (get_parent(get_parent(x)) == 0) {
+            if (get_left(get_parent(x)) == x) {
+                right_rotate(get_parent(x));
             }
             else {
-                std::cerr << "L" << std::endl;
-                left_rotate(x_parent);
+                left_rotate(get_parent(x));
             }
-            std::cerr << "operation 1" << std::endl;
-            print_vector(std::cerr);
         }
-        else if (get_left(x_parent) == x && get_left(get_parent(x_parent)) == x_parent) {
-            right_rotate(get_parent(x_parent));
-            right_rotate(x_parent);
-            std::cerr << "operation 2" << std::endl;
-            print_vector(std::cerr);
+        else if (get_left(get_parent(x)) == x && get_left(get_parent(get_parent(x))) == get_parent(x)) {
+            right_rotate(get_parent(get_parent(x)));
+            right_rotate(get_parent(x));
         }
-        else if (get_right(x_parent) == x && get_right(get_parent(x_parent)) == x_parent) {
-            left_rotate(get_parent(x_parent));
-            left_rotate(x_parent);
-            std::cerr << "operation 3" << std::endl;
-            print_vector(std::cerr);
+        else if (get_right(get_parent(x)) == x && get_right(get_parent(get_parent(x))) == get_parent(x)) {
+            left_rotate(get_parent(get_parent(x)));
+            left_rotate(get_parent(x));
         }
-        else if (get_left(x_parent) == x && get_right(get_parent(x_parent)) == x_parent) {
-            right_rotate(x_parent);
-            left_rotate(x_parent);
-            std::cerr << "operation 4" << std::endl;
-            print_vector(std::cerr);
+        else if (get_left(get_parent(x)) == x && get_right(get_parent(get_parent(x))) == get_parent(x)) {
+            right_rotate(get_parent(x));
+            left_rotate(get_parent(x));
         }
         else {
-            left_rotate(x_parent);
-            right_rotate(x_parent);
-            std::cerr << "operation 5" << std::endl;
-            print_vector(std::cerr);
+            left_rotate(get_parent(x));
+            right_rotate(get_parent(x));
         }
     }
 }
 
 void SuccinctSplayTree::replace(size_t u, size_t v ) {
     size_t u_parent = get_parent(u);
-    if (u_parent != 0) {
+    if (u_parent == 0) {
         root = v;
     }
     else if (u == get_left(u_parent)) {
@@ -286,39 +264,42 @@ size_t SuccinctSplayTree::add_node(const size_t& key, const size_t& value) {
     tree.append(0);
     tree.append(0);
     tree.append(0);
-    // add 1 to make it 1-based
-    return tree.size() - NODE_SIZE + 1;
+    // return 1-based index
+    return tree.size() / NODE_SIZE;
 }
     
 void SuccinctSplayTree::delete_node(size_t x) {
-        
+    
     // 1-based index of final node in the vector
-    size_t last = tree.size() - NODE_SIZE + 1;
+    size_t last = tree.size() / NODE_SIZE;
+    
+    if (x != last) {
         
-    // replace the values in x with the last node's values
-    set_key(x, get_key(last));
-    set_value(x, get_value(last));
-    set_left(x, get_left(last));
-    set_right(x, get_right(last));
-    set_key(x, get_parent(last));
+        // replace the values in x with the last node's values
+        set_key(x, get_key(last));
+        set_value(x, get_value(last));
+        set_left(x, get_left(last));
+        set_right(x, get_right(last));
+        set_parent(x, get_parent(last));
         
-    // update the edges from the last node's neighbors
-    if (get_left(x) != 0) {
-        set_parent(get_left(x), x);
-    }
-    if (get_right(x) != 0) {
-        set_parent(get_right(x), x);
-    }
-    if (get_parent(x) != 0) {
-        if (get_left(get_parent(x)) == last) {
-            set_left(get_parent(x), x);
+        // update the edges from the last node's neighbors
+        if (get_left(x) != 0) {
+            set_parent(get_left(x), x);
+        }
+        if (get_right(x) != 0) {
+            set_parent(get_right(x), x);
+        }
+        if (get_parent(x) != 0) {
+            if (get_left(get_parent(x)) == last) {
+                set_left(get_parent(x), x);
+            }
+            else {
+                set_right(get_parent(x), x);
+            }
         }
         else {
-            set_right(get_parent(x), x);
+            root = x;
         }
-    }
-    else {
-        root = x;
     }
         
     // remove the last node from the vector
@@ -364,7 +345,7 @@ void SuccinctSplayTree::print_vector(std::ostream& out) const {
             out << "| ";
         }
         if (i % NODE_SIZE == 0) {
-            out << "(" << i + 1 << "): ";
+            out << "(" << i / NODE_SIZE + 1 << "): ";
         }
         out << tree.get(i) << " ";
     }

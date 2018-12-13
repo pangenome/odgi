@@ -80,7 +80,7 @@ public:
         
     size_t find(const size_t& key) const;
     
-    size_t lower_bound(const size_t& key) const;
+    size_t first_lower(const size_t& key) const;
     
     size_t next(const size_t& x) const;
     
@@ -94,12 +94,11 @@ public:
         
 private:
     const static size_t NODE_SIZE = 5;
-    // offsets have an additive factor of -1 to adjust for 1-based indexing
-    const static int64_t KEY_OFFSET = -1;
-    const static int64_t VALUE_OFFSET = 0;
-    const static int64_t PARENT_OFFSET = 1;
-    const static int64_t LEFT_CHILD_OFFSET = 2;
-    const static int64_t RIGHT_CHILD_OFFSET = 3;
+    const static int64_t KEY_OFFSET = 0;
+    const static int64_t VALUE_OFFSET = 1;
+    const static int64_t PARENT_OFFSET = 2;
+    const static int64_t LEFT_CHILD_OFFSET = 3;
+    const static int64_t RIGHT_CHILD_OFFSET = 4;
         
     SuccinctDynamicVector tree;
     size_t root = 0;
@@ -224,43 +223,43 @@ inline size_t SuccinctSplayTree::size() const {
 }
     
 inline size_t SuccinctSplayTree::get_key(size_t x) const {
-    return tree.get(x + KEY_OFFSET);
+    return tree.get((x - 1) * NODE_SIZE + KEY_OFFSET);
 }
 
 inline size_t SuccinctSplayTree::get_value(size_t x) const {
-    return tree.get(x + VALUE_OFFSET);
+    return tree.get((x - 1) * NODE_SIZE + VALUE_OFFSET);
 }
 
 inline size_t SuccinctSplayTree::get_parent(size_t x) const {
-    return tree.get(x + PARENT_OFFSET);
+    return tree.get((x - 1) * NODE_SIZE + PARENT_OFFSET);
 }
 
 inline size_t SuccinctSplayTree::get_left(size_t x) const {
-    return tree.get(x + LEFT_CHILD_OFFSET);
+    return tree.get((x - 1) * NODE_SIZE + LEFT_CHILD_OFFSET);
 }
 
 inline size_t SuccinctSplayTree::get_right(size_t x) const {
-    return tree.get(x + RIGHT_CHILD_OFFSET);
+    return tree.get((x - 1) * NODE_SIZE + RIGHT_CHILD_OFFSET);
 }
     
 inline void SuccinctSplayTree::set_key(size_t x, size_t val) {
-    tree.set(x + KEY_OFFSET, val);
+    tree.set((x - 1) * NODE_SIZE + KEY_OFFSET, val);
 }
     
 inline void SuccinctSplayTree::set_value(size_t x, size_t val) {
-    tree.set(x + VALUE_OFFSET, val);
+    tree.set((x - 1) * NODE_SIZE + VALUE_OFFSET, val);
 }
     
 inline void SuccinctSplayTree::set_left(size_t x, size_t y) {
-    tree.set(x + LEFT_CHILD_OFFSET, y);
+    tree.set((x - 1) * NODE_SIZE + LEFT_CHILD_OFFSET, y);
 }
     
 inline void SuccinctSplayTree::set_right(size_t x, size_t y) {
-    tree.set(x + RIGHT_CHILD_OFFSET, y);
+    tree.set((x - 1) * NODE_SIZE + RIGHT_CHILD_OFFSET, y);
 }
     
 inline void SuccinctSplayTree::set_parent(size_t x, size_t y) {
-    tree.set(x + PARENT_OFFSET, y);
+    tree.set((x - 1) * NODE_SIZE + PARENT_OFFSET, y);
 }
 }
 
