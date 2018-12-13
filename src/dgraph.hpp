@@ -15,23 +15,16 @@
 #include "path.hpp"
 #include "handle_types.hpp"
 #include "handle_helper.hpp"
-#include "sdsl/bit_vectors.hpp"
 #include "dynamic.hpp"
-//#include "sdsl/enc_vector.hpp"
-//#include "sdsl/dac_vector.hpp"
-//#include "sdsl/vlc_vector.hpp"
-//#include "sdsl/wavelet_trees.hpp"
-//#include "sdsl/csa_wt.hpp"
-//#include "sdsl/suffix_arrays.hpp"
 
 namespace dankgraph {
 
 
-class SuccinctDynamicSequenceGraph {
+class graph_t {
         
 public:
-    SuccinctDynamicSequenceGraph();
-    ~SuccinctDynamicSequenceGraph();
+    graph_t();
+    ~graph_t();
         
     /// Look up the handle for the node with the given ID in the given orientation
     handle_t get_handle(const id_t& node_id, bool is_reverse = false) const;
@@ -366,61 +359,38 @@ public:
 
 private:
 
-    /// Encodes the topology of the graph.
-    //dyn::wt_string<dyn::suc_bv> graph_wt;
-
-    /// delimits records in graph_iv
-    //dyn::suc_bv graph_bv;
-
-    /// records node ids to allow for random access and random order
+    /// Records node ids to allow for random access and random order
     dyn::wt_string<dyn::suc_bv> graph_id_wt;
 
-    /// records edges of the 3' end on the forward strand, delimited by 0
+    /// Records edges of the 3' end on the forward strand, delimited by 0
     dyn::wt_string<dyn::suc_bv> edge_fwd_wt;
-    /// delimits the records in edge_fwd_wt
-    //dyn::suc_bv edge_fwd_bv;
-    /// marks inverting edges in edge_fwd_wt
+
+    /// Marks inverting edges in edge_fwd_wt
     dyn::suc_bv edge_fwd_inv_bv;
-    /// records edges of the 3' end on the reverse strand, delimited by 0
+
+    /// Records edges of the 3' end on the reverse strand, delimited by 0
     dyn::wt_string<dyn::suc_bv> edge_rev_wt;
-    /// delimits the records in edge_rev_wt
-    //dyn::suc_bv edge_rev_bv;
-    /// marks inverting edges in edge_rev_wt
+
+    /// Marks inverting edges in edge_rev_wt
     dyn::suc_bv edge_rev_inv_bv;
 
     /// Encodes all of the sequences of all nodes and all paths in the graph.
     /// The node sequences occur in the same order as in graph_iv;
     dyn::wt_string<dyn::suc_bv> seq_wt;
-    //SuccinctDynamicVector seq_iv;
 
-    /// Same length as seq_iv. 1's indicate the beginning of a node's sequence.
-    //SuccinctDynamicVector boundary_bv;
+    /// Same length as seq_wt. 1's indicate the beginning of a node's sequence.
     dyn::suc_bv boundary_bv;
 
-    /// Same length as seq_iv. 0's indicate that a base is still touched by some
+    /// Same length as seq_wt. 0's indicate that a base is still touched by some
     /// node or some path. 1's indicate that all nodes or paths that touch this
     /// base have been deleted.
-    //SuccinctDynamicVector dead_bv;
     dyn::suc_bv dead_bv;
 
-    /// Encodes a self-balancing binary tree as integers. Consists of fixed-width
-    /// records that have the following structure:
-    /// {interval start, members index, parent index, left child index, right child index}
-    /// Interval start variable indicates the start of a range in seq_iv (corresponding to
-    /// a node, unless the node has been deleted), members index indicates the 1-based index
-    /// of the first path membership record corresponding to this interval in
-    /// path_membership_value_iv, and parent/left child/right child index indicates the
-    /// topology of a binary tree search structure for these intervals. The indexes are 1-based
-    /// with 0 indicating that the neighbor does not exist.
-    SuccinctDynamicVector path_membership_range_iv;
-
-    /// Encodes a series of linked lists. Consists of fixed-width records that have
-    /// the following structure:
-    /// {path id, rank, next index}
-    /// Path ID indicates which path the node occurs on, rank indicates the ordinal
-    /// position of this occurrence in the path, and next index indicates the 1-based
-    /// index of the next occurrence of this node in this vector (or 0 if there is none)
-    SuccinctDynamicVector path_membership_value_iv;
+    /// Ordered across the bases in seq_wt, stores the path ids (1-based) at each
+    /// segment in seq_wt, delimited by 0
+    dyn::wt_string<dyn::suc_bv> path_id_wt;
+    /// Stores the path step ranks at each segment in seq_wt, delemited by 0
+    dyn::wt_string<dyn::suc_bv> path_rank_wt;
 
     /// Encodes the embedded paths of the graph. Each path is represented as three vectors
     /// starts, lengths, orientations
@@ -430,9 +400,6 @@ private:
     /// indicating reverse strand.
     std::vector<path_t> paths;
 
-    size_t dead_bases;
-    size_t deleted_nodes;
-    size_t deleted_edges;
 };
 
 } // end dankness
