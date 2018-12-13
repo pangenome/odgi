@@ -10,6 +10,7 @@
 
 #include <cstdio>
 #include <cstdint>
+#include <algorithm>
 #include "sdsl/bit_vectors.hpp"
 #include "sdsl/enc_vector.hpp"
 #include "sdsl/dac_vector.hpp"
@@ -43,6 +44,10 @@ public:
         
     /// Remove the last value
     inline void pop();
+    
+    /// Either shrink the vector or grow the vector to the new size. New
+    /// entries created by growing are filled with 0.
+    inline void resize(size_t new_size);
         
     /// Returns the number of values
     inline size_t size() const;
@@ -63,7 +68,54 @@ private:
     static const double factor;
 };
     
+class SuccinctDeque {
+public:
+    SuccinctDeque(void);
+    ~SuccinctDeque(void);
     
+    /// Set the i-th value
+    inline void set(const size_t& i, const uint64_t& value);
+    
+    /// Returns the i-th value
+    inline uint64_t get(const size_t& i) const;
+    
+    /// Add a value to the front
+    inline void append_front(const uint64_t& value);
+    
+    /// Add a value to the back
+    inline void append_back(const uint64_t& value);
+    
+    /// Remove the front value
+    inline void pop_front();
+    
+    /// Remove the back value
+    inline void pop_back();
+    
+    /// Returns the number of values
+    inline size_t size() const;
+    
+    /// Returns true if there are no entries and false otherwise
+    inline bool empty() const;
+    
+    
+    
+private:
+    
+    inline void contract();
+    
+    inline size_t internal_index(const size_t& i) const;
+    
+    SuccinctDynamicVector vec;
+    
+    size_t begin_idx = 0;
+    size_t filled = 0;
+    static const double factor;
+};
+    
+/*
+ * A splay-tree implementation that stores keys, values, and pointers in
+ * bit-compressed form.
+ */
 class SuccinctSplayTree {
 
 public:
@@ -186,9 +238,29 @@ inline uint64_t SuccinctDynamicVector::get(const size_t& i) const {
 }
     
 inline void SuccinctDynamicVector::append(const uint64_t& value) {
-        
-    if (filled == vec.size()) {
-        size_t new_capacity = size_t(vec.size() * factor) + 1;
+    resize(filled + 1);
+    set(filled - 1, value);
+}
+    
+inline void SuccinctDynamicVector::pop() {
+    resize(filled - 1);
+}
+    
+inline void SuccinctDynamicVector::resize(size_t new_size) {
+    if (new_size < filled) {
+        size_t shrink_capacity = vec.size() / (factor * factor);
+        if (new_size < shrink_capacity) {
+            sdsl::int_vector<> tmp;
+            tmp.width(vec.width());
+            tmp.resize(new_size);
+            for (size_t i = 0; i < new_size; i++) {
+                tmp[i] = vec[i];
+            }
+            vec = std::move(tmp);
+        }
+    }
+    else if (new_size > vec.size()) {
+        size_t new_capacity = std::max<size_t>(size_t(vec.size() * factor) + 1, new_size);
         sdsl::int_vector<> tmp;
         tmp.width(vec.width());
         tmp.resize(new_capacity);
@@ -197,23 +269,7 @@ inline void SuccinctDynamicVector::append(const uint64_t& value) {
         }
         vec = std::move(tmp);
     }
-        
-    filled++;
-    set(filled - 1, value);
-}
-    
-inline void SuccinctDynamicVector::pop() {
-    filled--;
-    size_t shrink_capacity = vec.size() / (factor * factor);
-    if (filled < shrink_capacity) {
-        sdsl::int_vector<> tmp;
-        tmp.width(vec.width());
-        tmp.resize(shrink_capacity);
-        for (size_t i = 0; i < filled; i++) {
-            tmp[i] = vec[i];
-        }
-        vec = std::move(tmp);
-    }
+    filled = new_size;
 }
     
 inline size_t SuccinctDynamicVector::size() const {
@@ -275,6 +331,103 @@ inline void SuccinctSplayTree::set_right(size_t x, size_t y) {
     
 inline void SuccinctSplayTree::set_parent(size_t x, size_t y) {
     tree.set((x - 1) * NODE_SIZE + PARENT_OFFSET, y);
+}
+
+inline size_t SuccinctDeque::internal_index(const size_t& i) const {
+    assert(i < filled);
+    return i < vec.size() - begin_idx ? begin_idx + i : i - (vec.size() - begin_idx);
+}
+
+inline void SuccinctDeque::set(const size_t& i, const uint64_t& value) {
+    return vec.set(internal_index(i), value);
+}
+
+inline uint64_t SuccinctDeque::get(const size_t& i) const {
+    return vec.get(internal_index(i));
+}
+
+inline void SuccinctDeque::append_front(const uint64_t& value) {
+    if (filled == vec.size()) {
+        size_t new_capacity = size_t(factor * vec.size()) + 1;
+        SuccinctDynamicVector new_vec;
+        new_vec.resize(new_capacity);
+        
+        new_vec.set(0, value);
+        for (size_t i = 0; i < filled; i++) {
+            new_vec.set(i + 1, get(i));
+        }
+        
+        vec = new_vec;
+        begin_idx = 0;
+    }
+    else {
+        if (begin_idx == 0) {
+            begin_idx = vec.size() - 1;
+        }
+        else {
+            begin_idx--;
+        }
+        vec.set(begin_idx, value);
+    }
+    
+    filled++;
+}
+
+inline void SuccinctDeque::append_back(const uint64_t& value) {
+    if (filled == vec.size()) {
+        size_t new_capacity = size_t(factor * vec.size()) + 1;
+        SuccinctDynamicVector new_vec;
+        new_vec.resize(new_capacity);
+        
+        for (size_t i = 0; i < filled; i++) {
+            new_vec.set(i, get(i));
+        }
+        new_vec.set(filled, value);
+        
+        vec = new_vec;
+        begin_idx = 0;
+        filled++;
+    }
+    else {
+        filled++;
+        vec.set(internal_index(filled - 1), value);
+    }
+}
+    
+inline void SuccinctDeque::contract() {
+    size_t shrink_capacity = vec.size() / (factor * factor);
+    if (filled <= shrink_capacity) {
+        SuccinctDynamicVector new_vec;
+        new_vec.resize(filled);
+        for (size_t i = 0; i < filled; i++) {
+            new_vec.set(i, get(i));
+        }
+        
+        vec = new_vec;
+        begin_idx = 0;
+    }
+}
+
+inline void SuccinctDeque::pop_front() {
+    begin_idx++;
+    if (begin_idx == vec.size()) {
+        begin_idx = 0;
+    }
+    filled--;
+    contract();
+}
+
+inline void SuccinctDeque::pop_back() {
+    filled--;
+    contract();
+}
+
+inline size_t SuccinctDeque::size() const {
+    return filled;
+}
+
+inline bool SuccinctDeque::empty() const {
+    return filled == 0;
 }
 }
 

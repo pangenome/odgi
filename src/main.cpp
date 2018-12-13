@@ -4,6 +4,7 @@
 #include <vector>
 #include <map>
 #include <unordered_set>
+#include <deque>
 
 using namespace dankgraph;
 
@@ -80,6 +81,98 @@ void test_dynamic_vector() {
                         
             assert(std_vec.empty() == dyn_vec.empty());
             assert(std_vec.size() == dyn_vec.size());
+        }
+    }
+}
+
+void test_deque() {
+    
+    enum deque_op_t {SET = 0, GET = 1, APPEND_LEFT = 2, POP_LEFT = 3, APPEND_RIGHT = 4, POP_RIGHT = 5};
+    std::random_device rd;
+    std::default_random_engine prng(rd());
+    std::uniform_int_distribution<int> op_distr(0, 5);
+    
+    int num_runs = 10000;
+    int num_ops = 300;
+    int gets_per_op = 5;
+    int sets_per_op = 5;
+    int appends_per_op = 3;
+    int pops_per_op = 1;
+    
+    for (size_t i = 0; i < num_runs; i++) {
+        
+        uint64_t next_val = 0;
+        
+        std::deque<uint64_t> std_deq;
+        SuccinctDeque suc_deq;
+        
+        for (size_t j = 0; j < num_ops; j++) {
+            
+            deque_op_t op = (deque_op_t) op_distr(prng);
+            switch (op) {
+                case SET:
+                    if (!std_deq.empty()) {
+                        for (size_t k = 0; k < sets_per_op; k++) {
+                            size_t idx = prng() % std_deq.size();
+                            std_deq[idx] = next_val;
+                            suc_deq.set(idx, next_val);
+                            next_val++;
+                        }
+                    }
+                    
+                    break;
+                    
+                case GET:
+                    if (!std_deq.empty()) {
+                        for (size_t k = 0; k < gets_per_op; k++) {
+                            size_t idx = prng() % std_deq.size();
+                            assert(std_deq[idx] == suc_deq.get(idx));
+                            next_val++;
+                        }
+                    }
+                    
+                    break;
+                    
+                case APPEND_LEFT:
+                    for (size_t k = 0; k < appends_per_op; k++) {
+                        std_deq.push_front(next_val);
+                        suc_deq.append_front(next_val);
+                        next_val++;
+                    }
+                    
+                    break;
+                    
+                case POP_LEFT:
+                    for (size_t k = 0; k < pops_per_op && !std_deq.empty(); k++) {
+                        std_deq.pop_front();
+                        suc_deq.pop_front();
+                    }
+                    
+                    break;
+                    
+                case APPEND_RIGHT:
+                    for (size_t k = 0; k < appends_per_op; k++) {
+                        std_deq.push_back(next_val);
+                        suc_deq.append_back(next_val);
+                        next_val++;
+                    }
+                    
+                    break;
+                    
+                case POP_RIGHT:
+                    for (size_t k = 0; k < pops_per_op && !std_deq.empty(); k++) {
+                        std_deq.pop_back();
+                        suc_deq.pop_back();
+                    }
+                    
+                    break;
+                    
+                default:
+                    break;
+            }
+            
+            assert(std_deq.empty() == suc_deq.empty());
+            assert(std_deq.size() == suc_deq.size());
         }
     }
 }
@@ -209,6 +302,7 @@ void test_splay_tree() {
 int main(void){
     
     test_dynamic_vector();
+    test_deque();
     test_splay_tree();
     
     return 0;
