@@ -1,7 +1,5 @@
 //
 //  dgraph.hpp
-//  
-//
 //
 
 #ifndef dgraph_hpp

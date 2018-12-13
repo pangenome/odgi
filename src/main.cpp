@@ -1,4 +1,4 @@
-#include "dgraph.hpp"
+#include "graph.hpp"
 #include "dynamic_structs.hpp"
 
 using namespace dankgraph;
