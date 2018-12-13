@@ -25,8 +25,40 @@ struct id_emitter_factory{
 };
 
 
+
+
 inline void dank_to_gfa_stream(SuccinctDynamicSequenceGraph* sd, std::ostream& os) const {
-    
+    gfak::GFAKluge gg;
+    gg.set_version(2.0);
+
+    std::function<bool(const handle_t&)> node_handle_to_kluge = [&](const handle_t& h){
+        gfak::sequence_elem s;
+        s.name = std::to_string(sd->get_id(h));
+        s.length = sd->get_length(h);
+        s.sequence = sd->get_sequence(h);
+        gg.write_element(os, s);
+        return true;
+    };
+    sd->for_each_handle(node_handle_to_kluge);
+
+    std::function<bool(const edge_t&)> edge_to_kluge = [&](const edge_t& e){
+        gfak::edge_elem e_elem;
+        e_elem.source_name = std::to_string(sd->get_id(e.first));
+        e_elem.sink_name = std::to_string(sd->get_id(e.second));
+        e_elem.source_orientation_forward = true;
+        e_elem.sink_orientation_forward = true;
+        e_elem.type = 1;
+        e_elem.ends.set(0,1);
+        e_elem.ends.set(1,1);
+        e_elem.ends.set(2,0);
+        e_elem.ends.set(3,0);
+        e_elem.cigar = "0M";
+        e_id = "*";
+        gg.write_element(os, e_elem);
+        return true;
+    };
+
+    sd->for_each_edge(edge_to_kluge);
 };
 
 inline void dank_from_gfa_file(char* filename, SuccinctDynamicSequenceGraph* sd) const{
@@ -35,8 +67,6 @@ inline void dank_from_gfa_file(char* filename, SuccinctDynamicSequenceGraph* sd)
     gfak::GFAKluge gg;
     gg.parse_gfa_file(std::string(filename));
 
-
-    
     // Load up our nodes
     map<string, gfak::sequence_elem,custom_key> seqs = gg.get_name_to_seq();
     map<string, gfak::edge_elem> edges = gg.get_seq_to_edges();
