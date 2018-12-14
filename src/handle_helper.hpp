@@ -1,6 +1,7 @@
 #ifndef dgraph_handle_helper
 #define dgraph_handle_helper
 #include <cstdint>
+#include <cassert>
 #include "handle_types.hpp"
 
 namespace dankgraph{
@@ -33,7 +34,6 @@ inline bool operator==(const handle_t& a, const handle_t& b) {
 inline bool operator!=(const handle_t& a, const handle_t& b) {
     return as_integer(a) != as_integer(b);
 }
-
 
 struct handle_helper{
 

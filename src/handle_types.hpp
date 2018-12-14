@@ -3,12 +3,13 @@
 #include <cstdint>
 #include <utility>
 
+
 namespace dankgraph{
 
 /// represents an id
 typedef int64_t id_t;
 /// represents an offset
-typedef size_t off_t;
+typedef std::size_t off_t;
 /// represents a position
 typedef std::tuple<id_t, bool, off_t> pos_t;
 /// represents the internal id of a node traversal
