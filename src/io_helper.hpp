@@ -32,7 +32,10 @@ struct id_emitter_factory{
 inline void gfa_to_beta(const char* filename, betagraph::BGraph* bg){
     gfak::GFAKluge gg;
     gg.parse_gfa_file(string(filename));
-    
+
+    for (auto s : gg.get_name_to_seq()){
+        
+    }
 };
 
 inline void dank_to_gfa_stream(SuccinctDynamicSequenceGraph* sd, std::ostream& os) {

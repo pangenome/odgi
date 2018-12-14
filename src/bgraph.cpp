@@ -144,18 +144,24 @@ namespace betagraph{
     // TODO: allow stopping early?
     void BGraph::for_each_path_handle(const std::function<void(const path_handle_t&)>& iteratee) const{
 
-        std::cerr << "Not implemented" << std::endl;
-        exit(1);
+        for (auto p : paths.paths){
+            iteratee(get_path_handle(p.first));
+        }
     }
     
-    /// Get a node handle (node ID and orientation) from a handle to an occurrence on a path
+    // Get a node handle (node ID and orientation) from a handle to an occurrence on a path
     // handle_t BGraph::get_occurrence(const occurrence_handle_t& occurrence_handle) const{
 
     // }
     
-//     /// Get a handle to the first occurrence in a path.
-//     /// The path MUST be nonempty.
-//     occurrence_handle_t get_first_occurrence(const path_handle_t& path_handle) const;
+    /// Get a handle to the first occurrence in a path.
+    /// The path MUST be nonempty.
+    dankgraph::occurrence_handle_t BGraph::get_first_occurrence(const path_handle_t& path_handle) const{
+        dankgraph::occurrence_handle_t x;
+        as_integers(x)[0] = as_integer(path_handle);
+        as_integers(x)[1] = (paths.paths.at(get_path_name(path_handle)).occurrences[0].id);
+        return x;
+    }
     
 //     /// Get a handle to the last occurrence in a path
 //     /// The path MUST be nonempty.
