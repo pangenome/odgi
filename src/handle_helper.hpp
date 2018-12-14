@@ -1,6 +1,7 @@
 #ifndef dgraph_handle_helper
 #define dgraph_handle_helper
 #include <cstdint>
+#include <cassert>
 #include "handle_types.hpp"
 
 namespace dankgraph{
@@ -32,6 +33,56 @@ inline bool operator==(const handle_t& a, const handle_t& b) {
 /// Define inequality on handles
 inline bool operator!=(const handle_t& a, const handle_t& b) {
     return as_integer(a) != as_integer(b);
+}
+
+/// View a path handle as an integer
+inline int64_t& as_integer(path_handle_t& path_handle) {
+    return reinterpret_cast<int64_t&>(path_handle);
+}
+
+/// View a const path handle as a const integer
+inline const int64_t& as_integer(const path_handle_t& path_handle) {
+    return reinterpret_cast<const int64_t&>(path_handle);
+}
+
+/// View an integer as a path handle
+inline path_handle_t& as_path_handle(int64_t& value) {
+    return reinterpret_cast<path_handle_t&>(value);
+}
+
+/// View a const integer as a const path handle
+inline const path_handle_t& as_path_handle(const int64_t& value) {
+    return reinterpret_cast<const path_handle_t&>(value);
+}
+
+/// Define equality on path handles
+inline bool operator==(const path_handle_t& a, const path_handle_t& b) {
+    return as_integer(a) == as_integer(b);
+}
+
+/// Define inequality on path handles
+inline bool operator!=(const path_handle_t& a, const path_handle_t& b) {
+    return as_integer(a) != as_integer(b);
+}
+    
+/// View an occurrence handle as an integer
+inline int64_t* as_integers(occurrence_handle_t& occurrence_handle) {
+    return reinterpret_cast<int64_t*>(&occurrence_handle);
+}
+
+/// View a const occurrence handle as a const integer
+inline const int64_t* as_integers(const occurrence_handle_t& occurrence_handle) {
+    return reinterpret_cast<const int64_t*>(&occurrence_handle);
+}
+
+/// Define equality on occurrence handles
+inline bool operator==(const occurrence_handle_t& a, const occurrence_handle_t& b) {
+    return as_integers(a)[0] == as_integers(b)[0] && as_integers(a)[1] == as_integers(b)[1];
+}
+
+/// Define inequality on occurrence handles
+inline bool operator!=(const occurrence_handle_t& a, const occurrence_handle_t& b) {
+    return !(a == b);
 }
 
 
