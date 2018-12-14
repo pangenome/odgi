@@ -27,6 +27,8 @@ namespace dankgraph {
         
         // TODO: don't duplicate an existing node
         
+        std::cerr << "creating node record" << std::endl;
+        
         // no edges yet, null pointer for linked list
         graph_iv.append(0);
         graph_iv.append(0);
@@ -34,17 +36,21 @@ namespace dankgraph {
         graph_iv.append(seq_iv.size());
         graph_iv.append(sequence.size());
         
+        std::cerr << "adding sequence" << std::endl;
         // encode the sequence interval
         for (size_t i = 0; i < sequence.size(); i++) {
             seq_iv.append(encode_nucleotide(sequence[i]));
             boundary_bv.append(i ? 0 : 1);
         }
         
+        std::cerr << "expanding id vector" << std::endl;
         // expand the ID vector's dimensions so it can handle the full ID interval
         if (id_to_graph_iv.empty()) {
+            std::cerr << "adding initial" << std::endl;
             id_to_graph_iv.append_back(0);
         }
         else {
+            std::cerr << "doing range expansion" << std::endl;
             for (int64_t i = id; i < min_id; i++) {
                 id_to_graph_iv.append_front(0);
             }
@@ -55,23 +61,30 @@ namespace dankgraph {
         
         // update the min and max ID
         max_id = std::max(id, max_id);
-        min_id = std::max(id, min_id);
+        min_id = std::min(id, min_id);
         
+        std::cerr << "setting id pointer at " << id - min_id << " of " << id_to_graph_iv.size() << std::endl;
         // record the mapping of the ID to the graph record
         id_to_graph_iv.set(id - min_id, graph_iv.size() / GRAPH_RECORD_SIZE);
+        
+        std::cerr << "finished creating node " << id << std::endl;
         
         return get_handle(id);
     }
     
     void SuccinctDynamicSequenceGraph::create_edge(const handle_t& left, const handle_t& right) {
         
+        
+        std::cerr << "creating edge " << get_id(left) << (get_is_reverse(left) ? "-" :"+") << "->" << get_id(right) << (get_is_reverse(right) ? "-" :"+") << std::endl;
+        
         // look for the edge
         bool add_edge = follow_edges(left, false, [&](const handle_t& next) {
-            return next == right;
+            return next != right;
         });
         
         // don't duplicate it
         if (!add_edge) {
+            std::cerr << "this is a duplicate edge" << std::endl;
             return;
         }
         
@@ -79,9 +92,9 @@ namespace dankgraph {
         size_t g_iv_left = graph_iv_index(left) + (get_is_reverse(left) ?
                                                    GRAPH_START_EDGES_OFFSET :
                                                    GRAPH_END_EDGES_OFFSET);
-        size_t g_iv_right = graph_iv_index(left) + (get_is_reverse(left) ?
-                                                    GRAPH_END_EDGES_OFFSET :
-                                                    GRAPH_START_EDGES_OFFSET);
+        size_t g_iv_right = graph_iv_index(right) + (get_is_reverse(right) ?
+                                                     GRAPH_END_EDGES_OFFSET :
+                                                     GRAPH_START_EDGES_OFFSET);
         
         // add a new linked list node pointing to the rest of the list
         edge_lists_iv.append(encode_edge_target(right));
@@ -125,7 +138,7 @@ namespace dankgraph {
         size_t g_iv_index = graph_iv_index(handle);
         size_t seq_start = graph_iv.get(g_iv_index + GRAPH_SEQ_START_OFFSET);
         size_t seq_len = graph_iv.get(g_iv_index + GRAPH_SEQ_LENGTH_OFFSET);
-        std::string seq(seq_len, 'A');
+        std::string seq(seq_len, 'N');
         for (size_t i = 0; i < seq_len; i++) {
             seq[i] = decode_nucleotide(seq_iv.get(seq_start + i));
         }
@@ -353,25 +366,40 @@ namespace dankgraph {
     
     void SuccinctDynamicSequenceGraph::remove_edge_reference(const handle_t& on, const handle_t& to) {
         
-        handle_t looking_for = get_is_reverse(on) ? flip(to) : to;
+        // Note: this function assumes that edge ref exists, crashes otherwise
         
+        std::cerr << "removing edge ref on " << get_id(on) << (get_is_reverse(on) ? "-" : "+") << " to " << get_id(to) << (get_is_reverse(to) ? "-" : "+") << std::endl;
+//        handle_t looking_for = get_is_reverse(on) ? flip(to) : to;
+//        std::cerr << "we are looking for " << get_id(looking_for) << (get_is_reverse(looking_for) ? "-" : "+") << std::endl;
+        
+        std::cerr << "getting edge list pointer" << std::endl;
+        std::cerr << "initial node record for " << get_id(on) << " is at " << graph_iv_index(on) << std::endl;
         size_t g_iv_idx = graph_iv_index(on) + (get_is_reverse(on)
-                                                ? GRAPH_END_EDGES_OFFSET
-                                                : GRAPH_START_EDGES_OFFSET);
+                                                ? GRAPH_START_EDGES_OFFSET
+                                                : GRAPH_END_EDGES_OFFSET);
+        std::cerr << "accessing edge list at " << g_iv_idx << " of " << graph_iv.size() << std::endl;
         size_t edge_list_idx = graph_iv.get(g_iv_idx);
+        std::cerr << "edge list head is at " << edge_list_idx << " of " << edge_lists_iv.size() << std::endl;
+        std::cerr << "target is " << get_id(decode_edge_target(get_edge_target(edge_list_idx))) << (get_is_reverse(decode_edge_target(get_edge_target(edge_list_idx))) ? "-" : "+") << std::endl;
         
-        if (decode_edge_target(get_edge_target(edge_list_idx)) == looking_for) {
+        if (decode_edge_target(get_edge_target(edge_list_idx)) == to) {
+            std::cerr << "edge is at head of list" << std::endl;
             // the edge back to the deleting node is the first in the list, so we need
             // to update the head
             graph_iv.set(g_iv_idx, get_next_edge_index(edge_list_idx));
         }
         else {
+            std::cerr << "edge is not at head" << std::endl;
             // we need to traverse down the list and to find the edge back
             size_t prev_edge_list_idx = edge_list_idx;
             edge_list_idx = get_next_edge_index(edge_list_idx);
-            while (decode_edge_target(get_edge_target(edge_list_idx)) != looking_for) {
+            std::cerr << "next edge is at " << edge_list_idx << std::endl;
+            std::cerr << "target is " << get_id(decode_edge_target(get_edge_target(edge_list_idx))) << (get_is_reverse(decode_edge_target(get_edge_target(edge_list_idx))) ? "-" : "+") << std::endl;
+            while (decode_edge_target(get_edge_target(edge_list_idx)) != to) {
                 prev_edge_list_idx = edge_list_idx;
                 edge_list_idx = get_next_edge_index(edge_list_idx);
+                std::cerr << "next edge is at " << edge_list_idx << std::endl;
+                std::cerr << "target is " << get_id(decode_edge_target(get_edge_target(edge_list_idx))) << (get_is_reverse(decode_edge_target(get_edge_target(edge_list_idx))) ? "-" : "+") << std::endl;
             }
             // skip over this edge in this linked list
             edge_lists_iv.set((prev_edge_list_idx - 1) * EDGE_RECORD_SIZE + EDGE_NEXT_OFFSET,
@@ -388,6 +416,7 @@ namespace dankgraph {
     
     void SuccinctDynamicSequenceGraph::defragment(void) {
         if (deleted_node_records > defrag_factor * (graph_iv.size() / GRAPH_RECORD_SIZE)) {
+            std::cerr << "defragging graph vector" << std::endl;
             // adjust the start
             while (id_to_graph_iv.empty() ? false : id_to_graph_iv.get(0) == 0) {
                 id_to_graph_iv.pop_front();
@@ -416,31 +445,36 @@ namespace dankgraph {
             // replace graph_iv with the defragged copy
             graph_iv = new_graph_iv;
             deleted_node_records = 0;
+            std::cerr << "finished defragging node vector" << std::endl;
         }
         
         // TODO: defrag the seq_iv?
         
         if (deleted_edge_records > defrag_factor * (edge_lists_iv.size() / EDGE_RECORD_SIZE)) {
             
+            std::cerr << "defragging edge vector" << std::endl;
             SuccinctDynamicVector new_edge_lists_iv;
             
             for (size_t i = 0; i < id_to_graph_iv.size(); i++) {
-                size_t g_iv_idx = id_to_graph_iv.get(i);
-                if (g_iv_idx) {
-                    for (bool on_start : {true, false}) {
-                        // are we doing the start or the end edges?
-                        size_t which_edge_offset = on_start ? GRAPH_START_EDGES_OFFSET : GRAPH_END_EDGES_OFFSET;
-                        
-                        size_t edge_list_idx = graph_iv.get(g_iv_idx + which_edge_offset);
+                size_t raw_g_iv_idx = id_to_graph_iv.get(i);
+                if (raw_g_iv_idx) {
+                    std::cerr << "found node at ID " << min_id + i << " with raw index " << raw_g_iv_idx << std::endl;
+                    // this node still exists
+                    size_t g_iv_idx = (raw_g_iv_idx - 1) * GRAPH_RECORD_SIZE;
+                    for (size_t edge_list_offset : {GRAPH_START_EDGES_OFFSET, GRAPH_END_EDGES_OFFSET}) {
+                        std::cerr << "handling edge list at offset " << edge_list_offset << " from " << g_iv_idx << std::endl;
+                        size_t edge_list_idx = graph_iv.get(g_iv_idx + edge_list_offset);
+                        std::cerr << "edges start at index " << edge_list_idx << std::endl;
                         if (edge_list_idx) {
                             // add a new edge record
                             new_edge_lists_iv.append(get_edge_target(edge_list_idx));
                             new_edge_lists_iv.append(0);
                             // point the graph vector at this new edge list
-                            graph_iv.set(g_iv_idx + which_edge_offset, new_edge_lists_iv.size() / EDGE_RECORD_SIZE);
+                            graph_iv.set(g_iv_idx + edge_list_offset, new_edge_lists_iv.size() / EDGE_RECORD_SIZE);
                             
                             edge_list_idx = get_next_edge_index(edge_list_idx);
                             while (edge_list_idx) {
+                                std::cerr << "next edge is at " << edge_list_idx << std::endl;
                                 // add a new edge record
                                 new_edge_lists_iv.append(get_edge_target(edge_list_idx));
                                 new_edge_lists_iv.append(0);
@@ -458,6 +492,7 @@ namespace dankgraph {
             edge_lists_iv = new_edge_lists_iv;
             
             deleted_edge_records = 0;
+            std::cerr << "finished defragging edge vector" << std::endl;
         }
     }
     

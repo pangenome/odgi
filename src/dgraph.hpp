@@ -360,7 +360,7 @@ inline char SuccinctDynamicSequenceGraph::decode_nucleotide(const uint64_t& val)
 }
     
 inline size_t SuccinctDynamicSequenceGraph::graph_iv_index(const handle_t& handle) const {
-    return (id_to_graph_iv.get(get_id(handle)) - 1) * GRAPH_RECORD_SIZE;
+    return (id_to_graph_iv.get(get_id(handle) - min_id) - 1) * GRAPH_RECORD_SIZE;
 }
     
 inline const uint64_t& SuccinctDynamicSequenceGraph::encode_edge_target(const handle_t& handle) const {
