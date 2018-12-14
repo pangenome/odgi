@@ -33,6 +33,8 @@ inline void gfa_to_beta(const char* filename, betagraph::BGraph* bg){
     gfak::GFAKluge gg;
     gg.parse_gfa_file(string(filename));
 
+    bg = new BGraph();
+
     for (auto s : gg.get_name_to_seq()){
         
     }

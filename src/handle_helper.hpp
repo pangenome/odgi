@@ -114,5 +114,29 @@ struct handle_helper{
 
 }
 
+namespace std {
+
+/**
+ * Define hashes for handles.
+ */
+template<> struct hash<dankgraph::handle_t> {
+public:
+    inline size_t operator()(const dankgraph::handle_t& handle) const {
+        return std::hash<int64_t>()(dankgraph::as_integer(handle));
+    }
+};
+
+/**
+ * Define hashes for path handles.
+ */
+template<> struct hash<dankgraph::path_handle_t> {
+public:
+    inline size_t operator()(const dankgraph::path_handle_t& path_handle) const {
+        return std::hash<int64_t>()(dankgraph::as_integer(path_handle));
+    }
+};
+
+}
+
 
 #endif

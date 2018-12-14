@@ -15,6 +15,7 @@ namespace betagraph{
 public:
     BGraph();
     ~BGraph();
+
         
     /// Look up the handle for the node with the given ID in the given orientation
     handle_t get_handle(const dankgraph::id_t& node_id, bool is_reverse = false) const;
