@@ -204,6 +204,9 @@ public:
     /// Execute a function on each path in the graph
     // TODO: allow stopping early?
     void for_each_path_handle(const std::function<void(const path_handle_t&)>& iteratee) const;
+
+    /// Enumerate the path occurrences on a given handle (strand agnostic) *TODO move to vg
+    void for_each_occurrence_on_handle(const handle_t& handle, const std::function<void(const occurrence_handle_t&)>& iteratee) const;
     
     /// Get a node handle (node ID and orientation) from a handle to an occurrence on a path
     handle_t get_occurrence(const occurrence_handle_t& occurrence_handle) const;
@@ -272,7 +275,10 @@ public:
     /// Create an edge connecting the given handles in the given order and orientations.
     /// Ignores existing edges.
     void create_edge(const handle_t& left, const handle_t& right);
-    
+
+    /// Check if an edge exists
+    bool has_edge(const handle_t& left, const handle_t& right);
+
     /// Convenient wrapper for create_edge.
     inline void create_edge(const edge_t& edge) {
         create_edge(edge.first, edge.second);
@@ -364,12 +370,14 @@ private:
     id_t _min_node_id = 0;
 
     /// Records edges of the 3' end on the forward strand, delimited by 0
+    /// ordered by rank in graph_id_wt, defined by opposite rank+1 (handle)
     dyn::wt_string<dyn::suc_bv> edge_fwd_wt;
 
     /// Marks inverting edges in edge_fwd_wt
     dyn::suc_bv edge_fwd_inv_bv;
 
-    /// Records edges of the 3' end on the reverse strand, delimited by 0
+    /// Records edges of the 3' end on the reverse strand, delimited by 0,
+    /// ordered by rank in graph_id_wt, defined by opposite rank+1 (handle)
     dyn::wt_string<dyn::suc_bv> edge_rev_wt;
 
     /// Marks inverting edges in edge_rev_wt
@@ -377,23 +385,20 @@ private:
 
     /// Encodes all of the sequences of all nodes and all paths in the graph.
     /// The node sequences occur in the same order as in graph_iv;
+    /// Node boundaries are given by 0s
     dyn::wt_string<dyn::suc_bv> seq_wt;
 
-    /// Same length as seq_wt. 1's indicate the beginning of a node's sequence.
-    dyn::suc_bv boundary_bv;
-
-    /// Same length as seq_wt. 0's indicate that a base is still in the public graph.
-    /// 1's indicate that this base has been deleted from the public topology of the graph.
-    /// 2's indicate that all nodes or paths that touch this base have been deleted,
-    /// and it may be collected in the next compaction cycle.
-    dyn::wt_string<dyn::rle_str> dead_wt;
-
-    /// Ordered across the bases in seq_wt, stores the path ids (1-based) at each
+    /// Ordered across the nodes in graph_id_wt, stores the path ids (1-based) at each
     /// segment in seq_wt, delimited by 0
     dyn::wt_string<dyn::suc_bv> path_id_wt;
 
-    /// Stores the path step ranks at each segment in seq_wt, delemited by 0
-    /// Note that these can be redundant, in the case of a node division.
+    /// Ordered across the nodes in graph_id_wt, stores the (1-based) rank of the
+    /// particular node traversal in each path. The stored value is the rank of the
+    /// node id among in the path id list. For paths that cross a given node once,
+    /// this will simply be 1. Each subsequent crossing will yield 2, 3, ... etc.
+    /// This provides a mapping between graph node id and the occurrence_handle_t
+    /// that is dynamically derivable and robust to the modification of any other part
+    /// of the path.
     dyn::wt_string<dyn::suc_bv> path_rank_wt;
 
     /// Stores path names in their internal order, delimited by '$'
@@ -403,11 +408,12 @@ private:
     dyn::suc_bv path_name_bv;
 
     /// Encodes the embedded paths of the graph. Each path is represented as three vectors
-    /// starts, lengths, orientations
-    /// The values in starts correspond to the 0-based indexes of an interval in seq_iv.
-    /// The values in lengths are simply the length.
+    /// ids, strand, sequences
+    /// The values in starts correspond to the ids in graph_id_wt.
     /// The strand of this interval is given by the corresponding bit in orientations, with 1
     /// indicating reverse strand.
+    /// Sequence in the path that does not map to the graph is stored in the sequence vector
+    /// and referred to using the node id 0.
     std::vector<path_t> paths;
 
     /// A helper to record the number of live nodes
