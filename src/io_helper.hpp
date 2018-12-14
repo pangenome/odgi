@@ -31,13 +31,36 @@ struct id_emitter_factory{
 
 inline void gfa_to_beta(const char* filename, betagraph::BGraph* bg){
     gfak::GFAKluge gg;
-    gg.parse_gfa_file(string(filename));
+    double version = gg.detect_version_from_file(filename);
 
     bg = new BGraph();
 
-    for (auto s : gg.get_name_to_seq()){
-        
+    std::function<void(gfak::sequence_elem)> seqfunc = [&](gfak::sequence_elem s){
+
+    };
+
+    std::function<void(gfak::edge_elem)> edgefunc = [&](gfak::edge_elem e){
+
+    };
+
+    std::function<void(gfak::path_elem)> pathfunc = [&](gfak::path_elem p){
+
+    };
+
+    std::function<void(gfak::group_elem)> groupfunc = [&](gfak::group_elem g){
+
+    };
+
+    gg.for_each_sequence_line_in_file(filename, seqfunc);
+    gg.for_each_edge_line_in_file(filename, edge_func);
+    if (version == 1.0){
+        gg.for_each_path_line_in_file(filename, pathfunc);
     }
+    else if (version == 2.0){
+        gg.for_each_group_line_in_file(filename, groupfunc)
+    }
+
+
 };
 
 inline void dank_to_gfa_stream(SuccinctDynamicSequenceGraph* sd, std::ostream& os) {
