@@ -35,7 +35,7 @@ inline bool operator!=(const handle_t& a, const handle_t& b) {
 }
 
 
-struct handle_helper{
+struct EasyHandlePacking {
 
     /// Extract the packed integer
     inline static uint64_t unpack_number(const handle_t& handle) {

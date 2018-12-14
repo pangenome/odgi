@@ -97,7 +97,8 @@ public:
     /// Returns true if there are no entries and false otherwise
     inline bool empty() const;
     
-    
+    /// Empty the contents
+    inline void clear();
     
 private:
     
@@ -282,6 +283,7 @@ inline bool SuccinctDynamicVector::empty() const {
 
 inline void SuccinctDynamicVector::clear() {
     vec.resize(0);
+    vec.width(1);
     filled = 0;
 }
     
@@ -428,6 +430,12 @@ inline size_t SuccinctDeque::size() const {
 
 inline bool SuccinctDeque::empty() const {
     return filled == 0;
+}
+    
+inline void SuccinctDeque::clear() {
+    vec.clear();
+    filled = 0;
+    begin_idx = 0;
 }
 }
 

@@ -242,29 +242,38 @@ public:
 /// These are the backing data structures that we use to fulfill the above functions
 
 private:
+    // TODO: delete this later, very duplicative
+    inline std::string reverse_complement(const std::string& seq) const;
     
     id_t max_id = 0;
     id_t min_id = std::numeric_limits<id_t>::max();
     
-    inline uint8_t encode_nucleotide(const char& nt);
-    inline char decode_nucleotide(const uint64_t& val);
-    inline uint64_t complement_encoded_nucleotide(const uint64_t& val);
-    inline size_t graph_iv_index(const handle_t& handle);
-    inline uint64_t encode_edge_target(const handle_t& handle);
-    inline handle decode_edge_target(const handle_t& handle);
+    inline uint8_t encode_nucleotide(const char& nt) const;
+    inline char decode_nucleotide(const uint64_t& val) const;
+    inline uint64_t complement_encoded_nucleotide(const uint64_t& val) const;
+    inline size_t graph_iv_index(const handle_t& handle) const;
+    inline const uint64_t& encode_edge_target(const handle_t& handle) const;
+    inline const handle_t& decode_edge_target(const uint64_t& val) const;
+    inline const uint64_t get_next_edge_index(const uint64_t& edge_index) const;
+    inline const uint64_t get_edge_target(const uint64_t& edge_index) const;
+    void remove_edge_reference(const handle_t& on, const handle_t& to);
+    void defragment(void);
     
-    const static size_t GRAPH_RECORD_SIZE = 5;
     
-    const static size_t GRAPH_ID_OFFSET = 0;
-    const static size_t GRAPH_START_EDGES_OFFSET = 1;
-    const static size_t GRAPH_END_EDGES_OFFSET = 2;
-    const static size_t GRAPH_SEQ_START_OFFSET = 3;
-    const static size_t GRAPH_SEQ_LENGTH_OFFSET = 4;
+    const static size_t GRAPH_RECORD_SIZE = 4;
+    
+    const static size_t GRAPH_START_EDGES_OFFSET = 0;
+    const static size_t GRAPH_END_EDGES_OFFSET = 1;
+    const static size_t GRAPH_SEQ_START_OFFSET = 2;
+    const static size_t GRAPH_SEQ_LENGTH_OFFSET = 3;
     
     const static size_t EDGE_RECORD_SIZE = 2;
     
     const static size_t EDGE_TRAV_OFFSET = 0;
     const static size_t EDGE_NEXT_OFFSET = 1;
+    
+    // defragment when the deleted records are this fraction of the whole
+    const static double defrag_factor;
     
     /// Encodes the topology of the graph.
     /// {ID, start edge list index, end edge list index, seq index, seq length}
@@ -299,7 +308,7 @@ private:
     /// path_membership_value_iv, and parent/left child/right child index indicates the
     /// topology of a binary tree search structure for these intervals. The indexes are 1-based
     /// with 0 indicating that the neighbor does not exist.
-    SuccinctDynamicVector path_membership_range_iv;
+    SuccinctSplayTree path_membership_range_iv;
 
     /// Encodes a series of linked lists. Consists of fixed-width records that have
     /// the following structure:
@@ -317,12 +326,12 @@ private:
     /// indicating reverse strand.
     std::vector<path_t> paths;
 
-    size_t dead_bases;
-    size_t deleted_nodes;
-    size_t deleted_edges;
+    size_t dead_bases = 0;
+    size_t deleted_node_records = 0;
+    size_t deleted_edge_records = 0;
 };
     
-inline uint8_t SuccinctDynamicSequenceGraph::encode_nucleotide(const char& nt) {
+inline uint8_t SuccinctDynamicSequenceGraph::encode_nucleotide(const char& nt) const {
     if (nt == 'a' || nt == 'A') {
         return 0;
     }
@@ -341,29 +350,37 @@ inline uint8_t SuccinctDynamicSequenceGraph::encode_nucleotide(const char& nt) {
     }
 }
     
-inline uint64_t SuccinctDynamicSequenceGraph::complement_encoded_nucleotide(const uint64_t& val) {
+inline uint64_t SuccinctDynamicSequenceGraph::complement_encoded_nucleotide(const uint64_t& val) const {
     return val == 4 ? 4 : 3 - val;
 }
     
-inline uint8_t SuccinctDynamicSequenceGraph::decode_nucleotide(const uint64_t& val) {
+inline char SuccinctDynamicSequenceGraph::decode_nucleotide(const uint64_t& val) const {
     static const char* alphabet = "ACGTN";
     return alphabet[val];
 }
     
-inline size_t SuccinctDynamicSequenceGraph::graph_iv_index(const handle_t& handle) {
+inline size_t SuccinctDynamicSequenceGraph::graph_iv_index(const handle_t& handle) const {
     return (id_to_graph_iv.get(get_id(handle)) - 1) * GRAPH_RECORD_SIZE;
 }
     
-inline uint64_t SuccinctDynamicSequenceGraph::encode_edge_target(const handle_t& handle) {
-    return reinterpret_cast<uint64_t>(handle);
+inline const uint64_t& SuccinctDynamicSequenceGraph::encode_edge_target(const handle_t& handle) const {
+    return reinterpret_cast<const uint64_t&>(handle);
 }
     
-inline handle_t SuccinctDynamicSequenceGraph::decode_edge_target(const uint64_t& val) {
-    return reinterpret_cast<handle_t>(val);
+inline const handle_t& SuccinctDynamicSequenceGraph::decode_edge_target(const uint64_t& val) const {
+    return reinterpret_cast<const handle_t&>(val);
 }
-    
-std::string reverse_complement(const std::string& seq) {
-    std::string rev_comp(seq.size());
+
+inline const uint64_t SuccinctDynamicSequenceGraph::get_next_edge_index(const uint64_t& edge_index) const {
+    return edge_lists_iv.get((edge_index - 1) * EDGE_RECORD_SIZE + EDGE_NEXT_OFFSET);
+}
+
+inline const uint64_t SuccinctDynamicSequenceGraph::get_edge_target(const uint64_t& edge_index) const {
+    return edge_lists_iv.get((edge_index - 1) * EDGE_RECORD_SIZE + EDGE_TRAV_OFFSET);
+}
+
+inline std::string SuccinctDynamicSequenceGraph::reverse_complement(const std::string& seq) const {
+    std::string rev_comp(seq.size(), 'A');
     for (size_t i = 0; i < seq.size(); i++) {
         char nt = seq.at(i);
         if (nt == 'a' || nt == 'A') {
