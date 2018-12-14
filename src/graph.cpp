@@ -621,7 +621,7 @@ void graph_t::clear(void) {
 /// handle to a later handle's position will make the seen handle be visited
 /// again and the later handle not be visited at all).
 void graph_t::swap_handles(const handle_t& a, const handle_t& b) {
-    
+    assert(false);
 }
     
 /// Alter the node that the given handle corresponds to so the orientation
@@ -633,6 +633,7 @@ void graph_t::swap_handles(const handle_t& a, const handle_t& b) {
 /// Does not update any stored paths. May change the ordering of the underlying
 /// graph.
 handle_t graph_t::apply_orientation(const handle_t& handle) {
+    
 }
     
 /// Split a handle's underlying node at the given offsets in the handle's
@@ -643,6 +644,7 @@ handle_t graph_t::apply_orientation(const handle_t& handle) {
 /// passed in.
 /// Updates stored paths.
 std::vector<handle_t> graph_t::divide_handle(const handle_t& handle, const std::vector<size_t>& offsets) {
+    
 }
     
 
@@ -658,6 +660,7 @@ std::vector<handle_t> graph_t::divide_handle(const handle_t& handle, const std::
  * Destroy the given path. Invalidates handles to the path and its node occurrences.
  */
 void graph_t::destroy_path(const path_handle_t& path) {
+    paths[as_integer(path)].clear();
 }
 
 /**
@@ -667,6 +670,7 @@ void graph_t::destroy_path(const path_handle_t& path) {
  * remain valid.
  */
 path_handle_t graph_t::create_path_handle(const std::string& name) {
+    paths.emplace_back(name);
 }
     
 /**
@@ -675,6 +679,8 @@ path_handle_t graph_t::create_path_handle(const std::string& name) {
  * occurrences on the path, and to other paths, must remain valid.
  */
 occurrence_handle_t graph_t::append_occurrence(const path_handle_t& path, const handle_t& to_append) {
+    //void append_occurrence(const id_t& id, bool strand);
+    paths[as_integer(path)].append_occurrence(to_append);
 }
 
 
