@@ -55,7 +55,7 @@ set(sdsl-lite-divsufsort_LIB "${INSTALL_DIR}/src/sdsl-lite-build/external/libdiv
 # gfakluge (full build using its cmake config)
 ExternalProject_Add(gfakluge
   GIT_REPOSITORY "https://github.com/edawson/gfakluge.git"
-  GIT_TAG "8c30259b86fcfd592477e5f21e3999ddac850fdd"
+  GIT_TAG "88ca1d2ca36151953d23d16380eee63e00e3638b7"
   BUILD_IN_SOURCE TRUE
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR} # TODO ADD static build flag
   UPDATE_COMMAND ""
