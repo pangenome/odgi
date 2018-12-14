@@ -63,7 +63,10 @@ inline void dank_to_gfa_stream(SuccinctDynamicSequenceGraph* sd, std::ostream& o
 
 inline void dank_from_gfa_file(char* filename, SuccinctDynamicSequenceGraph* sd) {
 
-    id_emitter_factory id_fac;
+    // We can't do ID renaming unless we put all S lines in before our edges,
+    // and even then it's a little dicey. Ideally, this would get pushed all
+    // the way down to GFAK or it'd be used with line-by-line input.
+    //id_emitter_factory id_fac;
     gfak::GFAKluge gg;
     gg.parse_gfa_file(std::string(filename));
 
@@ -71,12 +74,13 @@ inline void dank_from_gfa_file(char* filename, SuccinctDynamicSequenceGraph* sd)
     map<string, gfak::sequence_elem, gfak::custom_key> seqs = gg.get_name_to_seq();
     map<string, std::vector<gfak::edge_elem>> edges = gg.get_seq_to_edges();
     for (auto s : seqs){
-        id_t id = id_fac.emit_id(s.first);
-    }
-    int s_counter = 0;
-    for (auto s : seqs){
-        
-    }
+        //id_t id = id_fac.emit_id(s.first);
+
+        for (auto e : edges[s.first]){
+
+        }
+
+    };
 
 };
 };

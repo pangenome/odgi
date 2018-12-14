@@ -1,5 +1,6 @@
 #ifndef bgraph_h
 #define bgraph_h
+#include <atomic>
 #include "handle_types.hpp"
 #include "handle_helper.hpp"
 #include "io_helper.hpp"
@@ -349,49 +350,14 @@ private:
     /// Encodes the topology of the graph.
     /// {ID, start edge list index, end edge list index, seq index}
     //SuccinctDynamicVector graph_iv;
+    bgraph_t graph;
+    uint64_t num_edges;
+    uint64_t num_nodes;
 
-    /// Encodes a series of edges lists of nodes.
-    /// {relative offset, orientation, next edge index}
-    //SuccinctDynamicVector edge_lists_iv;
+    bpathstore_t paths;
 
-    /// Encodes all of the sequences of all nodes and all paths in the graph.
-    /// The node sequences occur in the same order as in graph_iv;
-    //SuccinctDynamicVector seq_iv;
+    static const handle_helper hhelper;
 
-    /// Same length as seq_iv. 1's indicate the beginning of a node's sequence.
-    //SuccinctDynamicVector boundary_bv;
-
-    /// Same length as seq_iv. 0's indicate that a base is still touched by some
-    /// node or some path. 1's indicate that all nodes or paths that touch this
-    /// base have been deleted.
-    //SuccinctDynamicVector dead_bv;
-
-    /// Encodes a self-balancing binary tree as integers. Consists of fixed-width
-    /// records that have the following structure:
-    /// {interval start, members index, parent index, left child index, right child index}
-    /// Interval start variable indicates the start of a range in seq_iv (corresponding to
-    /// a node, unless the node has been deleted), members index indicates the 1-based index
-    /// of the first path membership record corresponding to this interval in
-    /// path_membership_value_iv, and parent/left child/right child index indicates the
-    /// topology of a binary tree search structure for these intervals. The indexes are 1-based
-    /// with 0 indicating that the neighbor does not exist.
-    //SuccinctDynamicVector path_membership_range_iv;
-
-    /// Encodes a series of linked lists. Consists of fixed-width records that have
-    /// the following structure:
-    /// {path id, rank, next index}
-    /// Path ID indicates which path the node occurs on, rank indicates the ordinal
-    /// position of this occurrence in the path, and next index indicates the 1-based
-    /// index of the next occurrence of this node in this vector (or 0 if there is none)
-    //SuccinctDynamicVector path_membership_value_iv;
-
-    /// Encodes the embedded paths of the graph. Each path is represented as three vectors
-    /// starts, lengths, orientations
-    /// The values in starts correspond to the 0-based indexes of an interval in seq_iv.
-    /// The values in lengths are simply the length.
-    /// The strand of this interval is given by the corresponding bit in orientations, with 1
-    /// indicating reverse strand.
-    //std::vector<path_t> paths;
 
     //size_t dead_bases;
     //size_t deleted_nodes;

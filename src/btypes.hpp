@@ -5,6 +5,14 @@
 #include "spp.h"
 
 namespace betagraph{
+
+    struct bholder_t{
+        bool orientation;
+        uint32_t length;
+        vector<dankgraph::edge_t> in_edges;
+        vector<dankgraph::edge_t> out_edges;
+        string sequence;
+    };
     struct b_node_t {
         bool orientation;
         std::int64_t id;
@@ -20,10 +28,21 @@ namespace betagraph{
         char* name;
         std::vector<int64_t> ids; 
     };
-    struct b_graph_t{
-        spp::sparse_hash_map<int64_t, b_node_t> id_to_node;
-        spp::sparse_hash_map<int64_t, vector<b_edge_t>> node_to_edges;
-        spp::sparse_hash_map<char*, b_path_t> name_to_path;
+    struct bgraph_t{
+        // spp::sparse_hash_map<int64_t, b_node_t> id_to_node;
+        // spp::sparse_hash_map<int64_t, vector<b_edge_t>> node_to_edges;
+        // spp::sparse_hash_map<char*, b_path_t> name_to_path;
+        spp::sparse_hash_map<id_t, bholder_t> backer;
+        id_t min_node_id = 0;
+        id_t max_node_id = UINT64_MAX;
+    };
+    struct bpath_occurrence_t{
+        int32_t rank = 0;
+        id_t id;
+    };
+    struct bpathstore_t{
+        spp::sparse_hash_map<string, bpath_occurrence_t> paths;
+
     };
 
 }
