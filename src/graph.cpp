@@ -120,95 +120,6 @@ id_t graph_t::max_node_id(void) const {
 }
     
 ////////////////////////////////////////////////////////////////////////////
-// Interface that needs to be using'd
-////////////////////////////////////////////////////////////////////////////
-    
-/// Loop over all the handles to next/previous (right/left) nodes. Works
-/// with a callback that just takes all the handles and returns void.
-/// Has to be a template because we can't overload on the types of std::function arguments otherwise.
-/// MUST be pulled into implementing classes with `using` in order to work!
-/*
-template <typename T>
-auto graph_t::follow_edges(const handle_t& handle, bool go_left, T&& iteratee) const
-    -> typename std::enable_if<std::is_void<decltype(iteratee(get_handle(0, false)))>::value>::type {
-    // Implementation only for void-returning iteratees
-    // We ought to just overload on the std::function but that's not allowed until C++14.
-    // See <https://stackoverflow.com/q/13811180>
-        
-    // We also can't use result_of<T(handle_t)>::type to sniff the return
-    // type out because that ::type would not exist (since that's what you
-    // get for a void apparently?) and we couldn't check if it's bool or
-    // void.
-        
-    // So we do this nonsense thing with a trailing return type (to get the
-    // actual arg into scope) and a decltype (which is allowed to resolve to
-    // void) and is_void (which is allowed to take void) and a fake
-    // get_handle call (which is the shortest handle_t-typed expression I
-    // could think of).
-        
-    // Make a wrapper that puts a bool return type on.
-    std::function<bool(const handle_t&)> lambda = [&](const handle_t& found) {
-        iteratee(found);
-        return true;
-    };
-        
-    // Use that
-    follow_edges(handle, go_left, lambda);
-        
-    // During development I managed to get earlier versions of this template to build infinitely recursive functions.
-    static_assert(!std::is_void<decltype(lambda(get_handle(0, false)))>::value, "can't take our own lambda");
-}
-*/
-    
-/// Loop over all the nodes in the graph in their local forward
-/// orientations, in their internal stored order. Works with void-returning iteratees.
-/// MUST be pulled into implementing classes with `using` in order to work!
-/*
-template <typename T>
-auto graph_t::for_each_handle(T&& iteratee, bool parallel) const
-    -> typename std::enable_if<std::is_void<decltype(iteratee(get_handle(0, false)))>::value>::type {
-    // Make a wrapper that puts a bool return type on.
-    std::function<bool(const handle_t&)> lambda = [&](const handle_t& found) {
-        iteratee(found);
-        return true;
-    };
-        
-    // Use that
-    for_each_handle(lambda, parallel);
-}
-*/
-
-/*
-void graph_t::for_each_edge(const std::function<bool(const edge_t&)>& iteratee, bool parallel) {
-    for_each_handle([&](const handle_t& handle){
-            bool keep_going = true;
-            // filter to edges where this node is lower ID or any rightward self-loops
-            follow_edges(handle, false, [&](const handle_t& next) {
-                    if (get_id(handle) <= get_id(next)) {
-                        keep_going = iteratee(edge_handle(handle, next));
-                    }
-                    return keep_going;
-                });
-            if (keep_going) {
-                // filter to edges where this node is lower ID or leftward reversing
-                // self-loop
-                follow_edges(handle, true, [&](const handle_t& prev) {
-                        if (get_id(handle) < get_id(prev) ||
-                            (get_id(handle) == get_id(prev) && !get_is_reverse(prev))) {
-                            keep_going = iteratee(edge_handle(prev, handle));
-                        }
-                        return keep_going;
-                    });
-            }
-        }, parallel);
-}
-*/
-    
-/// Get a handle from a Visit Protobuf object.
-/// Must be using'd to avoid shadowing.
-//handle_t get_handle(const Visit& visit) const;
-    
-////////////////////////////////////////////////////////////////////////////
 // Additional optional interface with a default implementation
 ////////////////////////////////////////////////////////////////////////////
     
@@ -710,6 +621,7 @@ void graph_t::clear(void) {
 /// handle to a later handle's position will make the seen handle be visited
 /// again and the later handle not be visited at all).
 void graph_t::swap_handles(const handle_t& a, const handle_t& b) {
+    
 }
     
 /// Alter the node that the given handle corresponds to so the orientation
