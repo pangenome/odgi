@@ -106,36 +106,52 @@ namespace betagraph{
 //     /// outward handle you would arrive at.
 //     handle_t traverse_edge_handle(const edge_t& edge, const handle_t& left) const;
     
-// /**
-//  * This is the interface for a handle graph that stores embedded paths.
-//  */
+/**
+ * This is the interface for a handle graph that stores embedded paths.
+ */
     
-//     ////////////////////////////////////////////////////////////////////////////
-//     // Path handle interface that needs to be implemented
-//     ////////////////////////////////////////////////////////////////////////////
+    ////////////////////////////////////////////////////////////////////////////
+    // Path handle interface that needs to be implemented
+    ////////////////////////////////////////////////////////////////////////////
     
-//     /// Determine if a path name exists and is legal to get a path handle for.
-//     bool has_path(const std::string& path_name) const;
+    /// Determine if a path name exists and is legal to get a path handle for.
+     bool BGraph::has_path(const std::string& path_name) const{
+         return paths.has_path(path_name);
+     }
     
-//     /// Look up the path handle for the given path name.
-//     /// The path with that name must exist.
-//     path_handle_t get_path_handle(const std::string& path_name) const;
+    /// Look up the path handle for the given path name.
+    /// The path with that name must exist.
+    path_handle_t BGraph::get_path_handle(const std::string& path_name) const{
+        return as_path_handle(paths.get_id(path_name));
+    }
     
-//     /// Look up the name of a path from a handle to it
-//     std::string get_path_name(const path_handle_t& path_handle) const;
+    /// Look up the name of a path from a handle to it
+    std::string BGraph::get_path_name(const path_handle_t& path_handle) const{
+        return paths.get_name(path_handle);
+    }
     
-//     /// Returns the number of node occurrences in the path
-//     size_t get_occurrence_count(const path_handle_t& path_handle) const;
+    /// Returns the number of node occurrences in the path
+    size_t BGraph::get_occurrence_count(const path_handle_t& path_handle) const{
+        return paths.get_path_occurrence_count(path_handle);
+    }
 
-//     /// Returns the number of paths stored in the graph
-//     size_t get_path_count() const;
+    /// Returns the number of paths stored in the graph
+    size_t BGraph::get_path_count() const{
+        return paths.paths.size();
+    }
     
-//     /// Execute a function on each path in the graph
-//     // TODO: allow stopping early?
-//     void for_each_path_handle(const std::function<void(const path_handle_t&)>& iteratee) const;
+    /// Execute a function on each path in the graph
+    // TODO: allow stopping early?
+    void BGraph::for_each_path_handle(const std::function<void(const path_handle_t&)>& iteratee) const{
+
+        std::cerr << "Not implemented" << std::endl;
+        exit(1);
+    }
     
-//     /// Get a node handle (node ID and orientation) from a handle to an occurrence on a path
-//     handle_t get_occurrence(const occurrence_handle_t& occurrence_handle) const;
+    /// Get a node handle (node ID and orientation) from a handle to an occurrence on a path
+    // handle_t BGraph::get_occurrence(const occurrence_handle_t& occurrence_handle) const{
+
+    // }
     
 //     /// Get a handle to the first occurrence in a path.
 //     /// The path MUST be nonempty.

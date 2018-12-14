@@ -1,9 +1,11 @@
 #ifndef bgraph_h
 #define bgraph_h
 #include <atomic>
+#include <vector>
+#include <string>
+#include <iostream>
 #include "handle_types.hpp"
 #include "handle_helper.hpp"
-#include "io_helper.hpp"
 #include "btypes.hpp"
 
 namespace betagraph{

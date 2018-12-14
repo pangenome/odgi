@@ -3,6 +3,8 @@
 #include "gfakluge.hpp"
 #include "handle_types.hpp"
 #include "dgraph.hpp"
+#include "bgraph.hpp"
+#include "btypes.hpp"
 #include <unordered_set>
 
 
@@ -25,6 +27,12 @@ struct id_emitter_factory{
             exit(1);
         }
     };
+};
+
+inline void gfa_to_beta(const char* filename, betagraph::BGraph* bg){
+    gfak::GFAKluge gg;
+    gg.parse_gfa_file(string(filename));
+    
 };
 
 inline void dank_to_gfa_stream(SuccinctDynamicSequenceGraph* sd, std::ostream& os) {
