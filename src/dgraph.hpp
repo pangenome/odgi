@@ -248,6 +248,7 @@ private:
     id_t max_id = 0;
     id_t min_id = std::numeric_limits<id_t>::max();
     
+    size_t new_node_record(id_t node_id);
     inline uint8_t encode_nucleotide(const char& nt) const;
     inline char decode_nucleotide(const uint64_t& val) const;
     inline uint64_t complement_encoded_nucleotide(const uint64_t& val) const;
@@ -256,6 +257,7 @@ private:
     inline const handle_t& decode_edge_target(const uint64_t& val) const;
     inline const uint64_t get_next_edge_index(const uint64_t& edge_index) const;
     inline const uint64_t get_edge_target(const uint64_t& edge_index) const;
+    inline void set_edge_target(const uint64_t& edge_index, const handle_t& handle);
     void remove_edge_reference(const handle_t& on, const handle_t& to);
     void defragment(void);
     
@@ -331,6 +333,8 @@ private:
     size_t deleted_edge_records = 0;
 };
     
+    
+    
 inline uint8_t SuccinctDynamicSequenceGraph::encode_nucleotide(const char& nt) const {
     if (nt == 'a' || nt == 'A') {
         return 0;
@@ -377,6 +381,10 @@ inline const uint64_t SuccinctDynamicSequenceGraph::get_next_edge_index(const ui
 
 inline const uint64_t SuccinctDynamicSequenceGraph::get_edge_target(const uint64_t& edge_index) const {
     return edge_lists_iv.get((edge_index - 1) * EDGE_RECORD_SIZE + EDGE_TRAV_OFFSET);
+}
+    
+inline void SuccinctDynamicSequenceGraph::set_edge_target(const uint64_t& edge_index, const handle_t& handle) {
+    edge_lists_iv.set((edge_index - 1) * EDGE_RECORD_SIZE + EDGE_TRAV_OFFSET, encode_edge_target(handle));
 }
 
 inline std::string SuccinctDynamicSequenceGraph::reverse_complement(const std::string& seq) const {
