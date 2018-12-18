@@ -253,6 +253,8 @@ private:
     inline char decode_nucleotide(const uint64_t& val) const;
     inline uint64_t complement_encoded_nucleotide(const uint64_t& val) const;
     inline size_t graph_iv_index(const handle_t& handle) const;
+    inline uint64_t graph_index_to_seq_len_index(const size_t& graph_index) const;
+    inline uint64_t graph_index_to_seq_start_index(const size_t& graph_index) const;
     inline const uint64_t& encode_edge_target(const handle_t& handle) const;
     inline const handle_t& decode_edge_target(const uint64_t& val) const;
     inline const uint64_t get_next_edge_index(const uint64_t& edge_index) const;
@@ -261,13 +263,17 @@ private:
     void remove_edge_reference(const handle_t& on, const handle_t& to);
     void defragment(void);
     
+    const static size_t PAGE_WIDTH = 64;
     
-    const static size_t GRAPH_RECORD_SIZE = 4;
+    const static size_t GRAPH_RECORD_SIZE = 2;
+    const static size_t SEQ_START_RECORD_SIZE = 1;
+    const static size_t SEQ_LENGTH_RECORD_SIZE = 1;
     
     const static size_t GRAPH_START_EDGES_OFFSET = 0;
     const static size_t GRAPH_END_EDGES_OFFSET = 1;
-    const static size_t GRAPH_SEQ_START_OFFSET = 2;
-    const static size_t GRAPH_SEQ_LENGTH_OFFSET = 3;
+    
+    const static size_t SEQ_START_OFFSET = 0;
+    const static size_t SEQ_LENGTH_OFFSET = 0;
     
     const static size_t EDGE_RECORD_SIZE = 2;
     
@@ -278,12 +284,16 @@ private:
     const static double defrag_factor;
     
     /// Encodes the topology of the graph.
-    /// {ID, start edge list index, end edge list index, seq index, seq length}
-    SuccinctDynamicVector graph_iv;
+    /// {start edge list index, end edge list index}
+    PagedSuccinctDynamicVector graph_iv;
+    
+    PagedSuccinctDynamicVector seq_start_iv;
+    
+    SuccinctDynamicVector seq_length_iv;
 
     /// Encodes a series of edges lists of nodes.
     /// {ID|orientation, next edge index}
-    SuccinctDynamicVector edge_lists_iv;
+    PagedSuccinctDynamicVector edge_lists_iv;
     
     /// Encodes the 1-based offset of an ID in graph_iv in units of GRAPH_RECORD_SIZE.
     /// If no node with that ID exists, contains a 0.
@@ -293,42 +303,39 @@ private:
     /// The node sequences occur in the same order as in graph_iv;
     SuccinctDynamicVector seq_iv;
 
-    /// Same length as seq_iv. 1's indicate the beginning of a node's sequence.
-    SuccinctDynamicVector boundary_bv;
-
-    /// Same length as seq_iv. 0's indicate that a base is still touched by some
-    /// node or some path. 1's indicate that all nodes or paths that touch this
-    /// base have been deleted.
-    SuccinctDynamicVector dead_bv;
-
-    /// Encodes a self-balancing binary tree as integers. Consists of fixed-width
-    /// records that have the following structure:
-    /// {interval start, members index, parent index, left child index, right child index}
-    /// Interval start variable indicates the start of a range in seq_iv (corresponding to
-    /// a node, unless the node has been deleted), members index indicates the 1-based index
-    /// of the first path membership record corresponding to this interval in
-    /// path_membership_value_iv, and parent/left child/right child index indicates the
-    /// topology of a binary tree search structure for these intervals. The indexes are 1-based
-    /// with 0 indicating that the neighbor does not exist.
-    SuccinctSplayTree path_membership_range_iv;
-
-    /// Encodes a series of linked lists. Consists of fixed-width records that have
-    /// the following structure:
-    /// {path id, rank, next index}
-    /// Path ID indicates which path the node occurs on, rank indicates the ordinal
-    /// position of this occurrence in the path, and next index indicates the 1-based
-    /// index of the next occurrence of this node in this vector (or 0 if there is none)
-    SuccinctDynamicVector path_membership_value_iv;
-
-    /// Encodes the embedded paths of the graph. Each path is represented as three vectors
-    /// starts, lengths, orientations
-    /// The values in starts correspond to the 0-based indexes of an interval in seq_iv.
-    /// The values in lengths are simply the length.
-    /// The strand of this interval is given by the corresponding bit in orientations, with 1
-    /// indicating reverse strand.
-    std::vector<path_t> paths;
-
-    size_t dead_bases = 0;
+//    /// Same length as seq_iv. 0's indicate that a base is still touched by some
+//    /// node or some path. 1's indicate that all nodes or paths that touch this
+//    /// base have been deleted.
+//    SuccinctDynamicVector dead_bv;
+//
+//    /// Encodes a self-balancing binary tree as integers. Consists of fixed-width
+//    /// records that have the following structure:
+//    /// {interval start, members index, parent index, left child index, right child index}
+//    /// Interval start variable indicates the start of a range in seq_iv (corresponding to
+//    /// a node, unless the node has been deleted), members index indicates the 1-based index
+//    /// of the first path membership record corresponding to this interval in
+//    /// path_membership_value_iv, and parent/left child/right child index indicates the
+//    /// topology of a binary tree search structure for these intervals. The indexes are 1-based
+//    /// with 0 indicating that the neighbor does not exist.
+//    SuccinctSplayTree path_membership_range_iv;
+//
+//    /// Encodes a series of linked lists. Consists of fixed-width records that have
+//    /// the following structure:
+//    /// {path id, rank, next index}
+//    /// Path ID indicates which path the node occurs on, rank indicates the ordinal
+//    /// position of this occurrence in the path, and next index indicates the 1-based
+//    /// index of the next occurrence of this node in this vector (or 0 if there is none)
+//    SuccinctDynamicVector path_membership_value_iv;
+//
+//    /// Encodes the embedded paths of the graph. Each path is represented as three vectors
+//    /// starts, lengths, orientations
+//    /// The values in starts correspond to the 0-based indexes of an interval in seq_iv.
+//    /// The values in lengths are simply the length.
+//    /// The strand of this interval is given by the corresponding bit in orientations, with 1
+//    /// indicating reverse strand.
+//    std::vector<path_t> paths;
+//
+//    size_t dead_bases = 0;
     size_t deleted_node_records = 0;
     size_t deleted_edge_records = 0;
 };
@@ -365,6 +372,14 @@ inline char SuccinctDynamicSequenceGraph::decode_nucleotide(const uint64_t& val)
     
 inline size_t SuccinctDynamicSequenceGraph::graph_iv_index(const handle_t& handle) const {
     return (id_to_graph_iv.get(get_id(handle) - min_id) - 1) * GRAPH_RECORD_SIZE;
+}
+
+inline uint64_t SuccinctDynamicSequenceGraph::graph_index_to_seq_len_index(const size_t& graph_index) const {
+    return (graph_index * SEQ_LENGTH_RECORD_SIZE) / GRAPH_RECORD_SIZE + SEQ_LENGTH_OFFSET;
+}
+
+inline uint64_t SuccinctDynamicSequenceGraph::graph_index_to_seq_start_index(const size_t& graph_index) const {
+    return (graph_index * SEQ_START_RECORD_SIZE) / GRAPH_RECORD_SIZE + SEQ_START_OFFSET;
 }
     
 inline const uint64_t& SuccinctDynamicSequenceGraph::encode_edge_target(const handle_t& handle) const {

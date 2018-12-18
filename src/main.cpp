@@ -85,6 +85,85 @@ void test_dynamic_vector() {
     }
 }
 
+void test_paged_dynamic_vector() {
+    
+    enum vec_op_t {SET = 0, GET = 1, APPEND = 2, POP = 3};
+    std::random_device rd;
+    std::default_random_engine prng(rd());
+    std::uniform_int_distribution<int> op_distr(0, 3);
+    std::uniform_int_distribution<int> page_distr(1, 5);
+    std::uniform_int_distribution<int> val_distr(0, 100);
+    
+    int num_runs = 10000;
+    int num_ops = 300;
+    int gets_per_op = 5;
+    int sets_per_op = 5;
+    int appends_per_op = 3;
+    int pops_per_op = 1;
+    
+    for (size_t i = 0; i < num_runs; i++) {
+        
+        uint64_t next_val = val_distr(prng);
+        
+        std::vector<uint64_t> std_vec;
+        PagedSuccinctDynamicVector dyn_vec(4);//page_distr(prng));
+        
+        for (size_t j = 0; j < num_ops; j++) {
+            
+            vec_op_t op = (vec_op_t) op_distr(prng);
+            switch (op) {
+                case SET:
+                    if (!std_vec.empty()) {
+                        for (size_t k = 0; k < sets_per_op; k++) {
+                            size_t idx = prng() % dyn_vec.size();
+                            std_vec[idx] = next_val;
+                            dyn_vec.set(idx, next_val);
+                            next_val = val_distr(prng);
+                        }
+                    }
+                    
+                    break;
+                    
+                case GET:
+                    if (!std_vec.empty()) {
+                        for (size_t k = 0; k < gets_per_op; k++) {
+                            size_t idx = prng() % dyn_vec.size();
+                            assert(std_vec[idx] == dyn_vec.get(idx));
+                            next_val = val_distr(prng);
+                        }
+                    }
+                    
+                    break;
+                    
+                case APPEND:
+                    for (size_t k = 0; k < appends_per_op; k++) {
+                        std_vec.push_back(next_val);
+                        dyn_vec.append(next_val);
+                        next_val = val_distr(prng);
+                    }
+                    
+                    break;
+                    
+                case POP:
+                    if (!std_vec.empty()) {
+                        for (size_t k = 0; k < pops_per_op; k++) {
+                            std_vec.pop_back();
+                            dyn_vec.pop();
+                        }
+                    }
+                    
+                    break;
+                    
+                default:
+                    break;
+            }
+            
+            assert(std_vec.empty() == dyn_vec.empty());
+            assert(std_vec.size() == dyn_vec.size());
+        }
+    }
+}
+
 void test_deque() {
     
     enum deque_op_t {SET = 0, GET = 1, APPEND_LEFT = 2, POP_LEFT = 3, APPEND_RIGHT = 4, POP_RIGHT = 5};
@@ -1279,6 +1358,7 @@ int main(void){
     
     test_succinct_dynamic_graph();
     test_dynamic_vector();
+    test_paged_dynamic_vector();
     test_deque();
     test_splay_tree();
     

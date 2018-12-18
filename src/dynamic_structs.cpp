@@ -18,6 +18,14 @@ SuccinctDynamicVector::SuccinctDynamicVector() {
 SuccinctDynamicVector::~SuccinctDynamicVector() {
     
 }
+    
+PagedSuccinctDynamicVector::PagedSuccinctDynamicVector(size_t page_size) : page_size(page_size) {
+    
+}
+
+PagedSuccinctDynamicVector::~PagedSuccinctDynamicVector() {
+    
+}
 
 SuccinctDeque::SuccinctDeque() {
     

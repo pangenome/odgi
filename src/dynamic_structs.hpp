@@ -67,6 +67,57 @@ private:
     // geometric expansion factor
     static const double factor;
 };
+
+/*
+ * A dynamic integer vector that provides better compression when values in the
+ * integer vector do not vary much from their neighbors in the vector
+ */
+class PagedSuccinctDynamicVector {
+public:
+    
+    /// Construct and set page size (starts empty)
+    PagedSuccinctDynamicVector(size_t page_size);
+    
+    // Destructor
+    ~PagedSuccinctDynamicVector();
+    
+    /// Set the i-th value
+    inline void set(const size_t& i, const uint64_t& value);
+    
+    /// Returns the i-th value
+    inline uint64_t get(const size_t& i) const;
+    
+    /// Add a value to the end
+    inline void append(const uint64_t& value);
+    
+    /// Remove the last value
+    inline void pop();
+    
+    /// Either shrink the vector or grow the vector to the new size. New
+    /// entries created by growing are filled with 0.
+    inline void resize(size_t new_size);
+    
+    /// Returns the number of values
+    inline size_t size() const;
+    
+    /// Returns true if there are no entries and false otherwise
+    inline bool empty() const;
+    
+    /// Clears the backing vector
+    inline void clear();
+    
+private:
+    
+    PagedSuccinctDynamicVector();
+    
+    inline uint64_t to_diff(const uint64_t& value, const uint64_t& page) const;
+    inline uint64_t from_diff(const uint64_t& diff, const uint64_t& page) const;
+    
+    size_t page_size = 64;
+    
+    SuccinctDynamicVector diffs;
+    SuccinctDynamicVector pages;
+};
     
 class SuccinctDeque {
 public:
@@ -436,6 +487,58 @@ inline void SuccinctDeque::clear() {
     vec.clear();
     filled = 0;
     begin_idx = 0;
+}
+    
+inline void PagedSuccinctDynamicVector::set(const size_t& i, const uint64_t& value) {
+    diffs.set(i, to_diff(value, pages.get(i / page_size)));
+}
+
+inline uint64_t PagedSuccinctDynamicVector::get(const size_t& i) const {
+    return from_diff(diffs.get(i), pages.get(i / page_size));
+}
+
+inline void PagedSuccinctDynamicVector::append(const uint64_t& value) {
+    if (diffs.size() % page_size == 0) {
+        diffs.append(0);
+        pages.append(value);
+    }
+    else {
+        diffs.append(to_diff(value, pages.get(diffs.size() / page_size)));
+    }
+}
+
+inline void PagedSuccinctDynamicVector::pop() {
+    diffs.pop();
+    if (diffs.size() % page_size == 0) {
+        pages.pop();
+    }
+}
+
+inline void PagedSuccinctDynamicVector::resize(size_t new_size) {
+    diffs.resize(new_size);
+    pages.resize(new_size / page_size);
+}
+
+inline size_t PagedSuccinctDynamicVector::size() const {
+    return diffs.size();
+}
+
+inline bool PagedSuccinctDynamicVector::empty() const {
+    return pages.empty();
+}
+
+inline void PagedSuccinctDynamicVector::clear() {
+    pages.clear();
+    diffs.clear();
+}
+    
+inline uint64_t PagedSuccinctDynamicVector::to_diff(const uint64_t& value, const uint64_t& page) const {
+    // negatives map to odds, positives to evens
+    return value < page ? (page - value) * 2 - 1 : (value - page) * 2;
+}
+
+inline uint64_t PagedSuccinctDynamicVector::from_diff(const uint64_t& diff, const uint64_t& page) const {
+    return diff % 2 ? page - (diff + 1) / 2 : page + diff / 2;
 }
 }
 

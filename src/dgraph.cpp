@@ -11,7 +11,7 @@ namespace dankgraph {
     
     const double SuccinctDynamicSequenceGraph::defrag_factor = .2;
     
-    SuccinctDynamicSequenceGraph::SuccinctDynamicSequenceGraph() {
+    SuccinctDynamicSequenceGraph::SuccinctDynamicSequenceGraph() : graph_iv(PAGE_WIDTH), seq_start_iv(PAGE_WIDTH), edge_lists_iv(PAGE_WIDTH) {
         
     }
     
@@ -27,9 +27,10 @@ namespace dankgraph {
         // no edges yet, null pointer for linked list
         graph_iv.append(0);
         graph_iv.append(0);
+        
         // record the sequence interval
-        graph_iv.append(0);
-        graph_iv.append(0);
+        seq_start_iv.append(0);
+        seq_length_iv.append(0);
         
         // expand the ID vector's dimensions so it can handle the full ID interval
         if (id_to_graph_iv.empty()) {
@@ -63,14 +64,12 @@ namespace dankgraph {
         // TODO: don't duplicate an existing node
         
         size_t g_iv_idx = new_node_record(id);
-        
-        graph_iv.set(g_iv_idx + GRAPH_SEQ_START_OFFSET, seq_iv.size());
-        graph_iv.set(g_iv_idx + GRAPH_SEQ_LENGTH_OFFSET, sequence.size());
+        seq_start_iv.set(graph_index_to_seq_start_index(g_iv_idx), seq_iv.size());
+        seq_length_iv.set(graph_index_to_seq_len_index(g_iv_idx), sequence.size());
         
         // encode the sequence interval
         for (size_t i = 0; i < sequence.size(); i++) {
             seq_iv.append(encode_nucleotide(sequence[i]));
-            boundary_bv.append(i ? 0 : 1);
         }
         
         return get_handle(id);
@@ -131,13 +130,13 @@ namespace dankgraph {
     }
     
     size_t SuccinctDynamicSequenceGraph::get_length(const handle_t& handle) const {
-        return graph_iv.get(graph_iv_index(handle) + GRAPH_SEQ_LENGTH_OFFSET);
+        return seq_length_iv.get(graph_index_to_seq_len_index(graph_iv_index(handle)));
     }
     
     std::string SuccinctDynamicSequenceGraph::get_sequence(const handle_t& handle) const {
         size_t g_iv_index = graph_iv_index(handle);
-        size_t seq_start = graph_iv.get(g_iv_index + GRAPH_SEQ_START_OFFSET);
-        size_t seq_len = graph_iv.get(g_iv_index + GRAPH_SEQ_LENGTH_OFFSET);
+        size_t seq_start = seq_start_iv.get(graph_index_to_seq_start_index(g_iv_index));
+        size_t seq_len = seq_length_iv.get(graph_index_to_seq_len_index(g_iv_index));
         std::string seq(seq_len, 'N');
         for (size_t i = 0; i < seq_len; i++) {
             seq[i] = decode_nucleotide(seq_iv.get(seq_start + i));
@@ -160,6 +159,18 @@ namespace dankgraph {
             uint64_t val = graph_iv.get(g_iv_index_a + i);
             graph_iv.set(g_iv_index_a + i, graph_iv.get(g_iv_index_b + i));
             graph_iv.set(g_iv_index_b + i, val);
+        }
+        for (size_t i = 0; i < SEQ_LENGTH_RECORD_SIZE; i++) {
+            uint64_t val = seq_length_iv.get(graph_index_to_seq_len_index(g_iv_index_a) + i);
+            seq_length_iv.set(graph_index_to_seq_len_index(g_iv_index_a) + i,
+                              seq_length_iv.get(graph_index_to_seq_len_index(g_iv_index_b) + i));
+            seq_length_iv.set(graph_index_to_seq_len_index(g_iv_index_b) + i, val);
+        }
+        for (size_t i = 0; i < SEQ_START_RECORD_SIZE; i++) {
+            uint64_t val = seq_start_iv.get(graph_index_to_seq_start_index(g_iv_index_a) + i);
+            seq_start_iv.set(graph_index_to_seq_start_index(g_iv_index_a) + i,
+                              seq_start_iv.get(graph_index_to_seq_start_index(g_iv_index_b) + i));
+            seq_start_iv.set(graph_index_to_seq_start_index(g_iv_index_b) + i, val);
         }
         
         id_to_graph_iv.set(id_a - min_id, g_iv_index_b / GRAPH_RECORD_SIZE + 1);
@@ -262,8 +273,8 @@ namespace dankgraph {
             
             // reverse complement the sequence in place
             
-            size_t seq_start = graph_iv.get(g_iv_idx + GRAPH_SEQ_START_OFFSET);
-            size_t seq_len = graph_iv.get(g_iv_idx + GRAPH_SEQ_LENGTH_OFFSET);
+            size_t seq_start = seq_start_iv.get(graph_index_to_seq_start_index(g_iv_idx));
+            size_t seq_len = seq_length_iv.get(graph_index_to_seq_len_index(g_iv_idx));
             
             for (size_t i = 0; i < seq_len / 2; i++) {
                 size_t j = seq_start + seq_len - i - 1;
@@ -305,7 +316,7 @@ namespace dankgraph {
         
         // offsets in the sequence vector will be measured relative to the first position of
         // the current handle
-        size_t first_start = graph_iv.get(g_iv_idx + GRAPH_SEQ_START_OFFSET);
+        size_t first_start = seq_start_iv.get(graph_index_to_seq_start_index(g_iv_idx));
         
         // we record the the edges out of this node so they can be transferred onto the final
         // node in the split
@@ -320,14 +331,13 @@ namespace dankgraph {
             size_t new_g_iv_idx = new_node_record(next_id);
             
             // seq start
-            graph_iv.set(new_g_iv_idx + GRAPH_SEQ_START_OFFSET, first_start + off);
-            boundary_bv.set(first_start + off, 1);
+            seq_start_iv.set(graph_index_to_seq_start_index(new_g_iv_idx), first_start + off);
             
             return_val.push_back(get_handle(next_id, false));
             
             // now let's do what we still need to on the previous node
             // set the previous node's length based on the current offset
-            graph_iv.set(g_iv_idx + GRAPH_SEQ_LENGTH_OFFSET, off - last_offset);
+            seq_length_iv.set(graph_index_to_seq_len_index(g_iv_idx), off - last_offset);
             
             // create an edge forward onto the new node
             edge_lists_iv.append(encode_edge_target(get_handle(next_id)));
@@ -348,7 +358,7 @@ namespace dankgraph {
         }
         
         // set final node's length to the remaining sequence
-        graph_iv.set(g_iv_idx + GRAPH_SEQ_LENGTH_OFFSET, node_length - last_offset);
+        seq_length_iv.set(graph_index_to_seq_len_index(g_iv_idx), node_length - last_offset);
         
         // point the final node's end edges to the original node's end edges
         graph_iv.set(g_iv_idx + GRAPH_END_EDGES_OFFSET, end_edges);
@@ -458,20 +468,23 @@ namespace dankgraph {
                 min_id++;
             }
             // adjust the end
-            while (id_to_graph_iv.empty() ? false : id_to_graph_iv.get(0) == 0) {
+            while (id_to_graph_iv.empty() ? false : id_to_graph_iv.get(id_to_graph_iv.size() - 1) == 0) {
                 id_to_graph_iv.pop_back();
             }
             
-            SuccinctDynamicVector new_graph_iv;
+            PagedSuccinctDynamicVector new_graph_iv(PAGE_WIDTH);
+            SuccinctDynamicVector new_seq_length_iv;
+            PagedSuccinctDynamicVector new_seq_start_iv(PAGE_WIDTH);
             
             for (size_t i = 0; i < id_to_graph_iv.size(); i++) {
-                size_t g_iv_idx = id_to_graph_iv.get(i);
-                if (g_iv_idx) {
+                size_t raw_g_iv_idx = id_to_graph_iv.get(i);
+                if (raw_g_iv_idx) {
+                    size_t g_iv_idx = (raw_g_iv_idx - 1) * GRAPH_RECORD_SIZE;
                     // this node still exists, create a new copy
                     new_graph_iv.append(graph_iv.get(g_iv_idx + GRAPH_START_EDGES_OFFSET));
                     new_graph_iv.append(graph_iv.get(g_iv_idx + GRAPH_END_EDGES_OFFSET));
-                    new_graph_iv.append(graph_iv.get(g_iv_idx + GRAPH_SEQ_START_OFFSET));
-                    new_graph_iv.append(graph_iv.get(g_iv_idx + GRAPH_SEQ_LENGTH_OFFSET));
+                    new_seq_length_iv.append(graph_index_to_seq_len_index(g_iv_idx));
+                    new_seq_start_iv.append(graph_index_to_seq_start_index(g_iv_idx));
                     // update the pointer into graph_iv
                     id_to_graph_iv.set(i, new_graph_iv.size() / GRAPH_RECORD_SIZE);
                 }
@@ -479,6 +492,8 @@ namespace dankgraph {
             
             // replace graph_iv with the defragged copy
             graph_iv = new_graph_iv;
+            seq_length_iv = new_seq_length_iv;
+            seq_start_iv = new_seq_start_iv;
             deleted_node_records = 0;
         }
         
@@ -486,7 +501,7 @@ namespace dankgraph {
         
         if (deleted_edge_records > defrag_factor * (edge_lists_iv.size() / EDGE_RECORD_SIZE)) {
             
-            SuccinctDynamicVector new_edge_lists_iv;
+            PagedSuccinctDynamicVector new_edge_lists_iv(PAGE_WIDTH);
             
             for (size_t i = 0; i < id_to_graph_iv.size(); i++) {
                 size_t raw_g_iv_idx = id_to_graph_iv.get(i);
@@ -529,7 +544,6 @@ namespace dankgraph {
         edge_lists_iv.clear();
         id_to_graph_iv.clear();
         seq_iv.clear();
-        boundary_bv.clear();
         min_id = std::numeric_limits<id_t>::max();
         max_id = 0;
         deleted_edge_records = 0;
