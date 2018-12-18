@@ -29,6 +29,10 @@ class SuccinctDynamicVector {
 public:
     /// Constructor (starts empty)
     SuccinctDynamicVector();
+    
+    /// Move constructors
+    SuccinctDynamicVector(SuccinctDynamicVector&& other) = default;
+    SuccinctDynamicVector& operator=(SuccinctDynamicVector&& other) = default;
         
     /// Destructor
     ~SuccinctDynamicVector();
@@ -78,6 +82,10 @@ public:
     /// Construct and set page size (starts empty)
     PagedSuccinctDynamicVector(size_t page_size);
     
+    /// Move constructors
+    PagedSuccinctDynamicVector(PagedSuccinctDynamicVector&& other) = default;
+    PagedSuccinctDynamicVector& operator=(PagedSuccinctDynamicVector&& other) = default;
+    
     // Destructor
     ~PagedSuccinctDynamicVector();
     
@@ -123,6 +131,10 @@ class SuccinctDeque {
 public:
     SuccinctDeque(void);
     ~SuccinctDeque(void);
+    
+    /// Move constructors
+    SuccinctDeque(SuccinctDeque&& other) = default;
+    SuccinctDeque& operator=(SuccinctDeque&& other) = default;
     
     /// Set the i-th value
     inline void set(const size_t& i, const uint64_t& value);
@@ -173,6 +185,10 @@ class SuccinctSplayTree {
 public:
     SuccinctSplayTree(void);
     ~SuccinctSplayTree(void);
+    
+    /// Move constructors
+    SuccinctSplayTree(SuccinctSplayTree&& other) = default;
+    SuccinctSplayTree& operator=(SuccinctSplayTree&& other) = default;
     
     /// Insert a key-value pair. If the key already exists, the current value
     /// will be replaced with the given value.
@@ -410,7 +426,7 @@ inline void SuccinctDeque::append_front(const uint64_t& value) {
             new_vec.set(i + 1, get(i));
         }
         
-        vec = new_vec;
+        vec = std::move(new_vec);
         begin_idx = 0;
     }
     else {
@@ -437,7 +453,7 @@ inline void SuccinctDeque::append_back(const uint64_t& value) {
         }
         new_vec.set(filled, value);
         
-        vec = new_vec;
+        vec = std::move(new_vec);
         begin_idx = 0;
         filled++;
     }
@@ -456,7 +472,7 @@ inline void SuccinctDeque::contract() {
             new_vec.set(i, get(i));
         }
         
-        vec = new_vec;
+        vec = std::move(new_vec);
         begin_idx = 0;
     }
 }
@@ -499,7 +515,7 @@ inline uint64_t PagedSuccinctDynamicVector::get(const size_t& i) const {
 
 inline void PagedSuccinctDynamicVector::append(const uint64_t& value) {
     if (diffs.size() % page_size == 0) {
-        diffs.append(0);
+        diffs.append(to_diff(value, value));
         pages.append(value);
     }
     else {

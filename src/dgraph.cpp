@@ -491,9 +491,9 @@ namespace dankgraph {
             }
             
             // replace graph_iv with the defragged copy
-            graph_iv = new_graph_iv;
-            seq_length_iv = new_seq_length_iv;
-            seq_start_iv = new_seq_start_iv;
+            graph_iv = std::move(new_graph_iv);
+            seq_length_iv = std::move(new_seq_length_iv);
+            seq_start_iv = std::move(new_seq_start_iv);
             deleted_node_records = 0;
         }
         
@@ -533,7 +533,7 @@ namespace dankgraph {
                 }
             }
             
-            edge_lists_iv = new_edge_lists_iv;
+            edge_lists_iv = std::move(new_edge_lists_iv);
             
             deleted_edge_records = 0;
         }
