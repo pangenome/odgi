@@ -4,6 +4,7 @@
 #include "dynamic.hpp"
 #include "handle_types.hpp"
 #include "handle_helper.hpp"
+#include "dna.hpp"
 
 namespace dankgraph {
 
@@ -29,6 +30,8 @@ public:
     step_t get_occurrence(uint64_t rank) const;
     /// unlink the occurrence from the graph handle, storing the sequence in the path itself
     void unlink_occurrence(uint64_t rank, const std::string& seq);
+    /// relink the occurrence to the graph, using the given handle as target and sequence to verify correctness
+    void link_occurrence(uint64_t rank, const handle_t& handle, const std::string& seq);
 private:
     /// store the ids in the path
     /// zeros indicate privately stored sequences in unlinked occurrences
@@ -62,7 +65,7 @@ inline step_t path_t::get_occurrence(uint64_t rank) const {
     result.id = ids_wt.at(rank);
     result.strand = strands_wt.at(rank);
     if (!result.id) {
-        for (uint64_t i = seq_wt.select(ids_wt.rank(rank, 0), 0);
+        for (uint64_t i = seq_wt.select(ids_wt.rank(rank, 0), 0)+1;
              ; ++i) {
             char c = seq_wt.at(i);
             if (!c) break;
@@ -83,6 +86,27 @@ inline void path_t::unlink_occurrence(uint64_t rank, const std::string& seq) {
     // CAUTION we've appended the seq in its natural orientation in the graph
     // and the orientation is maintained in the strand_bv
     // we have to refer to this when e.g. serializing the path
+}
+
+inline void path_t::link_occurrence(uint64_t rank, const handle_t& handle, const std::string& seq) {
+    // get the original step to verify validity of new step sequence and set orientation
+    step_t step = get_occurrence(rank);
+    // assert that it's unlinked
+    assert(step.id == 0);
+    // verify the sequence, assume that seq is that of the new handle
+    assert(step.seq == (handle_helper::unpack_bit(handle) == step.strand ? seq : reverse_complement(seq)));
+    // set the path step id to that of the handle
+    ids_wt.remove(rank);
+    ids_wt.insert(rank, handle_helper::unpack_number(handle));
+    // set the strand flag to that of the handle
+    strands_wt.remove(rank);
+    strands_wt.insert(rank, handle_helper::unpack_bit(handle));
+    // remove the sequence from seq_wt
+    uint64_t i = seq_wt.select(ids_wt.rank(rank, 0), 0)+1;
+    while (seq_wt.at(i) != 0) {
+        seq_wt.remove(i);
+    }
+    seq_wt.remove(i); // remove trailing delimiter 0
 }
 
 }

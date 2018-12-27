@@ -630,10 +630,54 @@ void graph_t::swap_handles(const handle_t& a, const handle_t& b) {
 /// reflect this. Invalidates all handles to the node (including the one
 /// passed). Returns a new, valid handle to the node in its new forward
 /// orientation. Note that it is possible for the node's ID to change.
-/// Does not update any stored paths. May change the ordering of the underlying
+/// Updates all stored paths. May change the ordering of the underlying
 /// graph.
 handle_t graph_t::apply_orientation(const handle_t& handle) {
-    
+    // do nothing if we're already in the right orientation
+    if (!handle_helper::unpack_bit(handle)) return handle;
+    // store edges
+    vector<handle_t> edges_fwd;
+    vector<handle_t> edges_rev;
+    follow_edges(handle, false, [&](const handle_t& h) {
+            edges_fwd.push_back(h);
+        });
+    follow_edges(handle, true, [&](const handle_t& h) {
+            edges_rev.push_back(h);
+        });
+    // save the sequence's reverse complement, which we will use to add the new handle
+    const std::string seq = (handle_helper::unpack_bit(handle)
+                             ? reverse_complement(get_sequence(handle))
+                             : get_sequence(handle));
+    // get the path set
+    //vector<path_occ
+    vector<occurrence_handle_t> occurrences;
+    vector<bool> orientations;
+    for_each_occurrence_on_handle(handle, [&](const occurrence_handle_t& occ) {
+            // save occurrence information
+            occurrences.push_back(occ);
+            auto& path = paths.at(as_integers(occ)[0]);
+            // record relative orientation
+            orientations.push_back(path.get_occurrence(as_integers(occ)[1]).strand);
+        });
+    // destroy the handle!
+    destroy_handle(handle);
+    // we have the technology. we can rebuild it.
+    handle_t new_handle = create_handle(seq);
+    // reconnect it to the graph
+    for (auto& h : edges_fwd) {
+        create_edge(handle_helper::toggle_bit(new_handle), h);
+    }
+    for (auto& h : edges_rev) {
+        create_edge(h, handle_helper::toggle_bit(new_handle));
+    }
+    // and relink it to the paths
+    for (uint64_t j = 0; j < occurrences.size(); ++j) {
+        auto& occ = occurrences.at(j);
+        bool orient = orientations.at(j);
+        handle_t h = orient ? new_handle : handle_helper::toggle_bit(new_handle);
+        auto& path = paths.at(as_integers(occ)[0]);
+        path.link_occurrence(as_integers(occ)[1], h, seq);
+    }
 }
     
 /// Split a handle's underlying node at the given offsets in the handle's
