@@ -32,6 +32,8 @@ public:
     void unlink_occurrence(uint64_t rank, const std::string& seq);
     /// relink the occurrence to the graph, using the given handle as target and sequence to verify correctness
     void link_occurrence(uint64_t rank, const handle_t& handle, const std::string& seq);
+    /// replace the occurrence with a series of steps (used in divide_handle)
+    void replace_occurrence(uint64_t rank, const std::vector<handle_t>& handles);
 private:
     /// store the ids in the path
     /// zeros indicate privately stored sequences in unlinked occurrences
@@ -79,10 +81,23 @@ inline void path_t::unlink_occurrence(uint64_t rank, const std::string& seq) {
     // set the path step id to 0
     ids_wt.remove(rank);
     ids_wt.insert(rank, 0);
-    // append the sequence to seq_wt
-    if (seq_wt.size() == 0) seq_wt.push_back(0); // start and end with 0s
-    for (auto c : seq) seq_wt.push_back(c);
-    seq_wt.push_back(0);
+    uint64_t null_rank = ids_wt.rank(rank, 0);
+    // insert the sequence in the right place in seq_wt
+    if (seq_wt.size() == 0) {
+        // at the end
+        assert(null_rank == 0);
+        seq_wt.push_back(0); // start and end with 0s
+        for (auto c : seq) seq_wt.push_back(c);
+        seq_wt.push_back(0);
+    } else {
+        // at a particular place
+        uint64_t i = seq_wt.select(null_rank, 0)+1;
+        seq_wt.insert(i, 0); // insert the 0
+        // write in reverse
+        for (uint64_t j = seq.size()-1; j >= 0; --j) {
+            seq_wt.insert(i, seq.at(j));
+        }
+    }
     // CAUTION we've appended the seq in its natural orientation in the graph
     // and the orientation is maintained in the strand_bv
     // we have to refer to this when e.g. serializing the path
@@ -107,6 +122,18 @@ inline void path_t::link_occurrence(uint64_t rank, const handle_t& handle, const
         seq_wt.remove(i);
     }
     seq_wt.remove(i); // remove trailing delimiter 0
+}
+
+inline void path_t::replace_occurrence(uint64_t rank, const std::vector<handle_t>& handles) {
+    // delete the step
+    ids_wt.remove(rank);
+    strands_wt.remove(rank);
+    // insert the new steps in reverse order
+    for (uint64_t i = handles.size()-1; i >= 0; --i) {
+        auto& handle = handles.at(i);
+        ids_wt.insert(rank, handle_helper::unpack_number(handle));
+        strands_wt.insert(rank, handle_helper::unpack_bit(handle));
+    }
 }
 
 }

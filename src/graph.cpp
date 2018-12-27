@@ -649,7 +649,6 @@ handle_t graph_t::apply_orientation(const handle_t& handle) {
                              ? reverse_complement(get_sequence(handle))
                              : get_sequence(handle));
     // get the path set
-    //vector<path_occ
     vector<occurrence_handle_t> occurrences;
     vector<bool> orientations;
     for_each_occurrence_on_handle(handle, [&](const occurrence_handle_t& occ) {
@@ -688,7 +687,72 @@ handle_t graph_t::apply_orientation(const handle_t& handle) {
 /// passed in.
 /// Updates stored paths.
 std::vector<handle_t> graph_t::divide_handle(const handle_t& handle, const std::vector<size_t>& offsets) {
-    
+    // convert the offsets to the forward strand, if needed
+    std::vector<size_t> fwd_offsets;
+    size_t length = get_length(handle);
+    if (handle_helper::unpack_bit(handle)) {
+        for (auto& o : offsets) fwd_offsets.push_back(length-o);
+    } else {
+        for (auto& o : offsets) fwd_offsets.push_back(o);
+    }
+    std::sort(fwd_offsets.begin(), fwd_offsets.end());
+    handle_t fwd_handle = handle_helper::unpack_bit(handle) ? handle_helper::toggle_bit(handle) : handle;
+    // break it into the given pieces by building up the new node sequences
+    std::string seq = get_sequence(fwd_handle);
+    std::vector<std::string> seqs;
+    for (uint64_t i = 0; i < offsets.size()-1; ++i) {
+        seqs.push_back(seq.substr(offsets[i], offsets[i+1]-offsets[i]));
+    }
+    // make the handles
+    std::vector<handle_t> handles;
+    for (auto& s : seqs) {
+        handles.push_back(create_handle(s));
+    }
+    // and record their reverse, for use in path fixup
+    std::vector<handle_t> rev_handles;
+    for (auto& h : handles) {
+        rev_handles.push_back(handle_helper::toggle_bit(h));
+    }
+    std::reverse(rev_handles.begin(), rev_handles.end());
+    // connect the pieces head to tail
+    for (uint64_t i = 0; i < handles.size()-1; ++i) {
+        create_edge(handles[i], handles[i+1]);
+    }
+    // collect the handle's path context
+    vector<occurrence_handle_t> occurrences;
+    vector<bool> orientations;
+    for_each_occurrence_on_handle(handle, [&](const occurrence_handle_t& occ) {
+            // save occurrence information
+            occurrences.push_back(occ);
+            auto& path = paths.at(as_integers(occ)[0]);
+            // record relative orientation
+            orientations.push_back(path.get_occurrence(as_integers(occ)[1]).strand);
+        });
+    // replace the path steps with the new handles in the correct orientation
+    for (uint64_t j = 0; j < occurrences.size(); ++j) {
+        auto& occ = occurrences.at(j);
+        auto& path = paths.at(as_integers(occ)[0]);
+        bool flip = orientations.at(j);
+        if (flip) {
+            path.replace_occurrence(as_integers(occ)[1], rev_handles);
+        } else {
+            path.replace_occurrence(as_integers(occ)[1], handles);
+        }
+    }
+    // collect the context of the forward handle
+    vector<handle_t> edges_fwd;
+    vector<handle_t> edges_rev;
+    follow_edges(fwd_handle, false, [&](const handle_t& h) {
+            edges_fwd.push_back(h);
+        });
+    follow_edges(fwd_handle, true, [&](const handle_t& h) {
+            edges_rev.push_back(h);
+        });
+    // destroy the handle
+    destroy_handle(fwd_handle);
+    // connect the ends to the previous context
+    for (auto& h : edges_rev) create_edge(h, handles.front());
+    for (auto& h : edges_rev) create_edge(handles.back(), h);
 }
     
 
