@@ -371,6 +371,7 @@ handle_t graph_t::create_handle(const std::string& sequence, const id_t& id) {
     id_t new_id = id;
     // set new max
     _max_node_id = max(new_id, _max_node_id);
+    _min_node_id = max((uint64_t)1, (uint64_t)min(new_id, _min_node_id));
     // add to graph_id_wt
     graph_id_wt.push_back(new_id);
     // set up initial delimiters if the graph is empty
@@ -381,6 +382,7 @@ handle_t graph_t::create_handle(const std::string& sequence, const id_t& id) {
         edge_rev_wt.push_back(0);
         edge_rev_inv_bv.push_back(0);
         path_id_wt.push_back(0);
+        path_rank_wt.push_back(0);
     }
     // append to seq_wt, delimit by 0
     for (auto c : sequence) seq_wt.push_back(c);
@@ -392,10 +394,11 @@ handle_t graph_t::create_handle(const std::string& sequence, const id_t& id) {
     edge_rev_inv_bv.push_back(0);
     // set up delimiters for path_id_wt, to be filled later
     path_id_wt.push_back(0);
+    path_rank_wt.push_back(0);
     // increment node count
     ++_node_count;
     // return handle
-    return as_handle(new_id);
+    return handle_helper::pack(new_id, 0);
 }
     
 /// Remove the node belonging to the given handle and all of its edges.
@@ -482,22 +485,22 @@ void graph_t::create_edge(const handle_t& left, const handle_t& right) {
     }
     bool inv = (left_rev != right_rev);
     if (!left_rev) {
-        uint64_t edge_fwd_left_offset = edge_fwd_wt.select(0, left_rank);
-        edge_fwd_wt.insert(edge_fwd_left_offset+1, right_rank+1);
-        edge_fwd_inv_bv.insert(edge_fwd_left_offset+1, inv);
+        uint64_t edge_fwd_left_offset = edge_fwd_wt.select(left_rank, 0);
+        edge_fwd_wt.insert(edge_fwd_left_offset, right_rank);
+        edge_fwd_inv_bv.insert(edge_fwd_left_offset, inv);
     } else {
-        uint64_t edge_rev_left_offset = edge_rev_wt.select(0, left_rank);
-        edge_rev_wt.insert(edge_rev_left_offset+1, right_rank+1);
-        edge_rev_inv_bv.insert(edge_rev_left_offset+1, inv);
+        uint64_t edge_rev_left_offset = edge_rev_wt.select(left_rank, 0);
+        edge_rev_wt.insert(edge_rev_left_offset, right_rank);
+        edge_rev_inv_bv.insert(edge_rev_left_offset, inv);
     }
     if (!right_rev) {
-        uint64_t edge_rev_right_offset = edge_rev_wt.select(0, right_rank);
-        edge_rev_wt.insert(edge_rev_right_offset+1, left_rank+1);
-        edge_rev_inv_bv.insert(edge_rev_right_offset+1, inv);
+        uint64_t edge_rev_right_offset = edge_rev_wt.select(right_rank, 0);
+        edge_rev_wt.insert(edge_rev_right_offset, left_rank);
+        edge_rev_inv_bv.insert(edge_rev_right_offset, inv);
     } else {
-        uint64_t edge_fwd_right_offset = edge_fwd_wt.select(0, right_rank);
-        edge_rev_wt.insert(edge_fwd_right_offset+1, left_rank+1);
-        edge_rev_inv_bv.insert(edge_fwd_right_offset+1, inv);
+        uint64_t edge_fwd_right_offset = edge_fwd_wt.select(right_rank, 0);
+        edge_rev_wt.insert(edge_fwd_right_offset, left_rank);
+        edge_rev_inv_bv.insert(edge_fwd_right_offset, inv);
     }
     ++_edge_count;
 }
@@ -526,7 +529,7 @@ void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
     }
     bool inv = (left_rev != right_rev);
     if (!left_rev) {
-        uint64_t edge_fwd_left_offset = edge_fwd_wt.select(0, left_rank);
+        uint64_t edge_fwd_left_offset = edge_fwd_wt.select(left_rank, 0);
         uint64_t edge_fwd_left_offset_erase = 0;
         for (uint64_t i = edge_fwd_left_offset+1; ; ++i) {
             uint64_t c = edge_fwd_wt.at(i);
@@ -541,7 +544,7 @@ void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
             edge_fwd_inv_bv.remove(edge_fwd_left_offset_erase);
         }
     } else {
-        uint64_t edge_rev_left_offset = edge_rev_wt.select(0, left_rank);
+        uint64_t edge_rev_left_offset = edge_rev_wt.select(left_rank, 0);
         uint64_t edge_rev_left_offset_erase = 0;
         for (uint64_t i = edge_rev_left_offset+1; ; ++i) {
             uint64_t c = edge_rev_wt.at(i);
@@ -557,7 +560,7 @@ void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
         }
     }
     if (!right_rev) {
-        uint64_t edge_rev_right_offset = edge_rev_wt.select(0, right_rank);
+        uint64_t edge_rev_right_offset = edge_rev_wt.select(right_rank, 0);
         uint64_t edge_rev_right_offset_erase = 0;
         for (uint64_t i = edge_rev_right_offset+1; ; ++i) {
             uint64_t c = edge_rev_wt.at(i);
@@ -572,7 +575,7 @@ void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
             edge_rev_inv_bv.remove(edge_rev_right_offset_erase);
         }
     } else {
-        uint64_t edge_fwd_right_offset = edge_fwd_wt.select(0, right_rank);
+        uint64_t edge_fwd_right_offset = edge_fwd_wt.select(right_rank, 0);
         uint64_t edge_fwd_right_offset_erase = 0;
         for (uint64_t i = edge_fwd_right_offset+1; ; ++i) {
             uint64_t c = edge_fwd_wt.at(i);
@@ -779,6 +782,7 @@ void graph_t::destroy_path(const path_handle_t& path) {
  */
 path_handle_t graph_t::create_path_handle(const std::string& name) {
     paths.emplace_back(name);
+    return as_path_handle(paths.size()-1);
 }
     
 /**
@@ -787,9 +791,70 @@ path_handle_t graph_t::create_path_handle(const std::string& name) {
  * occurrences on the path, and to other paths, must remain valid.
  */
 occurrence_handle_t graph_t::append_occurrence(const path_handle_t& path, const handle_t& to_append) {
-    //void append_occurrence(const id_t& id, bool strand);
     paths[as_integer(path)].append_occurrence(to_append);
+    // and add the occurrence to the correct places in the node to path/occurrence mappings
+    uint64_t prev_occs_on_node = 0;
+    uint64_t i = path_id_wt.select(handle_helper::unpack_number(to_append), 0);
+    uint64_t j = i + 1;
+    while (path_id_wt.at(j) != 0) {
+        if (path_id_wt.at(j) == as_integer(path)+1) ++prev_occs_on_node;
+        ++j;
+    }
+    path_id_wt.insert(i+1, as_integer(path)+1);
+    path_rank_wt.insert(i+1, prev_occs_on_node+1);
+    occurrence_handle_t occ;
+    as_integers(occ)[0] = as_integer(path);
+    as_integers(occ)[1] = prev_occs_on_node;
+    return occ;
 }
 
+void graph_t::display(void) {
+    std::cerr << "------ graph state ------" << std::endl;
+
+    std::cerr << "_max_node_id = " << _max_node_id << std::endl;
+    std::cerr << "_min_node_id = " << _min_node_id << std::endl;
+
+    std::cerr << "graph_id_wt" << "\t";
+    for (uint64_t i = 0; i < graph_id_wt.size(); ++i) std::cerr << graph_id_wt[i] << " "; std::cerr << std::endl;
+    /// Records edges of the 3' end on the forward strand, delimited by 0
+    /// ordered by rank in graph_id_wt, defined by opposite rank+1 (handle)
+    std::cerr << "edge_fwd_wt" << "\t";
+    for (uint64_t i = 0; i < edge_fwd_wt.size(); ++i) std::cerr << edge_fwd_wt[i] << " "; std::cerr << std::endl;
+    /// Marks inverting edges in edge_fwd_wt
+    std::cerr << "edge_fwd_inv_bv" << "\t";
+    for (uint64_t i = 0; i < edge_fwd_inv_bv.size(); ++i) std::cerr << edge_fwd_inv_bv[i] << " "; std::cerr << std::endl;
+    /// Records edges of the 3' end on the reverse strand, delimited by 0,
+    /// ordered by rank in graph_id_wt, defined by opposite rank+1 (handle)
+    std::cerr << "edge_rev_wt" << "\t";
+    for (uint64_t i = 0; i < edge_rev_wt.size(); ++i) std::cerr << edge_rev_wt[i] << " "; std::cerr << std::endl;
+    /// Marks inverting edges in edge_rev_wt
+    std::cerr << "edge_rev_inv_bv" << "\t";
+    for (uint64_t i = 0; i < edge_rev_inv_bv.size(); ++i) std::cerr << edge_rev_inv_bv[i] << " "; std::cerr << std::endl;
+    /// Encodes all of the sequences of all nodes and all paths in the graph.
+    /// The node sequences occur in the same order as in graph_iv;
+    /// Node boundaries are given by 0s
+    std::cerr << "seq_wt" << "\t\t";
+    for (uint64_t i = 0; i < seq_wt.size(); ++i) std::cerr << seq_wt[i] << " "; std::cerr << std::endl;
+    /// Ordered across the nodes in graph_id_wt, stores the path ids (1-based) at each
+    /// segment in seq_wt, delimited by 0, one for each path occurrrence (node traversal).
+    std::cerr << "path_id_wt" << "\t";
+    for (uint64_t i = 0; i < path_id_wt.size(); ++i) std::cerr << path_id_wt[i] << " "; std::cerr << std::endl;
+    /// Ordered across the nodes in graph_id_wt, stores the (1-based) rank of the
+    /// particular node traversal in each path. The stored value is the rank of the
+    /// node id among in the path id list. For paths that cross a given node once,
+    /// this will simply be 1. Each subsequent crossing will yield 2, 3, ... etc.
+    /// This provides a mapping between graph node id and the occurrence_handle_t
+    /// that is dynamically derivable and robust to the modification of any other part
+    /// of the path.
+    std::cerr << "path_rank_wt" << "\t";
+    for (uint64_t i = 0; i < path_rank_wt.size(); ++i) std::cerr << path_rank_wt[i] << " "; std::cerr << std::endl;
+
+    // not dumped...
+    /// Stores path names in their internal order, delimited by '$'
+    //dyn::wt_fmi path_name_fmi;
+    /// Marks the beginning of each path name
+    //dyn::suc_bv path_name_bv;
+
+}
 
 }

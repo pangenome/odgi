@@ -199,8 +199,8 @@ public:
     size_t get_occurrence_count(const path_handle_t& path_handle) const;
 
     /// Returns the number of paths stored in the graph
-    size_t get_path_count() const;
-    
+    size_t get_path_count(void) const;
+
     /// Execute a function on each path in the graph
     // TODO: allow stopping early?
     void for_each_path_handle(const std::function<void(const path_handle_t&)>& iteratee) const;
@@ -359,6 +359,9 @@ public:
      */
     occurrence_handle_t append_occurrence(const path_handle_t& path, const handle_t& to_append);
 
+    /// A helper function to visualize the state of the graph
+    void display(void);
+    
 /// These are the backing data structures that we use to fulfill the above functions
 
 private:
@@ -389,7 +392,7 @@ private:
     dyn::wt_string<dyn::suc_bv> seq_wt;
 
     /// Ordered across the nodes in graph_id_wt, stores the path ids (1-based) at each
-    /// segment in seq_wt, delimited by 0
+    /// segment in seq_wt, delimited by 0, one for each path occurrrence (node traversal).
     dyn::wt_string<dyn::suc_bv> path_id_wt;
 
     /// Ordered across the nodes in graph_id_wt, stores the (1-based) rank of the
@@ -398,7 +401,7 @@ private:
     /// this will simply be 1. Each subsequent crossing will yield 2, 3, ... etc.
     /// This provides a mapping between graph node id and the occurrence_handle_t
     /// that is dynamically derivable and robust to the modification of any other part
-    /// of the path.
+    /// of the path. Length == to path_id_wt
     dyn::wt_string<dyn::suc_bv> path_rank_wt;
 
     /// Stores path names in their internal order, delimited by '$'
