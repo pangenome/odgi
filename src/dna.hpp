@@ -64,6 +64,36 @@ inline void reverse_complement_in_place(std::string& seq) {
     }
 }
 
+inline int dna_as_int(char c) {
+    switch (c) {
+    case 'A':
+        return 1;
+    case 'T':
+        return 2;
+    case 'C':
+        return 3;
+    case 'G':
+        return 4;
+    default:
+        return 5;
+    }
+}
+
+inline char int_as_dna(int i) {
+    switch (i) {
+    case 1:
+        return 'A';
+    case 2:
+        return 'T';
+    case 3:
+        return 'C';
+    case 4:
+        return 'G';
+    default:
+        return 'N';
+    }
+}
+
 }
 
 #endif

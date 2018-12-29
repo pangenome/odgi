@@ -385,7 +385,7 @@ handle_t graph_t::create_handle(const std::string& sequence, const id_t& id) {
         path_rank_wt.push_back(0);
     }
     // append to seq_wt, delimit by 0
-    for (auto c : sequence) seq_wt.push_back(c);
+    for (auto c : sequence) seq_wt.push_back(dna_as_int(c));
     seq_wt.push_back(0);
     // set up delemiters for edges, for later filling
     edge_fwd_wt.push_back(0);
