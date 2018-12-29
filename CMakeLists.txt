@@ -78,6 +78,14 @@ set(gfakluge_INCLUDE "${INSTALL_DIR}/src/gfakluge/src")
 set(gfakluge_tinyFA_INCLUDE "${INSTALL_DIR}/src/gfakluge/src/tinyFA")
 set(gfakluge_LIB "${INSTALL_DIR}/src/gfakluge")
 
+# taywee's C++ args library, header only
+ExternalProject_Add(tayweeargs
+  GIT_REPOSITORY "https://github.com/Taywee/args.git"
+  GIT_TAG "3de44ec671db452cc0c4ef86399b108939768abb"
+  UPDATE_COMMAND ""
+  INSTALL_COMMAND "")
+ExternalProject_Get_property(tayweeargs SOURCE_DIR)
+set(tayweeargs_INCLUDE "${SOURCE_DIR}")
 
 # sparsepp
 ExternalProject_Add(sparsepp
@@ -106,12 +114,14 @@ add_executable(dankgraph
 add_dependencies(dankgraph sdsl-lite)
 add_dependencies(dankgraph dynamic)
 add_dependencies(dankgraph gfakluge)
+add_dependencies(dankgraph tayweeargs)
 target_include_directories(dankgraph PUBLIC
   "${sdsl-lite_INCLUDE}"
   "${sdsl-lite-divsufsort_INCLUDE}"
   "${dynamic_INCLUDE}"
   "${gfakluge_INCLUDE}"
   "${gfakluge_tinyFA_INCLUDE}"
+  "${tayweeargs_INCLUDE}"
   "${sparsepp_INCLUDE}")
 target_link_libraries(dankgraph
   "${sdsl-lite_LIB}/libsdsl.a"
