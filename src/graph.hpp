@@ -14,6 +14,7 @@
 #include "handle_types.hpp"
 #include "handle_helper.hpp"
 #include "dynamic.hpp"
+#include "dynamic_types.hpp"
 
 namespace dankgraph {
 
@@ -21,8 +22,9 @@ namespace dankgraph {
 class graph_t {
         
 public:
-    graph_t();
-    ~graph_t();
+    graph_t(void);
+    graph_t(uint64_t n);
+    ~graph_t(void);
         
     /// Look up the handle for the node with the given ID in the given orientation
     handle_t get_handle(const id_t& node_id, bool is_reverse = false) const;
@@ -368,32 +370,32 @@ private:
 
     /// Records node ids to allow for random access and random order
     /// Use the special value "0" to indicate deleted nodes
-    dyn::wt_string<dyn::suc_bv> graph_id_wt;
+    wt_str graph_id_wt;
     id_t _max_node_id = 0;
     id_t _min_node_id = 0;
 
     /// Records edges of the 3' end on the forward strand, delimited by 0
     /// ordered by rank in graph_id_wt, defined by opposite rank+1 (handle)
-    dyn::wt_string<dyn::suc_bv> edge_fwd_wt;
+    wt_str edge_fwd_wt;
 
     /// Marks inverting edges in edge_fwd_wt
-    dyn::suc_bv edge_fwd_inv_bv;
+    suc_bv edge_fwd_inv_bv;
 
     /// Records edges of the 3' end on the reverse strand, delimited by 0,
     /// ordered by rank in graph_id_wt, defined by opposite rank+1 (handle)
-    dyn::wt_string<dyn::suc_bv> edge_rev_wt;
+    wt_str edge_rev_wt;
 
     /// Marks inverting edges in edge_rev_wt
-    dyn::suc_bv edge_rev_inv_bv;
+    suc_bv edge_rev_inv_bv;
 
     /// Encodes all of the sequences of all nodes and all paths in the graph.
     /// The node sequences occur in the same order as in graph_iv;
     /// Node boundaries are given by 0s
-    dyn::wt_string<dyn::suc_bv> seq_wt;
+    wt_str seq_wt;
 
     /// Ordered across the nodes in graph_id_wt, stores the path ids (1-based) at each
     /// segment in seq_wt, delimited by 0, one for each path occurrrence (node traversal).
-    dyn::wt_string<dyn::suc_bv> path_id_wt;
+    wt_str path_id_wt;
 
     /// Ordered across the nodes in graph_id_wt, stores the (1-based) rank of the
     /// particular node traversal in each path. The stored value is the rank of the
@@ -402,13 +404,13 @@ private:
     /// This provides a mapping between graph node id and the occurrence_handle_t
     /// that is dynamically derivable and robust to the modification of any other part
     /// of the path. Length == to path_id_wt
-    dyn::wt_string<dyn::suc_bv> path_rank_wt;
+    wt_str path_rank_wt;
 
     /// Stores path names in their internal order, delimited by '$'
     dyn::wt_fmi path_name_fmi;
 
     /// Marks the beginning of each path name
-    dyn::suc_bv path_name_bv;
+    suc_bv path_name_bv;
 
     /// Encodes the embedded paths of the graph. Each path is represented as three vectors
     /// ids, strand, sequences

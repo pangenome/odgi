@@ -2,6 +2,7 @@
 #define dank_path_hpp
 
 #include "dynamic.hpp"
+#include "dynamic_types.hpp"
 #include "handle_types.hpp"
 #include "handle_helper.hpp"
 #include "dna.hpp"
@@ -37,17 +38,17 @@ public:
 private:
     /// store the ids in the path
     /// zeros indicate privately stored sequences in unlinked occurrences
-    dyn::wt_string<dyn::suc_bv> ids_wt;
+    wt_str ids_wt;
     /// the strand of each step
-    dyn::suc_bv strands_wt;
+    suc_bv strands_wt;
     /// sequence that is in this path, but not represented in the graph
     /// for instance, after the removal of nodes from the graph
-    dyn::wt_string<dyn::suc_bv> seq_wt;
+    wt_str seq_wt;
 };
 
 inline void path_t::clear(void) {
-    dyn::wt_string<dyn::suc_bv> null_wt;
-    dyn::suc_bv null_bv;
+    wt_str null_wt;
+    suc_bv null_bv;
     ids_wt = null_wt;
     strands_wt = null_bv;
     seq_wt = null_wt;

@@ -8,8 +8,8 @@ project(dankgraph)
 set(CMAKE_CXX_STANDARD 11)
 
 # Use all standard-compliant optimizations
-set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -O2")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -O2")
+set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -g")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -g")
 
 # We use OpenMP for parallelism
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
@@ -55,7 +55,7 @@ set(sdsl-lite-divsufsort_LIB "${INSTALL_DIR}/src/sdsl-lite-build/external/libdiv
 # DYNAMIC (full build using its cmake config)
 ExternalProject_Add(dynamic
   GIT_REPOSITORY "https://github.com/vgteam/DYNAMIC.git"
-  GIT_TAG "5ac514bb4d76563a0cf0d62f6f205f6ccfdb4518"
+  GIT_TAG "613d6819c5364744db63226cecb1e40a770f47bb"
   # we don't actually install dynamic... it's header only
   #CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
   UPDATE_COMMAND ""
@@ -101,12 +101,11 @@ ExternalProject_Get_property(sparsepp INSTALL_DIR)
 set(sparsepp_INCLUDE "${INSTALL_DIR}/src/sparsepp/sparsepp/")
 set(sparsepp_LIB "${INSTALL_DIR}/src/sparsepp/sparsepp/")
 
-set(CMAKE_BUILD_TYPE Debug) 
+set(CMAKE_BUILD_TYPE Release)
 
 # set up our target executable and specify its dependencies and includes
 add_executable(dankgraph
   ${CMAKE_SOURCE_DIR}/src/graph.cpp
-  ${CMAKE_SOURCE_DIR}/src/dynamic_structs.cpp
   ${CMAKE_SOURCE_DIR}/src/path.cpp
   ${CMAKE_SOURCE_DIR}/src/main.cpp
   ${CMAKE_SOURCE_DIR}/src/bgraph.cpp
@@ -127,9 +126,12 @@ target_link_libraries(dankgraph
   "${sdsl-lite_LIB}/libsdsl.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort64.a"
+  "-ltcmalloc"
   )
+
+#set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc")
 
 if (APPLE)
 elseif (TRUE)
-  set(CMAKE_EXE_LINKER_FLAGS "-static")
+#  set(CMAKE_EXE_LINKER_FLAGS "-static")
 endif()

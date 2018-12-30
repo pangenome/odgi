@@ -6,7 +6,22 @@
 
 namespace dankgraph {
 
-graph_t::graph_t(void) { }
+graph_t::graph_t(void) {
+    // to set a fixed alphabet size
+    //graph_id_wt = dyn::wt_string<dyn::suc_bv>(10000000);
+    //seq_wt = wt_str(6); // for DNA
+}
+
+graph_t::graph_t(uint64_t n) {
+    // to set a fixed alphabet size
+    graph_id_wt = wt_str(n);
+    edge_fwd_wt = wt_str(n);
+    edge_rev_wt = wt_str(n);
+    seq_wt = wt_str(6);
+    path_id_wt = wt_str(n);
+    path_rank_wt = wt_str(n);
+}
+
 graph_t::~graph_t(void) { }
 
 /// Look up the handle for the node with the given ID in the given orientation
@@ -595,8 +610,8 @@ void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
         
 /// Remove all nodes and edges. Does not update any stored paths.
 void graph_t::clear(void) {
-    dyn::wt_string<dyn::suc_bv> null_wt;
-    dyn::suc_bv null_bv;
+    wt_str null_wt;
+    suc_bv null_bv;
     dyn::wt_fmi null_fmi;
     _max_node_id = 0;
     _min_node_id = 0;
