@@ -47,16 +47,16 @@ handle_t graph_t::flip(const handle_t& handle) const {
 /// Get the length of a node
 size_t graph_t::get_length(const handle_t& handle) const {
     uint64_t offset = handle_helper::unpack_number(handle);
-    return seq_wt.select(offset+1, 0) - seq_wt.select(offset, 0);
+    return seq_wt.select(offset+1, 0)-1 - seq_wt.select(offset, 0);
 }
     
 /// Get the sequence of a node, presented in the handle's local forward orientation.
 std::string graph_t::get_sequence(const handle_t& handle) const {
     std::string seq;
     uint64_t offset = handle_helper::unpack_number(handle);
-    for (uint64_t i = seq_wt.select(offset, 0); ; ++i) {
+    for (uint64_t i = seq_wt.select(offset, 0)+1; ; ++i) {
         char c = seq_wt.at(i);
-        if (c) { seq += c; } else break;
+        if (c) { seq += int_as_dna(c); } else break;
     }
     return seq;
 }
@@ -66,7 +66,7 @@ std::string graph_t::get_sequence(const handle_t& handle) const {
 /// continue. Returns true if we finished and false if we stopped early.
 bool graph_t::follow_edges(const handle_t& handle, bool go_left, const std::function<bool(const handle_t&)>& iteratee) const {
     bool result = true;
-    bool offset = handle_helper::unpack_number(handle);
+    uint64_t offset = handle_helper::unpack_number(handle);
     bool is_rev = handle_helper::unpack_bit(handle);
     // NB edges are stored in canonical orientation, forward to reverse prefered
     if (!go_left && !is_rev || go_left && is_rev) {
@@ -833,7 +833,7 @@ path_handle_t graph_t::create_path_handle(const std::string& name) {
  * occurrences on the path, and to other paths, must remain valid.
  */
 occurrence_handle_t graph_t::append_occurrence(const path_handle_t& path, const handle_t& to_append) {
-    paths[as_integer(path)].append_occurrence(to_append);
+    paths[as_integer(path)].append_occurrence(get_id(to_append), handle_helper::unpack_bit(to_append));
     // and add the occurrence to the correct places in the node to path/occurrence mappings
     uint64_t prev_occs_on_node = 0;
     uint64_t i = path_id_wt.select(handle_helper::unpack_number(to_append), 0);
@@ -900,7 +900,37 @@ void graph_t::display(void) const {
 }
 
 void graph_t::to_gfa(std::ostream& out) const {
-
+    out << "H\tVN:Z:1.0" << std::endl;
+    // for each node
+    for_each_handle([&out,this](const handle_t& h) {
+            out << "S\t" << get_id(h) << "\t" << get_sequence(h) << std::endl;
+            // get the forward edges from this handle
+            follow_edges(h, false, [&out, &h, this](const handle_t& a){
+                    out << "L\t" << get_id(h) << "\t"
+                        << (handle_helper::unpack_bit(h)?"-":"+")
+                        << "\t" << get_id(a) << "\t"
+                        << (handle_helper::unpack_bit(a)?"-":"+")
+                        << "\t0M" << std::endl;
+                });
+        });
+    for_each_path_handle([&out,this](const path_handle_t& p) {
+            //occurrence_handle_t occ = get_first_occurrence(p);
+            out << "P\t" << get_path_name(p) << "\t";
+            auto& path = paths.at(as_integer(p));
+            uint64_t path_length = path.occurrence_count();
+            for (uint64_t i = 0; i < path_length; ++i) {
+                step_t step = path.get_occurrence(i);
+                out << step.id << (step.strand?"-":"+");
+                if (i+1 < path_length) out << ",";
+            }
+            out << "\t";
+            for (uint64_t i = 0; i < path_length; ++i) {
+                step_t step = path.get_occurrence(i);
+                out << get_length(get_handle(step.id)) << "M";
+                if (i+1 < path_length) out << ",";
+            }
+            out << std::endl;
+        });
 }
 
 }

@@ -30,6 +30,7 @@ int main(int argc, char** argv) {
     //args::ValueFlag<uint64_t> repeat_max(parser, "N", "limit transitive closure to include no more than N copies of a given input base", {'r', "repeat-max"});
     //args::ValueFlag<uint64_t> aln_keep_n_longest(parser, "N", "keep up to the N-longest alignments overlapping each query position", {'k', "aln-keep-n-longest"});
     //args::ValueFlag<uint64_t> aln_min_length(parser, "N", "ignore alignments shorter than this", {'m', "aln-min-length"});
+    args::Flag to_gfa(parser, "to_gfa", "write the graph to stdout in GFA format", {'G', "to-gfa"});
     args::Flag debug(parser, "debug", "enable debugging", {'d', "debug"});
     try {
         parser.ParseCLI(argc, argv);
@@ -103,6 +104,9 @@ int main(int argc, char** argv) {
     // here we should measure memory usage etc.
     if (args::get(debug)) {
         graph.display();
+    }
+    if (args::get(to_gfa)) {
+        graph.to_gfa(std::cout);
     }
     return 0;
 }

@@ -22,7 +22,7 @@ public:
     /// constructor
     path_t(const std::string& n) { name = n; }
     /// append a step across the given id with the orientation given by strand
-    void append_occurrence(const handle_t& handle);
+    void append_occurrence(const id_t& id, bool strand);
     /// remove all elements
     void clear(void);
     /// the number of steps in the path
@@ -54,9 +54,9 @@ inline void path_t::clear(void) {
     seq_wt = null_wt;
 }
 
-inline void path_t::append_occurrence(const handle_t& handle) {
-    ids_wt.push_back(handle_helper::unpack_number(handle));
-    strands_wt.push_back(handle_helper::unpack_bit(handle));
+inline void path_t::append_occurrence(const id_t& id, bool strand) {
+    ids_wt.push_back(id);
+    strands_wt.push_back(strand);
 }
 
 inline uint64_t path_t::occurrence_count(void) const {
