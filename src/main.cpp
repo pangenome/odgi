@@ -82,8 +82,8 @@ int main(int argc, char** argv) {
     //i = 0; std::cerr << std::endl;
     gg.for_each_edge_line_in_file(filename, [&](gfak::edge_elem e) {
             if (e.source_name.empty()) return;
-            handle_t a = handle_helper::pack(stol(e.source_name), !e.source_orientation_forward);
-            handle_t b = handle_helper::pack(stol(e.sink_name), !e.sink_orientation_forward);
+            handle_t a = graph.get_handle(stol(e.source_name), !e.source_orientation_forward);
+            handle_t b = graph.get_handle(stol(e.sink_name), !e.sink_orientation_forward);
             graph.create_edge(a, b);
             //if (i % 100 == 0) std::cerr << "edges " << i << "\r";
             //++i;

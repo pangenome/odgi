@@ -72,10 +72,11 @@ bool graph_t::follow_edges(const handle_t& handle, bool go_left, const std::func
     if (!go_left && !is_rev || go_left && is_rev) {
         uint64_t edges_begin = edge_fwd_wt.select(offset, 0)+1;
         for (uint64_t i = edges_begin; ; ++i) {
-            id_t rank = edge_fwd_wt.at(i);
-            if (rank==0) break; // end of record
+            uint64_t x = edge_fwd_wt.at(i);
+            if (x==0) break; // end of record
+            uint64_t id = edge_delta_to_id(get_id(handle), x);
             bool inv = edge_fwd_inv_bv.at(i);
-            handle_t handle = handle_helper::pack(rank-1, (inv ? !is_rev : is_rev));
+            handle_t handle = get_handle(id, (inv ? !is_rev : is_rev));
             result &= iteratee(handle);
             if (!result) break;
         }
@@ -83,10 +84,11 @@ bool graph_t::follow_edges(const handle_t& handle, bool go_left, const std::func
         assert(go_left && !is_rev || !go_left && is_rev);
         uint64_t edges_begin = edge_rev_wt.select(offset, 0)+1;
         for (uint64_t i = edges_begin; ; ++i) {
-            id_t rank = edge_rev_wt.at(i);
-            if (rank==0) break; // end of record
+            uint64_t x = edge_rev_wt.at(i);
+            if (x==0) break; // end of record
+            uint64_t id = edge_delta_to_id(get_id(handle), x);
             bool inv = edge_rev_inv_bv.at(i);
-            handle_t handle = handle_helper::pack(rank-1, (inv ? !is_rev : is_rev));
+            handle_t handle = get_handle(id, (inv ? !is_rev : is_rev));
             result &= iteratee(handle);
             if (!result) break;
         }
@@ -487,7 +489,9 @@ void graph_t::destroy_handle(const handle_t& handle) {
 /// Create an edge connecting the given handles in the given order and orientations.
 /// Ignores existing edges.
 void graph_t::create_edge(const handle_t& left, const handle_t& right) {
-    if (has_edge(left, right)) return; // do nothing if edge exists
+    //std::cerr << "create_edge from " << get_id(left) << " to " << get_id(right) << std::endl;
+    //if (has_edge(left, right)) return; // do nothing if edge exists
+    //std::cerr << "proceeding" << std::endl;
     uint64_t left_rank = handle_helper::unpack_number(left);
     bool left_rev = handle_helper::unpack_bit(left);
     uint64_t right_rank = handle_helper::unpack_number(right);
@@ -499,25 +503,48 @@ void graph_t::create_edge(const handle_t& left, const handle_t& right) {
         std::swap(left_rank, right_rank);
     }
     bool inv = (left_rev != right_rev);
+    // establish the insertion value
+    int64_t delta_right = get_id(left) - get_id(right);
+    uint64_t right_relative = (delta_right == 0 ? 1 : (delta_right > 0 ? 2*abs(delta_right) : 2*abs(delta_right)+1));
+    int64_t delta_left = get_id(right) - get_id(left);
+    uint64_t left_relative = (delta_left == 0 ? 1 : (delta_left > 0 ? 2*abs(delta_left) : 2*abs(delta_left+1)));
+    //uint64_t left_relative = right_rank;
+    //uint64_t right_relative = left_rank;
     if (!left_rev) {
-        uint64_t edge_fwd_left_offset = edge_fwd_wt.select(left_rank, 0);
-        edge_fwd_wt.insert(edge_fwd_left_offset, right_rank);
+        //std::cerr << "not left rev" << std::endl;
+        uint64_t edge_fwd_left_offset = edge_fwd_wt.select(left_rank+1, 0);
+        //std::cerr << "edge fwd " << edge_fwd_left_offset << std::endl;
+        edge_fwd_wt.insert(edge_fwd_left_offset, left_relative);
         edge_fwd_inv_bv.insert(edge_fwd_left_offset, inv);
     } else {
-        uint64_t edge_rev_left_offset = edge_rev_wt.select(left_rank, 0);
-        edge_rev_wt.insert(edge_rev_left_offset, right_rank);
+        //std::cerr << "left rev" << std::endl;
+        uint64_t edge_rev_left_offset = edge_rev_wt.select(left_rank+1, 0);
+        edge_rev_wt.insert(edge_rev_left_offset, left_relative);
         edge_rev_inv_bv.insert(edge_rev_left_offset, inv);
     }
     if (!right_rev) {
-        uint64_t edge_rev_right_offset = edge_rev_wt.select(right_rank, 0);
-        edge_rev_wt.insert(edge_rev_right_offset, left_rank);
+        //std::cerr << "not right rev" << std::endl;
+        uint64_t edge_rev_right_offset = edge_rev_wt.select(right_rank+1, 0);
+        edge_rev_wt.insert(edge_rev_right_offset, right_relative);
         edge_rev_inv_bv.insert(edge_rev_right_offset, inv);
     } else {
-        uint64_t edge_fwd_right_offset = edge_fwd_wt.select(right_rank, 0);
-        edge_rev_wt.insert(edge_fwd_right_offset, left_rank);
+        //std::cerr << "right rev" << std::endl;
+        uint64_t edge_fwd_right_offset = edge_fwd_wt.select(right_rank+1, 0);
+        edge_rev_wt.insert(edge_fwd_right_offset, right_relative);
         edge_rev_inv_bv.insert(edge_fwd_right_offset, inv);
     }
     ++_edge_count;
+}
+
+uint64_t graph_t::edge_delta_to_id(uint64_t base, uint64_t delta) const {
+    assert(delta != 0);
+    if (delta == 1) {
+        return base;
+    } else if (delta % 2 == 0) {
+        return base + delta/2;
+    } else { //if (delta-1 % 2 == 0) {
+        return base - (delta-1)/2;
+    }
 }
 
 bool graph_t::has_edge(const handle_t& left, const handle_t& right) {
@@ -823,37 +850,37 @@ occurrence_handle_t graph_t::append_occurrence(const path_handle_t& path, const 
     return occ;
 }
 
-void graph_t::display(void) {
+void graph_t::display(void) const {
     std::cerr << "------ graph state ------" << std::endl;
 
     std::cerr << "_max_node_id = " << _max_node_id << std::endl;
     std::cerr << "_min_node_id = " << _min_node_id << std::endl;
 
     std::cerr << "graph_id_wt" << "\t";
-    for (uint64_t i = 0; i < graph_id_wt.size(); ++i) std::cerr << graph_id_wt[i] << " "; std::cerr << std::endl;
+    for (uint64_t i = 0; i < graph_id_wt.size(); ++i) std::cerr << graph_id_wt.at(i) << " "; std::cerr << std::endl;
     /// Records edges of the 3' end on the forward strand, delimited by 0
     /// ordered by rank in graph_id_wt, defined by opposite rank+1 (handle)
     std::cerr << "edge_fwd_wt" << "\t";
-    for (uint64_t i = 0; i < edge_fwd_wt.size(); ++i) std::cerr << edge_fwd_wt[i] << " "; std::cerr << std::endl;
+    for (uint64_t i = 0; i < edge_fwd_wt.size(); ++i) std::cerr << edge_fwd_wt.at(i) << " "; std::cerr << std::endl;
     /// Marks inverting edges in edge_fwd_wt
     std::cerr << "edge_fwd_inv_bv" << "\t";
-    for (uint64_t i = 0; i < edge_fwd_inv_bv.size(); ++i) std::cerr << edge_fwd_inv_bv[i] << " "; std::cerr << std::endl;
+    for (uint64_t i = 0; i < edge_fwd_inv_bv.size(); ++i) std::cerr << edge_fwd_inv_bv.at(i) << " "; std::cerr << std::endl;
     /// Records edges of the 3' end on the reverse strand, delimited by 0,
     /// ordered by rank in graph_id_wt, defined by opposite rank+1 (handle)
     std::cerr << "edge_rev_wt" << "\t";
-    for (uint64_t i = 0; i < edge_rev_wt.size(); ++i) std::cerr << edge_rev_wt[i] << " "; std::cerr << std::endl;
+    for (uint64_t i = 0; i < edge_rev_wt.size(); ++i) std::cerr << edge_rev_wt.at(i) << " "; std::cerr << std::endl;
     /// Marks inverting edges in edge_rev_wt
     std::cerr << "edge_rev_inv_bv" << "\t";
-    for (uint64_t i = 0; i < edge_rev_inv_bv.size(); ++i) std::cerr << edge_rev_inv_bv[i] << " "; std::cerr << std::endl;
+    for (uint64_t i = 0; i < edge_rev_inv_bv.size(); ++i) std::cerr << edge_rev_inv_bv.at(i) << " "; std::cerr << std::endl;
     /// Encodes all of the sequences of all nodes and all paths in the graph.
     /// The node sequences occur in the same order as in graph_iv;
     /// Node boundaries are given by 0s
     std::cerr << "seq_wt" << "\t\t";
-    for (uint64_t i = 0; i < seq_wt.size(); ++i) std::cerr << seq_wt[i] << " "; std::cerr << std::endl;
+    for (uint64_t i = 0; i < seq_wt.size(); ++i) std::cerr << seq_wt.at(i) << " "; std::cerr << std::endl;
     /// Ordered across the nodes in graph_id_wt, stores the path ids (1-based) at each
     /// segment in seq_wt, delimited by 0, one for each path occurrrence (node traversal).
     std::cerr << "path_id_wt" << "\t";
-    for (uint64_t i = 0; i < path_id_wt.size(); ++i) std::cerr << path_id_wt[i] << " "; std::cerr << std::endl;
+    for (uint64_t i = 0; i < path_id_wt.size(); ++i) std::cerr << path_id_wt.at(i) << " "; std::cerr << std::endl;
     /// Ordered across the nodes in graph_id_wt, stores the (1-based) rank of the
     /// particular node traversal in each path. The stored value is the rank of the
     /// node id among in the path id list. For paths that cross a given node once,
@@ -862,13 +889,17 @@ void graph_t::display(void) {
     /// that is dynamically derivable and robust to the modification of any other part
     /// of the path.
     std::cerr << "path_rank_wt" << "\t";
-    for (uint64_t i = 0; i < path_rank_wt.size(); ++i) std::cerr << path_rank_wt[i] << " "; std::cerr << std::endl;
+    for (uint64_t i = 0; i < path_rank_wt.size(); ++i) std::cerr << path_rank_wt.at(i) << " "; std::cerr << std::endl;
 
     // not dumped...
     /// Stores path names in their internal order, delimited by '$'
     //dyn::wt_fmi path_name_fmi;
     /// Marks the beginning of each path name
     //dyn::suc_bv path_name_bv;
+
+}
+
+void graph_t::to_gfa(std::ostream& out) const {
 
 }
 

@@ -362,7 +362,10 @@ public:
     occurrence_handle_t append_occurrence(const path_handle_t& path, const handle_t& to_append);
 
     /// A helper function to visualize the state of the graph
-    void display(void);
+    void display(void) const;
+
+    /// Convert to GFA (for debugging)
+    void to_gfa(std::ostream& out) const;
     
 /// These are the backing data structures that we use to fulfill the above functions
 
@@ -375,14 +378,16 @@ private:
     id_t _min_node_id = 0;
 
     /// Records edges of the 3' end on the forward strand, delimited by 0
-    /// ordered by rank in graph_id_wt, defined by opposite rank+1 (handle)
+    /// ordered by rank in graph_id_wt, recorded by δ = id_this - id_that
+    /// and stored as (δ = 0 ? 1 : (δ > 0 ? 2δ+1 : 2δ+2))
     wt_str edge_fwd_wt;
 
     /// Marks inverting edges in edge_fwd_wt
     suc_bv edge_fwd_inv_bv;
 
     /// Records edges of the 3' end on the reverse strand, delimited by 0,
-    /// ordered by rank in graph_id_wt, defined by opposite rank+1 (handle)
+    /// ordered by rank in graph_id_wt, recorded by δ = id_this - id_that
+    /// and stored as (δ = 0 ? 1 : (δ > 0 ? 2δ+1 : 2δ+2))
     wt_str edge_rev_wt;
 
     /// Marks inverting edges in edge_rev_wt
@@ -427,6 +432,10 @@ private:
     uint64_t _edge_count = 0;
     /// A helper to record the number of live paths
     uint64_t _path_count = 0;
+
+    /// Helper to convert between edge storage and actual id
+    uint64_t edge_delta_to_id(uint64_t left, uint64_t delta) const;
+    //uint64_t edge_rev_delta_to_id(uint64_t left, uint64_t delta);
 
 };
 
