@@ -38,7 +38,6 @@ public:
 private:
     /// store the ids in the path
     /// zeros indicate privately stored sequences in unlinked occurrences
-    //wt_str ids_wt;
     dyn::packed_vector ids_pv;
     /// the strand of each step
     suc_bv strands_wt;
@@ -50,7 +49,6 @@ private:
 };
 
 inline void path_t::clear(void) {
-    //wt_str null_wt;
     dyn::packed_vector null_pv;
     wt_str null_wt;
     suc_bv null_bv;
@@ -139,6 +137,14 @@ inline void path_t::replace_occurrence(uint64_t rank, const std::vector<handle_t
     // delete the step
     ids_pv.remove(rank);
     strands_wt.remove(rank);
+    if (unlinked_bv.at(rank)) {
+        // remove the sequence from seq_wt
+        uint64_t i = seq_wt.select(unlinked_bv.rank1(rank), 0)+1;
+        while (seq_wt.at(i) != 0) {
+            seq_wt.remove(i);
+        }
+        seq_wt.remove(i); // remove trailing delimiter 0
+    }
     unlinked_bv.remove(rank);
     // insert the new steps in reverse order
     for (uint64_t i = handles.size()-1; i >= 0; --i) {

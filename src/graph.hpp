@@ -279,7 +279,7 @@ public:
     void create_edge(const handle_t& left, const handle_t& right);
 
     /// Check if an edge exists
-    bool has_edge(const handle_t& left, const handle_t& right);
+    bool has_edge(const handle_t& left, const handle_t& right) const;
 
     /// Convenient wrapper for create_edge.
     inline void create_edge(const edge_t& edge) {
@@ -439,7 +439,8 @@ private:
 
     /// Helper to convert between edge storage and actual id
     uint64_t edge_delta_to_id(uint64_t left, uint64_t delta) const;
-    //uint64_t edge_rev_delta_to_id(uint64_t left, uint64_t delta);
+    /// Helper to convert between ids storage and actual id
+    uint64_t edge_to_delta(const handle_t& left, const handle_t& right) const;
 
 };
 

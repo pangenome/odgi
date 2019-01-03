@@ -77,7 +77,7 @@ int main(int argc, char** argv) {
     gg.for_each_sequence_line_in_file(filename, [&](gfak::sequence_elem s) {
             uint64_t id = stol(s.name);
             graph.create_handle(s.sequence, id);
-            if (i % 100 == 0) std::cerr << "nodes " << i << "\r";
+            if (i % 1000 == 0) std::cerr << "nodes " << i << "\r";
             ++i;
         });
     i = 0; std::cerr << std::endl;
@@ -86,7 +86,7 @@ int main(int argc, char** argv) {
             handle_t a = graph.get_handle(stol(e.source_name), !e.source_orientation_forward);
             handle_t b = graph.get_handle(stol(e.sink_name), !e.sink_orientation_forward);
             graph.create_edge(a, b);
-            if (i % 100 == 0) std::cerr << "edges " << i << "\r";
+            if (i % 1000 == 0) std::cerr << "edges " << i << "\r";
             ++i;
         });
     i = 0; std::cerr << std::endl;
@@ -97,7 +97,7 @@ int main(int argc, char** argv) {
                 handle_t occ = graph.get_handle(stol(p.segment_names[j]),
                                                 !p.orientations[j]);
                 graph.append_occurrence(path, occ);
-                if (i % 100 == 0) std::cerr << "path " << p.name << " " << i << "\r";
+                if (i % 1000 == 0) std::cerr << "path " << p.name << " " << i << "\r";
                 ++i;
                 // ignores overlaps
             }

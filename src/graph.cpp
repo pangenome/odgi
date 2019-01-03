@@ -499,10 +499,8 @@ void graph_t::create_edge(const handle_t& left, const handle_t& right) {
     bool right_rev = handle_helper::unpack_bit(right_h);
     bool inv = (left_rev != right_rev);
     // establish the insertion value
-    int64_t delta_right = get_id(left_h) - get_id(right_h);
-    uint64_t right_relative = (delta_right == 0 ? 1 : (delta_right > 0 ? 2*abs(delta_right) : 2*abs(delta_right)+1));
-    int64_t delta_left = get_id(right_h) - get_id(left_h);
-    uint64_t left_relative = (delta_left == 0 ? 1 : (delta_left > 0 ? 2*abs(delta_left) : 2*abs(delta_left+1)));
+    uint64_t right_relative = edge_to_delta(right_h, left_h);
+    uint64_t left_relative = edge_to_delta(left_h, right_h);
     if (!left_rev) {
         //std::cerr << "not left rev" << std::endl;
         uint64_t edge_fwd_left_offset = edge_fwd_wt.select(left_rank+1, 0);
@@ -523,8 +521,8 @@ void graph_t::create_edge(const handle_t& left, const handle_t& right) {
     } else {
         //std::cerr << "right rev" << std::endl;
         uint64_t edge_fwd_right_offset = edge_fwd_wt.select(right_rank+1, 0);
-        edge_rev_wt.insert(edge_fwd_right_offset, right_relative);
-        edge_rev_inv_bv.insert(edge_fwd_right_offset, inv);
+        edge_fwd_wt.insert(edge_fwd_right_offset, right_relative);
+        edge_fwd_inv_bv.insert(edge_fwd_right_offset, inv);
     }
     ++_edge_count;
 }
@@ -540,7 +538,12 @@ uint64_t graph_t::edge_delta_to_id(uint64_t base, uint64_t delta) const {
     }
 }
 
-bool graph_t::has_edge(const handle_t& left, const handle_t& right) {
+uint64_t graph_t::edge_to_delta(const handle_t& left, const handle_t& right) const {
+    int64_t delta = get_id(right) - get_id(left);
+    return (delta == 0 ? 1 : (delta > 0 ? 2*abs(delta) : 2*abs(delta)+1));
+}
+
+bool graph_t::has_edge(const handle_t& left, const handle_t& right) const {
     bool exists = false;
     follow_edges(left, false, [&right, &exists](const handle_t& next) {
             if (next == right) exists = true;
@@ -566,10 +569,8 @@ void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
     bool right_rev = handle_helper::unpack_bit(right_h);
     bool inv = (left_rev != right_rev);
     // establish the insertion value
-    int64_t delta_right = get_id(left_h) - get_id(right_h);
-    uint64_t right_relative = (delta_right == 0 ? 1 : (delta_right > 0 ? 2*abs(delta_right) : 2*abs(delta_right)+1));
-    int64_t delta_left = get_id(right_h) - get_id(left_h);
-    uint64_t left_relative = (delta_left == 0 ? 1 : (delta_left > 0 ? 2*abs(delta_left) : 2*abs(delta_left+1)));
+    uint64_t right_relative = edge_to_delta(right_h, left_h);
+    uint64_t left_relative = edge_to_delta(left_h, right_h);
     if (!left_rev) {
         uint64_t edge_fwd_left_offset = edge_fwd_wt.select(left_rank, 0);
         uint64_t edge_fwd_left_offset_erase = 0;
