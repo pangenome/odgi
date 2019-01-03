@@ -6,15 +6,10 @@
 
 namespace dankgraph {
 
-graph_t::graph_t(void) {
-    // to set a fixed alphabet size
-    //graph_id_wt = dyn::wt_string<dyn::suc_bv>(10000000);
-    //seq_wt = wt_str(6); // for DNA
-}
+graph_t::graph_t(void) { }
 
 graph_t::graph_t(uint64_t n) {
     // to set a fixed alphabet size
-    graph_id_wt = wt_str(n);
     edge_fwd_wt = wt_str(n);
     edge_rev_wt = wt_str(n);
     seq_pv = dyn::packed_vector(0, 6);
@@ -26,12 +21,15 @@ graph_t::~graph_t(void) { }
 
 /// Look up the handle for the node with the given ID in the given orientation
 handle_t graph_t::get_handle(const id_t& node_id, bool is_reverse) const {
-    return handle_helper::pack(graph_id_wt.select(0, node_id), is_reverse);
+    //return handle_helper::pack(graph_id_wt.select(0, node_id), is_reverse);
+    auto f = graph_id_map.find(node_id);
+    assert(f != graph_id_map.end());
+    return handle_helper::pack(f->second, is_reverse);
 }
     
 /// Get the ID from a handle
 id_t graph_t::get_id(const handle_t& handle) const {
-    return graph_id_wt.at(handle_helper::unpack_number(handle));
+    return graph_id_pv.at(handle_helper::unpack_number(handle));
 }
     
 /// Get the orientation of a handle
@@ -105,14 +103,14 @@ void graph_t::for_each_handle(const std::function<bool(const handle_t&)>& iterat
     if (parallel) {
         volatile bool flag=false;
 #pragma omp parallel for
-        for (uint64_t i = 0; i < graph_id_wt.size(); ++i) {
+        for (uint64_t i = 0; i < graph_id_pv.size(); ++i) {
             if (flag) continue;
             bool result = iteratee(handle_helper::pack(i,false));
 #pragma omp atomic
             flag &= result;
         }
     } else {
-        for (uint64_t i = 0; i < graph_id_wt.size(); ++i) {
+        for (uint64_t i = 0; i < graph_id_pv.size(); ++i) {
             if (!iteratee(handle_helper::pack(i,false))) break;
         }
     }
@@ -121,7 +119,7 @@ void graph_t::for_each_handle(const std::function<bool(const handle_t&)>& iterat
 /// Return the number of nodes in the graph
 /// TODO: can't be node_count because XG has a field named node_count.
 size_t graph_t::node_size(void) const {
-    graph_id_wt.size() - graph_id_wt.rank(graph_id_wt.size(), 0);
+    return graph_id_pv.size();
 }
     
 /// Return the smallest ID in the graph, or some smaller number if the
@@ -233,7 +231,7 @@ void graph_t::for_each_path_handle(const std::function<void(const path_handle_t&
 }
 
 void graph_t::for_each_occurrence_on_handle(const handle_t& handle, const std::function<void(const occurrence_handle_t&)>& iteratee) const {
-    id_t id = graph_id_wt.at(handle_helper::unpack_number(handle));
+    id_t id = graph_id_pv.at(handle_helper::unpack_number(handle));
     uint64_t i = path_id_wt.select(0, id)+1;
     uint64_t j = path_rank_wt.select(0, id)+1;
     uint64_t p = path_id_wt.at(i);
@@ -261,7 +259,9 @@ handle_t graph_t::get_occurrence(const occurrence_handle_t& occurrence_handle) c
     // get the step
     step_t step = path.get_occurrence(occ_handle[1]);
     // compute the handle
-    handle_t handle = handle_helper::pack(graph_id_wt.select(0, step.id), step.strand);
+    auto f = graph_id_map.find(step.id);
+    assert(f != graph_id_map.end());
+    handle_t handle = handle_helper::pack(f->second, step.strand);
     // TODO assert that it's fully live ?
     //assert(hidden_wt.rank(hidden_wt.size(), step.id) == 0);
     // if it is, we return it
@@ -383,14 +383,15 @@ handle_t graph_t::create_handle(const std::string& sequence) {
 
 /// Create a new node with the given id and sequence, then return the handle.
 handle_t graph_t::create_handle(const std::string& sequence, const id_t& id) {
-    assert(!graph_id_wt.char_exists(id));
+    assert(!graph_id_map.find(id) != graph_id_map.end());
     assert(id > 0);
     id_t new_id = id;
     // set new max
     _max_node_id = max(new_id, _max_node_id);
     _min_node_id = max((uint64_t)1, (uint64_t)min(new_id, _min_node_id));
-    // add to graph_id_wt
-    graph_id_wt.push_back(new_id);
+    graph_id_map[new_id] = graph_id_pv.size();
+    // add to graph_id_pv
+    graph_id_pv.push_back(new_id);
     // set up initial delimiters if the graph is empty
     if (!seq_bv.size()) {
         seq_bv.push_back(1);
@@ -432,9 +433,10 @@ handle_t graph_t::create_handle(const std::string& sequence, const id_t& id) {
 /// May **NOT** be called on the node from which edges are being followed during follow_edges.
 void graph_t::destroy_handle(const handle_t& handle) {
     uint64_t offset = handle_helper::unpack_number(handle);
-    // remove from graph_id_wt
-    id_t id = graph_id_wt.at(offset);
-    graph_id_wt.remove(offset);
+    // remove from graph_id_pv
+    id_t id = graph_id_pv.at(offset);
+    graph_id_pv.remove(offset);
+    graph_id_map.erase(id);
     // remove occs in edge lists
     // enumerate the edges
     std::vector<edge_t> edges_to_destroy;
@@ -641,7 +643,7 @@ void graph_t::clear(void) {
     dyn::wt_fmi null_fmi;
     _max_node_id = 0;
     _min_node_id = 0;
-    graph_id_wt = null_wt;
+    graph_id_pv = null_pv;
     edge_fwd_wt = null_wt;
     edge_fwd_inv_bv = null_bv;
     edge_rev_wt = null_wt;
@@ -856,17 +858,17 @@ void graph_t::display(void) const {
     std::cerr << "_max_node_id = " << _max_node_id << std::endl;
     std::cerr << "_min_node_id = " << _min_node_id << std::endl;
 
-    std::cerr << "graph_id_wt" << "\t";
-    for (uint64_t i = 0; i < graph_id_wt.size(); ++i) std::cerr << graph_id_wt.at(i) << " "; std::cerr << std::endl;
+    std::cerr << "graph_id_pv" << "\t";
+    for (uint64_t i = 0; i < graph_id_pv.size(); ++i) std::cerr << graph_id_pv.at(i) << " "; std::cerr << std::endl;
     /// Records edges of the 3' end on the forward strand, delimited by 0
-    /// ordered by rank in graph_id_wt, defined by opposite rank+1 (handle)
+    /// ordered by rank in graph_id_pv, defined by opposite rank+1 (handle)
     std::cerr << "edge_fwd_wt" << "\t";
     for (uint64_t i = 0; i < edge_fwd_wt.size(); ++i) std::cerr << edge_fwd_wt.at(i) << " "; std::cerr << std::endl;
     /// Marks inverting edges in edge_fwd_wt
     std::cerr << "edge_fwd_inv_bv" << "\t";
     for (uint64_t i = 0; i < edge_fwd_inv_bv.size(); ++i) std::cerr << edge_fwd_inv_bv.at(i) << " "; std::cerr << std::endl;
     /// Records edges of the 3' end on the reverse strand, delimited by 0,
-    /// ordered by rank in graph_id_wt, defined by opposite rank+1 (handle)
+    /// ordered by rank in graph_id_pv, defined by opposite rank+1 (handle)
     std::cerr << "edge_rev_wt" << "\t";
     for (uint64_t i = 0; i < edge_rev_wt.size(); ++i) std::cerr << edge_rev_wt.at(i) << " "; std::cerr << std::endl;
     /// Marks inverting edges in edge_rev_wt
@@ -879,11 +881,11 @@ void graph_t::display(void) const {
     for (uint64_t i = 0; i < seq_pv.size(); ++i) std::cerr << seq_pv.at(i) << " "; std::cerr << std::endl;
     std::cerr << "seq_bv" << "\t\t";
     for (uint64_t i = 0; i < seq_bv.size(); ++i) std::cerr << seq_bv.at(i) << " "; std::cerr << std::endl;
-    /// Ordered across the nodes in graph_id_wt, stores the path ids (1-based) at each
+    /// Ordered across the nodes in graph_id_pv, stores the path ids (1-based) at each
     /// segment in seq_wt, delimited by 0, one for each path occurrrence (node traversal).
     std::cerr << "path_id_wt" << "\t";
     for (uint64_t i = 0; i < path_id_wt.size(); ++i) std::cerr << path_id_wt.at(i) << " "; std::cerr << std::endl;
-    /// Ordered across the nodes in graph_id_wt, stores the (1-based) rank of the
+    /// Ordered across the nodes in graph_id_pv, stores the (1-based) rank of the
     /// particular node traversal in each path. The stored value is the rank of the
     /// node id among in the path id list. For paths that cross a given node once,
     /// this will simply be 1. Each subsequent crossing will yield 2, 3, ... etc.

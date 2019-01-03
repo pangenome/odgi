@@ -73,33 +73,35 @@ int main(int argc, char** argv) {
     graph_t graph(num_nodes+1); // include delimiter
     */
     graph_t graph;
-    //uint64_t i = 0;
+    uint64_t i = 0;
     gg.for_each_sequence_line_in_file(filename, [&](gfak::sequence_elem s) {
             uint64_t id = stol(s.name);
             graph.create_handle(s.sequence, id);
-            //if (i % 100 == 0) std::cerr << "nodes " << i << "\r";
-            //++i;
+            if (i % 100 == 0) std::cerr << "nodes " << i << "\r";
+            ++i;
         });
-    //i = 0; std::cerr << std::endl;
+    i = 0; std::cerr << std::endl;
     gg.for_each_edge_line_in_file(filename, [&](gfak::edge_elem e) {
             if (e.source_name.empty()) return;
             handle_t a = graph.get_handle(stol(e.source_name), !e.source_orientation_forward);
             handle_t b = graph.get_handle(stol(e.sink_name), !e.sink_orientation_forward);
             graph.create_edge(a, b);
-            //if (i % 100 == 0) std::cerr << "edges " << i << "\r";
-            //++i;
+            if (i % 100 == 0) std::cerr << "edges " << i << "\r";
+            ++i;
         });
-    //i = 0; std::cerr << std::endl;
+    i = 0; std::cerr << std::endl;
     gg.for_each_path_line_in_file(filename, [&](gfak::path_elem p) {
             path_handle_t path = graph.create_path_handle(p.name);
+            i = 0;
             for (uint64_t j = 0; j < p.segment_names.size(); ++j) {
                 handle_t occ = graph.get_handle(stol(p.segment_names[j]),
                                                 !p.orientations[j]);
                 graph.append_occurrence(path, occ);
-                //if (i % 100 == 0) std::cerr << "paths " << i << "\r";
-                //++i;
+                if (i % 100 == 0) std::cerr << "path " << p.name << " " << i << "\r";
+                ++i;
                 // ignores overlaps
             }
+            std::cerr << std::endl;
         });
     // here we should measure memory usage etc.
     if (args::get(debug)) {

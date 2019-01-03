@@ -373,7 +373,8 @@ private:
 
     /// Records node ids to allow for random access and random order
     /// Use the special value "0" to indicate deleted nodes
-    wt_str graph_id_wt;
+    dyn::packed_vector graph_id_pv;
+    spp::sparse_hash_map<uint64_t, uint64_t> graph_id_map;
     id_t _max_node_id = 0;
     id_t _min_node_id = 0;
 
