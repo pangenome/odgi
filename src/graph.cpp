@@ -17,7 +17,7 @@ graph_t::graph_t(uint64_t n) {
     graph_id_wt = wt_str(n);
     edge_fwd_wt = wt_str(n);
     edge_rev_wt = wt_str(n);
-    seq_wt = wt_str(6);
+    seq_pv = dyn::packed_vector(0, 6);
     path_id_wt = wt_str(n);
     path_rank_wt = wt_str(n);
 }
@@ -47,16 +47,16 @@ handle_t graph_t::flip(const handle_t& handle) const {
 /// Get the length of a node
 size_t graph_t::get_length(const handle_t& handle) const {
     uint64_t offset = handle_helper::unpack_number(handle);
-    return seq_wt.select(offset+1, 0)-1 - seq_wt.select(offset, 0);
+    return seq_bv.select1(offset+1) - seq_bv.select1(offset);
 }
     
 /// Get the sequence of a node, presented in the handle's local forward orientation.
 std::string graph_t::get_sequence(const handle_t& handle) const {
     std::string seq;
     uint64_t offset = handle_helper::unpack_number(handle);
-    for (uint64_t i = seq_wt.select(offset, 0)+1; ; ++i) {
-        char c = seq_wt.at(i);
-        if (c) { seq += int_as_dna(c); } else break;
+    for (uint64_t i = seq_bv.select1(offset); ; ++i) {
+        if (seq.size() && seq_bv.at(i)) break;
+        seq += int_as_dna(seq_pv.at(i));
     }
     return seq;
 }
@@ -392,8 +392,8 @@ handle_t graph_t::create_handle(const std::string& sequence, const id_t& id) {
     // add to graph_id_wt
     graph_id_wt.push_back(new_id);
     // set up initial delimiters if the graph is empty
-    if (!seq_wt.size()) {
-        seq_wt.push_back(0);
+    if (!seq_bv.size()) {
+        seq_bv.push_back(1);
         edge_fwd_wt.push_back(0);
         edge_fwd_inv_bv.push_back(0);
         edge_rev_wt.push_back(0);
@@ -402,8 +402,14 @@ handle_t graph_t::create_handle(const std::string& sequence, const id_t& id) {
         path_rank_wt.push_back(0);
     }
     // append to seq_wt, delimit by 0
-    for (auto c : sequence) seq_wt.push_back(dna_as_int(c));
-    seq_wt.push_back(0);
+    for (auto c : sequence) {
+        seq_pv.push_back(dna_as_int(c));
+    }
+    // update seq_bv
+    for (uint64_t i = 0; i < sequence.size()-1; ++i) {
+            seq_bv.push_back(0);
+    }
+    seq_bv.push_back(1); // end delimiter
     // set up delemiters for edges, for later filling
     edge_fwd_wt.push_back(0);
     edge_fwd_inv_bv.push_back(0);
@@ -459,10 +465,12 @@ void graph_t::destroy_handle(const handle_t& handle) {
     }
     // save the node sequence for stashing in the paths
     std::string seq = get_sequence(handle);
-    // remove the sequence from seq_wt
-    uint64_t seq_wt_offset = seq_wt.select(offset, 0);
-    for (uint64_t i = seq_wt_offset; seq_wt.at(i) != 0; ++i) {
-        seq_wt.remove(i);
+    // remove the sequence from seq_pv
+    uint64_t seq_pv_offset = seq_bv.select1(offset);
+    uint64_t length = get_length(handle);
+    for (uint64_t i = seq_pv_offset; i < seq_pv_offset+length; ++i) {
+        seq_pv.remove(i);
+        seq_bv.remove(i);
     }
     // move the sequence of the node into each path that traverses it
     // remove reference to the node from the paths
@@ -639,6 +647,7 @@ void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
 void graph_t::clear(void) {
     wt_str null_wt;
     suc_bv null_bv;
+    dyn::packed_vector null_pv;
     dyn::wt_fmi null_fmi;
     _max_node_id = 0;
     _min_node_id = 0;
@@ -647,7 +656,8 @@ void graph_t::clear(void) {
     edge_fwd_inv_bv = null_bv;
     edge_rev_wt = null_wt;
     edge_rev_inv_bv = null_bv;
-    seq_wt = null_wt;
+    seq_pv = null_pv;
+    seq_bv = null_bv;
     path_id_wt = null_wt;
     path_rank_wt = null_wt;
     path_name_fmi = null_fmi;
@@ -875,8 +885,10 @@ void graph_t::display(void) const {
     /// Encodes all of the sequences of all nodes and all paths in the graph.
     /// The node sequences occur in the same order as in graph_iv;
     /// Node boundaries are given by 0s
-    std::cerr << "seq_wt" << "\t\t";
-    for (uint64_t i = 0; i < seq_wt.size(); ++i) std::cerr << seq_wt.at(i) << " "; std::cerr << std::endl;
+    std::cerr << "seq_pv" << "\t\t";
+    for (uint64_t i = 0; i < seq_pv.size(); ++i) std::cerr << seq_pv.at(i) << " "; std::cerr << std::endl;
+    std::cerr << "seq_bv" << "\t\t";
+    for (uint64_t i = 0; i < seq_bv.size(); ++i) std::cerr << seq_bv.at(i) << " "; std::cerr << std::endl;
     /// Ordered across the nodes in graph_id_wt, stores the path ids (1-based) at each
     /// segment in seq_wt, delimited by 0, one for each path occurrrence (node traversal).
     std::cerr << "path_id_wt" << "\t";

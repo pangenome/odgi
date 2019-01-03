@@ -396,7 +396,10 @@ private:
     /// Encodes all of the sequences of all nodes and all paths in the graph.
     /// The node sequences occur in the same order as in graph_iv;
     /// Node boundaries are given by 0s
-    wt_str seq_wt;
+    dyn::packed_vector seq_pv;
+
+    /// Marks the beginnings of nodes in seq_pv
+    suc_bv seq_bv;
 
     /// Ordered across the nodes in graph_id_wt, stores the path ids (1-based) at each
     /// segment in seq_wt, delimited by 0, one for each path occurrrence (node traversal).
