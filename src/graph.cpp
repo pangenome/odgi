@@ -483,11 +483,13 @@ void graph_t::create_edge(const handle_t& left, const handle_t& right) {
     //std::cerr << "create_edge from " << get_id(left) << " to " << get_id(right) << std::endl;
     //if (has_edge(left, right)) return; // do nothing if edge exists
     //std::cerr << "proceeding" << std::endl;
-    handle_t left_h = right;
-    handle_t right_h = left;
+    handle_t left_h = left;
+    handle_t right_h = right;
     if (handle_helper::unpack_bit(left_h)
         && handle_helper::unpack_bit(right_h)) {
         std::swap(left_h, right_h);
+        left_h = handle_helper::toggle_bit(left_h);
+        right_h = handle_helper::toggle_bit(right_h);
     }
     uint64_t left_rank = handle_helper::unpack_number(left_h);
     bool left_rev = handle_helper::unpack_bit(left_h);
@@ -497,7 +499,7 @@ void graph_t::create_edge(const handle_t& left, const handle_t& right) {
     // establish the insertion value
     int64_t delta_right = get_id(left_h) - get_id(right_h);
     uint64_t right_relative = (delta_right == 0 ? 1 : (delta_right > 0 ? 2*abs(delta_right) : 2*abs(delta_right)+1));
-    int64_t delta_left = get_id(right) - get_id(left_h);
+    int64_t delta_left = get_id(right_h) - get_id(left_h);
     uint64_t left_relative = (delta_left == 0 ? 1 : (delta_left > 0 ? 2*abs(delta_left) : 2*abs(delta_left+1)));
     if (!left_rev) {
         //std::cerr << "not left rev" << std::endl;
@@ -548,11 +550,13 @@ bool graph_t::has_edge(const handle_t& left, const handle_t& right) {
 /// Ignores nonexistent edges.
 /// Does not update any stored paths.
 void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
-    handle_t left_h = right;
-    handle_t right_h = left;
+    handle_t left_h = left;
+    handle_t right_h = right;
     if (handle_helper::unpack_bit(left_h)
         && handle_helper::unpack_bit(right_h)) {
         std::swap(left_h, right_h);
+        left_h = handle_helper::toggle_bit(left_h);
+        right_h = handle_helper::toggle_bit(right_h);
     }
     uint64_t left_rank = handle_helper::unpack_number(left_h);
     bool left_rev = handle_helper::unpack_bit(left_h);
@@ -562,7 +566,7 @@ void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
     // establish the insertion value
     int64_t delta_right = get_id(left_h) - get_id(right_h);
     uint64_t right_relative = (delta_right == 0 ? 1 : (delta_right > 0 ? 2*abs(delta_right) : 2*abs(delta_right)+1));
-    int64_t delta_left = get_id(right) - get_id(left_h);
+    int64_t delta_left = get_id(right_h) - get_id(left_h);
     uint64_t left_relative = (delta_left == 0 ? 1 : (delta_left > 0 ? 2*abs(delta_left) : 2*abs(delta_left+1)));
     if (!left_rev) {
         uint64_t edge_fwd_left_offset = edge_fwd_wt.select(left_rank, 0);
