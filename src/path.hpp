@@ -43,7 +43,7 @@ private:
     /// the strand of each step
     suc_bv strands_wt;
     /// mark the unlinked sequences in ids_pv
-    gap_bv unlinked_gbv;
+    suc_bv unlinked_bv;
     /// sequence that is in this path, but not represented in the graph
     /// for instance, after the removal of nodes from the graph
     wt_str seq_wt;
@@ -54,17 +54,16 @@ inline void path_t::clear(void) {
     dyn::packed_vector null_pv;
     wt_str null_wt;
     suc_bv null_bv;
-    gap_bv null_gbv;
     ids_pv = null_pv;
     strands_wt = null_bv;
-    unlinked_gbv = null_gbv;
+    unlinked_bv = null_bv;
     seq_wt = null_wt;
 }
 
 inline void path_t::append_occurrence(const id_t& id, bool strand) {
     ids_pv.push_back(id);
     strands_wt.push_back(strand);
-    unlinked_gbv.push_back(0);
+    unlinked_bv.push_back(0);
 }
 
 inline uint64_t path_t::occurrence_count(void) const {
@@ -76,7 +75,7 @@ inline step_t path_t::get_occurrence(uint64_t rank) const {
     result.id = ids_pv.at(rank);
     result.strand = strands_wt.at(rank);
     if (!result.id) {
-        uint64_t x = unlinked_gbv.rank1(rank);
+        uint64_t x = unlinked_bv.rank1(rank);
         for (uint64_t i = seq_wt.select(x, 0)+1; ; ++i) {
             char c = seq_wt.at(i);
             if (!c) break;
@@ -90,8 +89,8 @@ inline void path_t::unlink_occurrence(uint64_t rank, const std::string& seq) {
     // set the path step id to 0
     ids_pv.remove(rank);
     ids_pv.insert(rank, 0);
-    unlinked_gbv.set(rank);
-    uint64_t null_rank = unlinked_gbv.rank1(rank);
+    unlinked_bv.set(rank);
+    uint64_t null_rank = unlinked_bv.rank1(rank);
     // insert the sequence in the right place in seq_wt
     if (seq_wt.size() == 0) {
         // at the end
@@ -127,26 +126,26 @@ inline void path_t::link_occurrence(uint64_t rank, const handle_t& handle, const
     strands_wt.remove(rank);
     strands_wt.insert(rank, handle_helper::unpack_bit(handle));
     // remove the sequence from seq_wt
-    uint64_t i = seq_wt.select(unlinked_gbv.rank1(rank), 0)+1;
+    uint64_t i = seq_wt.select(unlinked_bv.rank1(rank), 0)+1;
     while (seq_wt.at(i) != 0) {
         seq_wt.remove(i);
     }
     seq_wt.remove(i); // remove trailing delimiter 0
     // remove the unlinked marker bit
-    unlinked_gbv.remove(rank);
+    unlinked_bv.remove(rank);
 }
 
 inline void path_t::replace_occurrence(uint64_t rank, const std::vector<handle_t>& handles) {
     // delete the step
     ids_pv.remove(rank);
     strands_wt.remove(rank);
-    unlinked_gbv.remove(rank);
+    unlinked_bv.remove(rank);
     // insert the new steps in reverse order
     for (uint64_t i = handles.size()-1; i >= 0; --i) {
         auto& handle = handles.at(i);
         ids_pv.insert(rank, handle_helper::unpack_number(handle));
         strands_wt.insert(rank, handle_helper::unpack_bit(handle));
-        unlinked_gbv.insert(rank, 0);
+        unlinked_bv.insert(rank, 0);
     }
 }
 
