@@ -436,32 +436,15 @@ void graph_t::destroy_handle(const handle_t& handle) {
     id_t id = graph_id_wt.at(offset);
     graph_id_wt.remove(offset);
     // remove occs in edge lists
-    while (edge_fwd_wt.rank(edge_fwd_wt.size(), id) > 0) {
-        uint64_t i = edge_fwd_wt.select(0, id);
-        edge_fwd_wt.remove(i);
-        edge_fwd_inv_bv.remove(i);
-        --_edge_count;
-    }
-    while (edge_rev_wt.rank(edge_rev_wt.size(), id) > 0) {
-        uint64_t i = edge_rev_wt.select(0, id);
-        edge_rev_wt.remove(i);
-        edge_rev_inv_bv.remove(i);
-    }
-    // remove outbound edges and records from edge lists
-    uint64_t edge_fwd_offset = edge_fwd_wt.select(offset, 0);
-    edge_fwd_wt.remove(edge_fwd_offset);
-    edge_fwd_inv_bv.remove(edge_fwd_offset);
-    for (uint64_t i = edge_fwd_offset; edge_fwd_wt.at(i) != 0; ) {
-        edge_fwd_wt.remove(i);
-        edge_fwd_inv_bv.remove(i);
-        --_edge_count;
-    }
-    uint64_t edge_rev_offset = edge_rev_wt.select(offset, 0);
-    edge_rev_wt.remove(edge_rev_offset);
-    edge_rev_inv_bv.remove(edge_rev_offset);
-    for (uint64_t i = edge_rev_offset; edge_rev_wt.at(i) != 0; ) {
-        edge_rev_wt.remove(i);
-        edge_rev_inv_bv.remove(i);
+    // enumerate the edges
+    std::vector<edge_t> edges_to_destroy;
+    follow_edges(handle, false, [&edges_to_destroy,&handle,this](const handle_t& h) {
+            edges_to_destroy.push_back(make_pair(handle, h)); });
+    follow_edges(handle, true, [&edges_to_destroy,&handle,this](const handle_t& h) {
+            edges_to_destroy.push_back(make_pair(h, handle)); });
+    // and then remove them
+    for (auto& edge : edges_to_destroy) {
+        destroy_edge(edge);
     }
     // save the node sequence for stashing in the paths
     std::string seq = get_sequence(handle);
@@ -500,24 +483,22 @@ void graph_t::create_edge(const handle_t& left, const handle_t& right) {
     //std::cerr << "create_edge from " << get_id(left) << " to " << get_id(right) << std::endl;
     //if (has_edge(left, right)) return; // do nothing if edge exists
     //std::cerr << "proceeding" << std::endl;
-    uint64_t left_rank = handle_helper::unpack_number(left);
-    bool left_rev = handle_helper::unpack_bit(left);
-    uint64_t right_rank = handle_helper::unpack_number(right);
-    bool right_rev = handle_helper::unpack_bit(right);
-    // canonicalize
-    if (left_rev && right_rev) {
-        left_rev = !left_rev;
-        right_rev = !right_rev;
-        std::swap(left_rank, right_rank);
+    handle_t left_h = right;
+    handle_t right_h = left;
+    if (handle_helper::unpack_bit(left_h)
+        && handle_helper::unpack_bit(right_h)) {
+        std::swap(left_h, right_h);
     }
+    uint64_t left_rank = handle_helper::unpack_number(left_h);
+    bool left_rev = handle_helper::unpack_bit(left_h);
+    uint64_t right_rank = handle_helper::unpack_number(right_h);
+    bool right_rev = handle_helper::unpack_bit(right_h);
     bool inv = (left_rev != right_rev);
     // establish the insertion value
-    int64_t delta_right = get_id(left) - get_id(right);
+    int64_t delta_right = get_id(left_h) - get_id(right_h);
     uint64_t right_relative = (delta_right == 0 ? 1 : (delta_right > 0 ? 2*abs(delta_right) : 2*abs(delta_right)+1));
-    int64_t delta_left = get_id(right) - get_id(left);
+    int64_t delta_left = get_id(right) - get_id(left_h);
     uint64_t left_relative = (delta_left == 0 ? 1 : (delta_left > 0 ? 2*abs(delta_left) : 2*abs(delta_left+1)));
-    //uint64_t left_relative = right_rank;
-    //uint64_t right_relative = left_rank;
     if (!left_rev) {
         //std::cerr << "not left rev" << std::endl;
         uint64_t edge_fwd_left_offset = edge_fwd_wt.select(left_rank+1, 0);
@@ -567,24 +548,29 @@ bool graph_t::has_edge(const handle_t& left, const handle_t& right) {
 /// Ignores nonexistent edges.
 /// Does not update any stored paths.
 void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
-    uint64_t left_rank = handle_helper::unpack_number(left);
-    bool left_rev = handle_helper::unpack_bit(left);
-    uint64_t right_rank = handle_helper::unpack_number(right);
-    bool right_rev = handle_helper::unpack_bit(right);
-    // canonicalize
-    if (left_rev && right_rev) {
-        left_rev = !left_rev;
-        right_rev = !right_rev;
-        std::swap(left_rank, right_rank);
+    handle_t left_h = right;
+    handle_t right_h = left;
+    if (handle_helper::unpack_bit(left_h)
+        && handle_helper::unpack_bit(right_h)) {
+        std::swap(left_h, right_h);
     }
+    uint64_t left_rank = handle_helper::unpack_number(left_h);
+    bool left_rev = handle_helper::unpack_bit(left_h);
+    uint64_t right_rank = handle_helper::unpack_number(right_h);
+    bool right_rev = handle_helper::unpack_bit(right_h);
     bool inv = (left_rev != right_rev);
+    // establish the insertion value
+    int64_t delta_right = get_id(left_h) - get_id(right_h);
+    uint64_t right_relative = (delta_right == 0 ? 1 : (delta_right > 0 ? 2*abs(delta_right) : 2*abs(delta_right)+1));
+    int64_t delta_left = get_id(right) - get_id(left_h);
+    uint64_t left_relative = (delta_left == 0 ? 1 : (delta_left > 0 ? 2*abs(delta_left) : 2*abs(delta_left+1)));
     if (!left_rev) {
         uint64_t edge_fwd_left_offset = edge_fwd_wt.select(left_rank, 0);
         uint64_t edge_fwd_left_offset_erase = 0;
         for (uint64_t i = edge_fwd_left_offset+1; ; ++i) {
             uint64_t c = edge_fwd_wt.at(i);
             if (c != 0) break;
-            if (c == right_rank+1) {
+            if (c == left_relative && inv == edge_fwd_inv_bv.at(i)) {
                 edge_fwd_left_offset_erase = i;
                 break;
             }
@@ -599,7 +585,7 @@ void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
         for (uint64_t i = edge_rev_left_offset+1; ; ++i) {
             uint64_t c = edge_rev_wt.at(i);
             if (c != 0) break;
-            if (c == right_rank+1) {
+            if (c == left_relative && inv == edge_rev_inv_bv.at(i)) {
                 edge_rev_left_offset_erase = i;
                 break;
             }
@@ -615,7 +601,7 @@ void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
         for (uint64_t i = edge_rev_right_offset+1; ; ++i) {
             uint64_t c = edge_rev_wt.at(i);
             if (c != 0) break;
-            if (c == right_rank+1) {
+            if (c == right_relative && inv == edge_rev_inv_bv.at(i)) {
                 edge_rev_right_offset_erase = i;
                 break;
             }
@@ -630,7 +616,7 @@ void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
         for (uint64_t i = edge_fwd_right_offset+1; ; ++i) {
             uint64_t c = edge_fwd_wt.at(i);
             if (c != 0) break;
-            if (c == right_rank+1) {
+            if (c == right_relative && inv == edge_fwd_inv_bv.at(i)) {
                 edge_fwd_right_offset_erase = i;
                 break;
             }
