@@ -207,12 +207,12 @@ path_handle_t graph_t::get_path_handle(const std::string& path_name) const {
     
 /// Look up the name of a path from a handle to it
 std::string graph_t::get_path_name(const path_handle_t& path_handle) const {
-    return paths.at(as_integer(path_handle)).name;
+    return paths.at(as_integer(path_handle))->name;
 }
     
 /// Returns the number of node occurrences in the path
 size_t graph_t::get_occurrence_count(const path_handle_t& path_handle) const {
-    return paths.at(as_integer(path_handle)).occurrence_count();
+    return paths.at(as_integer(path_handle))->occurrence_count();
 }
 
 /// Returns the number of paths stored in the graph
@@ -224,7 +224,7 @@ size_t graph_t::get_path_count(void) const {
 // TODO: allow stopping early?
 void graph_t::for_each_path_handle(const std::function<void(const path_handle_t&)>& iteratee) const {
     for (uint64_t i = 0; i < paths.size(); ++i) {
-        if (paths.at(i).occurrence_count()) {
+        if (paths.at(i)->occurrence_count()) {
             iteratee(as_path_handle(i));
         }
     }
@@ -255,7 +255,7 @@ void graph_t::for_each_occurrence_on_handle(const handle_t& handle, const std::f
 handle_t graph_t::get_occurrence(const occurrence_handle_t& occurrence_handle) const {
     const int64_t* occ_handle = as_integers(occurrence_handle);
     //path_handle_t = as_path_handle(occ_handle[0]);
-    auto& path = paths.at(occ_handle[0]);
+    auto& path = *paths.at(occ_handle[0]);
     // get the step
     step_t step = path.get_occurrence(occ_handle[1]);
     // compute the handle
@@ -271,7 +271,7 @@ handle_t graph_t::get_occurrence(const occurrence_handle_t& occurrence_handle) c
 /// Get a handle to the first occurrence in a path.
 /// The path MUST be nonempty.
 occurrence_handle_t graph_t::get_first_occurrence(const path_handle_t& path_handle) const {
-    auto& path = paths.at(as_integer(path_handle));
+    auto& path = *paths.at(as_integer(path_handle));
     assert(path.occurrence_count());
     occurrence_handle_t result;
     int64_t* r_ints = as_integers(result);
@@ -283,7 +283,7 @@ occurrence_handle_t graph_t::get_first_occurrence(const path_handle_t& path_hand
 /// Get a handle to the last occurrence in a path
 /// The path MUST be nonempty.
 occurrence_handle_t graph_t::get_last_occurrence(const path_handle_t& path_handle) const {
-    auto& path = paths.at(as_integer(path_handle));
+    auto& path = *paths.at(as_integer(path_handle));
     assert(path.occurrence_count());
     occurrence_handle_t result;
     int64_t* r_ints = as_integers(result);
@@ -295,14 +295,14 @@ occurrence_handle_t graph_t::get_last_occurrence(const path_handle_t& path_handl
 /// Returns true if the occurrence is not the last occurence on the path, else false
 bool graph_t::has_next_occurrence(const occurrence_handle_t& occurrence_handle) const {
     const int64_t* occ_handle = as_integers(occurrence_handle);
-    auto& path = paths.at(occ_handle[0]);
+    auto& path = *paths.at(occ_handle[0]);
     return occ_handle[1] < path.occurrence_count()-1;
 }
     
 /// Returns true if the occurrence is not the first occurence on the path, else false
 bool graph_t::has_previous_occurrence(const occurrence_handle_t& occurrence_handle) const {
     const int64_t* occ_handle = as_integers(occurrence_handle);
-    auto& path = paths.at(occ_handle[0]);
+    auto& path = *paths.at(occ_handle[0]);
     assert(path.occurrence_count());
     return occ_handle[1] > 0;
 }
@@ -310,7 +310,7 @@ bool graph_t::has_previous_occurrence(const occurrence_handle_t& occurrence_hand
 /// Returns a handle to the next occurrence on the path
 occurrence_handle_t graph_t::get_next_occurrence(const occurrence_handle_t& occurrence_handle) const {
     const int64_t* occ_handle = as_integers(occurrence_handle);
-    auto& path = paths.at(occ_handle[0]);
+    auto& path = *paths.at(occ_handle[0]);
     assert(path.occurrence_count());
     uint64_t rank = occ_handle[1];
     occurrence_handle_t next_occ_handle = occurrence_handle;
@@ -322,7 +322,7 @@ occurrence_handle_t graph_t::get_next_occurrence(const occurrence_handle_t& occu
 /// Returns a handle to the previous occurrence on the path
 occurrence_handle_t graph_t::get_previous_occurrence(const occurrence_handle_t& occurrence_handle) const {
     const int64_t* occ_handle = as_integers(occurrence_handle);
-    auto& path = paths.at(occ_handle[0]);
+    auto& path = *paths.at(occ_handle[0]);
     assert(path.occurrence_count());
     uint64_t rank = occ_handle[1];
     occurrence_handle_t prev_occ_handle = occurrence_handle;
@@ -349,7 +349,7 @@ size_t graph_t::get_ordinal_rank_of_occurrence(const occurrence_handle_t& occurr
 
 /// Returns true if the given path is empty, and false otherwise
 bool graph_t::is_empty(const path_handle_t& path_handle) const {
-    auto& path = paths.at(as_integer(path_handle));
+    auto& path = *paths.at(as_integer(path_handle));
     return path.occurrence_count() == 0;
 }
 
@@ -460,7 +460,7 @@ void graph_t::destroy_handle(const handle_t& handle) {
     // move the sequence of the node into each path that traverses it
     // remove reference to the node from the paths
     for_each_occurrence_on_handle(handle, [&](const occurrence_handle_t& occ) {
-            auto& path = paths.at(as_integers(occ)[0]);
+            auto& path = *paths.at(as_integers(occ)[0]);
             path.unlink_occurrence(as_integers(occ)[1], seq);
         });
     // remove reference to the paths
@@ -655,6 +655,7 @@ void graph_t::clear(void) {
     path_rank_wt = null_wt;
     path_name_fmi = null_fmi;
     path_name_bv = null_bv;
+    for (auto& p : paths) delete p;
     paths.clear();
     _node_count = 0;
     _edge_count = 0;
@@ -702,7 +703,7 @@ handle_t graph_t::apply_orientation(const handle_t& handle) {
     for_each_occurrence_on_handle(handle, [&](const occurrence_handle_t& occ) {
             // save occurrence information
             occurrences.push_back(occ);
-            auto& path = paths.at(as_integers(occ)[0]);
+            auto& path = *paths.at(as_integers(occ)[0]);
             // record relative orientation
             orientations.push_back(path.get_occurrence(as_integers(occ)[1]).strand);
         });
@@ -722,7 +723,7 @@ handle_t graph_t::apply_orientation(const handle_t& handle) {
         auto& occ = occurrences.at(j);
         bool orient = orientations.at(j);
         handle_t h = orient ? new_handle : handle_helper::toggle_bit(new_handle);
-        auto& path = paths.at(as_integers(occ)[0]);
+        auto& path = *paths.at(as_integers(occ)[0]);
         path.link_occurrence(as_integers(occ)[1], h, seq);
     }
 }
@@ -772,14 +773,14 @@ std::vector<handle_t> graph_t::divide_handle(const handle_t& handle, const std::
     for_each_occurrence_on_handle(handle, [&](const occurrence_handle_t& occ) {
             // save occurrence information
             occurrences.push_back(occ);
-            auto& path = paths.at(as_integers(occ)[0]);
+            auto& path = *paths.at(as_integers(occ)[0]);
             // record relative orientation
             orientations.push_back(path.get_occurrence(as_integers(occ)[1]).strand);
         });
     // replace the path steps with the new handles in the correct orientation
     for (uint64_t j = 0; j < occurrences.size(); ++j) {
         auto& occ = occurrences.at(j);
-        auto& path = paths.at(as_integers(occ)[0]);
+        auto& path = *paths.at(as_integers(occ)[0]);
         bool flip = orientations.at(j);
         if (flip) {
             path.replace_occurrence(as_integers(occ)[1], rev_handles);
@@ -816,7 +817,7 @@ std::vector<handle_t> graph_t::divide_handle(const handle_t& handle, const std::
  * Destroy the given path. Invalidates handles to the path and its node occurrences.
  */
 void graph_t::destroy_path(const path_handle_t& path) {
-    paths[as_integer(path)].clear();
+    paths[as_integer(path)]->clear();
 }
 
 /**
@@ -826,7 +827,9 @@ void graph_t::destroy_path(const path_handle_t& path) {
  * remain valid.
  */
 path_handle_t graph_t::create_path_handle(const std::string& name) {
-    paths.emplace_back(name);
+    path_t* p = new path_t(name);
+    //path_t p(name);
+    paths.push_back(p);
     return as_path_handle(paths.size()-1);
 }
     
@@ -836,7 +839,7 @@ path_handle_t graph_t::create_path_handle(const std::string& name) {
  * occurrences on the path, and to other paths, must remain valid.
  */
 occurrence_handle_t graph_t::append_occurrence(const path_handle_t& path, const handle_t& to_append) {
-    paths[as_integer(path)].append_occurrence(get_id(to_append), handle_helper::unpack_bit(to_append));
+    paths[as_integer(path)]->append_occurrence(get_id(to_append), handle_helper::unpack_bit(to_append));
     // and add the occurrence to the correct places in the node to path/occurrence mappings
     uint64_t prev_occs_on_node = 0;
     uint64_t i = path_id_wt.select(handle_helper::unpack_number(to_append), 0);
@@ -921,7 +924,7 @@ void graph_t::to_gfa(std::ostream& out) const {
     for_each_path_handle([&out,this](const path_handle_t& p) {
             //occurrence_handle_t occ = get_first_occurrence(p);
             out << "P\t" << get_path_name(p) << "\t";
-            auto& path = paths.at(as_integer(p));
+            auto& path = *paths.at(as_integer(p));
             uint64_t path_length = path.occurrence_count();
             for (uint64_t i = 0; i < path_length; ++i) {
                 step_t step = path.get_occurrence(i);

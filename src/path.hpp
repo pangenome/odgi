@@ -55,6 +55,7 @@ inline void path_t::clear(void) {
 }
 
 inline void path_t::append_occurrence(const id_t& id, bool strand) {
+    //std::cerr << "appending " << id << " " << strand << std::endl;
     ids_wt.push_back(id);
     strands_wt.push_back(strand);
 }
@@ -126,6 +127,14 @@ inline void path_t::link_occurrence(uint64_t rank, const handle_t& handle, const
 }
 
 inline void path_t::replace_occurrence(uint64_t rank, const std::vector<handle_t>& handles) {
+    if (ids_wt.at(rank) == 0) {
+        // remove the sequence from seq_wt
+        uint64_t i = seq_wt.select(ids_wt.rank(rank, 0), 0)+1;
+        while (seq_wt.at(i) != 0) {
+            seq_wt.remove(i);
+        }
+        seq_wt.remove(i); // remove trailing delimiter 0
+    }
     // delete the step
     ids_wt.remove(rank);
     strands_wt.remove(rank);

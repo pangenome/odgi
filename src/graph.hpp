@@ -428,7 +428,7 @@ private:
     /// indicating reverse strand.
     /// Sequence in the path that does not map to the graph is stored in the sequence vector
     /// and referred to using the node id 0.
-    std::vector<path_t> paths;
+    std::vector<path_t*> paths;
 
     /// A helper to record the number of live nodes
     uint64_t _node_count = 0;
