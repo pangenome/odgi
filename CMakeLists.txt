@@ -106,7 +106,6 @@ set(CMAKE_BUILD_TYPE Release)
 # set up our target executable and specify its dependencies and includes
 add_executable(dankgraph
   ${CMAKE_SOURCE_DIR}/src/graph.cpp
-  ${CMAKE_SOURCE_DIR}/src/path.cpp
   ${CMAKE_SOURCE_DIR}/src/main.cpp
   ${CMAKE_SOURCE_DIR}/src/bgraph.cpp
   )

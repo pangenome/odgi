@@ -10,7 +10,7 @@
 #include <vector>
 #include <utility>
 #include <functional>
-#include "path.hpp"
+#include "dna.hpp"
 #include "handle_types.hpp"
 #include "handle_helper.hpp"
 #include "dynamic.hpp"
@@ -18,12 +18,10 @@
 
 namespace dankgraph {
 
-
 class graph_t {
         
 public:
     graph_t(void);
-    graph_t(uint64_t n);
     ~graph_t(void);
         
     /// Look up the handle for the node with the given ID in the given orientation
@@ -361,6 +359,21 @@ public:
      */
     occurrence_handle_t append_occurrence(const path_handle_t& path, const handle_t& to_append);
 
+    /// Returns true if the occurrence is unlinked
+    bool is_unlinked(const occurrence_handle_t& occurrence_handle);
+
+    /// Unlink the occurrence from the graph, stashing the unlinked sequence to allow for lossless path reconstruction
+    void unlink_occurrence(const occurrence_handle_t& occurrence_handle);
+
+    /// Get the sequence of the occurrence, which may or may not be linked
+    std::string get_occurrence_sequence(const occurrence_handle_t& occurrence_handle);
+
+    /// Set the occurrence to the given handle, possibly re-linking and cleaning up if needed
+    void set_occurrence(const occurrence_handle_t& occurrence_handle, const handle_t& handle);
+
+    /// Replace the occurrence with multiple handles, handling unlinked replacement as in set_occurrence
+    void replace_occurrence(const occurrence_handle_t& occurrence_handle, const std::vector<handle_t>& handles);
+
     /// A helper function to visualize the state of the graph
     void display(void) const;
 
@@ -402,43 +415,40 @@ private:
     /// Marks the beginnings of nodes in seq_pv
     suc_bv seq_bv;
 
-    /// Ordered across the nodes in graph_id_wt, stores the path ids (1-based) at each
-    /// segment in seq_wt, delimited by 0, one for each path occurrrence (node traversal).
-    wt_str path_id_wt;
+    /// Single wt encoding of graph paths; recorded by handle
+    /// Paths delimited by std::numeric_limits<uint64_t>::max()
+    /// std::numeric_limits<uint64_t>::max()-1 indicates steps that have been unlinked
+    wt_str path_handle_wt;
+    const static uint64_t path_handle_wt_end_marker = std::numeric_limits<uint64_t>::max();
+    const static uint64_t path_handle_wt_unlinked_marker = std::numeric_limits<uint64_t>::max();
 
-    /// Ordered across the nodes in graph_id_wt, stores the (1-based) rank of the
-    /// particular node traversal in each path. The stored value is the rank of the
-    /// node id among in the path id list. For paths that cross a given node once,
-    /// this will simply be 1. Each subsequent crossing will yield 2, 3, ... etc.
-    /// This provides a mapping between graph node id and the occurrence_handle_t
-    /// that is dynamically derivable and robust to the modification of any other part
-    /// of the path. Length == to path_id_wt
-    wt_str path_rank_wt;
+    /// Stores unlinked sequences in the order in which they occur in path_handle_wt, delimited by 0
+    wt_str path_seq_wt;
 
     /// Stores path names in their internal order, delimited by '$'
     dyn::wt_fmi path_name_fmi;
 
-    /// Marks the beginning of each path name
-    suc_bv path_name_bv;
+    /// Stores path names in their internal order, delimited by 0
+    dyn::packed_vector path_name_pv;
 
-    /// Encodes the embedded paths of the graph. Each path is represented as three vectors
-    /// ids, strand, sequences
-    /// The values in starts correspond to the ids in graph_id_wt.
-    /// The strand of this interval is given by the corresponding bit in orientations, with 1
-    /// indicating reverse strand.
-    /// Sequence in the path that does not map to the graph is stored in the sequence vector
-    /// and referred to using the node id 0.
-    std::vector<path_t*> paths;
+    /// Marks the beginning of each path name in path_name_fmi and path_name_pv
+    suc_bv path_name_bv;
 
     /// A helper to record the number of live nodes
     uint64_t _node_count = 0;
+
     /// A helper to record the number of live edges
     uint64_t _edge_count = 0;
+
     /// A helper to record the number of live paths
     uint64_t _path_count = 0;
 
+    /// A helper to record the next path handle (path deletions are hard because of our path FM-index)
+    uint64_t _path_handle_next = 0;
+
     /// Helper to convert between edge storage and actual id
     uint64_t edge_delta_to_id(uint64_t left, uint64_t delta) const;
+
     /// Helper to convert between ids storage and actual id
     uint64_t edge_to_delta(const handle_t& left, const handle_t& right) const;
 
