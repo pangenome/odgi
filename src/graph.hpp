@@ -210,6 +210,9 @@ public:
     
     /// Get a node handle (node ID and orientation) from a handle to an occurrence on a path
     handle_t get_occurrence(const occurrence_handle_t& occurrence_handle) const;
+
+    /// Get a path handle (path ID) from a handle to an occurrence on a path
+    path_handle_t get_path(const occurrence_handle_t& occurrence_handle) const;
     
     /// Get a handle to the first occurrence in a path.
     /// The path MUST be nonempty.
@@ -263,6 +266,9 @@ public:
 
     /// Create a new node with the given id and sequence, then return the handle.
     handle_t create_handle(const std::string& sequence, const id_t& id);
+
+    /// Create a "hidden" node which might carry parts of paths that traversed deleted portions of the graph
+    handle_t create_hidden_handle(const std::string& sequence);
     
     /// Remove the node belonging to the given handle and all of its edges.
     /// Does not update any stored paths.
@@ -359,20 +365,18 @@ public:
      */
     occurrence_handle_t append_occurrence(const path_handle_t& path, const handle_t& to_append);
 
-    /// Returns true if the occurrence is unlinked
-    bool is_unlinked(const occurrence_handle_t& occurrence_handle);
-
-    /// Unlink the occurrence from the graph, stashing the unlinked sequence to allow for lossless path reconstruction
-    void unlink_occurrence(const occurrence_handle_t& occurrence_handle);
-
-    /// Get the sequence of the occurrence, which may or may not be linked
-    std::string get_occurrence_sequence(const occurrence_handle_t& occurrence_handle);
-
+    /**
+     * Insert a visit to a node to the given path between the given occurrences.
+     * Returns a handle to the new occurrence on the path which is appended.
+     * Handles to prior occurrences on the path, and to other paths, must remain valid.
+     */
+    occurrence_handle_t insert_occurrence(const occurrence_handle_t& before, const occurrence_handle_t& after, const handle_t& to_insert);
+    
     /// Set the occurrence to the given handle, possibly re-linking and cleaning up if needed
-    void set_occurrence(const occurrence_handle_t& occurrence_handle, const handle_t& handle);
+    occurrence_handle_t set_occurrence(const occurrence_handle_t& occurrence_handle, const handle_t& handle);
 
-    /// Replace the occurrence with multiple handles, handling unlinked replacement as in set_occurrence
-    void replace_occurrence(const occurrence_handle_t& occurrence_handle, const std::vector<handle_t>& handles);
+    /// Replace the occurrence with multiple handles
+    std::vector<occurrence_handle_t> replace_occurrence(const occurrence_handle_t& occurrence_handle, const std::vector<handle_t>& handles);
 
     /// A helper function to visualize the state of the graph
     void display(void) const;
@@ -387,9 +391,12 @@ private:
     /// Records node ids to allow for random access and random order
     /// Use the special value "0" to indicate deleted nodes
     dyn::packed_vector graph_id_pv;
+    /// efficient id to handle conversion
     spp::sparse_hash_map<uint64_t, uint64_t> graph_id_map;
     id_t _max_node_id = 0;
     id_t _min_node_id = 0;
+    /// records nodes that are hidden, but used to store path sequence that has been removed from the node space
+    spp::sparse_hash_set<uint64_t> graph_id_hidden_set;
 
     /// Records edges of the 3' end on the forward strand, delimited by 0
     /// ordered by rank in graph_id_wt, recorded by δ = id_this - id_that
@@ -415,15 +422,41 @@ private:
     /// Marks the beginnings of nodes in seq_pv
     suc_bv seq_bv;
 
-    /// Single wt encoding of graph paths; recorded by handle
-    /// Paths delimited by std::numeric_limits<uint64_t>::max()
-    /// std::numeric_limits<uint64_t>::max()-1 indicates steps that have been unlinked
+    /// ordered path identifiers as they traverse each node
+    /// the index of the path identifier in this WT defines the occurrence_handle_t for the step
+    /// which also maps into the path_next_* and path_prev_* WTs
     wt_str path_handle_wt;
-    const static uint64_t path_handle_wt_end_marker = std::numeric_limits<uint64_t>::max();
-    const static uint64_t path_handle_wt_unlinked_marker = std::numeric_limits<uint64_t>::max();
 
-    /// Stores unlinked sequences in the order in which they occur in path_handle_wt, delimited by 0
-    wt_str path_seq_wt;
+    /// delimits the node records in path_handle_wt
+    suc_bv path_handle_bv;
+
+    /// which orientation are we traversing in?
+    dyn::packed_vector path_rev_pv;
+
+    /// special delimiters used in the path_next_id_wt and path_prev_id_wt
+    const static uint64_t path_begin_marker = std::numeric_limits<uint64_t>::max()-1;
+    const static uint64_t path_end_marker = std::numeric_limits<uint64_t>::max();
+    
+    /// by occurrence, where this particular occurrence goes next
+    wt_str path_next_id_wt;
+
+    /// the rank of the path occurrence among occurrences in this path in the next handle's list
+    wt_str path_next_rank_wt;
+
+    /// by occurrence, where this particular occurrence came from 
+    wt_str path_prev_id_wt;
+
+    /// the rank of the path occurrence among occurrences in this path in the previous handle's list
+    wt_str path_prev_rank_wt;
+
+    /// maps between path identifier and the first occurrence in the path
+    spp::sparse_hash_map<uint64_t, occurrence_handle_t> path_first_occ_map;
+
+    /// maps between path identifier and the last occurrence in the path
+    spp::sparse_hash_map<uint64_t, occurrence_handle_t> path_last_occ_map;
+
+    /// records the occurrence count of each path
+    dyn::packed_vector path_occurrence_count_pv;
 
     /// Stores path names in their internal order, delimited by '$'
     dyn::wt_fmi path_name_fmi;
@@ -437,6 +470,9 @@ private:
     /// A helper to record the number of live nodes
     uint64_t _node_count = 0;
 
+    /// A counter that records the number of hidden nodes
+    uint64_t _hidden_count = 0;
+
     /// A helper to record the number of live edges
     uint64_t _edge_count = 0;
 
@@ -449,8 +485,26 @@ private:
     /// Helper to convert between edge storage and actual id
     uint64_t edge_delta_to_id(uint64_t left, uint64_t delta) const;
 
-    /// Helper to convert between ids storage and actual id
+    /// Helper to convert between ids and stored edge
     uint64_t edge_to_delta(const handle_t& left, const handle_t& right) const;
+
+    /// Helper to simplify removal of path handle records
+    void destroy_path_handle_records(uint64_t i);
+
+    /// Helper to create the internal records for the occurrence
+    occurrence_handle_t create_occurrence(const path_handle_t& path, const handle_t& handle);
+
+    /// Helper to destroy the internal records for the occurrence
+    void destroy_occurrence(const occurrence_handle_t& occurrence_handle);
+
+    /// Helper to stitch up partially built paths
+    void link_occurrences(const occurrence_handle_t& from, const occurrence_handle_t& to);
+
+    /// Decrement the occurrence rank references for this occurrence
+    void decrement_rank(const occurrence_handle_t& occurrence_handle);
+
+    /// The internal rank of the occurrence
+    uint64_t occurrence_rank(const occurrence_handle_t& occurrence_handle) const;
 
 };
 
