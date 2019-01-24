@@ -207,6 +207,9 @@ public:
 
     /// Enumerate the path occurrences on a given handle (strand agnostic) *TODO move to vg
     void for_each_occurrence_on_handle(const handle_t& handle, const std::function<void(const occurrence_handle_t&)>& iteratee) const;
+
+    /// Returns the number of node occurrences on the handle
+    size_t get_occurrence_count(const handle_t& handle) const;
     
     /// Get a node handle (node ID and orientation) from a handle to an occurrence on a path
     handle_t get_occurrence(const occurrence_handle_t& occurrence_handle) const;
@@ -427,9 +430,6 @@ private:
     /// which also maps into the path_next_* and path_prev_* WTs
     wt_str path_handle_wt;
 
-    /// delimits the node records in path_handle_wt
-    suc_bv path_handle_bv;
-
     /// which orientation are we traversing in?
     dyn::packed_vector path_rev_pv;
 
@@ -449,14 +449,13 @@ private:
     /// the rank of the path occurrence among occurrences in this path in the previous handle's list
     wt_str path_prev_rank_wt;
 
-    /// maps between path identifier and the first occurrence in the path
-    spp::sparse_hash_map<uint64_t, occurrence_handle_t> path_first_occ_map;
-
-    /// maps between path identifier and the last occurrence in the path
-    spp::sparse_hash_map<uint64_t, occurrence_handle_t> path_last_occ_map;
-
-    /// records the occurrence count of each path
-    dyn::packed_vector path_occurrence_count_pv;
+    struct path_metadata_t {
+        uint64_t length;
+        occurrence_handle_t first;
+        occurrence_handle_t last;
+    };
+    /// maps between path identifier and the start, end, and length of the path
+    spp::sparse_hash_map<uint64_t, path_metadata_t> path_metadata_map;
 
     /// Stores path names in their internal order, delimited by '$'
     dyn::wt_fmi path_name_fmi;
