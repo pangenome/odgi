@@ -5,10 +5,9 @@
 
 namespace dankgraph {
 
-typedef dyn::succinct_bitvector<dyn::spsi<dyn::packed_vector,8192,16> > suc_bv;
-//typedef dyn::gap_bitvector<dyn::spsi<dyn::packed_vector,8192,16> > suc_bv;
-typedef dyn::wt_string<suc_bv> wt_str;
-//typedef dyn::wt_string<dyn::rle_str> wt_str;
+typedef dyn::succinct_bitvector<dyn::spsi<dyn::packed_vector,2048,2> > suc_bv;
+typedef dyn::spsi<dyn::packed_vector,1024,1> spsi_iv;
+typedef dyn::wt_string<dyn::succinct_bitvector<dyn::spsi<dyn::packed_vector,2048,2> > > wt_str;
 
 }
 

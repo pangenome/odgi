@@ -431,23 +431,23 @@ private:
     wt_str path_handle_wt;
 
     /// which orientation are we traversing in?
-    dyn::packed_vector path_rev_pv;
+    spsi_iv path_rev_iv;
 
     /// special delimiters used in the path_next_id_wt and path_prev_id_wt
-    const static uint64_t path_begin_marker = std::numeric_limits<uint64_t>::max()-1;
-    const static uint64_t path_end_marker = std::numeric_limits<uint64_t>::max();
+    const static uint64_t path_begin_marker = 1; //std::numeric_limits<uint64_t>::max()-1;
+    const static uint64_t path_end_marker = 2; // std::numeric_limits<uint64_t>::max();
     
     /// by occurrence, where this particular occurrence goes next
-    wt_str path_next_id_wt;
+    spsi_iv path_next_id_iv;
 
     /// the rank of the path occurrence among occurrences in this path in the next handle's list
-    wt_str path_next_rank_wt;
+    spsi_iv path_next_rank_iv;
 
     /// by occurrence, where this particular occurrence came from 
-    wt_str path_prev_id_wt;
+    spsi_iv path_prev_id_iv;
 
     /// the rank of the path occurrence among occurrences in this path in the previous handle's list
-    wt_str path_prev_rank_wt;
+    spsi_iv path_prev_rank_iv;
 
     struct path_metadata_t {
         uint64_t length;
