@@ -404,7 +404,8 @@ private:
     /// Records edges of the 3' end on the forward strand, delimited by 0
     /// ordered by rank in graph_id_wt, recorded by δ = id_this - id_that
     /// and stored as (δ = 0 ? 1 : (δ > 0 ? 2δ+1 : 2δ+2))
-    wt_str edge_fwd_wt;
+    spsi_iv edge_fwd_iv;
+    suc_bv edge_fwd_bv;
 
     /// Marks inverting edges in edge_fwd_wt
     suc_bv edge_fwd_inv_bv;
@@ -412,7 +413,8 @@ private:
     /// Records edges of the 3' end on the reverse strand, delimited by 0,
     /// ordered by rank in graph_id_wt, recorded by δ = id_this - id_that
     /// and stored as (δ = 0 ? 1 : (δ > 0 ? 2δ+1 : 2δ+2))
-    wt_str edge_rev_wt;
+    spsi_iv edge_rev_iv;
+    suc_bv edge_rev_bv;
 
     /// Marks inverting edges in edge_rev_wt
     suc_bv edge_rev_inv_bv;

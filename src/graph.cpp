@@ -9,9 +9,11 @@ namespace dankgraph {
 graph_t::graph_t(void) {
     // set up initial delimiters
     seq_bv.push_back(1);
-    edge_fwd_wt.push_back(0);
+    edge_fwd_iv.push_back(0);
+    edge_fwd_bv.push_back(1);
     edge_fwd_inv_bv.push_back(0);
-    edge_rev_wt.push_back(0);
+    edge_rev_iv.push_back(0);
+    edge_rev_bv.push_back(1);
     edge_rev_inv_bv.push_back(0);
     path_handle_wt.push_back(0);
     path_rev_iv.push_back(0);
@@ -75,9 +77,9 @@ bool graph_t::follow_edges(const handle_t& handle, bool go_left, const std::func
     bool is_rev = handle_helper::unpack_bit(handle);
     // NB edges are stored in canonical orientation, forward to reverse prefered
     if (!go_left && !is_rev || go_left && is_rev) {
-        uint64_t edges_begin = edge_fwd_wt.select(offset, 0)+1;
+        uint64_t edges_begin = edge_fwd_bv.select1(offset)+1;
         for (uint64_t i = edges_begin; ; ++i) {
-            uint64_t x = edge_fwd_wt.at(i);
+            uint64_t x = edge_fwd_iv.at(i);
             if (x==0) break; // end of record
             uint64_t id = edge_delta_to_id(get_id(handle), x);
             bool inv = edge_fwd_inv_bv.at(i);
@@ -87,9 +89,9 @@ bool graph_t::follow_edges(const handle_t& handle, bool go_left, const std::func
         }
     } else {
         assert(go_left && !is_rev || !go_left && is_rev);
-        uint64_t edges_begin = edge_rev_wt.select(offset, 0)+1;
+        uint64_t edges_begin = edge_rev_bv.select1(offset)+1;
         for (uint64_t i = edges_begin; ; ++i) {
-            uint64_t x = edge_rev_wt.at(i);
+            uint64_t x = edge_rev_iv.at(i);
             if (x==0) break; // end of record
             uint64_t id = edge_delta_to_id(get_id(handle), x);
             bool inv = edge_rev_inv_bv.at(i);
@@ -153,9 +155,9 @@ size_t graph_t::get_degree(const handle_t& handle, bool go_left) const {
     uint64_t offset = handle_helper::unpack_number(handle);
     bool is_rev = handle_helper::unpack_bit(handle);
     if (!go_left && !is_rev || go_left && is_rev) {
-        return edge_fwd_wt.select(offset+1, 0) - edge_fwd_wt.select(offset, 0);
+        return edge_fwd_bv.select1(offset+1) - edge_fwd_bv.select1(offset);
     } else {
-        return edge_rev_wt.select(offset+1, 0) - edge_rev_wt.select(offset, 0);
+        return edge_rev_bv.select1(offset+1) - edge_rev_bv.select1(offset);
     }
 }
     
@@ -396,9 +398,11 @@ handle_t graph_t::create_handle(const std::string& sequence, const id_t& id) {
     }
     seq_bv.push_back(1); // end delimiter
     // set up delemiters for edges, for later filling
-    edge_fwd_wt.push_back(0);
+    edge_fwd_iv.push_back(0);
+    edge_fwd_bv.push_back(1);
     edge_fwd_inv_bv.push_back(0);
-    edge_rev_wt.push_back(0);
+    edge_rev_iv.push_back(0);
+    edge_rev_bv.push_back(1);
     edge_rev_inv_bv.push_back(0);
     // set up path handle mapping
     path_handle_wt.push_back(0);
@@ -504,25 +508,29 @@ void graph_t::create_edge(const handle_t& left, const handle_t& right) {
     uint64_t left_relative = edge_to_delta(left_h, right_h);
     if (!left_rev) {
         //std::cerr << "not left rev" << std::endl;
-        uint64_t edge_fwd_left_offset = edge_fwd_wt.select(left_rank+1, 0);
+        uint64_t edge_fwd_left_offset = edge_fwd_bv.select1(left_rank+1);
         //std::cerr << "edge fwd " << edge_fwd_left_offset << std::endl;
-        edge_fwd_wt.insert(edge_fwd_left_offset, left_relative);
+        edge_fwd_iv.insert(edge_fwd_left_offset, left_relative);
+        edge_fwd_bv.insert(edge_fwd_left_offset, 0);
         edge_fwd_inv_bv.insert(edge_fwd_left_offset, inv);
     } else {
         //std::cerr << "left rev" << std::endl;
-        uint64_t edge_rev_left_offset = edge_rev_wt.select(left_rank+1, 0);
-        edge_rev_wt.insert(edge_rev_left_offset, left_relative);
+        uint64_t edge_rev_left_offset = edge_rev_bv.select1(left_rank+1);
+        edge_rev_iv.insert(edge_rev_left_offset, left_relative);
+        edge_rev_bv.insert(edge_rev_left_offset, 0);
         edge_rev_inv_bv.insert(edge_rev_left_offset, inv);
     }
     if (!right_rev) {
         //std::cerr << "not right rev" << std::endl;
-        uint64_t edge_rev_right_offset = edge_rev_wt.select(right_rank+1, 0);
-        edge_rev_wt.insert(edge_rev_right_offset, right_relative);
+        uint64_t edge_rev_right_offset = edge_rev_bv.select1(right_rank+1);
+        edge_rev_iv.insert(edge_rev_right_offset, right_relative);
+        edge_rev_bv.insert(edge_rev_right_offset, 0);
         edge_rev_inv_bv.insert(edge_rev_right_offset, inv);
     } else {
         //std::cerr << "right rev" << std::endl;
-        uint64_t edge_fwd_right_offset = edge_fwd_wt.select(right_rank+1, 0);
-        edge_fwd_wt.insert(edge_fwd_right_offset, right_relative);
+        uint64_t edge_fwd_right_offset = edge_fwd_bv.select1(right_rank+1);
+        edge_fwd_iv.insert(edge_fwd_right_offset, right_relative);
+        edge_fwd_bv.insert(edge_fwd_right_offset, 0);
         edge_fwd_inv_bv.insert(edge_fwd_right_offset, inv);
     }
     ++_edge_count;
@@ -574,10 +582,10 @@ void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
     uint64_t right_relative = edge_to_delta(right_h, left_h);
     uint64_t left_relative = edge_to_delta(left_h, right_h);
     if (!left_rev) {
-        uint64_t edge_fwd_left_offset = edge_fwd_wt.select(left_rank, 0);
+        uint64_t edge_fwd_left_offset = edge_fwd_bv.select1(left_rank);
         uint64_t edge_fwd_left_offset_erase = 0;
         for (uint64_t i = edge_fwd_left_offset+1; ; ++i) {
-            uint64_t c = edge_fwd_wt.at(i);
+            uint64_t c = edge_fwd_iv.at(i);
             if (c != 0) break;
             if (c == left_relative && inv == edge_fwd_inv_bv.at(i)) {
                 edge_fwd_left_offset_erase = i;
@@ -585,14 +593,15 @@ void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
             }
         }
         if (edge_fwd_left_offset_erase) {
-            edge_fwd_wt.remove(edge_fwd_left_offset_erase);
+            edge_fwd_iv.remove(edge_fwd_left_offset_erase);
+            edge_fwd_bv.remove(edge_fwd_left_offset_erase);
             edge_fwd_inv_bv.remove(edge_fwd_left_offset_erase);
         }
     } else {
-        uint64_t edge_rev_left_offset = edge_rev_wt.select(left_rank, 0);
+        uint64_t edge_rev_left_offset = edge_rev_bv.select1(left_rank);
         uint64_t edge_rev_left_offset_erase = 0;
         for (uint64_t i = edge_rev_left_offset+1; ; ++i) {
-            uint64_t c = edge_rev_wt.at(i);
+            uint64_t c = edge_rev_iv.at(i);
             if (c != 0) break;
             if (c == left_relative && inv == edge_rev_inv_bv.at(i)) {
                 edge_rev_left_offset_erase = i;
@@ -600,15 +609,16 @@ void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
             }
         }
         if (edge_rev_left_offset_erase) {
-            edge_rev_wt.remove(edge_rev_left_offset_erase);
+            edge_rev_iv.remove(edge_rev_left_offset_erase);
+            edge_rev_bv.remove(edge_rev_left_offset_erase);
             edge_rev_inv_bv.remove(edge_rev_left_offset_erase);
         }
     }
     if (!right_rev) {
-        uint64_t edge_rev_right_offset = edge_rev_wt.select(right_rank, 0);
+        uint64_t edge_rev_right_offset = edge_rev_bv.select1(right_rank);
         uint64_t edge_rev_right_offset_erase = 0;
         for (uint64_t i = edge_rev_right_offset+1; ; ++i) {
-            uint64_t c = edge_rev_wt.at(i);
+            uint64_t c = edge_rev_iv.at(i);
             if (c != 0) break;
             if (c == right_relative && inv == edge_rev_inv_bv.at(i)) {
                 edge_rev_right_offset_erase = i;
@@ -616,14 +626,15 @@ void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
             }
         }
         if (edge_rev_right_offset_erase) {
-            edge_rev_wt.remove(edge_rev_right_offset_erase);
+            edge_rev_iv.remove(edge_rev_right_offset_erase);
+            edge_rev_bv.remove(edge_rev_right_offset_erase);
             edge_rev_inv_bv.remove(edge_rev_right_offset_erase);
         }
     } else {
-        uint64_t edge_fwd_right_offset = edge_fwd_wt.select(right_rank, 0);
+        uint64_t edge_fwd_right_offset = edge_fwd_bv.select1(right_rank);
         uint64_t edge_fwd_right_offset_erase = 0;
         for (uint64_t i = edge_fwd_right_offset+1; ; ++i) {
-            uint64_t c = edge_fwd_wt.at(i);
+            uint64_t c = edge_fwd_iv.at(i);
             if (c != 0) break;
             if (c == right_relative && inv == edge_fwd_inv_bv.at(i)) {
                 edge_fwd_right_offset_erase = i;
@@ -631,7 +642,8 @@ void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
             }
         }
         if (edge_fwd_right_offset_erase) {
-            edge_fwd_wt.remove(edge_fwd_right_offset_erase);
+            edge_fwd_iv.remove(edge_fwd_right_offset_erase);
+            edge_fwd_bv.remove(edge_fwd_right_offset_erase);
             edge_fwd_inv_bv.remove(edge_fwd_right_offset_erase);
         }
     }
@@ -642,15 +654,18 @@ void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
 void graph_t::clear(void) {
     wt_str null_wt;
     suc_bv null_bv;
+    spsi_iv null_iv;
     dyn::packed_vector null_pv;
     // XXX TODO add in current path storage
     dyn::wt_fmi null_fmi;
     _max_node_id = 0;
     _min_node_id = 0;
     graph_id_pv = null_pv;
-    edge_fwd_wt = null_wt;
+    edge_fwd_iv = null_iv;
+    edge_fwd_bv = null_bv;
     edge_fwd_inv_bv = null_bv;
-    edge_rev_wt = null_wt;
+    edge_rev_iv = null_iv;
+    edge_rev_bv = null_bv;
     edge_rev_inv_bv = null_bv;
     seq_pv = null_pv;
     seq_bv = null_bv;
@@ -1026,15 +1041,19 @@ void graph_t::display(void) const {
     for (uint64_t i = 0; i < graph_id_pv.size(); ++i) std::cerr << graph_id_pv.at(i) << " "; std::cerr << std::endl;
     /// Records edges of the 3' end on the forward strand, delimited by 0
     /// ordered by rank in graph_id_pv, defined by opposite rank+1 (handle)
-    std::cerr << "edge_fwd_wt" << "\t";
-    for (uint64_t i = 0; i < edge_fwd_wt.size(); ++i) std::cerr << edge_fwd_wt.at(i) << " "; std::cerr << std::endl;
+    std::cerr << "edge_fwd_iv" << "\t";
+    for (uint64_t i = 0; i < edge_fwd_iv.size(); ++i) std::cerr << edge_fwd_iv.at(i) << " "; std::cerr << std::endl;
+    std::cerr << "edge_fwd_bv" << "\t";
+    for (uint64_t i = 0; i < edge_fwd_bv.size(); ++i) std::cerr << edge_fwd_bv.at(i) << " "; std::cerr << std::endl;
     /// Marks inverting edges in edge_fwd_wt
     std::cerr << "edge_fwd_inv_bv" << "\t";
     for (uint64_t i = 0; i < edge_fwd_inv_bv.size(); ++i) std::cerr << edge_fwd_inv_bv.at(i) << " "; std::cerr << std::endl;
     /// Records edges of the 3' end on the reverse strand, delimited by 0,
     /// ordered by rank in graph_id_pv, defined by opposite rank+1 (handle)
-    std::cerr << "edge_rev_wt" << "\t";
-    for (uint64_t i = 0; i < edge_rev_wt.size(); ++i) std::cerr << edge_rev_wt.at(i) << " "; std::cerr << std::endl;
+    std::cerr << "edge_rev_iv" << "\t";
+    for (uint64_t i = 0; i < edge_rev_iv.size(); ++i) std::cerr << edge_rev_iv.at(i) << " "; std::cerr << std::endl;
+    std::cerr << "edge_rev_bv" << "\t";
+    for (uint64_t i = 0; i < edge_rev_bv.size(); ++i) std::cerr << edge_rev_bv.at(i) << " "; std::cerr << std::endl;
     /// Marks inverting edges in edge_rev_wt
     std::cerr << "edge_rev_inv_bv" << "\t";
     for (uint64_t i = 0; i < edge_rev_inv_bv.size(); ++i) std::cerr << edge_rev_inv_bv.at(i) << " "; std::cerr << std::endl;
