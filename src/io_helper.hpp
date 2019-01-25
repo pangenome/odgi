@@ -1,6 +1,7 @@
 #ifndef gfa_io_helper
 #define gfa_io_helper
 #include "gfakluge.hpp"
+#include "graph.hpp"
 #include "handle_types.hpp"
 #include "dgraph.hpp"
 #include "bgraph.hpp"

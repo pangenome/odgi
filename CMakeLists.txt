@@ -8,8 +8,8 @@ project(dankgraph)
 set(CMAKE_CXX_STANDARD 11)
 
 # Use all standard-compliant optimizations
-set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -O2")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -O2")
+set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -g")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -g")
 
 # We use OpenMP for parallelism
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
@@ -52,10 +52,21 @@ set(sdsl-lite-divsufsort_INCLUDE "${INSTALL_DIR}/src/sdsl-lite-build/external/li
 set(sdsl-lite_LIB "${INSTALL_DIR}/src/sdsl-lite-build/lib")
 set(sdsl-lite-divsufsort_LIB "${INSTALL_DIR}/src/sdsl-lite-build/external/libdivsufsort/lib")
 
+# DYNAMIC (full build using its cmake config)
+ExternalProject_Add(dynamic
+  GIT_REPOSITORY "https://github.com/vgteam/DYNAMIC.git"
+  GIT_TAG "613d6819c5364744db63226cecb1e40a770f47bb"
+  # we don't actually install dynamic... it's header only
+  #CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
+  UPDATE_COMMAND ""
+  INSTALL_COMMAND "")
+ExternalProject_Get_property(dynamic INSTALL_DIR)
+set(dynamic_INCLUDE "${INSTALL_DIR}/src/dynamic/include")
+
 # gfakluge (full build using its cmake config)
 ExternalProject_Add(gfakluge
-  GIT_REPOSITORY "https://github.com/edawson/gfakluge.git"
-  GIT_TAG "88ca1d2ca36151953d23d16380eee63e00e3638b7"
+  GIT_REPOSITORY "https://github.com/vgteam/gfakluge.git"
+  GIT_TAG "bc6dc370fd22c2f84d2ae2c476a25dedeb45496e"
   BUILD_IN_SOURCE TRUE
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR} # TODO ADD static build flag
   UPDATE_COMMAND ""
@@ -67,6 +78,14 @@ set(gfakluge_INCLUDE "${INSTALL_DIR}/src/gfakluge/src")
 set(gfakluge_tinyFA_INCLUDE "${INSTALL_DIR}/src/gfakluge/src/tinyFA")
 set(gfakluge_LIB "${INSTALL_DIR}/src/gfakluge")
 
+# taywee's C++ args library, header only
+ExternalProject_Add(tayweeargs
+  GIT_REPOSITORY "https://github.com/Taywee/args.git"
+  GIT_TAG "3de44ec671db452cc0c4ef86399b108939768abb"
+  UPDATE_COMMAND ""
+  INSTALL_COMMAND "")
+ExternalProject_Get_property(tayweeargs SOURCE_DIR)
+set(tayweeargs_INCLUDE "${SOURCE_DIR}")
 
 # sparsepp
 ExternalProject_Add(sparsepp
@@ -82,30 +101,36 @@ ExternalProject_Get_property(sparsepp INSTALL_DIR)
 set(sparsepp_INCLUDE "${INSTALL_DIR}/src/sparsepp/sparsepp/")
 set(sparsepp_LIB "${INSTALL_DIR}/src/sparsepp/sparsepp/")
 
-set(CMAKE_BUILD_TYPE Debug) 
+set(CMAKE_BUILD_TYPE Release)
 
 # set up our target executable and specify its dependencies and includes
 add_executable(dankgraph
-  ${CMAKE_SOURCE_DIR}/src/dgraph.cpp
-  ${CMAKE_SOURCE_DIR}/src/dynamic_structs.cpp
-  ${CMAKE_SOURCE_DIR}/src/path.cpp
+  ${CMAKE_SOURCE_DIR}/src/graph.cpp
   ${CMAKE_SOURCE_DIR}/src/main.cpp
   ${CMAKE_SOURCE_DIR}/src/bgraph.cpp
   )
 add_dependencies(dankgraph sdsl-lite)
+add_dependencies(dankgraph dynamic)
+add_dependencies(dankgraph gfakluge)
+add_dependencies(dankgraph tayweeargs)
 target_include_directories(dankgraph PUBLIC
   "${sdsl-lite_INCLUDE}"
   "${sdsl-lite-divsufsort_INCLUDE}"
+  "${dynamic_INCLUDE}"
   "${gfakluge_INCLUDE}"
   "${gfakluge_tinyFA_INCLUDE}"
+  "${tayweeargs_INCLUDE}"
   "${sparsepp_INCLUDE}")
 target_link_libraries(dankgraph
   "${sdsl-lite_LIB}/libsdsl.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort64.a"
+  "-ltcmalloc"
   )
+
+#set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc")
 
 if (APPLE)
 elseif (TRUE)
-  set(CMAKE_EXE_LINKER_FLAGS "-static")
+#  set(CMAKE_EXE_LINKER_FLAGS "-static")
 endif()

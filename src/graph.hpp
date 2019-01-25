@@ -1,7 +1,5 @@
 //
 //  dgraph.hpp
-//  
-//
 //
 
 #ifndef dgraph_hpp
@@ -12,25 +10,19 @@
 #include <vector>
 #include <utility>
 #include <functional>
-#include "path.hpp"
+#include "dna.hpp"
 #include "handle_types.hpp"
 #include "handle_helper.hpp"
-#include "sdsl/bit_vectors.hpp"
-//#include "sdsl/enc_vector.hpp"
-//#include "sdsl/dac_vector.hpp"
-//#include "sdsl/vlc_vector.hpp"
-//#include "sdsl/wavelet_trees.hpp"
-//#include "sdsl/csa_wt.hpp"
-//#include "sdsl/suffix_arrays.hpp"
+#include "dynamic.hpp"
+#include "dynamic_types.hpp"
 
 namespace dankgraph {
 
-
-class SuccinctDynamicSequenceGraph {
+class graph_t {
         
 public:
-    SuccinctDynamicSequenceGraph();
-    ~SuccinctDynamicSequenceGraph();
+    graph_t(void);
+    ~graph_t(void);
         
     /// Look up the handle for the node with the given ID in the given orientation
     handle_t get_handle(const id_t& node_id, bool is_reverse = false) const;
@@ -207,14 +199,23 @@ public:
     size_t get_occurrence_count(const path_handle_t& path_handle) const;
 
     /// Returns the number of paths stored in the graph
-    size_t get_path_count() const;
-    
+    size_t get_path_count(void) const;
+
     /// Execute a function on each path in the graph
     // TODO: allow stopping early?
     void for_each_path_handle(const std::function<void(const path_handle_t&)>& iteratee) const;
+
+    /// Enumerate the path occurrences on a given handle (strand agnostic) *TODO move to vg
+    void for_each_occurrence_on_handle(const handle_t& handle, const std::function<void(const occurrence_handle_t&)>& iteratee) const;
+
+    /// Returns the number of node occurrences on the handle
+    size_t get_occurrence_count(const handle_t& handle) const;
     
     /// Get a node handle (node ID and orientation) from a handle to an occurrence on a path
     handle_t get_occurrence(const occurrence_handle_t& occurrence_handle) const;
+
+    /// Get a path handle (path ID) from a handle to an occurrence on a path
+    path_handle_t get_path(const occurrence_handle_t& occurrence_handle) const;
     
     /// Get a handle to the first occurrence in a path.
     /// The path MUST be nonempty.
@@ -268,6 +269,9 @@ public:
 
     /// Create a new node with the given id and sequence, then return the handle.
     handle_t create_handle(const std::string& sequence, const id_t& id);
+
+    /// Create a "hidden" node which might carry parts of paths that traversed deleted portions of the graph
+    handle_t create_hidden_handle(const std::string& sequence);
     
     /// Remove the node belonging to the given handle and all of its edges.
     /// Does not update any stored paths.
@@ -280,7 +284,10 @@ public:
     /// Create an edge connecting the given handles in the given order and orientations.
     /// Ignores existing edges.
     void create_edge(const handle_t& left, const handle_t& right);
-    
+
+    /// Check if an edge exists
+    bool has_edge(const handle_t& left, const handle_t& right) const;
+
     /// Convenient wrapper for create_edge.
     inline void create_edge(const edge_t& edge) {
         create_edge(edge.first, edge.second);
@@ -361,60 +368,145 @@ public:
      */
     occurrence_handle_t append_occurrence(const path_handle_t& path, const handle_t& to_append);
 
+    /**
+     * Insert a visit to a node to the given path between the given occurrences.
+     * Returns a handle to the new occurrence on the path which is appended.
+     * Handles to prior occurrences on the path, and to other paths, must remain valid.
+     */
+    occurrence_handle_t insert_occurrence(const occurrence_handle_t& before, const occurrence_handle_t& after, const handle_t& to_insert);
+    
+    /// Set the occurrence to the given handle, possibly re-linking and cleaning up if needed
+    occurrence_handle_t set_occurrence(const occurrence_handle_t& occurrence_handle, const handle_t& handle);
+
+    /// Replace the occurrence with multiple handles
+    std::vector<occurrence_handle_t> replace_occurrence(const occurrence_handle_t& occurrence_handle, const std::vector<handle_t>& handles);
+
+    /// A helper function to visualize the state of the graph
+    void display(void) const;
+
+    /// Convert to GFA (for debugging)
+    void to_gfa(std::ostream& out) const;
+    
 /// These are the backing data structures that we use to fulfill the above functions
 
 private:
-        
-    /// Encodes the topology of the graph.
-    /// {ID, start edge list index, end edge list index, seq index}
-    SuccinctDynamicVector graph_iv;
 
-    /// Encodes a series of edges lists of nodes.
-    /// {relative offset, orientation, next edge index}
-    SuccinctDynamicVector edge_lists_iv;
+    /// Records node ids to allow for random access and random order
+    /// Use the special value "0" to indicate deleted nodes
+    dyn::packed_vector graph_id_pv;
+    /// efficient id to handle conversion
+    spp::sparse_hash_map<uint64_t, uint64_t> graph_id_map;
+    id_t _max_node_id = 0;
+    id_t _min_node_id = 0;
+    /// records nodes that are hidden, but used to store path sequence that has been removed from the node space
+    spp::sparse_hash_set<uint64_t> graph_id_hidden_set;
+
+    /// Records edges of the 3' end on the forward strand, delimited by 0
+    /// ordered by rank in graph_id_wt, recorded by δ = id_this - id_that
+    /// and stored as (δ = 0 ? 1 : (δ > 0 ? 2δ+1 : 2δ+2))
+    spsi_iv edge_fwd_iv;
+    suc_bv edge_fwd_bv;
+
+    /// Marks inverting edges in edge_fwd_wt
+    suc_bv edge_fwd_inv_bv;
+
+    /// Records edges of the 3' end on the reverse strand, delimited by 0,
+    /// ordered by rank in graph_id_wt, recorded by δ = id_this - id_that
+    /// and stored as (δ = 0 ? 1 : (δ > 0 ? 2δ+1 : 2δ+2))
+    spsi_iv edge_rev_iv;
+    suc_bv edge_rev_bv;
+
+    /// Marks inverting edges in edge_rev_wt
+    suc_bv edge_rev_inv_bv;
 
     /// Encodes all of the sequences of all nodes and all paths in the graph.
     /// The node sequences occur in the same order as in graph_iv;
-    SuccinctDynamicVector seq_iv;
+    /// Node boundaries are given by 0s
+    dyn::packed_vector seq_pv;
 
-    /// Same length as seq_iv. 1's indicate the beginning of a node's sequence.
-    SuccinctDynamicVector boundary_bv;
+    /// Marks the beginnings of nodes in seq_pv
+    suc_bv seq_bv;
 
-    /// Same length as seq_iv. 0's indicate that a base is still touched by some
-    /// node or some path. 1's indicate that all nodes or paths that touch this
-    /// base have been deleted.
-    SuccinctDynamicVector dead_bv;
+    /// ordered path identifiers as they traverse each node
+    /// the index of the path identifier in this WT defines the occurrence_handle_t for the step
+    /// which also maps into the path_next_* and path_prev_* WTs
+    wt_str path_handle_wt;
 
-    /// Encodes a self-balancing binary tree as integers. Consists of fixed-width
-    /// records that have the following structure:
-    /// {interval start, members index, parent index, left child index, right child index}
-    /// Interval start variable indicates the start of a range in seq_iv (corresponding to
-    /// a node, unless the node has been deleted), members index indicates the 1-based index
-    /// of the first path membership record corresponding to this interval in
-    /// path_membership_value_iv, and parent/left child/right child index indicates the
-    /// topology of a binary tree search structure for these intervals. The indexes are 1-based
-    /// with 0 indicating that the neighbor does not exist.
-    SuccinctDynamicVector path_membership_range_iv;
+    /// which orientation are we traversing in?
+    spsi_iv path_rev_iv;
 
-    /// Encodes a series of linked lists. Consists of fixed-width records that have
-    /// the following structure:
-    /// {path id, rank, next index}
-    /// Path ID indicates which path the node occurs on, rank indicates the ordinal
-    /// position of this occurrence in the path, and next index indicates the 1-based
-    /// index of the next occurrence of this node in this vector (or 0 if there is none)
-    SuccinctDynamicVector path_membership_value_iv;
+    /// special delimiters used in the path_next_id_wt and path_prev_id_wt
+    const static uint64_t path_begin_marker = 1; //std::numeric_limits<uint64_t>::max()-1;
+    const static uint64_t path_end_marker = 2; // std::numeric_limits<uint64_t>::max();
+    
+    /// by occurrence, where this particular occurrence goes next
+    spsi_iv path_next_id_iv;
 
-    /// Encodes the embedded paths of the graph. Each path is represented as three vectors
-    /// starts, lengths, orientations
-    /// The values in starts correspond to the 0-based indexes of an interval in seq_iv.
-    /// The values in lengths are simply the length.
-    /// The strand of this interval is given by the corresponding bit in orientations, with 1
-    /// indicating reverse strand.
-    std::vector<path_t> paths;
+    /// the rank of the path occurrence among occurrences in this path in the next handle's list
+    spsi_iv path_next_rank_iv;
 
-    size_t dead_bases;
-    size_t deleted_nodes;
-    size_t deleted_edges;
+    /// by occurrence, where this particular occurrence came from 
+    spsi_iv path_prev_id_iv;
+
+    /// the rank of the path occurrence among occurrences in this path in the previous handle's list
+    spsi_iv path_prev_rank_iv;
+
+    struct path_metadata_t {
+        uint64_t length;
+        occurrence_handle_t first;
+        occurrence_handle_t last;
+    };
+    /// maps between path identifier and the start, end, and length of the path
+    spp::sparse_hash_map<uint64_t, path_metadata_t> path_metadata_map;
+
+    /// Stores path names in their internal order, delimited by '$'
+    dyn::wt_fmi path_name_fmi;
+
+    /// Stores path names in their internal order, delimited by 0
+    dyn::packed_vector path_name_pv;
+
+    /// Marks the beginning of each path name in path_name_fmi and path_name_pv
+    suc_bv path_name_bv;
+
+    /// A helper to record the number of live nodes
+    uint64_t _node_count = 0;
+
+    /// A counter that records the number of hidden nodes
+    uint64_t _hidden_count = 0;
+
+    /// A helper to record the number of live edges
+    uint64_t _edge_count = 0;
+
+    /// A helper to record the number of live paths
+    uint64_t _path_count = 0;
+
+    /// A helper to record the next path handle (path deletions are hard because of our path FM-index)
+    uint64_t _path_handle_next = 0;
+
+    /// Helper to convert between edge storage and actual id
+    uint64_t edge_delta_to_id(uint64_t left, uint64_t delta) const;
+
+    /// Helper to convert between ids and stored edge
+    uint64_t edge_to_delta(const handle_t& left, const handle_t& right) const;
+
+    /// Helper to simplify removal of path handle records
+    void destroy_path_handle_records(uint64_t i);
+
+    /// Helper to create the internal records for the occurrence
+    occurrence_handle_t create_occurrence(const path_handle_t& path, const handle_t& handle);
+
+    /// Helper to destroy the internal records for the occurrence
+    void destroy_occurrence(const occurrence_handle_t& occurrence_handle);
+
+    /// Helper to stitch up partially built paths
+    void link_occurrences(const occurrence_handle_t& from, const occurrence_handle_t& to);
+
+    /// Decrement the occurrence rank references for this occurrence
+    void decrement_rank(const occurrence_handle_t& occurrence_handle);
+
+    /// The internal rank of the occurrence
+    uint64_t occurrence_rank(const occurrence_handle_t& occurrence_handle) const;
+
 };
 
 } // end dankness

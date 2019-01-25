@@ -35,7 +35,7 @@ namespace betagraph{
         // spp::sparse_hash_map<char*, b_path_t> name_to_path;
         spp::sparse_hash_map<dankgraph::id_t, bholder_t> backer;
         id_t min_node_id = 0;
-        id_t max_node_id = UINT64_MAX;
+        id_t max_node_id = std::numeric_limits<id_t>::max();
     };
     struct bpath_occurrence_t{
         int32_t rank = 0;
