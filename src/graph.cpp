@@ -815,6 +815,7 @@ std::vector<handle_t> graph_t::divide_handle(const handle_t& handle, const std::
     // connect the ends to the previous context
     for (auto& h : edges_rev) create_edge(h, handles.front());
     for (auto& h : edges_rev) create_edge(handles.back(), h);
+    return handles;
 }
     
 
