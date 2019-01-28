@@ -121,6 +121,30 @@ void graph_t::for_each_handle(const std::function<bool(const handle_t&)>& iterat
         }
     }
 }
+
+void graph_t::for_each_edge(const std::function<bool(const edge_t&)>& iteratee, bool parallel){
+    for_each_handle([&](const handle_t& handle){
+            bool keep_going = true;
+            // filter to edges where this node is lower ID or any rightward self-loops
+            follow_edges(handle, false, [&](const handle_t& next) {
+                    if (get_id(handle) <= get_id(next)) {
+                        keep_going = iteratee(edge_handle(handle, next));
+                    }
+                    return keep_going;
+                });
+            if (keep_going) {
+                // filter to edges where this node is lower ID or leftward reversing
+                // self-loop
+                follow_edges(handle, true, [&](const handle_t& prev) {
+                        if (get_id(handle) < get_id(prev) ||
+                            (get_id(handle) == get_id(prev) && !get_is_reverse(prev))) {
+                            keep_going = iteratee(edge_handle(prev, handle));
+                        }
+                        return keep_going;
+                    });
+            }
+        }, parallel);
+}
     
 /// Return the number of nodes in the graph
 /// TODO: can't be node_count because XG has a field named node_count.
@@ -172,7 +196,6 @@ handle_t graph_t::forward(const handle_t& handle) const {
     return handle_fwd;
 }
 
-/*
 /// A pair of handles can be used as an edge. When so used, the handles have a
 /// canonical order and orientation.
 edge_t graph_t::edge_handle(const handle_t& left, const handle_t& right) const {
@@ -181,6 +204,7 @@ edge_t graph_t::edge_handle(const handle_t& left, const handle_t& right) const {
     
 /// Such a pair can be viewed from either inward end handle and produce the
 /// outward handle you would arrive at.
+/*
 handle_t graph_t::traverse_edge_handle(const edge_t& edge, const handle_t& left) const {
 }
 */
@@ -643,11 +667,14 @@ void graph_t::clear(void) {
     suc_bv null_bv;
     lciv_iv null_iv;
     dyn::packed_vector null_pv;
-    // XXX TODO add in current path storage
-    dyn::wt_fmi null_fmi;
     _max_node_id = 0;
     _min_node_id = 0;
+    _node_count = 0;
+    _edge_count = 0;
+    _path_count = 0;
+    _path_handle_next = 0;
     graph_id_pv = null_pv;
+    graph_id_map.clear();
     edge_fwd_iv = null_iv;
     edge_fwd_bv = null_bv;
     edge_fwd_inv_bv = null_bv;
@@ -657,10 +684,13 @@ void graph_t::clear(void) {
     seq_pv = null_pv;
     seq_bv = null_bv;
     path_handle_wt = null_wt;
-    _node_count = 0;
-    _edge_count = 0;
-    _path_count = 0;
-    _path_handle_next = 0;
+    path_rev_iv = null_iv;
+    path_next_id_iv = null_iv;
+    path_next_rank_iv = null_iv;
+    path_prev_id_iv = null_iv;
+    path_prev_rank_iv = null_iv;
+    path_metadata_map.clear();
+    path_name_map.clear();
 }
     
 /// Swap the nodes corresponding to the given handles, in the ordering used
@@ -1117,6 +1147,134 @@ void graph_t::to_gfa(std::ostream& out) const {
                 });
             out << std::endl;
         });
+}
+
+uint64_t graph_t::serialize(std::ostream& out) const {
+    uint64_t written = 0;
+    out.write((char*)&_max_node_id,sizeof(_max_node_id));
+    written += sizeof(_max_node_id);
+    out.write((char*)&_min_node_id,sizeof(_min_node_id));
+    written += sizeof(_min_node_id);
+    out.write((char*)&_node_count,sizeof(_node_count));
+    written += sizeof(_node_count);
+    out.write((char*)&_edge_count,sizeof(_edge_count));
+    written += sizeof(_edge_count);
+    out.write((char*)&_path_count,sizeof(_path_count));
+    written += sizeof(_path_count);
+    out.write((char*)&_path_handle_next,sizeof(_path_handle_next));
+    written += sizeof(_path_handle_next);
+    written += graph_id_pv.serialize(out);
+    size_t i = graph_id_map.size();
+    out.write((char*)&i,sizeof(size_t));
+    written += sizeof(size_t);
+    for (auto& p : graph_id_map) {
+        out.write((char*)&p.first,sizeof(p.first));
+        written += sizeof(p.first);
+        out.write((char*)&p.second,sizeof(p.second));
+        written += sizeof(p.second);
+    }
+    written += edge_fwd_iv.serialize(out);
+    written += edge_fwd_bv.serialize(out);
+    written += edge_fwd_inv_bv.serialize(out);
+    written += edge_rev_iv.serialize(out);
+    written += edge_rev_bv.serialize(out);
+    written += edge_rev_inv_bv.serialize(out);
+    written += seq_pv.serialize(out);
+    written += seq_bv.serialize(out);
+    written += path_handle_wt.serialize(out);
+    written += path_rev_iv.serialize(out);
+    written += path_next_id_iv.serialize(out);
+    written += path_next_rank_iv.serialize(out);
+    written += path_prev_id_iv.serialize(out);
+    written += path_prev_rank_iv.serialize(out);
+    i = path_metadata_map.size();
+    out.write((char*)&i,sizeof(size_t));
+    written += sizeof(size_t);
+    for (auto& p : path_metadata_map) {
+        out.write((char*)&p.first,sizeof(p.first));
+        written += sizeof(p.first);
+        auto& m = p.second;
+        out.write((char*)&m.length,sizeof(m.length));
+        written += sizeof(m.length);
+        out.write((char*)&m.first,sizeof(m.first));
+        written += sizeof(m.first);
+        out.write((char*)&m.last,sizeof(m.last));
+        written += sizeof(m.last);
+        i = m.name.size();
+        out.write((char*)&i,sizeof(size_t));
+        written += sizeof(size_t);
+        out.write((char*)m.name.c_str(),m.name.size());
+        written += m.name.size();
+    }
+    i = path_name_map.size();
+    out.write((char*)&i,sizeof(size_t));
+    written += sizeof(size_t);
+    for (auto& p : path_name_map) {
+        i = p.first.size();
+        out.write((char*)&i,sizeof(size_t));
+        written += sizeof(size_t);
+        out.write(p.first.c_str(),p.first.size());
+        written += p.first.size();
+        out.write((char*)&p.second,sizeof(p.second));
+        written += sizeof(p.second);
+    }
+}
+
+void graph_t::load(std::istream& in) {
+    //uint64_t written = 0;
+    in.read((char*)&_max_node_id,sizeof(_max_node_id));
+    in.read((char*)&_min_node_id,sizeof(_min_node_id));
+    in.read((char*)&_node_count,sizeof(_node_count));
+    in.read((char*)&_edge_count,sizeof(_edge_count));
+    in.read((char*)&_path_count,sizeof(_path_count));
+    in.read((char*)&_path_handle_next,sizeof(_path_handle_next));
+    graph_id_pv.load(in);
+    size_t i;
+    in.read((char*)&i,sizeof(size_t));
+    for (size_t j = 0; j < i; ++j) {
+        uint64_t k, v;
+        in.read((char*)&k,sizeof(uint64_t));
+        in.read((char*)&v,sizeof(uint64_t));
+        graph_id_map[k] = v;
+    }
+    edge_fwd_iv.load(in);
+    edge_fwd_bv.load(in);
+    edge_fwd_inv_bv.load(in);
+    edge_rev_iv.load(in);
+    edge_rev_bv.load(in);
+    edge_rev_inv_bv.load(in);
+    seq_pv.load(in);
+    seq_bv.load(in);
+    path_handle_wt.load(in);
+    path_rev_iv.load(in);
+    path_next_id_iv.load(in);
+    path_next_rank_iv.load(in);
+    path_prev_id_iv.load(in);
+    path_prev_rank_iv.load(in);
+    in.read((char*)&i,sizeof(size_t));
+    for (size_t j = 0; j < i; ++j) {
+        uint64_t k;
+        in.read((char*)&k,sizeof(uint64_t));
+        auto& m = path_metadata_map[k];
+        in.read((char*)&m.length,sizeof(m.length));
+        in.read((char*)&m.first,sizeof(m.first));
+        in.read((char*)&m.last,sizeof(m.last));
+        uint64_t s;
+        in.read((char*)&s,sizeof(size_t));
+        char n[s+1]; n[s] = '\0';
+        in.read(n,s);
+        m.name = string(n);
+    }
+    in.read((char*)&i,sizeof(size_t));
+    for (size_t j = 0; j < i; ++j) {
+        uint64_t s;
+        in.read((char*)&s,sizeof(size_t));
+        char k[s+1]; k[s] = '\0';
+        in.read(k,s);
+        uint64_t v;
+        in.read((char*)&v,sizeof(uint64_t));
+        path_name_map[string(k)] = v;
+    }
 }
 
 }
