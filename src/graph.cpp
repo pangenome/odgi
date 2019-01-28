@@ -199,7 +199,7 @@ handle_t graph_t::forward(const handle_t& handle) const {
 /// A pair of handles can be used as an edge. When so used, the handles have a
 /// canonical order and orientation.
 edge_t graph_t::edge_handle(const handle_t& left, const handle_t& right) const {
-    make_pair(left, right);
+    return make_pair(left, right);
 }
     
 /// Such a pair can be viewed from either inward end handle and produce the
@@ -1219,6 +1219,7 @@ uint64_t graph_t::serialize(std::ostream& out) const {
         out.write((char*)&p.second,sizeof(p.second));
         written += sizeof(p.second);
     }
+    return written;
 }
 
 void graph_t::load(std::istream& in) {
