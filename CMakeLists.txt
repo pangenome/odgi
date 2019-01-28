@@ -125,7 +125,6 @@ target_link_libraries(dg
   "${sdsl-lite_LIB}/libsdsl.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort64.a"
-  "-ltcmalloc"
   )
 
 #set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc")
