@@ -455,18 +455,13 @@ private:
         uint64_t length;
         occurrence_handle_t first;
         occurrence_handle_t last;
+        std::string name;
     };
     /// maps between path identifier and the start, end, and length of the path
     spp::sparse_hash_map<uint64_t, path_metadata_t> path_metadata_map;
 
-    /// Stores path names in their internal order, delimited by '$'
-    dyn::wt_fmi path_name_fmi;
-
-    /// Stores path names in their internal order, delimited by 0
-    dyn::packed_vector path_name_pv;
-
-    /// Marks the beginning of each path name in path_name_fmi and path_name_pv
-    suc_bv path_name_bv;
+    /// Links path names to handles
+    spp::sparse_hash_map<std::string, uint64_t> path_name_map;
 
     /// A helper to record the number of live nodes
     uint64_t _node_count = 0;

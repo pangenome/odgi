@@ -66,7 +66,7 @@ set(dynamic_INCLUDE "${INSTALL_DIR}/src/dynamic/include")
 # gfakluge (full build using its cmake config)
 ExternalProject_Add(gfakluge
   GIT_REPOSITORY "https://github.com/vgteam/gfakluge.git"
-  GIT_TAG "bc6dc370fd22c2f84d2ae2c476a25dedeb45496e"
+  GIT_TAG "943c849aea13d6fb3f7ea49209a388eeceb9bd97"
   BUILD_IN_SOURCE TRUE
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR} # TODO ADD static build flag
   UPDATE_COMMAND ""
@@ -125,6 +125,7 @@ target_link_libraries(dg
   "${sdsl-lite_LIB}/libsdsl.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort64.a"
+  "-ltcmalloc"
   )
 
 #set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc")

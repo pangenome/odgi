@@ -21,9 +21,6 @@ graph_t::graph_t(void) {
     path_next_rank_iv.push_back(0);
     path_prev_id_iv.push_back(0);
     path_prev_rank_iv.push_back(0);
-    path_name_fmi.extend('$');
-    path_name_pv.push_back(0);
-    path_name_bv.push_back(1);
 }
 
 graph_t::~graph_t(void) { }
@@ -198,41 +195,31 @@ handle_t graph_t::traverse_edge_handle(const edge_t& edge, const handle_t& left)
     
 /// Determine if a path name exists and is legal to get a path handle for.
 bool graph_t::has_path(const std::string& path_name) const {
-    std::string query_s = "$" + path_name + "$";
-    std::vector<uint64_t> query_v(query_s.begin(), query_s.end());
-    std::vector<uint64_t> occs = path_name_fmi.locate(query_v);
-    assert(occs.size() <= 1);
-    if (occs.empty()) return false;
-    uint64_t offset = occs.front();
-    path_handle_t path = as_path_handle(path_name_bv.rank1(offset));
-    return get_occurrence_count(path) > 0;
+    auto f = path_name_map.find(path_name);
+    if (f == path_name_map.end()) return false;
+    else return true;
 }
     
 /// Look up the path handle for the given path name.
 /// The path with that name must exist.
 path_handle_t graph_t::get_path_handle(const std::string& path_name) const {
-    std::string query_s = "$" + path_name + "$";
-    std::vector<uint64_t> query_v(query_s.begin(), query_s.end());
-    std::vector<uint64_t> occs = path_name_fmi.locate(query_v);
-    assert(occs.size() == 1);
-    uint64_t offset = occs.front();
-    return as_path_handle(path_name_bv.rank1(offset));
+    auto f = path_name_map.find(path_name);
+    assert(f != path_name_map.end());
+    return as_path_handle(f->second);
 }
 
 /// Look up the name of a path from a handle to it
 std::string graph_t::get_path_name(const path_handle_t& path_handle) const {
-    std::string name;
-    uint64_t name_begin = path_name_bv.select1(as_integer(path_handle))+1;
-    uint64_t name_end = path_name_bv.select1(as_integer(path_handle)+1);
-    for (uint64_t i = name_begin; i < name_end; ++i) {
-        name += path_name_pv.at(i);
-    }
-    return name;
+    auto f = path_metadata_map.find(as_integer(path_handle));
+    assert(f != path_metadata_map.end());
+    return f->second.name;
 }
     
 /// Returns the number of node occurrences in the path
 size_t graph_t::get_occurrence_count(const path_handle_t& path_handle) const {
-    return path_metadata_map.at(as_integer(path_handle)).length;
+    auto f = path_metadata_map.find(as_integer(path_handle));
+    if (f == path_metadata_map.end()) return 0;
+    else return f->second.length;
 }
 
 /// Returns the number of paths stored in the graph
@@ -670,8 +657,6 @@ void graph_t::clear(void) {
     seq_pv = null_pv;
     seq_bv = null_bv;
     path_handle_wt = null_wt;
-    path_name_fmi = null_fmi;
-    path_name_bv = null_bv;
     _node_count = 0;
     _edge_count = 0;
     _path_count = 0;
@@ -825,6 +810,7 @@ void graph_t::destroy_path(const path_handle_t& path) {
     for (uint64_t i = 0; i < path_pv.size(); ++i) {
         destroy_path_handle_records(path_pv.at(i));
     }
+    path_name_map.erase(get_path_name(path));
     path_metadata_map.erase(as_integer(path));
     --_path_count;
 }
@@ -845,13 +831,8 @@ void graph_t::destroy_path_handle_records(uint64_t i) {
  * remain valid.
  */
 path_handle_t graph_t::create_path_handle(const std::string& name) {
-    for (auto c : name) path_name_fmi.extend(c);
-    path_name_fmi.extend('$');
-    for (auto c : name) path_name_pv.push_back(c);
-    path_name_pv.push_back(0);
-    for (auto c : name) path_name_bv.push_back(0);
-    path_name_bv.push_back(1);
     path_handle_t path = as_path_handle(_path_handle_next++);
+    path_name_map[name] = as_integer(path);
     auto& p = path_metadata_map[as_integer(path)]; // set empty record
     occurrence_handle_t occ;
     as_integers(occ)[0] = 0;
@@ -859,6 +840,7 @@ path_handle_t graph_t::create_path_handle(const std::string& name) {
     p.first = occ;
     p.last = occ;
     p.length = 0;
+    p.name = name;
     ++_path_count;
     return path;
 }
@@ -1093,14 +1075,10 @@ void graph_t::display(void) const {
     for (uint64_t i = 0; i < path_prev_rank_iv.size(); ++i) std::cerr << path_prev_rank_iv.at(i) << " "; std::cerr << std::endl;
     std::cerr << "path_metadata" << "\t";
     for (auto& p : path_metadata_map) {
-        std::cerr << p.first << ":"
+        std::cerr << p.first << ":" << p.second.name << ":"
                   << as_integers(p.second.first)[0] << "/" << as_integers(p.second.first)[1] << "->"
                   << as_integers(p.second.last)[0] << "/" << as_integers(p.second.last)[1] << " ";
     } std::cerr << std::endl;
-    std::cerr << "path_name_pv" << "\t";
-    for (uint64_t i = 0; i < path_name_pv.size(); ++i) std::cerr << path_name_pv.at(i) << " "; std::cerr << std::endl;
-    std::cerr << "path_name_bv" << "\t";
-    for (uint64_t i = 0; i < path_name_bv.size(); ++i) std::cerr << path_name_bv.at(i) << " "; std::cerr << std::endl;
 
     // not dumped...
     /// Stores path names in their internal order, delimited by '$'
