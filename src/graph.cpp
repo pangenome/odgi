@@ -242,7 +242,7 @@ void graph_t::for_each_occurrence_on_handle(const handle_t& handle, const std::f
     uint64_t handle_rank = handle_helper::unpack_number(handle);
     uint64_t begin = path_handle_wt.select(handle_rank, 0);
     uint64_t end = path_handle_wt.select(handle_rank+1, 0);
-    spp::sparse_hash_map<uint64_t, uint64_t> path_count;
+    hash_map<uint64_t, uint64_t> path_count;
     for (uint64_t i = 0; i < end-begin; ++i) {
         occurrence_handle_t occ;
         as_integers(occ)[0] = handle_rank;

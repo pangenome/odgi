@@ -102,11 +102,11 @@ int main(int argc, char** argv) {
     gg.for_each_path_element_in_file(filename, [&](const std::string& path_name, const std::string& node_id, bool is_rev, const std::string& cigar) {
             path_handle_t path;
             if (!graph.has_path(path_name)) {
-                i = 0;
                 path = graph.create_path_handle(path_name);
-                if (args::get(progress)) {
+                if (args::get(progress) && i != 0) {
                     std::cerr << std::endl;
                 }
+                i = 0;
             } else {
                 path = graph.get_path_handle(path_name);
             }

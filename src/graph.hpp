@@ -15,6 +15,7 @@
 #include "handle_helper.hpp"
 #include "dynamic.hpp"
 #include "dynamic_types.hpp"
+#include "hash_map.hpp"
 
 namespace dankgraph {
 
@@ -395,11 +396,11 @@ private:
     /// Use the special value "0" to indicate deleted nodes
     dyn::packed_vector graph_id_pv;
     /// efficient id to handle conversion
-    spp::sparse_hash_map<uint64_t, uint64_t> graph_id_map;
+    hash_map<uint64_t, uint64_t> graph_id_map;
     id_t _max_node_id = 0;
     id_t _min_node_id = 0;
     /// records nodes that are hidden, but used to store path sequence that has been removed from the node space
-    spp::sparse_hash_set<uint64_t> graph_id_hidden_set;
+    hash_set<uint64_t> graph_id_hidden_set;
 
     /// Records edges of the 3' end on the forward strand, delimited by 0
     /// ordered by rank in graph_id_wt, recorded by δ = id_this - id_that
@@ -458,10 +459,10 @@ private:
         std::string name;
     };
     /// maps between path identifier and the start, end, and length of the path
-    spp::sparse_hash_map<uint64_t, path_metadata_t> path_metadata_map;
+    hash_map<uint64_t, path_metadata_t> path_metadata_map;
 
     /// Links path names to handles
-    spp::sparse_hash_map<std::string, uint64_t> path_name_map;
+    string_hash_map<std::string, uint64_t> path_name_map;
 
     /// A helper to record the number of live nodes
     uint64_t _node_count = 0;
