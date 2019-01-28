@@ -8,8 +8,8 @@ project(dankgraph)
 set(CMAKE_CXX_STANDARD 11)
 
 # Use all standard-compliant optimizations
-set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O2 -g")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O2 -g")
+set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -g")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g")
 
 # We use OpenMP for parallelism
 if ("${CMAKE_CXX_COMPILER_ID}" STREQUAL "Clang")
@@ -55,7 +55,7 @@ set(sdsl-lite-divsufsort_LIB "${INSTALL_DIR}/src/sdsl-lite-build/external/libdiv
 # DYNAMIC (full build using its cmake config)
 ExternalProject_Add(dynamic
   GIT_REPOSITORY "https://github.com/vgteam/DYNAMIC.git"
-  GIT_TAG "613d6819c5364744db63226cecb1e40a770f47bb"
+  GIT_TAG "e5fb3008b8d08e0e4e490e46739728d14b1bc617"
   # we don't actually install dynamic... it's header only
   #CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
   UPDATE_COMMAND ""
@@ -104,16 +104,16 @@ set(sparsepp_LIB "${INSTALL_DIR}/src/sparsepp/sparsepp/")
 set(CMAKE_BUILD_TYPE Release)
 
 # set up our target executable and specify its dependencies and includes
-add_executable(dankgraph
+add_executable(dg
   ${CMAKE_SOURCE_DIR}/src/graph.cpp
   ${CMAKE_SOURCE_DIR}/src/main.cpp
   ${CMAKE_SOURCE_DIR}/src/bgraph.cpp
   )
-add_dependencies(dankgraph sdsl-lite)
-add_dependencies(dankgraph dynamic)
-add_dependencies(dankgraph gfakluge)
-add_dependencies(dankgraph tayweeargs)
-target_include_directories(dankgraph PUBLIC
+add_dependencies(dg sdsl-lite)
+add_dependencies(dg dynamic)
+add_dependencies(dg gfakluge)
+add_dependencies(dg tayweeargs)
+target_include_directories(dg PUBLIC
   "${sdsl-lite_INCLUDE}"
   "${sdsl-lite-divsufsort_INCLUDE}"
   "${dynamic_INCLUDE}"
@@ -121,7 +121,7 @@ target_include_directories(dankgraph PUBLIC
   "${gfakluge_tinyFA_INCLUDE}"
   "${tayweeargs_INCLUDE}"
   "${sparsepp_INCLUDE}")
-target_link_libraries(dankgraph
+target_link_libraries(dg
   "${sdsl-lite_LIB}/libsdsl.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort64.a"

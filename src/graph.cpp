@@ -654,7 +654,7 @@ void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
 void graph_t::clear(void) {
     wt_str null_wt;
     suc_bv null_bv;
-    spsi_iv null_iv;
+    lciv_iv null_iv;
     dyn::packed_vector null_pv;
     // XXX TODO add in current path storage
     dyn::wt_fmi null_fmi;

@@ -404,7 +404,7 @@ private:
     /// Records edges of the 3' end on the forward strand, delimited by 0
     /// ordered by rank in graph_id_wt, recorded by δ = id_this - id_that
     /// and stored as (δ = 0 ? 1 : (δ > 0 ? 2δ+1 : 2δ+2))
-    spsi_iv edge_fwd_iv;
+    lciv_iv edge_fwd_iv;
     suc_bv edge_fwd_bv;
 
     /// Marks inverting edges in edge_fwd_wt
@@ -413,7 +413,7 @@ private:
     /// Records edges of the 3' end on the reverse strand, delimited by 0,
     /// ordered by rank in graph_id_wt, recorded by δ = id_this - id_that
     /// and stored as (δ = 0 ? 1 : (δ > 0 ? 2δ+1 : 2δ+2))
-    spsi_iv edge_rev_iv;
+    lciv_iv edge_rev_iv;
     suc_bv edge_rev_bv;
 
     /// Marks inverting edges in edge_rev_wt
@@ -433,23 +433,23 @@ private:
     wt_str path_handle_wt;
 
     /// which orientation are we traversing in?
-    spsi_iv path_rev_iv;
+    lciv_iv path_rev_iv;
 
     /// special delimiters used in the path_next_id_wt and path_prev_id_wt
     const static uint64_t path_begin_marker = 1; //std::numeric_limits<uint64_t>::max()-1;
     const static uint64_t path_end_marker = 2; // std::numeric_limits<uint64_t>::max();
     
     /// by occurrence, where this particular occurrence goes next
-    spsi_iv path_next_id_iv;
+    lciv_iv path_next_id_iv;
 
     /// the rank of the path occurrence among occurrences in this path in the next handle's list
-    spsi_iv path_next_rank_iv;
+    lciv_iv path_next_rank_iv;
 
     /// by occurrence, where this particular occurrence came from 
-    spsi_iv path_prev_id_iv;
+    lciv_iv path_prev_id_iv;
 
     /// the rank of the path occurrence among occurrences in this path in the previous handle's list
-    spsi_iv path_prev_rank_iv;
+    lciv_iv path_prev_rank_iv;
 
     struct path_metadata_t {
         uint64_t length;
