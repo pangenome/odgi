@@ -6,25 +6,6 @@
 
 namespace dankgraph {
 
-graph_t::graph_t(void) {
-    // set up initial delimiters
-    seq_bv.push_back(1);
-    edge_fwd_iv.push_back(0);
-    edge_fwd_bv.push_back(1);
-    edge_fwd_inv_bv.push_back(0);
-    edge_rev_iv.push_back(0);
-    edge_rev_bv.push_back(1);
-    edge_rev_inv_bv.push_back(0);
-    path_handle_wt.push_back(0);
-    path_rev_iv.push_back(0);
-    path_next_id_iv.push_back(0);
-    path_next_rank_iv.push_back(0);
-    path_prev_id_iv.push_back(0);
-    path_prev_rank_iv.push_back(0);
-}
-
-graph_t::~graph_t(void) { }
-
 /// Look up the handle for the node with the given ID in the given orientation
 handle_t graph_t::get_handle(const id_t& node_id, bool is_reverse) const {
     //return handle_helper::pack(graph_id_wt.select(0, node_id), is_reverse);

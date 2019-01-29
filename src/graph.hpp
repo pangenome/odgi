@@ -22,8 +22,118 @@ namespace dankgraph {
 class graph_t {
         
 public:
-    graph_t(void);
-    ~graph_t(void);
+    graph_t(void) {
+        // set up initial delimiters
+        seq_bv.push_back(1);
+        edge_fwd_iv.push_back(0);
+        edge_fwd_bv.push_back(1);
+        edge_fwd_inv_bv.push_back(0);
+        edge_rev_iv.push_back(0);
+        edge_rev_bv.push_back(1);
+        edge_rev_inv_bv.push_back(0);
+        path_handle_wt.push_back(0);
+        path_rev_iv.push_back(0);
+        path_next_id_iv.push_back(0);
+        path_next_rank_iv.push_back(0);
+        path_prev_id_iv.push_back(0);
+        path_prev_rank_iv.push_back(0);
+    }
+
+    ~graph_t(void) { clear(); }
+
+    /// Copy constructor.
+    graph_t(const graph_t& other) {
+        _max_node_id = other._max_node_id;
+        _min_node_id = other._min_node_id;
+        _node_count = other._node_count;
+        _edge_count = other._edge_count;
+        _path_count = other._path_count;
+        _path_handle_next = other._path_handle_next;
+        graph_id_pv = other.graph_id_pv;
+        graph_id_map = other.graph_id_map;
+        edge_fwd_iv = other.edge_fwd_iv;
+        edge_fwd_bv = other.edge_fwd_bv;
+        edge_fwd_inv_bv = other.edge_fwd_inv_bv;
+        edge_rev_iv = other.edge_rev_iv;
+        edge_rev_bv = other.edge_rev_bv;
+        edge_rev_inv_bv = other.edge_rev_inv_bv;
+        seq_pv = other.seq_pv;
+        seq_bv = other.seq_bv;
+        path_handle_wt = other.path_handle_wt;
+        path_rev_iv = other.path_rev_iv;
+        path_next_id_iv = other.path_next_id_iv;
+        path_next_rank_iv = other.path_next_rank_iv;
+        path_prev_id_iv = other.path_prev_id_iv;
+        path_prev_rank_iv = other.path_prev_rank_iv;
+        path_metadata_map = other.path_metadata_map;
+        path_name_map = other.path_name_map;
+    }
+
+    /// Move constructor.
+    graph_t(graph_t&& other) noexcept {
+        _max_node_id = other._max_node_id;
+        _min_node_id = other._min_node_id;
+        _node_count = other._node_count;
+        _edge_count = other._edge_count;
+        _path_count = other._path_count;
+        _path_handle_next = other._path_handle_next;
+        graph_id_pv = other.graph_id_pv;
+        graph_id_map = other.graph_id_map;
+        edge_fwd_iv = other.edge_fwd_iv;
+        edge_fwd_bv = other.edge_fwd_bv;
+        edge_fwd_inv_bv = other.edge_fwd_inv_bv;
+        edge_rev_iv = other.edge_rev_iv;
+        edge_rev_bv = other.edge_rev_bv;
+        edge_rev_inv_bv = other.edge_rev_inv_bv;
+        seq_pv = other.seq_pv;
+        seq_bv = other.seq_bv;
+        path_handle_wt = other.path_handle_wt;
+        path_rev_iv = other.path_rev_iv;
+        path_next_id_iv = other.path_next_id_iv;
+        path_next_rank_iv = other.path_next_rank_iv;
+        path_prev_id_iv = other.path_prev_id_iv;
+        path_prev_rank_iv = other.path_prev_rank_iv;
+        path_metadata_map = other.path_metadata_map;
+        path_name_map = other.path_name_map;
+    }
+
+    /// Copy assignment operator.
+    graph_t& operator=(const graph_t& other) {
+        graph_t tmp(other);
+        *this = std::move(tmp);
+        return *this;
+    }
+
+    /// Move assignment operator.
+    graph_t& operator=(graph_t&& other) noexcept {
+        // todo should we use std::swap ?
+        _max_node_id = other._max_node_id;
+        _min_node_id = other._min_node_id;
+        _node_count = other._node_count;
+        _edge_count = other._edge_count;
+        _path_count = other._path_count;
+        _path_handle_next = other._path_handle_next;
+        graph_id_pv = other.graph_id_pv;
+        graph_id_map = other.graph_id_map;
+        edge_fwd_iv = other.edge_fwd_iv;
+        edge_fwd_bv = other.edge_fwd_bv;
+        edge_fwd_inv_bv = other.edge_fwd_inv_bv;
+        edge_rev_iv = other.edge_rev_iv;
+        edge_rev_bv = other.edge_rev_bv;
+        edge_rev_inv_bv = other.edge_rev_inv_bv;
+        seq_pv = other.seq_pv;
+        seq_bv = other.seq_bv;
+        path_handle_wt = other.path_handle_wt;
+        path_rev_iv = other.path_rev_iv;
+        path_next_id_iv = other.path_next_id_iv;
+        path_next_rank_iv = other.path_next_rank_iv;
+        path_prev_id_iv = other.path_prev_id_iv;
+        path_prev_rank_iv = other.path_prev_rank_iv;
+        path_metadata_map = other.path_metadata_map;
+        path_name_map = other.path_name_map;
+        return *this;
+    }
+
         
     /// Look up the handle for the node with the given ID in the given orientation
     handle_t get_handle(const id_t& node_id, bool is_reverse = false) const;
