@@ -66,7 +66,7 @@ set(dynamic_INCLUDE "${INSTALL_DIR}/src/dynamic/include")
 # gfakluge (full build using its cmake config)
 ExternalProject_Add(gfakluge
   GIT_REPOSITORY "https://github.com/vgteam/gfakluge.git"
-  GIT_TAG "943c849aea13d6fb3f7ea49209a388eeceb9bd97"
+  GIT_TAG "9332647b08995e067ef1619168a10157ba8b07f9"
   BUILD_IN_SOURCE TRUE
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR} # TODO ADD static build flag
   UPDATE_COMMAND ""
