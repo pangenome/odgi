@@ -6,7 +6,7 @@
 #include <type_traits>
 #include "spp.h"
 
-namespace dankgraph {
+namespace dg {
 
 // Thomas Wang's integer hash function. In many implementations, std::hash
 // is identity function for integers, which leads to performance issues.

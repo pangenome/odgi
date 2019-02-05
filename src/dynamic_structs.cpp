@@ -6,7 +6,7 @@
 #include "dynamic_structs.hpp"
 
 
-namespace dankgraph {
+namespace dg {
     
 const double SuccinctDynamicVector::factor = 1.25;
     

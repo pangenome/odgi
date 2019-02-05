@@ -1,7 +1,7 @@
 #include "graph.hpp"
 #include "dynamic_structs.hpp"
 
-using namespace dankgraph;
+using namespace dg;
 
 void test_dynamic_vector() {
     

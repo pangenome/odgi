@@ -4,7 +4,7 @@
 #include <utility>
 
 
-namespace dankgraph{
+namespace dg{
 
 /// represents an id
 typedef int64_t id_t;
@@ -19,7 +19,7 @@ typedef std::pair<handle_t, handle_t> edge_t;
 /// represents the internal id of a path entity
 struct path_handle_t { char data[sizeof(int64_t)]; };
 /// An occurrence handle is an opaque reference to an occurrence of an oriented node along a path in a graph
-/// In dankgraph, it refers to [0], a node id/rank/handle, and [1], a rank within the records on that node
+/// In dg, it refers to [0], a node id/rank/handle, and [1], a rank within the records on that node
 struct occurrence_handle_t { char data[2 * sizeof(int64_t)]; };
 
 }

@@ -108,12 +108,19 @@ add_executable(dg
   ${CMAKE_SOURCE_DIR}/src/graph.cpp
   ${CMAKE_SOURCE_DIR}/src/main.cpp
   ${CMAKE_SOURCE_DIR}/src/bgraph.cpp
+  ${CMAKE_SOURCE_DIR}/src/handle.cpp
+  ${CMAKE_SOURCE_DIR}/src/unittest/driver.cpp
+  ${CMAKE_SOURCE_DIR}/src/unittest/handle.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/subcommand.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/build_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/test_main.cpp
   )
 add_dependencies(dg sdsl-lite)
 add_dependencies(dg dynamic)
 add_dependencies(dg gfakluge)
 add_dependencies(dg tayweeargs)
 target_include_directories(dg PUBLIC
+  "${CMAKE_SOURCE_DIR}/src"
   "${sdsl-lite_INCLUDE}"
   "${sdsl-lite-divsufsort_INCLUDE}"
   "${dynamic_INCLUDE}"

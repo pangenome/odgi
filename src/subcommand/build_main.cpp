@@ -1,25 +1,24 @@
+#include "subcommand.hpp"
 #include "graph.hpp"
 #include "gfakluge.hpp"
 #include "args.hxx"
 //#include "io_helper.hpp"
 
-using namespace dankgraph;
+namespace dg {
 
-void make_graph(void) {
-    graph_t graph;
-    handle_t a = graph.create_handle("A");
-    handle_t t = graph.create_handle("T");
-    handle_t g = graph.create_handle("G");
-    handle_t c = graph.create_handle("C");
-    graph.create_edge(a, t);
-    graph.create_edge(a, c);
-    graph.create_edge(t, g);
-    graph.create_edge(c, g);
-}
+using namespace dg::subcommand;
 
-int main(int argc, char** argv) {
+int main_build(int argc, char** argv) {
 
-    args::ArgumentParser parser("dankgraph: succinct, dynamic variation graph");
+    // trick argumentparser to do the right thing with the subcommand
+    for (uint64_t i = 1; i < argc-1; ++i) {
+        argv[i] = argv[i+1];
+    }
+    std::string prog_name = "dg build";
+    argv[0] = (char*)prog_name.c_str();
+    --argc;
+    
+    args::ArgumentParser parser("construct a dynamic succinct variation graph");
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> gfa_file(parser, "FILE", "construct the graph from this GFA input file", {'g', "gfa"});
     args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store the index in this file", {'o', "out"});
@@ -163,4 +162,10 @@ int main(int argc, char** argv) {
     }
     //if (args::get(
     return 0;
+}
+
+static Subcommand dg_build("build", "build dynamic succinct variation graph",
+                           PIPELINE, 3, main_build);
+
+
 }

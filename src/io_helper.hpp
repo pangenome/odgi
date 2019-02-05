@@ -9,7 +9,7 @@
 #include <unordered_set>
 
 
-namespace dankgraph{
+namespace dg{
 
 struct id_emitter_factory{
     std::unordered_set<string> seen_identifiers;
@@ -40,7 +40,7 @@ inline void dank_to_gfa_stream(SuccinctDynamicSequenceGraph* sd, std::ostream& o
     gfak::GFAKluge gg;
     gg.set_version(2.0);
 
-    std::function<bool(const dankgraph::handle_t&)> node_handle_to_kluge = [&](const dankgraph::handle_t& h){
+    std::function<bool(const dg::handle_t&)> node_handle_to_kluge = [&](const dg::handle_t& h){
         gfak::sequence_elem s;
         s.name = std::to_string(sd->get_id(h));
         s.length = sd->get_length(h);
@@ -50,7 +50,7 @@ inline void dank_to_gfa_stream(SuccinctDynamicSequenceGraph* sd, std::ostream& o
     };
     sd->for_each_handle(node_handle_to_kluge);
 
-    std::function<bool(const edge_t&)> edge_to_kluge = [&](const dankgraph::edge_t& e){
+    std::function<bool(const edge_t&)> edge_to_kluge = [&](const dg::edge_t& e){
         gfak::edge_elem e_elem;
         e_elem.source_name = std::to_string(sd->get_id(e.first));
         e_elem.sink_name = std::to_string(sd->get_id(e.second));

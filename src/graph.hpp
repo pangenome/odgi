@@ -11,15 +11,16 @@
 #include <utility>
 #include <functional>
 #include "dna.hpp"
-#include "handle_types.hpp"
-#include "handle_helper.hpp"
+#include "handle.hpp"
+//#include "handle_types.hpp"
+//#include "handle_helper.hpp"
 #include "dynamic.hpp"
 #include "dynamic_types.hpp"
 #include "hash_map.hpp"
 
-namespace dankgraph {
+namespace dg {
 
-class graph_t {
+class graph_t : public MutablePathDeletableHandleGraph {
         
 public:
     graph_t(void) {
@@ -134,7 +135,9 @@ public:
         return *this;
     }
 
-        
+    /// Method to check if a node exists by ID
+    bool has_node(id_t node_id) const;
+    
     /// Look up the handle for the node with the given ID in the given orientation
     handle_t get_handle(const id_t& node_id, bool is_reverse = false) const;
     
@@ -294,6 +297,11 @@ public:
     // TODO: allow stopping early?
     void for_each_path_handle(const std::function<void(const path_handle_t&)>& iteratee) const;
 
+    /// Returns a vector of all occurrences of a node on paths. Optionally restricts to
+    /// occurrences that match the handle in orientation.
+    std::vector<occurrence_handle_t> occurrences_of_handle(const handle_t& handle,
+                                                           bool match_orientation = false) const;
+    
     /// Enumerate the path occurrences on a given handle (strand agnostic) *TODO move to vg
     void for_each_occurrence_on_handle(const handle_t& handle, const std::function<void(const occurrence_handle_t&)>& iteratee) const;
 

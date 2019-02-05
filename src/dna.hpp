@@ -3,7 +3,7 @@
 
 #include <string>
 
-namespace dankgraph {
+namespace dg {
 
 static const char complement[256] = {'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N', // 8
                                      'N', 'N', 'N', 'N', 'N', 'N', 'N', 'N', // 16

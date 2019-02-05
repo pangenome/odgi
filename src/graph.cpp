@@ -4,7 +4,13 @@
 
 #include "graph.hpp"
 
-namespace dankgraph {
+namespace dg {
+
+/// Method to check if a node exists by ID
+bool graph_t::has_node(id_t node_id) const {
+    return graph_id_map.find(node_id) != graph_id_map.end()
+        && !graph_id_hidden_set.count(node_id);
+}
 
 /// Look up the handle for the node with the given ID in the given orientation
 handle_t graph_t::get_handle(const id_t& node_id, bool is_reverse) const {
@@ -256,6 +262,20 @@ void graph_t::for_each_occurrence_on_handle(const handle_t& handle, const std::f
     }
 }
 
+/// Returns a vector of all occurrences of a node on paths. Optionally restricts to
+/// occurrences that match the handle in orientation.
+std::vector<occurrence_handle_t> graph_t::occurrences_of_handle(const handle_t& handle,
+                                                                bool match_orientation) const {
+    std::vector<occurrence_handle_t> res;
+    for_each_occurrence_on_handle(handle, [&](const occurrence_handle_t& occ) {
+            handle_t h = get_occurrence(occ);
+            if (!match_orientation || handle_helper::unpack_bit(h) == handle_helper::unpack_bit(h)) {
+                res.push_back(occ);
+            }
+        });
+    return res;
+}
+
 size_t graph_t::get_occurrence_count(const handle_t& handle) const {
     uint64_t handle_rank = handle_helper::unpack_number(handle);
     uint64_t begin = path_handle_wt.select(handle_rank, 0)+1;
@@ -322,6 +342,10 @@ occurrence_handle_t graph_t::get_previous_occurrence(const occurrence_handle_t& 
     as_integers(occ)[0] = handle_helper::unpack_number(get_handle(edge_delta_to_id(curr_id, path_prev_id_iv.at(i)-2), false));
     as_integers(occ)[1] = path_prev_rank_iv.at(i);
     return occ;
+}
+
+path_handle_t graph_t::get_path_handle_of_occurrence(const occurrence_handle_t& occurrence_handle) const {
+    return as_path_handle(path_handle_wt.at(occurrence_rank(occurrence_handle)));
 }
     
 ////////////////////////////////////////////////////////////////////////////
