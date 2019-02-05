@@ -151,6 +151,7 @@ TEST_CASE("VG and XG handle implementations are correct", "[handle][vg][xg]") {
             for (handle_t node_handle : {n0, n1, n2, n3, n4, n5, n6, n7, n8, n9}) {
                 
                 //id_t node_id = g->get_id(node);
+                //cerr << "node handle " << as_integer(node_handle) << " " << handle_helper::unpack_number(node_handle) << " id " << g->get_id(node_handle) << endl;
                 
                 SECTION("We see each node correctly forward") {
                     REQUIRE(g->get_id(node_handle) == ids[node_handle]);

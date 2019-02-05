@@ -49,7 +49,7 @@ std::string graph_t::get_sequence(const handle_t& handle) const {
         if (seq.size() && seq_bv.at(i)) break;
         seq += int_as_dna(seq_pv.at(i));
     }
-    return seq;
+    return (handle_helper::unpack_bit(handle) ? reverse_complement(seq) : seq);
 }
     
 /// Loop over all the handles to next/previous (right/left) nodes. Passes
@@ -403,6 +403,7 @@ handle_t graph_t::create_handle(const std::string& sequence, const id_t& id) {
     _min_node_id = max((uint64_t)1, (uint64_t)min(new_id, _min_node_id));
     graph_id_map[new_id] = graph_id_pv.size();
     // add to graph_id_pv
+    uint64_t handle_rank = graph_id_pv.size();
     graph_id_pv.push_back(new_id);
     // append to seq_wt, delimit by 0
     for (auto c : sequence) {
@@ -430,7 +431,7 @@ handle_t graph_t::create_handle(const std::string& sequence, const id_t& id) {
     // increment node count
     ++_node_count;
     // return handle
-    return handle_helper::pack(new_id, 0);
+    return handle_helper::pack(handle_rank, 0);
 }
     
 /// Remove the node belonging to the given handle and all of its edges.
