@@ -119,6 +119,7 @@ add_dependencies(dg sdsl-lite)
 add_dependencies(dg dynamic)
 add_dependencies(dg gfakluge)
 add_dependencies(dg tayweeargs)
+add_dependencies(dg sparsepp)
 target_include_directories(dg PUBLIC
   "${CMAKE_SOURCE_DIR}/src"
   "${sdsl-lite_INCLUDE}"
