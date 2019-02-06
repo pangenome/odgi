@@ -87,6 +87,17 @@ ExternalProject_Add(tayweeargs
 ExternalProject_Get_property(tayweeargs SOURCE_DIR)
 set(tayweeargs_INCLUDE "${SOURCE_DIR}")
 
+# backwardscpp
+ExternalProject_Add(backwardscpp
+  GIT_REPOSITORY "https://github.com/bombela/backward-cpp.git"
+  GIT_TAG "b353585d4bd19f9e51816bc11d2e53b0e5b4a760"
+#  CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
+  UPDATE_COMMAND ""
+  INSTALL_COMMAND "")
+ExternalProject_Get_property(backwardscpp SOURCE_DIR)
+#"${INSTALL_DIR}/src/sdsl-lite-build/include"
+set(backwardscpp_INCLUDE "${SOURCE_DIR}")
+
 # sparsepp
 ExternalProject_Add(sparsepp
   GIT_REPOSITORY "https://github.com/edawson/sparsepp.git"
@@ -109,6 +120,7 @@ add_executable(dg
   ${CMAKE_SOURCE_DIR}/src/main.cpp
   ${CMAKE_SOURCE_DIR}/src/bgraph.cpp
   ${CMAKE_SOURCE_DIR}/src/handle.cpp
+  ${CMAKE_SOURCE_DIR}/src/crash.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/driver.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/handle.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/subcommand.cpp
@@ -127,11 +139,13 @@ target_include_directories(dg PUBLIC
   "${gfakluge_INCLUDE}"
   "${gfakluge_tinyFA_INCLUDE}"
   "${tayweeargs_INCLUDE}"
+  "${backwardscpp_INCLUDE}"
   "${sparsepp_INCLUDE}")
 target_link_libraries(dg
   "${sdsl-lite_LIB}/libsdsl.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort64.a"
+  "-ldl"
   #"-ltcmalloc"
   )
 

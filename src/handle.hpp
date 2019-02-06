@@ -26,8 +26,9 @@ namespace dg {
 /// sufficiently large as to require itin the chosen representation).
 /// This allows for overlays that can wrap their backing graphs' handles without using any more space.
 /// TODO: Note that this precludes us using pointers as handles unless we make them wider.
-struct handle_t { char data[sizeof(int64_t)];
-};
+struct handle_t { char data[sizeof(int64_t)]; };
+
+typedef int64_t id_t;
 
 typedef std::pair<handle_t, handle_t> edge_t;
 

@@ -12,6 +12,8 @@
 // New subcommand system provides all the subcommands that used to live here
 #include "subcommand/subcommand.hpp"
 
+#include "crash.hpp"
+
 using namespace std;
 using namespace dg;
 
@@ -43,6 +45,7 @@ int main(int argc, char *argv[]) {
 
     // Make sure the system meets system requirements (i.e. has all the instructions we need)
     //preflight_check();
+    dg::enable_crash_handling();
 
     // Set up stack trace support from crash.hpp
     //enable_crash_handling();

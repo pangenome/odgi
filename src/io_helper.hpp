@@ -2,7 +2,7 @@
 #define gfa_io_helper
 #include "gfakluge.hpp"
 #include "graph.hpp"
-#include "handle_types.hpp"
+#include "handle.hpp"
 #include "dgraph.hpp"
 #include "bgraph.hpp"
 #include "btypes.hpp"

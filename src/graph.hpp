@@ -25,6 +25,8 @@ class graph_t : public MutablePathDeletableHandleGraph {
 public:
     graph_t(void) {
         // set up initial delimiters
+        graph_id_iv.push_back(0); // false entry, maybe a bug in lciv
+        deleted_id_bv.push_back(1);
         seq_bv.push_back(1);
         edge_fwd_iv.push_back(0);
         edge_fwd_bv.push_back(1);
@@ -50,7 +52,8 @@ public:
         _edge_count = other._edge_count;
         _path_count = other._path_count;
         _path_handle_next = other._path_handle_next;
-        graph_id_pv = other.graph_id_pv;
+        graph_id_iv = other.graph_id_iv;
+        deleted_id_bv = other.deleted_id_bv;
         graph_id_map = other.graph_id_map;
         edge_fwd_iv = other.edge_fwd_iv;
         edge_fwd_bv = other.edge_fwd_bv;
@@ -78,7 +81,8 @@ public:
         _edge_count = other._edge_count;
         _path_count = other._path_count;
         _path_handle_next = other._path_handle_next;
-        graph_id_pv = other.graph_id_pv;
+        graph_id_iv = other.graph_id_iv;
+        deleted_id_bv = other.deleted_id_bv;
         graph_id_map = other.graph_id_map;
         edge_fwd_iv = other.edge_fwd_iv;
         edge_fwd_bv = other.edge_fwd_bv;
@@ -114,7 +118,8 @@ public:
         _edge_count = other._edge_count;
         _path_count = other._path_count;
         _path_handle_next = other._path_handle_next;
-        graph_id_pv = other.graph_id_pv;
+        graph_id_iv = other.graph_id_iv;
+        deleted_id_bv = other.deleted_id_bv;
         graph_id_map = other.graph_id_map;
         edge_fwd_iv = other.edge_fwd_iv;
         edge_fwd_bv = other.edge_fwd_bv;
@@ -496,7 +501,9 @@ private:
 
     /// Records node ids to allow for random access and random order
     /// Use the special value "0" to indicate deleted nodes
-    dyn::packed_vector graph_id_pv;
+    lciv_iv graph_id_iv;
+    /// Mark deleted nodes here for translating graph ids into handles
+    suc_bv deleted_id_bv;
     /// efficient id to handle conversion
     hash_map<uint64_t, uint64_t> graph_id_map;
     id_t _max_node_id = 0;
@@ -604,6 +611,9 @@ private:
 
     /// The internal rank of the occurrence
     uint64_t occurrence_rank(const occurrence_handle_t& occurrence_handle) const;
+
+    /// Help us deal with deleted nodes
+    uint64_t get_handle_rank(const handle_t& handle) const;
 
 };
 
