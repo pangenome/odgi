@@ -83,6 +83,7 @@ bool graph_t::follow_edges(const handle_t& handle, bool go_left, const std::func
     uint64_t edge_start = edge_offset + TOPOLOGY_NODE_HEADER_LENGTH;
     uint64_t edge_count = topology_iv.at(edge_offset + TOPOLOGY_EDGE_COUNT_OFFSET);
     bool result = true;
+    if (edge_count == 0) return result;
     for (uint64_t i = edge_start; i < edge_start+edge_count*2; ) {
         // unpack the edge
         uint64_t other_id = edge_delta_to_id(handle_id, topology_iv.at(i++));
@@ -132,24 +133,18 @@ void graph_t::for_each_handle(const std::function<bool(const handle_t&)>& iterat
 void graph_t::for_each_edge(const std::function<bool(const edge_t&)>& iteratee, bool parallel){
     for_each_handle([&](const handle_t& handle){
             bool keep_going = true;
-            // filter to edges where this node is lower ID or any rightward self-loops
-            follow_edges(handle, false, [&](const handle_t& next) {
-                    if (get_id(handle) <= get_id(next)) {
+            follow_edges(handle, false, [&](const handle_t& next){
+                    if (as_integer(handle) < as_integer(next)) {
                         keep_going = iteratee(edge_handle(handle, next));
                     }
                     return keep_going;
                 });
-            if (keep_going) {
-                // filter to edges where this node is lower ID or leftward reversing
-                // self-loop
-                follow_edges(handle, true, [&](const handle_t& prev) {
-                        if (get_id(handle) < get_id(prev) ||
-                            (get_id(handle) == get_id(prev) && !get_is_reverse(prev))) {
-                            keep_going = iteratee(edge_handle(prev, handle));
-                        }
-                        return keep_going;
-                    });
-            }
+            follow_edges(handle_helper::toggle_bit(handle), false, [&](const handle_t& next){
+                    if (as_integer(handle) < as_integer(next)) {
+                        keep_going = iteratee(edge_handle(handle_helper::toggle_bit(handle), next));
+                    }
+                    return keep_going;
+                });
         }, parallel);
 }
     
@@ -480,7 +475,7 @@ void graph_t::destroy_handle(const handle_t& handle) {
     // destroy the now-empty edge record space for this handle
     uint64_t i = topology_bv.select1(offset);
     uint64_t j = topology_bv.select1(offset+1);
-    for (uint64_t k = 0; k < TOPOLOGY_NODE_HEADER_LENGTH+1; ++k) {
+    for (uint64_t k = 0; k < TOPOLOGY_NODE_HEADER_LENGTH; ++k) {
         topology_iv.remove(i);
         topology_bv.remove(i);
     }
@@ -567,9 +562,11 @@ void graph_t::rebuild_id_handle_mapping(void) {
 /// Create an edge connecting the given handles in the given order and orientations.
 /// Ignores existing edges.
 void graph_t::create_edge(const handle_t& left, const handle_t& right) {
+    //std::cerr << std::endl;
     //std::cerr << "create_edge from " << get_id(left) << ":" << handle_helper::unpack_bit(left) << " to " << get_id(right) << ":" << handle_helper::unpack_bit(right) << std::endl;
+    //to_gfa(std::cerr);
     //display();
-    //if (has_edge(left, right)) return; // do nothing if edge exists
+    if (has_edge(left, right)) return; // do nothing if edge exists
     //std::cerr << "proceeding" << std::endl;
     handle_t left_h = left, right_h = right;
     canonicalize_edge(left_h, right_h);
@@ -602,6 +599,10 @@ void graph_t::create_edge(const handle_t& left, const handle_t& right) {
     ++topology_iv[right_offset + TOPOLOGY_EDGE_COUNT_OFFSET];
 
     ++_edge_count;
+    
+    //std::cerr << "after create edge " << std::endl;
+    //to_gfa(std::cerr); std::cerr << std::endl;
+    //display();
 }
 
 
@@ -625,6 +626,7 @@ bool graph_t::has_edge(const handle_t& left, const handle_t& right) const {
     bool exists = false;
     follow_edges(left, false, [&right, &exists](const handle_t& next) {
             if (next == right) exists = true;
+            return !exists;
         });
     return exists;
 }
@@ -672,6 +674,7 @@ void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
             topology_iv.remove(i);
             topology_bv.remove(i);
             topology_bv.remove(i);
+            --topology_iv[left_offset + TOPOLOGY_EDGE_COUNT_OFFSET];
             found_edge = true;
             break;
         }
@@ -699,6 +702,7 @@ void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
             topology_iv.remove(i);
             topology_bv.remove(i);
             topology_bv.remove(i);
+            --topology_iv[right_offset + TOPOLOGY_EDGE_COUNT_OFFSET];
             found_edge = true;
             break;
         }
@@ -757,6 +761,7 @@ void graph_t::swap_handles(const handle_t& a, const handle_t& b) {
 /// graph.
 handle_t graph_t::apply_orientation(const handle_t& handle) {
     //std::cerr << "before applying orientation" << std::endl;
+    //to_gfa(std::cerr);
     //display();
     // do nothing if we're already in the right orientation
     if (!handle_helper::unpack_bit(handle)) return handle;
@@ -769,8 +774,15 @@ handle_t graph_t::apply_orientation(const handle_t& handle) {
     follow_edges(handle_helper::toggle_bit(handle), true, [&](const handle_t& h) {
             edges_rev.push_back(h);
         });
+    //std::cerr << "got edges " << edges_fwd.size() << " " << edges_rev.size() << std::endl;
+    //std::cerr << "before destroy fwd edges" << std::endl;
+    //display();
     for (auto& h : edges_fwd) destroy_edge(handle_helper::toggle_bit(handle), h);
+    //std::cerr << "before destroy rev edges" << std::endl;
+    //display();
     for (auto& h : edges_rev) destroy_edge(h, handle_helper::toggle_bit(handle));
+    //std::cerr << "after destroy  edges" << std::endl;
+    //display();
     // save the sequence's reverse complement, which we will use to add the new handle
     const std::string seq = get_sequence(handle);
     // we have the technology. we can rebuild it.
@@ -783,13 +795,15 @@ handle_t graph_t::apply_orientation(const handle_t& handle) {
         });
     // reconnect it to the graph
     for (auto& h : edges_fwd) {
-        create_edge(h, handle);
-    }
-    for (auto& h : edges_rev) {
         create_edge(handle, h);
     }
+    for (auto& h : edges_rev) {
+        create_edge(h, handle);
+    }
     //std::cerr << "after applying orientation" << std::endl;
+    //to_gfa(std::cerr);
     //display();
+    //std::cerr << std::endl;//display();
     return handle_helper::toggle_bit(handle);
 }
 
@@ -827,6 +841,9 @@ void graph_t::set_handle_sequence(const handle_t& handle, const std::string& seq
 /// passed in.
 /// Updates stored paths.
 std::vector<handle_t> graph_t::divide_handle(const handle_t& handle, const std::vector<size_t>& offsets) {
+    //std::cerr << "divide " << get_id(handle) << ":" << get_is_reverse(handle) << std::endl;
+    //display();
+
     // convert the offsets to the forward strand, if needed
     std::vector<uint64_t> fwd_offsets = { 0 };
     uint64_t length = get_length(handle);
@@ -886,7 +903,9 @@ std::vector<handle_t> graph_t::divide_handle(const handle_t& handle, const std::
     destroy_handle(fwd_handle);
     // connect the ends to the previous context
     for (auto& h : edges_rev) create_edge(h, handles.front());
-    for (auto& h : edges_rev) create_edge(handles.back(), h);
+    for (auto& h : edges_fwd) create_edge(handles.back(), h);
+    //std::cerr << "made divide" << std::endl;
+    //display();
     return handle_helper::unpack_bit(handle) ? rev_handles : handles;
 }
     
@@ -1190,11 +1209,22 @@ void graph_t::to_gfa(std::ostream& out) const {
             out << "S\t" << get_id(h) << "\t" << get_sequence(h) << std::endl;
             // get the forward edges from this handle
             follow_edges(h, false, [&out, &h, this](const handle_t& a){
-                    out << "L\t" << get_id(h) << "\t"
-                        << (handle_helper::unpack_bit(h)?"-":"+")
-                        << "\t" << get_id(a) << "\t"
-                        << (handle_helper::unpack_bit(a)?"-":"+")
-                        << "\t0M" << std::endl;
+                    if (as_integer(h) < as_integer(a)) {
+                        out << "L\t" << get_id(h) << "\t"
+                            << (handle_helper::unpack_bit(h)?"-":"+")
+                            << "\t" << get_id(a) << "\t"
+                            << (handle_helper::unpack_bit(a)?"-":"+")
+                            << "\t0M" << std::endl;
+                    }
+                });
+            follow_edges(handle_helper::toggle_bit(h), false, [&out, &h, this](const handle_t& a){
+                    if (as_integer(h) < as_integer(a)) {
+                        out << "L\t" << get_id(h) << "\t"
+                            << (handle_helper::unpack_bit(h)?"+":"-")
+                            << "\t" << get_id(a) << "\t"
+                            << (handle_helper::unpack_bit(a)?"-":"+")
+                            << "\t0M" << std::endl;
+                    }
                 });
         });
     for_each_path_handle([&out,this](const path_handle_t& p) {

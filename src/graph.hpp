@@ -538,10 +538,11 @@ private:
     };
 
     inline void canonicalize_edge(handle_t& left, handle_t& right) const {
-        if (handle_helper::unpack_bit(left) && handle_helper::unpack_bit(right)) {
+        if (handle_helper::unpack_bit(left) && handle_helper::unpack_bit(right)
+            || ((handle_helper::unpack_bit(left) || handle_helper::unpack_bit(right)) && as_integer(left) > as_integer(right))) {
             std::swap(left, right);
-            handle_helper::toggle_bit(left);
-            handle_helper::toggle_bit(right);
+            left = handle_helper::toggle_bit(left);
+            right = handle_helper::toggle_bit(right);
         }
     }
 
