@@ -6,7 +6,7 @@
 #include "catch.hpp"
 
 #include "handle.hpp"
-//#include "handle_helper.hpp"
+//#include "handle.hpp"
 #include "graph.hpp"
 
 #include <iostream>
@@ -402,7 +402,8 @@ TEST_CASE("Deletable handle graphs work", "[handle][vg]") {
                     });
                     REQUIRE(node_count == 2);
                 }
-                
+
+                /*
                 SECTION("Nodes can be swapped") {
                     // Get all the nodes
                     vector<handle_t> order;
@@ -427,6 +428,7 @@ TEST_CASE("Deletable handle graphs work", "[handle][vg]") {
                     REQUIRE(swapped.back() == order.front());
                     
                 }
+                */
                 
                 SECTION("No edges exist by default") {
                     
@@ -475,6 +477,14 @@ TEST_CASE("Deletable handle graphs work", "[handle][vg]") {
                         });
                         
                         REQUIRE(edges.size() == 1);
+                        /*
+                        cerr << g->get_id(edges.front().first)
+                             << ":" << handle_helper::unpack_bit(edges.front().first)
+                             << " " << g->get_id(edges.front().second)
+                             << ":" << handle_helper::unpack_bit(edges.front().second) << endl;
+                        edge_t x = g->edge_handle(g->flip(handle2), modified);
+                        cerr << g->get_id(x.first) << ":" << handle_helper::unpack_bit(x.first) << " " << g->get_id(x.second) << ":" << handle_helper::unpack_bit(x.second) << endl;
+                        */
                         REQUIRE(edges.front() == g->edge_handle(g->flip(handle2), modified));
                         
                         

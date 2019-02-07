@@ -28,12 +28,8 @@ public:
         graph_id_iv.push_back(0); // false entry, maybe a bug in lciv
         deleted_id_bv.push_back(1);
         seq_bv.push_back(1);
-        edge_fwd_iv.push_back(0);
-        edge_fwd_bv.push_back(1);
-        edge_fwd_inv_bv.push_back(0);
-        edge_rev_iv.push_back(0);
-        edge_rev_bv.push_back(1);
-        edge_rev_inv_bv.push_back(0);
+        //topology_iv.push_back(0);
+        topology_bv.push_back(1);
         path_handle_wt.push_back(0);
         path_rev_iv.push_back(0);
         path_next_id_iv.push_back(0);
@@ -55,12 +51,8 @@ public:
         graph_id_iv = other.graph_id_iv;
         deleted_id_bv = other.deleted_id_bv;
         graph_id_map = other.graph_id_map;
-        edge_fwd_iv = other.edge_fwd_iv;
-        edge_fwd_bv = other.edge_fwd_bv;
-        edge_fwd_inv_bv = other.edge_fwd_inv_bv;
-        edge_rev_iv = other.edge_rev_iv;
-        edge_rev_bv = other.edge_rev_bv;
-        edge_rev_inv_bv = other.edge_rev_inv_bv;
+        topology_iv = other.topology_iv;
+        topology_bv = other.topology_bv;
         seq_pv = other.seq_pv;
         seq_bv = other.seq_bv;
         path_handle_wt = other.path_handle_wt;
@@ -84,12 +76,8 @@ public:
         graph_id_iv = other.graph_id_iv;
         deleted_id_bv = other.deleted_id_bv;
         graph_id_map = other.graph_id_map;
-        edge_fwd_iv = other.edge_fwd_iv;
-        edge_fwd_bv = other.edge_fwd_bv;
-        edge_fwd_inv_bv = other.edge_fwd_inv_bv;
-        edge_rev_iv = other.edge_rev_iv;
-        edge_rev_bv = other.edge_rev_bv;
-        edge_rev_inv_bv = other.edge_rev_inv_bv;
+        topology_iv = other.topology_iv;
+        topology_bv = other.topology_bv;
         seq_pv = other.seq_pv;
         seq_bv = other.seq_bv;
         path_handle_wt = other.path_handle_wt;
@@ -121,12 +109,8 @@ public:
         graph_id_iv = other.graph_id_iv;
         deleted_id_bv = other.deleted_id_bv;
         graph_id_map = other.graph_id_map;
-        edge_fwd_iv = other.edge_fwd_iv;
-        edge_fwd_bv = other.edge_fwd_bv;
-        edge_fwd_inv_bv = other.edge_fwd_inv_bv;
-        edge_rev_iv = other.edge_rev_iv;
-        edge_rev_bv = other.edge_rev_bv;
-        edge_rev_inv_bv = other.edge_rev_inv_bv;
+        topology_iv = other.topology_iv;
+        topology_bv = other.topology_bv;
         seq_pv = other.seq_pv;
         seq_bv = other.seq_bv;
         path_handle_wt = other.path_handle_wt;
@@ -374,7 +358,7 @@ public:
 
     /// Create a "hidden" node which might carry parts of paths that traversed deleted portions of the graph
     handle_t create_hidden_handle(const std::string& sequence);
-    
+
     /// Remove the node belonging to the given handle and all of its edges.
     /// Does not update any stored paths.
     /// Invalidates the destroyed handle.
@@ -394,7 +378,7 @@ public:
     inline void create_edge(const edge_t& edge) {
         create_edge(edge.first, edge.second);
     }
-    
+
     /// Remove the edge connecting the given handles in the given order and orientations.
     /// Ignores nonexistent edges.
     /// Does not update any stored paths.
@@ -490,7 +474,7 @@ public:
     void to_gfa(std::ostream& out) const;
 
     /// Serialize
-    uint64_t serialize(std::ostream& out) const;
+    uint64_t serialize(std::ostream& out);
 
     /// Load
     void load(std::istream& in);
@@ -499,35 +483,67 @@ public:
 
 private:
 
-    /// Records node ids to allow for random access and random order
-    /// Use the special value "0" to indicate deleted nodes
+    /// Records the handle to node_id mapping
+    /// Use the special value "0" to indicate deleted nodes so that
+    /// handle references in the id_map and elsewhere are not immediately destroyed
     lciv_iv graph_id_iv;
-    /// Mark deleted nodes here for translating graph ids into handles
+    /// Mark deleted nodes here for translating graph ids into internal ranks
     suc_bv deleted_id_bv;
-    /// efficient id to handle conversion
+    uint64_t _deleted_node_count = 0;
+    /// efficient id to handle/sequence conversion
     hash_map<uint64_t, uint64_t> graph_id_map;
     id_t _max_node_id = 0;
     id_t _min_node_id = 0;
     /// records nodes that are hidden, but used to store path sequence that has been removed from the node space
     hash_set<uint64_t> graph_id_hidden_set;
 
-    /// Records edges of the 3' end on the forward strand, delimited by 0
-    /// ordered by rank in graph_id_wt, recorded by δ = id_this - id_that
-    /// and stored as (δ = 0 ? 1 : (δ > 0 ? 2δ+1 : 2δ+2))
-    lciv_iv edge_fwd_iv;
-    suc_bv edge_fwd_bv;
+    /// Records edges of the graph in both orientations
+    /// to enable efficient traversal of the graph
+    /// node := { header, edges_to, edges_from }
+    /// header := { node_id, node_start, node_length, edges_to_count, edges_from_count }
+    /// node_id := integer
+    /// node_start := integer (offset in s_iv)
+    /// node_length := integer
+    /// edges_to_count := integer
+    /// edges_from_count := integer
+    /// edges_to := { edge_to, ... }
+    /// edges_from := { edge_from, ... }
+    /// edge_to := { offset_to_next_node, edge_type }
+    /// edge_from := { offset_to_previous_node, edge_type }
+    lciv_iv topology_iv;
+    suc_bv topology_bv;
+    
+    // Let's define some offset ints
+    const static uint64_t TOPOLOGY_NODE_HEADER_LENGTH = 1;
+    const static uint64_t TOPOLOGY_EDGE_COUNT_OFFSET = 0;
+    const static uint64_t TOPOLOGY_EDGE_RECORD_LENGTH = 2;
+    const static uint64_t TOPOLOGY_EDGE_DELTA_OFFSET = 0;
+    const static uint64_t TOPOLOGY_EDGE_TYPE_OFFSET = 1;
 
-    /// Marks inverting edges in edge_fwd_wt
-    suc_bv edge_fwd_inv_bv;
+    /// edge type conversion
+    /// 1 = fwd->fwd, 2 = fwd->rev, 3 = rev->fwd, 4 = rev->rev
+    struct edge_helper {
+        inline static uint8_t pack(bool on_rev, bool other_rev, bool to_curr) {
+            return on_rev | (other_rev << 1) | (to_curr << 2);
+        }
+        inline static uint8_t unpack_on_rev(uint8_t edge) {
+            return edge & 1;
+        }
+        inline static uint8_t unpack_other_rev(uint8_t edge) {
+            return edge & (1 << 1);
+        }
+        inline static uint8_t unpack_to_curr(uint8_t edge) {
+            return edge & (1 << 2);
+        }
+    };
 
-    /// Records edges of the 3' end on the reverse strand, delimited by 0,
-    /// ordered by rank in graph_id_wt, recorded by δ = id_this - id_that
-    /// and stored as (δ = 0 ? 1 : (δ > 0 ? 2δ+1 : 2δ+2))
-    lciv_iv edge_rev_iv;
-    suc_bv edge_rev_bv;
-
-    /// Marks inverting edges in edge_rev_wt
-    suc_bv edge_rev_inv_bv;
+    inline void canonicalize_edge(handle_t& left, handle_t& right) const {
+        if (handle_helper::unpack_bit(left) && handle_helper::unpack_bit(right)) {
+            std::swap(left, right);
+            handle_helper::toggle_bit(left);
+            handle_helper::toggle_bit(right);
+        }
+    }
 
     /// Encodes all of the sequences of all nodes and all paths in the graph.
     /// The node sequences occur in the same order as in graph_iv;
@@ -614,6 +630,12 @@ private:
 
     /// Help us deal with deleted nodes
     uint64_t get_handle_rank(const handle_t& handle) const;
+
+    /// Compact away the deleted nodes info
+    void rebuild_id_handle_mapping(void);
+
+    /// Set the handle sequence
+    void set_handle_sequence(const handle_t& handle, const std::string& seq);
 
 };
 
