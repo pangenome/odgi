@@ -75,6 +75,7 @@ std::string graph_t::get_sequence(const handle_t& handle) const {
 /// continue. Returns true if we finished and false if we stopped early.
 bool graph_t::follow_edges(const handle_t& handle, bool go_left, const std::function<bool(const handle_t&)>& iteratee) const {
     //std::cerr << "following " << get_id(handle) << ":" << handle_helper::unpack_bit(handle)<< std::endl;
+    //to_gfa(std::cerr);
     //display();
     id_t handle_id = get_id(handle);
     uint64_t handle_rank = get_handle_rank(handle);
@@ -587,6 +588,8 @@ void graph_t::create_edge(const handle_t& left, const handle_t& right) {
     topology_bv.insert(left_edge_ins, 0);
     topology_bv.insert(left_edge_ins, 0);
     ++topology_iv[left_offset + TOPOLOGY_EDGE_COUNT_OFFSET];
+
+    if (left_rank == right_rank) return;
 
     uint64_t right_offset = topology_bv.select1(right_rank);
     uint64_t right_edge_ins = right_offset + TOPOLOGY_NODE_HEADER_LENGTH;
