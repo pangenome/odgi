@@ -112,7 +112,7 @@
 %	TITLE PAGE
 %----------------------------------------------------------------------------------------
 
-\title[\textsc{dsgvg}]{Dynamic succinct genome variation graphs} % The short title appears at the bottom of every slide, the full title is only on the title page
+\title[\textsc{dsgvg} @ LAW\&LSD]{Dynamic succinct genome variation graphs} % The short title appears at the bottom of every slide, the full title is only on the title page
 
 \author{Erik Garrison} % Your name
 \institute[UCSC] % Your institution as it will appear on the bottom of every slide, may be shorthand to save space
@@ -202,6 +202,8 @@ With large genomes, we have tended to do this via linear reference models.
     Alignments of whole genomes are equivalently represented as a graph.
     \\~\\
     Here, the variation graph induced by \textsc{seqwish} from the  \textsc{minimap2} alignments of seven \emph{S. cerevisiae} genomes.
+    \\~\\
+    10.1038/ng.3847
     \column{.5\textwidth} % Left column and width
 
     \begin{figure}
@@ -277,8 +279,6 @@ With large genomes, we have tended to do this via linear reference models.
 
 \section{Representing VGs}
 
-\subsection{Dynamic, uncompressed}
-
 \begin{frame}
   \frametitle{The variation graph toolkit: \textsc{vg}}
     We have implemented variation graph utilities in \textsc{vg}\footnote{\url{https://github.com/vgteam/vg}}.
@@ -286,25 +286,54 @@ With large genomes, we have tended to do this via linear reference models.
     \includegraphics[scale=0.2,center]{vg_logo.png}
   \end{figure}
 \end{frame}
-  
+
+\subsection{Handle graphs}
+\begin{frame}[fragile]
+  \frametitle{Handle graph interface}
+  After working with variation graphs for some time, the \textsc{vgteam} has established a standard virtual API that graph backing implementations can match.
+  \\~\\
+  Opaque \emph{handles} that internally represent nodes and path steps are exposed directly to external algorithms without requiring indirection.
+  \\~\\
+  %64-bit handles are provided for nodes, where $n_i$ and $\overline{n_i}$ are distinct and the handle records the relative orientation.
+  %\\~\\
+  %Path steps are exposed as 128-bit records, and could represent e.g. node/path/rank for each path step.
+%\end{frame}
+%\begin{frame}[fragile]
+  \begin{lstlisting}
+    class HandleGraph { };
+    class PathHandleGraph : virtual public HandleGraph { ... };
+    class MutableHandleGraph : virtual public HandleGraph { ... };
+    class DeletableHandleGraph : virtual public MutableHandleGraph { ... };
+    class MutablePathHandleGraph : virtual public PathHandleGraph { ... };
+    class MutablePathMutableHandleGraph :
+        virtual public MutablePathHandleGraph,
+        virtual public MutableHandleGraph { ... };
+    class MutablePathDeletableHandleGraph :
+        virtual public MutablePathHandleGraph,
+        virtual public DeletableHandleGraph { ... };
+  \end{lstlisting}
+\end{frame}
+
+\subsection{Dynamic, uncompressed}
+
 \begin{frame}[fragile]
   \frametitle{\textsc{vg}'s dynamic graph}
-  Represented naïvely, the dynamic graph implemented in \textsc{vg} consumes a lot of memory.
+  Represented naïvely, the dynamic graph implemented in \textsc{vg} consumes a lot of memory in hash tables and linked lists.
+%  In \textsc{vg} we use hash tables to store node/edge/path relationships and linked lists to represent paths.
   \\~\\
-  Much of it is spent on hash tables and linked lists.
-  \\~\\
-  For the graph's nodes and edges:
+  For the graph's nodes $N$:
   \begin{lstlisting}
     hash_map<id_t, Node*> node_by_id;
-    pair_hash_map<pair<NodeSide, NodeSide>, Edge*> edge_by_sides;
     hash_map<Node*, int> node_index;
+  \end{lstlisting}
+  ... its edges $E$:
+  \begin{lstlisting}
+    pair_hash_map<pair<NodeSide, NodeSide>, Edge*> edge_by_sides;
     hash_map<Edge*, int> edge_index;
     hash_map<id_t, vector<pair<id_t, bool>>> edges_on_start;
     hash_map<id_t, vector<pair<id_t, bool>>> edges_on_end;
   \end{lstlisting}
-
-  And for the paths $P$.
-  
+  and for each path $p_i \in P$:
   \begin{lstlisting}
     hash_map<const mapping_t*, pair<list<mapping_t>::iterator, int64_t> > mapping_itr;
     map<string, hash_map<size_t, mapping_t*>> mappings_by_rank;
@@ -317,17 +346,23 @@ With large genomes, we have tended to do this via linear reference models.
   \frametitle{Memory woes}
   Loading a variation graph into memory with \textsc{vg}'s default dynamic model can require more than twenty times the uncompressed size in GFA\footnote{\url{https://github.com/GFA-spec/GFA-spec}}.
   \\~\\
-  For the human genome and 1000 Genomes Project (1000GP) variation, where the GFA requires 20GB, loading the whole graph is expected to take around 400GB of memory.
+  For the human genome and 1000 Genomes Project (1000GP) variation, where the GFA requires 20GB, loading the whole graph is expected to take around 400GB of memory\footnote{I actually haven't ever done this, because my testing is only on systems with $<$256GB of RAM.}.
+  \\~\\
+  Dynamic modification of the graph requires us partitioning the graph by chromosome, which is not tenable for large assembly graphs or in genome graphs with a lot of structural variation.
 \end{frame}
 
 \subsection{Static, succinct}
 \begin{frame}[fragile]
-  \frametitle{Performant static variation graph}
+  \frametitle{Compact static variation graph}
   To hold large graphs in memory during DNA sequence read alignments, we developed the \textsc{xg} succinct variation graph.
   \\~\\
   The basic idea is to compact the graph into a set of succinct data structures that provide decent cache locality when traversing the graph.
   \\~\\
-  This self index is capable of storing the 1000GP graph in 
+  This self index is capable of storing the 1000GP graph in 30GB.
+  \\~\\
+  To build it we don't use the \textsc{vg} class, but a lighter-weight hash based graph model, which still requires $>$100GB of RAM!
+  \\~\\
+  It supports graph topology, node sequence, path membership, and path position queries.
 \end{frame}
 
 \begin{frame}
@@ -341,17 +376,19 @@ With large genomes, we have tended to do this via linear reference models.
   Bitcompressed vector $S_\mathbf{iv}$ stores the sequence labels of nodes.
   \\~\\
   Paths are recorded in mapping $N_\mathbf{path}$ and a set of per-path vectors that allow for positional and topological queries.
+  \\~\\
+  Bitvectors featuring $rank(i,c)$ and $select(i,c)$ allow us to map between node ids and these structures.
 \end{frame}
 
 \begin{frame}
-  \frametitle{\textsc{xg} implementation}
+  \frametitle{\textsc{xg} sketch}
   \begin{figure}
     \includegraphics[scale=0.375,center]{xg_index_sketch_nice.pdf}
   \end{figure}
 \end{frame}
 
 \begin{frame}
-  \frametitle{Succinctly representing haplotypes with the GBWT}
+  \frametitle{The Graph Burrows Wheeler Transform}
   Sirén's GBWT (and the related gPBWT) use the BWT of haplotypes through the graph to build a compact index of paths.
 
   \begin{figure}
@@ -359,143 +396,187 @@ With large genomes, we have tended to do this via linear reference models.
   \end{figure}
 
   The repetitive nature of the paths generated by real genomes makes the GBWT very compressible.
+  The GBWT allows for efficient $O(|p|)$ haplotype matching.
 \end{frame}
 
+\subsection{Dynamic, succinct}
 
-\section{Dynamic succinct VGs}
+\begin{frame}[fragile]
+  \frametitle{``dank'' graphs: \textsc{dsgvg}}
+  The ideal VG would be fully dynamic, but small and efficient.
+  \\~\\
+  To implement such a graph, we have extended DYNAMIC\footnote{\url{https://github.com/vgteam/DYNAMIC}} to provide dynamic locally-packed integer vectors based on a B+-tree, and otherwise used standard structures provided by the library. These provide rank, select, insert, and remove.
+  \\~\\
+  \begin{columns}[c] % The "c" option specifies centered vertical alignment while the "t" option is used for top vertical alignment
 
-%------------------------------------------------
+    \column{.5\textwidth} % Right column and width
+    Nodes and edges:
+    \begin{lstlisting}
+      lciv_iv graph_id_iv;
+      suc_bv deleted_id_bv;
+      hash_map<uint64_t, uint64_t> graph_id_map;
+      hash_set<uint64_t> graph_id_hidden_set;
+      lciv_iv topology_iv;
+      suc_bv topology_bv;
+    \end{lstlisting}
+
+    \column{.5\textwidth} % Left column and width
+    Paths:
+    \begin{lstlisting}
+      dyn::packed_vector seq_pv;
+      suc_bv seq_bv;
+      wt_str path_handle_wt;
+      lciv_iv path_rev_iv;
+      lciv_iv path_next_id_iv;
+      lciv_iv path_next_rank_iv;
+      lciv_iv path_prev_id_iv;
+      lciv_iv path_prev_rank_iv;
+    \end{lstlisting}
+  \end{columns}
+\end{frame}
 
 \begin{frame}
-\frametitle{Bullet Points}
-\begin{itemize}
-\item Lorem ipsum dolor sit amet, consectetur adipiscing elit
-\item Aliquam blandit faucibus nisi, sit amet dapibus enim tempus eu
-\item Nulla commodo, erat quis gravida posuere, elit lacus lobortis est, quis porttitor odio mauris at libero
-\item Nam cursus est eget velit posuere pellentesque
-\item Vestibulum faucibus velit a augue condimentum quis convallis nulla gravida
-\end{itemize}
+  \frametitle{\textsc{dsgvg} summary}
+  As in GBWT, we can exploit the typical structure of variation graphs (linear, with some structural variants and long-range joins) to reduce the local alphabet size.
+  \\~\\
+  We relativistically encode edges $e_{ij}$ as $i - j$.
+  \\~\\
+  Paths are also relativistically encoded.
+  Each entry in the path vectors refers to a path step on a particular node.
+  We record the next and previous steps to allow path traversal.
+  Path records are recorded as $node(p_i) - node(p_j)$, and as the rank of the particular path on that node, which allows for cycles.
 \end{frame}
 
-%------------------------------------------------
-
-\begin{frame}
-\frametitle{Blocks of Highlighted Text}
-\begin{block}{Block 1}
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer lectus nisl, ultricies in feugiat rutrum, porttitor sit amet augue. Aliquam ut tortor mauris. Sed volutpat ante purus, quis accumsan dolor.
-\end{block}
-
-\begin{block}{Block 2}
-Pellentesque sed tellus purus. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Vestibulum quis magna at risus dictum tempor eu vitae velit.
-\end{block}
-
-\begin{block}{Block 3}
-Suspendisse tincidunt sagittis gravida. Curabitur condimentum, enim sed venenatis rutrum, ipsum neque consectetur orci, sed blandit justo nisi ac lacus.
-\end{block}
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}
-\frametitle{Multiple Columns}
-\begin{columns}[c] % The "c" option specifies centered vertical alignment while the "t" option is used for top vertical alignment
-
-\column{.45\textwidth} % Left column and width
-\textbf{Heading}
-\begin{enumerate}
-\item Statement
-\item Explanation
-\item Example
-\end{enumerate}
-
-\column{.5\textwidth} % Right column and width
-Lorem ipsum dolor sit amet, consectetur adipiscing elit. Integer lectus nisl, ultricies in feugiat rutrum, porttitor sit amet augue. Aliquam ut tortor mauris. Sed volutpat ante purus, quis accumsan dolor.
-
-\end{columns}
-\end{frame}
-
-%------------------------------------------------
-\section{Second Section}
-%------------------------------------------------
-
-\begin{frame}
-\frametitle{Table}
-\begin{table}
-\begin{tabular}{l l l}
-\toprule
-\textbf{Treatments} & \textbf{Response 1} & \textbf{Response 2}\\
-\midrule
-Treatment 1 & 0.0003262 & 0.562 \\
-Treatment 2 & 0.0015681 & 0.910 \\
-Treatment 3 & 0.0009271 & 0.296 \\
-\bottomrule
-\end{tabular}
-\caption{Table caption}
-\end{table}
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}
-\frametitle{Theorem}
-\begin{theorem}[Mass--energy equivalence]
-$E = mc^2$
-\end{theorem}
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}[fragile] % Need to use the fragile option when verbatim is used in the slide
-\frametitle{Verbatim}
-\begin{example}[Theorem Slide Code]
+\begin{frame}[fragile]
+  \frametitle{\textsc{dsgvg} sketch}
+      {\tiny
 \begin{verbatim}
-\begin{frame}
-\frametitle{Theorem}
-\begin{theorem}[Mass--energy equivalence]
-$E = mc^2$
-\end{theorem}
-\end{frame}\end{verbatim}
-\end{example}
+graph_id_map 5->4 7->6 8->7 1->0 4->3 6->5 2->1 9->8 3->2 
+graph_id_iv	 1 2 3 4 5 6 7 8 9 0 
+del_id_bv    0 0 0 0 0 0 0 0 0 1
+topology_iv  2 4 0 2 0 3 6 0 4 0 3 4 3 4 0 2 0 5 4 3 4 0 3 4 5 4 3 2 0 5 4 7 4 4 4 0 2 0 3 4 5 4 2 4 0 3 4 2 2 0 5 4 2 3 4 5 4
+topology_bv  1 0 0 0 0 1 0 0 0 0 0 0 1 0 0 0 0 0 0 1 0 0 0 0 0 0 1 0 0 0 0 0 0 1 0 0 0 0 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1 0 0 0 0 1
+seq_pv       3 1 1 1 2 1 1 4 1 4 2 3 2 2 4 1 4 1 1 1 2 2 2 2 3 2 
+seq_bv       1 0 0 0 0 0 0 0 1 1 1 1 1 0 0 1 1 1 0 0 0 0 0 0 0 0 1
+p_handle_wt  0 1 0 0 1 0 0 1 0 1 0 0 1 0 1 0 
+p_rev_iv     0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+p_next_id_iv 0 6 0 0 6 0 0 4 0 6 0 0 4 0 $ 0 
+p_next_rn_wt 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+p_prev_id_iv 0 ^ 0 0 7 0 0 7 0 5 0 0 7 0 5 0 
+p_prev_rn_wt 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 
+p_metadata   0:x:0/0->8/0 
+\end{verbatim}
+      }
+        \begin{figure}
+    \includegraphics[scale=0.4,center]{w_graph.pdf}
+  \end{figure}
+
 \end{frame}
-
-%------------------------------------------------
-
-\begin{frame}
-\frametitle{Figure}
-Uncomment the code on this slide to include your own image from the same directory as the template .TeX file.
-%\begin{figure}
-%\includegraphics[width=0.8\linewidth]{test}
-%\end{figure}
-\end{frame}
-
-%------------------------------------------------
-
-\begin{frame}[fragile] % Need to use the fragile option when verbatim is used in the slide
-\frametitle{Citation}
-An example of the \verb|\cite| command to cite within the presentation:\\~
-
-This statement requires citation \cite{p1}.
-\end{frame}
-
-%------------------------------------------------
 
 \begin{frame}
-\frametitle{References}
-\footnotesize{
-\begin{thebibliography}{99} % Beamer does not support BibTeX so references must be inserted manually as below
-\bibitem[Smith, 2012]{p1} John Smith (2012)
-\newblock Title of the publication
-\newblock \emph{Journal Name} 12(3), 45 -- 678.
-\end{thebibliography}
-}
+  \frametitle{A note on wavelet trees and wavelet matrixes}
+  \begin{figure}
+    \includegraphics[scale=0.12,center]{wt_ptr_and_non.png}
+  \end{figure}
+  \begin{figure}
+    \includegraphics[scale=0.12,center]{wt_ptr_and_wm.png}
+  \end{figure}
 \end{frame}
-
-%------------------------------------------------
 
 \begin{frame}
-\Huge{\centerline{The End}}
+  \frametitle{A note on wavelet trees and wavelet matrixes}
+  The DSGVG could be implemented more compactly using a wavelet matrix.
+  This would avoid the high cost of alphabet size when using a pointer based wavelet tree.
+  \\~\\
+  \begin{itemize}
+  \item One WM could store the node id to handle rank mapping, avoiding the need for a deletion state vector and garbage collection.
+  \item The graph topology could be stored non-relativistically in a WM, providing simpler queries.
+  \item A WM built from concatenated paths $\$p_1\$p_2\$\ldots\$p_{|P|}\$$ would support path$\to$node and node$\to$path mapping, and simple updates of paths without auxiliary structures.
+  \end{itemize}
 \end{frame}
 
-%----------------------------------------------------------------------------------------
+\begin{frame}
+  \frametitle{No dynamic wavelet matrix implementation exists}
+  In ``Practical Dynamic Entropy-Compressed Bitvectors with Applications'' (10.1007/978-3-319-38851-9\_8, 2016), the authors provide a URL for their implementation, but the code was never posted.
+  \\~\\
+  This would be really useful, but in the interest of time I have not pursued a new implementation of it.
+\end{frame}
+
+\section{Results}
+
+\subsection{Graphs from the 1000GP}
+
+\begin{frame}
+  \frametitle{1000GP graphs}
+  These graphs are built from the variant list in the 1000GP. They contain only the reference path, and have dense variation (one variant every 11bp).
+  \begin{center}
+  \begin{tabular}{ | c | c | c | c | c | c | }
+    \hline
+    graph & GFA & XG & DSGVG & \textsc{vg} stats & \textsc{dsgvg} stats \\
+    \hline
+    \hline
+    1Mbp & 5.3MB & 9.7MB & 3.8M & 0.64s & 0.21s \\
+    chr20 & 438MB & 620MB & 249MB & 64.8s & 20.5s \\
+    chr8 & 1.1GB & 1.6GB & 610MB & 175s & 50.5s \\
+    chr2 & 1.6GB & 2.4GB & 968MB & 291s & 82.6s \\
+    1000GP & 20GB & 30GB & 12GB & n/a & 1265s \\
+    \hline  
+  \end{tabular}
+  \end{center}
+\end{frame}
+
+\subsection{\emph{S. cerevisiae} graphs}
+
+\begin{frame}[fragile]
+  \frametitle{\emph{S. cerevisiae} whole genome alignment graphs}
+  \begin{columns}[c] % The "c" option specifies centered vertical alignment while the "t" option is used for top vertical alignment
+    \column{.5\textwidth} % Right column and width
+    \textsc{Cactus} graph %(LASTZ$\to$\textsc{Cactus}$\to$GFA)
+    \begin{figure}
+      \includegraphics[scale=0.18,center]{cactus_yeast.png}
+    \end{figure}
+    \column{.5\textwidth} % Left column and width
+    \textsc{seqwish} graph %(\textsc{minimap2}$\to$\textsc{seqwish}$\to$GFA)
+    \begin{figure}
+      \includegraphics[scale=0.10,center]{seqwish_yeast.png}
+    \end{figure}
+  \end{columns}
+    \begin{center}
+  \begin{tabular}{ | c | c | c | c | c | c | }
+    \hline
+    graph & GFA & XG & DSGVG & \textsc{vg} stats & \textsc{dsgvg} stats \\
+    \hline
+    \hline
+    cactus & 115MB & 66MB & 81MB & 34.8s & 2.31s \\
+    seqwish & 92MB & 44MB & 77MB & 18.6s & 1.50s \\
+    \hline  
+  \end{tabular}
+  \end{center}
+\end{frame}
+
+\subsection{Larger whole genome alignments}
+\begin{frame}
+  \frametitle{A cichlid pangenome}
+  Alignment of four cichlid (and related) genomes.
+  Each genome is around 1GBp, and the GFA produced by \textsc{seqwish} is 14GB.
+  The resulting \textsc{dsgvg} index is 11GB.
+  It was impossible to process this graph with \textsc{vg}.
+  \begin{figure}
+    \includegraphics[scale=0.7,center]{cichlid_log.pdf}
+  \end{figure}
+\end{frame}
+
+\subsection{Testing}
+\begin{frame}
+  \frametitle{Unit tests}
+  Although I'm not providing numbers, the graph is in fact dynamic and it's tested. See \url{https://github.com/vgteam/dsgvg}
+\end{frame}
+
+\section{Conclusions}
+\begin{frame}
+  \frametitle{Conclusions!}
+  We have implemented a dynamic succinct genome variation graph model.
+  Next steps...
+\end{frame}
 
 \end{document} 
