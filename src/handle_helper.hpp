@@ -4,7 +4,7 @@
 #include <cassert>
 #include "handle_types.hpp"
 
-namespace dg{
+namespace dsgvg {
 /// View a handle as an integer
 inline uint64_t& as_integer(handle_t& handle) {
     return reinterpret_cast<uint64_t&>(handle);

@@ -7,12 +7,12 @@ namespace betagraph{
     BGraph::~BGraph(){
 
     };
-    handle_t BGraph::get_handle(const dg::id_t& node_id, bool is_reverse) const{
+    handle_t BGraph::get_handle(const dsgvg::id_t& node_id, bool is_reverse) const{
         return hhelper.pack(node_id, is_reverse);
     }
     
 
-    dg::id_t BGraph::get_id(const handle_t& handle) const{
+    dsgvg::id_t BGraph::get_id(const handle_t& handle) const{
         return hhelper.unpack_number(handle);
     }
     
@@ -66,11 +66,11 @@ namespace betagraph{
         return graph.backer.size();
     }
     
-    dg::id_t BGraph::min_node_id(void) const{
+    dsgvg::id_t BGraph::min_node_id(void) const{
         return graph.min_node_id;
     }
 
-    dg::id_t BGraph::max_node_id(void) const{
+    dsgvg::id_t BGraph::max_node_id(void) const{
         return graph.max_node_id;
     }
   
@@ -204,7 +204,7 @@ namespace betagraph{
 //     handle_t create_handle(const std::string& sequence);
 
 //     /// Create a new node with the given id and sequence, then return the handle.
-//     handle_t create_handle(const std::string& sequence, const dg::id_t& id);
+//     handle_t create_handle(const std::string& sequence, const dsgvg::id_t& id);
     
 //     /// Remove the node belonging to the given handle and all of its edges.
 //     /// Does not update any stored paths.
@@ -219,7 +219,7 @@ namespace betagraph{
 //     void create_edge(const handle_t& left, const handle_t& right);
     
 //     /// Convenient wrapper for create_edge.
-//     inline void create_edge(const dg::edge_t& edge) {
+//     inline void create_edge(const dsgvg::edge_t& edge) {
 //         create_edge(edge.first, edge.second);
 //     }
     

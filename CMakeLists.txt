@@ -115,10 +115,10 @@ set(sparsepp_LIB "${INSTALL_DIR}/src/sparsepp/sparsepp/")
 set(CMAKE_BUILD_TYPE Release)
 
 # set up our target executable and specify its dependencies and includes
-add_executable(dg
+add_executable(dsgvg
   ${CMAKE_SOURCE_DIR}/src/graph.cpp
   ${CMAKE_SOURCE_DIR}/src/main.cpp
-  ${CMAKE_SOURCE_DIR}/src/bgraph.cpp
+  #${CMAKE_SOURCE_DIR}/src/bgraph.cpp
   ${CMAKE_SOURCE_DIR}/src/handle.cpp
   ${CMAKE_SOURCE_DIR}/src/crash.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/driver.cpp
@@ -127,11 +127,11 @@ add_executable(dg
   ${CMAKE_SOURCE_DIR}/src/subcommand/build_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/test_main.cpp
   )
-add_dependencies(dg sdsl-lite)
-add_dependencies(dg dynamic)
-add_dependencies(dg gfakluge)
-add_dependencies(dg tayweeargs)
-target_include_directories(dg PUBLIC
+add_dependencies(dsgvg sdsl-lite)
+add_dependencies(dsgvg dynamic)
+add_dependencies(dsgvg gfakluge)
+add_dependencies(dsgvg tayweeargs)
+target_include_directories(dsgvg PUBLIC
   "${CMAKE_SOURCE_DIR}/src"
   "${sdsl-lite_INCLUDE}"
   "${sdsl-lite-divsufsort_INCLUDE}"
@@ -141,7 +141,7 @@ target_include_directories(dg PUBLIC
   "${tayweeargs_INCLUDE}"
   "${backwardscpp_INCLUDE}"
   "${sparsepp_INCLUDE}")
-target_link_libraries(dg
+target_link_libraries(dsgvg
   "${sdsl-lite_LIB}/libsdsl.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort64.a"

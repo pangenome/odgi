@@ -10,8 +10,8 @@ namespace betagraph{
     struct bholder_t{
         bool orientation;
         uint32_t length;
-        std::vector<dg::edge_t> in_edges;
-        std::vector<dg::edge_t> out_edges;
+        std::vector<dsgvg::edge_t> in_edges;
+        std::vector<dsgvg::edge_t> out_edges;
         std::string sequence;
     };
     struct b_node_t {
@@ -33,7 +33,7 @@ namespace betagraph{
         // spp::sparse_hash_map<int64_t, b_node_t> id_to_node;
         // spp::sparse_hash_map<int64_t, vector<b_edge_t>> node_to_edges;
         // spp::sparse_hash_map<char*, b_path_t> name_to_path;
-        spp::sparse_hash_map<dg::id_t, bholder_t> backer;
+        spp::sparse_hash_map<dsgvg::id_t, bholder_t> backer;
         id_t min_node_id = 0;
         id_t max_node_id = std::numeric_limits<id_t>::max();
     };
@@ -42,14 +42,14 @@ namespace betagraph{
         id_t id;
     };
     struct bpath_key_t{
-        dg::id_t id;
+        dsgvg::id_t id;
         std::string name;
         bool operator==(const bpath_key_t &o) const 
         { return name == o.name && name == o.name; }
     };
 
     struct bpath_val_t{
-        dg::id_t id;
+        dsgvg::id_t id;
         std::vector<bpath_occurrence_t> occurrences;
     };
 
@@ -57,17 +57,17 @@ namespace betagraph{
 
     struct bpathstore_t{
         spp::sparse_hash_map<std::string, bpath_val_t> paths;
-        spp::sparse_hash_map<dg::id_t, std::string> id_to_name;
+        spp::sparse_hash_map<dsgvg::id_t, std::string> id_to_name;
         bool has_path(const std::string& s) const{
             return (paths.count(s) != 0);
         };
-        dg::id_t get_id(std::string s) const{
+        dsgvg::id_t get_id(std::string s) const{
             return paths.at(s).id;
         };
-        std::string get_name(dg::path_handle_t p) const{
+        std::string get_name(dsgvg::path_handle_t p) const{
             return id_to_name.at(as_integer(p));
         };
-        size_t get_path_occurrence_count(dg::path_handle_t p) const{
+        size_t get_path_occurrence_count(dsgvg::path_handle_t p) const{
             return paths.at(id_to_name.at(as_integer(p))).occurrences.size();
         };
 

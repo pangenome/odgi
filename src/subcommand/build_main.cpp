@@ -4,9 +4,9 @@
 #include "args.hxx"
 //#include "io_helper.hpp"
 
-namespace dg {
+namespace dsgvg {
 
-using namespace dg::subcommand;
+using namespace dsgvg::subcommand;
 
 int main_build(int argc, char** argv) {
 

@@ -9,15 +9,15 @@
 #include "unittest/driver.hpp"
 
 using namespace std;
-using namespace dg;
-using namespace dg::subcommand;
+using namespace dsgvg;
+using namespace dsgvg::subcommand;
 
 // No help_test is necessary because the unit testing library takes care of
 // complaining about missing options.
 
 int main_test(int argc, char** argv){
     // Forward arguments along to the main unit test driver
-    return dg::unittest::run_unit_tests(argc, argv);
+    return dsgvg::unittest::run_unit_tests(argc, argv);
 }
 
 // Register subcommand

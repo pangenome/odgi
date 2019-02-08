@@ -4,7 +4,7 @@
  * Implement handle graph utility methods.
  */
 
-namespace dg {
+namespace dsgvg {
 
 using namespace std;
 

@@ -7,7 +7,7 @@
 #include <vector>
 #include <limits>
 
-namespace dg {
+namespace dsgvg {
 namespace subcommand {
 
 std::ostream& operator<<(std::ostream& out, const CommandCategory& category) {

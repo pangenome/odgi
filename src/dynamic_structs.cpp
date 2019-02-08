@@ -6,7 +6,7 @@
 #include "dynamic_structs.hpp"
 
 
-namespace dg {
+namespace dsgvg {
     
 const double SuccinctDynamicVector::factor = 1.25;
     

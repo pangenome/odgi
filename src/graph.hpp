@@ -18,7 +18,7 @@
 #include "dynamic_types.hpp"
 #include "hash_map.hpp"
 
-namespace dg {
+namespace dsgvg {
 
 class graph_t : public MutablePathDeletableHandleGraph {
         

@@ -13,7 +13,7 @@
 #include <vector>
 #include <cassert>
 
-namespace dg {
+namespace dsgvg {
 
 /// A handle is 8 (assuming id_t is still int64_t) opaque bytes.
 /// A handle refers to an oriented node.
@@ -164,26 +164,26 @@ namespace std {
 /**
  * Define hashes for handles.
  */
-template<> struct hash<dg::handle_t> {
+template<> struct hash<dsgvg::handle_t> {
 public:
-    inline size_t operator()(const dg::handle_t& handle) const {
-        return std::hash<int64_t>()(dg::as_integer(handle));
+    inline size_t operator()(const dsgvg::handle_t& handle) const {
+        return std::hash<int64_t>()(dsgvg::as_integer(handle));
     }
 };
 
 /**
  * Define hashes for path handles.
  */
-template<> struct hash<dg::path_handle_t> {
+template<> struct hash<dsgvg::path_handle_t> {
 public:
-    inline size_t operator()(const dg::path_handle_t& path_handle) const {
-        return std::hash<int64_t>()(dg::as_integer(path_handle));
+    inline size_t operator()(const dsgvg::path_handle_t& path_handle) const {
+        return std::hash<int64_t>()(dsgvg::as_integer(path_handle));
     }
 };
 
 }
 
-namespace dg {
+namespace dsgvg {
 
 using namespace std;
 

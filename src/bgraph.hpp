@@ -9,7 +9,7 @@
 #include "btypes.hpp"
 
 namespace betagraph{
-    using namespace dg;
+    using namespace dsgvg;
     class BGraph {
         
 public:
@@ -17,10 +17,10 @@ public:
     ~BGraph();
         
     /// Look up the handle for the node with the given ID in the given orientation
-    handle_t get_handle(const dg::id_t& node_id, bool is_reverse = false) const;
+    handle_t get_handle(const dsgvg::id_t& node_id, bool is_reverse = false) const;
     
     /// Get the ID from a handle
-    dg::id_t get_id(const handle_t& handle) const;
+    dsgvg::id_t get_id(const handle_t& handle) const;
     
     /// Get the orientation of a handle
     bool get_is_reverse(const handle_t& handle) const;
@@ -52,11 +52,11 @@ public:
     
     /// Return the smallest ID in the graph, or some smaller number if the
     /// smallest ID is unavailable. Return value is unspecified if the graph is empty.
-    dg::id_t min_node_id(void) const;
+    dsgvg::id_t min_node_id(void) const;
     
     /// Return the largest ID in the graph, or some larger number if the
     /// largest ID is unavailable. Return value is unspecified if the graph is empty.
-    dg::id_t max_node_id(void) const;
+    dsgvg::id_t max_node_id(void) const;
     
     ////////////////////////////////////////////////////////////////////////////
     // Interface that needs to be using'd
@@ -251,7 +251,7 @@ public:
     handle_t create_handle(const std::string& sequence);
 
     /// Create a new node with the given id and sequence, then return the handle.
-    handle_t create_handle(const std::string& sequence, const dg::id_t& id);
+    handle_t create_handle(const std::string& sequence, const dsgvg::id_t& id);
     
     /// Remove the node belonging to the given handle and all of its edges.
     /// Does not update any stored paths.
@@ -266,7 +266,7 @@ public:
     void create_edge(const handle_t& left, const handle_t& right);
     
     /// Convenient wrapper for create_edge.
-    inline void create_edge(const dg::edge_t& edge) {
+    inline void create_edge(const dsgvg::edge_t& edge) {
         create_edge(edge.first, edge.second);
     }
     

@@ -1,7 +1,7 @@
 #ifndef DG_UNITTEST_DRIVER_HPP_INCLUDED
 #define DG_UNITTEST_DRIVER_HPP_INCLUDED
 
-namespace dg {
+namespace dsgvg {
 namespace unittest {
 
 /**

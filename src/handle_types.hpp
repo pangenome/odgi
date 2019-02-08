@@ -4,7 +4,7 @@
 #include <utility>
 
 
-namespace dg{
+namespace dsgvg {
 
 /// represents an id
 typedef int64_t id_t;
