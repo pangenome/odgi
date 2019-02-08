@@ -461,7 +461,7 @@ handle_t graph_t::create_handle(const std::string& sequence, const id_t& id) {
 void graph_t::destroy_handle(const handle_t& handle) {
     handle_t fwd_handle = handle_helper::unpack_bit(handle) ? handle_helper::toggle_bit(handle) : handle;
     uint64_t offset = get_handle_rank(handle);
-    id_t id = get_id(handle);
+    uint64_t id = get_id(handle);
     // remove occs in edge lists
     // enumerate the edges
     std::vector<edge_t> edges_to_destroy;
@@ -646,10 +646,10 @@ void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
     
     uint64_t left_rank = get_handle_rank(left_h);
     uint64_t right_rank = get_handle_rank(right_h);
-    id_t left_id = get_id(left_h);
-    id_t right_id = get_id(right_h);
+    uint64_t left_id = get_id(left_h);
+    uint64_t right_id = get_id(right_h);
     bool left_rev = handle_helper::unpack_bit(left_h);
-    bool right_rev = handle_helper::unpack_bit(left_h);
+    bool right_rev = handle_helper::unpack_bit(right_h);
     uint64_t right_relative = edge_to_delta(right_h, left_h);
     uint64_t left_relative = edge_to_delta(left_h, right_h);
     
