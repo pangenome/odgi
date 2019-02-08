@@ -120,7 +120,7 @@ add_executable(dsgvg
   ${CMAKE_SOURCE_DIR}/src/main.cpp
   #${CMAKE_SOURCE_DIR}/src/bgraph.cpp
   ${CMAKE_SOURCE_DIR}/src/handle.cpp
-  ${CMAKE_SOURCE_DIR}/src/crash.cpp
+  #${CMAKE_SOURCE_DIR}/src/crash.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/driver.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/handle.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/subcommand.cpp

@@ -12,7 +12,7 @@
 // New subcommand system provides all the subcommands that used to live here
 #include "subcommand/subcommand.hpp"
 
-#include "crash.hpp"
+//#include "crash.hpp" // broken on GCC 8.2.0
 
 using namespace std;
 using namespace dsgvg;
@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
 
     // Make sure the system meets system requirements (i.e. has all the instructions we need)
     //preflight_check();
-    dsgvg::enable_crash_handling();
+    //dsgvg::enable_crash_handling();
 
     // Set up stack trace support from crash.hpp
     //enable_crash_handling();
