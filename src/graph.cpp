@@ -67,19 +67,19 @@ std::string graph_t::get_sequence(const handle_t& handle) const {
         if (seq.size() && seq_bv.at(i)) break;
         seq += int_as_dna(seq_pv.at(i));
     }
-    return (handle_helper::unpack_bit(handle) ? reverse_complement(seq) : seq);
+    return (get_is_reverse(handle) ? reverse_complement(seq) : seq);
 }
     
 /// Loop over all the handles to next/previous (right/left) nodes. Passes
 /// them to a callback which returns false to stop iterating and true to
 /// continue. Returns true if we finished and false if we stopped early.
 bool graph_t::follow_edges(const handle_t& handle, bool go_left, const std::function<bool(const handle_t&)>& iteratee) const {
-    //std::cerr << "following " << get_id(handle) << ":" << handle_helper::unpack_bit(handle)<< std::endl;
+    //std::cerr << "following " << get_id(handle) << ":" << get_is_reverse(handle)<< std::endl;
     //to_gfa(std::cerr);
     //display();
     id_t handle_id = get_id(handle);
     uint64_t handle_rank = get_handle_rank(handle);
-    bool is_rev = handle_helper::unpack_bit(handle);
+    bool is_rev = get_is_reverse(handle);
     uint64_t edge_offset = topology_bv.select1(handle_rank);
     uint64_t edge_start = edge_offset + TOPOLOGY_NODE_HEADER_LENGTH;
     uint64_t edge_count = topology_iv.at(edge_offset + TOPOLOGY_EDGE_COUNT_OFFSET);
@@ -140,9 +140,9 @@ void graph_t::for_each_edge(const std::function<bool(const edge_t&)>& iteratee, 
                     }
                     return keep_going;
                 });
-            follow_edges(handle_helper::toggle_bit(handle), false, [&](const handle_t& next){
+            follow_edges(flip(handle), false, [&](const handle_t& next){
                     if (as_integer(handle) < as_integer(next)) {
-                        keep_going = iteratee(edge_handle(handle_helper::toggle_bit(handle), next));
+                        keep_going = iteratee(edge_handle(flip(handle), next));
                     }
                     return keep_going;
                 });
@@ -191,7 +191,7 @@ size_t graph_t::get_degree(const handle_t& handle, bool go_left) const {
 /// Get the locally forward version of a handle
 handle_t graph_t::forward(const handle_t& handle) const {
     handle_t handle_fwd = handle;
-    if (handle_helper::unpack_bit(handle)) handle_helper::toggle_bit(handle_fwd);
+    if (get_is_reverse(handle)) flip(handle_fwd);
     return handle_fwd;
 }
 
@@ -253,7 +253,7 @@ size_t graph_t::get_path_count(void) const {
 /// Execute a function on each path in the graph
 // TODO: allow stopping early?
 void graph_t::for_each_path_handle(const std::function<void(const path_handle_t&)>& iteratee) const {
-    for (uint64_t i = 0; i < _path_handle_next; ++i) {
+    for (uint64_t i = 1; i <= _path_handle_next; ++i) {
         path_handle_t path = as_path_handle(i);
         if (get_occurrence_count(path) > 0) {
             iteratee(path);
@@ -262,12 +262,13 @@ void graph_t::for_each_path_handle(const std::function<void(const path_handle_t&
 }
 
 void graph_t::for_each_occurrence_on_handle(const handle_t& handle, const std::function<void(const occurrence_handle_t&)>& iteratee) const {
+    id_t handle_id = get_id(handle);
     uint64_t handle_rank = get_handle_rank(handle);
     uint64_t begin = path_handle_wt.select(handle_rank, 0)+1;
     uint64_t end = path_handle_wt.select(handle_rank+1, 0);
     for (uint64_t i = 0; i < end-begin; ++i) {
         occurrence_handle_t occ;
-        as_integers(occ)[0] = handle_rank;
+        as_integers(occ)[0] = handle_id;
         as_integers(occ)[1] = i;
         iteratee(occ);
     }
@@ -280,7 +281,7 @@ std::vector<occurrence_handle_t> graph_t::occurrences_of_handle(const handle_t& 
     std::vector<occurrence_handle_t> res;
     for_each_occurrence_on_handle(handle, [&](const occurrence_handle_t& occ) {
             handle_t h = get_occurrence(occ);
-            if (!match_orientation || handle_helper::unpack_bit(h) == handle_helper::unpack_bit(h)) {
+            if (!match_orientation || get_is_reverse(h) == get_is_reverse(handle)) {
                 res.push_back(occ);
             }
         });
@@ -295,7 +296,9 @@ size_t graph_t::get_occurrence_count(const handle_t& handle) const {
 }
 
 uint64_t graph_t::occurrence_rank(const occurrence_handle_t& occurrence_handle) const {
-    uint64_t i = as_integers(occurrence_handle)[0];
+    //display();
+    //std::cerr << "get occ rank " << as_integers(occurrence_handle)[0] << ":" << as_integers(occurrence_handle)[1] << std::endl;
+    uint64_t i = get_handle_rank(get_handle(as_integers(occurrence_handle)[0]));
     uint64_t j = as_integers(occurrence_handle)[1];
     return path_handle_wt.select(i, 0)+1 + j;
 }
@@ -303,12 +306,12 @@ uint64_t graph_t::occurrence_rank(const occurrence_handle_t& occurrence_handle) 
 /// Get a node handle (node ID and orientation) from a handle to an occurrence on a path
 handle_t graph_t::get_occurrence(const occurrence_handle_t& occurrence_handle) const {
     uint64_t i = occurrence_rank(occurrence_handle);
-    return handle_helper::pack(as_integers(occurrence_handle)[0], path_rev_iv.at(i));
+    return get_handle(as_integers(occurrence_handle)[0], path_rev_iv.at(i));
 }
 
 /// Get a path handle (path ID) from a handle to an occurrence on a path
 path_handle_t graph_t::get_path(const occurrence_handle_t& occurrence_handle) const {
-    return as_path_handle(path_handle_wt.at(occurrence_rank(occurrence_handle))-1);
+    return as_path_handle(path_handle_wt.at(occurrence_rank(occurrence_handle)));
 }
 
 /// Get a handle to the first occurrence in a path.
@@ -330,29 +333,28 @@ bool graph_t::has_next_occurrence(const occurrence_handle_t& occurrence_handle) 
     
 /// Returns true if the occurrence is not the first occurence on the path, else false
 bool graph_t::has_previous_occurrence(const occurrence_handle_t& occurrence_handle) const {
-    return path_next_id_iv.at(occurrence_rank(occurrence_handle)) != path_begin_marker;
+    return path_prev_id_iv.at(occurrence_rank(occurrence_handle)) != path_begin_marker;
 }
 
 /// Returns a handle to the next occurrence on the path, which must exist
 occurrence_handle_t graph_t::get_next_occurrence(const occurrence_handle_t& occurrence_handle) const {
     uint64_t i = occurrence_rank(occurrence_handle);
-    id_t curr_id = get_id(handle_helper::pack(as_integers(occurrence_handle)[0], false));
+    id_t curr_id = as_integers(occurrence_handle)[0];
     occurrence_handle_t occ;
-    //as_integers(occ)[0] = edge_delta_to_id(curr_id, path_next_id_iv.at(i));
-    as_integers(occ)[0] = get_handle_rank(get_handle(edge_delta_to_id(curr_id, path_next_id_iv.at(i)-2), false));
+    as_integers(occ)[0] = edge_delta_to_id(curr_id, path_next_id_iv.at(i)-2);
     as_integers(occ)[1] = path_next_rank_iv.at(i);
     return occ;
 }
 
 /// Returns a handle to the previous occurrence on the path
 occurrence_handle_t graph_t::get_previous_occurrence(const occurrence_handle_t& occurrence_handle) const {
+    std::cerr << "prev occ " << as_integers(occurrence_handle)[0] << ":" << as_integers(occurrence_handle)[1] << std::endl;
     uint64_t i = occurrence_rank(occurrence_handle);
-    id_t curr_id = get_id(handle_helper::pack(as_integers(occurrence_handle)[0], false));
+    std::cerr << "occ rank " << i << std::endl;
+    id_t curr_id = as_integers(occurrence_handle)[0];
+    std::cerr << "got id " << curr_id << std::endl;
     occurrence_handle_t occ;
-    //as_integers(occ)[0] = get_handle(edge_delta_to_id(curr_id, path_prev_id_iv.at(i)), false);
-    //std::cerr << "current id " << curr_id << std::endl;
-    //std::cerr << "prev id delta " << path_prev_id_iv.at(i) << std::endl;
-    as_integers(occ)[0] = get_handle_rank(get_handle(edge_delta_to_id(curr_id, path_prev_id_iv.at(i)-2), false));
+    as_integers(occ)[0] = edge_delta_to_id(curr_id, path_prev_id_iv.at(i)-2);
     as_integers(occ)[1] = path_prev_rank_iv.at(i);
     return occ;
 }
@@ -459,7 +461,7 @@ handle_t graph_t::create_handle(const std::string& sequence, const id_t& id) {
 /// May **NOT** be called during parallel for_each_handle iteration.
 /// May **NOT** be called on the node from which edges are being followed during follow_edges.
 void graph_t::destroy_handle(const handle_t& handle) {
-    handle_t fwd_handle = handle_helper::unpack_bit(handle) ? handle_helper::toggle_bit(handle) : handle;
+    handle_t fwd_handle = get_is_reverse(handle) ? flip(handle) : handle;
     uint64_t offset = get_handle_rank(handle);
     uint64_t id = get_id(handle);
     // remove occs in edge lists
@@ -471,6 +473,7 @@ void graph_t::destroy_handle(const handle_t& handle) {
             edges_to_destroy.push_back(make_pair(h, fwd_handle)); });
     // and then remove them
     for (auto& edge : edges_to_destroy) {
+        std::cerr << "destroy_edge from destroy_handle" << std::endl;
         destroy_edge(edge);
     }
     // destroy the now-empty edge record space for this handle
@@ -495,26 +498,29 @@ void graph_t::destroy_handle(const handle_t& handle) {
     for_each_occurrence_on_handle(handle, [this,&occs](const occurrence_handle_t& occ) {
             occs.push_back(occ);
         });
+    std::cerr << "going to replace occs" << std::endl;
     if (occs.size()) {
+        std::cerr << "uh has occs?" << std::endl;
         handle_t hidden = create_hidden_handle(seq);
         for (auto& occ : occs) {
             handle_t h = get_occurrence(occ);
-            if (handle_helper::unpack_bit(h)) {
-                set_occurrence(occ, handle_helper::toggle_bit(hidden));
+            if (get_is_reverse(h)) {
+                set_occurrence(occ, flip(hidden));
             } else {
                 set_occurrence(occ, hidden);
             }
         }
     }
     // remove from path handle mapping
-    do {
-        path_handle_wt.remove(offset);
-        path_rev_iv.remove(offset);
-        path_next_id_iv.remove(offset);
-        path_next_rank_iv.remove(offset);
-        path_prev_id_iv.remove(offset);
-        path_prev_rank_iv.remove(offset);
-    } while (path_handle_wt.at(offset) != 0);
+    uint64_t path_offset = path_handle_wt.select(offset, 0);
+    {
+        path_handle_wt.remove(path_offset);
+        path_rev_iv.remove(path_offset);
+        path_next_id_iv.remove(path_offset);
+        path_next_rank_iv.remove(path_offset);
+        path_prev_id_iv.remove(path_offset);
+        path_prev_rank_iv.remove(path_offset);
+    } while (path_handle_wt.at(path_offset) != 0);
     // remove from graph_id_iv
     graph_id_iv[handle_helper::unpack_number(handle)] = 0;
     deleted_id_bv[handle_helper::unpack_number(handle)] = 1;
@@ -564,7 +570,7 @@ void graph_t::rebuild_id_handle_mapping(void) {
 /// Ignores existing edges.
 void graph_t::create_edge(const handle_t& left, const handle_t& right) {
     //std::cerr << std::endl;
-    //std::cerr << "create_edge from " << get_id(left) << ":" << handle_helper::unpack_bit(left) << " to " << get_id(right) << ":" << handle_helper::unpack_bit(right) << std::endl;
+    //std::cerr << "create_edge from " << get_id(left) << ":" << get_is_reverse(left) << " to " << get_id(right) << ":" << get_is_reverse(right) << std::endl;
     //to_gfa(std::cerr);
     //display();
     if (has_edge(left, right)) return; // do nothing if edge exists
@@ -581,8 +587,8 @@ void graph_t::create_edge(const handle_t& left, const handle_t& right) {
     // insert the edge for each side
     uint64_t left_offset = topology_bv.select1(left_rank);
     uint64_t left_edge_ins = left_offset + TOPOLOGY_NODE_HEADER_LENGTH;
-    topology_iv.insert(left_edge_ins, edge_helper::pack(handle_helper::unpack_bit(left_h),
-                                                        handle_helper::unpack_bit(right_h),
+    topology_iv.insert(left_edge_ins, edge_helper::pack(get_is_reverse(left_h),
+                                                        get_is_reverse(right_h),
                                                         false));
     topology_iv.insert(left_edge_ins, left_relative);
     topology_bv.insert(left_edge_ins, 0);
@@ -593,8 +599,8 @@ void graph_t::create_edge(const handle_t& left, const handle_t& right) {
 
     uint64_t right_offset = topology_bv.select1(right_rank);
     uint64_t right_edge_ins = right_offset + TOPOLOGY_NODE_HEADER_LENGTH;
-    topology_iv.insert(right_edge_ins, edge_helper::pack(handle_helper::unpack_bit(right_h),
-                                                         handle_helper::unpack_bit(left_h),
+    topology_iv.insert(right_edge_ins, edge_helper::pack(get_is_reverse(right_h),
+                                                         get_is_reverse(left_h),
                                                          true));
     topology_iv.insert(right_edge_ins, right_relative);
     topology_bv.insert(right_edge_ins, 0);
@@ -638,7 +644,7 @@ bool graph_t::has_edge(const handle_t& left, const handle_t& right) const {
 /// Ignores nonexistent edges.
 /// Does not update any stored paths.
 void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
-
+    std::cerr << "destroy edge!!!!!!!!!" << std::endl;
     //if (!has_edge(left, right)) return;
     handle_t left_h = left;
     handle_t right_h = right;
@@ -648,8 +654,8 @@ void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
     uint64_t right_rank = get_handle_rank(right_h);
     uint64_t left_id = get_id(left_h);
     uint64_t right_id = get_id(right_h);
-    bool left_rev = handle_helper::unpack_bit(left_h);
-    bool right_rev = handle_helper::unpack_bit(right_h);
+    bool left_rev = get_is_reverse(left_h);
+    bool right_rev = get_is_reverse(right_h);
     uint64_t right_relative = edge_to_delta(right_h, left_h);
     uint64_t left_relative = edge_to_delta(left_h, right_h);
     
@@ -763,27 +769,59 @@ void graph_t::swap_handles(const handle_t& a, const handle_t& b) {
 /// Updates all stored paths. May change the ordering of the underlying
 /// graph.
 handle_t graph_t::apply_orientation(const handle_t& handle) {
-    //std::cerr << "before applying orientation" << std::endl;
-    //to_gfa(std::cerr);
-    //display();
+    std::cerr << "before applying orientation" << std::endl;
+    to_gfa(std::cerr);
+    display();
     // do nothing if we're already in the right orientation
-    if (!handle_helper::unpack_bit(handle)) return handle;
+    if (!get_is_reverse(handle)) return handle;
+    handle_t fwd_handle = flip(handle);
+    handle_t rev_handle = handle;
     // store edges
+    vector<handle_t> edges_fwd_fwd;
+    vector<handle_t> edges_fwd_rev;
+    vector<handle_t> edges_rev_fwd;
+    vector<handle_t> edges_rev_rev;
+    follow_edges(fwd_handle, false, [&](const handle_t& h) {
+            edges_fwd_fwd.push_back(h);
+        });
+    follow_edges(fwd_handle, true, [&](const handle_t& h) {
+            edges_fwd_rev.push_back(h);
+        });
+    follow_edges(rev_handle, false, [&](const handle_t& h) {
+            edges_rev_fwd.push_back(h);
+        });
+    follow_edges(rev_handle, true, [&](const handle_t& h) {
+            edges_rev_rev.push_back(h);
+        });
+    /*
     vector<handle_t> edges_fwd;
     vector<handle_t> edges_rev;
-    follow_edges(handle_helper::toggle_bit(handle), false, [&](const handle_t& h) {
+    follow_edges(flip(handle), false, [&](const handle_t& h) {
             edges_fwd.push_back(h);
         });
-    follow_edges(handle_helper::toggle_bit(handle), true, [&](const handle_t& h) {
+    follow_edges(flip(handle), true, [&](const handle_t& h) {
             edges_rev.push_back(h);
         });
+    */
     //std::cerr << "got edges " << edges_fwd.size() << " " << edges_rev.size() << std::endl;
     //std::cerr << "before destroy fwd edges" << std::endl;
     //display();
-    for (auto& h : edges_fwd) destroy_edge(handle_helper::toggle_bit(handle), h);
+    for (auto& h : edges_fwd_fwd) destroy_edge(fwd_handle, h);
+    for (auto& h : edges_fwd_rev) destroy_edge(h, fwd_handle);
+    for (auto& h : edges_rev_fwd) destroy_edge(rev_handle, h);
+    for (auto& h : edges_rev_rev) destroy_edge(h, rev_handle);
+        /*
+    for (auto& h : edges_fwd) {
+        //std::cerr << "destroy_edge from apply_orientation" << std::endl;
+        destroy_edge(flip(handle), h);
+    }
     //std::cerr << "before destroy rev edges" << std::endl;
     //display();
-    for (auto& h : edges_rev) destroy_edge(h, handle_helper::toggle_bit(handle));
+    for (auto& h : edges_rev) {
+        //std::cerr << "destroy_edge from apply_orientation" << std::endl;
+        destroy_edge(h, flip(handle));
+    }
+        */
     //std::cerr << "after destroy  edges" << std::endl;
     //display();
     // save the sequence's reverse complement, which we will use to add the new handle
@@ -797,17 +835,23 @@ handle_t graph_t::apply_orientation(const handle_t& handle) {
             path_rev_iv[i] = !path_rev_iv[i];
         });
     // reconnect it to the graph
-    for (auto& h : edges_fwd) {
+    for (auto& h : edges_fwd_fwd) {
         create_edge(handle, h);
     }
-    for (auto& h : edges_rev) {
+    for (auto& h : edges_fwd_rev) {
         create_edge(h, handle);
     }
-    //std::cerr << "after applying orientation" << std::endl;
-    //to_gfa(std::cerr);
-    //display();
+    for (auto& h : edges_rev_fwd) {
+        create_edge(flip(handle), h);
+    }
+    for (auto& h : edges_rev_rev) {
+        create_edge(h, flip(handle));
+    }
+    std::cerr << "after applying orientation" << std::endl;
+    to_gfa(std::cerr);
+    display();
     //std::cerr << std::endl;//display();
-    return handle_helper::toggle_bit(handle);
+    return flip(handle);
 }
 
 void graph_t::set_handle_sequence(const handle_t& handle, const std::string& seq) {
@@ -844,19 +888,20 @@ void graph_t::set_handle_sequence(const handle_t& handle, const std::string& seq
 /// passed in.
 /// Updates stored paths.
 std::vector<handle_t> graph_t::divide_handle(const handle_t& handle, const std::vector<size_t>& offsets) {
-    //std::cerr << "divide " << get_id(handle) << ":" << get_is_reverse(handle) << std::endl;
-    //display();
+    std::cerr << "divide " << get_id(handle) << ":" << get_is_reverse(handle) << std::endl;
+    display();
+    to_gfa(std::cerr);
 
     // convert the offsets to the forward strand, if needed
     std::vector<uint64_t> fwd_offsets = { 0 };
     uint64_t length = get_length(handle);
-    if (handle_helper::unpack_bit(handle)) {
+    if (get_is_reverse(handle)) {
         for (auto& o : offsets) fwd_offsets.push_back(length-o);
     } else {
         for (auto& o : offsets) fwd_offsets.push_back(o);
     }
     std::sort(fwd_offsets.begin(), fwd_offsets.end());
-    handle_t fwd_handle = handle_helper::unpack_bit(handle) ? handle_helper::toggle_bit(handle) : handle;
+    handle_t fwd_handle = get_is_reverse(handle) ? flip(handle) : handle;
     // break it into the given pieces by building up the new node sequences
     std::string seq = get_sequence(fwd_handle);
     fwd_offsets.push_back(seq.size());
@@ -872,7 +917,7 @@ std::vector<handle_t> graph_t::divide_handle(const handle_t& handle, const std::
     // and record their reverse, for use in path fixup
     std::vector<handle_t> rev_handles;
     for (auto& h : handles) {
-        rev_handles.push_back(handle_helper::toggle_bit(h));
+        rev_handles.push_back(flip(h));
     }
     std::reverse(rev_handles.begin(), rev_handles.end());
     // connect the pieces head to tail
@@ -885,31 +930,62 @@ std::vector<handle_t> graph_t::divide_handle(const handle_t& handle, const std::
             occurrences.push_back(occ);
         });
     // replace path occurrences with the new handles
+    /// XXXXXX
+    // these occs have been disrupted and the ID space needs to be remapped
+    std::cerr << "gawna replace em" << std::endl;
     for (auto& occ : occurrences) {
         handle_t h = get_occurrence(occ);
-        if (handle_helper::unpack_bit(h)) {
+        //replace_occurrence(occ, handles);
+        if (get_is_reverse(h)) {
             replace_occurrence(occ, rev_handles);
         } else {
             replace_occurrence(occ, handles);
         }
     }
+    //destroy_path_handle_records(occurrences);
+    std::vector<uint64_t> occ_ranks;
+    for (auto& occ : occurrences) {
+        occ_ranks.push_back(occurrence_rank(occ));
+    }
+    std::sort(occ_ranks.begin(), occ_ranks.end());
+    std::reverse(occ_ranks.begin(), occ_ranks.end());
+    std::cerr << "reemoving ";
+    for (auto& i : occ_ranks) std::cerr << i << ",";
+    std::cerr << std::endl;
+    for (auto& occ_rank : occ_ranks) {
+        destroy_path_handle_records(occ_rank);
+    }
+//}
     // collect the context of the forward handle
-    vector<handle_t> edges_fwd;
-    vector<handle_t> edges_rev;
+    vector<handle_t> edges_fwd_fwd;
+    vector<handle_t> edges_fwd_rev;
+    vector<handle_t> edges_rev_fwd;
+    vector<handle_t> edges_rev_rev;
     follow_edges(fwd_handle, false, [&](const handle_t& h) {
-            edges_fwd.push_back(h);
+            edges_fwd_fwd.push_back(h);
         });
     follow_edges(fwd_handle, true, [&](const handle_t& h) {
-            edges_rev.push_back(h);
+            edges_fwd_rev.push_back(h);
+        });
+    follow_edges(flip(fwd_handle), false, [&](const handle_t& h) {
+            edges_rev_fwd.push_back(h);
+        });
+    follow_edges(flip(fwd_handle), true, [&](const handle_t& h) {
+            edges_rev_rev.push_back(h);
         });
     // destroy the handle
     destroy_handle(fwd_handle);
     // connect the ends to the previous context
-    for (auto& h : edges_rev) create_edge(h, handles.front());
-    for (auto& h : edges_fwd) create_edge(handles.back(), h);
-    //std::cerr << "made divide" << std::endl;
-    //display();
-    return handle_helper::unpack_bit(handle) ? rev_handles : handles;
+    for (auto& h : edges_fwd_fwd) create_edge(handles.back(), h);
+    for (auto& h : edges_fwd_rev) create_edge(h, handles.front());
+    for (auto& h : edges_rev_fwd) create_edge(rev_handles.back(), h);
+    for (auto& h : edges_rev_rev) create_edge(h, rev_handles.front());
+    //for (auto& h : edges_rev) create_edge(h, rev_handles.front());
+    //for (auto& h : edges_fwd) create_edge(rev_handles.back(), flip(h));
+    std::cerr << "made divide" << std::endl;
+    display();
+    to_gfa(std::cerr);
+    return get_is_reverse(handle) ? rev_handles : handles;
 }
     
 
@@ -956,7 +1032,10 @@ void graph_t::destroy_path_handle_records(uint64_t i) {
  * remain valid.
  */
 path_handle_t graph_t::create_path_handle(const std::string& name) {
-    path_handle_t path = as_path_handle(_path_handle_next++);
+    std::cerr << "before create path handle" << std::endl;
+    to_gfa(std::cerr);
+    display();
+    path_handle_t path = as_path_handle(++_path_handle_next);
     path_name_map[name] = as_integer(path);
     auto& p = path_metadata_map[as_integer(path)]; // set empty record
     occurrence_handle_t occ;
@@ -967,6 +1046,8 @@ path_handle_t graph_t::create_path_handle(const std::string& name) {
     p.length = 0;
     p.name = name;
     ++_path_count;
+    std::cerr << "after create path handle" << std::endl;
+    to_gfa(std::cerr);
     return path;
 }
 
@@ -975,14 +1056,18 @@ occurrence_handle_t graph_t::create_occurrence(const path_handle_t& path, const 
     uint64_t rank_on_handle = get_occurrence_count(handle);
     // build our occurrence
     occurrence_handle_t occ;
-    as_integers(occ)[0] = get_handle_rank(handle);
+    as_integers(occ)[0] = get_id(handle);
     as_integers(occ)[1] = rank_on_handle;
     // find our insertion point
     uint64_t i = occurrence_rank(occ);
     // add reference to the path handle mapping
-    path_handle_wt.insert(i, as_integer(path)+1);
+    std::cerr << "got occ " << as_integers(occ)[0] << ":" << as_integers(occ)[1] << std::endl;
+    path_handle_wt.insert(i, as_integer(path));
+    if (path_handle_wt.at(i) != as_integer(path)) {
+        std::cerr << "the wt is broken" << std::endl;
+    }
     // record our handle orientation
-    path_rev_iv.insert(i, handle_helper::unpack_bit(handle));
+    path_rev_iv.insert(i, get_is_reverse(handle));
     // pad the next step
     path_next_id_iv.insert(i, path_end_marker);
     path_next_rank_iv.insert(i, 0);
@@ -997,8 +1082,6 @@ void graph_t::link_occurrences(const occurrence_handle_t& from, const occurrence
     path_handle_t path = get_path(from);
     assert(path == get_path(to));
     uint64_t i = occurrence_rank(from);
-    // WHY CAN'T I EDIT A PACKED_VECTOR??????
-    // and this wt is dog slow...
     path_next_id_iv[i] = edge_to_delta(get_occurrence(from), get_occurrence(to))+2;
     path_next_rank_iv[i] = as_integers(to)[1];
     uint64_t j = occurrence_rank(to);
@@ -1007,6 +1090,14 @@ void graph_t::link_occurrences(const occurrence_handle_t& from, const occurrence
 }
 
 void graph_t::destroy_occurrence(const occurrence_handle_t& occurrence_handle) {
+    std::cerr << "destroy " << as_integers(occurrence_handle)[0] << ":" << as_integers(occurrence_handle)[0] << std::endl;
+    display();
+    to_gfa(std::cerr);
+    // assert that this thing actually exists
+    //assert(occurrences_
+    if (occurrences_of_handle(get_occurrence(occurrence_handle)).size() <= as_integers(occurrence_handle)[1]) {
+        std::cerr << "WTF" << std::endl;
+    }
     // erase reference to this occurrence
     if (has_previous_occurrence(occurrence_handle)) {
         auto occ = get_previous_occurrence(occurrence_handle);
@@ -1033,6 +1124,9 @@ void graph_t::destroy_occurrence(const occurrence_handle_t& occurrence_handle) {
             }
         });
     destroy_path_handle_records(occurrence_rank(occurrence_handle));
+    display();
+    to_gfa(std::cerr);
+    std::cerr << "done destroy ^^" << std::endl;
 }
 
 /**
@@ -1042,6 +1136,8 @@ void graph_t::destroy_occurrence(const occurrence_handle_t& occurrence_handle) {
  */
 occurrence_handle_t graph_t::append_occurrence(const path_handle_t& path, const handle_t& to_append) {
     // get the last occurrence
+    std::cerr << "before append occ" << std::endl;
+    to_gfa(std::cerr);
     auto& p = path_metadata_map[as_integer(path)];
     // create the new occurrence
     occurrence_handle_t new_occ = create_occurrence(path, to_append);
@@ -1056,6 +1152,9 @@ occurrence_handle_t graph_t::append_occurrence(const path_handle_t& path, const 
     p.last = new_occ;
     // update our occurrence count
     ++p.length;
+    std::cerr << "after append occ" << std::endl;
+    to_gfa(std::cerr);
+    display();
     return new_occ;
 }
 
@@ -1091,10 +1190,15 @@ std::vector<occurrence_handle_t>
 graph_t::replace_occurrence(const occurrence_handle_t& occurrence_handle,
                             const std::vector<handle_t>& handles) {
     // verify path integrity
+    std::cerr << "replacing " << as_integers(occurrence_handle)[0] << ":" << as_integers(occurrence_handle)[1] << " with ";
+    for (auto& handle : handles) {
+        std::cerr << get_id(handle) << ":" << get_is_reverse(handle) << " ";
+    } std::cerr << std::endl;
     const std::string prev_seq = get_sequence(get_occurrence(occurrence_handle));
     std::string new_seq;
     for (auto& handle : handles) new_seq.append(get_sequence(handle));
     assert(prev_seq == new_seq);
+    std::cerr << "prev vs new " << prev_seq << " " << new_seq << std::endl;
     // find the current occurrence
     handle_t curr_handle = get_occurrence(occurrence_handle);
     // assert that we are not invalidating the path
@@ -1106,35 +1210,40 @@ graph_t::replace_occurrence(const occurrence_handle_t& occurrence_handle,
     if (has_previous_occurrence(occurrence_handle)) {
         prev_occ = get_previous_occurrence(occurrence_handle);
     } else {
-        as_integers(prev_occ)[0] = path_begin_marker;
+        as_integers(prev_occ)[0] = 0;
         as_integers(prev_occ)[1] = 0;
     }
     if (has_next_occurrence(occurrence_handle)) {
         next_occ = get_next_occurrence(occurrence_handle);
     } else {
-        as_integers(next_occ)[0] = path_end_marker;
+        as_integers(next_occ)[0] = 0;
         as_integers(next_occ)[1] = 0;
     }
     // get the path
     path_handle_t path = get_path(occurrence_handle);
-    // destroy the current occurrence
-    destroy_occurrence(occurrence_handle);
     // determine the new occurrences
     std::vector<occurrence_handle_t> new_occs;
     for (auto& handle : handles) {
         new_occs.push_back(create_occurrence(path, handle));
+        std::cerr << "created occ " << as_integers(new_occs.back())[0] << ":" << as_integers(new_occs.back())[1] << std::endl;
     }
+    std::cerr << "before link occs" << std::endl;
+    display();
+    to_gfa(std::cerr);
     // link new occurrences
     for (uint64_t i = 0; i < new_occs.size()-1; ++i) {
         link_occurrences(new_occs[i], new_occs[i+1]);
     }
     // link to context
-    if (as_integers(prev_occ)[0] != path_begin_marker) {
+    if (as_integers(prev_occ)[0]) {
         link_occurrences(prev_occ, new_occs.front());
     }
-    if (as_integers(next_occ)[0] != path_end_marker) {
+    if (as_integers(next_occ)[0]) {
         link_occurrences(new_occs.back(), next_occ);
     }
+    std::cerr << "after replace occs" << std::endl;
+    display();
+    to_gfa(std::cerr);
     return new_occs;
 }
 
@@ -1214,18 +1323,18 @@ void graph_t::to_gfa(std::ostream& out) const {
             follow_edges(h, false, [&out, &h, this](const handle_t& a){
                     if (as_integer(h) < as_integer(a)) {
                         out << "L\t" << get_id(h) << "\t"
-                            << (handle_helper::unpack_bit(h)?"-":"+")
+                            << (get_is_reverse(h)?"-":"+")
                             << "\t" << get_id(a) << "\t"
-                            << (handle_helper::unpack_bit(a)?"-":"+")
+                            << (get_is_reverse(a)?"-":"+")
                             << "\t0M" << std::endl;
                     }
                 });
-            follow_edges(handle_helper::toggle_bit(h), false, [&out, &h, this](const handle_t& a){
+            follow_edges(flip(h), false, [&out, &h, this](const handle_t& a){
                     if (as_integer(h) < as_integer(a)) {
                         out << "L\t" << get_id(h) << "\t"
-                            << (handle_helper::unpack_bit(h)?"+":"-")
+                            << (get_is_reverse(h)?"+":"-")
                             << "\t" << get_id(a) << "\t"
-                            << (handle_helper::unpack_bit(a)?"-":"+")
+                            << (get_is_reverse(a)?"-":"+")
                             << "\t0M" << std::endl;
                     }
                 });
@@ -1235,7 +1344,7 @@ void graph_t::to_gfa(std::ostream& out) const {
             out << "P\t" << get_path_name(p) << "\t";
             for_each_occurrence_in_path(p, [this,&out](const occurrence_handle_t& occ) {
                     handle_t h = get_occurrence(occ);
-                    out << get_id(h) << (handle_helper::unpack_bit(h)?"-":"+");
+                    out << get_id(h) << (get_is_reverse(h)?"-":"+");
                     if (has_next_occurrence(occ)) out << ",";
                 });
             out << "\t";

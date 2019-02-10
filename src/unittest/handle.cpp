@@ -2034,13 +2034,13 @@ TEST_CASE("Deletable handle graphs with mutable paths work", "[handle][packed][h
         MutablePathDeletableHandleGraph& graph = *implementation;
         
         auto check_path = [&](const path_handle_t& p, const vector<handle_t>& occs) {
-            
+            std::cerr << "check path" << std::endl;
             occurrence_handle_t occ;
             for (int i = 0; i < occs.size(); i++){
                 if (i == 0) {
                     occ = graph.get_first_occurrence(p);
                 }
-                
+
                 REQUIRE(graph.get_path_handle_of_occurrence(occ) == p);
                 REQUIRE(graph.get_occurrence(occ) == occs[i]);
                 REQUIRE(graph.has_previous_occurrence(occ) == (i > 0));
@@ -2068,6 +2068,7 @@ TEST_CASE("Deletable handle graphs with mutable paths work", "[handle][packed][h
         };
         
         auto check_flips = [&](const path_handle_t& p, const vector<handle_t>& occs) {
+            std::cerr << "check flips" << std::endl;
             auto flipped = occs;
             for (size_t i = 0; i < occs.size(); i++) {
                 
@@ -2089,6 +2090,14 @@ TEST_CASE("Deletable handle graphs with mutable paths work", "[handle][packed][h
         graph.create_edge(h2, h3);
         graph.create_edge(h1, graph.flip(h2));
         graph.create_edge(graph.flip(h2), h3);
+
+        bool found_x = false;
+        graph.follow_edges(graph.flip(h2), false, [&](const handle_t& other) {
+            if (other == h3) {
+                found_x = true;
+            }
+        });
+        REQUIRE(found_x);
         
         REQUIRE(!graph.has_path("1"));
         REQUIRE(graph.get_path_count() == 0);
