@@ -130,6 +130,7 @@ add_dependencies(dsgvg sdsl-lite)
 add_dependencies(dsgvg dynamic)
 add_dependencies(dsgvg gfakluge)
 add_dependencies(dsgvg tayweeargs)
+add_dependencies(dsgvg sparsepp)
 target_include_directories(dsgvg PUBLIC
   "${CMAKE_SOURCE_DIR}/src"
   "${sdsl-lite_INCLUDE}"
