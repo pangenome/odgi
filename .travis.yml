@@ -5,7 +5,8 @@ compiler: gcc
 sudo: required
 dist: trusty
 #before_install:
-#install:
-#  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt install cmake gcc-6 g++-6; fi
+install:
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt install cmake gcc-6 g++-6; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 60 --slave /usr/bin/g++ g++ /usr/bin/g++-6; fi
 script:
   - cmake -H. -Bbuild && cmake --build build -- -j 4 && echo Testing && bin/dsgvg test
