@@ -5,8 +5,8 @@ compiler: gcc
 sudo: required
 dist: xenial
 #before_install:
-#install:
-#  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo apt install cmake gcc-6 g++-6; fi
-#  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-6 60 --slave /usr/bin/g++ g++ /usr/bin/g++-6; fi
+install:
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo add-apt-repository ppa:jonathonf/gcc-7.1; sudo apt update -yy; sudo apt install gcc-7 g++-7; fi
+  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 60 --slave /usr/bin/g++ g++ /usr/bin/g++-7; fi
 script:
   - cmake -H. -Bbuild && cmake --build build -- -j 4 && echo Testing && bin/dsgvg test
