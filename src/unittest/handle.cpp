@@ -2034,7 +2034,7 @@ TEST_CASE("Deletable handle graphs with mutable paths work", "[handle][packed][h
         MutablePathDeletableHandleGraph& graph = *implementation;
         
         auto check_path = [&](const path_handle_t& p, const vector<handle_t>& occs) {
-            std::cerr << "check path" << std::endl;
+
             occurrence_handle_t occ;
             for (int i = 0; i < occs.size(); i++){
                 if (i == 0) {
@@ -2068,7 +2068,7 @@ TEST_CASE("Deletable handle graphs with mutable paths work", "[handle][packed][h
         };
         
         auto check_flips = [&](const path_handle_t& p, const vector<handle_t>& occs) {
-            std::cerr << "check flips" << std::endl;
+
             auto flipped = occs;
             for (size_t i = 0; i < occs.size(); i++) {
                 
@@ -2221,7 +2221,7 @@ TEST_CASE("Deletable handle graphs with mutable paths work", "[handle][packed][h
         // graph can destroy paths
         
         graph.destroy_path(p3);
-        
+
         REQUIRE(!graph.has_path("3"));
         REQUIRE(graph.get_path_count() == 2);
         
@@ -2245,7 +2245,7 @@ TEST_CASE("Deletable handle graphs with mutable paths work", "[handle][packed][h
         REQUIRE(found1);
         REQUIRE(found2);
         REQUIRE(!found3);
-        
+
         // check flips to see if membership records are still functional
         check_flips(p1, {h1, segments[0], segments[1], segments[2], h3});
         check_flips(p2, {h1, graph.flip(segments[2]), graph.flip(segments[1]), graph.flip(segments[0]), h3});
