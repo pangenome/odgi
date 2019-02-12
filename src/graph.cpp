@@ -722,7 +722,55 @@ void graph_t::clear(void) {
 void graph_t::swap_handles(const handle_t& a, const handle_t& b) {
     //assert(false);
 }
-    
+
+/// Reorder the graph's internal structure to match that given.
+/// Optionally compact the id space of the graph to match the ordering, from 1->|ordering|.
+void graph_t::apply_ordering(const std::vector<handle_t>& order, bool compact_ids) {
+    graph_t ordered;
+    // nodes
+    hash_map<id_t, id_t> ids;
+    ids.reserve(order.size());
+    // establish id mapping
+    if (compact_ids) {
+        for (uint64_t i = 0; i < order.size(); ++i) {
+            ids[get_id(order.at(i))] = i+1;
+        }
+    } else {
+        for (uint64_t i = 0; i < order.size(); ++i) {
+            auto& handle = order.at(i);
+            ids[get_id(handle)] = get_id(handle);
+        }
+    }
+    // nodes
+    for (auto& handle : order) {
+        ordered.create_handle(get_sequence(handle), ids[get_id(handle)]);
+    }
+    // edges
+    for (auto& handle : order) {
+        follow_edges(handle, false, [&](const handle_t& h) {
+                ordered.create_edge(ordered.get_handle(ids[get_id(handle)], get_is_reverse(handle)),
+                                    ordered.get_handle(ids[get_id(h)], get_is_reverse(h)));
+            });
+        follow_edges(flip(handle), false, [&](const handle_t& h) {
+                ordered.create_edge(ordered.get_handle(ids[get_id(handle)], get_is_reverse(flip(handle))),
+                                    ordered.get_handle(ids[get_id(h)], get_is_reverse(h)));
+            });
+    }
+    // paths
+    std::cerr << "paths" << std::endl;
+    for_each_path_handle([&](const path_handle_t& old_path) {
+            //occurrence_handle_t occ = get_first_occurrence(p);
+            path_handle_t new_path = ordered.create_path_handle(get_path_name(old_path));
+            std::cerr << get_path_name(old_path) << std::endl;
+            for_each_occurrence_in_path(old_path, [&](const occurrence_handle_t& occ) {
+                    handle_t old_handle = get_occurrence(occ);
+                    handle_t new_handle = ordered.get_handle(ids[get_id(old_handle)], get_is_reverse(old_handle));
+                    ordered.append_occurrence(new_path, new_handle);
+                });
+        });
+    *this = ordered;
+}
+
 /// Alter the node that the given handle corresponds to so the orientation
 /// indicated by the handle becomes the node's local forward orientation.
 /// Rewrites all edges pointing to the node and the node's sequence to
@@ -1327,7 +1375,7 @@ void graph_t::load(std::istream& in) {
     in.read((char*)&_deleted_node_count,sizeof(_deleted_node_count));
     graph_id_iv.load(in);
     // rebuild our hash table
-    graph_id_map.reservE(graph_id_iv.size());
+    graph_id_map.reserve(graph_id_iv.size());
     for (size_t i = 0; i < graph_id_iv.size(); ++i) {
         graph_id_map[graph_id_iv.at(i)] = i;
     }

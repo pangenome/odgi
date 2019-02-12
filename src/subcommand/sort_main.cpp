@@ -53,6 +53,7 @@ int main_sort(int argc, char** argv) {
     }
     std::string outfile = args::get(dg_out_file);
     if (outfile.size()) {
+        graph.apply_ordering(algorithms::topological_order(&graph), true);
         ofstream f(outfile.c_str());
         graph.serialize(f);
         f.close();
