@@ -5,6 +5,9 @@
 #include <tuple>
 #include <type_traits>
 #include "spp.h"
+#include "bytell_hash_map.hpp"
+#include "flat_hash_map.hpp"
+//#include "unordered_map.hpp"
 
 namespace dsgvg {
 
@@ -60,10 +63,15 @@ struct wang_hash<std::pair<A, B>> {
 // Replacements for std::unordered_map.
 
 template<typename K, typename V>
-class hash_map : public spp::sparse_hash_map<K, V, wang_hash<K>> { };
+class hash_map : public ska::flat_hash_map<K, V, ska::power_of_two_std_hash<K> > { };
+//class hash_map : public ska::bytell_hash_map<K, V, wang_hash<K>> { };
+//class hash_map : public ska::unordered_map<K, V, wang_hash<K>> { };
+//class hash_map : public spp::sparse_hash_map<K, V, wang_hash<K>> { };
 
 template<typename K, typename V>
-class string_hash_map : public spp::sparse_hash_map<K, V> { };
+//class string_hash_map : public spp::sparse_hash_map<K, V> { };
+//class string_hash_map : public ska::bytell_hash_map<K, V> { };
+class string_hash_map : public ska::flat_hash_map<K, V, ska::power_of_two_std_hash<K> > { };
 
 template<typename K, typename V>
 class pair_hash_map : public spp::sparse_hash_map<K, V, wang_hash<K>> { };
@@ -74,7 +82,9 @@ class hash_map<K*, V> : public spp::sparse_hash_map<K*, V, wang_hash<K*>> { };
 // Replacements for std::unordered_set.
 
 template<typename K>
-class hash_set : public spp::sparse_hash_set<K, wang_hash<K>> { };
+//class hash_set : public spp::sparse_hash_set<K, wang_hash<K>> { };
+//class hash_set : public ska::bytell_hash_set<K, wang_hash<K>> { };
+class hash_set : public ska::flat_hash_set<K, ska::power_of_two_std_hash<K> > { };
 
 template<typename K>
 class string_hash_set : public spp::sparse_hash_set<K> { };

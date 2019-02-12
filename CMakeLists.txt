@@ -4,8 +4,8 @@ cmake_minimum_required(VERSION 3.1)
 
 # Project's name
 project(dankgraph)
-# We build using c++11
-set(CMAKE_CXX_STANDARD 11)
+# We build using c++14
+set(CMAKE_CXX_STANDARD 14)
 
 # Use all standard-compliant optimizations
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -g")
@@ -111,6 +111,17 @@ ExternalProject_Get_property(sparsepp INSTALL_DIR)
 set(sparsepp_INCLUDE "${INSTALL_DIR}/src/sparsepp/sparsepp/")
 set(sparsepp_LIB "${INSTALL_DIR}/src/sparsepp/sparsepp/")
 
+# ska
+ExternalProject_Add(ska
+  GIT_REPOSITORY "https://github.com/skarupke/flat_hash_map.git"
+  GIT_TAG "2c4687431f978f02a3780e24b8b701d22aa32d9c"
+  UPDATE_COMMAND ""
+  INSTALL_COMMAND ""
+  BUILD_COMMAND ""
+  CONFIGURE_COMMAND "")
+ExternalProject_Get_property(ska SOURCE_DIR)
+set(ska_INCLUDE "${SOURCE_DIR}")
+
 set(CMAKE_BUILD_TYPE Release)
 
 # set up our target executable and specify its dependencies and includes
@@ -131,6 +142,7 @@ add_dependencies(dsgvg dynamic)
 add_dependencies(dsgvg gfakluge)
 add_dependencies(dsgvg tayweeargs)
 add_dependencies(dsgvg sparsepp)
+add_dependencies(dsgvg ska)
 target_include_directories(dsgvg PUBLIC
   "${CMAKE_SOURCE_DIR}/src"
   "${sdsl-lite_INCLUDE}"
@@ -140,7 +152,8 @@ target_include_directories(dsgvg PUBLIC
   "${gfakluge_tinyFA_INCLUDE}"
   "${tayweeargs_INCLUDE}"
   "${backwardscpp_INCLUDE}"
-  "${sparsepp_INCLUDE}")
+  "${sparsepp_INCLUDE}"
+  "${ska_INCLUDE}")
 target_link_libraries(dsgvg
   "${sdsl-lite_LIB}/libsdsl.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort.a"
