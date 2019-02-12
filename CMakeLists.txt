@@ -128,7 +128,6 @@ set(CMAKE_BUILD_TYPE Release)
 add_executable(dsgvg
   ${CMAKE_SOURCE_DIR}/src/graph.cpp
   ${CMAKE_SOURCE_DIR}/src/main.cpp
-  #${CMAKE_SOURCE_DIR}/src/bgraph.cpp
   ${CMAKE_SOURCE_DIR}/src/handle.cpp
   ${CMAKE_SOURCE_DIR}/src/crash.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/driver.cpp
@@ -136,6 +135,11 @@ add_executable(dsgvg
   ${CMAKE_SOURCE_DIR}/src/subcommand/subcommand.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/build_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/test_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/stats_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/sort_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/view_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/is_single_stranded.cpp
   )
 add_dependencies(dsgvg sdsl-lite)
 add_dependencies(dsgvg dynamic)

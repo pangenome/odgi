@@ -15,6 +15,7 @@ bool graph_t::has_node(id_t node_id) const {
 /// Look up the handle for the node with the given ID in the given orientation
 handle_t graph_t::get_handle(const id_t& node_id, bool is_reverse) const {
     //return handle_helper::pack(graph_id_wt.select(0, node_id), is_reverse);
+    //std::cerr << "node_id " << node_id << " " << graph_id_map.at(node_id) << std::endl;
     auto f = graph_id_map.find(node_id);
     assert(f != graph_id_map.end());
     return handle_helper::pack(f->second, is_reverse);
@@ -523,7 +524,7 @@ void graph_t::rebuild_id_handle_mapping(void) {
     for (uint64_t i = 0; i < graph_id_iv.size(); ++i) {
         uint64_t id = graph_id_iv[i];
         if (id == 0) continue;
-        graph_id_map[id] = ++j;
+        graph_id_map[id] = j++;
     }
     for (uint64_t i = 0; i < graph_id_iv.size(); ) {
         uint64_t id = graph_id_iv[i];
@@ -1271,15 +1272,6 @@ uint64_t graph_t::serialize(std::ostream& out) {
     written += sizeof(_deleted_node_count);
     written += graph_id_iv.serialize(out);
     written += deleted_id_bv.serialize(out);
-    size_t i = graph_id_map.size();
-    out.write((char*)&i,sizeof(size_t));
-    written += sizeof(size_t);
-    for (auto& p : graph_id_map) {
-        out.write((char*)&p.first,sizeof(p.first));
-        written += sizeof(p.first);
-        out.write((char*)&p.second,sizeof(p.second));
-        written += sizeof(p.second);
-    }
     written += topology_iv.serialize(out);
     written += topology_bv.serialize(out);
     written += seq_pv.serialize(out);
@@ -1290,7 +1282,7 @@ uint64_t graph_t::serialize(std::ostream& out) {
     written += path_next_rank_iv.serialize(out);
     written += path_prev_id_iv.serialize(out);
     written += path_prev_rank_iv.serialize(out);
-    i = path_metadata_map.size();
+    size_t i = path_metadata_map.size();
     out.write((char*)&i,sizeof(size_t));
     written += sizeof(size_t);
     for (auto& p : path_metadata_map) {
@@ -1334,15 +1326,12 @@ void graph_t::load(std::istream& in) {
     in.read((char*)&_path_handle_next,sizeof(_path_handle_next));
     in.read((char*)&_deleted_node_count,sizeof(_deleted_node_count));
     graph_id_iv.load(in);
-    deleted_id_bv.load(in);
-    size_t i;
-    in.read((char*)&i,sizeof(size_t));
-    for (size_t j = 0; j < i; ++j) {
-        uint64_t k, v;
-        in.read((char*)&k,sizeof(uint64_t));
-        in.read((char*)&v,sizeof(uint64_t));
-        graph_id_map[k] = v;
+    // rebuild our hash table
+    graph_id_map.reservE(graph_id_iv.size());
+    for (size_t i = 0; i < graph_id_iv.size(); ++i) {
+        graph_id_map[graph_id_iv.at(i)] = i;
     }
+    deleted_id_bv.load(in);
     topology_iv.load(in);
     topology_bv.load(in);
     seq_pv.load(in);
@@ -1353,7 +1342,9 @@ void graph_t::load(std::istream& in) {
     path_next_rank_iv.load(in);
     path_prev_id_iv.load(in);
     path_prev_rank_iv.load(in);
+    size_t i = 0;
     in.read((char*)&i,sizeof(size_t));
+    path_metadata_map.reserve(i);
     for (size_t j = 0; j < i; ++j) {
         uint64_t k;
         in.read((char*)&k,sizeof(uint64_t));
@@ -1368,6 +1359,7 @@ void graph_t::load(std::istream& in) {
         m.name = string(n);
     }
     in.read((char*)&i,sizeof(size_t));
+    path_name_map.reserve(i);
     for (size_t j = 0; j < i; ++j) {
         uint64_t s;
         in.read((char*)&s,sizeof(size_t));
