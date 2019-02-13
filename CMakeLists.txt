@@ -130,6 +130,7 @@ add_executable(dsgvg
   ${CMAKE_SOURCE_DIR}/src/main.cpp
   ${CMAKE_SOURCE_DIR}/src/handle.cpp
   ${CMAKE_SOURCE_DIR}/src/crash.cpp
+  ${CMAKE_SOURCE_DIR}/src/position.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/driver.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/handle.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/subcommand.cpp
@@ -138,7 +139,9 @@ add_executable(dsgvg
   ${CMAKE_SOURCE_DIR}/src/subcommand/stats_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/sort_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/view_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/kmers_main.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/is_single_stranded.cpp
   )
 add_dependencies(dsgvg sdsl-lite)
