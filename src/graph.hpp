@@ -400,6 +400,10 @@ public:
     /// handle to a later handle's position will make the seen handle be visited
     /// again and the later handle not be visited at all).
     void swap_handles(const handle_t& a, const handle_t& b);
+
+    /// Reorder the graph's internal structure to match that given.
+    /// Optionally compact the id space of the graph to match the ordering, from 1->|ordering|.
+    void apply_ordering(const std::vector<handle_t>& order, bool compact_ids = false);
     
     /// Alter the node that the given handle corresponds to so the orientation
     /// indicated by the handle becomes the node's local forward orientation.
