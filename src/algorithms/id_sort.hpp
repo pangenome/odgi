@@ -9,13 +9,15 @@
 
 #include <unordered_map>
 
-#include "../handle.hpp"
+#include <handlegraph/handle_graph.hpp>
+#include <handlegraph/mutable_handle_graph.hpp>
 
 
 namespace vg {
 namespace algorithms {
 
 using namespace std;
+using namespace handlegraph;
 
 
 /**

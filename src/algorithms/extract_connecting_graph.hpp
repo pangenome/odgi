@@ -11,7 +11,8 @@
 
 #include "../position.hpp"
 #include "../cached_position.hpp"
-#include "../handle.hpp"
+#include <handlegraph/handle_graph.hpp>
+#include <handlegraph/deletable_handle_graph.hpp>
 #include "../vg.pb.h"
 #include "../hash_map.hpp"
 
@@ -19,6 +20,8 @@
 
 namespace vg {
 namespace algorithms {
+
+using namespace handlegraph;
     
     /// Fills a DeletableHandleGraph with the subgraph of a HandleGraph that connects two positions. The nodes that
     /// contain the two positions will be 'cut' at the position and will be tips in the returned graph. By default,
@@ -42,13 +45,13 @@ namespace algorithms {
     ///  only_walks                 only extract nodes and edges if they fall on some walk between pos_1 and pos_2
     ///  strict_max_len             only extract nodes and edges if they fall on some walk between pos_1 and pos_2
     ///                             that is under the maximum length (implies only_walks = true)
-    unordered_map<id_t, id_t> extract_connecting_graph(const HandleGraph* source,
-                                                       DeletableHandleGraph* into,
-                                                       int64_t max_len,
-                                                       pos_t pos_1, pos_t pos_2,
-                                                       bool detect_terminal_cycles = false,
-                                                       bool only_walks = false,
-                                                       bool strict_max_len = false);
+    unordered_map<handlegraph::id_t, handlegraph::id_t> extract_connecting_graph(const HandleGraph* source,
+                                                                                 DeletableHandleGraph* into,
+                                                                                 int64_t max_len,
+                                                                                 pos_t pos_1, pos_t pos_2,
+                                                                                 bool detect_terminal_cycles = false,
+                                                                                 bool only_walks = false,
+                                                                                 bool strict_max_len = false);
 
 }
 }

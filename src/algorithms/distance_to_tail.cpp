@@ -5,6 +5,7 @@ namespace vg {
 namespace algorithms {
 
 using namespace std;
+using namespace handlegraph;
 
 bool is_tail_node(handle_t h, const HandleGraph* g) {
 	bool no_right_edges = true;

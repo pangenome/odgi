@@ -7,7 +7,7 @@
  * Defines algorithms for deciding if a graph is acyclic or directed acyclic
  */
 
-#include "../handle.hpp"
+#include <handlegraph/handle_graph.hpp>
 #include "is_single_stranded.hpp"
 
 #include <unordered_set>
@@ -17,6 +17,7 @@ namespace vg {
 namespace algorithms {
 
 using namespace std;
+using namespace handlegraph;
 
 // Returns true if the graph contains no cycles (i.e. true if no node can reach itself
 // along a bidirected walk).

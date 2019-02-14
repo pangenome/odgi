@@ -4,6 +4,7 @@
 #include <vector>
 #include <string>
 #include "spp.h"
+#include <handlegraph/types.hpp>
 
 namespace betagraph{
 
@@ -34,22 +35,22 @@ namespace betagraph{
         // spp::sparse_hash_map<int64_t, vector<b_edge_t>> node_to_edges;
         // spp::sparse_hash_map<char*, b_path_t> name_to_path;
         spp::sparse_hash_map<dsgvg::id_t, bholder_t> backer;
-        id_t min_node_id = 0;
-        id_t max_node_id = std::numeric_limits<id_t>::max();
+        handlegraph::id_t min_node_id = 0;
+        handlegraph::id_t max_node_id = std::numeric_limits<handlegraph::id_t>::max();
     };
     struct bpath_occurrence_t{
         int32_t rank = 0;
-        id_t id;
+        handlegraph::id_t id;
     };
     struct bpath_key_t{
-        dsgvg::id_t id;
+        handlegraph::id_t id;
         std::string name;
         bool operator==(const bpath_key_t &o) const 
         { return name == o.name && name == o.name; }
     };
 
     struct bpath_val_t{
-        dsgvg::id_t id;
+        handlegraph::id_t id;
         std::vector<bpath_occurrence_t> occurrences;
     };
 
@@ -57,11 +58,11 @@ namespace betagraph{
 
     struct bpathstore_t{
         spp::sparse_hash_map<std::string, bpath_val_t> paths;
-        spp::sparse_hash_map<dsgvg::id_t, std::string> id_to_name;
+        spp::sparse_hash_map<handlegraph::id_t, std::string> id_to_name;
         bool has_path(const std::string& s) const{
             return (paths.count(s) != 0);
         };
-        dsgvg::id_t get_id(std::string s) const{
+        handlegraph::id_t get_id(std::string s) const{
             return paths.at(s).id;
         };
         std::string get_name(dsgvg::path_handle_t p) const{

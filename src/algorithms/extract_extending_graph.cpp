@@ -13,9 +13,11 @@ namespace vg {
 namespace algorithms {
 
 using namespace structures;
+using namespace handlegraph;
 
-unordered_map<id_t, id_t> extract_extending_graph(const HandleGraph* source, DeletableHandleGraph* into, int64_t max_dist, pos_t pos,
-                                                  bool backward, bool preserve_cycles_on_src_node) {
+unordered_map<handlegraph::id_t, handlegraph::id_t> extract_extending_graph(const HandleGraph* source, DeletableHandleGraph* into, 
+                                                                            int64_t max_dist, pos_t pos,
+                                                                            bool backward, bool preserve_cycles_on_src_node) {
     
     if (into->node_size()) {
         cerr << "error:[extract_extending_graph] must extract into an empty graph" << endl;
@@ -39,7 +41,7 @@ unordered_map<id_t, id_t> extract_extending_graph(const HandleGraph* source, Del
     };
     
     // a map from node ids in the extracted graph to the node ids in the original graph
-    unordered_map<id_t, id_t> id_trans;
+    unordered_map<handlegraph::id_t, handlegraph::id_t> id_trans;
     
     // a graph index that we will maintain as we extract the subgraph
     handle_t search_origin = source->get_handle(id(pos));
@@ -73,10 +75,10 @@ unordered_map<id_t, id_t> extract_extending_graph(const HandleGraph* source, Del
         }
     }
     
-    id_t max_id = id(pos);
+    handlegraph::id_t max_id = id(pos);
     bool cycled_to_source = false;
     unordered_set<edge_t> observed_edges;
-    unordered_set<id_t> observed_nodes{id(pos)};
+    unordered_set<handlegraph::id_t> observed_nodes{id(pos)};
     
     while (!queue.empty()) {
         // get the next shortest distance traversal from either the init
@@ -99,7 +101,7 @@ unordered_map<id_t, id_t> extract_extending_graph(const HandleGraph* source, Del
 #endif
             
             // Get the ID of where we're going.
-            id_t next_id = source->get_id(next);
+            handlegraph::id_t next_id = source->get_id(next);
             
             // do we ever return to the source node?
             cycled_to_source = cycled_to_source || next_id == id(pos);
@@ -172,7 +174,7 @@ unordered_map<id_t, id_t> extract_extending_graph(const HandleGraph* source, Del
         // after we cut it
         
         // choose an ID that hasn't been used yet
-        id_t dup_id = max_id + 1;
+        handlegraph::id_t dup_id = max_id + 1;
         
         // duplicate the node
         handle_t dup_node = into->create_handle(source->get_sequence(search_origin), dup_id);

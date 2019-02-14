@@ -10,12 +10,15 @@
 #include <vector>
 
 #include "../position.hpp"
-#include "../handle.hpp"
+#include <handlegraph/handle_graph.hpp>
+#include <handlegraph/mutable_handle_graph.hpp>
 
 #include <structures/rank_pairing_heap.hpp>
 
 namespace vg {
 namespace algorithms {
+
+using namespace handlegraph;
 
     /// Fills graph 'into' with the subgraph of the handle graph 'source' that contains all of the
     /// positions in the positions vector and all other nodes and edges that can be reached within

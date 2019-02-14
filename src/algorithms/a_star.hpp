@@ -7,7 +7,7 @@
  * Defines an implementation of the A* heuristic-guided search algorithm.
  */
 
-#include "../handle.hpp"
+#include <handlegraph/handle_graph.hpp>
 #include "topological_sort.hpp"
 
 #include <unordered_map>
@@ -19,6 +19,7 @@ namespace vg {
 namespace algorithms {
 
 using namespace std;
+using namespace handlegraph;
 
     /// Implements the A* heuristic-guided search algorithm. Returns the path from pos_1 to
     /// pos_2 that is either minimal or maximal length, according to the parameters. Allows

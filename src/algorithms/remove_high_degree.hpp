@@ -8,13 +8,14 @@
  */
 
 #include "../vg.pb.h"
-#include "../handle.hpp"
+#include <handlegraph/deletable_handle_graph.hpp>
 #include <vector>
 
 namespace vg {
 namespace algorithms {
 
 using namespace std;
+using namespace handlegraph;
 
 void remove_high_degree_nodes(DeletableHandleGraph& g, int max_degree);
 

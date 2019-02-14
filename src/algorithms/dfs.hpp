@@ -1,7 +1,7 @@
 #ifndef VG_ALGORITHMS_DFS_HPP_INCLUDED
 #define VG_ALGORITHMS_DFS_HPP_INCLUDED
 
-#include "handle.hpp"
+#include <handlegraph/handle_graph.hpp>
 #include <vector>
 #include <set>
 #include <deque>
@@ -11,6 +11,8 @@ namespace algorithms {
     
     
 using namespace std;
+using namespace handlegraph;
+
 
 void dfs(
     const HandleGraph& graph,

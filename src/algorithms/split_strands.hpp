@@ -7,7 +7,8 @@
  * Defines algorithm for converting any graph into a single stranded graph.
  */
 
-#include "../handle.hpp"
+#include <handlegraph/handle_graph.hpp>
+#include <handlegraph/mutable_handle_graph.hpp>
 #include "../utility.hpp"
 
 #include <unordered_set>
@@ -17,6 +18,7 @@ namespace vg {
 namespace algorithms {
 
 using namespace std;
+using namespace handlegraph;
 
     /// Fills a MutableHandleGraph 'into' with a graph that has the same sequence and path
     /// space as 'source', but all of the sequences are on the forward strand. This is
@@ -24,8 +26,8 @@ using namespace std;
     /// complement sequence. Returns a map that translates node IDs from 'into' to their
     /// node ID and orientation in 'source'. Reports an error and exits if 'into' is not
     /// empty.
-    unordered_map<id_t, pair<id_t, bool>> split_strands(const HandleGraph* source,
-                                                        MutableHandleGraph* into);
+    unordered_map<handlegraph::id_t, pair<handlegraph::id_t, bool>> split_strands(const HandleGraph* source,
+                                                                                  MutableHandleGraph* into);
 
 }
 }

@@ -6,6 +6,7 @@ namespace vg {
 namespace algorithms {
 
 using namespace std;
+using namespace handlegraph;
 
     vector<handle_t> eades_algorithm(const HandleGraph* graph) {
         

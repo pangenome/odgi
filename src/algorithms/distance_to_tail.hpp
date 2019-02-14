@@ -7,12 +7,13 @@
 #include "../cached_position.hpp"
 #include "../vg.pb.h"
 #include "../hash_map.hpp"
-#include "../handle.hpp"
+#include <handlegraph/handle_graph.hpp>
 
 namespace vg {
 namespace algorithms {
 
 using namespace std;
+using namespace handlegraph;
 
 /// Find all of the nodes with no edges on their left sides.
 vector<handle_t> tail_nodes(const HandleGraph* g);

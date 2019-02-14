@@ -4,15 +4,16 @@ namespace vg {
 namespace algorithms {
 
 using namespace std;
+using namespace handlegraph;
 
-    unordered_map<id_t, pair<id_t, bool>> split_strands(const HandleGraph* source, MutableHandleGraph* into) {
+    unordered_map<handlegraph::id_t, pair<handlegraph::id_t, bool>> split_strands(const HandleGraph* source, MutableHandleGraph* into) {
         
         if (into->node_size()) {
             cerr << "error:[algorithms] attempted to create strand-splitted graph in a non-empty graph" << endl;
             exit(1);
         }
         
-        unordered_map<id_t, pair<id_t, bool>> node_translation;
+        unordered_map<handlegraph::id_t, pair<handlegraph::id_t, bool>> node_translation;
         
         unordered_map<handle_t, handle_t> forward_node;
         unordered_map<handle_t, handle_t> reverse_node;

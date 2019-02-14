@@ -13,14 +13,15 @@ namespace vg {
 namespace algorithms {
 
 using namespace structures;
+using namespace handlegraph;
 
-unordered_map<id_t, id_t> extract_connecting_graph(const HandleGraph* source,
-                                                   DeletableHandleGraph* into,
-                                                   int64_t max_len,
-                                                   pos_t pos_1, pos_t pos_2,
-                                                   bool detect_terminal_cycles,
-                                                   bool only_paths,
-                                                   bool strict_max_len) {
+unordered_map<handlegraph::id_t, handlegraph::id_t> extract_connecting_graph(const HandleGraph* source,
+                                                                             DeletableHandleGraph* into,
+                                                                             int64_t max_len,
+                                                                             pos_t pos_1, pos_t pos_2,
+                                                                             bool detect_terminal_cycles,
+                                                                             bool only_paths,
+                                                                             bool strict_max_len) {
 #ifdef debug_vg_algorithms
     cerr << "[extract_connecting_graph] max len: " << max_len << ", pos 1: " << pos_1 << ", pos 2: " << pos_2 << endl;
 #endif
@@ -66,10 +67,10 @@ unordered_map<id_t, id_t> extract_connecting_graph(const HandleGraph* source,
     handle_t source_handle_2 = source->get_handle(id(pos_2), is_rev(pos_2));
     
     // for finding the largest node id in the subgraph
-    id_t max_id = max(id(pos_1), id(pos_2));
+    handlegraph::id_t max_id = max(id(pos_1), id(pos_2));
     
     // a translator for node ids in 'into' to node ids in 'source'
-    unordered_map<id_t, id_t> id_trans;
+    unordered_map<handlegraph::id_t, handlegraph::id_t> id_trans;
     
     // the edges we have encountered in the traversal
     unordered_set<edge_t> observed_edges;
@@ -156,7 +157,7 @@ unordered_map<id_t, id_t> extract_connecting_graph(const HandleGraph* source,
             source->follow_edges(trav.handle, false, [&](const handle_t& next) {
                 // get the orientation and id of the other side of the edge
                 
-                id_t next_id = source->get_id(next);
+                handlegraph::id_t next_id = source->get_id(next);
                 bool next_rev = source->get_is_reverse(next);
                 
 #ifdef debug_vg_algorithms
@@ -237,7 +238,7 @@ unordered_map<id_t, id_t> extract_connecting_graph(const HandleGraph* source,
             
             source->follow_edges(trav.handle, false, [&](const handle_t& next) {
                 // get the orientation and id of the other side of the edge
-                id_t next_id = source->get_id(next);
+                handlegraph::id_t next_id = source->get_id(next);
                 bool next_rev = source->get_is_reverse(next);
                 
 #ifdef debug_vg_algorithms
@@ -341,7 +342,7 @@ unordered_map<id_t, id_t> extract_connecting_graph(const HandleGraph* source,
         return dup_handle;
     };
     
-    id_t duplicate_node_1 = 0, duplicate_node_2 = 0;
+    handlegraph::id_t duplicate_node_1 = 0, duplicate_node_2 = 0;
     
     if (detect_terminal_cycles) {
         // if there are edges traversed in both directions from the boundary position's nodes, then

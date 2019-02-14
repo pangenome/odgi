@@ -6,12 +6,14 @@ namespace vg {
 namespace algorithms {
 
 using namespace std;
+using namespace handlegraph;
 
-    unordered_map<id_t, id_t> dagify(const HandleGraph* graph, MutableHandleGraph* into,
-                                     size_t min_preserved_path_length) {
+
+    unordered_map<handlegraph::id_t, handlegraph::id_t> dagify(const HandleGraph* graph, MutableHandleGraph* into,
+                                                               size_t min_preserved_path_length) {
         
         // initialize the translator from the dagified graph back to the original graph
-        unordered_map<id_t, id_t> translator;
+        unordered_map<handlegraph::id_t, handlegraph::id_t> translator;
         
         // generate a canonical orientation across the graph
         vector<handle_t> orientation = single_stranded_orientation(graph);
@@ -29,7 +31,7 @@ using namespace std;
 #endif
         
         // mark the ones that whose canonical orientation is reversed
-        unordered_set<id_t> reversed_nodes;
+        unordered_set<handlegraph::id_t> reversed_nodes;
         for (size_t i = 0; i < orientation.size(); i++) {
             if (graph->get_is_reverse(orientation[i])) {
                 reversed_nodes.insert(graph->get_id(orientation[i]));
@@ -37,13 +39,13 @@ using namespace std;
         }
         
         // find the strongly connected components of the original graph
-        vector<unordered_set<id_t>> strong_components = strongly_connected_components(graph);
+        vector<unordered_set<handlegraph::id_t>> strong_components = strongly_connected_components(graph);
         
 #ifdef debug_dagify
         cerr << "got strongly connected components:" << endl;
         for (size_t i = 0; i < strong_components.size(); i++) {
             cerr << "\tcomponent " << i << endl;
-            for (id_t nid : strong_components[i]) {
+            for (handlegraph::id_t nid : strong_components[i]) {
                 cerr << "\t\t" << nid << endl;
             }
         }
@@ -53,7 +55,7 @@ using namespace std;
         // that paths are preserved
         
         // a tracker for which SCC a node belongs to
-        unordered_map<id_t, size_t> component_of;
+        unordered_map<handlegraph::id_t, size_t> component_of;
         // a map from a node in the original graph to all its copies (in order) in the
         // dagified graph
         unordered_map<handle_t, vector<handle_t>> injector;
@@ -65,7 +67,7 @@ using namespace std;
             
             // keep track of which nodes are in which component (for later)
             auto& component = strong_components[i];
-            for (id_t node_id : component) {
+            for (handlegraph::id_t node_id : component) {
                 component_of[node_id] = i;
             }
             
@@ -73,7 +75,7 @@ using namespace std;
             
             // wrap the SCC in a handle graph
             SubHandleGraph subgraph(graph);
-            for (const id_t& node_id : component) {
+            for (const handlegraph::id_t& node_id : component) {
                 subgraph.add_handle(graph->get_handle(node_id));
             }
             

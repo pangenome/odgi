@@ -4,9 +4,10 @@ namespace vg {
 namespace algorithms {
 
 using namespace std;
+using namespace handlegraph;
 
-    unordered_map<id_t, pair<id_t, bool>> reverse_complement_graph(const HandleGraph* source,
-                                                                   MutableHandleGraph* into) {
+    unordered_map<handlegraph::id_t, pair<handlegraph::id_t, bool>> reverse_complement_graph(const HandleGraph* source,
+                                                                                             MutableHandleGraph* into) {
         
         if (into->node_size()) {
             cerr << "error:[algorithms] attempted to create reversed graph in a non-empty graph" << endl;
@@ -14,7 +15,7 @@ using namespace std;
         }
         
         // the return value, translation from 'into' -> 'source'
-        unordered_map<id_t, pair<id_t, bool>> node_translation;
+        unordered_map<handlegraph::id_t, pair<handlegraph::id_t, bool>> node_translation;
         // for translating b/w the graphs the other direction in the course in the algorithm
         unordered_map<handle_t, handle_t> forward_translation;
         
