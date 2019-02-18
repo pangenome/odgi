@@ -55,11 +55,13 @@ set(sdsl-lite-divsufsort_LIB "${INSTALL_DIR}/src/sdsl-lite-build/external/libdiv
 # DYNAMIC (full build using its cmake config)
 ExternalProject_Add(dynamic
   GIT_REPOSITORY "https://github.com/vgteam/DYNAMIC.git"
-  GIT_TAG "0f61233d43e790bb7fe2b9bb48978d9f14460c32"
+  GIT_TAG "615d8be5276bcd4c5a3d8e31679b4f8e81b2eefc"
   # we don't actually install dynamic... it's header only
   #CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
   UPDATE_COMMAND ""
-  INSTALL_COMMAND "")
+  INSTALL_COMMAND ""
+  BUILD_COMMAND ""
+  CONFIGURE_COMMAND "")
 ExternalProject_Get_property(dynamic INSTALL_DIR)
 set(dynamic_INCLUDE "${INSTALL_DIR}/src/dynamic/include")
 

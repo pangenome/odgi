@@ -25,11 +25,7 @@ class graph_t : public MutablePathDeletableHandleGraph {
 public:
     graph_t(void) {
         // set up initial delimiters
-        graph_id_iv.push_back(0); // false entry, maybe a bug in lciv
         deleted_id_bv.push_back(1);
-        seq_bv.push_back(1);
-        //topology_iv.push_back(0);
-        topology_bv.push_back(1);
         path_handle_wt.push_back(0);
         path_rev_iv.push_back(0);
         path_next_id_iv.push_back(0);
@@ -48,13 +44,8 @@ public:
         _edge_count = other._edge_count;
         _path_count = other._path_count;
         _path_handle_next = other._path_handle_next;
-        graph_id_iv = other.graph_id_iv;
         deleted_id_bv = other.deleted_id_bv;
         graph_id_map = other.graph_id_map;
-        topology_iv = other.topology_iv;
-        topology_bv = other.topology_bv;
-        seq_pv = other.seq_pv;
-        seq_bv = other.seq_bv;
         path_handle_wt = other.path_handle_wt;
         path_rev_iv = other.path_rev_iv;
         path_next_id_iv = other.path_next_id_iv;
@@ -73,13 +64,8 @@ public:
         _edge_count = other._edge_count;
         _path_count = other._path_count;
         _path_handle_next = other._path_handle_next;
-        graph_id_iv = other.graph_id_iv;
         deleted_id_bv = other.deleted_id_bv;
         graph_id_map = other.graph_id_map;
-        topology_iv = other.topology_iv;
-        topology_bv = other.topology_bv;
-        seq_pv = other.seq_pv;
-        seq_bv = other.seq_bv;
         path_handle_wt = other.path_handle_wt;
         path_rev_iv = other.path_rev_iv;
         path_next_id_iv = other.path_next_id_iv;
@@ -106,13 +92,8 @@ public:
         _edge_count = other._edge_count;
         _path_count = other._path_count;
         _path_handle_next = other._path_handle_next;
-        graph_id_iv = other.graph_id_iv;
         deleted_id_bv = other.deleted_id_bv;
         graph_id_map = other.graph_id_map;
-        topology_iv = other.topology_iv;
-        topology_bv = other.topology_bv;
-        seq_pv = other.seq_pv;
-        seq_bv = other.seq_bv;
         path_handle_wt = other.path_handle_wt;
         path_rev_iv = other.path_rev_iv;
         path_next_id_iv = other.path_next_id_iv;
@@ -258,10 +239,6 @@ public:
     /// outward handle you would arrive at.
     handle_t traverse_edge_handle(const edge_t& edge, const handle_t& left) const;
     
-/**
- * This is the interface for a handle graph that stores embedded paths.
- */
-    
     ////////////////////////////////////////////////////////////////////////////
     // Path handle interface that needs to be implemented
     ////////////////////////////////////////////////////////////////////////////
@@ -343,13 +320,6 @@ public:
     /// Loop over all the occurrences along a path, from first through last
     void for_each_occurrence_in_path(const path_handle_t& path, const std::function<void(const occurrence_handle_t&)>& iteratee) const;
 
-/**
- * This is the interface for a handle graph that supports modification.
- */
-    /*
-     * Note: All operations may invalidate path handles and occurrence handles.
-     */
-    
     /// Create a new node with the given sequence and return the handle.
     handle_t create_handle(const std::string& sequence);
 
@@ -483,46 +453,48 @@ public:
     /// Load
     void load(std::istream& in);
     
-/// These are the backing data structures that we use to fulfill the above functions
+/// eThese are the backing data structures that we use to fulfill the above functions
 
 private:
+
+    /// A node object with the sequence and its edge lists
+    struct node_t {
+        node_t() {}
+        node_t(id_t id, const std::string& sequence) : id(id), sequence(sequence) { }
+        void clear(void) {
+            id = 0;
+            sequence.clear();
+            edges.clear();
+        }
+        // stored uncompressed for performance
+        id_t id;
+        // stored literally for performance
+        std::string sequence;
+        //suc_iv seq_v;
+        /// Records edges of the graph in both orientations
+        /// to enable efficient traversal of the graph
+        suc_iv edges;
+
+        // Some offset ints used in 
+        const static uint64_t EDGE_RECORD_LENGTH = 2;
+        const static uint64_t EDGE_DELTA_OFFSET = 0;
+        const static uint64_t EDGE_TYPE_OFFSET = 1;
+    };
 
     /// Records the handle to node_id mapping
     /// Use the special value "0" to indicate deleted nodes so that
     /// handle references in the id_map and elsewhere are not immediately destroyed
-    lciv_iv graph_id_iv;
+    //lciv_iv graph_id_iv;
+    std::vector<node_t> node_v;
     /// Mark deleted nodes here for translating graph ids into internal ranks
     suc_bv deleted_id_bv;
     uint64_t _deleted_node_count = 0;
     /// efficient id to handle/sequence conversion
-    hash_map<uint64_t, uint64_t> graph_id_map;
+    hash_map<id_t, uint64_t> graph_id_map;
     id_t _max_node_id = 0;
     id_t _min_node_id = 0;
-    /// records nodes that are hidden, but used to store path sequence that has been removed from the node space
+    /// records nodes that are hidden, but used to compactly store path sequence that has been removed from the node space
     hash_set<uint64_t> graph_id_hidden_set;
-
-    /// Records edges of the graph in both orientations
-    /// to enable efficient traversal of the graph
-    /// node := { header, edges_to, edges_from }
-    /// header := { node_id, node_start, node_length, edges_to_count, edges_from_count }
-    /// node_id := integer
-    /// node_start := integer (offset in s_iv)
-    /// node_length := integer
-    /// edges_to_count := integer
-    /// edges_from_count := integer
-    /// edges_to := { edge_to, ... }
-    /// edges_from := { edge_from, ... }
-    /// edge_to := { offset_to_next_node, edge_type }
-    /// edge_from := { offset_to_previous_node, edge_type }
-    lciv_iv topology_iv;
-    suc_bv topology_bv;
-    
-    // Let's define some offset ints
-    const static uint64_t TOPOLOGY_NODE_HEADER_LENGTH = 1;
-    const static uint64_t TOPOLOGY_EDGE_COUNT_OFFSET = 0;
-    const static uint64_t TOPOLOGY_EDGE_RECORD_LENGTH = 2;
-    const static uint64_t TOPOLOGY_EDGE_DELTA_OFFSET = 0;
-    const static uint64_t TOPOLOGY_EDGE_TYPE_OFFSET = 1;
 
     /// edge type conversion
     /// 1 = fwd->fwd, 2 = fwd->rev, 3 = rev->fwd, 4 = rev->rev
@@ -549,14 +521,6 @@ private:
             right = handle_helper::toggle_bit(right);
         }
     }
-
-    /// Encodes all of the sequences of all nodes and all paths in the graph.
-    /// The node sequences occur in the same order as in graph_iv;
-    /// Node boundaries are given by 0s
-    dyn::packed_vector seq_pv;
-
-    /// Marks the beginnings of nodes in seq_pv
-    suc_bv seq_bv;
 
     /// ordered path identifiers as they traverse each node
     /// the index of the path identifier in this WT defines the occurrence_handle_t for the step
