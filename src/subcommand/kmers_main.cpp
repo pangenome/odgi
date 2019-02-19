@@ -2,6 +2,10 @@
 #include "graph.hpp"
 #include "algorithms/kmer.hpp"
 #include "args.hxx"
+#include "threads.hpp"
+#include "algorithms/hash.hpp"
+#include "phf.hpp"
+#include <chrono>
 
 namespace dsgvg {
 
@@ -47,11 +51,73 @@ int main_kmers(int argc, char** argv) {
         graph.load(f);
         f.close();
     }
+    std::vector<std::vector<kmer_t>> buffers(get_thread_count());
     if (args::get(kmers_stdout)) {
         algorithms::for_each_kmer(graph, args::get(kmer_length), [&](const kmer_t& kmer) {
-#pragma omp critical
-                std::cout << kmer << std::endl;
+                int tid = omp_get_thread_num();
+                auto& buffer = buffers.at(tid);
+                buffer.push_back(kmer);
+                if (buffer.size() > 1e5) {
+#pragma omp critical (cout)
+                    {
+                        for (auto& kmer : buffer) {
+                            std::cout << kmer << "\n";
+                        }
+                        buffer.clear();
+                    }
+                }
             });
+        for (auto& buffer : buffers) {
+            for (auto& kmer : buffer) {
+                std::cout << kmer << "\n";
+            }
+            buffer.clear();
+        }
+        std::cout.flush();
+    } else {
+        //ska::flat_hash_map<uint32_t, uint32_t> kmer_table;
+        vector<uint64_t> kmers;
+        uint64_t seen_kmers = 0;
+        algorithms::for_each_kmer(graph, args::get(kmer_length), [&](const kmer_t& kmer) {
+                //int tid = omp_get_thread_num();
+//#pragma omp atomic
+                uint64_t hash = djb2_hash64(kmer.seq.c_str());
+                //if (hash % 31 == 0) {
+#pragma omp critical (kmers)
+                    kmers.push_back(hash);
+                    //}
+                /*
+#pragma omp critical (cerr)
+                if (seen_kmers % 100000 == 0) {
+                    std::cerr << seen_kmers << " " << kmer_table.size() << "\r";
+                } else {
+                    ++seen_kmers;
+                }
+                */
+            });
+        std::cerr << std::endl;
+        std::sort(kmers.begin(), kmers.end());
+        kmers.erase(std::unique(kmers.begin(), kmers.end()), kmers.end());
+        boophf_t * bphf = new boomphf::mphf<uint64_t,hasher_t>(kmers.size(),kmers,get_thread_count());
+        //kmers.clear();
+        std::cerr << "querying kmers" << std::endl;
+        chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
+        for (auto& hash : kmers) {
+            bphf->lookup(hash);
+        }
+        chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
+        auto used_time = chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count();
+        std::cerr << "done with " << kmers.size() << " @ " << (double)used_time/(double)kmers.size() << "ns/kmer" << std::endl;
+        /*
+        algorithms::for_each_kmer(graph, args::get(kmer_length), [&](const kmer_t& kmer) {
+                uint64_t hash = djb2_hash64(kmer.seq.c_str());
+                bphf->lookup(hash);
+#pragma omp atomic
+                ++seen_kmers;
+            });
+        std::cerr << "done with " << seen_kmers << " kmers" << std::endl;
+        */
+        delete bphf;
     }
     return 0;
 }

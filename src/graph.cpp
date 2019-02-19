@@ -699,11 +699,11 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order, bool compact_id
             });
     }
     // paths
-    std::cerr << "paths" << std::endl;
+    //std::cerr << "paths" << std::endl;
     for_each_path_handle([&](const path_handle_t& old_path) {
             //occurrence_handle_t occ = get_first_occurrence(p);
             path_handle_t new_path = ordered.create_path_handle(get_path_name(old_path));
-            std::cerr << get_path_name(old_path) << std::endl;
+            //std::cerr << get_path_name(old_path) << std::endl;
             for_each_occurrence_in_path(old_path, [&](const occurrence_handle_t& occ) {
                     handle_t old_handle = get_occurrence(occ);
                     handle_t new_handle = ordered.get_handle(ids[get_id(old_handle)], get_is_reverse(old_handle));

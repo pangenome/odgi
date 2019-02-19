@@ -453,7 +453,7 @@ public:
     /// Load
     void load(std::istream& in);
     
-/// eThese are the backing data structures that we use to fulfill the above functions
+/// These are the backing data structures that we use to fulfill the above functions
 
 private:
 

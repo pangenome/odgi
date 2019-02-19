@@ -89,6 +89,16 @@ ExternalProject_Add(tayweeargs
 ExternalProject_Get_property(tayweeargs SOURCE_DIR)
 set(tayweeargs_INCLUDE "${SOURCE_DIR}")
 
+ExternalProject_Add(bbhash
+  GIT_REPOSITORY "https://github.com/vgteam/BBHash.git"
+  GIT_TAG "ccc22805eae48aca2a01a7ff5ef8e002857020d3"
+  UPDATE_COMMAND ""
+  INSTALL_COMMAND ""
+  BUILD_COMMAND ""
+  CONFIGURE_COMMAND "")
+ExternalProject_Get_property(bbhash SOURCE_DIR)
+set(bbhash_INCLUDE "${SOURCE_DIR}")
+
 # backwardscpp
 ExternalProject_Add(backwardscpp
   GIT_REPOSITORY "https://github.com/bombela/backward-cpp.git"
@@ -150,6 +160,7 @@ add_dependencies(dsgvg sdsl-lite)
 add_dependencies(dsgvg dynamic)
 add_dependencies(dsgvg gfakluge)
 add_dependencies(dsgvg tayweeargs)
+add_dependencies(dsgvg bbhash)
 add_dependencies(dsgvg sparsepp)
 add_dependencies(dsgvg ska)
 target_include_directories(dsgvg PUBLIC
@@ -162,7 +173,8 @@ target_include_directories(dsgvg PUBLIC
   "${tayweeargs_INCLUDE}"
   "${backwardscpp_INCLUDE}"
   "${sparsepp_INCLUDE}"
-  "${ska_INCLUDE}")
+  "${ska_INCLUDE}"
+  "${bbhash_INCLUDE}")
 target_link_libraries(dsgvg
   "${sdsl-lite_LIB}/libsdsl.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort.a"
