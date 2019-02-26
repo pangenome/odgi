@@ -466,7 +466,7 @@ void graph_t::destroy_handle(const handle_t& handle) {
     }
     // remove from path handle mapping
     uint64_t path_offset = path_handle_wt.select(offset, 0);
-    {
+    do {
         path_handle_wt.remove(path_offset);
         path_rev_iv.remove(path_offset);
         path_next_id_iv.remove(path_offset);

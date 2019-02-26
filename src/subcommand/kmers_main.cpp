@@ -5,6 +5,8 @@
 #include "threads.hpp"
 #include "algorithms/hash.hpp"
 #include "phf.hpp"
+#include "algorithms/prune.hpp"
+#include "algorithms/remove_high_degree.hpp"
 #include <chrono>
 
 namespace dsgvg {
@@ -24,8 +26,11 @@ int main_kmers(int argc, char** argv) {
     args::ArgumentParser parser("show and characterize the kmer space of the graph");
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-    args::ValueFlag<uint64_t> kmer_length(parser, "kmer_length", "the length of the kmers to generate", {'k', "kmer-length"});
-    args::Flag kmers_stdout(parser, "kmers_stdout", "write the kmers to stdout", {'c', "stdout"});
+    args::ValueFlag<uint64_t> kmer_length(parser, "K", "the length of the kmers to generate", {'k', "kmer-length"});
+    args::ValueFlag<uint64_t> max_furcations(parser, "N", "break at edges that would be induce this many furcations in a kmer", {'e', "max-furcations"});
+    args::ValueFlag<uint64_t> max_degree(parser, "N", "remove nodes that have degree greater that this level", {'D', "max-degree"});
+    args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
+    args::Flag kmers_stdout(parser, "", "write the kmers to stdout", {'c', "stdout"});
 
     try {
         parser.ParseCLI(argc, argv);
@@ -50,6 +55,20 @@ int main_kmers(int argc, char** argv) {
         ifstream f(infile.c_str());
         graph.load(f);
         f.close();
+    }
+    if (args::get(threads)) {
+        omp_set_num_threads(args::get(threads));
+    }
+    if (args::get(max_degree)) {
+        algorithms::remove_high_degree_nodes(graph, args::get(max_degree));
+    }
+    if (args::get(max_furcations)) {
+        std::vector<edge_t> to_prune = algorithms::find_edges_to_prune(graph, args::get(kmer_length), args::get(max_furcations));
+        std::cerr << "edges to prune: " << to_prune.size() << std::endl;
+        for (auto& edge : to_prune) {
+            graph.destroy_edge(edge);
+        }
+        std::cerr << "done prune" << std::endl;
     }
     std::vector<std::vector<kmer_t>> buffers(get_thread_count());
     if (args::get(kmers_stdout)) {
