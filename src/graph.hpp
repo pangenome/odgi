@@ -17,6 +17,8 @@
 #include "dynamic.hpp"
 #include "dynamic_types.hpp"
 #include "hash_map.hpp"
+//#include "varint.hpp"
+#include "node.hpp"
 
 namespace dsgvg {
 
@@ -456,30 +458,6 @@ public:
 /// These are the backing data structures that we use to fulfill the above functions
 
 private:
-
-    /// A node object with the sequence and its edge lists
-    struct node_t {
-        node_t() {}
-        node_t(id_t id, const std::string& sequence) : id(id), sequence(sequence) { }
-        void clear(void) {
-            id = 0;
-            sequence.clear();
-            edges.clear();
-        }
-        // stored uncompressed for performance
-        id_t id;
-        // stored literally for performance
-        std::string sequence;
-        //suc_iv seq_v;
-        /// Records edges of the graph in both orientations
-        /// to enable efficient traversal of the graph
-        suc_iv edges;
-
-        // Some offset ints used in 
-        const static uint64_t EDGE_RECORD_LENGTH = 2;
-        const static uint64_t EDGE_DELTA_OFFSET = 0;
-        const static uint64_t EDGE_TYPE_OFFSET = 1;
-    };
 
     /// Records the handle to node_id mapping
     /// Use the special value "0" to indicate deleted nodes so that
