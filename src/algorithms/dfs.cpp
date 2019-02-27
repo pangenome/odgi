@@ -4,6 +4,8 @@ namespace vg {
 namespace algorithms {
 
 using namespace std;
+using namespace handlegraph;
+
 
 // depth first search across node traversals with interface to traversal tree via callback
 void dfs(

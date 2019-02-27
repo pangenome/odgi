@@ -4,9 +4,10 @@ namespace vg {
 namespace algorithms {
 
 using namespace std;
+using namespace handlegraph;
 
-vector<unordered_set<id_t>> weakly_connected_components(const HandleGraph* graph) {
-    vector<unordered_set<id_t>> to_return;
+vector<unordered_set<handlegraph::id_t>> weakly_connected_components(const HandleGraph* graph) {
+    vector<unordered_set<handlegraph::id_t>> to_return;
     
     // This only holds locally forward handles
     unordered_set<handle_t> traversed;
@@ -50,10 +51,10 @@ vector<unordered_set<id_t>> weakly_connected_components(const HandleGraph* graph
     return to_return;
 }
 
-vector<pair<unordered_set<id_t>, vector<handle_t>>> weakly_connected_components_with_tips(const HandleGraph* graph) {
+vector<pair<unordered_set<handlegraph::id_t>, vector<handle_t>>> weakly_connected_components_with_tips(const HandleGraph* graph) {
     // TODO: deduplicate with above
     
-    vector<pair<unordered_set<id_t>, vector<handle_t>>> to_return;
+    vector<pair<unordered_set<handlegraph::id_t>, vector<handle_t>>> to_return;
     
     // This only holds locally forward handles
     unordered_set<handle_t> traversed;

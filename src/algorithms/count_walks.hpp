@@ -7,7 +7,7 @@
  * Defines algorithm for counting the number of distinct walks through a DAG.
  */
 
-#include "../handle.hpp"
+#include <handlegraph/handle_graph.hpp>
 #include "topological_sort.hpp"
 
 #include <unordered_map>
@@ -17,6 +17,7 @@ namespace vg {
 namespace algorithms {
 
 using namespace std;
+using namespace handlegraph;
 
     /// Returns the number of source-to-sink walks through the graph. Assumes that
     /// the graph is a single-stranded DAG. Consider checking these properties with

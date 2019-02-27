@@ -9,6 +9,7 @@ namespace vg {
 namespace algorithms {
 
 using namespace std;
+using namespace handlegraph;
 
 vector<handle_t> id_order(HandleGraph* g) {
     // We will fill and sort this

@@ -4,6 +4,7 @@ namespace vg {
 namespace algorithms {
 
 using namespace std;
+using namespace handlegraph;
 
 void remove_high_degree_nodes(DeletableHandleGraph& g, int max_degree) {
     vector<handle_t> to_remove;

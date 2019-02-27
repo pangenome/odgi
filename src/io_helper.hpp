@@ -2,7 +2,7 @@
 #define gfa_io_helper
 #include "gfakluge.hpp"
 #include "graph.hpp"
-#include "handle.hpp"
+#include <handlegraph/handle_graph.hpp>
 #include "dgraph.hpp"
 #include "bgraph.hpp"
 #include "btypes.hpp"
@@ -10,6 +10,8 @@
 
 
 namespace dg{
+
+using namespace handlegraph;
 
 struct id_emitter_factory{
     std::unordered_set<string> seen_identifiers;

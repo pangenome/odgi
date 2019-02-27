@@ -5,8 +5,8 @@
 
 #include "catch.hpp"
 
-#include "handle.hpp"
-//#include "handle.hpp"
+#include <handlegraph/handle_graph.hpp>
+#include <handlegraph/util.hpp>
 #include "graph.hpp"
 
 #include <iostream>
@@ -20,6 +20,7 @@ namespace dsgvg {
 namespace unittest {
 
 using namespace std;
+using namespace handlegraph;
 
 TEST_CASE( "Handle utility functions work", "[handle]" ) {
 
@@ -113,7 +114,7 @@ TEST_CASE("VG and XG handle implementations are correct", "[handle][vg][xg]") {
     // Make a vg graph
     graph_t g;
     unordered_map<handle_t, string> seqs;
-    unordered_map<handle_t, id_t> ids;
+    unordered_map<handle_t, handlegraph::id_t> ids;
             
     string s = "CGA"; handle_t n0 = g.create_handle(s); seqs[n0] = s;
     s = "TTGG"; handle_t n1 = g.create_handle(s); seqs[n1] = s;
@@ -129,7 +130,7 @@ TEST_CASE("VG and XG handle implementations are correct", "[handle][vg][xg]") {
         ids[node] = g.get_id(node);
     }
 
-    g.create_edge(handle_helper::toggle_bit(n1), handle_helper::toggle_bit(n0)); // a doubly reversing edge to keep it interesting
+    g.create_edge(number_bool_packing::toggle_bit(n1), number_bool_packing::toggle_bit(n0)); // a doubly reversing edge to keep it interesting
     g.create_edge(n1, n2);
     g.create_edge(n2, n3);
     g.create_edge(n2, n4);
@@ -150,8 +151,8 @@ TEST_CASE("VG and XG handle implementations are correct", "[handle][vg][xg]") {
         for (const HandleGraph* g : {(HandleGraph*) &g }) {
             for (handle_t node_handle : {n0, n1, n2, n3, n4, n5, n6, n7, n8, n9}) {
                 
-                //id_t node_id = g->get_id(node);
-                //cerr << "node handle " << as_integer(node_handle) << " " << handle_helper::unpack_number(node_handle) << " id " << g->get_id(node_handle) << endl;
+                //handlegraph::id_t node_id = g->get_id(node);
+                //cerr << "node handle " << as_integer(node_handle) << " " << number_bool_packing::unpack_number(node_handle) << " id " << g->get_id(node_handle) << endl;
                 
                 SECTION("We see each node correctly forward") {
                     REQUIRE(g->get_id(node_handle) == ids[node_handle]);
@@ -479,11 +480,11 @@ TEST_CASE("Deletable handle graphs work", "[handle][vg]") {
                         REQUIRE(edges.size() == 1);
                         /*
                         cerr << g->get_id(edges.front().first)
-                             << ":" << handle_helper::unpack_bit(edges.front().first)
+                             << ":" << number_bool_packing::unpack_bit(edges.front().first)
                              << " " << g->get_id(edges.front().second)
-                             << ":" << handle_helper::unpack_bit(edges.front().second) << endl;
+                             << ":" << number_bool_packing::unpack_bit(edges.front().second) << endl;
                         edge_t x = g->edge_handle(g->flip(handle2), modified);
-                        cerr << g->get_id(x.first) << ":" << handle_helper::unpack_bit(x.first) << " " << g->get_id(x.second) << ":" << handle_helper::unpack_bit(x.second) << endl;
+                        cerr << g->get_id(x.first) << ":" << number_bool_packing::unpack_bit(x.first) << " " << g->get_id(x.second) << ":" << number_bool_packing::unpack_bit(x.second) << endl;
                         */
                         REQUIRE(edges.front() == g->edge_handle(g->flip(handle2), modified));
                         

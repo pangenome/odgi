@@ -4,6 +4,7 @@ namespace dsgvg {
 namespace algorithms {
 
 using namespace std;
+using namespace handlegraph;
 
     bool is_single_stranded(const HandleGraph* graph) {
         
@@ -35,7 +36,7 @@ using namespace std;
         orientation.reserve(graph->node_size());
         
         // keep track of which nodes have already been oriented and which orientation
-        unordered_map<id_t, bool> recorded_orientation;
+        unordered_map<handlegraph::id_t, bool> recorded_orientation;
         
         // keep track of whether we've encountered a node in two orientations
         bool failed = false;
@@ -95,7 +96,7 @@ using namespace std;
     }
 
 /*
-    unordered_set<id_t> make_single_stranded(MutableHandleGraph* graph) {
+    unordered_set<handlegraph::id_t> make_single_stranded(MutableHandleGraph* graph) {
         
         auto orientations = single_stranded_orientation(graph);
         

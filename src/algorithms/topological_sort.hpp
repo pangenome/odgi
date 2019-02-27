@@ -12,7 +12,7 @@
 #include <map>
 #include <iostream>
 #include "../hash_map.hpp"
-#include "../handle.hpp"
+#include <handlegraph/handle_graph.hpp>
 #include "apply_bulk_modifications.hpp"
 #include "is_single_stranded.hpp"
 
@@ -20,6 +20,7 @@ namespace dsgvg {
 namespace algorithms {
 
 using namespace std;
+using namespace handlegraph;
 
 /// Find all of the nodes with no edges on their left sides.
 vector<handle_t> head_nodes(const HandleGraph* g);

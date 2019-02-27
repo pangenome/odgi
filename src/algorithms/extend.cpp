@@ -4,6 +4,7 @@ namespace vg {
 namespace algorithms {
 
 using namespace std;
+using namespace handlegraph;
 
     void extend(const HandleGraph* source, MutableHandleGraph* into) {
         

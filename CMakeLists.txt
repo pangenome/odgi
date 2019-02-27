@@ -39,12 +39,21 @@ include_directories("${PROJECT_SOURCE_DIR}")
 # Add external projects
 include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 
+# TODO: We're using INSTALL_DIR very wrong. We *should* be actually installing
+# the external projects into their prefixes and working with the installed
+# files. Instead we're building but not installing them and trying to work with
+# the non-installed build trees.
+# 
+# Hence the blanked out INSTALL_COMMANDs to suppress the install step.
+#
+# We need to NOT blank out UPDATE_COMMAND or we can never change the Git revision we point to.
+# The cost of this is that we have to re-configure on every build if we do update.
+
 # sdsl-lite (full build using its cmake config)
 ExternalProject_Add(sdsl-lite
   GIT_REPOSITORY "https://github.com/simongog/sdsl-lite.git"
   GIT_TAG "d52aa9a71513d132e30c09491b5899af449ebb94"
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR} # TODO ADD static build flag
-  UPDATE_COMMAND ""
   INSTALL_COMMAND "")
 ExternalProject_Get_property(sdsl-lite INSTALL_DIR)
 set(sdsl-lite_INCLUDE "${INSTALL_DIR}/src/sdsl-lite-build/include")
@@ -58,7 +67,6 @@ ExternalProject_Add(dynamic
   GIT_TAG "0f61233d43e790bb7fe2b9bb48978d9f14460c32"
   # we don't actually install dynamic... it's header only
   #CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
-  UPDATE_COMMAND ""
   INSTALL_COMMAND "")
 ExternalProject_Get_property(dynamic INSTALL_DIR)
 set(dynamic_INCLUDE "${INSTALL_DIR}/src/dynamic/include")
@@ -69,7 +77,6 @@ ExternalProject_Add(gfakluge
   GIT_TAG "d99d927ab286c3dfaeb4db15c15d306d1fab0806"
   BUILD_IN_SOURCE TRUE
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR} # TODO ADD static build flag
-  UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   BUILD_COMMAND ""
   CONFIGURE_COMMAND "")
@@ -78,11 +85,20 @@ set(gfakluge_INCLUDE "${INSTALL_DIR}/src/gfakluge/src")
 set(gfakluge_tinyFA_INCLUDE "${INSTALL_DIR}/src/gfakluge/src/tinyFA")
 set(gfakluge_LIB "${INSTALL_DIR}/src/gfakluge")
 
+# libhandlegraph (full build using its cmake config)
+ExternalProject_Add(handlegraph
+  GIT_REPOSITORY "https://github.com/vgteam/libhandlegraph.git"
+  GIT_TAG "4fb0a4b750995c35e45b8c510397339af4ddc2fc"
+  CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
+  INSTALL_COMMAND "")
+ExternalProject_Get_property(handlegraph INSTALL_DIR)
+set(handlegraph_INCLUDE "${INSTALL_DIR}/src/handlegraph/src/include")
+set(handlegraph_LIB "${INSTALL_DIR}/src/handlegraph-build")
+
 # taywee's C++ args library, header only
 ExternalProject_Add(tayweeargs
   GIT_REPOSITORY "https://github.com/Taywee/args.git"
   GIT_TAG "3de44ec671db452cc0c4ef86399b108939768abb"
-  UPDATE_COMMAND ""
   INSTALL_COMMAND "")
 ExternalProject_Get_property(tayweeargs SOURCE_DIR)
 set(tayweeargs_INCLUDE "${SOURCE_DIR}")
@@ -92,7 +108,6 @@ ExternalProject_Add(backwardscpp
   GIT_REPOSITORY "https://github.com/bombela/backward-cpp.git"
   GIT_TAG "b353585d4bd19f9e51816bc11d2e53b0e5b4a760"
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
-  UPDATE_COMMAND ""
   INSTALL_COMMAND "")
 ExternalProject_Get_property(backwardscpp SOURCE_DIR)
 set(backwardscpp_INCLUDE "${SOURCE_DIR}")
@@ -103,7 +118,6 @@ ExternalProject_Add(sparsepp
   GIT_TAG "1c5a285e87b2244383efe0398f9992acd61234e9"
   BUILD_IN_SOURCE TRUE
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR} # TODO ADD static build flag
-  UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   BUILD_COMMAND ""
   CONFIGURE_COMMAND "")
@@ -115,7 +129,6 @@ set(sparsepp_LIB "${INSTALL_DIR}/src/sparsepp/sparsepp/")
 ExternalProject_Add(ska
   GIT_REPOSITORY "https://github.com/skarupke/flat_hash_map.git"
   GIT_TAG "2c4687431f978f02a3780e24b8b701d22aa32d9c"
-  UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   BUILD_COMMAND ""
   CONFIGURE_COMMAND "")
@@ -128,7 +141,6 @@ set(CMAKE_BUILD_TYPE Release)
 add_executable(dsgvg
   ${CMAKE_SOURCE_DIR}/src/graph.cpp
   ${CMAKE_SOURCE_DIR}/src/main.cpp
-  ${CMAKE_SOURCE_DIR}/src/handle.cpp
   ${CMAKE_SOURCE_DIR}/src/crash.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/driver.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/handle.cpp
@@ -144,6 +156,7 @@ add_executable(dsgvg
 add_dependencies(dsgvg sdsl-lite)
 add_dependencies(dsgvg dynamic)
 add_dependencies(dsgvg gfakluge)
+add_dependencies(dsgvg handlegraph)
 add_dependencies(dsgvg tayweeargs)
 add_dependencies(dsgvg sparsepp)
 add_dependencies(dsgvg ska)
@@ -154,6 +167,7 @@ target_include_directories(dsgvg PUBLIC
   "${dynamic_INCLUDE}"
   "${gfakluge_INCLUDE}"
   "${gfakluge_tinyFA_INCLUDE}"
+  "${handlegraph_INCLUDE}"
   "${tayweeargs_INCLUDE}"
   "${backwardscpp_INCLUDE}"
   "${sparsepp_INCLUDE}"
@@ -162,6 +176,7 @@ target_link_libraries(dsgvg
   "${sdsl-lite_LIB}/libsdsl.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort64.a"
+  "${handlegraph_LIB}/libhandlegraph.a"
   "-ldl"
 #"-ltcmalloc"
   )

@@ -8,7 +8,7 @@
  * solution to the minimum feedback arc set.
  */
 
-#include "../handle.hpp"
+#include <handlegraph/handle_graph.hpp>
 #include "is_single_stranded.hpp"
 
 #include <vector>
@@ -19,6 +19,7 @@ namespace vg {
 namespace algorithms {
 
 using namespace std;
+using namespace handlegraph;
 
     /// Returns a layout of handles that has a small number of edges that point backward
     /// along the layout (i.e. feedback arcs). Only valid for graphs that have a single

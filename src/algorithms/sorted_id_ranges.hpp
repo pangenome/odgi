@@ -10,15 +10,16 @@
 #include <vector>
 #include <utility>
 
-#include "../handle.hpp"
+#include <handlegraph/handle_graph.hpp>
 
 namespace vg {
 namespace algorithms {
 
 using namespace std;
+using namespace handlegraph;
 
 /// Get a sorted list of inclusive ranges of IDs used in the given HandleGraph.
-vector<pair<id_t, id_t>> sorted_id_ranges(const HandleGraph* graph);
+vector<pair<handlegraph::id_t, handlegraph::id_t>> sorted_id_ranges(const HandleGraph* graph);
 
 
 }

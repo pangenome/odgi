@@ -3,7 +3,7 @@
 
 #include <unordered_map>
 
-#include "../handle.hpp"
+#include <handlegraph/handle_graph.hpp>
 
 #include "eades_algorithm.hpp"
 #include "structures/rank_pairing_heap.hpp"
@@ -12,6 +12,7 @@ namespace vg {
 namespace algorithms {
 
 using namespace std;
+using namespace handlegraph;
     
     /// Returns the length of the shortest cycle in the entire graph, or
     /// numeric_limits<size_t>::max() if no cycle exists.

@@ -7,7 +7,7 @@
  * Defines algorithms for deciding if a graph contains reversing edges.
  */
 
-#include "../handle.hpp"
+#include <handlegraph/handle_graph.hpp>
 //#include "apply_bulk_modifications.hpp"
 #include <iostream>
 #include <unordered_set>
@@ -18,6 +18,7 @@ namespace dsgvg {
 namespace algorithms {
 
 using namespace std;
+using namespace handlegraph;
 
     /// Returns true if the graph contains no reversing edges (i.e. edges that connected
     /// the locally forward orientation of a node to the locally reverse orientation of
@@ -36,7 +37,7 @@ using namespace std;
     /// to another locally forward orientation). If no such combination of orientations
     /// exists, produces an error and exits. Returns a set of the node IDs for nodes that
     /// were swapped in orientation. Potentially invalidates any existing handles.
-//unordered_set<id_t> make_single_stranded(MutableHandleGraph* graph);
+//unordered_set<handlegraph::id_t> make_single_stranded(MutableHandleGraph* graph);
 
 }
 }

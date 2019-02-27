@@ -7,13 +7,15 @@
  * Defines algorithm adding graph material from one graph into another
  */
 
-#include "../handle.hpp"
+#include <handlegraph/handle_graph.hpp>
+#include <handlegraph/mutable_handle_graph.hpp>
 #include "../utility.hpp"
 
 namespace vg {
 namespace algorithms {
 
 using namespace std;
+using namespace handlegraph;
 
     /// Adds the non-duplicative nodes and edges from 'source' to 'into'. Assumes that
     /// both graphs use the same ID space.
