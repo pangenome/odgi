@@ -123,7 +123,7 @@ inline uint64_t length(const uint64_t& i) {
     } else if (i <= cut1 + 255 + 256 * (cut2 - 1 - cut1)) {
         return 2;
     } else {
-        return (64 - count_leading_zeros_64(i) + 7) / 8;
+        return 1 + (64 - count_leading_zeros_64(i) + 7) / 8;
     }
 }
 

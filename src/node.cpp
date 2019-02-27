@@ -5,13 +5,8 @@ namespace dsgvg {
 node_t::node_t(void) { }
 
 node_t::node_t(id_t id, const std::string& sequence) {
-    // calculate the id encoding and store it
-    std::vector<uint8_t> id_pack = varint::encode({(uint64_t)id});
-    uint64_t id_size = id_pack.size();
-    reserve(size() + distance(id_pack.begin(), id_pack.end()));
-    insert(end(), id_pack.begin(), id_pack.end());
-    // record the sequence size
-    varint::encode({sequence.size()}, *this);
+    // record the id and sequence size
+    varint::encode({(uint64_t)id, (uint64_t)sequence.size()}, *this);
     // and store the sequence
     insert(end(), sequence.begin(), sequence.end());
     varint::encode({0}, *this); // record that there are no edges
@@ -90,7 +85,7 @@ void node_t::set_edge_count(uint64_t count, const node_t::layout_t& layout) {
     uint8_t count_encoding_delta = varint::length(count) - varint::length(layout.edge_count);
     // check if we need to realloc the edge count storage
     if (count_encoding_delta < 0) {
-        erase(begin()+layout.edge_start, begin()+layout.edge_start+varint::length(layout.edge_count)+1);
+        erase(begin()+layout.edge_start, begin()+layout.edge_start+varint::length(layout.edge_count));
         std::vector<uint8_t> x(count);
         insert(begin()+layout.edge_start, x.begin(), x.end());
     } else if (count_encoding_delta > 0) {
@@ -102,6 +97,12 @@ void node_t::set_edge_count(uint64_t count, const node_t::layout_t& layout) {
 }
 
 void node_t::display(void) const {
+    layout_t layout = get_layout();
+    std::cerr << layout.id << " "
+              << layout.seq_start << " "
+              << layout.seq_len << " "
+              << layout.edge_start << " "
+              << layout.edge_count << " |";
     for (auto i : *this) {
         std::cerr << (int) i << " ";
     }
