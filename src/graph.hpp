@@ -46,6 +46,7 @@ public:
         _edge_count = other._edge_count;
         _path_count = other._path_count;
         _path_handle_next = other._path_handle_next;
+        node_v = other.node_v;
         deleted_id_bv = other.deleted_id_bv;
         graph_id_map = other.graph_id_map;
         path_metadata_v = other.path_metadata_v;
@@ -60,6 +61,7 @@ public:
         _edge_count = other._edge_count;
         _path_count = other._path_count;
         _path_handle_next = other._path_handle_next;
+        node_v = other.node_v;
         deleted_id_bv = other.deleted_id_bv;
         graph_id_map = other.graph_id_map;
         path_metadata_v = other.path_metadata_v;
@@ -82,6 +84,7 @@ public:
         _edge_count = other._edge_count;
         _path_count = other._path_count;
         _path_handle_next = other._path_handle_next;
+        node_v = other.node_v;
         deleted_id_bv = other.deleted_id_bv;
         graph_id_map = other.graph_id_map;
         path_metadata_v = other.path_metadata_v;
