@@ -11,6 +11,8 @@ namespace dsgvg {
 
 using namespace handlegraph;
 using id_t = handlegraph::id_t;
+const uint8_t EDGE_RECORD_LENGTH = 2;
+const uint8_t PATH_RECORD_LENGTH = 5;
 
 /// A node object with the sequence, its edge lists, and paths
 class node_t {
@@ -70,8 +72,6 @@ public:
         uint64_t next_id = 0;
         uint64_t next_rank = 0;
     };
-    const uint8_t EDGE_RECORD_LENGTH = 2;
-    const uint8_t PATH_RECORD_LENGTH = 5;
     const layout_t get_layout(void) const;
     const layout_t get_seq_layout(void) const;
     const layout_t get_seq_edge_layout(void) const;

@@ -1145,6 +1145,7 @@ uint64_t graph_t::serialize(std::ostream& out) {
     written += sizeof(_path_handle_next);
     out.write((char*)&_deleted_node_count,sizeof(_deleted_node_count));
     written += sizeof(_deleted_node_count);
+    written += deleted_id_bv.serialize(out);
     assert(_node_count == node_v.size());
     for (auto& node : node_v) {
         uint64_t node_size = node.size();
@@ -1153,7 +1154,6 @@ uint64_t graph_t::serialize(std::ostream& out) {
         out.write((char*)node.data(), node.size());
         written += node.size();
     }
-    written += deleted_id_bv.serialize(out);
     size_t i = path_metadata_v.size();
     out.write((char*)&i,sizeof(size_t));
     written += sizeof(size_t);
@@ -1194,6 +1194,7 @@ void graph_t::load(std::istream& in) {
     in.read((char*)&_path_count,sizeof(_path_count));
     in.read((char*)&_path_handle_next,sizeof(_path_handle_next));
     in.read((char*)&_deleted_node_count,sizeof(_deleted_node_count));
+    deleted_id_bv.load(in);
     for (size_t i = 0; i < _node_count; ++i) {
         node_v.emplace_back();
         auto& node = node_v.back();
@@ -1207,7 +1208,6 @@ void graph_t::load(std::istream& in) {
     for (size_t i = 0; i < node_v.size(); ++i) {
         graph_id_map[node_v.at(i).id()] = i;
     }
-    deleted_id_bv.load(in);
     size_t i = 0;
     in.read((char*)&i,sizeof(size_t));
     path_metadata_v.reserve(i);
