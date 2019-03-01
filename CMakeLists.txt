@@ -64,14 +64,17 @@ set(sdsl-lite-divsufsort_LIB "${INSTALL_DIR}/src/sdsl-lite-build/external/libdiv
 # DYNAMIC (full build using its cmake config)
 ExternalProject_Add(dynamic
   GIT_REPOSITORY "https://github.com/vgteam/DYNAMIC.git"
-  GIT_TAG "0f61233d43e790bb7fe2b9bb48978d9f14460c32"
+  GIT_TAG "615d8be5276bcd4c5a3d8e31679b4f8e81b2eefc"
   # we don't actually install dynamic... it's header only
   #CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
-  INSTALL_COMMAND "")
+  UPDATE_COMMAND ""
+  INSTALL_COMMAND ""
+  BUILD_COMMAND ""
+  CONFIGURE_COMMAND "")
 ExternalProject_Get_property(dynamic INSTALL_DIR)
 set(dynamic_INCLUDE "${INSTALL_DIR}/src/dynamic/include")
 
-# gfakluge (full build using its cmake config)
+# gfakluge (now header only)
 ExternalProject_Add(gfakluge
   GIT_REPOSITORY "https://github.com/vgteam/gfakluge.git"
   GIT_TAG "d99d927ab286c3dfaeb4db15c15d306d1fab0806"
@@ -102,6 +105,27 @@ ExternalProject_Add(tayweeargs
   INSTALL_COMMAND "")
 ExternalProject_Get_property(tayweeargs SOURCE_DIR)
 set(tayweeargs_INCLUDE "${SOURCE_DIR}")
+
+# parallel bsort (header-only, so here we just check if we can build it)
+ExternalProject_Add(bsort
+  GIT_REPOSITORY "https://github.com/ekg/bsort.git"
+  GIT_TAG "b14c3302fa6379cc5d49fdd023d375032e801c41"
+  UPDATE_COMMAND ""
+  INSTALL_COMMAND "")
+ExternalProject_Get_property(bsort SOURCE_DIR)
+set(bsort_INCLUDE "${SOURCE_DIR}/src")
+set(bsort_LIB "${SOURCE_DIR}/lib")
+
+# BBHash perfect hasher
+ExternalProject_Add(bbhash
+  GIT_REPOSITORY "https://github.com/vgteam/BBHash.git"
+  GIT_TAG "ccc22805eae48aca2a01a7ff5ef8e002857020d3"
+  UPDATE_COMMAND ""
+  INSTALL_COMMAND ""
+  BUILD_COMMAND ""
+  CONFIGURE_COMMAND "")
+ExternalProject_Get_property(bbhash SOURCE_DIR)
+set(bbhash_INCLUDE "${SOURCE_DIR}")
 
 # backwardscpp
 ExternalProject_Add(backwardscpp
@@ -142,6 +166,9 @@ add_executable(dsgvg
   ${CMAKE_SOURCE_DIR}/src/graph.cpp
   ${CMAKE_SOURCE_DIR}/src/main.cpp
   ${CMAKE_SOURCE_DIR}/src/crash.cpp
+  ${CMAKE_SOURCE_DIR}/src/position.cpp
+  ${CMAKE_SOURCE_DIR}/src/threads.cpp
+  ${CMAKE_SOURCE_DIR}/src/node.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/driver.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/handle.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/subcommand.cpp
@@ -150,16 +177,22 @@ add_executable(dsgvg
   ${CMAKE_SOURCE_DIR}/src/subcommand/stats_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/sort_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/view_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/kmers_main.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/is_single_stranded.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/remove_high_degree.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/prune.cpp
   )
 add_dependencies(dsgvg sdsl-lite)
 add_dependencies(dsgvg dynamic)
 add_dependencies(dsgvg gfakluge)
 add_dependencies(dsgvg handlegraph)
 add_dependencies(dsgvg tayweeargs)
+add_dependencies(dsgvg bbhash)
 add_dependencies(dsgvg sparsepp)
 add_dependencies(dsgvg ska)
+add_dependencies(dsgvg bsort)
 target_include_directories(dsgvg PUBLIC
   "${CMAKE_SOURCE_DIR}/src"
   "${sdsl-lite_INCLUDE}"
@@ -171,14 +204,16 @@ target_include_directories(dsgvg PUBLIC
   "${tayweeargs_INCLUDE}"
   "${backwardscpp_INCLUDE}"
   "${sparsepp_INCLUDE}"
-  "${ska_INCLUDE}")
+  "${ska_INCLUDE}"
+  "${bbhash_INCLUDE}"
+  "${bsort_INCLUDE}")
 target_link_libraries(dsgvg
   "${sdsl-lite_LIB}/libsdsl.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort64.a"
   "${handlegraph_LIB}/libhandlegraph.a"
   "-ldl"
-#"-ltcmalloc"
+#  "-ltcmalloc_minimal"
   )
 
 #set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc")

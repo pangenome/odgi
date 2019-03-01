@@ -18,6 +18,8 @@
 #include "dynamic.hpp"
 #include "dynamic_types.hpp"
 #include "hash_map.hpp"
+//#include "varint.hpp"
+#include "node.hpp"
 
 namespace dsgvg {
 
@@ -31,17 +33,7 @@ class graph_t : public MutablePathDeletableHandleGraph {
 public:
     graph_t(void) {
         // set up initial delimiters
-        graph_id_iv.push_back(0); // false entry, maybe a bug in lciv
         deleted_id_bv.push_back(1);
-        seq_bv.push_back(1);
-        //topology_iv.push_back(0);
-        topology_bv.push_back(1);
-        path_handle_wt.push_back(0);
-        path_rev_iv.push_back(0);
-        path_next_id_iv.push_back(0);
-        path_next_rank_iv.push_back(0);
-        path_prev_id_iv.push_back(0);
-        path_prev_rank_iv.push_back(0);
     }
 
     ~graph_t(void) { clear(); }
@@ -54,20 +46,9 @@ public:
         _edge_count = other._edge_count;
         _path_count = other._path_count;
         _path_handle_next = other._path_handle_next;
-        graph_id_iv = other.graph_id_iv;
         deleted_id_bv = other.deleted_id_bv;
         graph_id_map = other.graph_id_map;
-        topology_iv = other.topology_iv;
-        topology_bv = other.topology_bv;
-        seq_pv = other.seq_pv;
-        seq_bv = other.seq_bv;
-        path_handle_wt = other.path_handle_wt;
-        path_rev_iv = other.path_rev_iv;
-        path_next_id_iv = other.path_next_id_iv;
-        path_next_rank_iv = other.path_next_rank_iv;
-        path_prev_id_iv = other.path_prev_id_iv;
-        path_prev_rank_iv = other.path_prev_rank_iv;
-        path_metadata_map = other.path_metadata_map;
+        path_metadata_v = other.path_metadata_v;
         path_name_map = other.path_name_map;
     }
 
@@ -79,20 +60,9 @@ public:
         _edge_count = other._edge_count;
         _path_count = other._path_count;
         _path_handle_next = other._path_handle_next;
-        graph_id_iv = other.graph_id_iv;
         deleted_id_bv = other.deleted_id_bv;
         graph_id_map = other.graph_id_map;
-        topology_iv = other.topology_iv;
-        topology_bv = other.topology_bv;
-        seq_pv = other.seq_pv;
-        seq_bv = other.seq_bv;
-        path_handle_wt = other.path_handle_wt;
-        path_rev_iv = other.path_rev_iv;
-        path_next_id_iv = other.path_next_id_iv;
-        path_next_rank_iv = other.path_next_rank_iv;
-        path_prev_id_iv = other.path_prev_id_iv;
-        path_prev_rank_iv = other.path_prev_rank_iv;
-        path_metadata_map = other.path_metadata_map;
+        path_metadata_v = other.path_metadata_v;
         path_name_map = other.path_name_map;
     }
 
@@ -112,20 +82,9 @@ public:
         _edge_count = other._edge_count;
         _path_count = other._path_count;
         _path_handle_next = other._path_handle_next;
-        graph_id_iv = other.graph_id_iv;
         deleted_id_bv = other.deleted_id_bv;
         graph_id_map = other.graph_id_map;
-        topology_iv = other.topology_iv;
-        topology_bv = other.topology_bv;
-        seq_pv = other.seq_pv;
-        seq_bv = other.seq_bv;
-        path_handle_wt = other.path_handle_wt;
-        path_rev_iv = other.path_rev_iv;
-        path_next_id_iv = other.path_next_id_iv;
-        path_next_rank_iv = other.path_next_rank_iv;
-        path_prev_id_iv = other.path_prev_id_iv;
-        path_prev_rank_iv = other.path_prev_rank_iv;
-        path_metadata_map = other.path_metadata_map;
+        path_metadata_v = other.path_metadata_v;
         path_name_map = other.path_name_map;
         return *this;
     }
@@ -135,7 +94,7 @@ public:
     
     /// Look up the handle for the node with the given ID in the given orientation
     handle_t get_handle(const id_t& node_id, bool is_reverse = false) const;
-    
+
     /// Get the ID from a handle
     id_t get_id(const handle_t& handle) const;
     
@@ -191,9 +150,23 @@ public:
     /// information more efficiently can override this method.
     size_t get_degree(const handle_t& handle, bool go_left) const;
     
-/**
- * This is the interface for a handle graph that stores embedded paths.
- */
+    ////////////////////////////////////////////////////////////////////////////
+    // Concrete utility methods
+    ////////////////////////////////////////////////////////////////////////////
+    
+    /// Get a Protobuf Visit from a handle.
+    //Visit to_visit(const handle_t& handle) const;
+    
+    /// Get the locally forward version of a handle
+    handle_t forward(const handle_t& handle) const;
+    
+    /// A pair of handles can be used as an edge. When so used, the handles have a
+    /// canonical order and orientation.
+    edge_t edge_handle(const handle_t& left, const handle_t& right) const;
+    
+    /// Such a pair can be viewed from either inward end handle and produce the
+    /// outward handle you would arrive at.
+    handle_t traverse_edge_handle(const edge_t& edge, const handle_t& left) const;
     
     ////////////////////////////////////////////////////////////////////////////
     // Path handle interface that needs to be implemented
@@ -272,13 +245,13 @@ public:
     /// Returns true if the given path is empty, and false otherwise
     bool is_empty(const path_handle_t& path_handle) const;
 
-/**
- * This is the interface for a handle graph that supports modification.
- */
-    /*
-     * Note: All operations may invalidate path handles and occurrence handles.
-     */
-    
+    ////////////////////////////////////////////////////////////////////////////
+    // Concrete utility methods
+    ////////////////////////////////////////////////////////////////////////////
+
+    /// Loop over all the occurrences along a path, from first through last
+    void for_each_occurrence_in_path(const path_handle_t& path, const std::function<void(const occurrence_handle_t&)>& iteratee) const;
+
     /// Create a new node with the given sequence and return the handle.
     handle_t create_handle(const std::string& sequence);
 
@@ -419,39 +392,17 @@ private:
     /// Records the handle to node_id mapping
     /// Use the special value "0" to indicate deleted nodes so that
     /// handle references in the id_map and elsewhere are not immediately destroyed
-    lciv_iv graph_id_iv;
+    //lciv_iv graph_id_iv;
+    std::vector<node_t> node_v;
     /// Mark deleted nodes here for translating graph ids into internal ranks
     suc_bv deleted_id_bv;
     uint64_t _deleted_node_count = 0;
     /// efficient id to handle/sequence conversion
-    hash_map<uint64_t, uint64_t> graph_id_map;
+    hash_map<id_t, uint64_t> graph_id_map;
     id_t _max_node_id = 0;
     id_t _min_node_id = 0;
-    /// records nodes that are hidden, but used to store path sequence that has been removed from the node space
+    /// records nodes that are hidden, but used to compactly store path sequence that has been removed from the node space
     hash_set<uint64_t> graph_id_hidden_set;
-
-    /// Records edges of the graph in both orientations
-    /// to enable efficient traversal of the graph
-    /// node := { header, edges_to, edges_from }
-    /// header := { node_id, node_start, node_length, edges_to_count, edges_from_count }
-    /// node_id := integer
-    /// node_start := integer (offset in s_iv)
-    /// node_length := integer
-    /// edges_to_count := integer
-    /// edges_from_count := integer
-    /// edges_to := { edge_to, ... }
-    /// edges_from := { edge_from, ... }
-    /// edge_to := { offset_to_next_node, edge_type }
-    /// edge_from := { offset_to_previous_node, edge_type }
-    lciv_iv topology_iv;
-    suc_bv topology_bv;
-    
-    // Let's define some offset ints
-    const static uint64_t TOPOLOGY_NODE_HEADER_LENGTH = 1;
-    const static uint64_t TOPOLOGY_EDGE_COUNT_OFFSET = 0;
-    const static uint64_t TOPOLOGY_EDGE_RECORD_LENGTH = 2;
-    const static uint64_t TOPOLOGY_EDGE_DELTA_OFFSET = 0;
-    const static uint64_t TOPOLOGY_EDGE_TYPE_OFFSET = 1;
 
     /// edge type conversion
     /// 1 = fwd->fwd, 2 = fwd->rev, 3 = rev->fwd, 4 = rev->rev
@@ -478,39 +429,7 @@ private:
             right = number_bool_packing::toggle_bit(right);
         }
     }
-
-    /// Encodes all of the sequences of all nodes and all paths in the graph.
-    /// The node sequences occur in the same order as in graph_iv;
-    /// Node boundaries are given by 0s
-    dyn::packed_vector seq_pv;
-
-    /// Marks the beginnings of nodes in seq_pv
-    suc_bv seq_bv;
-
-    /// ordered path identifiers as they traverse each node
-    /// the index of the path identifier in this WT defines the occurrence_handle_t for the step
-    /// which also maps into the path_next_* and path_prev_* WTs
-    wt_str path_handle_wt;
-
-    /// which orientation are we traversing in?
-    lciv_iv path_rev_iv;
-
-    /// special delimiters used in the path_next_id_wt and path_prev_id_wt
-    const static uint64_t path_begin_marker = 1; //std::numeric_limits<uint64_t>::max()-1;
-    const static uint64_t path_end_marker = 2; // std::numeric_limits<uint64_t>::max();
     
-    /// by occurrence, where this particular occurrence goes next
-    lciv_iv path_next_id_iv;
-
-    /// the rank of the path occurrence among occurrences in this path in the next handle's list
-    lciv_iv path_next_rank_iv;
-
-    /// by occurrence, where this particular occurrence came from 
-    lciv_iv path_prev_id_iv;
-
-    /// the rank of the path occurrence among occurrences in this path in the previous handle's list
-    lciv_iv path_prev_rank_iv;
-
     struct path_metadata_t {
         uint64_t length;
         occurrence_handle_t first;
@@ -518,7 +437,7 @@ private:
         std::string name;
     };
     /// maps between path identifier and the start, end, and length of the path
-    hash_map<uint64_t, path_metadata_t> path_metadata_map;
+    std::vector<path_metadata_t> path_metadata_v;
 
     /// Links path names to handles
     string_hash_map<std::string, uint64_t> path_name_map;
@@ -559,9 +478,6 @@ private:
     /// Decrement the occurrence rank references for this occurrence
     void decrement_rank(const occurrence_handle_t& occurrence_handle);
 
-    /// The internal rank of the occurrence
-    uint64_t occurrence_rank(const occurrence_handle_t& occurrence_handle) const;
-
     /// Help us deal with deleted nodes
     uint64_t get_handle_rank(const handle_t& handle) const;
 
@@ -571,7 +487,17 @@ private:
     /// Set the handle sequence
     void set_handle_sequence(const handle_t& handle, const std::string& seq);
 
+    /// get the backing node rank for a given node id
+    uint64_t get_node_rank(const id_t& node_id) const;
+
 };
+
+const static uint64_t path_begin_marker = 0; //std::numeric_limits<uint64_t>::max()-1;
+const static uint64_t path_end_marker = 1; // std::numeric_limits<uint64_t>::max();
+
+// avoid undefined reference error
+//const uint64_t graph_t::path_begin_marker;
+//const uint64_t graph_t::path_end_marker;
 
 } // end dankness
 
