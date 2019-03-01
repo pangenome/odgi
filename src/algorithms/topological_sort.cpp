@@ -4,6 +4,7 @@ namespace dsgvg {
 namespace algorithms {
 
 using namespace std;
+using namespace handlegraph;
 
 vector<handle_t> head_nodes(const HandleGraph* g) {
     vector<handle_t> to_return;
@@ -60,7 +61,7 @@ vector<handle_t> topological_order(const HandleGraph* g) {
     
     // This (s) is our set of oriented nodes.
     // using a map instead of a set ensures a stable sort across different systems
-    map<id_t, handle_t> s;
+    map<handlegraph::id_t, handle_t> s;
 
     // We find the head and tails, if there are any
     vector<handle_t> heads{head_nodes(g)};
@@ -68,7 +69,7 @@ vector<handle_t> topological_order(const HandleGraph* g) {
 
     
     // Maps from node ID to first orientation we suggested for it.
-    map<id_t, handle_t> seeds;
+    map<handlegraph::id_t, handle_t> seeds;
     
     
     for(handle_t& head : heads) {
@@ -84,7 +85,7 @@ vector<handle_t> topological_order(const HandleGraph* g) {
 
     // We will use an ordered map handles by ID for nodes we have not visited
     // yet. This ensures a consistent sort order across systems.
-    map<id_t, handle_t> unvisited;
+    map<handlegraph::id_t, handle_t> unvisited;
     g->for_each_handle([&](const handle_t& found) {
         if (!s.count(g->get_id(found))) {
             // Only nodes that aren't yet in s are unvisited.

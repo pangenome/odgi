@@ -11,6 +11,7 @@ namespace vg {
 namespace algorithms {
 
 using namespace structures;
+using namespace handlegraph;
 
 unordered_map<handle_t, size_t>  find_shortest_paths(const HandleGraph* g, handle_t start,
                                                      bool traverse_leftward) {

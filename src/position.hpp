@@ -4,13 +4,18 @@
 //#include "utility.hpp"
 #include <iostream>
 #include <tuple>
-#include "handle.hpp"
+#include <handlegraph/util.hpp>
 
 /** \file 
  * Functions for working with Positions and `pos_t`s.
  */
 
 namespace dsgvg {
+
+//using namespace handlegraph;
+
+// Resolve ambiguous id_t typedef by putting it in our namespace.
+using id_t = handlegraph::id_t;
 
 /// Represents an oriented position on a Node.
 /// Position type: id, direction, offset.
@@ -20,37 +25,37 @@ typedef std::tuple<id_t, bool, uint64_t> pos_t;
 
 /// Make a position that refers to a node id an offset on the node
 inline pos_t make_pos_t(id_t id, bool is_rev, uint64_t off) {
-    return make_tuple(id, is_rev, off);
+    return std::make_tuple(id, is_rev, off);
 }
 
 /// Extract the id of the node a pos_t is on.
 inline id_t id(const pos_t& pos) {
-    return get<0>(pos);
+    return std::get<0>(pos);
 }
 
 /// Return true if a pos_t is on the reverse strand of its node.
 inline bool is_rev(const pos_t& pos) {
-    return get<1>(pos);
+    return std::get<1>(pos);
 }
 
 /// Get the offset along the selected strand of the node from a pos_t.
 inline uint64_t offset(const pos_t& pos) {
-    return get<2>(pos);
+    return std::get<2>(pos);
 }
 
 /// Get a reference to the Node ID of a pos_t.
 inline id_t& get_id(pos_t& pos) {
-    return get<0>(pos);
+    return std::get<0>(pos);
 }
 
 /// Get a reference to the reverse flag of a pos_t.
 inline bool& get_is_rev(pos_t& pos) {
-    return get<1>(pos);
+    return std::get<1>(pos);
 }
 
 /// Get a reference to the offset field of a pos_t, which counts along the selected strand of the node.
 inline uint64_t& get_offset(pos_t& pos) {
-    return get<2>(pos);
+    return std::get<2>(pos);
 }
 
 /// Return true if a pos_t is unset.

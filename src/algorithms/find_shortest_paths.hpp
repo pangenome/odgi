@@ -12,10 +12,12 @@
 #include "../position.hpp"
 #include "../vg.pb.h"
 #include "../hash_map.hpp"
-#include "../handle.hpp"
+#include <handlegraph/handle_graph.hpp>
 
 namespace vg {
 namespace algorithms {
+
+using namespace handlegraph;
     
     /// Finds the length of the shortest oriented path from the given handle
     /// in a given direction to all reachable oriented nodes on a directed walk.

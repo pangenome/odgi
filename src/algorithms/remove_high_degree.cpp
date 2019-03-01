@@ -3,6 +3,8 @@
 namespace dsgvg {
 namespace algorithms {
 
+using namespace handlegraph;
+
 void remove_high_degree_nodes(DeletableHandleGraph& g, int max_degree) {
     std::vector<handle_t> to_remove;
     g.for_each_handle([&](const handle_t& h) {

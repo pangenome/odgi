@@ -5,7 +5,8 @@
 #include <vector>
 #include <list>
 #include "threads.hpp"
-#include "handle.hpp"
+#include <handlegraph/util.hpp>
+#include <handlegraph/handle_graph.hpp>
 #include "position.hpp"
 
 /** \file 
@@ -13,6 +14,8 @@
  */
 
 namespace dsgvg {
+
+using namespace handlegraph;
 
 namespace algorithms {
 

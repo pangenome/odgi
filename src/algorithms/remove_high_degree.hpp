@@ -7,12 +7,14 @@
  * Defines a process that removes high-degree nodes from a graph
  */
 
-#include "handle.hpp"
+#include <handlegraph/deletable_handle_graph.hpp>
 #include <vector>
 #include <iostream>
 
 namespace dsgvg {
 namespace algorithms {
+
+using namespace handlegraph;
 
 void remove_high_degree_nodes(DeletableHandleGraph& g, int max_degree);
 

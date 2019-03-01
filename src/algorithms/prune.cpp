@@ -20,10 +20,10 @@ std::vector<edge_t> find_edges_to_prune(const HandleGraph& graph, size_t k, size
                 // determine next positions
                 id_t handle_id = graph.get_id(handle);
                 size_t handle_length = graph.get_length(handle);
-                string handle_seq = graph.get_sequence(handle);
+                std::string handle_seq = graph.get_sequence(handle);
                 for (size_t i = 0; i < handle_length;  ++i) {
                     pos_t begin = make_pos_t(handle_id, handle_is_rev, handle_length);
-                    pos_t end = make_pos_t(handle_id, handle_is_rev, min(handle_length, i+k));
+                    pos_t end = make_pos_t(handle_id, handle_is_rev, std::min(handle_length, i+k));
                     walk_t walk = walk_t(offset(end)-offset(begin), begin, end, handle, 0);
                     if (walk.length < k) {
                         // are we branching over more than one edge?
@@ -59,7 +59,7 @@ std::vector<edge_t> find_edges_to_prune(const HandleGraph& graph, size_t k, size
                             id_t curr_id = graph.get_id(walk.curr);
                             size_t curr_length = graph.get_length(walk.curr);
                             bool curr_is_rev = graph.get_is_reverse(walk.curr);
-                            size_t take = min(curr_length, k-walk.length);
+                            size_t take = std::min(curr_length, k-walk.length);
                             walk.end = make_pos_t(curr_id, curr_is_rev, take);
                             walk.length += take;
                             if (walk.length < k) {

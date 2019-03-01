@@ -6,6 +6,7 @@ namespace vg {
 namespace algorithms {
 
 using namespace std;
+using namespace handlegraph;
 
 bool is_head_node(handle_t h, const HandleGraph* g) {
 	bool no_left_edges = true;

@@ -4,6 +4,7 @@ namespace vg {
 namespace algorithms {
 
 using namespace std;
+using namespace handlegraph;
 
     size_t count_walks(const HandleGraph* graph) {
         

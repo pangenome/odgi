@@ -14,16 +14,16 @@ bool graph_t::has_node(id_t node_id) const {
 
 /// Look up the handle for the node with the given ID in the given orientation
 handle_t graph_t::get_handle(const id_t& node_id, bool is_reverse) const {
-    //return handle_helper::pack(graph_id_wt.select(0, node_id), is_reverse);
+    //return number_bool_packing::pack(graph_id_wt.select(0, node_id), is_reverse);
     //std::cerr << "node_id " << node_id << " " << graph_id_map.at(node_id) << std::endl;
     auto f = graph_id_map.find(node_id);
     assert(f != graph_id_map.end());
-    return handle_helper::pack(f->second, is_reverse);
+    return number_bool_packing::pack(f->second, is_reverse);
 }
 
 /// Get the ID from a handle
 id_t graph_t::get_id(const handle_t& handle) const {
-    return node_v.at(handle_helper::unpack_number(handle)).id();
+    return node_v.at(number_bool_packing::unpack_number(handle)).id();
 }
 
 /// get the backing node for a given node id
@@ -35,12 +35,12 @@ uint64_t graph_t::get_node_rank(const id_t& node_id) const {
     
 /// Get the orientation of a handle
 bool graph_t::get_is_reverse(const handle_t& handle) const {
-    return handle_helper::unpack_bit(handle);
+    return number_bool_packing::unpack_bit(handle);
 }
     
 /// Invert the orientation of a handle (potentially without getting its ID)
 handle_t graph_t::flip(const handle_t& handle) const {
-    return handle_helper::toggle_bit(handle);
+    return number_bool_packing::toggle_bit(handle);
 }
     
 /// Get the length of a node
@@ -53,7 +53,7 @@ size_t graph_t::get_length(const handle_t& handle) const {
 uint64_t graph_t::get_handle_rank(const handle_t& handle) const {
     // convert between handle and internal rank
     // deals with deleted nodes
-    uint64_t rank = handle_helper::unpack_number(handle);
+    uint64_t rank = number_bool_packing::unpack_number(handle);
     if (!_deleted_node_count) {
         return rank;
     } else {
@@ -64,15 +64,15 @@ uint64_t graph_t::get_handle_rank(const handle_t& handle) const {
 
 /// Get the sequence of a node, presented in the handle's local forward orientation.
 std::string graph_t::get_sequence(const handle_t& handle) const {
-    auto& seq = node_v.at(handle_helper::unpack_number(handle)).sequence();
+    auto& seq = node_v.at(number_bool_packing::unpack_number(handle)).sequence();
     return (get_is_reverse(handle) ? reverse_complement(seq) : seq);
 }
     
 /// Loop over all the handles to next/previous (right/left) nodes. Passes
 /// them to a callback which returns false to stop iterating and true to
 /// continue. Returns true if we finished and false if we stopped early.
-bool graph_t::follow_edges(const handle_t& handle, bool go_left, const std::function<bool(const handle_t&)>& iteratee) const {
-    const node_t& node = node_v.at(handle_helper::unpack_number(handle));
+bool graph_t::follow_edges_impl(const handle_t& handle, bool go_left, const std::function<bool(const handle_t&)>& iteratee) const {
+    const node_t& node = node_v.at(number_bool_packing::unpack_number(handle));
     bool is_rev = get_is_reverse(handle);
     bool result = true;
     id_t node_id = node.id();
@@ -105,43 +105,27 @@ bool graph_t::follow_edges(const handle_t& handle, bool go_left, const std::func
 /// returns false. Can be told to run in parallel, in which case stopping
 /// after a false return value is on a best-effort basis and iteration
 /// order is not defined.
-void graph_t::for_each_handle(const std::function<bool(const handle_t&)>& iteratee, bool parallel) const {
+bool graph_t::for_each_handle_impl(const std::function<bool(const handle_t&)>& iteratee, bool parallel) const {
     if (parallel) {
-        volatile bool flag=false;
+        volatile bool flag=true;
 #pragma omp parallel for
         for (uint64_t i = 0; i < node_v.size(); ++i) {
             if (deleted_id_bv.at(i) == 1) continue;
-            if (flag) continue;
-            bool result = iteratee(handle_helper::pack(i, false));
+            if (!flag) continue;
+            bool result = iteratee(number_bool_packing::pack(i,false));
 #pragma omp atomic
             flag &= result;
         }
+        return flag;
     } else {
         for (uint64_t i = 0; i < node_v.size(); ++i) {
             if (deleted_id_bv.at(i) == 1) continue;
-            if (!iteratee(handle_helper::pack(i, false))) break;
+            if (!iteratee(number_bool_packing::pack(i,false))) return false;
         }
+        return true;
     }
 }
 
-void graph_t::for_each_edge(const std::function<bool(const edge_t&)>& iteratee, bool parallel){
-    for_each_handle([&](const handle_t& handle){
-            bool keep_going = true;
-            follow_edges(handle, false, [&](const handle_t& next){
-                    if (as_integer(handle) < as_integer(next)) {
-                        keep_going = iteratee(edge_handle(handle, next));
-                    }
-                    return keep_going;
-                });
-            follow_edges(flip(handle), false, [&](const handle_t& next){
-                    if (as_integer(handle) < as_integer(next)) {
-                        keep_going = iteratee(edge_handle(flip(handle), next));
-                    }
-                    return keep_going;
-                });
-        }, parallel);
-}
-    
 /// Return the number of nodes in the graph
 /// TODO: can't be node_count because XG has a field named node_count.
 size_t graph_t::node_size(void) const {
@@ -173,33 +157,6 @@ size_t graph_t::get_degree(const handle_t& handle, bool go_left) const {
     follow_edges(handle, go_left, [&degree](const handle_t& h) { ++degree; });
     return degree;
 }
-    
-////////////////////////////////////////////////////////////////////////////
-// Concrete utility methods
-////////////////////////////////////////////////////////////////////////////
-    
-/// Get a Protobuf Visit from a handle.
-//Visit to_visit(const handle_t& handle) const;
-    
-/// Get the locally forward version of a handle
-handle_t graph_t::forward(const handle_t& handle) const {
-    handle_t handle_fwd = handle;
-    if (get_is_reverse(handle)) flip(handle_fwd);
-    return handle_fwd;
-}
-
-/// A pair of handles can be used as an edge. When so used, the handles have a
-/// canonical order and orientation.
-edge_t graph_t::edge_handle(const handle_t& left, const handle_t& right) const {
-    return make_pair(left, right);
-}
-    
-/// Such a pair can be viewed from either inward end handle and produce the
-/// outward handle you would arrive at.
-/*
-handle_t graph_t::traverse_edge_handle(const edge_t& edge, const handle_t& left) const {
-}
-*/
     
 /**
  * This is the interface for a handle graph that stores embedded paths.
@@ -240,27 +197,29 @@ size_t graph_t::get_path_count(void) const {
 }
     
 /// Execute a function on each path in the graph
-// TODO: allow stopping early?
-void graph_t::for_each_path_handle(const std::function<void(const path_handle_t&)>& iteratee) const {
-    for (uint64_t i = 0; i < _path_handle_next; ++i) {
+bool graph_t::for_each_path_handle_impl(const std::function<bool(const path_handle_t&)>& iteratee) const {
+    bool flag = true;
+    for (uint64_t i = 1; i <= _path_handle_next && flag; ++i) {
         path_handle_t path = as_path_handle(i);
         if (get_occurrence_count(path) > 0) {
-            iteratee(path);
+            flag &= iteratee(path);
         }
     }
+    return flag;
 }
 
-void graph_t::for_each_occurrence_on_handle(const handle_t& handle, const std::function<void(const occurrence_handle_t&)>& iteratee) const {
-    //id_t handle_id = get_id(handle);
-    const node_t& node = node_v.at(handle_helper::unpack_number(handle));
+bool graph_t::for_each_occurrence_on_handle_impl(const handle_t& handle, const std::function<bool(const occurrence_handle_t&)>& iteratee) const {
+    const node_t& node = node_v.at(number_bool_packing::unpack_number(handle));
+    bool flag = true;
     id_t handle_id = node.id();
     uint64_t path_count = node.path_count();
     for (uint64_t i = 0; i < path_count; ++i) {
         occurrence_handle_t occ;
         as_integers(occ)[0] = handle_id;
         as_integers(occ)[1] = i;
-        iteratee(occ);
+        flag &= iteratee(occ);
     }
+    return flag;
 }
 
 /// Returns a vector of all occurrences of a node on paths. Optionally restricts to
@@ -278,7 +237,7 @@ std::vector<occurrence_handle_t> graph_t::occurrences_of_handle(const handle_t& 
 }
 
 size_t graph_t::get_occurrence_count(const handle_t& handle) const {
-    const node_t& node = node_v.at(handle_helper::unpack_number(handle));
+    const node_t& node = node_v.at(number_bool_packing::unpack_number(handle));
     return node.path_count();
 }
 
@@ -355,9 +314,12 @@ bool graph_t::is_empty(const path_handle_t& path_handle) const {
     return get_occurrence_count(path_handle) == 0;
 }
 
-////////////////////////////////////////////////////////////////////////////
-// Concrete utility methods
-////////////////////////////////////////////////////////////////////////////
+/**
+ * This is the interface for a handle graph that supports modification.
+ */
+/*
+ * Note: All operations may invalidate path handles and occurrence handles.
+ */
 
 /// Loop over all the occurrences along a path, from first through last
 void graph_t::for_each_occurrence_in_path(const path_handle_t& path, const std::function<void(const occurrence_handle_t&)>& iteratee) const {
@@ -369,13 +331,6 @@ void graph_t::for_each_occurrence_in_path(const path_handle_t& path, const std::
         iteratee(occ);
     }
 }
-
-/**
- * This is the interface for a handle graph that supports modification.
- */
-/*
- * Note: All operations may invalidate path handles and occurrence handles.
- */
     
 /// Create a new node with the given sequence and return the handle.
 handle_t graph_t::create_handle(const std::string& sequence) {
@@ -413,7 +368,7 @@ handle_t graph_t::create_handle(const std::string& sequence, const id_t& id) {
     // increment node count
     ++_node_count;
     // return handle
-    return handle_helper::pack(handle_rank, 0);
+    return number_bool_packing::pack(handle_rank, 0);
 }
     
 /// Remove the node belonging to the given handle and all of its edges.
@@ -456,10 +411,10 @@ void graph_t::destroy_handle(const handle_t& handle) {
             }
         }
     }
-    // remove from graph_id_iv
-    auto& node = node_v[handle_helper::unpack_number(handle)];
+    // remove from the graph by hiding it (compaction later)
+    auto& node = node_v[number_bool_packing::unpack_number(handle)];
     node.clear();
-    deleted_id_bv[handle_helper::unpack_number(handle)] = 1;
+    deleted_id_bv[number_bool_packing::unpack_number(handle)] = 1;
     // from the id to handle map
     graph_id_map.erase(id);
     // and from the set of hidden nodes, if it's a member
@@ -500,8 +455,8 @@ void graph_t::create_edge(const handle_t& left, const handle_t& right) {
     canonicalize_edge(left_h, right_h);
     if (has_edge(left_h, right_h)) return; // do nothing if edge exists
 
-    uint64_t left_rank = handle_helper::unpack_number(left_h);
-    uint64_t right_rank = handle_helper::unpack_number(right_h);
+    uint64_t left_rank = number_bool_packing::unpack_number(left_h);
+    uint64_t right_rank = number_bool_packing::unpack_number(right_h);
     uint64_t right_relative = edge_to_delta(right_h, left_h);
     uint64_t left_relative = edge_to_delta(left_h, right_h);
 
@@ -559,8 +514,8 @@ void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
     handle_t right_h = right;
     canonicalize_edge(left_h, right_h);
     
-    uint64_t left_rank = handle_helper::unpack_number(left_h);
-    uint64_t right_rank = handle_helper::unpack_number(right_h);
+    uint64_t left_rank = number_bool_packing::unpack_number(left_h);
+    uint64_t right_rank = number_bool_packing::unpack_number(right_h);
     auto& left_node = node_v.at(left_rank);
     auto& right_node = node_v.at(right_rank);
     bool left_rev = get_is_reverse(left_h);
@@ -729,7 +684,7 @@ handle_t graph_t::apply_orientation(const handle_t& handle) {
     // we have the technology. we can rebuild it.
     // replace the handle sequence
     //set_handle_sequence(handle, seq);
-    auto& node = node_v.at(handle_helper::unpack_number(handle));
+    auto& node = node_v.at(number_bool_packing::unpack_number(handle));
     
     node.set_sequence(get_sequence(handle));
     node.flip_paths();
@@ -751,7 +706,7 @@ handle_t graph_t::apply_orientation(const handle_t& handle) {
 
 void graph_t::set_handle_sequence(const handle_t& handle, const std::string& seq) {
     assert(seq.size());
-    node_v[handle_helper::unpack_number(handle)].set_sequence(seq);
+    node_v[number_bool_packing::unpack_number(handle)].set_sequence(seq);
 }
     
 /// Split a handle's underlying node at the given offsets in the handle's
@@ -808,7 +763,7 @@ std::vector<handle_t> graph_t::divide_handle(const handle_t& handle, const std::
             replace_occurrence(occ, handles);
         }
     }
-    node_v.at(handle_helper::unpack_number(handle)).clear_path_steps();
+    node_v.at(number_bool_packing::unpack_number(handle)).clear_path_steps();
     // collect the context of the handle
     vector<handle_t> edges_fwd_fwd;
     vector<handle_t> edges_fwd_rev;
@@ -890,7 +845,7 @@ occurrence_handle_t graph_t::create_occurrence(const path_handle_t& path, const 
     occurrence_handle_t occ;
     as_integers(occ)[0] = get_id(handle);
     as_integers(occ)[1] = rank_on_handle;
-    auto& node = node_v.at(handle_helper::unpack_number(handle));
+    auto& node = node_v.at(number_bool_packing::unpack_number(handle));
     node.add_path_step(as_integer(path), get_is_reverse(handle),
                        path_begin_marker, 0, path_end_marker, 0);
     return occ;

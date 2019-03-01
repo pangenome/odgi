@@ -4,7 +4,8 @@
 #include <iostream>
 #include <string>
 #include <list>
-#include "handle.hpp"
+#include <handlegraph/util.hpp>
+#include <handlegraph/handle_graph.hpp>
 #include "position.hpp"
 
 /** \file 
@@ -12,6 +13,8 @@
  */
 
 namespace dsgvg {
+
+using namespace handlegraph;
 
 /// Stores a kmer in the context of a graph.
 struct kmer_t {
@@ -30,13 +33,13 @@ struct kmer_t {
 };
 
 /// Print a kmer_t to a stream.
-ostream& operator<<(ostream& out, const kmer_t& kmer);
+std::ostream& operator<<(std::ostream& out, const kmer_t& kmer);
 
 namespace algorithms {
 
 /// Iterate over all the kmers in the graph, running lambda on each
 void for_each_kmer(const HandleGraph& graph, size_t k,
-                   const function<void(const kmer_t&)>& lambda);
+                   const std::function<void(const kmer_t&)>& lambda);
 
 }
 

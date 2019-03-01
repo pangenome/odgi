@@ -5,7 +5,7 @@ namespace dsgvg {
 namespace algorithms {
 
 void for_each_kmer(const HandleGraph& graph, size_t k,
-                   const function<void(const kmer_t&)>& lambda) {
+                   const std::function<void(const kmer_t&)>& lambda) {
     graph.for_each_handle([&](const handle_t& h) {
             // for the forward and reverse of this handle
             // walk k bases from the end, so that any kmer starting on the node will be represented in the tree we build
@@ -16,10 +16,10 @@ void for_each_kmer(const HandleGraph& graph, size_t k,
                 // determine next positions
                 id_t handle_id = graph.get_id(handle);
                 size_t handle_length = graph.get_length(handle);
-                string handle_seq = graph.get_sequence(handle);
+                std::string handle_seq = graph.get_sequence(handle);
                 for (size_t i = 0; i < handle_length;  ++i) {
                     pos_t begin = make_pos_t(handle_id, handle_is_rev, i);
-                    pos_t end = make_pos_t(handle_id, handle_is_rev, min(handle_length, i+k));
+                    pos_t end = make_pos_t(handle_id, handle_is_rev, std::min(handle_length, i+k));
                     kmer_t kmer = kmer_t(handle_seq.substr(offset(begin), offset(end)-offset(begin)), begin, end, handle);
                     if (kmer.seq.size() < k) {
                         kmer.seq.reserve(k); // may reduce allocation costs
@@ -38,7 +38,7 @@ void for_each_kmer(const HandleGraph& graph, size_t k,
                 while (!kmers.empty()) {
                     // first we check which ones have reached length k in the current handle; for each of these we run lambda and remove them from our list
                     auto kmers_end = kmers.end();
-                    for (list<kmer_t>::iterator q = kmers.begin(); q != kmers_end; ++q) {
+                    for (std::list<kmer_t>::iterator q = kmers.begin(); q != kmers_end; ++q) {
                         auto& kmer = *q;
                         // did we reach our target length?
                         if (kmer.seq.size() == k) {
@@ -54,8 +54,8 @@ void for_each_kmer(const HandleGraph& graph, size_t k,
                             id_t curr_id = graph.get_id(kmer.curr);
                             size_t curr_length = graph.get_length(kmer.curr);
                             bool curr_is_rev = graph.get_is_reverse(kmer.curr);
-                            string curr_seq = graph.get_sequence(kmer.curr);
-                            size_t take = min(curr_length, k-kmer.seq.size());
+                            std::string curr_seq = graph.get_sequence(kmer.curr);
+                            size_t take = std::min(curr_length, k-kmer.seq.size());
                             kmer.end = make_pos_t(curr_id, curr_is_rev, take);
                             kmer.seq.append(curr_seq.substr(0,take));
                             if (kmer.seq.size() < k) {
@@ -80,7 +80,7 @@ void for_each_kmer(const HandleGraph& graph, size_t k,
 
 }
 
-ostream& operator<<(ostream& out, const kmer_t& kmer) {
+std::ostream& operator<<(std::ostream& out, const kmer_t& kmer) {
     out << kmer.seq << "\t"
         << id(kmer.begin) << ":" << (is_rev(kmer.begin) ? "-":"") << offset(kmer.begin) << "\t";
     return out;

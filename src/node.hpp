@@ -4,10 +4,13 @@
 #include <iostream>
 #include <cstdint>
 #include <string>
-#include "handle.hpp"
+#include <handlegraph/util.hpp>
 #include "varint.hpp"
 
 namespace dsgvg {
+
+using namespace handlegraph;
+using id_t = handlegraph::id_t;
 
 /// A node object with the sequence, its edge lists, and paths
 class node_t {

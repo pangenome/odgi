@@ -3,6 +3,8 @@
 namespace vg {
 namespace algorithms {
 
+using namespace handlegraph;
+
     /// An implementation of Bellman-Ford with Yen's ordering improvement applied
     /// to a layout ideally has a small feedback arc set
     size_t bellman_ford_shortest_cycle_length(const HandleGraph* graph,

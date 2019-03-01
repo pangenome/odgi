@@ -12,6 +12,8 @@ namespace vg {
 namespace algorithms {
 
 using namespace structures;
+using namespace handlegraph;
+
 
 void extract_containing_graph(const HandleGraph* source,
                               MutableHandleGraph* into,

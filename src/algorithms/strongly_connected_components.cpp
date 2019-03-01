@@ -4,6 +4,7 @@ namespace vg {
 namespace algorithms {
 
 using namespace std;
+using namespace handlegraph;
     // recursion-free version of Tarjan's strongly connected components algorithm
     // https://en.wikipedia.org/wiki/Tarjan%27s_strongly_connected_components_algorithm
     // Generalized to bidirected graphs as described (confusingly) in
@@ -24,7 +25,7 @@ using namespace std;
     // node in a component if either orientation is in it. But bear in mind that
     // both orientations of a node might not actually be in the same strongly
     // connected component in a bidirected graph, so now the components may overlap.
-    vector<unordered_set<id_t>> strongly_connected_components(const HandleGraph* handle_graph) {
+    vector<unordered_set<handlegraph::id_t>> strongly_connected_components(const HandleGraph* handle_graph) {
         
 #ifdef debug
         cerr << "Computing strongly connected components" << endl;
@@ -43,12 +44,12 @@ using namespace std;
         // What components did we find? Because of the way strongly connected
         // components generalizes, both orientations of a node always end up in the
         // same component.
-        vector<unordered_set<id_t>> components;
+        vector<unordered_set<handlegraph::id_t>> components;
         
         // A single node ID from each component we've already added, which we use
         // to deduplicate the results
         // TODO: why do we produce duplicate components in the first place?
-        unordered_set<id_t> already_used;
+        unordered_set<handlegraph::id_t> already_used;
         
         dfs(*handle_graph,
         [&](const handle_t& trav) {
@@ -107,7 +108,7 @@ using namespace std;
 #endif
                 handle_t other;
                 bool is_duplicate = false;
-                unordered_set<id_t> component;
+                unordered_set<handlegraph::id_t> component;
                 do
                 {
                     // Grab everything that was put on the DFS stack below us
@@ -116,7 +117,7 @@ using namespace std;
                     stack.pop_back();
                     on_stack.erase(other);
                     
-                    id_t node_id = handle_graph->get_id(other);
+                    handlegraph::id_t node_id = handle_graph->get_id(other);
                     
                     if (already_used.count(node_id)) {
                         is_duplicate = true;
