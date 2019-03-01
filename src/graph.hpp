@@ -28,12 +28,6 @@ public:
     graph_t(void) {
         // set up initial delimiters
         deleted_id_bv.push_back(1);
-        path_handle_wt.push_back(0);
-        path_rev_iv.push_back(0);
-        path_next_id_iv.push_back(0);
-        path_next_rank_iv.push_back(0);
-        path_prev_id_iv.push_back(0);
-        path_prev_rank_iv.push_back(0);
     }
 
     ~graph_t(void) { clear(); }
@@ -48,13 +42,7 @@ public:
         _path_handle_next = other._path_handle_next;
         deleted_id_bv = other.deleted_id_bv;
         graph_id_map = other.graph_id_map;
-        path_handle_wt = other.path_handle_wt;
-        path_rev_iv = other.path_rev_iv;
-        path_next_id_iv = other.path_next_id_iv;
-        path_next_rank_iv = other.path_next_rank_iv;
-        path_prev_id_iv = other.path_prev_id_iv;
-        path_prev_rank_iv = other.path_prev_rank_iv;
-        path_metadata_map = other.path_metadata_map;
+        path_metadata_v = other.path_metadata_v;
         path_name_map = other.path_name_map;
     }
 
@@ -68,13 +56,7 @@ public:
         _path_handle_next = other._path_handle_next;
         deleted_id_bv = other.deleted_id_bv;
         graph_id_map = other.graph_id_map;
-        path_handle_wt = other.path_handle_wt;
-        path_rev_iv = other.path_rev_iv;
-        path_next_id_iv = other.path_next_id_iv;
-        path_next_rank_iv = other.path_next_rank_iv;
-        path_prev_id_iv = other.path_prev_id_iv;
-        path_prev_rank_iv = other.path_prev_rank_iv;
-        path_metadata_map = other.path_metadata_map;
+        path_metadata_v = other.path_metadata_v;
         path_name_map = other.path_name_map;
     }
 
@@ -96,13 +78,7 @@ public:
         _path_handle_next = other._path_handle_next;
         deleted_id_bv = other.deleted_id_bv;
         graph_id_map = other.graph_id_map;
-        path_handle_wt = other.path_handle_wt;
-        path_rev_iv = other.path_rev_iv;
-        path_next_id_iv = other.path_next_id_iv;
-        path_next_rank_iv = other.path_next_rank_iv;
-        path_prev_id_iv = other.path_prev_id_iv;
-        path_prev_rank_iv = other.path_prev_rank_iv;
-        path_metadata_map = other.path_metadata_map;
+        path_metadata_v = other.path_metadata_v;
         path_name_map = other.path_name_map;
         return *this;
     }
@@ -112,7 +88,7 @@ public:
     
     /// Look up the handle for the node with the given ID in the given orientation
     handle_t get_handle(const id_t& node_id, bool is_reverse = false) const;
-    
+
     /// Get the ID from a handle
     id_t get_id(const handle_t& handle) const;
     
@@ -499,31 +475,7 @@ private:
             right = handle_helper::toggle_bit(right);
         }
     }
-
-    /// ordered path identifiers as they traverse each node
-    /// the index of the path identifier in this WT defines the occurrence_handle_t for the step
-    /// which also maps into the path_next_* and path_prev_* WTs
-    wt_str path_handle_wt;
-
-    /// which orientation are we traversing in?
-    lciv_iv path_rev_iv;
-
-    /// special delimiters used in the path_next_id_wt and path_prev_id_wt
-    const static uint64_t path_begin_marker = 1; //std::numeric_limits<uint64_t>::max()-1;
-    const static uint64_t path_end_marker = 2; // std::numeric_limits<uint64_t>::max();
     
-    /// by occurrence, where this particular occurrence goes next
-    lciv_iv path_next_id_iv;
-
-    /// the rank of the path occurrence among occurrences in this path in the next handle's list
-    lciv_iv path_next_rank_iv;
-
-    /// by occurrence, where this particular occurrence came from 
-    lciv_iv path_prev_id_iv;
-
-    /// the rank of the path occurrence among occurrences in this path in the previous handle's list
-    lciv_iv path_prev_rank_iv;
-
     struct path_metadata_t {
         uint64_t length;
         occurrence_handle_t first;
@@ -531,7 +483,7 @@ private:
         std::string name;
     };
     /// maps between path identifier and the start, end, and length of the path
-    hash_map<uint64_t, path_metadata_t> path_metadata_map;
+    std::vector<path_metadata_t> path_metadata_v;
 
     /// Links path names to handles
     string_hash_map<std::string, uint64_t> path_name_map;
@@ -572,9 +524,6 @@ private:
     /// Decrement the occurrence rank references for this occurrence
     void decrement_rank(const occurrence_handle_t& occurrence_handle);
 
-    /// The internal rank of the occurrence
-    uint64_t occurrence_rank(const occurrence_handle_t& occurrence_handle) const;
-
     /// Help us deal with deleted nodes
     uint64_t get_handle_rank(const handle_t& handle) const;
 
@@ -584,7 +533,17 @@ private:
     /// Set the handle sequence
     void set_handle_sequence(const handle_t& handle, const std::string& seq);
 
+    /// get the backing node rank for a given node id
+    uint64_t get_node_rank(const id_t& node_id) const;
+
 };
+
+const static uint64_t path_begin_marker = 0; //std::numeric_limits<uint64_t>::max()-1;
+const static uint64_t path_end_marker = 1; // std::numeric_limits<uint64_t>::max();
+
+// avoid undefined reference error
+//const uint64_t graph_t::path_begin_marker;
+//const uint64_t graph_t::path_end_marker;
 
 } // end dankness
 

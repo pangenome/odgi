@@ -2040,7 +2040,6 @@ TEST_CASE("Deletable handle graphs with mutable paths work", "[handle][packed][h
                 if (i == 0) {
                     occ = graph.get_first_occurrence(p);
                 }
-
                 REQUIRE(graph.get_path_handle_of_occurrence(occ) == p);
                 REQUIRE(graph.get_occurrence(occ) == occs[i]);
                 REQUIRE(graph.has_previous_occurrence(occ) == (i > 0));
@@ -2133,7 +2132,6 @@ TEST_CASE("Deletable handle graphs with mutable paths work", "[handle][packed][h
         graph.append_occurrence(p2, h1);
         graph.append_occurrence(p2, graph.flip(h2));
         graph.append_occurrence(p2, h3);
-        
         check_path(p2, {h1, graph.flip(h2), h3});
         
         // graph can query occurrences of a node on paths
@@ -2203,11 +2201,11 @@ TEST_CASE("Deletable handle graphs with mutable paths work", "[handle][packed][h
         REQUIRE(found1);
         REQUIRE(found2);
         found1 = found2 = false;
-        
+
         vector<handle_t> segments = graph.divide_handle(h2, {size_t(2), size_t(4)});
         
         // graph preserves paths when dividing nodes
-        
+
         check_path(p1, {h1, segments[0], segments[1], segments[2], h3});
         check_path(p2, {h1, graph.flip(segments[2]), graph.flip(segments[1]), graph.flip(segments[0]), h3});
         

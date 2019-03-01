@@ -127,4 +127,23 @@ inline uint64_t length(const uint64_t& i) {
     }
 }
 
+inline uint64_t bytes(const uint8_t *in, size_t count) {
+    uint64_t bytes = 0;
+    while (count-- > 0) {
+        uint8_t b0 = *in++;
+        bytes++;
+        if (LIKELY(b0 < cut1)) {
+        } else if (b0 < cut2) {
+            uint8_t b1 = *in++;
+            bytes++;
+        } else {
+            size_t sh = b0 - cut2;
+            in += 2 + sh;
+            bytes += 2 + sh;
+        }
+    }
+    return bytes;
+}
+
+
 }

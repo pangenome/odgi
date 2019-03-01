@@ -20,10 +20,17 @@ handle_t graph_t::get_handle(const id_t& node_id, bool is_reverse) const {
     assert(f != graph_id_map.end());
     return handle_helper::pack(f->second, is_reverse);
 }
-    
+
 /// Get the ID from a handle
 id_t graph_t::get_id(const handle_t& handle) const {
     return node_v.at(handle_helper::unpack_number(handle)).id();
+}
+
+/// get the backing node for a given node id
+uint64_t graph_t::get_node_rank(const id_t& node_id) const {
+    auto f = graph_id_map.find(node_id);
+    assert(f != graph_id_map.end());
+    return f->second;
 }
     
 /// Get the orientation of a handle
@@ -57,9 +64,7 @@ uint64_t graph_t::get_handle_rank(const handle_t& handle) const {
 
 /// Get the sequence of a node, presented in the handle's local forward orientation.
 std::string graph_t::get_sequence(const handle_t& handle) const {
-    auto f = graph_id_map.find(get_id(handle));
-    assert(f != graph_id_map.end());
-    auto& seq = node_v.at(f->second).sequence();
+    auto& seq = node_v.at(handle_helper::unpack_number(handle)).sequence();
     return (get_is_reverse(handle) ? reverse_complement(seq) : seq);
 }
     
@@ -67,16 +72,13 @@ std::string graph_t::get_sequence(const handle_t& handle) const {
 /// them to a callback which returns false to stop iterating and true to
 /// continue. Returns true if we finished and false if we stopped early.
 bool graph_t::follow_edges(const handle_t& handle, bool go_left, const std::function<bool(const handle_t&)>& iteratee) const {
-    //std::cerr << "in follow edges" << std::endl;
-    //display();
-    //id_t handle_id = get_id(handle);
     const node_t& node = node_v.at(handle_helper::unpack_number(handle));
     bool is_rev = get_is_reverse(handle);
     bool result = true;
     id_t node_id = node.id();
     const std::vector<uint64_t> node_edges = node.edges();
     if (node_edges.size() == 0) return result;
-    for (uint64_t i = 0; i < node_edges.size(); i+=2) {
+    for (uint64_t i = 0; i+1 < node_edges.size(); i+=2) {
         // unpack the edge
         uint64_t other_id = edge_delta_to_id(node_id, node_edges.at(i));
         uint8_t packed_edge = node_edges.at(i+1);
@@ -224,16 +226,12 @@ path_handle_t graph_t::get_path_handle(const std::string& path_name) const {
 
 /// Look up the name of a path from a handle to it
 std::string graph_t::get_path_name(const path_handle_t& path_handle) const {
-    auto f = path_metadata_map.find(as_integer(path_handle));
-    assert(f != path_metadata_map.end());
-    return f->second.name;
+    return path_metadata_v.at(as_integer(path_handle)).name;
 }
     
 /// Returns the number of node occurrences in the path
 size_t graph_t::get_occurrence_count(const path_handle_t& path_handle) const {
-    auto f = path_metadata_map.find(as_integer(path_handle));
-    if (f == path_metadata_map.end()) return 0;
-    else return f->second.length;
+    return path_metadata_v.at(as_integer(path_handle)).length;
 }
 
 /// Returns the number of paths stored in the graph
@@ -244,7 +242,7 @@ size_t graph_t::get_path_count(void) const {
 /// Execute a function on each path in the graph
 // TODO: allow stopping early?
 void graph_t::for_each_path_handle(const std::function<void(const path_handle_t&)>& iteratee) const {
-    for (uint64_t i = 1; i <= _path_handle_next; ++i) {
+    for (uint64_t i = 0; i < _path_handle_next; ++i) {
         path_handle_t path = as_path_handle(i);
         if (get_occurrence_count(path) > 0) {
             iteratee(path);
@@ -253,11 +251,11 @@ void graph_t::for_each_path_handle(const std::function<void(const path_handle_t&
 }
 
 void graph_t::for_each_occurrence_on_handle(const handle_t& handle, const std::function<void(const occurrence_handle_t&)>& iteratee) const {
-    id_t handle_id = get_id(handle);
-    uint64_t handle_rank = get_handle_rank(handle);
-    uint64_t begin = path_handle_wt.select(handle_rank, 0)+1;
-    uint64_t end = path_handle_wt.select(handle_rank+1, 0);
-    for (uint64_t i = 0; i < end-begin; ++i) {
+    //id_t handle_id = get_id(handle);
+    const node_t& node = node_v.at(handle_helper::unpack_number(handle));
+    id_t handle_id = node.id();
+    uint64_t path_count = node.path_count();
+    for (uint64_t i = 0; i < path_count; ++i) {
         occurrence_handle_t occ;
         as_integers(occ)[0] = handle_id;
         as_integers(occ)[1] = i;
@@ -280,73 +278,72 @@ std::vector<occurrence_handle_t> graph_t::occurrences_of_handle(const handle_t& 
 }
 
 size_t graph_t::get_occurrence_count(const handle_t& handle) const {
-    uint64_t handle_rank = get_handle_rank(handle);
-    uint64_t begin = path_handle_wt.select(handle_rank, 0)+1;
-    uint64_t end = path_handle_wt.select(handle_rank+1, 0);
-    return end - begin;
-}
-
-uint64_t graph_t::occurrence_rank(const occurrence_handle_t& occurrence_handle) const {
-    uint64_t i = get_handle_rank(get_handle(as_integers(occurrence_handle)[0]));
-    uint64_t j = as_integers(occurrence_handle)[1];
-    return path_handle_wt.select(i, 0)+1 + j;
+    const node_t& node = node_v.at(handle_helper::unpack_number(handle));
+    return node.path_count();
 }
 
 /// Get a node handle (node ID and orientation) from a handle to an occurrence on a path
 handle_t graph_t::get_occurrence(const occurrence_handle_t& occurrence_handle) const {
-    uint64_t i = occurrence_rank(occurrence_handle);
-    return get_handle(as_integers(occurrence_handle)[0], path_rev_iv.at(i));
+    return get_handle(as_integers(occurrence_handle)[0],
+                      node_v.at(get_node_rank(as_integers(occurrence_handle)[0])).get_path_step(as_integers(occurrence_handle)[1]).is_rev);
 }
 
 /// Get a path handle (path ID) from a handle to an occurrence on a path
 path_handle_t graph_t::get_path(const occurrence_handle_t& occurrence_handle) const {
-    return as_path_handle(path_handle_wt.at(occurrence_rank(occurrence_handle)));
+    const node_t& node = node_v.at(get_node_rank(as_integers(occurrence_handle)[0]));
+    return as_path_handle(node.get_path_step(as_integers(occurrence_handle)[1]).path_id);
 }
 
 /// Get a handle to the first occurrence in a path.
 /// The path MUST be nonempty.
 occurrence_handle_t graph_t::get_first_occurrence(const path_handle_t& path_handle) const {
-    return path_metadata_map.at(as_integer(path_handle)).first;
+    return path_metadata_v.at(as_integer(path_handle)).first;
 }
     
 /// Get a handle to the last occurrence in a path
 /// The path MUST be nonempty.
 occurrence_handle_t graph_t::get_last_occurrence(const path_handle_t& path_handle) const {
-    return path_metadata_map.at(as_integer(path_handle)).last;
+    return path_metadata_v.at(as_integer(path_handle)).last;
 }
     
 /// Returns true if the occurrence is not the last occurence on the path, else false
 bool graph_t::has_next_occurrence(const occurrence_handle_t& occurrence_handle) const {
-    return path_next_id_iv.at(occurrence_rank(occurrence_handle)) != path_end_marker;
+    const node_t& node = node_v.at(get_node_rank(as_integers(occurrence_handle)[0]));
+    return node.get_path_step(as_integers(occurrence_handle)[1]).next_id != path_end_marker;
 }
     
 /// Returns true if the occurrence is not the first occurence on the path, else false
 bool graph_t::has_previous_occurrence(const occurrence_handle_t& occurrence_handle) const {
-    return path_prev_id_iv.at(occurrence_rank(occurrence_handle)) != path_begin_marker;
+    const node_t& node = node_v.at(get_node_rank(as_integers(occurrence_handle)[0]));
+    return node.get_path_step(as_integers(occurrence_handle)[1]).prev_id != path_begin_marker;
 }
 
 /// Returns a handle to the next occurrence on the path, which must exist
 occurrence_handle_t graph_t::get_next_occurrence(const occurrence_handle_t& occurrence_handle) const {
-    uint64_t i = occurrence_rank(occurrence_handle);
     id_t curr_id = as_integers(occurrence_handle)[0];
     occurrence_handle_t occ;
-    as_integers(occ)[0] = edge_delta_to_id(curr_id, path_next_id_iv.at(i)-2);
-    as_integers(occ)[1] = path_next_rank_iv.at(i);
+    const node_t& node = node_v.at(get_node_rank(as_integers(occurrence_handle)[0]));
+    auto& step = node.get_path_step(as_integers(occurrence_handle)[1]);
+    as_integers(occ)[0] = edge_delta_to_id(curr_id, step.next_id-2);
+    as_integers(occ)[1] = step.next_rank;
     return occ;
 }
 
 /// Returns a handle to the previous occurrence on the path
 occurrence_handle_t graph_t::get_previous_occurrence(const occurrence_handle_t& occurrence_handle) const {
-    uint64_t i = occurrence_rank(occurrence_handle);
     id_t curr_id = as_integers(occurrence_handle)[0];
     occurrence_handle_t occ;
-    as_integers(occ)[0] = edge_delta_to_id(curr_id, path_prev_id_iv.at(i)-2);
-    as_integers(occ)[1] = path_prev_rank_iv.at(i);
+    const node_t& node = node_v.at(get_node_rank(as_integers(occurrence_handle)[0]));
+    auto& step = node.get_path_step(as_integers(occurrence_handle)[1]);
+    as_integers(occ)[0] = edge_delta_to_id(curr_id, step.prev_id-2);
+    as_integers(occ)[1] = step.prev_rank;
     return occ;
 }
 
 path_handle_t graph_t::get_path_handle_of_occurrence(const occurrence_handle_t& occurrence_handle) const {
-    return as_path_handle(path_handle_wt.at(occurrence_rank(occurrence_handle)));
+    const node_t& node = node_v.at(get_node_rank(as_integers(occurrence_handle)[0]));
+    auto& step = node.get_path_step(as_integers(occurrence_handle)[1]);
+    return as_path_handle(step.path_id);
 }
     
 ////////////////////////////////////////////////////////////////////////////
@@ -408,18 +405,11 @@ handle_t graph_t::create_handle(const std::string& sequence, const id_t& id) {
         _min_node_id = new_id;
     }
     // add to node vector
-    node_v.emplace_back(node_t(new_id, sequence));
+    node_v.emplace_back(new_id, sequence);
     uint64_t handle_rank = node_v.size()-1;
     graph_id_map[new_id] = handle_rank;
     // it's not deleted
     deleted_id_bv.insert(handle_rank, 0);
-    // set up path handle mapping
-    path_handle_wt.push_back(0);
-    path_rev_iv.push_back(0);
-    path_next_id_iv.push_back(0);
-    path_next_rank_iv.push_back(0);
-    path_prev_id_iv.push_back(0);
-    path_prev_rank_iv.push_back(0);
     // increment node count
     ++_node_count;
     // return handle
@@ -466,16 +456,6 @@ void graph_t::destroy_handle(const handle_t& handle) {
             }
         }
     }
-    // remove from path handle mapping
-    uint64_t path_offset = path_handle_wt.select(offset, 0);
-    do {
-        path_handle_wt.remove(path_offset);
-        path_rev_iv.remove(path_offset);
-        path_next_id_iv.remove(path_offset);
-        path_next_rank_iv.remove(path_offset);
-        path_prev_id_iv.remove(path_offset);
-        path_prev_rank_iv.remove(path_offset);
-    } while (path_handle_wt.at(path_offset) != 0);
     // remove from graph_id_iv
     auto& node = node_v[handle_helper::unpack_number(handle)];
     node.clear();
@@ -589,13 +569,10 @@ void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
     uint64_t left_relative = edge_to_delta(left_h, right_h);
 
     // remove the edge from both sides
-
-    id_t left_node_id = left_node.id();
     id_t right_node_id = right_node.id();
+    id_t left_node_id = left_node.id();
 
     std::vector<uint64_t> left_node_edges = left_node.edges();
-    std::vector<uint64_t> right_node_edges = right_node.edges();
-
     bool found_edge = false;
     for (uint64_t i = 0; i < left_node_edges.size(); ) {
         uint64_t other_id = edge_delta_to_id(left_node_id, left_node_edges.at(i++));
@@ -608,13 +585,13 @@ void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
             to_curr ^= 1;
         }
         if (other_id == right_node_id && other_rev == right_rev) {
-            i -= 2;
-            left_node.remove_edge(i);
+            left_node.remove_edge((i-2)/2); //convert to edge rank 
             found_edge = true;
             break;
         }
     }
 
+    std::vector<uint64_t> right_node_edges = right_node.edges();
     for (uint64_t i = 0; i < right_node_edges.size(); ) {
         uint64_t other_id = edge_delta_to_id(right_node_id, right_node_edges.at(i++));
         uint8_t packed_edge = right_node_edges.at(i++);
@@ -626,8 +603,7 @@ void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
             to_curr ^= 1;
         }
         if (other_id == left_node_id && other_rev == left_rev) {
-            i -= 2;
-            right_node.remove_edge(i);
+            right_node.remove_edge((i-2)/2); // convert to edge rank
             found_edge = true;
             break;
         }
@@ -651,13 +627,7 @@ void graph_t::clear(void) {
     deleted_id_bv = null_bv;
     graph_id_map.clear();
     node_v.clear();
-    path_handle_wt = null_wt;
-    path_rev_iv = null_iv;
-    path_next_id_iv = null_iv;
-    path_next_rank_iv = null_iv;
-    path_prev_id_iv = null_iv;
-    path_prev_rank_iv = null_iv;
-    path_metadata_map.clear();
+    path_metadata_v.clear();
     path_name_map.clear();
 }
     
@@ -755,15 +725,14 @@ handle_t graph_t::apply_orientation(const handle_t& handle) {
     for (auto& h : edges_rev_fwd) destroy_edge(rev_handle, h);
     for (auto& h : edges_rev_rev) destroy_edge(h, rev_handle);
     // save the sequence's reverse complement, which we will use to add the new handle
-    const std::string seq = get_sequence(handle);
+    //const std::string seq = get_sequence(handle);
     // we have the technology. we can rebuild it.
     // replace the handle sequence
-    set_handle_sequence(handle, seq);
-    vector<occurrence_handle_t> occurrences;
-    for_each_occurrence_on_handle(handle, [&](const occurrence_handle_t& occ) {
-            uint64_t i = occurrence_rank(occ);
-            path_rev_iv[i] = !path_rev_iv[i];
-        });
+    //set_handle_sequence(handle, seq);
+    auto& node = node_v.at(handle_helper::unpack_number(handle));
+    
+    node.set_sequence(get_sequence(handle));
+    node.flip_paths();
     // reconnect it to the graph
     for (auto& h : edges_fwd_fwd) {
         create_edge(handle, h);
@@ -839,16 +808,7 @@ std::vector<handle_t> graph_t::divide_handle(const handle_t& handle, const std::
             replace_occurrence(occ, handles);
         }
     }
-    //destroy_path_handle_records(occurrences);
-    std::vector<uint64_t> occ_ranks;
-    for (auto& occ : occurrences) {
-        occ_ranks.push_back(occurrence_rank(occ));
-    }
-    std::sort(occ_ranks.begin(), occ_ranks.end());
-    std::reverse(occ_ranks.begin(), occ_ranks.end());
-    for (auto& occ_rank : occ_ranks) {
-        destroy_path_handle_records(occ_rank);
-    }
+    node_v.at(handle_helper::unpack_number(handle)).clear_path_steps();
     // collect the context of the handle
     vector<handle_t> edges_fwd_fwd;
     vector<handle_t> edges_fwd_rev;
@@ -901,15 +861,6 @@ void graph_t::destroy_path(const path_handle_t& path) {
     --_path_count;
 }
 
-void graph_t::destroy_path_handle_records(uint64_t i) {
-    path_handle_wt.remove(i);
-    path_rev_iv.remove(i);
-    path_next_id_iv.remove(i);
-    path_next_rank_iv.remove(i);
-    path_prev_id_iv.remove(i);
-    path_prev_rank_iv.remove(i);
-}
-
 /**
  * Create a path with the given name. The caller must ensure that no path
  * with the given name exists already, or the behavior is undefined.
@@ -917,9 +868,10 @@ void graph_t::destroy_path_handle_records(uint64_t i) {
  * remain valid.
  */
 path_handle_t graph_t::create_path_handle(const std::string& name) {
-    path_handle_t path = as_path_handle(++_path_handle_next);
+    path_handle_t path = as_path_handle(_path_handle_next++);
     path_name_map[name] = as_integer(path);
-    auto& p = path_metadata_map[as_integer(path)]; // set empty record
+    path_metadata_v.emplace_back();
+    auto& p = path_metadata_v.back(); //[as_integer(path)]; // set empty record
     occurrence_handle_t occ;
     as_integers(occ)[0] = 0;
     as_integers(occ)[1] = 0;
@@ -938,30 +890,29 @@ occurrence_handle_t graph_t::create_occurrence(const path_handle_t& path, const 
     occurrence_handle_t occ;
     as_integers(occ)[0] = get_id(handle);
     as_integers(occ)[1] = rank_on_handle;
-    // find our insertion point
-    uint64_t i = occurrence_rank(occ);
-    // add reference to the path handle mapping
-    path_handle_wt.insert(i, as_integer(path));
-    // record our handle orientation
-    path_rev_iv.insert(i, get_is_reverse(handle));
-    // pad the next step
-    path_next_id_iv.insert(i, path_end_marker);
-    path_next_rank_iv.insert(i, 0);
-    // pad the previous step
-    path_prev_id_iv.insert(i, path_begin_marker);
-    path_prev_rank_iv.insert(i, 0);
+    auto& node = node_v.at(handle_helper::unpack_number(handle));
+    node.add_path_step(as_integer(path), get_is_reverse(handle),
+                       path_begin_marker, 0, path_end_marker, 0);
     return occ;
 }
 
 void graph_t::link_occurrences(const occurrence_handle_t& from, const occurrence_handle_t& to) {
     path_handle_t path = get_path(from);
     assert(path == get_path(to));
-    uint64_t i = occurrence_rank(from);
-    path_next_id_iv[i] = edge_to_delta(get_occurrence(from), get_occurrence(to))+2;
-    path_next_rank_iv[i] = as_integers(to)[1];
-    uint64_t j = occurrence_rank(to);
-    path_prev_id_iv[j] = edge_to_delta(get_occurrence(to), get_occurrence(from))+2;
-    path_prev_rank_iv[j] = as_integers(from)[1];
+    const handle_t& from_handle = get_occurrence(from);
+    const handle_t& to_handle = get_occurrence(to);
+    const uint64_t& from_rank = as_integers(from)[1];
+    const uint64_t& to_rank = as_integers(to)[1];
+    node_t& from_node = node_v.at(get_node_rank(as_integers(from)[0]));
+    const node_t::step_t from_step = from_node.get_path_step(from_rank);
+    from_node.set_path_step(from_rank, from_step.path_id, from_step.is_rev,
+                            from_step.prev_id, from_step.prev_rank,
+                            edge_to_delta(from_handle, to_handle)+2, to_rank);
+    node_t& to_node = node_v.at(get_node_rank(as_integers(to)[0]));
+    const node_t::step_t to_step = to_node.get_path_step(to_rank);
+    to_node.set_path_step(to_rank, to_step.path_id, to_step.is_rev,
+                          edge_to_delta(to_handle, from_handle)+2, from_rank,
+                          to_step.next_id, to_step.next_rank);
 }
 
 void graph_t::destroy_occurrence(const occurrence_handle_t& occurrence_handle) {
@@ -972,28 +923,34 @@ void graph_t::destroy_occurrence(const occurrence_handle_t& occurrence_handle) {
         // we're about to erase the path, so we need to clean up the path metadata record
         path_handle_t path = get_path_handle_of_occurrence(occurrence_handle);
         path_name_map.erase(get_path_name(path));
-        path_metadata_map.erase(as_integer(path));
+        path_metadata_v[as_integer(path)] = path_metadata_t();
     } else {
         if (has_prev) {
             auto occ = get_previous_occurrence(occurrence_handle);
-            uint64_t i = occurrence_rank(occ);
-            path_next_id_iv[i] = path_end_marker;
-            path_next_rank_iv[i] = 0;
+            node_t& occ_node = node_v.at(get_node_rank(as_integers(occ)[0]));
+            uint64_t occ_rank = as_integers(occ)[1];
+            const node_t::step_t occ_step = occ_node.get_path_step(occ_rank);
+            //std::cerr << "destroy prev links " << occ_node.id() << std::endl;
+            occ_node.set_path_step(occ_rank, occ_step.path_id, occ_step.is_rev,
+                                   occ_step.prev_id, occ_step.prev_rank,
+                                   path_end_marker, 0);
         } else if (has_next) {
             auto occ = get_next_occurrence(occurrence_handle);
-            uint64_t i = occurrence_rank(occ);
-            auto& p = path_metadata_map[as_integer(get_path_handle_of_occurrence(occ))];
+            auto& p = path_metadata_v[as_integer(get_path_handle_of_occurrence(occ))];
             p.first = occ;
         }
         if (has_next) {
             auto occ = get_next_occurrence(occurrence_handle);
-            uint64_t i = occurrence_rank(occ);
-            path_prev_id_iv[i] = path_begin_marker;
-            path_prev_rank_iv[i] = 0;
+            node_t& occ_node = node_v.at(get_node_rank(as_integers(occ)[0]));
+            uint64_t occ_rank = as_integers(occ)[1];
+            const node_t::step_t occ_step = occ_node.get_path_step(occ_rank);
+            //std::cerr << "destroy next links " << occ_node.id() << std::endl;
+            occ_node.set_path_step(occ_rank, occ_step.path_id, occ_step.is_rev,
+                                   path_begin_marker, 0,
+                                   occ_step.next_id, occ_step.next_rank);
         } else if (has_prev) {
             auto occ = get_previous_occurrence(occurrence_handle);
-            uint64_t i = occurrence_rank(occ);
-            auto& p = path_metadata_map[as_integer(get_path_handle_of_occurrence(occ))];
+            auto& p = path_metadata_v[as_integer(get_path_handle_of_occurrence(occ))];
             p.last = occ;
         }
     }
@@ -1008,7 +965,8 @@ void graph_t::destroy_occurrence(const occurrence_handle_t& occurrence_handle) {
                 seen_curr = true;
             }
         });
-    destroy_path_handle_records(occurrence_rank(occurrence_handle));
+    node_t& curr_node = node_v.at(get_node_rank(as_integers(occurrence_handle)[0]));
+    curr_node.remove_path_step(as_integers(occurrence_handle)[1]);
 }
 
 /**
@@ -1018,7 +976,7 @@ void graph_t::destroy_occurrence(const occurrence_handle_t& occurrence_handle) {
  */
 occurrence_handle_t graph_t::append_occurrence(const path_handle_t& path, const handle_t& to_append) {
     // get the last occurrence
-    auto& p = path_metadata_map[as_integer(path)];
+    auto& p = path_metadata_v[as_integer(path)];
     // create the new occurrence
     occurrence_handle_t new_occ = create_occurrence(path, to_append);
     if (!p.length) {
@@ -1040,28 +998,32 @@ occurrence_handle_t graph_t::append_occurrence(const path_handle_t& path, const 
 /// ranks used to refer to it
 void graph_t::decrement_rank(const occurrence_handle_t& occurrence_handle) {
     // what is the actual rank of this occurrence?
+    //std::cerr << "in decrement rank " << as_integers(occurrence_handle)[0] << std::endl;
     if (has_previous_occurrence(occurrence_handle)) {
         auto occ = get_previous_occurrence(occurrence_handle);
         // decrement the rank information
-        uint64_t i = occurrence_rank(occ);
-        uint64_t p = path_next_rank_iv.at(i);
-        assert(p > 0);
-        path_next_rank_iv[i] = p-1;
+        node_t& occ_node = node_v.at(get_node_rank(as_integers(occ)[0]));
+        uint64_t occ_rank = as_integers(occ)[1];
+        const node_t::step_t occ_step = occ_node.get_path_step(occ_rank);
+        occ_node.set_path_step(occ_rank, occ_step.path_id, occ_step.is_rev,
+                               occ_step.prev_id, occ_step.prev_rank,
+                               occ_step.next_id, occ_step.next_rank-1);
     } else {
         // update path metadata
-        auto& p = path_metadata_map[as_integer(get_path(occurrence_handle))];
+        auto& p = path_metadata_v[as_integer(get_path(occurrence_handle))];
         --as_integers(p.first)[1];
     }
     if (has_next_occurrence(occurrence_handle)) {
         auto occ = get_next_occurrence(occurrence_handle);
-        // decrement the rank information
-        uint64_t i = occurrence_rank(occ);
-        uint64_t p = path_prev_rank_iv.at(i);
-        assert(p > 0);
-        path_prev_rank_iv[i] = p-1;
+        node_t& occ_node = node_v.at(get_node_rank(as_integers(occ)[0]));
+        uint64_t occ_rank = as_integers(occ)[1];
+        const node_t::step_t occ_step = occ_node.get_path_step(occ_rank);
+        occ_node.set_path_step(occ_rank, occ_step.path_id, occ_step.is_rev,
+                               occ_step.prev_id, occ_step.prev_rank-1,
+                               occ_step.next_id, occ_step.next_rank);
     } else {
         // update path metadata
-        auto& p = path_metadata_map[as_integer(get_path(occurrence_handle))];
+        auto& p = path_metadata_v[as_integer(get_path(occurrence_handle))];
         --as_integers(p.last)[1];
     }
 }
@@ -1132,9 +1094,19 @@ void graph_t::display(void) const {
     for (uint64_t i = 0; i < node_v.size(); ++i) {
         auto& node = node_v.at(i);
         std::cerr << node.id() << ":" << node.sequence() << " ";
-        std::vector<uint64_t> node_edges = node.edges();
+        const std::vector<uint64_t> node_edges = node.edges();
         for (uint64_t j = 0; j < node_edges.size(); ++j) {
             std::cerr << node_edges.at(j) << ",";
+        }
+        std::cerr << " _ ";
+        const std::vector<node_t::step_t> steps = node.get_path_steps();
+        for (auto& step : steps) {
+            std::cerr << step.path_id << ":"
+                      << step.is_rev << ":"
+                      << (step.prev_id == 0 ? "#" : std::to_string(edge_delta_to_id(node.id(), step.prev_id-2))) << ":"
+                      << step.prev_rank << ":"
+                      << (step.next_id == 1 ? "$" : std::to_string(edge_delta_to_id(node.id(), step.next_id-2))) << ":"
+                      << step.next_rank << " ";
         }
         std::cerr << " | ";
     }
@@ -1143,36 +1115,12 @@ void graph_t::display(void) const {
     for (uint64_t i = 0; i < deleted_id_bv.size(); ++i) std::cerr << deleted_id_bv.at(i) << " "; std::cerr << std::endl;
     /// Ordered across the nodes in graph_id_iv, stores the path ids (1-based) at each
     /// segment in seq_wt, delimited by 0, one for each path occurrrence (node traversal).
-    std::cerr << "path_handle_wt" << "\t";
-    for (uint64_t i = 0; i < path_handle_wt.size(); ++i) std::cerr << path_handle_wt.at(i) << " "; std::cerr << std::endl;
-    std::cerr << "path_rev_iv" << "\t";
-    for (uint64_t i = 0; i < path_rev_iv.size(); ++i) std::cerr << path_rev_iv.at(i) << " "; std::cerr << std::endl;
-    std::cerr << "path_next_id_iv" << "\t";
-    for (uint64_t i = 0; i < path_next_id_iv.size(); ++i) {
-        //std::cerr << "i is " << i << std::endl;
-        uint64_t j = path_next_id_iv.at(i);
-        if (j == path_begin_marker) std::cerr << "^";
-        else if (j == path_end_marker) std::cerr << "$";
-        else std::cerr << j;
-        std::cerr << " ";
-    } std::cerr << std::endl;
-    std::cerr << "path_next_rn_wt" << "\t";
-    for (uint64_t i = 0; i < path_next_rank_iv.size(); ++i) std::cerr << path_next_rank_iv.at(i) << " "; std::cerr << std::endl;
-    std::cerr << "path_prev_id_iv" << "\t";
-    for (uint64_t i = 0; i < path_prev_id_iv.size(); ++i) {
-        uint64_t j = path_prev_id_iv.at(i);
-        if (j == path_begin_marker) std::cerr << "^";
-        else if (j == path_end_marker) std::cerr << "$";
-        else std::cerr << j;
-        std::cerr << " ";
-    } std::cerr << std::endl;
-    std::cerr << "path_prev_rn_wt" << "\t";
-    for (uint64_t i = 0; i < path_prev_rank_iv.size(); ++i) std::cerr << path_prev_rank_iv.at(i) << " "; std::cerr << std::endl;
     std::cerr << "path_metadata" << "\t";
-    for (auto& p : path_metadata_map) {
-        std::cerr << p.first << ":" << p.second.name << ":"
-                  << as_integers(p.second.first)[0] << "/" << as_integers(p.second.first)[1] << "->"
-                  << as_integers(p.second.last)[0] << "/" << as_integers(p.second.last)[1] << " ";
+    for (uint64_t q = 0; q < path_metadata_v.size(); ++q) {
+        auto& p = path_metadata_v.at(q);
+        std::cerr << q << ":" << p.name << ":"
+                  << as_integers(p.first)[0] << "/" << as_integers(p.first)[1] << "->"
+                  << as_integers(p.last)[0] << "/" << as_integers(p.last)[1] << " ";
     } std::cerr << std::endl;
 
     // not dumped...
@@ -1251,19 +1199,10 @@ uint64_t graph_t::serialize(std::ostream& out) {
         written += node.size();
     }
     written += deleted_id_bv.serialize(out);
-    written += path_handle_wt.serialize(out);
-    written += path_rev_iv.serialize(out);
-    written += path_next_id_iv.serialize(out);
-    written += path_next_rank_iv.serialize(out);
-    written += path_prev_id_iv.serialize(out);
-    written += path_prev_rank_iv.serialize(out);
-    size_t i = path_metadata_map.size();
+    size_t i = path_metadata_v.size();
     out.write((char*)&i,sizeof(size_t));
     written += sizeof(size_t);
-    for (auto& p : path_metadata_map) {
-        out.write((char*)&p.first,sizeof(p.first));
-        written += sizeof(p.first);
-        auto& m = p.second;
+    for (auto m : path_metadata_v) {
         out.write((char*)&m.length,sizeof(m.length));
         written += sizeof(m.length);
         out.write((char*)&m.first,sizeof(m.first));
@@ -1314,19 +1253,12 @@ void graph_t::load(std::istream& in) {
         graph_id_map[node_v.at(i).id()] = i;
     }
     deleted_id_bv.load(in);
-    path_handle_wt.load(in);
-    path_rev_iv.load(in);
-    path_next_id_iv.load(in);
-    path_next_rank_iv.load(in);
-    path_prev_id_iv.load(in);
-    path_prev_rank_iv.load(in);
     size_t i = 0;
     in.read((char*)&i,sizeof(size_t));
-    path_metadata_map.reserve(i);
+    path_metadata_v.reserve(i);
     for (size_t j = 0; j < i; ++j) {
-        uint64_t k;
-        in.read((char*)&k,sizeof(uint64_t));
-        auto& m = path_metadata_map[k];
+        path_metadata_v.emplace_back();
+        auto& m = path_metadata_v.back();
         in.read((char*)&m.length,sizeof(m.length));
         in.read((char*)&m.first,sizeof(m.first));
         in.read((char*)&m.last,sizeof(m.last));
