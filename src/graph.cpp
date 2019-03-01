@@ -199,7 +199,7 @@ size_t graph_t::get_path_count(void) const {
 /// Execute a function on each path in the graph
 bool graph_t::for_each_path_handle_impl(const std::function<bool(const path_handle_t&)>& iteratee) const {
     bool flag = true;
-    for (uint64_t i = 1; i <= _path_handle_next && flag; ++i) {
+    for (uint64_t i = 0; i < _path_handle_next && flag; ++i) {
         path_handle_t path = as_path_handle(i);
         if (get_occurrence_count(path) > 0) {
             flag &= iteratee(path);
