@@ -102,6 +102,8 @@ public:
     void clear_path_steps(void);
     void set_path_count(uint64_t count, const layout_t& layout);
     uint64_t path_count(void) const;
+    uint64_t serialize(std::ostream& out) const;
+    void load(std::istream& in);
     void display(void) const;
 
     // path step helpers

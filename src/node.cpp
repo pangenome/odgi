@@ -225,6 +225,23 @@ uint64_t node_t::path_count(void) const {
     return layout.path_count;
 }
 
+uint64_t node_t::serialize(std::ostream& out) const {
+    uint64_t written = 0;
+    uint64_t node_size = bytes.size();
+    out.write((char*)&node_size, sizeof(node_size));
+    written += sizeof(uint64_t);
+    out.write((char*)bytes.data(), node_size*sizeof(uint8_t));
+    written += sizeof(uint8_t)*node_size;
+    return written;
+}
+
+void node_t::load(std::istream& in) {
+    uint64_t node_size = 0;
+    in.read((char*)&node_size, sizeof(node_size));
+    bytes.resize(node_size);
+    in.read((char*)bytes.data(), node_size*sizeof(uint8_t));
+}
+
 void node_t::display(void) const {
     layout_t layout = get_seq_edge_path_layout();
     std::cerr << layout.id << " "

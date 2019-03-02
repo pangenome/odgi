@@ -1148,11 +1148,7 @@ uint64_t graph_t::serialize(std::ostream& out) {
     written += deleted_id_bv.serialize(out);
     assert(_node_count == node_v.size());
     for (auto& node : node_v) {
-        uint64_t node_size = node.size();
-        out.write((char*)&node_size, sizeof(uint64_t));
-        written += sizeof(uint64_t);
-        out.write((char*)node.data(), node.size());
-        written += node.size();
+        written += node.serialize(out);
     }
     size_t i = path_metadata_v.size();
     out.write((char*)&i,sizeof(size_t));
@@ -1195,13 +1191,10 @@ void graph_t::load(std::istream& in) {
     in.read((char*)&_path_handle_next,sizeof(_path_handle_next));
     in.read((char*)&_deleted_node_count,sizeof(_deleted_node_count));
     deleted_id_bv.load(in);
+    node_v.resize(_node_count);
     for (size_t i = 0; i < _node_count; ++i) {
-        node_v.emplace_back();
-        auto& node = node_v.back();
-        uint64_t node_size = 0;
-        in.read((char*)&node_size, sizeof(uint64_t));
-        node.resize(node_size);
-        in.read((char*)node.data(), node_size);
+        auto& node = node_v[i];
+        node.load(in);
     }
     // rebuild our hash table
     graph_id_map.reserve(node_v.size());
