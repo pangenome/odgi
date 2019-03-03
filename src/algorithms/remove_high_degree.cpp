@@ -1,6 +1,6 @@
 #include "remove_high_degree.hpp"
 
-namespace dsgvg {
+namespace odgi {
 namespace algorithms {
 
 using namespace handlegraph;

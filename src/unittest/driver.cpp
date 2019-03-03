@@ -3,7 +3,7 @@
 #define CATCH_CONFIG_RUNNER
 #include "catch.hpp"
 
-namespace dsgvg {
+namespace odgi {
 namespace unittest {
 
 using namespace std;

@@ -10,7 +10,7 @@
  * Functions for working with Positions and `pos_t`s.
  */
 
-namespace dsgvg {
+namespace odgi {
 
 //using namespace handlegraph;
 

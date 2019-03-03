@@ -4,9 +4,9 @@
 #include "args.hxx"
 //#include "io_helper.hpp"
 
-namespace dsgvg {
+namespace odgi {
 
-using namespace dsgvg::subcommand;
+using namespace odgi::subcommand;
 
 int main_view(int argc, char** argv) {
 
@@ -14,7 +14,7 @@ int main_view(int argc, char** argv) {
     for (uint64_t i = 1; i < argc-1; ++i) {
         argv[i] = argv[i+1];
     }
-    std::string prog_name = "dsgvg view";
+    std::string prog_name = "odgi view";
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
@@ -65,7 +65,7 @@ int main_view(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand dsgvg_view("view", "projection of graphs into other formats",
+static Subcommand odgi_view("view", "projection of graphs into other formats",
                              PIPELINE, 3, main_view);
 
 

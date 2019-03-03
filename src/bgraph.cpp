@@ -219,7 +219,7 @@ namespace betagraph{
 //     void create_edge(const handle_t& left, const handle_t& right);
     
 //     /// Convenient wrapper for create_edge.
-//     inline void create_edge(const dsgvg::edge_t& edge) {
+//     inline void create_edge(const odgi::edge_t& edge) {
 //         create_edge(edge.first, edge.second);
 //     }
     

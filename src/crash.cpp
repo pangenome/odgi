@@ -45,7 +45,7 @@
     #include <backward.hpp>
 #endif
 
-namespace dsgvg {
+namespace odgi {
 
 // env var for getting full stack trace on std::cerr instead of a file path
 const char* var = "DG_FULL_TRACEBACK";

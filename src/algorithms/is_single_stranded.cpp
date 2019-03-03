@@ -1,6 +1,6 @@
 #include "is_single_stranded.hpp"
 
-namespace dsgvg {
+namespace odgi {
 namespace algorithms {
 
 using namespace std;

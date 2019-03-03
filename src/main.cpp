@@ -15,17 +15,17 @@
 #include "crash.hpp"
 
 using namespace std;
-using namespace dsgvg;
+using namespace odgi;
 
 
-void dsgvg_help(char** argv) {
-    cerr << "dsgvg: dynamic succinct variation graph tool" << endl
+void odgi_help(char** argv) {
+    cerr << "odgi: dynamic succinct variation graph tool" << endl
          << endl
          << "usage: " << argv[0] << " <command> [options]" << endl
          << endl
-         << dsgvg::subcommand::PIPELINE << ":" << endl;
+         << odgi::subcommand::PIPELINE << ":" << endl;
          
-    dsgvg::subcommand::Subcommand::for_each(dsgvg::subcommand::PIPELINE, [](const dsgvg::subcommand::Subcommand& command) {
+    odgi::subcommand::Subcommand::for_each(odgi::subcommand::PIPELINE, [](const odgi::subcommand::Subcommand& command) {
         // Announce every subcommand we have
         
         // Pad all the names so the descriptions line up
@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
 
     // Make sure the system meets system requirements (i.e. has all the instructions we need)
     //preflight_check();
-    dsgvg::enable_crash_handling();
+    odgi::enable_crash_handling();
 
     // Set up stack trace support from crash.hpp
     //enable_crash_handling();
@@ -54,11 +54,11 @@ int main(int argc, char *argv[]) {
     setenv("TCMALLOC_LARGE_ALLOC_REPORT_THRESHOLD", "1000000000000000", 1);
 
     if (argc == 1) {
-        dsgvg_help(argv);
+        odgi_help(argv);
         return 1;
     }
     
-    auto* subcommand = dsgvg::subcommand::Subcommand::get(argc, argv);
+    auto* subcommand = odgi::subcommand::Subcommand::get(argc, argv);
     if (subcommand != nullptr) {
         // We found a matching subcommand, so run it
         return (*subcommand)(argc, argv);
@@ -66,7 +66,7 @@ int main(int argc, char *argv[]) {
         // No subcommand found
         string command = argv[1];
         cerr << "error:[dg] command " << command << " not found" << endl;
-        dsgvg_help(argv);
+        odgi_help(argv);
         return 1;
     }
 

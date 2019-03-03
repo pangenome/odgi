@@ -7,7 +7,7 @@
 #include <handlegraph/util.hpp>
 #include "varint.hpp"
 
-namespace dsgvg {
+namespace odgi {
 
 using namespace handlegraph;
 using id_t = handlegraph::id_t;

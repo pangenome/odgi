@@ -11,8 +11,8 @@ namespace betagraph{
     struct bholder_t{
         bool orientation;
         uint32_t length;
-        std::vector<dsgvg::edge_t> in_edges;
-        std::vector<dsgvg::edge_t> out_edges;
+        std::vector<odgi::edge_t> in_edges;
+        std::vector<odgi::edge_t> out_edges;
         std::string sequence;
     };
     struct b_node_t {
@@ -34,7 +34,7 @@ namespace betagraph{
         // spp::sparse_hash_map<int64_t, b_node_t> id_to_node;
         // spp::sparse_hash_map<int64_t, vector<b_edge_t>> node_to_edges;
         // spp::sparse_hash_map<char*, b_path_t> name_to_path;
-        spp::sparse_hash_map<dsgvg::id_t, bholder_t> backer;
+        spp::sparse_hash_map<odgi::id_t, bholder_t> backer;
         handlegraph::id_t min_node_id = 0;
         handlegraph::id_t max_node_id = std::numeric_limits<handlegraph::id_t>::max();
     };
@@ -65,10 +65,10 @@ namespace betagraph{
         handlegraph::id_t get_id(std::string s) const{
             return paths.at(s).id;
         };
-        std::string get_name(dsgvg::path_handle_t p) const{
+        std::string get_name(odgi::path_handle_t p) const{
             return id_to_name.at(as_integer(p));
         };
-        size_t get_path_occurrence_count(dsgvg::path_handle_t p) const{
+        size_t get_path_occurrence_count(odgi::path_handle_t p) const{
             return paths.at(id_to_name.at(as_integer(p))).occurrences.size();
         };
 

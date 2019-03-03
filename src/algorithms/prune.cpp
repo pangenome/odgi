@@ -1,6 +1,6 @@
 #include "prune.hpp"
 
-namespace dsgvg {
+namespace odgi {
 
 namespace algorithms {
 

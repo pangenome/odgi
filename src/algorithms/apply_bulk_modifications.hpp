@@ -12,7 +12,7 @@
 #include <vector>
 #include <unordered_set>
 
-namespace dsgvg {
+namespace odgi {
 namespace algorithms {
 
 using namespace std;

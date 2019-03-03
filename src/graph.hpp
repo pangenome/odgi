@@ -21,7 +21,7 @@
 //#include "varint.hpp"
 #include "node.hpp"
 
-namespace dsgvg {
+namespace odgi {
 
 using namespace handlegraph;
 

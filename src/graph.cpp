@@ -4,7 +4,7 @@
 
 #include "graph.hpp"
 
-namespace dsgvg {
+namespace odgi {
 
 /// Method to check if a node exists by ID
 bool graph_t::has_node(id_t node_id) const {

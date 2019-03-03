@@ -18,7 +18,7 @@
 #include "sdsl/csa_wt.hpp"
 #include "sdsl/suffix_arrays.hpp"
 
-namespace dsgvg {
+namespace odgi {
     
 /*
  * A dynamic integer vector that maintains integers in bit-compressed form.

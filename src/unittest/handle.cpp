@@ -16,7 +16,7 @@
 #include <unordered_map>
 #include <unordered_set>
 
-namespace dsgvg {
+namespace odgi {
 namespace unittest {
 
 using namespace std;

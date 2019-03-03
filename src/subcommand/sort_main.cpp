@@ -3,9 +3,9 @@
 #include "args.hxx"
 #include "algorithms/topological_sort.hpp"
 
-namespace dsgvg {
+namespace odgi {
 
-using namespace dsgvg::subcommand;
+using namespace odgi::subcommand;
 
 int main_sort(int argc, char** argv) {
 
@@ -13,7 +13,7 @@ int main_sort(int argc, char** argv) {
     for (uint64_t i = 1; i < argc-1; ++i) {
         argv[i] = argv[i+1];
     }
-    std::string prog_name = "dsgvg sort";
+    std::string prog_name = "odgi sort";
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
@@ -61,7 +61,7 @@ int main_sort(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand dsgvg_build("sort", "topologically order the graph",
+static Subcommand odgi_build("sort", "topologically order the graph",
                               PIPELINE, 3, main_sort);
 
 

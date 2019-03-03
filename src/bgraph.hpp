@@ -8,7 +8,7 @@
 #include "btypes.hpp"
 
 namespace betagraph{
-    using namespace dsgvg;
+    using namespace odgi;
     using namespace handlegraph;
     class BGraph {
         
@@ -266,7 +266,7 @@ public:
     void create_edge(const handle_t& left, const handle_t& right);
     
     /// Convenient wrapper for create_edge.
-    inline void create_edge(const dsgvg::edge_t& edge) {
+    inline void create_edge(const odgi::edge_t& edge) {
         create_edge(edge.first, edge.second);
     }
     

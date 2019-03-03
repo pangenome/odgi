@@ -3,7 +3,7 @@
 
 #include "dynamic.hpp"
 
-namespace dsgvg {
+namespace odgi {
 
 typedef dyn::succinct_bitvector<dyn::spsi<dyn::packed_vector,256,16> > suc_bv;
 //typedef dyn::spsi<dyn::packed_vector,1024,1> spsi_iv;

@@ -162,7 +162,7 @@ set(ska_INCLUDE "${SOURCE_DIR}")
 set(CMAKE_BUILD_TYPE Release)
 
 # set up our target executable and specify its dependencies and includes
-add_executable(dsgvg
+add_executable(odgi
   ${CMAKE_SOURCE_DIR}/src/graph.cpp
   ${CMAKE_SOURCE_DIR}/src/main.cpp
   ${CMAKE_SOURCE_DIR}/src/crash.cpp
@@ -184,16 +184,16 @@ add_executable(dsgvg
   ${CMAKE_SOURCE_DIR}/src/algorithms/remove_high_degree.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/prune.cpp
   )
-add_dependencies(dsgvg sdsl-lite)
-add_dependencies(dsgvg dynamic)
-add_dependencies(dsgvg gfakluge)
-add_dependencies(dsgvg handlegraph)
-add_dependencies(dsgvg tayweeargs)
-add_dependencies(dsgvg bbhash)
-add_dependencies(dsgvg sparsepp)
-add_dependencies(dsgvg ska)
-add_dependencies(dsgvg bsort)
-target_include_directories(dsgvg PUBLIC
+add_dependencies(odgi sdsl-lite)
+add_dependencies(odgi dynamic)
+add_dependencies(odgi gfakluge)
+add_dependencies(odgi handlegraph)
+add_dependencies(odgi tayweeargs)
+add_dependencies(odgi bbhash)
+add_dependencies(odgi sparsepp)
+add_dependencies(odgi ska)
+add_dependencies(odgi bsort)
+target_include_directories(odgi PUBLIC
   "${CMAKE_SOURCE_DIR}/src"
   "${sdsl-lite_INCLUDE}"
   "${sdsl-lite-divsufsort_INCLUDE}"
@@ -207,7 +207,7 @@ target_include_directories(dsgvg PUBLIC
   "${ska_INCLUDE}"
   "${bbhash_INCLUDE}"
   "${bsort_INCLUDE}")
-target_link_libraries(dsgvg
+target_link_libraries(odgi
   "${sdsl-lite_LIB}/libsdsl.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort64.a"

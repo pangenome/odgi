@@ -14,7 +14,7 @@
 #include <unordered_map>
 #include <vector>
 
-namespace dsgvg {
+namespace odgi {
 namespace algorithms {
 
 using namespace std;
