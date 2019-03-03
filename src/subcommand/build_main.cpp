@@ -4,9 +4,9 @@
 #include "args.hxx"
 //#include "io_helper.hpp"
 
-namespace dsgvg {
+namespace odgi {
 
-using namespace dsgvg::subcommand;
+using namespace odgi::subcommand;
 
 int main_build(int argc, char** argv) {
 
@@ -14,7 +14,7 @@ int main_build(int argc, char** argv) {
     for (uint64_t i = 1; i < argc-1; ++i) {
         argv[i] = argv[i+1];
     }
-    std::string prog_name = "dsgvg build";
+    std::string prog_name = "odgi build";
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
@@ -126,7 +126,7 @@ int main_build(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand dsgvg_build("build", "build dynamic succinct variation graph",
+static Subcommand odgi_build("build", "build dynamic succinct variation graph",
                               PIPELINE, 3, main_build);
 
 

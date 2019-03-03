@@ -3,7 +3,7 @@
 
 #include <omp.h>
 
-namespace dsgvg {
+namespace odgi {
 
 int get_thread_count(void);
 

@@ -76,7 +76,7 @@ struct hash<std::tuple<TT...>>
 }
 #endif  // OVERLOAD_PAIR_HASH
 
-namespace dsgvg {
+namespace odgi {
 
 // Thomas Wang's integer hash function. In many implementations, std::hash
 // is identity function for integers, which leads to performance issues.

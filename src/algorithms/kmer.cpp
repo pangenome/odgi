@@ -1,6 +1,6 @@
 #include "kmer.hpp"
 
-namespace dsgvg {
+namespace odgi {
 
 namespace algorithms {
 

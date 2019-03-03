@@ -1,6 +1,6 @@
 #include "node.hpp"
 
-namespace dsgvg {
+namespace odgi {
 
 const node_t::layout_t node_t::get_seq_layout(void) const {
     node_t::layout_t layout;

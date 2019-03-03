@@ -3,7 +3,7 @@
 
 #include <cstdint>
 
-namespace dsgvg {
+namespace odgi {
 
 uint32_t djb2_hash32(const char *str)
 {

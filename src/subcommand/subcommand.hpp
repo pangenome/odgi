@@ -45,7 +45,7 @@
 #include <string>
 #include <iostream>
 
-namespace dsgvg {
+namespace odgi {
 namespace subcommand {
 
 /**

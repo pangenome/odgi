@@ -12,7 +12,7 @@
  *
  */
 
-namespace dsgvg {
+namespace odgi {
 
 /// Main should call this to turn on our stack tracing support.
 void enable_crash_handling();

@@ -1,6 +1,6 @@
 #include "topological_sort.hpp"
 
-namespace dsgvg {
+namespace odgi {
 namespace algorithms {
 
 using namespace std;

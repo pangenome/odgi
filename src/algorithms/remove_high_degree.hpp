@@ -11,7 +11,7 @@
 #include <vector>
 #include <iostream>
 
-namespace dsgvg {
+namespace odgi {
 namespace algorithms {
 
 using namespace handlegraph;

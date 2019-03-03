@@ -1,6 +1,6 @@
 #include "threads.hpp"
 
-namespace dsgvg {
+namespace odgi {
 
 int get_thread_count(void) {
     int thread_count = 1;

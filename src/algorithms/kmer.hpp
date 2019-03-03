@@ -12,7 +12,7 @@
  * Functions for working with `kmers_t`'s in HandleGraphs.
  */
 
-namespace dsgvg {
+namespace odgi {
 
 using namespace handlegraph;
 
