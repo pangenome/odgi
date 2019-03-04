@@ -30,6 +30,7 @@ struct kmer_t {
     /// Used in construction
     pos_t end; /// one past the (current) end of the kmer
     handle_t curr; /// the next handle we extend into
+    uint16_t forks; /// how many branching edge crossings we took to get here
 };
 
 /// Print a kmer_t to a stream.
@@ -38,7 +39,7 @@ std::ostream& operator<<(std::ostream& out, const kmer_t& kmer);
 namespace algorithms {
 
 /// Iterate over all the kmers in the graph, running lambda on each
-void for_each_kmer(const HandleGraph& graph, size_t k,
+void for_each_kmer(const HandleGraph& graph, size_t k, size_t edge_max,
                    const std::function<void(const kmer_t&)>& lambda);
 
 }

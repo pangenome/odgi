@@ -4,7 +4,7 @@ namespace odgi {
 
 namespace algorithms {
 
-void for_each_kmer(const HandleGraph& graph, size_t k,
+void for_each_kmer(const HandleGraph& graph, size_t k, size_t edge_max,
                    const std::function<void(const kmer_t&)>& lambda) {
     graph.for_each_handle([&](const handle_t& h) {
             // for the forward and reverse of this handle
@@ -22,13 +22,21 @@ void for_each_kmer(const HandleGraph& graph, size_t k,
                     pos_t end = make_pos_t(handle_id, handle_is_rev, std::min(handle_length, i+k));
                     kmer_t kmer = kmer_t(handle_seq.substr(offset(begin), offset(end)-offset(begin)), begin, end, handle);
                     if (kmer.seq.size() < k) {
-                        kmer.seq.reserve(k); // may reduce allocation costs
+                        size_t next_count = 0;
+                        if (edge_max) graph.follow_edges(kmer.curr, false, [&](const handle_t& next) { ++next_count; return next_count <= 1; });
+                        //kmer.seq.reserve(k); // may reduce allocation costs
                         // follow edges if we haven't completed the kmer here
-                        graph.follow_edges(kmer.curr, false, [&](const handle_t& next) {
-                                kmers.push_back(kmer);
-                                auto& todo = kmers.back();
-                                todo.curr = next;
+                        if (next_count > 1 && edge_max == kmer.forks) {
+                        } else {
+                            graph.follow_edges(kmer.curr, false, [&](const handle_t& next) {
+                                    kmers.push_back(kmer);
+                                    auto& todo = kmers.back();
+                                    todo.curr = next;
+                                    if (next_count > 1) {
+                                        ++todo.forks;
+                                    }
                             });
+                        }
                     } else {
                         kmers.push_back(kmer);
                     }
@@ -59,12 +67,29 @@ void for_each_kmer(const HandleGraph& graph, size_t k,
                             kmer.end = make_pos_t(curr_id, curr_is_rev, take);
                             kmer.seq.append(curr_seq.substr(0,take));
                             if (kmer.seq.size() < k) {
+                                size_t next_count = 0;
+                                if (edge_max) graph.follow_edges(kmer.curr, false, [&](const handle_t& next) { ++next_count; return next_count <= 1; });
+                                //kmer.seq.reserve(k); // may reduce allocation costs
+                                // follow edges if we haven't completed the kmer here
+                                if (next_count > 1 && edge_max == kmer.forks) {
+                                } else {
+                                    graph.follow_edges(kmer.curr, false, [&](const handle_t& next) {
+                                            kmers.push_back(kmer);
+                                            auto& todo = kmers.back();
+                                            todo.curr = next;
+                                            if (next_count > 1) {
+                                                ++todo.forks;
+                                            }
+                                        });
+                                }
                                 // if not, we need to expand through the node then follow on
+                                /*
                                 graph.follow_edges(kmer.curr, false, [&](const handle_t& next) {
                                         kmers.push_back(kmer);
                                         auto& todo = kmers.back();
                                         todo.curr = next;
                                     });
+                                */
                                 q = kmers.erase(q);
                             } else {
                                 if (kmer.seq.size() > k) {
