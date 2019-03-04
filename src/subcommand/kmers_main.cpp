@@ -62,6 +62,7 @@ int main_kmers(int argc, char** argv) {
     if (args::get(max_degree)) {
         algorithms::remove_high_degree_nodes(graph, args::get(max_degree));
     }
+    /*
     if (args::get(max_furcations)) {
         std::vector<edge_t> to_prune = algorithms::find_edges_to_prune(graph, args::get(kmer_length), args::get(max_furcations));
         std::cerr << "edges to prune: " << to_prune.size() << std::endl;
@@ -70,9 +71,10 @@ int main_kmers(int argc, char** argv) {
         }
         std::cerr << "done prune" << std::endl;
     }
+    */
     std::vector<std::vector<kmer_t>> buffers(get_thread_count());
     if (args::get(kmers_stdout)) {
-        algorithms::for_each_kmer(graph, args::get(kmer_length), [&](const kmer_t& kmer) {
+        algorithms::for_each_kmer(graph, args::get(kmer_length), args::get(max_furcations), [&](const kmer_t& kmer) {
                 int tid = omp_get_thread_num();
                 auto& buffer = buffers.at(tid);
                 buffer.push_back(kmer);
@@ -97,7 +99,7 @@ int main_kmers(int argc, char** argv) {
         //ska::flat_hash_map<uint32_t, uint32_t> kmer_table;
         vector<uint64_t> kmers;
         uint64_t seen_kmers = 0;
-        algorithms::for_each_kmer(graph, args::get(kmer_length), [&](const kmer_t& kmer) {
+        algorithms::for_each_kmer(graph, args::get(kmer_length), args::get(max_furcations), [&](const kmer_t& kmer) {
                 //int tid = omp_get_thread_num();
 //#pragma omp atomic
                 uint64_t hash = djb2_hash64(kmer.seq.c_str());

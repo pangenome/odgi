@@ -28,7 +28,7 @@ std::vector<edge_t> find_edges_to_prune(const HandleGraph& graph, size_t k, size
                     if (walk.length < k) {
                         // are we branching over more than one edge?
                         size_t next_count = 0;
-                        graph.follow_edges(walk.curr, false, [&](const handle_t& next) { ++next_count; });
+                        graph.follow_edges(walk.curr, false, [&](const handle_t& next) { ++next_count; return next_count <= 1; });
                         graph.follow_edges(walk.curr, false, [&](const handle_t& next) {
                                 if (next_count > 1 && edge_max == walk.forks) { // our next step takes us over the max
                                     int tid = omp_get_thread_num();
@@ -65,7 +65,7 @@ std::vector<edge_t> find_edges_to_prune(const HandleGraph& graph, size_t k, size
                             if (walk.length < k) {
                                 // if not, we need to expand through the node then follow on
                                 size_t next_count = 0;
-                                graph.follow_edges(walk.curr, false, [&](const handle_t& next) { ++next_count; });
+                                graph.follow_edges(walk.curr, false, [&](const handle_t& next) { ++next_count; return next_count <= 1; });
                                 graph.follow_edges(walk.curr, false, [&](const handle_t& next) {
                                         if (next_count > 1 && edge_max == walk.forks) { // our next step takes us over the max
                                             int tid = omp_get_thread_num();
