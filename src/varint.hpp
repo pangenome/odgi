@@ -96,12 +96,61 @@ inline std::vector<uint8_t> encode(const std::vector<uint64_t> &in, std::vector<
     return out;
 }
 
+inline uint8_t* encode(const std::vector<uint64_t> &in, uint8_t* out) {
+    for (auto x : in) {
+        if (x < cut1) {
+            // 1 byte.
+            *out++ = x;
+        } else if (x <= cut1 + 255 + 256 * (cut2 - 1 - cut1)) {
+            // 2 bytes.
+            x -= cut1;
+            *out++ = cut1 + (x >> 8);
+            *out++ = x & 0xff;
+        } else {
+            // 3-9 bytes.
+            unsigned bits = 64 - count_leading_zeros_64(x);
+            unsigned bytes = (bits + 7) / 8;
+            *out++ = cut2 + (bytes - 2);
+            for (unsigned n = 0; n < bytes; n++) {
+                *out++ = x & 0xff;
+                x >>= 8;
+            }
+        }
+    }
+    return out;
+}
+
 inline std::vector<uint8_t> encode(const std::vector<uint64_t> &in) {
     std::vector<uint8_t> out;
     return encode(in, out);
 }
 
-inline void decode(const uint8_t *in, uint64_t *out, size_t count) {
+inline uint8_t* encode(const uint64_t* in, uint8_t* out, uint64_t count) {
+    for (uint64_t i = 0; i < count; ++i) {
+        uint64_t x = *in++;
+        if (x < cut1) {
+            // 1 byte.
+            *out++ = x;
+        } else if (x <= cut1 + 255 + 256 * (cut2 - 1 - cut1)) {
+            // 2 bytes.
+            x -= cut1;
+            *out++ = cut1 + (x >> 8);
+            *out++ = x & 0xff;
+        } else {
+            // 3-9 bytes.
+            unsigned bits = 64 - count_leading_zeros_64(x);
+            unsigned bytes = (bits + 7) / 8;
+            *out++ = cut2 + (bytes - 2);
+            for (unsigned n = 0; n < bytes; n++) {
+                *out++ = x & 0xff;
+                x >>= 8;
+            }
+        }
+    }
+    return out;
+}
+
+inline uint8_t* decode(uint8_t *in, uint64_t *out, size_t count) {
     while (count-- > 0) {
         uint8_t b0 = *in++;
         if (LIKELY(b0 < cut1)) {
@@ -115,6 +164,7 @@ inline void decode(const uint8_t *in, uint64_t *out, size_t count) {
             in += 2 + sh;
         }
     }
+    return in;
 }
 
 inline uint64_t length(const uint64_t& i) {
@@ -127,7 +177,33 @@ inline uint64_t length(const uint64_t& i) {
     }
 }
 
-inline uint64_t bytes(const uint8_t *in, size_t count) {
+inline uint64_t length(const std::vector<uint64_t>& v) {
+    uint64_t l = 0;
+    for (auto& i : v) l += length(i);
+    return l;
+}
+
+inline uint64_t length(const uint64_t* v, uint64_t count) {
+    uint64_t l = 0;
+    for (uint64_t i = 0; i < count; ++i) l += length(*v++);
+    return l;
+}
+
+inline uint8_t* seek(uint8_t *in, size_t count) {
+    while (count-- > 0) {
+        uint8_t b0 = *in++;
+        if (LIKELY(b0 < cut1)) {
+        } else if (b0 < cut2) {
+            uint8_t b1 = *in++;
+        } else {
+            size_t sh = b0 - cut2;
+            in += 2 + sh;
+        }
+    }
+    return in;
+}
+
+inline uint64_t bytes(uint8_t *in, size_t count) {
     uint64_t bytes = 0;
     while (count-- > 0) {
         uint8_t b0 = *in++;

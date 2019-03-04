@@ -55,7 +55,7 @@ bool graph_t::follow_edges_impl(const handle_t& handle, bool go_left, const std:
     const node_t& node = node_v.at(number_bool_packing::unpack_number(handle));
     bool is_rev = get_is_reverse(handle);
     bool result = true;
-    id_t node_id = node.id();
+    id_t node_id = get_id(handle);
     const std::vector<uint64_t> node_edges = node.edges();
     if (node_edges.size() == 0) return result;
     for (uint64_t i = 0; i+1 < node_edges.size(); i+=2) {
@@ -191,7 +191,7 @@ bool graph_t::for_each_path_handle_impl(const std::function<bool(const path_hand
 bool graph_t::for_each_occurrence_on_handle_impl(const handle_t& handle, const std::function<bool(const occurrence_handle_t&)>& iteratee) const {
     const node_t& node = node_v.at(number_bool_packing::unpack_number(handle));
     bool flag = true;
-    id_t handle_id = node.id();
+    id_t handle_id = get_id(handle);
     uint64_t path_count = node.path_count();
     for (uint64_t i = 0; i < path_count; ++i) {
         occurrence_handle_t occ;
@@ -224,13 +224,13 @@ size_t graph_t::get_occurrence_count(const handle_t& handle) const {
 /// Get a node handle (node ID and orientation) from a handle to an occurrence on a path
 handle_t graph_t::get_occurrence(const occurrence_handle_t& occurrence_handle) const {
     return get_handle(as_integers(occurrence_handle)[0],
-                      node_v.at(get_node_rank(as_integers(occurrence_handle)[0])).get_path_step(as_integers(occurrence_handle)[1]).is_rev);
+                      node_v.at(get_node_rank(as_integers(occurrence_handle)[0])).get_path_step(as_integers(occurrence_handle)[1]).is_rev());
 }
 
 /// Get a path handle (path ID) from a handle to an occurrence on a path
 path_handle_t graph_t::get_path(const occurrence_handle_t& occurrence_handle) const {
     const node_t& node = node_v.at(get_node_rank(as_integers(occurrence_handle)[0]));
-    return as_path_handle(node.get_path_step(as_integers(occurrence_handle)[1]).path_id);
+    return as_path_handle(node.get_path_step(as_integers(occurrence_handle)[1]).path_id());
 }
 
 /// Get a handle to the first occurrence in a path.
@@ -248,13 +248,13 @@ occurrence_handle_t graph_t::get_last_occurrence(const path_handle_t& path_handl
 /// Returns true if the occurrence is not the last occurence on the path, else false
 bool graph_t::has_next_occurrence(const occurrence_handle_t& occurrence_handle) const {
     const node_t& node = node_v.at(get_node_rank(as_integers(occurrence_handle)[0]));
-    return node.get_path_step(as_integers(occurrence_handle)[1]).next_id != path_end_marker;
+    return node.get_path_step(as_integers(occurrence_handle)[1]).next_id() != path_end_marker;
 }
     
 /// Returns true if the occurrence is not the first occurence on the path, else false
 bool graph_t::has_previous_occurrence(const occurrence_handle_t& occurrence_handle) const {
     const node_t& node = node_v.at(get_node_rank(as_integers(occurrence_handle)[0]));
-    return node.get_path_step(as_integers(occurrence_handle)[1]).prev_id != path_begin_marker;
+    return node.get_path_step(as_integers(occurrence_handle)[1]).prev_id() != path_begin_marker;
 }
 
 /// Returns a handle to the next occurrence on the path, which must exist
@@ -263,8 +263,8 @@ occurrence_handle_t graph_t::get_next_occurrence(const occurrence_handle_t& occu
     occurrence_handle_t occ;
     const node_t& node = node_v.at(get_node_rank(as_integers(occurrence_handle)[0]));
     auto& step = node.get_path_step(as_integers(occurrence_handle)[1]);
-    as_integers(occ)[0] = edge_delta_to_id(curr_id, step.next_id-2);
-    as_integers(occ)[1] = step.next_rank;
+    as_integers(occ)[0] = edge_delta_to_id(curr_id, step.next_id()-2);
+    as_integers(occ)[1] = step.next_rank();
     return occ;
 }
 
@@ -274,15 +274,15 @@ occurrence_handle_t graph_t::get_previous_occurrence(const occurrence_handle_t& 
     occurrence_handle_t occ;
     const node_t& node = node_v.at(get_node_rank(as_integers(occurrence_handle)[0]));
     auto& step = node.get_path_step(as_integers(occurrence_handle)[1]);
-    as_integers(occ)[0] = edge_delta_to_id(curr_id, step.prev_id-2);
-    as_integers(occ)[1] = step.prev_rank;
+    as_integers(occ)[0] = edge_delta_to_id(curr_id, step.prev_id()-2);
+    as_integers(occ)[1] = step.prev_rank();
     return occ;
 }
 
 path_handle_t graph_t::get_path_handle_of_occurrence(const occurrence_handle_t& occurrence_handle) const {
     const node_t& node = node_v.at(get_node_rank(as_integers(occurrence_handle)[0]));
     auto& step = node.get_path_step(as_integers(occurrence_handle)[1]);
-    return as_path_handle(step.path_id);
+    return as_path_handle(step.path_id());
 }
     
 ////////////////////////////////////////////////////////////////////////////
@@ -365,7 +365,7 @@ handle_t graph_t::create_handle(const std::string& sequence, const id_t& id) {
     // it's not deleted
     deleted_node_bv[handle_rank] = 0;
     // set its values
-    node_v.at(handle_rank).init(id, sequence);
+    node_v.at(handle_rank).init(sequence);
     // increment node count
     --_deleted_node_count;
     ++_node_count;
@@ -525,8 +525,8 @@ void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
     uint64_t left_relative = edge_to_delta(left_h, right_h);
 
     // remove the edge from both sides
-    id_t right_node_id = right_node.id();
-    id_t left_node_id = left_node.id();
+    id_t right_node_id = get_id(right_h);
+    id_t left_node_id = get_id(left_h);
 
     std::vector<uint64_t> left_node_edges = left_node.edges();
     bool found_edge = false;
@@ -859,15 +859,15 @@ void graph_t::link_occurrences(const occurrence_handle_t& from, const occurrence
     const uint64_t& from_rank = as_integers(from)[1];
     const uint64_t& to_rank = as_integers(to)[1];
     node_t& from_node = node_v.at(get_node_rank(as_integers(from)[0]));
-    const node_t::step_t from_step = from_node.get_path_step(from_rank);
-    from_node.set_path_step(from_rank, from_step.path_id, from_step.is_rev,
-                            from_step.prev_id, from_step.prev_rank,
-                            edge_to_delta(from_handle, to_handle)+2, to_rank);
+    node_t::step_t from_step = from_node.get_path_step(from_rank);
+    from_step.set_next_id(edge_to_delta(from_handle, to_handle)+2);
+    from_step.set_next_rank(to_rank);
+    from_node.set_path_step(from_rank, from_step);
     node_t& to_node = node_v.at(get_node_rank(as_integers(to)[0]));
-    const node_t::step_t to_step = to_node.get_path_step(to_rank);
-    to_node.set_path_step(to_rank, to_step.path_id, to_step.is_rev,
-                          edge_to_delta(to_handle, from_handle)+2, from_rank,
-                          to_step.next_id, to_step.next_rank);
+    node_t::step_t to_step = to_node.get_path_step(to_rank);
+    to_step.set_prev_id(edge_to_delta(to_handle, from_handle)+2);
+    to_step.set_prev_rank(from_rank);
+    to_node.set_path_step(to_rank, to_step);
 }
 
 void graph_t::destroy_occurrence(const occurrence_handle_t& occurrence_handle) {
@@ -884,11 +884,11 @@ void graph_t::destroy_occurrence(const occurrence_handle_t& occurrence_handle) {
             auto occ = get_previous_occurrence(occurrence_handle);
             node_t& occ_node = node_v.at(get_node_rank(as_integers(occ)[0]));
             uint64_t occ_rank = as_integers(occ)[1];
-            const node_t::step_t occ_step = occ_node.get_path_step(occ_rank);
+            node_t::step_t occ_step = occ_node.get_path_step(occ_rank);
             //std::cerr << "destroy prev links " << occ_node.id() << std::endl;
-            occ_node.set_path_step(occ_rank, occ_step.path_id, occ_step.is_rev,
-                                   occ_step.prev_id, occ_step.prev_rank,
-                                   path_end_marker, 0);
+            occ_step.set_next_id(path_end_marker);
+            occ_step.set_next_rank(0);
+            occ_node.set_path_step(occ_rank, occ_step);
         } else if (has_next) {
             auto occ = get_next_occurrence(occurrence_handle);
             auto& p = path_metadata_v[as_integer(get_path_handle_of_occurrence(occ))];
@@ -898,11 +898,11 @@ void graph_t::destroy_occurrence(const occurrence_handle_t& occurrence_handle) {
             auto occ = get_next_occurrence(occurrence_handle);
             node_t& occ_node = node_v.at(get_node_rank(as_integers(occ)[0]));
             uint64_t occ_rank = as_integers(occ)[1];
-            const node_t::step_t occ_step = occ_node.get_path_step(occ_rank);
+            node_t::step_t occ_step = occ_node.get_path_step(occ_rank);
             //std::cerr << "destroy next links " << occ_node.id() << std::endl;
-            occ_node.set_path_step(occ_rank, occ_step.path_id, occ_step.is_rev,
-                                   path_begin_marker, 0,
-                                   occ_step.next_id, occ_step.next_rank);
+            occ_step.set_prev_id(path_begin_marker);
+            occ_step.set_prev_rank(0);
+            occ_node.set_path_step(occ_rank, occ_step);
         } else if (has_prev) {
             auto occ = get_previous_occurrence(occurrence_handle);
             auto& p = path_metadata_v[as_integer(get_path_handle_of_occurrence(occ))];
@@ -959,10 +959,9 @@ void graph_t::decrement_rank(const occurrence_handle_t& occurrence_handle) {
         // decrement the rank information
         node_t& occ_node = node_v.at(get_node_rank(as_integers(occ)[0]));
         uint64_t occ_rank = as_integers(occ)[1];
-        const node_t::step_t occ_step = occ_node.get_path_step(occ_rank);
-        occ_node.set_path_step(occ_rank, occ_step.path_id, occ_step.is_rev,
-                               occ_step.prev_id, occ_step.prev_rank,
-                               occ_step.next_id, occ_step.next_rank-1);
+        node_t::step_t occ_step = occ_node.get_path_step(occ_rank);
+        occ_step.set_next_rank(occ_step.next_rank()-1);
+        occ_node.set_path_step(occ_rank, occ_step);
     } else {
         // update path metadata
         auto& p = path_metadata_v[as_integer(get_path(occurrence_handle))];
@@ -972,10 +971,9 @@ void graph_t::decrement_rank(const occurrence_handle_t& occurrence_handle) {
         auto occ = get_next_occurrence(occurrence_handle);
         node_t& occ_node = node_v.at(get_node_rank(as_integers(occ)[0]));
         uint64_t occ_rank = as_integers(occ)[1];
-        const node_t::step_t occ_step = occ_node.get_path_step(occ_rank);
-        occ_node.set_path_step(occ_rank, occ_step.path_id, occ_step.is_rev,
-                               occ_step.prev_id, occ_step.prev_rank-1,
-                               occ_step.next_id, occ_step.next_rank);
+        node_t::step_t occ_step = occ_node.get_path_step(occ_rank);
+        occ_step.set_prev_rank(occ_step.prev_rank()-1);
+        occ_node.set_path_step(occ_rank, occ_step);
     } else {
         // update path metadata
         auto& p = path_metadata_v[as_integer(get_path(occurrence_handle))];
@@ -1048,7 +1046,8 @@ void graph_t::display(void) const {
     std::cerr << "node_v" << "\t";
     for (uint64_t i = 0; i < node_v.size(); ++i) {
         auto& node = node_v.at(i);
-        std::cerr << node.id() << ":" << node.sequence() << " ";
+        id_t node_id = i+1;
+        std::cerr << node_id << ":" << node.sequence() << " ";
         const std::vector<uint64_t> node_edges = node.edges();
         for (uint64_t j = 0; j < node_edges.size(); ++j) {
             std::cerr << node_edges.at(j) << ",";
@@ -1056,12 +1055,12 @@ void graph_t::display(void) const {
         std::cerr << " _ ";
         const std::vector<node_t::step_t> steps = node.get_path_steps();
         for (auto& step : steps) {
-            std::cerr << step.path_id << ":"
-                      << step.is_rev << ":"
-                      << (step.prev_id == 0 ? "#" : std::to_string(edge_delta_to_id(node.id(), step.prev_id-2))) << ":"
-                      << step.prev_rank << ":"
-                      << (step.next_id == 1 ? "$" : std::to_string(edge_delta_to_id(node.id(), step.next_id-2))) << ":"
-                      << step.next_rank << " ";
+            std::cerr << step.path_id() << ":"
+                      << step.is_rev() << ":"
+                      << (step.prev_id() == 0 ? "#" : std::to_string(edge_delta_to_id(node_id, step.prev_id()-2))) << ":"
+                      << step.prev_rank() << ":"
+                      << (step.next_id() == 1 ? "$" : std::to_string(edge_delta_to_id(node_id, step.next_id()-2))) << ":"
+                      << step.next_rank() << " ";
         }
         std::cerr << " | ";
     }
