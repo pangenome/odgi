@@ -35,6 +35,15 @@ const node_t::layout_t node_t::get_seq_edge_path_layout(void) const {
     return layout;
 }
 
+void node_t::init(const id_t& id, const std::string& sequence) {
+    // record the id and sequence size
+    varint::encode({(uint64_t)id, (uint64_t)sequence.size()}, bytes);
+    // and store the sequence
+    bytes.insert(bytes.end(), sequence.begin(), sequence.end());
+    varint::encode({0}, bytes); // record that there are no edges
+    varint::encode({0}, bytes); // record that there are no paths
+}
+
 id_t node_t::id(void) const {
     uint64_t res;
     varint::decode(bytes.data(), &res, 1);
