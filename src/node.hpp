@@ -30,16 +30,8 @@ public:
         this->bytes = other.bytes;
         return *this;
     }
-    node_t(id_t id, const std::string& sequence) {
-        // record the id and sequence size
-        varint::encode({(uint64_t)id, (uint64_t)sequence.size()}, bytes);
-        // and store the sequence
-        bytes.insert(bytes.end(), sequence.begin(), sequence.end());
-        varint::encode({0}, bytes); // record that there are no edges
-        varint::encode({0}, bytes); // record that there are no paths
-        //shrink_to_fit(); // TODO checkme
-        //std::cerr << "created " << id << " " << sequence << std::endl;
-        //display();
+    node_t(const id_t& id, const std::string& sequence) {
+        init(id, sequence);
     }
     uint64_t size(void) {
         return bytes.size();
@@ -76,6 +68,7 @@ public:
     const layout_t get_seq_layout(void) const;
     const layout_t get_seq_edge_layout(void) const;
     const layout_t get_seq_edge_path_layout(void) const;
+    void init(const id_t& id, const std::string& sequence);
     id_t id(void) const;
     uint64_t sequence_size(void) const;
     const std::string sequence(void) const;

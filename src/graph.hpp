@@ -33,7 +33,7 @@ class graph_t : public MutablePathDeletableHandleGraph {
 public:
     graph_t(void) {
         // set up initial delimiters
-        deleted_id_bv.push_back(1);
+        deleted_node_bv.push_back(1);
     }
 
     ~graph_t(void) { clear(); }
@@ -46,9 +46,9 @@ public:
         _edge_count = other._edge_count;
         _path_count = other._path_count;
         _path_handle_next = other._path_handle_next;
+        _deleted_node_count = other._deleted_node_count;
         node_v = other.node_v;
-        deleted_id_bv = other.deleted_id_bv;
-        graph_id_map = other.graph_id_map;
+        deleted_node_bv = other.deleted_node_bv;
         path_metadata_v = other.path_metadata_v;
         path_name_map = other.path_name_map;
     }
@@ -61,9 +61,9 @@ public:
         _edge_count = other._edge_count;
         _path_count = other._path_count;
         _path_handle_next = other._path_handle_next;
+        _deleted_node_count = other._deleted_node_count;
         node_v = other.node_v;
-        deleted_id_bv = other.deleted_id_bv;
-        graph_id_map = other.graph_id_map;
+        deleted_node_bv = other.deleted_node_bv;
         path_metadata_v = other.path_metadata_v;
         path_name_map = other.path_name_map;
     }
@@ -84,9 +84,9 @@ public:
         _edge_count = other._edge_count;
         _path_count = other._path_count;
         _path_handle_next = other._path_handle_next;
+        _deleted_node_count = other._deleted_node_count;
         node_v = other.node_v;
-        deleted_id_bv = other.deleted_id_bv;
-        graph_id_map = other.graph_id_map;
+        deleted_node_bv = other.deleted_node_bv;
         path_metadata_v = other.path_metadata_v;
         path_name_map = other.path_name_map;
         return *this;
@@ -398,10 +398,9 @@ private:
     //lciv_iv graph_id_iv;
     std::vector<node_t> node_v;
     /// Mark deleted nodes here for translating graph ids into internal ranks
-    suc_bv deleted_id_bv;
+    suc_bv deleted_node_bv;
     uint64_t _deleted_node_count = 0;
     /// efficient id to handle/sequence conversion
-    hash_map<id_t, uint64_t> graph_id_map;
     id_t _max_node_id = 0;
     id_t _min_node_id = 0;
     /// records nodes that are hidden, but used to compactly store path sequence that has been removed from the node space
@@ -481,11 +480,8 @@ private:
     /// Decrement the occurrence rank references for this occurrence
     void decrement_rank(const occurrence_handle_t& occurrence_handle);
 
-    /// Help us deal with deleted nodes
-    uint64_t get_handle_rank(const handle_t& handle) const;
-
     /// Compact away the deleted nodes info
-    void rebuild_id_handle_mapping(void);
+    //void rebuild_id_handle_mapping(void);
 
     /// Set the handle sequence
     void set_handle_sequence(const handle_t& handle, const std::string& seq);
