@@ -31,6 +31,7 @@ using id_t = handlegraph::id_t;
 class graph_t : public MutablePathDeletableHandleGraph {
         
 public:
+
     graph_t(void) {
         // set up initial delimiters
         deleted_node_bv.push_back(1);
@@ -38,6 +39,7 @@ public:
 
     ~graph_t(void) { clear(); }
 
+    /*
     /// Copy constructor.
     graph_t(const graph_t& other) {
         _max_node_id = other._max_node_id;
@@ -91,6 +93,7 @@ public:
         path_name_map = other.path_name_map;
         return *this;
     }
+    */
 
     /// Method to check if a node exists by ID
     bool has_node(id_t node_id) const;

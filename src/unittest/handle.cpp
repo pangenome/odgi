@@ -2103,22 +2103,22 @@ TEST_CASE("Deletable handle graphs with mutable paths work", "[handle][packed][h
         REQUIRE(graph.get_path_count() == 0);
         
         path_handle_t p1 = graph.create_path_handle("1");
-        
+
         REQUIRE(graph.has_path("1"));
         REQUIRE(graph.get_path_count() == 1);
         REQUIRE(graph.get_path_handle("1") == p1);
         REQUIRE(graph.get_path_name(p1) == "1");
         REQUIRE(graph.get_occurrence_count(p1) == 0);
         REQUIRE(graph.is_empty(p1));
-        
+
         graph.append_occurrence(p1, h1);
-        
+
         REQUIRE(graph.get_occurrence_count(p1) == 1);
         REQUIRE(!graph.is_empty(p1));
-        
+
         graph.append_occurrence(p1, h2);
         graph.append_occurrence(p1, h3);
-        
+
         REQUIRE(graph.get_occurrence_count(p1) == 3);
         
         // graph can traverse a path
@@ -2202,7 +2202,6 @@ TEST_CASE("Deletable handle graphs with mutable paths work", "[handle][packed][h
         REQUIRE(found1);
         REQUIRE(found2);
         found1 = found2 = false;
-
         vector<handle_t> segments = graph.divide_handle(h2, {size_t(2), size_t(4)});
         
         // graph preserves paths when dividing nodes
@@ -2240,7 +2239,6 @@ TEST_CASE("Deletable handle graphs with mutable paths work", "[handle][packed][h
                 REQUIRE(false);
             }
         });
-        
         REQUIRE(found1);
         REQUIRE(found2);
         REQUIRE(!found3);
