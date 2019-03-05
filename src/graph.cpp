@@ -316,15 +316,9 @@ void graph_t::for_each_occurrence_in_path(const path_handle_t& path, const std::
 handle_t graph_t::create_handle(const std::string& sequence) {
     // get first deleted node to recycle
     if (_deleted_node_count) {
-        --_deleted_node_count;
         return create_handle(sequence, deleted_node_bv.select1(0)+1);
     } else {
-        // just add an empty node
-        node_v.emplace_back();
-        deleted_node_bv.insert(deleted_node_bv.size(), 1);
-        ++_deleted_node_count;
-        // and fill it in
-        return create_handle(sequence, node_v.size());
+        return create_handle(sequence, node_v.size()+1);
     }
 }
 
@@ -342,10 +336,10 @@ handle_t graph_t::create_handle(const std::string& sequence, const id_t& id) {
     assert(sequence.size());
     assert(id > 0);
     if (id > node_v.size()) {
-        uint64_t to_add = id - node_v.size();
+        uint64_t to_add = id - node_v.size(); // + 1e5;
         uint64_t old_size = node_v.size();
         // realloc
-        node_v.resize((int64_t)id);
+        node_v.resize((uint64_t)id);
         // mark empty nodes
         for (uint64_t i = 0; i < to_add; ++i) {
             // insert before final delimiter
@@ -361,13 +355,14 @@ handle_t graph_t::create_handle(const std::string& sequence, const id_t& id) {
         _min_node_id = id;
     }
     // add to node vector
-    uint64_t handle_rank = id-1;
+    uint64_t handle_rank = (uint64_t)id-1;
+    // set its values
+    auto& node = node_v[handle_rank];
+    node.set_sequence(sequence);
     // it's not deleted
     deleted_node_bv[handle_rank] = 0;
-    // set its values
-    node_v.at(handle_rank).init(sequence);
-    // increment node count
     --_deleted_node_count;
+    // increment node count
     ++_node_count;
     // return handle
     return number_bool_packing::pack(handle_rank, 0);
@@ -687,7 +682,8 @@ handle_t graph_t::apply_orientation(const handle_t& handle) {
     auto& node = node_v.at(number_bool_packing::unpack_number(handle));
     
     node.set_sequence(get_sequence(handle));
-    node.flip_paths();
+    node.flip_paths(path_begin_marker, path_end_marker);
+
     // reconnect it to the graph
     for (auto& h : edges_fwd_fwd) {
         create_edge(handle, h);

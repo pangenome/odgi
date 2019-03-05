@@ -2,28 +2,26 @@
 
 namespace odgi {
 
-const node_t::layout_t node_t::get_layout(void) const {
+node_t::layout_t node_t::get_layout(void) const {
     node_t::layout_t layout;
     varint::decode((uint8_t*)bytes.data(), &layout.data[0], 5);
     return layout;
 }
 
-const node_t::layout_t node_t::set_layout(node_t::layout_t layout) {
-    // how big is our layout?
+node_t::layout_t node_t::set_layout(node_t::layout_t layout) {
+    // should we realloc the layout?
     uint64_t old_size = varint::bytes(bytes.data(), 5);
-    uint64_t new_size = varint::length(&layout.data[0], 5);
+    uint64_t new_size = varint::length(layout.data, 5);
     if (new_size < old_size) {
         bytes.erase(bytes.begin(), bytes.begin()+(old_size-new_size));
     } else if (new_size > old_size) {
         bytes.insert(bytes.begin(), new_size-old_size, 0);
     }
+    // we can get away with this because our layout bytes are always going to fit in a single byte
     layout.set_layout_bytes(new_size);
+    //assert(new_size == varint::length(layout.data, 5));
     varint::encode(layout.data, bytes.data(), 5);
     return layout;
-}
-
-void node_t::init(const std::string& sequence) {
-    set_sequence(sequence);
 }
 
 uint64_t node_t::sequence_size(void) const {
@@ -33,13 +31,14 @@ uint64_t node_t::sequence_size(void) const {
 
 const std::string node_t::sequence(void) const {
     node_t::layout_t layout = get_layout();
-    const std::string res((char*)bytes.data()+layout.layout_bytes()+layout.seq_bytes(), layout.seq_bytes());
+    const std::string res((char*)bytes.data()+layout.seq_start(), layout.seq_bytes());
     return res;
 }
 
 void node_t::set_sequence(const std::string& seq) {
     node_t::layout_t layout = get_layout();
     if (seq.size() > layout.seq_bytes()) {
+        bytes.reserve(bytes.size()+seq.size()-layout.seq_bytes()+8);
         bytes.insert(bytes.begin()+layout.seq_start(), seq.size() - layout.seq_bytes(), 0);
         layout.set_seq_bytes(seq.size());
         layout = set_layout(layout);
@@ -51,7 +50,7 @@ void node_t::set_sequence(const std::string& seq) {
     memcpy(bytes.data()+layout.seq_start(), seq.c_str(), seq.size());
 }
 
-const std::vector<uint64_t> node_t::edges(void) const {
+std::vector<uint64_t> node_t::edges(void) const {
     std::vector<uint64_t> res;
     const node_t::layout_t& layout = get_layout();
     if (layout.edge_count()) {
@@ -76,7 +75,7 @@ void node_t::remove_edge(const uint64_t& rank) {
     assert(rank < edge_count());
     node_t::layout_t layout = get_layout();
     if (rank > layout.edge_count()) assert(false);
-    uint64_t edge_offset = layout.edge_start() + varint::bytes(bytes.data()+layout.edge_start(), EDGE_RECORD_LENGTH*(rank-1));
+    uint64_t edge_offset = layout.edge_start() + varint::bytes(bytes.data()+layout.edge_start(), EDGE_RECORD_LENGTH*rank);
     // a bit redundant
     uint64_t j = varint::bytes(bytes.data()+edge_offset, EDGE_RECORD_LENGTH);
     bytes.erase(bytes.begin()+edge_offset, bytes.begin()+edge_offset+j);
@@ -104,8 +103,16 @@ void node_t::add_path_step(const uint64_t& path_id, const bool& is_rev,
 void node_t::add_path_step(const node_t::step_t& step) {
     layout_t layout = get_layout();
     layout.set_path_count(layout.path_count()+1);
-    layout = set_layout(layout);
-    varint::encode(step.data, bytes.data(), 5);
+    set_layout(layout);
+    uint64_t step_bytes = varint::length((uint64_t*)step.data, 5);
+    //std::cerr << "step bytes " << step_bytes << std::endl;
+    uint64_t old_size = bytes.size();
+    assert(bytes.size());
+    bytes.resize(bytes.size()+step_bytes);
+    bytes.reserve(bytes.size() + 8);
+    uint8_t* target = bytes.data() + old_size;
+    uint8_t* result = varint::encode(step.data, target, 5);
+    assert(result - target == step_bytes);
 }
 
 const std::vector<node_t::step_t> node_t::get_path_steps(void) const {
@@ -132,7 +139,7 @@ void node_t::set_path_step(const uint64_t& rank, const step_t& step) {
     layout_t layout = get_layout();
     uint8_t* target = varint::seek(bytes.data() + layout.path_start(), PATH_RECORD_LENGTH*rank);
     uint64_t old_size = varint::bytes(target, PATH_RECORD_LENGTH);
-    uint64_t new_size = varint::length(&step.data[0], PATH_RECORD_LENGTH);
+    uint64_t new_size = varint::length(step.data, PATH_RECORD_LENGTH);
     if (new_size > old_size) {
         // insert
         std::vector<uint8_t>::iterator it(target);
@@ -144,22 +151,29 @@ void node_t::set_path_step(const uint64_t& rank, const step_t& step) {
     varint::encode(step.data, target, 5);
 }
 
-void node_t::flip_paths(void) {
+void node_t::flip_paths(const uint64_t& start_marker, const uint64_t& end_marker) {
     const std::vector<node_t::step_t> steps = get_path_steps();
     // remove all path steps
     node_t::layout_t layout = get_layout();
+    uint64_t old_size = bytes.size();
     bytes.erase(bytes.begin()+layout.path_start(), bytes.end());
+    bytes.resize(old_size);
+    bytes.reserve(old_size+8);
+    uint8_t* target = bytes.data()+layout.path_start();
     // flip them and replace
     for (auto& step : steps) {
-        bytes.resize(bytes.size()+5);
-        varint::encode(step.data, (uint8_t*)bytes.data()+bytes.size(), 5);
+        // flip the step
+        step_t flipped(step.path_id(), !step.is_rev(),
+                       step.prev_id(), step.prev_rank(),
+                       step.next_id(), step.next_rank());
+        target = varint::encode(flipped.data, target, 5);
     }
 }
 
 void node_t::remove_path_step(const uint64_t& rank) {
     node_t::layout_t layout = get_layout();
     if (rank > layout.path_count()) assert(false);
-    uint8_t* i = varint::seek(bytes.data()+layout.path_start(), PATH_RECORD_LENGTH*(rank-1));
+    uint8_t* i = varint::seek(bytes.data()+layout.path_start(), PATH_RECORD_LENGTH*rank);
     uint8_t* j = varint::seek(i, PATH_RECORD_LENGTH);
     bytes.erase((std::vector<uint8_t>::iterator)i,
                 (std::vector<uint8_t>::iterator)j);
@@ -193,6 +207,7 @@ void node_t::load(std::istream& in) {
     uint64_t node_size = 0;
     in.read((char*)&node_size, sizeof(node_size));
     bytes.resize(node_size);
+    bytes.reserve(node_size+8);
     in.read((char*)bytes.data(), node_size*sizeof(uint8_t));
 }
 
