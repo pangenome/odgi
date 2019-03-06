@@ -31,6 +31,7 @@ int main_stats(int argc, char** argv) {
     //args::ValueFlag<uint64_t> aln_min_length(parser, "N", "ignore alignments shorter than this", {'m', "aln-min-length"});
     //args::Flag to_gfa(parser, "to_gfa", "write the graph to stdout in GFA format", {'G', "to-gfa"});
     args::Flag summarize(parser, "summarize", "summarize the graph properties and dimensions", {'S', "summarize"});
+    args::Flag path_coverage(parser, "path_coverage", "provide a histogram of path coverage over bases in the graph", {'C', "path-coverage"});
     //args::Flag debug(parser, "debug", "enable debugging", {'d', "debug"});
     //args::Flag progress(parser, "progress", "show progress updates", {'p', "progress"});
     try {
@@ -73,6 +74,28 @@ int main_stats(int argc, char** argv) {
         std::cerr << "nodes:\t" << node_count << std::endl;
         std::cerr << "edges:\t" << edge_count << std::endl;
         std::cerr << "paths:\t" << path_count << std::endl;
+    }
+    if (args::get(path_coverage)) {
+        std::map<uint64_t, uint64_t> full_histogram;
+        std::map<uint64_t, uint64_t> unique_histogram;
+        graph.for_each_handle([&](const handle_t& h) {
+                std::vector<uint64_t> paths_here;
+                graph.for_each_occurrence_on_handle(h, [&](const occurrence_handle_t& occ) {
+                        paths_here.push_back(as_integer(graph.get_path(occ)));
+                    });
+                std::sort(paths_here.begin(), paths_here.end());
+                std::vector<uint64_t> unique_paths = paths_here;
+                unique_paths.erase(std::unique(unique_paths.begin(), unique_paths.end()), unique_paths.end());
+                full_histogram[paths_here.size()] += graph.get_length(h);
+                unique_histogram[unique_paths.size()] += graph.get_length(h);
+            });
+        std::cout << "type\tcov\tN" << std::endl;
+        for (auto& p : full_histogram) {
+            std::cout << "full\t" << p.first << "\t" << p.second << std::endl;
+        }
+        for (auto& p : unique_histogram) {
+            std::cout << "uniq\t" << p.first << "\t" << p.second << std::endl;
+        }
     }
     return 0;
 }
