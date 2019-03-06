@@ -35,3 +35,9 @@ They can be run via `odgi test`.
 `odgi::graph_t` is a `MutablePathDeletableHandleGraph` in the generic variation graph [handle graph](https://github.com/vgteam/libhandlegraph) hierarchical API model.
 As such, it is possible to add, delete, and modify nodes, edges, and paths through the graph.
 Wherever possible, destructive operations on the graph maintain path validity.
+
+## name
+
+`odgi` is a play on the [Italian word "oggi" (/ˈɔd.dʒi/)](https://en.wiktionary.org/wiki/oggi), which means "today".
+As of 2019, a standard refrain in genomics is that genome graphs will be useful in _x_ years.
+But, if we make them efficient and scalable, they will be useful today.
