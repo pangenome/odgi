@@ -1,5 +1,9 @@
 //
-//  dgraph.hpp
+//  odgi
+//
+//  graph.hpp
+//
+//  main dynamic compact graph definition
 //
 
 #ifndef dgraph_hpp
@@ -13,12 +17,9 @@
 #include "dna.hpp"
 #include <handlegraph/mutable_path_deletable_handle_graph.hpp>
 #include <handlegraph/util.hpp>
-//#include "handle_types.hpp"
-//#include "number_bool_packing.hpp"
 #include "dynamic.hpp"
 #include "dynamic_types.hpp"
 #include "hash_map.hpp"
-//#include "varint.hpp"
 #include "node.hpp"
 
 namespace odgi {
