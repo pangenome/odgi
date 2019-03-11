@@ -169,7 +169,6 @@ add_executable(odgi
   ${CMAKE_SOURCE_DIR}/src/position.cpp
   ${CMAKE_SOURCE_DIR}/src/threads.cpp
   ${CMAKE_SOURCE_DIR}/src/node.cpp
-  ${CMAKE_SOURCE_DIR}/src/varint.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/driver.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/handle.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/fuzz.cpp
