@@ -1,5 +1,9 @@
 //
-//  dgraph.hpp
+//  odgi
+//
+//  graph.hpp
+//
+//  main dynamic compact graph definition
 //
 
 #ifndef dgraph_hpp
@@ -13,20 +17,17 @@
 #include "dna.hpp"
 #include <handlegraph/mutable_path_deletable_handle_graph.hpp>
 #include <handlegraph/util.hpp>
-//#include "handle_types.hpp"
-//#include "number_bool_packing.hpp"
 #include "dynamic.hpp"
 #include "dynamic_types.hpp"
 #include "hash_map.hpp"
-//#include "varint.hpp"
 #include "node.hpp"
 
 namespace odgi {
 
 using namespace handlegraph;
 
-// Resolve ambiguous id_t typedef by putting it in our namespace.
-using id_t = handlegraph::id_t;
+// Resolve ambiguous nid_t typedef by putting it in our namespace.
+using nid_t = handlegraph::nid_t;
 
 class graph_t : public MutablePathDeletableHandleGraph {
         
@@ -96,13 +97,13 @@ public:
     */
 
     /// Method to check if a node exists by ID
-    bool has_node(id_t node_id) const;
+    bool has_node(nid_t node_id) const;
     
     /// Look up the handle for the node with the given ID in the given orientation
-    handle_t get_handle(const id_t& node_id, bool is_reverse = false) const;
+    handle_t get_handle(const nid_t& node_id, bool is_reverse = false) const;
 
     /// Get the ID from a handle
-    id_t get_id(const handle_t& handle) const;
+    nid_t get_id(const handle_t& handle) const;
     
     /// Get the orientation of a handle
     bool get_is_reverse(const handle_t& handle) const;
@@ -136,11 +137,11 @@ public:
     
     /// Return the smallest ID in the graph, or some smaller number if the
     /// smallest ID is unavailable. Return value is unspecified if the graph is empty.
-    id_t min_node_id(void) const;
+    nid_t min_node_id(void) const;
     
     /// Return the largest ID in the graph, or some larger number if the
     /// largest ID is unavailable. Return value is unspecified if the graph is empty.
-    id_t max_node_id(void) const;
+    nid_t max_node_id(void) const;
     
     /// Get a handle from a Visit Protobuf object.
     /// Must be using'd to avoid shadowing.
@@ -262,7 +263,7 @@ public:
     handle_t create_handle(const std::string& sequence);
 
     /// Create a new node with the given id and sequence, then return the handle.
-    handle_t create_handle(const std::string& sequence, const id_t& id);
+    handle_t create_handle(const std::string& sequence, const nid_t& id);
 
     /// Create a "hidden" node which might carry parts of paths that traversed deleted portions of the graph
     handle_t create_hidden_handle(const std::string& sequence);
@@ -404,8 +405,8 @@ private:
     suc_bv deleted_node_bv;
     uint64_t _deleted_node_count = 0;
     /// efficient id to handle/sequence conversion
-    id_t _max_node_id = 0;
-    id_t _min_node_id = 0;
+    nid_t _max_node_id = 0;
+    nid_t _min_node_id = 0;
     /// records nodes that are hidden, but used to compactly store path sequence that has been removed from the node space
     hash_set<uint64_t> graph_id_hidden_set;
 
@@ -490,7 +491,7 @@ private:
     void set_handle_sequence(const handle_t& handle, const std::string& seq);
 
     /// get the backing node rank for a given node id
-    uint64_t get_node_rank(const id_t& node_id) const;
+    uint64_t get_node_rank(const nid_t& node_id) const;
 
 };
 

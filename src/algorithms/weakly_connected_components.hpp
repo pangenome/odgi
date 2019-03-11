@@ -23,12 +23,12 @@ using namespace handlegraph;
 /// might make sense to have a handle-returning version, but the consumers of
 /// weakly connected components right now want IDs, and membership in a weakly
 /// connected component is orientation-independent.
-vector<unordered_set<handlegraph::id_t>> weakly_connected_components(const HandleGraph* graph);
+vector<unordered_set<handlegraph::nid_t>> weakly_connected_components(const HandleGraph* graph);
 
 /// Return pairs of weakly connected component ID sets and the handles that are
 /// their tips, oriented inward. If a node is both a head and a tail, it will
 /// appear in tips in both orientations.
-vector<pair<unordered_set<handlegraph::id_t>, vector<handle_t>>> weakly_connected_components_with_tips(const HandleGraph* graph);
+vector<pair<unordered_set<handlegraph::nid_t>, vector<handle_t>>> weakly_connected_components_with_tips(const HandleGraph* graph);
 
 }
 }

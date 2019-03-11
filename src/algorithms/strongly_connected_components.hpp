@@ -12,7 +12,7 @@ using namespace std;
 using namespace handlegraph;
 
 /// Find all of the nodes with no edges on their left sides.
-vector<unordered_set<handlegraph::id_t>> strongly_connected_components(const HandleGraph* g);
+vector<unordered_set<handlegraph::nid_t>> strongly_connected_components(const HandleGraph* g);
     
 }
 }

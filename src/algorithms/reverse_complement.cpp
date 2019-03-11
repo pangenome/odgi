@@ -6,7 +6,7 @@ namespace algorithms {
 using namespace std;
 using namespace handlegraph;
 
-    unordered_map<handlegraph::id_t, pair<handlegraph::id_t, bool>> reverse_complement_graph(const HandleGraph* source,
+    unordered_map<handlegraph::nid_t, pair<handlegraph::nid_t, bool>> reverse_complement_graph(const HandleGraph* source,
                                                                                              MutableHandleGraph* into) {
         
         if (into->node_size()) {
@@ -15,7 +15,7 @@ using namespace handlegraph;
         }
         
         // the return value, translation from 'into' -> 'source'
-        unordered_map<handlegraph::id_t, pair<handlegraph::id_t, bool>> node_translation;
+        unordered_map<handlegraph::nid_t, pair<handlegraph::nid_t, bool>> node_translation;
         // for translating b/w the graphs the other direction in the course in the algorithm
         unordered_map<handle_t, handle_t> forward_translation;
         

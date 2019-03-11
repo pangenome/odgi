@@ -5,12 +5,14 @@
 #include <cstdint>
 #include <string>
 #include <handlegraph/util.hpp>
+#include <vector>
+#include <cstring>
 #include "varint.hpp"
 
 namespace odgi {
 
 using namespace handlegraph;
-using id_t = handlegraph::id_t;
+using nid_t = handlegraph::nid_t;
 const uint8_t EDGE_RECORD_LENGTH = 2;
 const uint8_t PATH_RECORD_LENGTH = 5;
 
@@ -21,7 +23,6 @@ public:
     void clear(void) {
         bytes.clear();
         bytes = { 5, 0, 0, 0, 0 };
-        bytes.reserve(13);
     }
     struct layout_t {
         uint64_t data[5] = { 0, 0, 0, 0, 0 };

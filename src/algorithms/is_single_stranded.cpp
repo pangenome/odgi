@@ -36,7 +36,7 @@ using namespace handlegraph;
         orientation.reserve(graph->node_size());
         
         // keep track of which nodes have already been oriented and which orientation
-        unordered_map<handlegraph::id_t, bool> recorded_orientation;
+        unordered_map<handlegraph::nid_t, bool> recorded_orientation;
         
         // keep track of whether we've encountered a node in two orientations
         bool failed = false;
@@ -96,7 +96,7 @@ using namespace handlegraph;
     }
 
 /*
-    unordered_set<handlegraph::id_t> make_single_stranded(MutableHandleGraph* graph) {
+    unordered_set<handlegraph::nid_t> make_single_stranded(MutableHandleGraph* graph) {
         
         auto orientations = single_stranded_orientation(graph);
         

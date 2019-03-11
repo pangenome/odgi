@@ -15,7 +15,7 @@ namespace algorithms {
 using namespace structures;
 using namespace handlegraph;
 
-unordered_map<handlegraph::id_t, handlegraph::id_t> extract_extending_graph(const HandleGraph* source, DeletableHandleGraph* into, 
+unordered_map<handlegraph::nid_t, handlegraph::nid_t> extract_extending_graph(const HandleGraph* source, DeletableHandleGraph* into, 
                                                                             int64_t max_dist, pos_t pos,
                                                                             bool backward, bool preserve_cycles_on_src_node) {
     
@@ -41,12 +41,12 @@ unordered_map<handlegraph::id_t, handlegraph::id_t> extract_extending_graph(cons
     };
     
     // a map from node ids in the extracted graph to the node ids in the original graph
-    unordered_map<handlegraph::id_t, handlegraph::id_t> id_trans;
+    unordered_map<handlegraph::nid_t, handlegraph::nid_t> nid_trans;
     
     // a graph index that we will maintain as we extract the subgraph
     handle_t search_origin = source->get_handle(id(pos));
     handle_t src_node = into->create_handle(source->get_sequence(search_origin), source->get_id(search_origin));
-    id_trans[id(pos)] = id(pos);
+    nid_trans[id(pos)] = id(pos);
     
     // Keep a handle to where we start from.
     // If the queue stays empty and we do no searching, the handle will be
@@ -75,10 +75,10 @@ unordered_map<handlegraph::id_t, handlegraph::id_t> extract_extending_graph(cons
         }
     }
     
-    handlegraph::id_t max_id = id(pos);
+    handlegraph::nid_t max_id = id(pos);
     bool cycled_to_source = false;
     unordered_set<edge_t> observed_edges;
-    unordered_set<handlegraph::id_t> observed_nodes{id(pos)};
+    unordered_set<handlegraph::nid_t> observed_nodes{id(pos)};
     
     while (!queue.empty()) {
         // get the next shortest distance traversal from either the init
@@ -101,7 +101,7 @@ unordered_map<handlegraph::id_t, handlegraph::id_t> extract_extending_graph(cons
 #endif
             
             // Get the ID of where we're going.
-            handlegraph::id_t next_id = source->get_id(next);
+            handlegraph::nid_t next_id = source->get_id(next);
             
             // do we ever return to the source node?
             cycled_to_source = cycled_to_source || next_id == id(pos);
@@ -113,7 +113,7 @@ unordered_map<handlegraph::id_t, handlegraph::id_t> extract_extending_graph(cons
             if (!observed_nodes.count(next_id)) {
                 // Grab the sequence in its local forward orientation.
                 into->create_handle(source->get_sequence(source->forward(next)), next_id);
-                id_trans[next_id] = next_id;
+                nid_trans[next_id] = next_id;
                 observed_nodes.insert(next_id);
                 max_id = std::max(next_id, max_id);
             }
@@ -174,13 +174,13 @@ unordered_map<handlegraph::id_t, handlegraph::id_t> extract_extending_graph(cons
         // after we cut it
         
         // choose an ID that hasn't been used yet
-        handlegraph::id_t dup_id = max_id + 1;
+        handlegraph::nid_t dup_id = max_id + 1;
         
         // duplicate the node
         handle_t dup_node = into->create_handle(source->get_sequence(search_origin), dup_id);
         
         // record the ID translation
-        id_trans[dup_id] = id(pos);
+        nid_trans[dup_id] = id(pos);
         
         for (const edge_t& edge : src_edges) {
             
@@ -221,17 +221,17 @@ unordered_map<handlegraph::id_t, handlegraph::id_t> extract_extending_graph(cons
     // cut the source node at the starting position and record a new translation
     size_t forward_offset = is_rev(pos) ? source->get_length(search_origin) - offset(pos) : offset(pos);
     pair<handle_t, handle_t> halves = into->divide_handle(src_node, forward_offset);
-    id_trans.erase(into->get_id(src_node));
+    nid_trans.erase(into->get_id(src_node));
     if (is_rev(pos) == backward) {
         into->destroy_handle(halves.first);
-        id_trans[into->get_id(halves.second)] = id(pos);
+        nid_trans[into->get_id(halves.second)] = id(pos);
     }
     else {
         into->destroy_handle(halves.second);
-        id_trans[into->get_id(halves.first)] = id(pos);
+        nid_trans[into->get_id(halves.first)] = id(pos);
     }
     
-    return id_trans;
+    return nid_trans;
 }
 
 }

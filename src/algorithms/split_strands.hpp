@@ -26,7 +26,7 @@ using namespace handlegraph;
     /// complement sequence. Returns a map that translates node IDs from 'into' to their
     /// node ID and orientation in 'source'. Reports an error and exits if 'into' is not
     /// empty.
-    unordered_map<handlegraph::id_t, pair<handlegraph::id_t, bool>> split_strands(const HandleGraph* source,
+    unordered_map<handlegraph::nid_t, pair<handlegraph::nid_t, bool>> split_strands(const HandleGraph* source,
                                                                                   MutableHandleGraph* into);
 
 }

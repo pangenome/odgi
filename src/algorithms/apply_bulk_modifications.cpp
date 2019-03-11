@@ -6,10 +6,10 @@ namespace algorithms {
 using namespace std;
 using namespace handlegraph;
 
-    unordered_set<handlegraph::id_t> apply_orientations(MutableHandleGraph* graph, const vector<handle_t>& orientations) {
+    unordered_set<handlegraph::nid_t> apply_orientations(MutableHandleGraph* graph, const vector<handle_t>& orientations) {
         
         // Track what we flip
-        unordered_set<handlegraph::id_t> flipped;
+        unordered_set<handlegraph::nid_t> flipped;
         for (const auto& handle : orientations) {
             if (graph->get_is_reverse(handle)) {
                 // This needs to be flipped

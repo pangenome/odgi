@@ -15,13 +15,13 @@ using namespace handlegraph;
 
 struct id_emitter_factory{
     std::unordered_set<string> seen_identifiers;
-    id_t current_id = 0;
+    nid_t current_id = 0;
 
     id_emitter_factory(){
         current_id = 0;
         seen_identifiers.reserve(1000);
     };
-    id_t emit_id(string identifier){
+    nid_t emit_id(string identifier){
         if (!seen_identifiers.count(identifier)){
             return ++current_id;
         }
@@ -85,7 +85,7 @@ inline void dank_from_gfa_file(char* filename, SuccinctDynamicSequenceGraph* sd)
     map<string, gfak::sequence_elem, gfak::custom_key> seqs = gg.get_name_to_seq();
     map<string, std::vector<gfak::edge_elem>> edges = gg.get_seq_to_edges();
     for (auto s : seqs){
-        //id_t id = id_fac.emit_id(s.first);
+        //nid_t id = id_fac.emit_id(s.first);
 
         for (auto e : edges[s.first]){
 

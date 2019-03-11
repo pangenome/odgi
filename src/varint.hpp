@@ -1,3 +1,12 @@
+#ifndef _ODGI_VARINT_H_
+#define _ODGI_VARINT_H_
+
+#include <cstdint>
+#include <cstring>
+#include <vector>
+
+namespace odgi {
+
 // Copyright 2016 Jakob Stoklund Olesen
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -12,13 +21,9 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
+namespace sqvarint {
+
 // Utility functions for making the compiler do what we want.
-
-#include <cstdint>
-#include <cstring>
-#include <vector>
-
-namespace varint {
 
 // Count the number of contiguous zero bits starting from the MSB.
 // It is undefined behavior if x is 0.
@@ -44,6 +49,14 @@ unaligned_load_u64(const uint8_t* p)
   uint64_t x;
   std::memcpy(&x, p, 8);
   return x;
+}
+
+inline uint64_t
+unaligned_load(const uint8_t* p, uint8_t s)
+{
+    uint64_t x;
+    std::memcpy(&x, p, s);
+    return x;
 }
 
 // Load an unsigned 16-bit number from an unaligned address.
@@ -150,7 +163,7 @@ inline uint8_t* encode(const uint64_t* in, uint8_t* out, uint64_t count) {
     return out;
 }
 
-inline uint8_t* decode(uint8_t *in, uint64_t *out, size_t count) {
+inline uint8_t* decode(uint64_t *out, uint8_t *in, size_t count) {
     while (count-- > 0) {
         uint8_t b0 = *in++;
         if (LIKELY(b0 < cut1)) {
@@ -221,5 +234,110 @@ inline uint64_t bytes(uint8_t *in, size_t count) {
     return bytes;
 }
 
+}
+
+namespace msbvarint {
+
+static const uint8_t MSB = 0x80;
+static const uint8_t MSBALL = ~0x7F;
+
+static const uint64_t N1 = 128; // 2 ^ 7
+static const uint64_t N2 = 16384;
+static const uint64_t N3 = 2097152;
+static const uint64_t N4 = 268435456;
+static const uint64_t N5 = 34359738368;
+static const uint64_t N6 = 4398046511104;
+static const uint64_t N7 = 562949953421312;
+static const uint64_t N8 = 72057594037927936;
+static const uint64_t N9 = 9223372036854775808U;
+
+inline uint64_t length(uint64_t n) {
+    return (
+        n < N1 ? 1
+        : n < N2 ? 2
+        : n < N3 ? 3
+        : n < N4 ? 4
+        : n < N5 ? 5
+        : n < N6 ? 6
+        : n < N7 ? 7
+        : n < N8 ? 8
+        : n < N9 ? 9
+        :         10
+        );
+}
+
+inline uint64_t length(const uint64_t* v, uint64_t n) {
+    uint64_t len = 0;
+    for ( ; n > 0; --n) {
+        len += length(*v++);
+    }
+    return len;
+}
+
+inline uint64_t length(const std::vector<uint64_t>& v) {
+    return length((uint64_t*)v.data(), v.size());
+}
+
+inline uint8_t* encode(uint64_t n, uint8_t* ptr) {
+    uint8_t* buf = ptr;
+    uint64_t l = length(n);
+    for ( ; l > 1; --l) {
+        // why this broken?
+        //while (n & MSBALL) {
+        *(ptr++) = (n & 0xFF) | MSB;
+        n = n >> 7;
+    }
+    *ptr++ = n;
+    return ptr;
+}
+
+inline uint8_t* encode(const uint64_t* in, uint8_t* ptr, uint64_t c) {
+    for ( ; c > 0; --c) {
+        ptr = encode(*in++, ptr);
+    }
+    return ptr;
+}
+
+inline uint8_t* encode(const std::vector<uint64_t>& v, uint8_t* ptr) {
+    return encode((uint64_t*)v.data(), ptr, v.size());
+}
+
+inline uint8_t* decode(uint64_t* out, uint8_t* ptr) {
+    uint8_t bits = 0;
+    uint64_t ll = 0;
+    while (*ptr & MSB) {
+        ll = *ptr++;
+        *out += ((ll & 0x7F) << bits);
+        bits += 7;
+    }
+    ll = *ptr++;
+    *out += ((ll & 0x7F) << bits);
+    return ptr;
+}
+
+inline uint8_t* decode(uint64_t* out, uint8_t* ptr, uint64_t c) {
+    for ( ; c > 0; --c) {
+        ptr = decode(out++, ptr);
+    }
+    return ptr;
+}
+
+inline uint8_t* seek(uint8_t* ptr, uint64_t n) {
+    for ( ; n > 0; --n) {
+        while (*ptr & MSB) {
+            ptr++;
+        }
+        ptr++;
+    }
+    return ptr;
+}
+
+inline uint64_t bytes(uint8_t* ptr, uint64_t n) {
+    return seek(ptr, n) - ptr;
+}
 
 }
+
+}
+
+#endif

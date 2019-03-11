@@ -25,7 +25,7 @@ using namespace handlegraph;
     // node in a component if either orientation is in it. But bear in mind that
     // both orientations of a node might not actually be in the same strongly
     // connected component in a bidirected graph, so now the components may overlap.
-    vector<unordered_set<handlegraph::id_t>> strongly_connected_components(const HandleGraph* handle_graph) {
+    vector<unordered_set<handlegraph::nid_t>> strongly_connected_components(const HandleGraph* handle_graph) {
         
 #ifdef debug
         cerr << "Computing strongly connected components" << endl;
@@ -44,12 +44,12 @@ using namespace handlegraph;
         // What components did we find? Because of the way strongly connected
         // components generalizes, both orientations of a node always end up in the
         // same component.
-        vector<unordered_set<handlegraph::id_t>> components;
+        vector<unordered_set<handlegraph::nid_t>> components;
         
         // A single node ID from each component we've already added, which we use
         // to deduplicate the results
         // TODO: why do we produce duplicate components in the first place?
-        unordered_set<handlegraph::id_t> already_used;
+        unordered_set<handlegraph::nid_t> already_used;
         
         dfs(*handle_graph,
         [&](const handle_t& trav) {
@@ -108,7 +108,7 @@ using namespace handlegraph;
 #endif
                 handle_t other;
                 bool is_duplicate = false;
-                unordered_set<handlegraph::id_t> component;
+                unordered_set<handlegraph::nid_t> component;
                 do
                 {
                     // Grab everything that was put on the DFS stack below us
@@ -117,7 +117,7 @@ using namespace handlegraph;
                     stack.pop_back();
                     on_stack.erase(other);
                     
-                    handlegraph::id_t node_id = handle_graph->get_id(other);
+                    handlegraph::nid_t node_id = handle_graph->get_id(other);
                     
                     if (already_used.count(node_id)) {
                         is_duplicate = true;

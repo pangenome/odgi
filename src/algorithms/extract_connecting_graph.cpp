@@ -15,7 +15,7 @@ namespace algorithms {
 using namespace structures;
 using namespace handlegraph;
 
-unordered_map<handlegraph::id_t, handlegraph::id_t> extract_connecting_graph(const HandleGraph* source,
+unordered_map<handlegraph::nid_t, handlegraph::nid_t> extract_connecting_graph(const HandleGraph* source,
                                                                              DeletableHandleGraph* into,
                                                                              int64_t max_len,
                                                                              pos_t pos_1, pos_t pos_2,
@@ -67,21 +67,21 @@ unordered_map<handlegraph::id_t, handlegraph::id_t> extract_connecting_graph(con
     handle_t source_handle_2 = source->get_handle(id(pos_2), is_rev(pos_2));
     
     // for finding the largest node id in the subgraph
-    handlegraph::id_t max_id = max(id(pos_1), id(pos_2));
+    handlegraph::nid_t max_id = max(id(pos_1), id(pos_2));
     
     // a translator for node ids in 'into' to node ids in 'source'
-    unordered_map<handlegraph::id_t, handlegraph::id_t> id_trans;
+    unordered_map<handlegraph::nid_t, handlegraph::nid_t> nid_trans;
     
     // the edges we have encountered in the traversal
     unordered_set<edge_t> observed_edges;
     
     // create nodes for the source positions in the new graph
     handle_t into_handle_1 = into->create_handle(source->get_sequence(source->forward(source_handle_1)), id(pos_1));
-    id_trans[id(pos_1)] = id(pos_1);
+    nid_trans[id(pos_1)] = id(pos_1);
     handle_t into_handle_2;
     if (id(pos_1) != id(pos_2)) {
         into_handle_2 = into->create_handle(source->get_sequence(source->forward(source_handle_2)), id(pos_2));
-        id_trans[id(pos_2)] = id(pos_2);
+        nid_trans[id(pos_2)] = id(pos_2);
     }
     else {
         into_handle_2 = into_handle_1;
@@ -157,7 +157,7 @@ unordered_map<handlegraph::id_t, handlegraph::id_t> extract_connecting_graph(con
             source->follow_edges(trav.handle, false, [&](const handle_t& next) {
                 // get the orientation and id of the other side of the edge
                 
-                handlegraph::id_t next_id = source->get_id(next);
+                handlegraph::nid_t next_id = source->get_id(next);
                 bool next_rev = source->get_is_reverse(next);
                 
 #ifdef debug_vg_algorithms
@@ -169,10 +169,10 @@ unordered_map<handlegraph::id_t, handlegraph::id_t> extract_connecting_graph(con
                 max_id = max(max_id, next_id);
                 
                 // make sure the node is in
-                if (!id_trans.count(next_id)) {
+                if (!nid_trans.count(next_id)) {
                     // Make a node with the forward orientation sequence
                     into->create_handle(source->get_sequence(source->forward(next)), next_id);
-                    id_trans[next_id] = next_id;
+                    nid_trans[next_id] = next_id;
                 }
                 
                 // distance to the end of this node
@@ -195,8 +195,8 @@ unordered_map<handlegraph::id_t, handlegraph::id_t> extract_connecting_graph(con
     // an empty translator
     if (!found_target) {
         into->clear();
-        id_trans.clear();
-        return id_trans;
+        nid_trans.clear();
+        return nid_trans;
     }
     
     // STEP 2: BACKWARD SEARCH (TO EXTRACT CYCLES ON THE FINAL NODE)
@@ -238,7 +238,7 @@ unordered_map<handlegraph::id_t, handlegraph::id_t> extract_connecting_graph(con
             
             source->follow_edges(trav.handle, false, [&](const handle_t& next) {
                 // get the orientation and id of the other side of the edge
-                handlegraph::id_t next_id = source->get_id(next);
+                handlegraph::nid_t next_id = source->get_id(next);
                 bool next_rev = source->get_is_reverse(next);
                 
 #ifdef debug_vg_algorithms
@@ -250,9 +250,9 @@ unordered_map<handlegraph::id_t, handlegraph::id_t> extract_connecting_graph(con
                 max_id = max(max_id, next_id);
                 
                 // make sure the node is in the graph
-                if (!id_trans.count(next_id)) {
+                if (!nid_trans.count(next_id)) {
                     into->create_handle(source->get_sequence(source->forward(next)), next_id);
-                    id_trans[next_id] = next_id;
+                    nid_trans[next_id] = next_id;
                 }
                 
                 // distance to the end of this node
@@ -301,7 +301,7 @@ unordered_map<handlegraph::id_t, handlegraph::id_t> extract_connecting_graph(con
         handle_t dup_handle = into->create_handle(into->get_sequence(into->forward(handle)));
         
         // record the translation
-        id_trans[into->get_id(dup_handle)] = id_trans[into->get_id(handle)];
+        nid_trans[into->get_id(dup_handle)] = nid_trans[into->get_id(handle)];
         
         if (preserve_right_edges) {
             // collect rightward edges
@@ -342,7 +342,7 @@ unordered_map<handlegraph::id_t, handlegraph::id_t> extract_connecting_graph(con
         return dup_handle;
     };
     
-    handlegraph::id_t duplicate_node_1 = 0, duplicate_node_2 = 0;
+    handlegraph::nid_t duplicate_node_1 = 0, duplicate_node_2 = 0;
     
     if (detect_terminal_cycles) {
         // if there are edges traversed in both directions from the boundary position's nodes, then
@@ -445,15 +445,15 @@ unordered_map<handlegraph::id_t, handlegraph::id_t> extract_connecting_graph(con
         {
             // split the node, update the IDs, and clean up the other side
             auto halves_1 = into->divide_handle(into_handle_1, offset(pos_1));
-            id_trans.erase(id(pos_1));
-            id_trans[into->get_id(halves_1.second)] = id(pos_1);
+            nid_trans.erase(id(pos_1));
+            nid_trans[into->get_id(halves_1.second)] = id(pos_1);
             into->destroy_handle(halves_1.first);
             cut_handle_1 = halves_1.second;
             
             // repeat for the second position
             auto halves_2 = into->divide_handle(into_handle_2, offset(pos_2));
-            id_trans.erase(id(pos_2));
-            id_trans[into->get_id(halves_2.first)] = id(pos_2);
+            nid_trans.erase(id(pos_2));
+            nid_trans[into->get_id(halves_2.first)] = id(pos_2);
             into->destroy_handle(halves_2.second);
             cut_handle_2 = halves_2.first;
             
@@ -463,8 +463,8 @@ unordered_map<handlegraph::id_t, handlegraph::id_t> extract_connecting_graph(con
         {
             // split the node, update the IDs, and clean up the two ends
             auto thirds = into->divide_handle(into_handle_2, vector<size_t>{offset(pos_1), offset(pos_2)});
-            id_trans.erase(id(pos_1));
-            id_trans[into->get_id(thirds[1])] = id(pos_1);
+            nid_trans.erase(id(pos_1));
+            nid_trans[into->get_id(thirds[1])] = id(pos_1);
             into->destroy_handle(thirds.front());
             into->destroy_handle(thirds.back());
             cut_handle_1 = thirds[1];
@@ -475,8 +475,8 @@ unordered_map<handlegraph::id_t, handlegraph::id_t> extract_connecting_graph(con
             if (duplicate_node_1) {
                 handle_t dup_handle = into->get_handle(duplicate_node_1, is_rev(pos_1));
                 auto halves = into->divide_handle(dup_handle, offset(pos_1));
-                id_trans.erase(duplicate_node_1);
-                id_trans[into->get_id(halves.second)] = id(pos_1);
+                nid_trans.erase(duplicate_node_1);
+                nid_trans[into->get_id(halves.second)] = id(pos_1);
                 duplicate_node_1 = into->get_id(halves.second);
                 into->destroy_handle(halves.first);
             }
@@ -484,8 +484,8 @@ unordered_map<handlegraph::id_t, handlegraph::id_t> extract_connecting_graph(con
             if (duplicate_node_2) {
                 handle_t dup_handle = into->get_handle(duplicate_node_2, is_rev(pos_2));
                 auto halves = into->divide_handle(dup_handle, offset(pos_2));
-                id_trans.erase(duplicate_node_2);
-                id_trans[into->get_id(halves.first)] = id(pos_2);
+                nid_trans.erase(duplicate_node_2);
+                nid_trans[into->get_id(halves.first)] = id(pos_2);
                 duplicate_node_2 = into->get_id(halves.first);
                 into->destroy_handle(halves.second);
             }
@@ -498,14 +498,14 @@ unordered_map<handlegraph::id_t, handlegraph::id_t> extract_connecting_graph(con
             // make a new node that will preserve the edges on the righthand side
             handle_t dup_node = duplicate_node(into_handle_1, false, true);
             auto halves_1 = into->divide_handle(dup_node, offset(pos_1));
-            id_trans[into->get_id(halves_1.second)] = id(pos_1);
+            nid_trans[into->get_id(halves_1.second)] = id(pos_1);
             into->destroy_handle(halves_1.first);
             cut_handle_1 = halves_1.second;
             
             // cut the original node and preserve its lefthand side edges
             auto halves_2 = into->divide_handle(into_handle_2, offset(pos_2));
-            id_trans.erase(id(pos_2));
-            id_trans[into->get_id(halves_2.first)] = id(pos_2);
+            nid_trans.erase(id(pos_2));
+            nid_trans[into->get_id(halves_2.first)] = id(pos_2);
             into->destroy_handle(halves_2.second);
             cut_handle_2 = halves_2.first;
             
@@ -782,7 +782,7 @@ unordered_map<handlegraph::id_t, handlegraph::id_t> extract_connecting_graph(con
     // TODO: it's not enough to return the translator because there's also the issue of the positions
     // on the first node being offset (however this information is fully contained in the arguments of
     // the function, which are obviously available in the environment that calls it)
-    return id_trans;
+    return nid_trans;
 }
 
 }

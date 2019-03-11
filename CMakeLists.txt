@@ -91,7 +91,7 @@ set(gfakluge_LIB "${INSTALL_DIR}/src/gfakluge")
 # libhandlegraph (full build using its cmake config)
 ExternalProject_Add(handlegraph
   GIT_REPOSITORY "https://github.com/vgteam/libhandlegraph.git"
-  GIT_TAG "4fb0a4b750995c35e45b8c510397339af4ddc2fc"
+  GIT_TAG "069acc9668bad7aeeab32d2a3730f6de28ed2352"
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
   INSTALL_COMMAND "")
 ExternalProject_Get_property(handlegraph INSTALL_DIR)
@@ -171,6 +171,7 @@ add_executable(odgi
   ${CMAKE_SOURCE_DIR}/src/node.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/driver.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/handle.cpp
+  ${CMAKE_SOURCE_DIR}/src/unittest/fuzz.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/subcommand.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/build_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/test_main.cpp

@@ -12,7 +12,7 @@
 // New subcommand system provides all the subcommands that used to live here
 #include "subcommand/subcommand.hpp"
 
-#include "crash.hpp"
+//#include "crash.hpp"
 
 using namespace std;
 using namespace odgi;
@@ -45,7 +45,7 @@ int main(int argc, char *argv[]) {
 
     // Make sure the system meets system requirements (i.e. has all the instructions we need)
     //preflight_check();
-    odgi::enable_crash_handling();
+    //odgi::enable_crash_handling();
 
     // Set up stack trace support from crash.hpp
     //enable_crash_handling();

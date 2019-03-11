@@ -6,6 +6,7 @@
 #include "catch.hpp"
 
 #include <handlegraph/handle_graph.hpp>
+#include <handlegraph/handle_graph.hpp>
 #include <handlegraph/util.hpp>
 #include "graph.hpp"
 
@@ -15,6 +16,7 @@
 #include <vector>
 #include <unordered_map>
 #include <unordered_set>
+#include <random>
 
 namespace odgi {
 namespace unittest {
@@ -114,7 +116,7 @@ TEST_CASE("VG and XG handle implementations are correct", "[handle][vg][xg]") {
     // Make a vg graph
     graph_t g;
     unordered_map<handle_t, string> seqs;
-    unordered_map<handle_t, handlegraph::id_t> ids;
+    unordered_map<handle_t, handlegraph::nid_t> ids;
             
     string s = "CGA"; handle_t n0 = g.create_handle(s); seqs[n0] = s;
     s = "TTGG"; handle_t n1 = g.create_handle(s); seqs[n1] = s;
@@ -2279,7 +2281,6 @@ TEST_CASE("Deletable handle graphs with mutable paths work", "[handle][packed][h
     }
     
 }
-    
 
 }
 }
