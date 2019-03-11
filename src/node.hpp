@@ -5,6 +5,8 @@
 #include <cstdint>
 #include <string>
 #include <handlegraph/util.hpp>
+#include <vector>
+#include <cstring>
 #include "varint.hpp"
 
 namespace odgi {
@@ -21,7 +23,6 @@ public:
     void clear(void) {
         bytes.clear();
         bytes = { 5, 0, 0, 0, 0 };
-        bytes.reserve(13);
     }
     struct layout_t {
         uint64_t data[5] = { 0, 0, 0, 0, 0 };

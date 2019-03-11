@@ -1,10 +1,11 @@
 #include "node.hpp"
+#include <cassert>
 
 namespace odgi {
 
 node_t::layout_t node_t::get_layout(void) const {
     node_t::layout_t layout;
-    varint::decode((uint8_t*)bytes.data(), &layout.data[0], 5);
+    varint::decode(&layout.data[0], (uint8_t*)bytes.data(), 5);
     return layout;
 }
 
@@ -38,7 +39,7 @@ const std::string node_t::sequence(void) const {
 void node_t::set_sequence(const std::string& seq) {
     node_t::layout_t layout = get_layout();
     if (seq.size() > layout.seq_bytes()) {
-        bytes.reserve(bytes.size()+seq.size()-layout.seq_bytes()+8);
+        bytes.reserve(bytes.size()+seq.size()-layout.seq_bytes());
         bytes.insert(bytes.begin()+layout.seq_start(), seq.size() - layout.seq_bytes(), 0);
         layout.set_seq_bytes(seq.size());
         layout = set_layout(layout);
@@ -55,7 +56,9 @@ std::vector<uint64_t> node_t::edges(void) const {
     const node_t::layout_t& layout = get_layout();
     if (layout.edge_count()) {
         res.resize(layout.edge_count()*EDGE_RECORD_LENGTH);
-        varint::decode((uint8_t*)bytes.data()+layout.edge_start(), res.data(), layout.edge_count()*EDGE_RECORD_LENGTH);
+        varint::decode(res.data(),
+                       (uint8_t*)bytes.data()+layout.edge_start(),
+                       layout.edge_count()*EDGE_RECORD_LENGTH);
     }
     assert(res.size() == layout.edge_count);
     return res;
@@ -109,7 +112,7 @@ void node_t::add_path_step(const node_t::step_t& step) {
     uint64_t old_size = bytes.size();
     assert(bytes.size());
     bytes.resize(bytes.size()+step_bytes);
-    bytes.reserve(bytes.size() + 8);
+    bytes.reserve(bytes.size());
     uint8_t* target = bytes.data() + old_size;
     uint8_t* result = varint::encode(step.data, target, 5);
     assert(result - target == step_bytes);
@@ -122,7 +125,7 @@ const std::vector<node_t::step_t> node_t::get_path_steps(void) const {
     uint8_t* target = (uint8_t*)bytes.data()+layout.path_start();
     for (uint64_t i = 0; i < layout.path_count(); ++i) {
         auto& step = steps[i];
-        target = varint::decode(target, &step.data[0], PATH_RECORD_LENGTH);
+        target = varint::decode(&step.data[0], target, PATH_RECORD_LENGTH);
     }
     return steps;
 }
@@ -130,8 +133,9 @@ const std::vector<node_t::step_t> node_t::get_path_steps(void) const {
 const node_t::step_t node_t::get_path_step(const uint64_t& rank) const {
     layout_t layout = get_layout();
     node_t::step_t step;
-    varint::decode(varint::seek((uint8_t*)bytes.data() + layout.path_start(), PATH_RECORD_LENGTH*rank),
-                   &step.data[0], PATH_RECORD_LENGTH);
+    varint::decode(&step.data[0],
+                   varint::seek((uint8_t*)bytes.data() + layout.path_start(), PATH_RECORD_LENGTH*rank),
+                   PATH_RECORD_LENGTH);
     return step;
 }
 
@@ -158,7 +162,7 @@ void node_t::flip_paths(const uint64_t& start_marker, const uint64_t& end_marker
     uint64_t old_size = bytes.size();
     bytes.erase(bytes.begin()+layout.path_start(), bytes.end());
     bytes.resize(old_size);
-    bytes.reserve(old_size+8);
+    bytes.reserve(old_size);
     uint8_t* target = bytes.data()+layout.path_start();
     // flip them and replace
     for (auto& step : steps) {
@@ -207,7 +211,7 @@ void node_t::load(std::istream& in) {
     uint64_t node_size = 0;
     in.read((char*)&node_size, sizeof(node_size));
     bytes.resize(node_size);
-    bytes.reserve(node_size+8);
+    bytes.reserve(node_size);
     in.read((char*)bytes.data(), node_size*sizeof(uint8_t));
 }
 
