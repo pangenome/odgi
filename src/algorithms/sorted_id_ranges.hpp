@@ -19,7 +19,7 @@ using namespace std;
 using namespace handlegraph;
 
 /// Get a sorted list of inclusive ranges of IDs used in the given HandleGraph.
-vector<pair<handlegraph::id_t, handlegraph::id_t>> sorted_id_ranges(const HandleGraph* graph);
+vector<pair<handlegraph::nid_t, handlegraph::nid_t>> sorted_id_ranges(const HandleGraph* graph);
 
 
 }

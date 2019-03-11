@@ -7,23 +7,23 @@
 namespace odgi {
 
 /// Method to check if a node exists by ID
-bool graph_t::has_node(id_t node_id) const {
+bool graph_t::has_node(nid_t node_id) const {
     uint64_t rank = get_node_rank(node_id);
     return (rank >= node_v.size() ? false : !deleted_node_bv.at(rank));
 }
 
 /// Look up the handle for the node with the given ID in the given orientation
-handle_t graph_t::get_handle(const id_t& node_id, bool is_reverse) const {
+handle_t graph_t::get_handle(const nid_t& node_id, bool is_reverse) const {
     return number_bool_packing::pack(node_id-1, is_reverse);
 }
 
 /// Get the ID from a handle
-id_t graph_t::get_id(const handle_t& handle) const {
+nid_t graph_t::get_id(const handle_t& handle) const {
     return number_bool_packing::unpack_number(handle)+1;
 }
 
 /// get the backing node for a given node id
-uint64_t graph_t::get_node_rank(const id_t& node_id) const {
+uint64_t graph_t::get_node_rank(const nid_t& node_id) const {
     return node_id - 1;
 }
     
@@ -55,7 +55,7 @@ bool graph_t::follow_edges_impl(const handle_t& handle, bool go_left, const std:
     const node_t& node = node_v.at(number_bool_packing::unpack_number(handle));
     bool is_rev = get_is_reverse(handle);
     bool result = true;
-    id_t node_id = get_id(handle);
+    nid_t node_id = get_id(handle);
     const std::vector<uint64_t> node_edges = node.edges();
     if (node_edges.size() == 0) return result;
     for (uint64_t i = 0; i+1 < node_edges.size(); i+=2) {
@@ -114,13 +114,13 @@ size_t graph_t::node_size(void) const {
     
 /// Return the smallest ID in the graph, or some smaller number if the
 /// smallest ID is unavailable. Return value is unspecified if the graph is empty.
-id_t graph_t::min_node_id(void) const {
+nid_t graph_t::min_node_id(void) const {
     return _min_node_id;
 }
     
 /// Return the largest ID in the graph, or some larger number if the
 /// largest ID is unavailable. Return value is unspecified if the graph is empty.
-id_t graph_t::max_node_id(void) const {
+nid_t graph_t::max_node_id(void) const {
     return _max_node_id;
 }
     
@@ -191,7 +191,7 @@ bool graph_t::for_each_path_handle_impl(const std::function<bool(const path_hand
 bool graph_t::for_each_occurrence_on_handle_impl(const handle_t& handle, const std::function<bool(const occurrence_handle_t&)>& iteratee) const {
     const node_t& node = node_v.at(number_bool_packing::unpack_number(handle));
     bool flag = true;
-    id_t handle_id = get_id(handle);
+    nid_t handle_id = get_id(handle);
     uint64_t path_count = node.path_count();
     for (uint64_t i = 0; i < path_count; ++i) {
         occurrence_handle_t occ;
@@ -259,7 +259,7 @@ bool graph_t::has_previous_occurrence(const occurrence_handle_t& occurrence_hand
 
 /// Returns a handle to the next occurrence on the path, which must exist
 occurrence_handle_t graph_t::get_next_occurrence(const occurrence_handle_t& occurrence_handle) const {
-    id_t curr_id = as_integers(occurrence_handle)[0];
+    nid_t curr_id = as_integers(occurrence_handle)[0];
     occurrence_handle_t occ;
     const node_t& node = node_v.at(get_node_rank(as_integers(occurrence_handle)[0]));
     auto& step = node.get_path_step(as_integers(occurrence_handle)[1]);
@@ -270,7 +270,7 @@ occurrence_handle_t graph_t::get_next_occurrence(const occurrence_handle_t& occu
 
 /// Returns a handle to the previous occurrence on the path
 occurrence_handle_t graph_t::get_previous_occurrence(const occurrence_handle_t& occurrence_handle) const {
-    id_t curr_id = as_integers(occurrence_handle)[0];
+    nid_t curr_id = as_integers(occurrence_handle)[0];
     occurrence_handle_t occ;
     const node_t& node = node_v.at(get_node_rank(as_integers(occurrence_handle)[0]));
     auto& step = node.get_path_step(as_integers(occurrence_handle)[1]);
@@ -325,14 +325,14 @@ handle_t graph_t::create_handle(const std::string& sequence) {
 handle_t graph_t::create_hidden_handle(const std::string& sequence) {
     // get node id as max+1
     handle_t handle = create_handle(sequence);
-    id_t id = get_id(handle);
+    nid_t id = get_id(handle);
     graph_id_hidden_set.insert(id);
     ++_hidden_count;
     return handle;
 }
 
 /// Create a new node with the given id and sequence, then return the handle.
-handle_t graph_t::create_handle(const std::string& sequence, const id_t& id) {
+handle_t graph_t::create_handle(const std::string& sequence, const nid_t& id) {
     assert(sequence.size());
     assert(id > 0);
     if (id > node_v.size()) {
@@ -455,7 +455,7 @@ void graph_t::create_edge(const handle_t& left, const handle_t& right) {
     uint64_t right_rank = number_bool_packing::unpack_number(right_h);
     uint64_t right_relative = edge_to_delta(right_h, left_h);
     uint64_t left_relative = edge_to_delta(left_h, right_h);
-
+    
     // insert the edge for each side
     auto& left_node = node_v.at(left_rank);
     left_node.add_edge(left_relative,
@@ -492,6 +492,8 @@ uint64_t graph_t::edge_to_delta(const handle_t& left, const handle_t& right) con
 }
 
 bool graph_t::has_edge(const handle_t& left, const handle_t& right) const {
+    auto& node_l = node_v[number_bool_packing::unpack_number(left)];
+    auto& node_r = node_v[number_bool_packing::unpack_number(right)];
     bool exists = false;
     follow_edges(left, false, [&right, &exists](const handle_t& next) {
             if (next == right) exists = true;
@@ -520,8 +522,8 @@ void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
     uint64_t left_relative = edge_to_delta(left_h, right_h);
 
     // remove the edge from both sides
-    id_t right_node_id = get_id(right_h);
-    id_t left_node_id = get_id(left_h);
+    nid_t right_node_id = get_id(right_h);
+    nid_t left_node_id = get_id(left_h);
 
     std::vector<uint64_t> left_node_edges = left_node.edges();
     bool found_edge = false;
@@ -597,7 +599,7 @@ void graph_t::swap_handles(const handle_t& a, const handle_t& b) {
 void graph_t::apply_ordering(const std::vector<handle_t>& order, bool compact_ids) {
     graph_t ordered;
     // nodes
-    hash_map<id_t, id_t> ids;
+    hash_map<nid_t, nid_t> ids;
     ids.reserve(order.size());
     // establish id mapping
     if (compact_ids) {
@@ -1042,7 +1044,7 @@ void graph_t::display(void) const {
     std::cerr << "node_v" << "\t";
     for (uint64_t i = 0; i < node_v.size(); ++i) {
         auto& node = node_v.at(i);
-        id_t node_id = i+1;
+        nid_t node_id = i+1;
         std::cerr << node_id << ":" << node.sequence() << " ";
         const std::vector<uint64_t> node_edges = node.edges();
         for (uint64_t j = 0; j < node_edges.size(); ++j) {

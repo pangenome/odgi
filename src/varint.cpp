@@ -19,7 +19,7 @@ static const uint64_t N7 = 562949953421312;
 static const uint64_t N8 = 72057594037927936;
 static const uint64_t N9 = 9223372036854775808U;
 
-uint8_t length(uint64_t n) {
+uint64_t length(uint64_t n) {
     return (
         n < N1 ? 1
         : n < N2 ? 2
@@ -47,7 +47,11 @@ uint64_t length(const std::vector<uint64_t>& v) {
 }
 
 uint8_t* encode(uint64_t n, uint8_t* ptr) {
-    while (n & MSBALL) {
+    uint8_t* buf = ptr;
+    uint64_t l = length(n);
+    for ( ; l > 1; --l) {
+        // why this broken?
+        //while (n & MSBALL) {
         *(ptr++) = (n & 0xFF) | MSB;
         n = n >> 7;
     }
@@ -70,9 +74,8 @@ uint8_t* decode(uint64_t* out, uint8_t* ptr) {
     uint8_t bits = 0;
     uint64_t ll = 0;
     while (*ptr & MSB) {
-        ll = *ptr;
+        ll = *ptr++;
         *out += ((ll & 0x7F) << bits);
-        ptr++;
         bits += 7;
     }
     ll = *ptr++;

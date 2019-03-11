@@ -21,7 +21,7 @@ using namespace std;
     // up to a given minimum length. Input HandleGraph must have a single stranded orientation.
     // Consider checking this property with has_single_stranded_orientation() before using.
     // Returns a mapping from the node IDs of into to the node IDs in graph.
-    unordered_map<handlegraph::id_t, handlegraph::id_t> dagify(const HandleGraph* graph, MutableHandleGraph* into,
+    unordered_map<handlegraph::nid_t, handlegraph::nid_t> dagify(const HandleGraph* graph, MutableHandleGraph* into,
                                                                size_t min_preserved_path_length);
 }
 }

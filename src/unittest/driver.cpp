@@ -6,8 +6,6 @@
 namespace odgi {
 namespace unittest {
 
-using namespace std;
-
 int run_unit_tests(int argc, char** argv) {
     // argc and argv are going to have command and subcommand, which I don't
     // think argv speaks.

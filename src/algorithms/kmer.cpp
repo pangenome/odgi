@@ -14,7 +14,7 @@ void for_each_kmer(const HandleGraph& graph, size_t k, size_t edge_max,
                 std::list<kmer_t> kmers;
                 // for each position in the node, set up a kmer with that start position and the node end or kmer length as the end position
                 // determine next positions
-                id_t handle_id = graph.get_id(handle);
+                nid_t handle_id = graph.get_id(handle);
                 size_t handle_length = graph.get_length(handle);
                 std::string handle_seq = graph.get_sequence(handle);
                 for (size_t i = 0; i < handle_length;  ++i) {
@@ -59,7 +59,7 @@ void for_each_kmer(const HandleGraph& graph, size_t k, size_t edge_max,
                             q = kmers.erase(q);
                         } else {
                             // do we finish in the current node?
-                            id_t curr_id = graph.get_id(kmer.curr);
+                            nid_t curr_id = graph.get_id(kmer.curr);
                             size_t curr_length = graph.get_length(kmer.curr);
                             bool curr_is_rev = graph.get_is_reverse(kmer.curr);
                             std::string curr_seq = graph.get_sequence(kmer.curr);

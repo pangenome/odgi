@@ -8,13 +8,12 @@ namespace odgi {
 
 namespace varint {
 
-uint8_t length(uint64_t n);
+uint64_t length(uint64_t n);
 uint64_t length(const uint64_t* v, uint64_t n);
 uint64_t length(const std::vector<uint64_t>& v);
 uint8_t* encode(uint64_t n, uint8_t* ptr);
 uint8_t* encode(const uint64_t* in, uint8_t* ptr, uint64_t c);
 uint8_t* encode(const std::vector<uint64_t>& v, uint8_t* ptr);
-uint64_t length(const std::vector<uint64_t>& v);
 uint8_t* decode(uint64_t* out, uint8_t* ptr);
 uint8_t* decode(uint64_t* out, uint8_t* ptr, uint64_t c);
 uint8_t* seek(uint8_t* ptr, uint64_t n);

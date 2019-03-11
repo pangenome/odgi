@@ -20,7 +20,6 @@ node_t::layout_t node_t::set_layout(node_t::layout_t layout) {
     }
     // we can get away with this because our layout bytes are always going to fit in a single byte
     layout.set_layout_bytes(new_size);
-    //assert(new_size == varint::length(layout.data, 5));
     varint::encode(layout.data, bytes.data(), 5);
     return layout;
 }
@@ -65,8 +64,10 @@ std::vector<uint64_t> node_t::edges(void) const {
 }
 
 void node_t::add_edge(const uint64_t& relative_id, const uint64_t& edge_type) {
+    //std::cerr << "add edge " << "relative_id " << relative_id << " edge_type " << edge_type << std::endl;
     node_t::layout_t layout = get_layout();
     uint64_t edge_bytes = varint::length({relative_id, edge_type});
+    bytes.reserve(bytes.size()+edge_bytes);
     bytes.insert(bytes.begin()+layout.edge_start(), edge_bytes, 0);
     varint::encode({relative_id, edge_type}, bytes.data()+layout.edge_start());
     layout.set_edge_bytes(layout.edge_bytes() + edge_bytes);
@@ -109,9 +110,7 @@ void node_t::add_path_step(const node_t::step_t& step) {
     set_layout(layout);
     uint64_t step_bytes = varint::length((uint64_t*)step.data, 5);
     uint64_t old_size = bytes.size();
-    assert(bytes.size());
-    bytes.resize(bytes.size()+step_bytes);
-    bytes.reserve(bytes.size()+step_bytes);
+    bytes.resize(old_size+step_bytes);
     uint8_t* target = bytes.data() + old_size;
     uint8_t* result = varint::encode(step.data, target, 5);
     assert(result - target == step_bytes);
@@ -140,17 +139,18 @@ const node_t::step_t node_t::get_path_step(const uint64_t& rank) const {
 
 void node_t::set_path_step(const uint64_t& rank, const step_t& step) {
     layout_t layout = get_layout();
-    uint8_t* target = varint::seek(bytes.data() + layout.path_start(), PATH_RECORD_LENGTH*rank);
+    uint64_t offset = layout.path_start()+varint::bytes(bytes.data() + layout.path_start(), PATH_RECORD_LENGTH*rank);
+    uint8_t* target = bytes.data()+offset;
     uint64_t old_size = varint::bytes(target, PATH_RECORD_LENGTH);
     uint64_t new_size = varint::length(step.data, PATH_RECORD_LENGTH);
     if (new_size > old_size) {
-        // insert
         std::vector<uint8_t>::iterator it(target);
         bytes.insert(it, new_size - old_size, 0);
     } else if (new_size < old_size) {
         std::vector<uint8_t>::iterator it(target);
         bytes.erase(it, it + (old_size - new_size));
     }
+    target = bytes.data() + offset; // recalculate target, as it may have moved due to resize!
     varint::encode(step.data, target, 5);
 }
 
@@ -161,7 +161,6 @@ void node_t::flip_paths(const uint64_t& start_marker, const uint64_t& end_marker
     uint64_t old_size = bytes.size();
     bytes.erase(bytes.begin()+layout.path_start(), bytes.end());
     bytes.resize(old_size);
-    bytes.reserve(old_size);
     uint8_t* target = bytes.data()+layout.path_start();
     // flip them and replace
     for (auto& step : steps) {
@@ -210,19 +209,20 @@ void node_t::load(std::istream& in) {
     uint64_t node_size = 0;
     in.read((char*)&node_size, sizeof(node_size));
     bytes.resize(node_size);
-    bytes.reserve(node_size);
     in.read((char*)bytes.data(), node_size*sizeof(uint8_t));
 }
 
 void node_t::display(void) const {
     layout_t layout = get_layout();
-    std::cerr << layout.layout_bytes() << " "
-              << layout.seq_bytes() << " "
-              << layout.edge_start() << " "
-              << layout.edge_count() << " "
-              << layout.edge_bytes() << " "
-              << layout.path_start() << " "
-              << layout.path_count() << " | ";
+    std::cerr << "self_bytes " << bytes.size() << " "
+              << "layout_bytes " << layout.layout_bytes() << " "
+              << "seq_bytes " << layout.seq_bytes() << " "
+              << "seq " << sequence() << " "
+              << "edge_start " << layout.edge_start() << " "
+              << "edge_count " << layout.edge_count() << " "
+              << "edge_bytes " << layout.edge_bytes() << " "
+              << "path_start " << layout.path_start() << " "
+              << "path_count " << layout.path_count() << " | ";
     for (auto i : bytes) {
         std::cerr << (int) i << " ";
     }

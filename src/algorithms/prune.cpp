@@ -18,7 +18,7 @@ std::vector<edge_t> find_edges_to_prune(const HandleGraph& graph, size_t k, size
                 std::list<walk_t> walks;
                 // for each position in the node, set up a kmer with that start position and the node end or kmer length as the end position
                 // determine next positions
-                id_t handle_id = graph.get_id(handle);
+                nid_t handle_id = graph.get_id(handle);
                 size_t handle_length = graph.get_length(handle);
                 std::string handle_seq = graph.get_sequence(handle);
                 for (size_t i = 0; i < handle_length;  ++i) {
@@ -56,7 +56,7 @@ std::vector<edge_t> find_edges_to_prune(const HandleGraph& graph, size_t k, size
                         if (walk.length >= k) {
                             q = walks.erase(q);
                         } else {
-                            id_t curr_id = graph.get_id(walk.curr);
+                            nid_t curr_id = graph.get_id(walk.curr);
                             size_t curr_length = graph.get_length(walk.curr);
                             bool curr_is_rev = graph.get_is_reverse(walk.curr);
                             size_t take = std::min(curr_length, k-walk.length);

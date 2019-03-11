@@ -1,8 +1,13 @@
 #ifndef DG_UNITTEST_DRIVER_HPP_INCLUDED
 #define DG_UNITTEST_DRIVER_HPP_INCLUDED
 
+#include <cassert>
+#include <string>
+
 namespace odgi {
 namespace unittest {
+
+using namespace std;
 
 /**
  * Take the original argc and argv from a `vg unittest` command-line call and

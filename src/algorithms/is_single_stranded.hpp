@@ -37,7 +37,7 @@ using namespace handlegraph;
     /// to another locally forward orientation). If no such combination of orientations
     /// exists, produces an error and exits. Returns a set of the node IDs for nodes that
     /// were swapped in orientation. Potentially invalidates any existing handles.
-//unordered_set<handlegraph::id_t> make_single_stranded(MutableHandleGraph* graph);
+//unordered_set<handlegraph::nid_t> make_single_stranded(MutableHandleGraph* graph);
 
 }
 }

@@ -25,7 +25,7 @@ bool is_directed_acyclic(const HandleGraph* graph) {
     // are only directed cycles left.
 
     // Build the degrees map
-    unordered_map<handlegraph::id_t, pair<int64_t, int64_t>> degrees;
+    unordered_map<handlegraph::nid_t, pair<int64_t, int64_t>> degrees;
     // And also the stack of tips to start at
     vector<handle_t> stack;
     graph->for_each_handle([&](const handle_t& here) {

@@ -12,7 +12,7 @@
 namespace odgi {
 
 using namespace handlegraph;
-using id_t = handlegraph::id_t;
+using nid_t = handlegraph::nid_t;
 const uint8_t EDGE_RECORD_LENGTH = 2;
 const uint8_t PATH_RECORD_LENGTH = 5;
 

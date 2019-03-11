@@ -6,10 +6,10 @@ namespace algorithms {
 using namespace std;
 using namespace handlegraph;
 
-vector<pair<handlegraph::id_t, handlegraph::id_t>> sorted_id_ranges(const HandleGraph* graph) {
+vector<pair<handlegraph::nid_t, handlegraph::nid_t>> sorted_id_ranges(const HandleGraph* graph) {
 
     // Build the list of of all the node IDs to operate on
-    vector<handlegraph::id_t> graph_ids;
+    vector<handlegraph::nid_t> graph_ids;
     graph->for_each_handle([&](handle_t handle) {
         // Put all the ids in the list
         graph_ids.push_back(graph->get_id(handle));
@@ -19,7 +19,7 @@ vector<pair<handlegraph::id_t, handlegraph::id_t>> sorted_id_ranges(const Handle
     std::sort(graph_ids.begin(), graph_ids.end());
     
     // Coalesce them into ranges
-    vector<pair<handlegraph::id_t, handlegraph::id_t>> ranges;
+    vector<pair<handlegraph::nid_t, handlegraph::nid_t>> ranges;
     for (auto& id : graph_ids) {
         if (ranges.empty() || ranges.back().second + 1 != id) {
             // We can't glom on to the previous range, so start a new one of just us
