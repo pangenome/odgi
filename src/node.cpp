@@ -108,11 +108,10 @@ void node_t::add_path_step(const node_t::step_t& step) {
     layout.set_path_count(layout.path_count()+1);
     set_layout(layout);
     uint64_t step_bytes = varint::length((uint64_t*)step.data, 5);
-    //std::cerr << "step bytes " << step_bytes << std::endl;
     uint64_t old_size = bytes.size();
     assert(bytes.size());
     bytes.resize(bytes.size()+step_bytes);
-    bytes.reserve(bytes.size());
+    bytes.reserve(bytes.size()+step_bytes);
     uint8_t* target = bytes.data() + old_size;
     uint8_t* result = varint::encode(step.data, target, 5);
     assert(result - target == step_bytes);
