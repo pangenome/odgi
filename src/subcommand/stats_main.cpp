@@ -166,6 +166,18 @@ int main_stats(int argc, char** argv) {
             path_names.push_back(i.first);
         }
 
+        // the header
+        std::cout << "path.name" << "\t"
+                  << "bed.name" << "\t"
+                  << "ival.start" << "\t"
+                  << "ival.stop" << "\t"
+                  << "ival.len" << "\t"
+                  << "state.len" << "\t"
+                  << "frac" << "\t"
+                  << "paths.size" << "\t"
+                  << "uniq.size" << "\t"
+                  << "paths" << std::endl;
+
 #pragma omp parallel for
         for (uint64_t k = 0; k < path_names.size(); ++k) {
             auto& path_name = path_names.at(k);
