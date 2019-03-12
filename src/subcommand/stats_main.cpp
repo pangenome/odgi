@@ -5,6 +5,7 @@
 #include "args.hxx"
 #include "split.hpp"
 //#include "io_helper.hpp"
+#include "threads.hpp"
 
 namespace odgi {
 
@@ -22,23 +23,14 @@ int main_stats(int argc, char** argv) {
     
     args::ArgumentParser parser("metrics describing variation graphs");
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-    //args::ValueFlag<std::string> gfa_file(parser, "FILE", "construct the graph from this GFA input file", {'g', "gfa"});
-    //args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store the index in this file", {'o', "out"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the index from this file", {'i', "idx"});
-    //args::ValueFlag<std::string> seqs(parser, "FILE", "the sequences used to generate the alignments", {'s', "seqs"});
-    //args::ValueFlag<std::string> base(parser, "FILE", "build graph using this basename", {'b', "base"});
-    //args::ValueFlag<uint64_t> num_threads(parser, "N", "use this many threads during parallel steps", {'t', "threads"});
-    //args::ValueFlag<uint64_t> repeat_max(parser, "N", "limit transitive closure to include no more than N copies of a given input base", {'r', "repeat-max"});
-    //args::ValueFlag<uint64_t> aln_keep_n_longest(parser, "N", "keep up to the N-longest alignments overlapping each query position", {'k', "aln-keep-n-longest"});
-    //args::ValueFlag<uint64_t> aln_min_length(parser, "N", "ignore alignments shorter than this", {'m', "aln-min-length"});
-    //args::Flag to_gfa(parser, "to_gfa", "write the graph to stdout in GFA format", {'G', "to-gfa"});
     args::Flag summarize(parser, "summarize", "summarize the graph properties and dimensions", {'S', "summarize"});
     args::Flag path_coverage(parser, "coverage", "provide a histogram of path coverage over bases in the graph", {'C', "coverage"});
     args::Flag path_setcov(parser, "setcov", "provide a histogram of coverage over unique sets of paths", {'V', "set-coverage"});
     args::Flag path_multicov(parser, "multicov", "provide a histogram of coverage over unique multisets of paths", {'M', "multi-coverage"});
     args::ValueFlag<std::string> path_bedmulticov(parser, "BED", "for each BED entry, provide a histogram of coverage over unique multisets of paths", {'B', "bed-multicov"});
-    //args::Flag debug(parser, "debug", "enable debugging", {'d', "debug"});
-    //args::Flag progress(parser, "progress", "show progress updates", {'p', "progress"});
+    args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
+
     try {
         parser.ParseCLI(argc, argv);
     } catch (args::Help) {
@@ -52,6 +44,12 @@ int main_stats(int argc, char** argv) {
     if (argc==1) {
         std::cout << parser;
         return 1;
+    }
+
+    if (args::get(threads)) {
+        omp_set_num_threads(args::get(threads));
+    } else {
+        omp_set_num_threads(1);
     }
 
     graph_t graph;
@@ -133,8 +131,9 @@ int main_stats(int argc, char** argv) {
         std::cout << "cov\tsets" << std::endl;
         for (auto& p : setcov) {
             std::cout << p.second << "\t";
+            bool first = true;
             for (auto& i : p.first) {
-                std::cout << graph.get_path_name(as_path_handle(i)) << ",";
+                std::cout << (first ? (first=false, "") :",") << graph.get_path_name(as_path_handle(i));
             }
             std::cout << std::endl;
         }
@@ -161,11 +160,19 @@ int main_stats(int argc, char** argv) {
                     make_pair(fields[3], new setcov_t())));
         }
 
-        for (auto& p : intervals) {
-            auto& path_name = p.first;
+        std::vector<std::string> path_names;
+        path_names.reserve(intervals.size());
+        for(auto const& i : intervals) {
+            path_names.push_back(i.first);
+        }
+
+#pragma omp parallel for
+        for (uint64_t k = 0; k < path_names.size(); ++k) {
+            auto& path_name = path_names.at(k);
+            auto& path_ivals = intervals[path_name];
             path_handle_t path = graph.get_path_handle(path_name);
             // build the intervals for each path we'll query
-            itree_t itree(std::move(p.second)); //, 16, 1);
+            itree_t itree(std::move(path_ivals)); //, 16, 1);
             uint64_t pos = 0;
             graph.for_each_occurrence_in_path(graph.get_path_handle(x), [&](const occurrence_handle_t& occ) {
                     std::vector<uint64_t> paths_here;
@@ -191,16 +198,23 @@ int main_stats(int argc, char** argv) {
                     auto& setcov = *ival.value.second;
                     for (auto& p : setcov) {
                         std::set<uint64_t> u(p.first.begin(), p.first.end());
-                        std::cout << path_name << "\t" << name << "\t" << ival.start << "\t" << ival.stop << "\t"
-                                  << p.second << "\t"
-                                  << u.size() << "\t";
-                        for (auto& i : p.first) {
-                            std::cout << graph.get_path_name(as_path_handle(i)) << ",";
+#pragma omp critical (cout)
+                        {
+                            std::cout << path_name << "\t" << name << "\t" << ival.start << "\t" << ival.stop << "\t"
+                                      << ival.stop - ival.start << "\t"
+                                      << p.second << "\t"
+                                      << (float)p.second/(ival.stop-ival.start) << "\t"
+                                      << p.first.size() << "\t"
+                                      << u.size() << "\t";
+                            bool first = true;
+                            for (auto& i : p.first) {
+                                std::cout << (first ? (first=false, "") :",") << graph.get_path_name(as_path_handle(i));;
+                            }
+                            std::cout << std::endl;
                         }
-                        std::cout << std::endl;
                     }
             });
-            for (auto& ival : p.second) {
+            for (auto& ival : path_ivals) {
                 delete ival.value.second;
             }
         }
