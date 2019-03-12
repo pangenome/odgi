@@ -159,6 +159,16 @@ ExternalProject_Add(ska
 ExternalProject_Get_property(ska SOURCE_DIR)
 set(ska_INCLUDE "${SOURCE_DIR}")
 
+# intervaltree
+ExternalProject_Add(intervaltree
+  GIT_REPOSITORY "https://github.com/ekg/intervaltree.git"
+  GIT_TAG "e8082c74a6f5c18de99d8b4cc4a55e2e62a1150d"
+  INSTALL_COMMAND ""
+  BUILD_COMMAND ""
+  CONFIGURE_COMMAND "")
+ExternalProject_Get_property(intervaltree SOURCE_DIR)
+set(intervaltree_INCLUDE "${SOURCE_DIR}")
+
 set(CMAKE_BUILD_TYPE Release)
 
 # set up our target executable and specify its dependencies and includes
@@ -206,6 +216,7 @@ target_include_directories(odgi PUBLIC
   "${backwardscpp_INCLUDE}"
   "${sparsepp_INCLUDE}"
   "${ska_INCLUDE}"
+  "${intervaltree_INCLUDE}"
   "${bbhash_INCLUDE}"
   "${bsort_INCLUDE}")
 target_link_libraries(odgi

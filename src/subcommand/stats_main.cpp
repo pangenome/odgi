@@ -1,7 +1,9 @@
 #include "subcommand.hpp"
 #include "graph.hpp"
+#include "IntervalTree.h"
 //#include "gfakluge.hpp"
 #include "args.hxx"
+#include "split.hpp"
 //#include "io_helper.hpp"
 
 namespace odgi {
@@ -31,9 +33,10 @@ int main_stats(int argc, char** argv) {
     //args::ValueFlag<uint64_t> aln_min_length(parser, "N", "ignore alignments shorter than this", {'m', "aln-min-length"});
     //args::Flag to_gfa(parser, "to_gfa", "write the graph to stdout in GFA format", {'G', "to-gfa"});
     args::Flag summarize(parser, "summarize", "summarize the graph properties and dimensions", {'S', "summarize"});
-    args::Flag path_coverage(parser, "path_coverage", "provide a histogram of path coverage over bases in the graph", {'C', "path-coverage"});
-    args::Flag path_setcov(parser, "path_setcov", "provide a histogram of coverage over unique sets of paths", {'V', "path-setcov"});
-    args::Flag path_multicov(parser, "path_setcov", "provide a histogram of coverage over unique multisets of paths", {'M', "path-multicov"});
+    args::Flag path_coverage(parser, "coverage", "provide a histogram of path coverage over bases in the graph", {'C', "coverage"});
+    args::Flag path_setcov(parser, "setcov", "provide a histogram of coverage over unique sets of paths", {'V', "set-coverage"});
+    args::Flag path_multicov(parser, "multicov", "provide a histogram of coverage over unique multisets of paths", {'M', "multi-coverage"});
+    args::ValueFlag<std::string> path_bedmulticov(parser, "BED", "for each BED entry, provide a histogram of coverage over unique multisets of paths", {'B', "bed-multicov"});
     //args::Flag debug(parser, "debug", "enable debugging", {'d', "debug"});
     //args::Flag progress(parser, "progress", "show progress updates", {'p', "progress"});
     try {
@@ -134,6 +137,72 @@ int main_stats(int argc, char** argv) {
                 std::cout << graph.get_path_name(as_path_handle(i)) << ",";
             }
             std::cout << std::endl;
+        }
+    }
+
+    if (!args::get(path_bedmulticov).empty()) {
+        std::string line;
+        typedef std::map<std::vector<uint64_t>, uint64_t> setcov_t;
+        typedef IntervalTree<uint64_t, std::pair<std::string, setcov_t*> > itree_t;
+        map<std::string, itree_t::interval_vector> intervals;
+        auto& x = args::get(path_bedmulticov);
+        std::ifstream bed_in(x);
+        while (std::getline(bed_in, line)) {
+            // BED is base-numbered, 0-origin, half-open.  This parse turns that
+            // into base-numbered, 0-origin, fully-closed for internal use.  All
+            // coordinates used internally should be in the latter, and coordinates
+            // from the user in the former should be converted immediately to the
+            // internal format.
+            std::vector<string> fields = split(line, '\t');
+            intervals[fields[0]].push_back(
+                itree_t::interval(
+                    std::stoul(fields[1]),
+                    std::stoul(fields[2]),
+                    make_pair(fields[3], new setcov_t())));
+        }
+
+        for (auto& p : intervals) {
+            auto& path_name = p.first;
+            path_handle_t path = graph.get_path_handle(path_name);
+            // build the intervals for each path we'll query
+            itree_t itree(std::move(p.second)); //, 16, 1);
+            uint64_t pos = 0;
+            graph.for_each_occurrence_in_path(graph.get_path_handle(x), [&](const occurrence_handle_t& occ) {
+                    std::vector<uint64_t> paths_here;
+                    handle_t h = graph.get_occurrence(occ);
+                    graph.for_each_occurrence_on_handle(h, [&](const occurrence_handle_t& occ) {
+                            paths_here.push_back(as_integer(graph.get_path(occ)));
+                        });
+                    uint64_t len = graph.get_length(h);
+                    // check each position in the node
+                    auto hits = itree.findOverlapping(pos, pos+len);
+                    if (hits.size()) {
+                        for (auto& h : hits) {
+                            auto& q = *h.value.second;
+                            // adjust length for overlap length
+                            uint64_t ovlp = len - (h.start > pos ? h.start - pos : 0) - (h.stop < pos+len ? pos+len - h.stop : 0);
+                            q[paths_here] += ovlp;
+                        }
+                    }
+                    pos += len;
+                });
+            itree.visit_all([&](const itree_t::interval& ival) {
+                    auto& name = ival.value.first;
+                    auto& setcov = *ival.value.second;
+                    for (auto& p : setcov) {
+                        std::set<uint64_t> u(p.first.begin(), p.first.end());
+                        std::cout << path_name << "\t" << name << "\t" << ival.start << "\t" << ival.stop << "\t"
+                                  << p.second << "\t"
+                                  << u.size() << "\t";
+                        for (auto& i : p.first) {
+                            std::cout << graph.get_path_name(as_path_handle(i)) << ",";
+                        }
+                        std::cout << std::endl;
+                    }
+            });
+            for (auto& ival : p.second) {
+                delete ival.value.second;
+            }
         }
     }
 
