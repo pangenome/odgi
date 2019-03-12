@@ -2,6 +2,8 @@
 #include "graph.hpp"
 #include "gfakluge.hpp"
 #include "args.hxx"
+#include <cstdio>
+#include <algorithm>
 //#include "io_helper.hpp"
 
 namespace odgi {
@@ -92,8 +94,10 @@ int main_build(int argc, char** argv) {
         if (args::get(progress)) {
             i = 0; std::cerr << std::endl;
         }
-        gg.for_each_path_element_in_file(filename, [&](const std::string& path_name, const std::string& node_id, bool is_rev, const std::string& cigar) {
+        gg.for_each_path_element_in_file(filename, [&](const std::string& path_name_raw, const std::string& node_id, bool is_rev, const std::string& cigar) {
                 path_handle_t path;
+                std::string path_name = path_name_raw;
+                path_name.erase(std::remove_if(path_name.begin(), path_name.end(), [](char c) { return std::isspace(c); }), path_name.end());
                 if (!graph.has_path(path_name)) {
                     if (args::get(progress)) {
                         std::cerr << "path " << ++i << "\r";

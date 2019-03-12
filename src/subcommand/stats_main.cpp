@@ -32,6 +32,8 @@ int main_stats(int argc, char** argv) {
     //args::Flag to_gfa(parser, "to_gfa", "write the graph to stdout in GFA format", {'G', "to-gfa"});
     args::Flag summarize(parser, "summarize", "summarize the graph properties and dimensions", {'S', "summarize"});
     args::Flag path_coverage(parser, "path_coverage", "provide a histogram of path coverage over bases in the graph", {'C', "path-coverage"});
+    args::Flag path_setcov(parser, "path_setcov", "provide a histogram of coverage over unique sets of paths", {'V', "path-setcov"});
+    args::Flag path_multicov(parser, "path_setcov", "provide a histogram of coverage over unique multisets of paths", {'M', "path-multicov"});
     //args::Flag debug(parser, "debug", "enable debugging", {'d', "debug"});
     //args::Flag progress(parser, "progress", "show progress updates", {'p', "progress"});
     try {
@@ -97,6 +99,44 @@ int main_stats(int argc, char** argv) {
             std::cout << "uniq\t" << p.first << "\t" << p.second << std::endl;
         }
     }
+    if (args::get(path_setcov)) {
+        std::map<std::set<uint64_t>, uint64_t> setcov;
+        graph.for_each_handle([&](const handle_t& h) {
+                std::set<uint64_t> paths_here;
+                graph.for_each_occurrence_on_handle(h, [&](const occurrence_handle_t& occ) {
+                        paths_here.insert(as_integer(graph.get_path(occ)));
+                    });
+                setcov[paths_here] += graph.get_length(h);
+            });
+        std::cout << "cov\tsets" << std::endl;
+        for (auto& p : setcov) {
+            std::cout << p.second << "\t";
+            for (auto& i : p.first) {
+                std::cout << graph.get_path_name(as_path_handle(i)) << ",";
+            }
+            std::cerr << std::endl;
+        }
+    }
+    if (args::get(path_multicov)) {
+        std::map<std::vector<uint64_t>, uint64_t> setcov;
+        graph.for_each_handle([&](const handle_t& h) {
+                std::vector<uint64_t> paths_here;
+                graph.for_each_occurrence_on_handle(h, [&](const occurrence_handle_t& occ) {
+                        paths_here.push_back(as_integer(graph.get_path(occ)));
+                    });
+                std::sort(paths_here.begin(), paths_here.end());
+                setcov[paths_here] += graph.get_length(h);
+            });
+        std::cout << "cov\tsets" << std::endl;
+        for (auto& p : setcov) {
+            std::cout << p.second << "\t";
+            for (auto& i : p.first) {
+                std::cout << graph.get_path_name(as_path_handle(i)) << ",";
+            }
+            std::cout << std::endl;
+        }
+    }
+
     return 0;
 }
 
