@@ -169,6 +169,16 @@ ExternalProject_Add(intervaltree
 ExternalProject_Get_property(intervaltree SOURCE_DIR)
 set(intervaltree_INCLUDE "${SOURCE_DIR}")
 
+# lodepng
+ExternalProject_Add(lodepng
+  GIT_REPOSITORY "https://github.com/lvandeve/lodepng.git"
+  GIT_TAG "037af4a37fd2f3adc89d9afc7f84ad1eadd80561"
+  INSTALL_COMMAND ""
+  BUILD_COMMAND ""
+  CONFIGURE_COMMAND "")
+ExternalProject_Get_property(lodepng SOURCE_DIR)
+set(lodepng_INCLUDE "${SOURCE_DIR}")
+
 set(CMAKE_BUILD_TYPE Release)
 
 # set up our target executable and specify its dependencies and includes
@@ -178,6 +188,7 @@ add_executable(odgi
   ${CMAKE_SOURCE_DIR}/src/crash.cpp
   ${CMAKE_SOURCE_DIR}/src/position.cpp
   ${CMAKE_SOURCE_DIR}/src/threads.cpp
+  ${CMAKE_SOURCE_DIR}/src/split.cpp
   ${CMAKE_SOURCE_DIR}/src/node.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/driver.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/handle.cpp
@@ -189,11 +200,13 @@ add_executable(odgi
   ${CMAKE_SOURCE_DIR}/src/subcommand/sort_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/view_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/kmers_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/viz_main.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/is_single_stranded.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/remove_high_degree.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/prune.cpp
+  ${lodepng_INCLUDE}/lodepng.cpp
   )
 add_dependencies(odgi sdsl-lite)
 add_dependencies(odgi dynamic)
@@ -217,6 +230,7 @@ target_include_directories(odgi PUBLIC
   "${sparsepp_INCLUDE}"
   "${ska_INCLUDE}"
   "${intervaltree_INCLUDE}"
+  "${lodepng_INCLUDE}"
   "${bbhash_INCLUDE}"
   "${bsort_INCLUDE}")
 target_link_libraries(odgi

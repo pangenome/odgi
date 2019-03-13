@@ -20,18 +20,10 @@ int main_view(int argc, char** argv) {
     
     args::ArgumentParser parser("projection of graphs into other formats");
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-    //args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store the index in this file", {'o', "out"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the index from this file", {'i', "idx"});
-    //args::ValueFlag<std::string> seqs(parser, "FILE", "the sequences used to generate the alignments", {'s', "seqs"});
-    //args::ValueFlag<std::string> base(parser, "FILE", "build graph using this basename", {'b', "base"});
-    //args::ValueFlag<uint64_t> num_threads(parser, "N", "use this many threads during parallel steps", {'t', "threads"});
-    //args::ValueFlag<uint64_t> repeat_max(parser, "N", "limit transitive closure to include no more than N copies of a given input base", {'r', "repeat-max"});
-    //args::ValueFlag<uint64_t> aln_keep_n_longest(parser, "N", "keep up to the N-longest alignments overlapping each query position", {'k', "aln-keep-n-longest"});
-    //args::ValueFlag<uint64_t> aln_min_length(parser, "N", "ignore alignments shorter than this", {'m', "aln-min-length"});
     args::Flag to_gfa(parser, "to_gfa", "write the graph to stdout in GFA format", {'g', "to-gfa"});
-    //args::Flag summarize(parser, "summarize", "summarize the graph properties and dimensions", {'S', "summarize"});
     args::Flag display(parser, "display", "show internal structures", {'d', "display"});
-    //args::Flag progress(parser, "progress", "show progress updates", {'p', "progress"});
+
     try {
         parser.ParseCLI(argc, argv);
     } catch (args::Help) {
