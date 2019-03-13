@@ -74,6 +74,9 @@ int main_viz(int argc, char** argv) {
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the index from this file", {'i', "idx"});
     args::ValueFlag<std::string> png_out_file(parser, "FILE", "write the output (png) to this file", {'o', "out"});
+    args::ValueFlag<uint64_t> image_width(parser, "N", "width in pixels of output image", {'x', "width"});
+    args::ValueFlag<uint64_t> image_height(parser, "N", "height in pixels of output image", {'y', "height"});
+    args::ValueFlag<float> alpha(parser, "FLOAT", "use this alpha for in aggregation", {'a', "alpha"});
     args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
     try {
@@ -114,19 +117,62 @@ int main_viz(int argc, char** argv) {
     }
     const char* filename = args::get(png_out_file).c_str();
 
-    //generate some image
-    unsigned width = 512, height = 512;
-    std::vector<unsigned char> image;
-    image.resize(width * height * 4);
-    for(unsigned y = 0; y < height; y++) {
-        for(unsigned x = 0; x < width; x++) {
-            image[4 * width * y + 4 * x + 0] = 255 * !(x & y);
-            image[4 * width * y + 4 * x + 1] = x ^ y;
-            image[4 * width * y + 4 * x + 2] = x | y;
-            image[4 * width * y + 4 * x + 3] = 255;
-        }
-    }
-    
+    hash_map<uint64_t, uint64_t> position_map;
+    std::vector<std::pair<uint64_t, uint64_t>> contacts;
+    uint64_t len = 0;
+    graph.for_each_handle([&](const handle_t& h) {
+            position_map[number_bool_packing::unpack_number(h)] = len;
+            uint64_t hl = graph.get_length(h);
+            len += hl;
+        });
+
+    uint64_t width = (args::get(image_width) ? args::get(image_width) : 1000);
+    uint64_t height = (args::get(image_height) ? args::get(image_height) : 1000);
+    std::vector<uint8_t> image;
+    image.resize(width * height * 4, 255);
+    float scale = (float)width/(float)len;
+
+    float alpha_value = 255*(args::get(alpha) ? args::get(alpha) : 1);
+
+    auto add_contact = [&](const uint64_t& _x, const uint64_t& _y) {
+        uint64_t x = std::min((uint64_t)std::round(_x * scale), width-1);
+        uint64_t y = std::min((uint64_t)std::round(_y * scale), height-1);
+        uint8_t v = alpha_value;
+        uint8_t* r = &image[4 * width * y + 4 * x + 0];
+        uint8_t* g = &image[4 * width * y + 4 * x + 1];
+        uint8_t* b = &image[4 * width * y + 4 * x + 2];
+        uint8_t* a = &image[4 * width * y + 4 * x + 3];
+        if (*r >= v) *r -= v;
+        if (*g >= v) *g -= v;
+        if (*b >= v) *b -= v;
+        *a = 255;
+    };
+
+    graph.for_each_handle([&](const handle_t& h) {
+            uint64_t p = position_map[number_bool_packing::unpack_number(h)];
+            uint64_t hl = graph.get_length(h);
+            // make contects for the bases in the node
+            for (uint64_t i = 0; i < hl-1; ++i) {
+                add_contact(p+i, p+i+1);
+            }
+        });
+
+
+    graph.for_each_handle([&](const handle_t& h) {
+            // add contacts for the edges
+            uint64_t hl = graph.get_length(h);
+            graph.follow_edges(h, false, [&](const handle_t& o) {
+                    uint64_t x = position_map[number_bool_packing::unpack_number(h)];
+                    uint64_t y = position_map[number_bool_packing::unpack_number(o)];
+                    add_contact(x, y);
+                });
+            graph.follow_edges(h, true, [&](const handle_t& o) {
+                    uint64_t x = position_map[number_bool_packing::unpack_number(o)];
+                    uint64_t y = position_map[number_bool_packing::unpack_number(h)];
+                    add_contact(x, y);
+                });
+        });
+
     png::encodeOneStep(filename, image, width, height);
 
     return 0;
