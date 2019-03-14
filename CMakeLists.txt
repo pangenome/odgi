@@ -171,13 +171,12 @@ set(intervaltree_INCLUDE "${SOURCE_DIR}")
 
 # lodepng
 ExternalProject_Add(lodepng
-  GIT_REPOSITORY "https://github.com/lvandeve/lodepng.git"
-  GIT_TAG "037af4a37fd2f3adc89d9afc7f84ad1eadd80561"
-  INSTALL_COMMAND ""
-  BUILD_COMMAND ""
-  CONFIGURE_COMMAND "")
+  GIT_REPOSITORY "https://github.com/ekg/lodepng.git"
+  GIT_TAG "6b7f7b2b1c0eaab7042b0137fa19129618d1bb9f"
+  INSTALL_COMMAND "")
 ExternalProject_Get_property(lodepng SOURCE_DIR)
 set(lodepng_INCLUDE "${SOURCE_DIR}")
+set(lodepng_LIB "${SOURCE_DIR}/lib")
 
 set(CMAKE_BUILD_TYPE Release)
 
@@ -206,7 +205,6 @@ add_executable(odgi
   ${CMAKE_SOURCE_DIR}/src/algorithms/is_single_stranded.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/remove_high_degree.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/prune.cpp
-  ${lodepng_INCLUDE}/lodepng.cpp
   )
 add_dependencies(odgi sdsl-lite)
 add_dependencies(odgi dynamic)
@@ -238,6 +236,7 @@ target_link_libraries(odgi
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort64.a"
   "${handlegraph_LIB}/libhandlegraph.a"
+  "${lodepng_LIB}/liblodepng.a"
   "-ldl"
 #  "-ltcmalloc_minimal"
   )
