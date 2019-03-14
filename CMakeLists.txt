@@ -202,6 +202,7 @@ add_executable(odgi
   ${CMAKE_SOURCE_DIR}/src/subcommand/viz_main.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/hash.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/is_single_stranded.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/remove_high_degree.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/prune.cpp
