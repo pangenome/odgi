@@ -117,7 +117,7 @@ int main_viz(int argc, char** argv) {
     }
     const char* filename = args::get(png_out_file).c_str();
 
-    hash_map<uint64_t, uint64_t> position_map;
+    std::vector<uint64_t> position_map(graph.node_size()+1);
     std::vector<std::pair<uint64_t, uint64_t>> contacts;
     uint64_t len = 0;
     graph.for_each_handle([&](const handle_t& h) {
@@ -125,6 +125,7 @@ int main_viz(int argc, char** argv) {
             uint64_t hl = graph.get_length(h);
             len += hl;
         });
+    position_map[position_map.size()-1] = len;
 
     uint64_t path_count = graph.get_path_count();
     uint64_t pix_per_path = (args::get(path_height) ? args::get(path_height) : 10);
@@ -134,12 +135,13 @@ int main_viz(int argc, char** argv) {
     uint64_t height = std::min(len, (args::get(image_height) ? args::get(image_height) : 1000));
     std::vector<uint8_t> image;
     image.resize(width * (height + path_space) * 4, 255);
-    float scale = (float)width/(float)len;
+    float scale_x = (float)width/(float)len;
+    float scale_y = (float)height/(float)len;
 
     auto add_point = [&](const uint64_t& _x, const uint64_t& _y,
                          const uint8_t& _r, const uint8_t& _g, const uint8_t& _b) {
-        uint64_t x = std::min((uint64_t)std::round(_x * scale), width-1);
-        uint64_t y = std::min((uint64_t)std::round(_y * scale), height-1) + path_space;
+        uint64_t x = std::min((uint64_t)std::round(_x * scale_x), width-1);
+        uint64_t y = std::min((uint64_t)std::round(_y * scale_y), height-1) + path_space;
         image[4 * width * y + 4 * x + 0] = _r;
         image[4 * width * y + 4 * x + 1] = _g;
         image[4 * width * y + 4 * x + 2] = _b;
@@ -147,20 +149,20 @@ int main_viz(int argc, char** argv) {
     };
 
     auto add_edge = [&](const handle_t& h, const handle_t& o) {
-        auto& _a = position_map[number_bool_packing::unpack_number(h)];
-        auto& _b = position_map[number_bool_packing::unpack_number(o)];
+        auto& _a = position_map[number_bool_packing::unpack_number(h) + !number_bool_packing::unpack_bit(h)];
+        auto& _b = position_map[number_bool_packing::unpack_number(o) + !number_bool_packing::unpack_bit(o)];
         uint64_t a = std::min(_a, _b);
         uint64_t b = std::max(_a, _b);
         uint64_t dist = b - a;
         uint64_t i = 0;
-        for ( ; i < dist; i+=1/scale) {
+        for ( ; i < dist; i+=1/scale_y) {
             add_point(a, i, 0, 0, 0);
         }
         while (a < b) {
             add_point(a, i, 0, 0, 0);
-            a += 1/scale;
+            a += 1/scale_x;
         }
-        for (uint64_t j = 0; j < dist; j+=1/scale) {
+        for (uint64_t j = 0; j < dist; j+=1/scale_y) {
             add_point(b, j, 0, 0, 0);
         }
     };
@@ -170,7 +172,7 @@ int main_viz(int argc, char** argv) {
             uint64_t hl = graph.get_length(h);
             // make contects for the bases in the node
             //for (uint64_t i = 0; i < hl; ++i) {
-            for (uint64_t i = 0; i < hl; i+=1/scale) {
+            for (uint64_t i = 0; i < hl; i+=1/scale_x) {
                 add_point(p+i, 0, 0, 0, 0);
             }
         });
@@ -180,16 +182,14 @@ int main_viz(int argc, char** argv) {
             graph.follow_edges(h, false, [&](const handle_t& o) {
                     add_edge(h, o);
                 });
-            /*
             graph.follow_edges(h, true, [&](const handle_t& o) {
                     add_edge(o, h);
                 });
-            */
         });
 
     auto add_path_step = [&](const uint64_t& _x, const uint64_t& _y,
                              const uint8_t& _r, const uint8_t& _g, const uint8_t& _b) {
-        uint64_t x = std::min((uint64_t)std::round(_x * scale), width-1);
+        uint64_t x = std::min((uint64_t)std::round(_x * scale_x), width-1);
         uint64_t t = _y*pix_per_path;
         uint64_t s = t+pix_per_path;
         for (uint64_t y = t; y < s; ++y) {
@@ -224,18 +224,14 @@ int main_viz(int argc, char** argv) {
             uint64_t path_rank = as_integer(path);
             uint64_t step = 0;
             graph.for_each_occurrence_in_path(path, [&](const occurrence_handle_t& occ) {
-                    //std::cerr << "occ " << ++step << "\r";
                     handle_t h = graph.get_occurrence(occ);
                     uint64_t p = position_map[number_bool_packing::unpack_number(h)];
                     // todo...
                     uint64_t hl = graph.get_length(h);
                     // make contects for the bases in the node
-                    //for (uint64_t i = 0; i < hl; ++i) {
-                    for (uint64_t i = 0; i < hl; i+=1/scale) {
+                    for (uint64_t i = 0; i < hl; i+=1/scale_x) {
                         add_path_step(p+i, path_rank, path_r, path_g, path_b);
                     }
-                    //x = p+hl;
-                    //y = p+hl;
                  });
          });
     
