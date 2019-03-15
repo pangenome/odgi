@@ -200,6 +200,7 @@ add_executable(odgi
   ${CMAKE_SOURCE_DIR}/src/subcommand/view_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/kmers_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/viz_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/paths_main.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/hash.cpp
