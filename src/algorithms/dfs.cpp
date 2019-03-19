@@ -1,6 +1,6 @@
 #include "dfs.hpp"
 
-namespace vg {
+namespace odgi {
 namespace algorithms {
 
 using namespace std;
@@ -18,12 +18,12 @@ void dfs(
     const function<void(const edge_t&)>& edge_curr_fn,       // called when we meet an edge in the current tree component
     const function<void(const edge_t&)>& edge_cross_fn,      // called when we meet an edge in an already-traversed tree component
     const vector<handle_t>& sources,                         // start only at these node traversals
-    const unordered_set<handle_t>& sinks                     // when hitting a sink, don't keep walking
+    const ska::flat_hash_set<handle_t>& sinks                     // when hitting a sink, don't keep walking
     ) {
 
     // to maintain search state
     enum SearchState { PRE = 0, CURR, POST };
-    unordered_map<handle_t, SearchState> state; // implicitly constructed entries will be PRE.
+    ska::flat_hash_map<handle_t, SearchState> state; // implicitly constructed entries will be PRE.
 
     // to maintain stack frames
     struct Frame {
@@ -36,7 +36,7 @@ void dfs(
     };
 
     // maintains edges while the node traversal's frame is on the stack
-    unordered_map<handle_t, vector<edge_t> > edges;
+    ska::flat_hash_map<handle_t, vector<edge_t> > edges;
 
     // do dfs from given root.  returns true if terminated via break condition, false otherwise
     function<bool(const handle_t&)> dfs_single_source = [&](const handle_t& root) {
@@ -204,7 +204,7 @@ void dfs(const HandleGraph& graph,
                       const function<void(const handle_t&)>& handle_begin_fn,
                       const function<void(const handle_t&)>& handle_end_fn,
                       const vector<handle_t>& sources,
-                      const unordered_set<handle_t>& sinks) {
+                      const ska::flat_hash_set<handle_t>& sinks) {
     auto edge_noop = [](const edge_t& e) { };
     dfs(graph,
         handle_begin_fn,
@@ -224,7 +224,7 @@ void dfs(const HandleGraph& graph,
                       const function<bool(void)>& break_fn) {
     auto edge_noop = [](const edge_t& e) { };
     vector<handle_t> empty_sources;
-    unordered_set<handle_t> empty_sinks;
+    ska::flat_hash_set<handle_t> empty_sinks;
     dfs(graph,
         handle_begin_fn,
         handle_end_fn,

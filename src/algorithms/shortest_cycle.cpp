@@ -1,6 +1,6 @@
 #include "shortest_cycle.hpp"
 
-namespace vg {
+namespace odgi {
 namespace algorithms {
 
 using namespace handlegraph;

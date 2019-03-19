@@ -2,21 +2,21 @@
 
 #include "dagify.hpp"
 
-namespace vg {
+namespace odgi {
+
 namespace algorithms {
 
-using namespace std;
 using namespace handlegraph;
 
 
-    unordered_map<handlegraph::nid_t, handlegraph::nid_t> dagify(const HandleGraph* graph, MutableHandleGraph* into,
+    ska::flat_hash_map<handlegraph::nid_t, handlegraph::nid_t> dagify(const HandleGraph* graph, MutableHandleGraph* into,
                                                                size_t min_preserved_path_length) {
         
         // initialize the translator from the dagified graph back to the original graph
-        unordered_map<handlegraph::nid_t, handlegraph::nid_t> translator;
+        ska::flat_hash_map<handlegraph::nid_t, handlegraph::nid_t> translator;
         
         // generate a canonical orientation across the graph
-        vector<handle_t> orientation = single_stranded_orientation(graph);
+        std::vector<handle_t> orientation = single_stranded_orientation(graph);
         
         if (orientation.size() < graph->node_size()) {
             cerr << "error:[dagify] Dagify algorithm only valid on graphs with a single stranded orientation, consider using split_strands first" << endl;
@@ -31,7 +31,7 @@ using namespace handlegraph;
 #endif
         
         // mark the ones that whose canonical orientation is reversed
-        unordered_set<handlegraph::nid_t> reversed_nodes;
+        ska::flat_hash_set<handlegraph::nid_t> reversed_nodes;
         for (size_t i = 0; i < orientation.size(); i++) {
             if (graph->get_is_reverse(orientation[i])) {
                 reversed_nodes.insert(graph->get_id(orientation[i]));
@@ -39,7 +39,7 @@ using namespace handlegraph;
         }
         
         // find the strongly connected components of the original graph
-        vector<unordered_set<handlegraph::nid_t>> strong_components = strongly_connected_components(graph);
+        std::vector<ska::flat_hash_set<handlegraph::nid_t>> strong_components = strongly_connected_components(graph);
         
 #ifdef debug_dagify
         cerr << "got strongly connected components:" << endl;
@@ -55,10 +55,10 @@ using namespace handlegraph;
         // that paths are preserved
         
         // a tracker for which SCC a node belongs to
-        unordered_map<handlegraph::nid_t, size_t> component_of;
+        ska::flat_hash_map<handlegraph::nid_t, size_t> component_of;
         // a map from a node in the original graph to all its copies (in order) in the
         // dagified graph
-        unordered_map<handle_t, vector<handle_t>> injector;
+        ska::flat_hash_map<handle_t, std::vector<handle_t>> injector;
         for (size_t i = 0; i < strong_components.size(); i++) {
             
 #ifdef debug_dagify
@@ -80,7 +80,7 @@ using namespace handlegraph;
             }
             
             // get a layout with a low FAS
-            vector<handle_t> layout = eades_algorithm(&subgraph);
+            std::vector<handle_t> layout = eades_algorithm(&subgraph);
             
             // make sure the layout matches the canonical orientation of the graph
             if (graph->get_is_reverse(layout.front()) != reversed_nodes.count(graph->get_id(layout.front()))) {
@@ -102,14 +102,14 @@ using namespace handlegraph;
 #endif
             
             // record the ordering of the layout so we can identify backward edges
-            unordered_map<handle_t, size_t> ordering;
+            ska::flat_hash_map<handle_t, size_t> ordering;
             for (size_t i = 0; i < layout.size(); i++) {
                 ordering[layout[i]] = i;
             }
             
             // mark the edges as either forward or backward relative to the layout
-            vector<vector<size_t>> forward_edges(layout.size());
-            vector<pair<size_t, size_t>> backward_edges;
+            std::vector<std::vector<size_t>> forward_edges(layout.size());
+            std::vector<pair<size_t, size_t>> backward_edges;
             subgraph.for_each_edge([&](const edge_t& edge) {
                 // get the indices of the edge in the layout, making sure to match
                 // the canonical orientation
@@ -141,8 +141,8 @@ using namespace handlegraph;
             
             // dynamic progamming structures that represent distances within the current
             // copy of the SCC and the next copy
-            vector<int64_t> distances(layout.size(), numeric_limits<int64_t>::max());
-            vector<int64_t> next_distances(layout.size(), numeric_limits<int64_t>::max());
+            std::vector<int64_t> distances(layout.size(), numeric_limits<int64_t>::max());
+            std::vector<int64_t> next_distances(layout.size(), numeric_limits<int64_t>::max());
             
             // init the distances so that we are measuring from the end of the heads of
             // backward edges (which cross to the next copy of the SCC)

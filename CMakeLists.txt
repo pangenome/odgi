@@ -91,7 +91,7 @@ set(gfakluge_LIB "${INSTALL_DIR}/src/gfakluge")
 # libhandlegraph (full build using its cmake config)
 ExternalProject_Add(handlegraph
   GIT_REPOSITORY "https://github.com/vgteam/libhandlegraph.git"
-  GIT_TAG "069acc9668bad7aeeab32d2a3730f6de28ed2352"
+  GIT_TAG "04688588e4ec840f18af74395d446e868fc13c12"
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
   INSTALL_COMMAND "")
 ExternalProject_Get_property(handlegraph INSTALL_DIR)
@@ -178,6 +178,16 @@ ExternalProject_Get_property(lodepng SOURCE_DIR)
 set(lodepng_INCLUDE "${SOURCE_DIR}")
 set(lodepng_LIB "${SOURCE_DIR}/lib")
 
+# structures
+ExternalProject_Add(structures
+  GIT_REPOSITORY "https://github.com/jeizenga/structures.git"
+  GIT_TAG "71722385665aa724b466889bbec1afbfd375201f"
+  INSTALL_COMMAND ""
+  BUILD_COMMAND ""
+  CONFIGURE_COMMAND "")
+ExternalProject_Get_property(structures SOURCE_DIR)
+set(structures_INCLUDE "${SOURCE_DIR}/src/include")
+
 set(CMAKE_BUILD_TYPE Release)
 
 # set up our target executable and specify its dependencies and includes
@@ -189,6 +199,7 @@ add_executable(odgi
   ${CMAKE_SOURCE_DIR}/src/threads.cpp
   ${CMAKE_SOURCE_DIR}/src/split.cpp
   ${CMAKE_SOURCE_DIR}/src/node.cpp
+  ${CMAKE_SOURCE_DIR}/src/subgraph.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/driver.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/handle.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/fuzz.cpp
@@ -207,6 +218,11 @@ add_executable(odgi
   ${CMAKE_SOURCE_DIR}/src/algorithms/is_single_stranded.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/remove_high_degree.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/prune.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/cycle_breaking_sort.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/eades_algorithm.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/dagify.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/strongly_connected_components.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/dfs.cpp
   )
 add_dependencies(odgi sdsl-lite)
 add_dependencies(odgi dynamic)
@@ -217,6 +233,8 @@ add_dependencies(odgi bbhash)
 add_dependencies(odgi sparsepp)
 add_dependencies(odgi ska)
 add_dependencies(odgi bsort)
+add_dependencies(odgi lodepng)
+add_dependencies(odgi structures)
 target_include_directories(odgi PUBLIC
   "${CMAKE_SOURCE_DIR}/src"
   "${sdsl-lite_INCLUDE}"
@@ -232,7 +250,8 @@ target_include_directories(odgi PUBLIC
   "${intervaltree_INCLUDE}"
   "${lodepng_INCLUDE}"
   "${bbhash_INCLUDE}"
-  "${bsort_INCLUDE}")
+  "${bsort_INCLUDE}"
+  "${structures_INCLUDE}")
 target_link_libraries(odgi
   "${sdsl-lite_LIB}/libsdsl.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort.a"

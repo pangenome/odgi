@@ -1090,7 +1090,7 @@ void graph_t::to_gfa(std::ostream& out) const {
             out << "S\t" << get_id(h) << "\t" << get_sequence(h) << std::endl;
             // get the forward edges from this handle
             follow_edges(h, false, [&out, &h, this](const handle_t& a){
-                    if (as_integer(h) < as_integer(a)) {
+                    if (as_integer(h) <= as_integer(a)) {
                         out << "L\t" << get_id(h) << "\t"
                             << (get_is_reverse(h)?"-":"+")
                             << "\t" << get_id(a) << "\t"
@@ -1099,7 +1099,7 @@ void graph_t::to_gfa(std::ostream& out) const {
                     }
                 });
             follow_edges(flip(h), false, [&out, &h, this](const handle_t& a){
-                    if (as_integer(h) < as_integer(a)) {
+                    if (as_integer(h) <= as_integer(a)) {
                         out << "L\t" << get_id(h) << "\t"
                             << (get_is_reverse(h)?"+":"-")
                             << "\t" << get_id(a) << "\t"

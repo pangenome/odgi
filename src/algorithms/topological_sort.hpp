@@ -76,6 +76,8 @@ vector<handle_t> lazy_topological_order(const HandleGraph* g);
  */
 vector<handle_t> lazier_topological_order(const HandleGraph* g);
 
+void topological_sort(MutableHandleGraph& g, bool compact_ids);
+
 }
 }
 

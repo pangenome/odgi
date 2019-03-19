@@ -2,7 +2,7 @@
 
 #include "eades_algorithm.hpp"
 
-namespace vg {
+namespace odgi {
 namespace algorithms {
 
 using namespace std;

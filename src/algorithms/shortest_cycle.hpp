@@ -8,7 +8,7 @@
 #include "eades_algorithm.hpp"
 #include "structures/rank_pairing_heap.hpp"
 
-namespace vg {
+namespace odgi {
 namespace algorithms {
 
 using namespace std;

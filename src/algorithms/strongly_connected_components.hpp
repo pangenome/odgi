@@ -1,20 +1,18 @@
-#ifndef VG_ALGORITHMS_STRONGLY_CONNECTED_COMPONENTS_HPP_INCLUDED
-#define VG_ALGORITHMS_STRONGLY_CONNECTED_COMPONENTS_HPP_INCLUDED
+#pragma once
 
 #include <unordered_set>
 #include <handlegraph/handle_graph.hpp>
+#include "hash_map.hpp"
 #include "dfs.hpp"
 
-namespace vg {
+namespace odgi {
 namespace algorithms {
 
 using namespace std;
 using namespace handlegraph;
 
 /// Find all of the nodes with no edges on their left sides.
-vector<unordered_set<handlegraph::nid_t>> strongly_connected_components(const HandleGraph* g);
+vector<ska::flat_hash_set<handlegraph::nid_t>> strongly_connected_components(const HandleGraph* g);
     
 }
 }
-
-#endif

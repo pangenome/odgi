@@ -2,6 +2,8 @@
 #include "graph.hpp"
 #include "args.hxx"
 #include "algorithms/topological_sort.hpp"
+#include "algorithms/eades_algorithm.hpp"
+#include "algorithms/cycle_breaking_sort.hpp"
 
 namespace odgi {
 
@@ -22,6 +24,8 @@ int main_sort(int argc, char** argv) {
     args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store the graph in this file", {'o', "out"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     args::Flag show_sort(parser, "show", "write the sort order mapping", {'S', "show"});
+    args::Flag cycle_breaking(parser, "cycle_breaking", "use a cycle breaking sort", {'b', "cycle-breaking"});
+    args::Flag eades(parser, "eades", "use eades algorithm", {'e', "eades"});
     try {
         parser.ParseCLI(argc, argv);
     } catch (args::Help) {
@@ -53,7 +57,14 @@ int main_sort(int argc, char** argv) {
     }
     std::string outfile = args::get(dg_out_file);
     if (outfile.size()) {
-        graph.apply_ordering(algorithms::topological_order(&graph), true);
+        if (args::get(eades)) {
+            graph.apply_ordering(algorithms::eades_algorithm(&graph), true);
+        } else {
+            graph.apply_ordering(algorithms::topological_order(&graph), true);
+        }
+        if (args::get(cycle_breaking)) {
+            graph.apply_ordering(algorithms::cycle_breaking_sort(graph), true);
+        }
         ofstream f(outfile.c_str());
         graph.serialize(f);
         f.close();
