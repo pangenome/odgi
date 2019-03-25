@@ -7,17 +7,17 @@
 #include "find_shortest_paths.hpp"
 #include <structures/updateable_priority_queue.hpp>
 
-namespace vg {
+namespace odgi {
 namespace algorithms {
 
 using namespace structures;
 using namespace handlegraph;
 
-unordered_map<handle_t, size_t>  find_shortest_paths(const HandleGraph* g, handle_t start,
-                                                     bool traverse_leftward) {
+ska::flat_hash_map<handle_t, size_t>  find_shortest_paths(const HandleGraph* g, handle_t start,
+                                                          bool traverse_leftward) {
 
     // This is the minimum distance to each handle
-    unordered_map<handle_t, size_t> distances;
+    ska::flat_hash_map<handle_t, size_t> distances;
     
     // We keep a priority queue so we can visit the handle with the shortest
     // distance next. We put handles in here whenever we see them with shorter

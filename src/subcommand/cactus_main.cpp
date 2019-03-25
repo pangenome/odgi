@@ -1,28 +1,27 @@
 #include "subcommand.hpp"
 #include "graph.hpp"
-//#include "gfakluge.hpp"
 #include "args.hxx"
-//#include "io_helper.hpp"
+#include "cactus.hpp"
 
 namespace odgi {
 
 using namespace odgi::subcommand;
 
-int main_view(int argc, char** argv) {
+int main_cactus(int argc, char** argv) {
 
     // trick argumentparser to do the right thing with the subcommand
     for (uint64_t i = 1; i < argc-1; ++i) {
         argv[i] = argv[i+1];
     }
-    std::string prog_name = "odgi view";
+    std::string prog_name = "odgi cactus";
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
-    args::ArgumentParser parser("projection of graphs into other formats");
+    args::ArgumentParser parser("build the cactus graph transformation of the graph");
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the index from this file", {'i', "idx"});
-    args::Flag to_gfa(parser, "to_gfa", "write the graph to stdout in GFA format", {'g', "to-gfa"});
-    args::Flag display(parser, "display", "show internal structures", {'d', "display"});
+    //args::Flag to_gfa(parser, "to_gfa", "write the graph to stdout in GFA format", {'g', "to-gfa"});
+    //args::Flag display(parser, "display", "show internal structures", {'d', "display"});
 
     try {
         parser.ParseCLI(argc, argv);
@@ -47,18 +46,19 @@ int main_view(int argc, char** argv) {
         graph.load(f);
         f.close();
     }
-    if (args::get(display)) {
-        graph.display();
-    }
-    if (args::get(to_gfa)) {
-        graph.to_gfa(std::cout);
-    }
+    auto g = handle_graph_to_cactus(graph, {});
+    stCactusGraph* cactus_graph = g.first;
+    stList* telomeres = g.second;
+    // 
+    stList_destruct(telomeres);
+    stCactusGraph_destruct(cactus_graph);
+
 
     return 0;
 }
 
-static Subcommand odgi_view("view", "projection of graphs into other formats",
-                             PIPELINE, 3, main_view);
+static Subcommand odgi_cactus("cactus", "cactus transformation of the graph",
+                              PIPELINE, 3, main_cactus);
 
 
 }

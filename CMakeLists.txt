@@ -91,7 +91,7 @@ set(gfakluge_LIB "${INSTALL_DIR}/src/gfakluge")
 # libhandlegraph (full build using its cmake config)
 ExternalProject_Add(handlegraph
   GIT_REPOSITORY "https://github.com/vgteam/libhandlegraph.git"
-  GIT_TAG "069acc9668bad7aeeab32d2a3730f6de28ed2352"
+  GIT_TAG "04688588e4ec840f18af74395d446e868fc13c12"
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
   INSTALL_COMMAND "")
 ExternalProject_Get_property(handlegraph INSTALL_DIR)
@@ -159,6 +159,48 @@ ExternalProject_Add(ska
 ExternalProject_Get_property(ska SOURCE_DIR)
 set(ska_INCLUDE "${SOURCE_DIR}")
 
+# intervaltree
+ExternalProject_Add(intervaltree
+  GIT_REPOSITORY "https://github.com/ekg/intervaltree.git"
+  GIT_TAG "e8082c74a6f5c18de99d8b4cc4a55e2e62a1150d"
+  INSTALL_COMMAND ""
+  BUILD_COMMAND ""
+  CONFIGURE_COMMAND "")
+ExternalProject_Get_property(intervaltree SOURCE_DIR)
+set(intervaltree_INCLUDE "${SOURCE_DIR}")
+
+# lodepng
+ExternalProject_Add(lodepng
+  GIT_REPOSITORY "https://github.com/ekg/lodepng.git"
+  GIT_TAG "6b7f7b2b1c0eaab7042b0137fa19129618d1bb9f"
+  INSTALL_COMMAND "")
+ExternalProject_Get_property(lodepng SOURCE_DIR)
+set(lodepng_INCLUDE "${SOURCE_DIR}")
+set(lodepng_LIB "${SOURCE_DIR}/lib")
+
+# structures
+ExternalProject_Add(structures
+  GIT_REPOSITORY "https://github.com/jeizenga/structures.git"
+  GIT_TAG "71722385665aa724b466889bbec1afbfd375201f"
+  INSTALL_COMMAND ""
+  BUILD_COMMAND ""
+  CONFIGURE_COMMAND "")
+ExternalProject_Get_property(structures SOURCE_DIR)
+set(structures_INCLUDE "${SOURCE_DIR}/src/include")
+
+ExternalProject_Add(sonlib
+  GIT_REPOSITORY "https://github.com/vgteam/pinchSonLib.git"
+  GIT_TAG "d25257e7ba615081078c41ac82dd70fffdc8baad"
+  BUILD_IN_SOURCE TRUE
+  INSTALL_COMMAND ""
+  BUILD_COMMAND "make"
+  CONFIGURE_COMMAND "")
+ExternalProject_Get_property(sonlib SOURCE_DIR)
+set(sonLib_inc_INCLUDE "${SOURCE_DIR}/sonLib/C/inc")
+set(sonLib_lib_INCLUDE "${SOURCE_DIR}/sonLib/lib")
+set(sonLib_LIB "${SOURCE_DIR}/sonLib/lib")
+
+
 set(CMAKE_BUILD_TYPE Release)
 
 # set up our target executable and specify its dependencies and includes
@@ -168,7 +210,11 @@ add_executable(odgi
   ${CMAKE_SOURCE_DIR}/src/crash.cpp
   ${CMAKE_SOURCE_DIR}/src/position.cpp
   ${CMAKE_SOURCE_DIR}/src/threads.cpp
+  ${CMAKE_SOURCE_DIR}/src/split.cpp
   ${CMAKE_SOURCE_DIR}/src/node.cpp
+  ${CMAKE_SOURCE_DIR}/src/subgraph.cpp
+  ${CMAKE_SOURCE_DIR}/src/cactus.cpp
+  #${CMAKE_SOURCE_DIR}/src/snarls.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/driver.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/handle.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/fuzz.cpp
@@ -179,11 +225,22 @@ add_executable(odgi
   ${CMAKE_SOURCE_DIR}/src/subcommand/sort_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/view_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/kmers_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/viz_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/paths_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/cactus_main.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/hash.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/is_single_stranded.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/remove_high_degree.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/prune.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/cycle_breaking_sort.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/eades_algorithm.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/dagify.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/strongly_connected_components.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/weakly_connected_components.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/dfs.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/find_shortest_paths.cpp
   )
 add_dependencies(odgi sdsl-lite)
 add_dependencies(odgi dynamic)
@@ -194,6 +251,9 @@ add_dependencies(odgi bbhash)
 add_dependencies(odgi sparsepp)
 add_dependencies(odgi ska)
 add_dependencies(odgi bsort)
+add_dependencies(odgi lodepng)
+add_dependencies(odgi structures)
+add_dependencies(odgi sonlib)
 target_include_directories(odgi PUBLIC
   "${CMAKE_SOURCE_DIR}/src"
   "${sdsl-lite_INCLUDE}"
@@ -206,13 +266,22 @@ target_include_directories(odgi PUBLIC
   "${backwardscpp_INCLUDE}"
   "${sparsepp_INCLUDE}"
   "${ska_INCLUDE}"
+  "${intervaltree_INCLUDE}"
+  "${lodepng_INCLUDE}"
   "${bbhash_INCLUDE}"
-  "${bsort_INCLUDE}")
+  "${bsort_INCLUDE}"
+  "${structures_INCLUDE}"
+  "${sonLib_lib_INCLUDE}"
+  "${sonLib_inc_INCLUDE}")
 target_link_libraries(odgi
   "${sdsl-lite_LIB}/libsdsl.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort64.a"
   "${handlegraph_LIB}/libhandlegraph.a"
+  "${lodepng_LIB}/liblodepng.a"
+  "${sonLib_LIB}/stPinchesAndCacti.a"
+  "${sonLib_LIB}/3EdgeConnected.a"
+  "${sonLib_LIB}/sonLib.a"
   "-ldl"
 #  "-ltcmalloc_minimal"
   )

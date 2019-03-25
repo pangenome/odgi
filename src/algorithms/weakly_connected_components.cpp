@@ -1,16 +1,15 @@
 #include "weakly_connected_components.hpp"
 
-namespace vg {
+namespace odgi {
 namespace algorithms {
 
-using namespace std;
 using namespace handlegraph;
 
-vector<unordered_set<handlegraph::nid_t>> weakly_connected_components(const HandleGraph* graph) {
-    vector<unordered_set<handlegraph::nid_t>> to_return;
+std::vector<ska::flat_hash_set<handlegraph::nid_t>> weakly_connected_components(const HandleGraph* graph) {
+    std::vector<ska::flat_hash_set<handlegraph::nid_t>> to_return;
     
     // This only holds locally forward handles
-    unordered_set<handle_t> traversed;
+    ska::flat_hash_set<handle_t> traversed;
     
     graph->for_each_handle([&](const handle_t& handle) {
         
@@ -23,7 +22,7 @@ vector<unordered_set<handlegraph::nid_t>> weakly_connected_components(const Hand
         }
         
         // The stack only holds locally forward handles
-        vector<handle_t> stack{forward};
+        std::vector<handle_t> stack{forward};
         to_return.emplace_back();
         while (!stack.empty()) {
             handle_t here = stack.back();
@@ -51,13 +50,13 @@ vector<unordered_set<handlegraph::nid_t>> weakly_connected_components(const Hand
     return to_return;
 }
 
-vector<pair<unordered_set<handlegraph::nid_t>, vector<handle_t>>> weakly_connected_components_with_tips(const HandleGraph* graph) {
+std::vector<std::pair<ska::flat_hash_set<handlegraph::nid_t>, std::vector<handle_t>>> weakly_connected_components_with_tips(const HandleGraph* graph) {
     // TODO: deduplicate with above
     
-    vector<pair<unordered_set<handlegraph::nid_t>, vector<handle_t>>> to_return;
+    std::vector<std::pair<ska::flat_hash_set<handlegraph::nid_t>, std::vector<handle_t>>> to_return;
     
     // This only holds locally forward handles
-    unordered_set<handle_t> traversed;
+    ska::flat_hash_set<handle_t> traversed;
     
     graph->for_each_handle([&](const handle_t& handle) {
         
@@ -70,7 +69,7 @@ vector<pair<unordered_set<handlegraph::nid_t>, vector<handle_t>>> weakly_connect
         }
         
         // The stack only holds locally forward handles
-        vector<handle_t> stack{forward};
+        std::vector<handle_t> stack{forward};
         to_return.emplace_back();
         while (!stack.empty()) {
             handle_t here = stack.back();

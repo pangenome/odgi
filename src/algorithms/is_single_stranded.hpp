@@ -1,5 +1,4 @@
-#ifndef VG_ALGORITHMS_IS_SINGLE_STRANDED_HPP_INCLUDED
-#define VG_ALGORITHMS_IS_SINGLE_STRANDED_HPP_INCLUDED
+#pragma once
 
 /**
  * \file single_stranded.hpp
@@ -42,4 +41,3 @@ using namespace handlegraph;
 }
 }
 
-#endif

@@ -348,5 +348,11 @@ vector<handle_t> lazier_topological_order(const HandleGraph* g) {
     return lazy_topological_order_internal(g, true);
 }
 
+
+void topological_sort(MutableHandleGraph& g, bool compact_ids) {
+    g.apply_ordering(topological_order(&g), compact_ids);
 }
+
+}
+
 }

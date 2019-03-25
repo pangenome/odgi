@@ -1,5 +1,4 @@
-#ifndef VG_ALGORITHMS_EADES_ALGORITHM_HPP_INCLUDED
-#define VG_ALGORITHMS_EADES_ALGORITHM_HPP_INCLUDED
+#pragma once
 
 /**
  * \file eades_algorithm.hpp
@@ -15,7 +14,7 @@
 #include <list>
 #include <unordered_map>
 
-namespace vg {
+namespace odgi {
 namespace algorithms {
 
 using namespace std;
@@ -29,5 +28,3 @@ using namespace handlegraph;
 
 }
 }
-
-#endif
