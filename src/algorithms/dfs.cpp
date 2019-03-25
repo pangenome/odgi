@@ -3,21 +3,20 @@
 namespace odgi {
 namespace algorithms {
 
-using namespace std;
 using namespace handlegraph;
 
 
 // depth first search across node traversals with interface to traversal tree via callback
 void dfs(
     const HandleGraph& graph,
-    const function<void(const handle_t&)>& handle_begin_fn,  // called when node orientation is first encountered
-    const function<void(const handle_t&)>& handle_end_fn,    // called when node orientation goes out of scope
-    const function<bool(void)>& break_fn,                    // called to check if we should stop the DFS; we stop when true is returned.
-    const function<void(const edge_t&)>& edge_fn,            // called when an edge is encountered
-    const function<void(const edge_t&)>& tree_fn,            // called when an edge forms part of the DFS spanning tree
-    const function<void(const edge_t&)>& edge_curr_fn,       // called when we meet an edge in the current tree component
-    const function<void(const edge_t&)>& edge_cross_fn,      // called when we meet an edge in an already-traversed tree component
-    const vector<handle_t>& sources,                         // start only at these node traversals
+    const std::function<void(const handle_t&)>& handle_begin_fn,  // called when node orientation is first encountered
+    const std::function<void(const handle_t&)>& handle_end_fn,    // called when node orientation goes out of scope
+    const std::function<bool(void)>& break_fn,                    // called to check if we should stop the DFS; we stop when true is returned.
+    const std::function<void(const edge_t&)>& edge_fn,            // called when an edge is encountered
+    const std::function<void(const edge_t&)>& tree_fn,            // called when an edge forms part of the DFS spanning tree
+    const std::function<void(const edge_t&)>& edge_curr_fn,       // called when we meet an edge in the current tree component
+    const std::function<void(const edge_t&)>& edge_cross_fn,      // called when we meet an edge in an already-traversed tree component
+    const std::vector<handle_t>& sources,                         // start only at these node traversals
     const ska::flat_hash_set<handle_t>& sinks                     // when hitting a sink, don't keep walking
     ) {
 
@@ -28,25 +27,25 @@ void dfs(
     // to maintain stack frames
     struct Frame {
         handle_t handle;
-        vector<edge_t>::iterator begin, end;
+        std::vector<edge_t>::iterator begin, end;
         Frame(handle_t h,
-              vector<edge_t>::iterator b,
-              vector<edge_t>::iterator e)
+              std::vector<edge_t>::iterator b,
+              std::vector<edge_t>::iterator e)
             : handle(h), begin(b), end(e) { }
     };
 
     // maintains edges while the node traversal's frame is on the stack
-    ska::flat_hash_map<handle_t, vector<edge_t> > edges;
+    ska::flat_hash_map<handle_t, std::vector<edge_t> > edges;
 
     // do dfs from given root.  returns true if terminated via break condition, false otherwise
-    function<bool(const handle_t&)> dfs_single_source = [&](const handle_t& root) {
+    std::function<bool(const handle_t&)> dfs_single_source = [&](const handle_t& root) {
         
 #ifdef debug
         cerr << "Starting a DFS from " << graph.get_id(root) << " " << graph.get_is_reverse(root) << endl;
 #endif
         
         // to store the stack frames
-        deque<Frame> todo;
+        std::deque<Frame> todo;
         if (state[root] == SearchState::PRE) {
 #ifdef debug
             cerr << "\tMoving from PRE to CURR" << endl;
@@ -201,9 +200,9 @@ void dfs(
 }
 
 void dfs(const HandleGraph& graph,
-                      const function<void(const handle_t&)>& handle_begin_fn,
-                      const function<void(const handle_t&)>& handle_end_fn,
-                      const vector<handle_t>& sources,
+                      const std::function<void(const handle_t&)>& handle_begin_fn,
+                      const std::function<void(const handle_t&)>& handle_end_fn,
+                      const std::vector<handle_t>& sources,
                       const ska::flat_hash_set<handle_t>& sinks) {
     auto edge_noop = [](const edge_t& e) { };
     dfs(graph,
@@ -219,11 +218,11 @@ void dfs(const HandleGraph& graph,
 }
 
 void dfs(const HandleGraph& graph,
-                      const function<void(const handle_t&)>& handle_begin_fn,
-                      const function<void(const handle_t&)>& handle_end_fn,
-                      const function<bool(void)>& break_fn) {
+                      const std::function<void(const handle_t&)>& handle_begin_fn,
+                      const std::function<void(const handle_t&)>& handle_end_fn,
+                      const std::function<bool(void)>& break_fn) {
     auto edge_noop = [](const edge_t& e) { };
-    vector<handle_t> empty_sources;
+    std::vector<handle_t> empty_sources;
     ska::flat_hash_set<handle_t> empty_sinks;
     dfs(graph,
         handle_begin_fn,

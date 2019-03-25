@@ -188,6 +188,19 @@ ExternalProject_Add(structures
 ExternalProject_Get_property(structures SOURCE_DIR)
 set(structures_INCLUDE "${SOURCE_DIR}/src/include")
 
+ExternalProject_Add(sonlib
+  GIT_REPOSITORY "https://github.com/vgteam/pinchSonLib.git"
+  GIT_TAG "d25257e7ba615081078c41ac82dd70fffdc8baad"
+  BUILD_IN_SOURCE TRUE
+  INSTALL_COMMAND ""
+  BUILD_COMMAND "make"
+  CONFIGURE_COMMAND "")
+ExternalProject_Get_property(sonlib SOURCE_DIR)
+set(sonLib_inc_INCLUDE "${SOURCE_DIR}/sonLib/C/inc")
+set(sonLib_lib_INCLUDE "${SOURCE_DIR}/sonLib/lib")
+set(sonLib_LIB "${SOURCE_DIR}/sonLib/lib")
+
+
 set(CMAKE_BUILD_TYPE Release)
 
 # set up our target executable and specify its dependencies and includes
@@ -200,6 +213,8 @@ add_executable(odgi
   ${CMAKE_SOURCE_DIR}/src/split.cpp
   ${CMAKE_SOURCE_DIR}/src/node.cpp
   ${CMAKE_SOURCE_DIR}/src/subgraph.cpp
+  ${CMAKE_SOURCE_DIR}/src/cactus.cpp
+  #${CMAKE_SOURCE_DIR}/src/snarls.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/driver.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/handle.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/fuzz.cpp
@@ -212,6 +227,7 @@ add_executable(odgi
   ${CMAKE_SOURCE_DIR}/src/subcommand/kmers_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/viz_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/paths_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/cactus_main.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/hash.cpp
@@ -222,7 +238,9 @@ add_executable(odgi
   ${CMAKE_SOURCE_DIR}/src/algorithms/eades_algorithm.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/dagify.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/strongly_connected_components.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/weakly_connected_components.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/dfs.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/find_shortest_paths.cpp
   )
 add_dependencies(odgi sdsl-lite)
 add_dependencies(odgi dynamic)
@@ -235,6 +253,7 @@ add_dependencies(odgi ska)
 add_dependencies(odgi bsort)
 add_dependencies(odgi lodepng)
 add_dependencies(odgi structures)
+add_dependencies(odgi sonlib)
 target_include_directories(odgi PUBLIC
   "${CMAKE_SOURCE_DIR}/src"
   "${sdsl-lite_INCLUDE}"
@@ -251,13 +270,18 @@ target_include_directories(odgi PUBLIC
   "${lodepng_INCLUDE}"
   "${bbhash_INCLUDE}"
   "${bsort_INCLUDE}"
-  "${structures_INCLUDE}")
+  "${structures_INCLUDE}"
+  "${sonLib_lib_INCLUDE}"
+  "${sonLib_inc_INCLUDE}")
 target_link_libraries(odgi
   "${sdsl-lite_LIB}/libsdsl.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort64.a"
   "${handlegraph_LIB}/libhandlegraph.a"
   "${lodepng_LIB}/liblodepng.a"
+  "${sonLib_LIB}/stPinchesAndCacti.a"
+  "${sonLib_LIB}/3EdgeConnected.a"
+  "${sonLib_LIB}/sonLib.a"
   "-ldl"
 #  "-ltcmalloc_minimal"
   )
