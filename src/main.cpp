@@ -34,7 +34,7 @@ void odgi_help(char** argv) {
         cerr << "  -- " << name << command.get_description() << endl;
      });
      
-     cerr << endl << "For more commands, type `dg help`." << endl;
+     cerr << endl << "For more commands, type `odgi help`." << endl;
  }
 
 // We make sure to compile main for the lowest common denominator architecture.
