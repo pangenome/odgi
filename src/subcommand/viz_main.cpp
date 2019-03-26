@@ -201,13 +201,14 @@ int main_viz(int argc, char** argv) {
     };
     
     graph.for_each_path_handle([&](const path_handle_t& path) {
-            uint32_t path_name_hash = djb2_hash32(graph.get_path_name(path).c_str());
+            std::hash<std::string> hash_fn;
+            uint64_t path_name_hash = wang_hash_64(hash_fn(graph.get_path_name(path)));
             uint8_t path_r = 0;
             uint8_t path_b = 0;
             uint8_t path_g = 0;
-            memcpy(&path_r, &path_name_hash, sizeof(uint8_t));
-            memcpy(&path_b, ((uint8_t*)&path_name_hash)+1, sizeof(uint8_t));
-            memcpy(&path_g, ((uint8_t*)&path_name_hash)+2, sizeof(uint8_t));
+            memcpy(&path_r, ((uint8_t*)&path_name_hash)+2, sizeof(uint8_t));
+            memcpy(&path_b, ((uint8_t*)&path_name_hash)+4, sizeof(uint8_t));
+            memcpy(&path_g, ((uint8_t*)&path_name_hash)+6, sizeof(uint8_t));
             float path_r_f = (float)path_r/(float)255;
             float path_g_f = (float)path_g/(float)255;
             float path_b_f = (float)path_b/(float)255;
@@ -215,9 +216,11 @@ int main_viz(int argc, char** argv) {
             path_r_f /= sum;
             path_g_f /= sum;
             path_b_f /= sum;
-            path_r = (uint8_t)std::round(255*std::min(path_r_f*1.5, 1.0));
-            path_g = (uint8_t)std::round(255*std::min(path_g_f*1.5, 1.0));
-            path_b = (uint8_t)std::round(255*std::min(path_b_f*1.5, 1.0));
+            // brighten the color
+            float f = std::min(1.8, 1.0/std::max(std::max(path_r_f, path_g_f), path_b_f));
+            path_r = (uint8_t)std::round(255*std::min(path_r_f*f, (float)1.0));
+            path_g = (uint8_t)std::round(255*std::min(path_g_f*f, (float)1.0));
+            path_b = (uint8_t)std::round(255*std::min(path_b_f*f, (float)1.0));
             std::cerr << "path " << as_integer(path) << " " << graph.get_path_name(path) << " " << path_r_f << " " << path_g_f << " " << path_b_f
                       << " " << (int)path_r << " " << (int)path_g << " " << (int)path_b << std::endl;
             /// Loop over all the occurrences along a path, from first through last
