@@ -200,6 +200,14 @@ set(sonLib_inc_INCLUDE "${SOURCE_DIR}/sonLib/C/inc")
 set(sonLib_lib_INCLUDE "${SOURCE_DIR}/sonLib/lib")
 set(sonLib_LIB "${SOURCE_DIR}/sonLib/lib")
 
+ExternalProject_Add(picosha256
+  GIT_REPOSITORY "https://github.com/okdshin/PicoSHA2.git"
+  GIT_TAG "b699e6c900be6e00152db5a3d123c1db42ea13d0"
+  INSTALL_COMMAND ""
+  BUILD_COMMAND ""
+  CONFIGURE_COMMAND "")
+ExternalProject_Get_property(picosha256 SOURCE_DIR)
+set(picosha256_INCLUDE "${SOURCE_DIR}")
 
 set(CMAKE_BUILD_TYPE Release)
 
@@ -254,6 +262,7 @@ add_dependencies(odgi bsort)
 add_dependencies(odgi lodepng)
 add_dependencies(odgi structures)
 add_dependencies(odgi sonlib)
+add_dependencies(odgi picosha256)
 target_include_directories(odgi PUBLIC
   "${CMAKE_SOURCE_DIR}/src"
   "${sdsl-lite_INCLUDE}"
@@ -272,7 +281,8 @@ target_include_directories(odgi PUBLIC
   "${bsort_INCLUDE}"
   "${structures_INCLUDE}"
   "${sonLib_lib_INCLUDE}"
-  "${sonLib_inc_INCLUDE}")
+  "${sonLib_inc_INCLUDE}"
+  "${picosha256_INCLUDE}")
 target_link_libraries(odgi
   "${sdsl-lite_LIB}/libsdsl.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort.a"
