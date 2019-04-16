@@ -4,6 +4,7 @@
 #include "algorithms/topological_sort.hpp"
 #include "algorithms/eades_algorithm.hpp"
 #include "algorithms/cycle_breaking_sort.hpp"
+#include "algorithms/id_ordered_paths.hpp"
 
 namespace odgi {
 
@@ -26,6 +27,8 @@ int main_sort(int argc, char** argv) {
     args::Flag show_sort(parser, "show", "write the sort order mapping", {'S', "show"});
     args::Flag cycle_breaking(parser, "cycle_breaking", "use a cycle breaking sort", {'b', "cycle-breaking"});
     args::Flag eades(parser, "eades", "use eades algorithm", {'e', "eades"});
+    args::Flag paths_by_min_node_id(parser, "paths-min", "sort paths by their lowest contained node id", {'P', "paths-min"});
+    args::Flag paths_by_max_node_id(parser, "paths-max", "sort paths by their highest contained node id", {'M', "paths-max"});
     try {
         parser.ParseCLI(argc, argv);
     } catch (args::Help) {
@@ -64,6 +67,12 @@ int main_sort(int argc, char** argv) {
         }
         if (args::get(cycle_breaking)) {
             graph.apply_ordering(algorithms::cycle_breaking_sort(graph), true);
+        }
+        if (args::get(paths_by_min_node_id)) {
+            graph.apply_path_ordering(algorithms::id_ordered_paths(graph, false));
+        }
+        if (args::get(paths_by_max_node_id)) {
+            graph.apply_path_ordering(algorithms::id_ordered_paths(graph, true));
         }
         ofstream f(outfile.c_str());
         graph.serialize(f);

@@ -642,6 +642,35 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order, bool compact_id
     *this = ordered;
 }
 
+void graph_t::apply_path_ordering(const std::vector<path_handle_t>& order) {
+    graph_t ordered;
+    // copy nodes
+    for_each_handle([&](const handle_t& handle) {
+            ordered.create_handle(get_sequence(handle), get_id(handle));
+        });
+    // copy edges
+    for_each_handle([&](const handle_t& handle) {
+            follow_edges(handle, false, [&](const handle_t& h) {
+                    ordered.create_edge(ordered.get_handle(get_id(handle), get_is_reverse(handle)),
+                                        ordered.get_handle(get_id(h), get_is_reverse(h)));
+                });
+            follow_edges(flip(handle), false, [&](const handle_t& h) {
+                    ordered.create_edge(ordered.get_handle(get_id(handle), get_is_reverse(flip(handle))),
+                                        ordered.get_handle(get_id(h), get_is_reverse(h)));
+                });
+        });
+    // add the paths in order
+    for (auto& path_handle : order) {
+        path_handle_t new_path = ordered.create_path_handle(get_path_name(path_handle));
+        for_each_occurrence_in_path(path_handle, [&](const occurrence_handle_t& occ) {
+                handle_t old_handle = get_occurrence(occ);
+                handle_t new_handle = ordered.get_handle(get_id(old_handle), get_is_reverse(old_handle));
+                ordered.append_occurrence(new_path, new_handle);
+            });
+    }
+    *this = ordered;
+}
+
 /// Alter the node that the given handle corresponds to so the orientation
 /// indicated by the handle becomes the node's local forward orientation.
 /// Rewrites all edges pointing to the node and the node's sequence to

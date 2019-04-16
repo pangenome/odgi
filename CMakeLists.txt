@@ -241,6 +241,7 @@ add_executable(odgi
   ${CMAKE_SOURCE_DIR}/src/algorithms/weakly_connected_components.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/dfs.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/find_shortest_paths.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/id_ordered_paths.cpp
   )
 add_dependencies(odgi sdsl-lite)
 add_dependencies(odgi dynamic)
