@@ -84,6 +84,7 @@ int main_viz(int argc, char** argv) {
     args::Flag path_per_row(parser, "bool", "display a single path per row rather than packing them", {'R', "path-per-row"});
     args::ValueFlag<float> link_path_pieces(parser, "FLOAT", "show thin links of this relative width to connect path pieces", {'L', "link-path-pieces"});
     args::ValueFlag<std::string> alignment_prefix(parser, "STRING", "apply alignment-related visual motifs to paths with this name prefix", {'A', "alignment-prefix"});
+    args::Flag show_strands(parser, "bool", "use reds and blues to show forward and reverse alignments (depends on -A)", {'S', "show-strand"});
     args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
     try {
@@ -297,22 +298,24 @@ int main_viz(int argc, char** argv) {
                 path_g_f = (x + 0.5*9)/10;
                 path_b_f = (x + 0.5*9)/10;
                 // check the path orientations
-                uint64_t steps = 0;
-                uint64_t rev = 0;
-                graph.for_each_occurrence_in_path(path, [&](const occurrence_handle_t& occ) {
-                        handle_t h = graph.get_occurrence(occ);
-                        ++steps;
-                        rev += graph.get_is_reverse(h);
-                    });
-                bool is_rev = (float)rev/(float)steps > 0.5;
-                if (is_rev) {
-                    path_r_f = path_r_f * 0.9;
-                    path_g_f = path_g_f * 0.9;
-                    path_b_f = path_b_f * 1.2;
-                } else {
-                    path_b_f = path_b_f * 0.9;
-                    path_g_f = path_g_f * 0.9;
-                    path_r_f = path_r_f * 1.2;
+                if (args::get(show_strands)) {
+                    uint64_t steps = 0;
+                    uint64_t rev = 0;
+                    graph.for_each_occurrence_in_path(path, [&](const occurrence_handle_t& occ) {
+                            handle_t h = graph.get_occurrence(occ);
+                            ++steps;
+                            rev += graph.get_is_reverse(h);
+                        });
+                    bool is_rev = (float)rev/(float)steps > 0.5;
+                    if (is_rev) {
+                        path_r_f = path_r_f * 0.9;
+                        path_g_f = path_g_f * 0.9;
+                        path_b_f = path_b_f * 1.2;
+                    } else {
+                        path_b_f = path_b_f * 0.9;
+                        path_g_f = path_g_f * 0.9;
+                        path_r_f = path_r_f * 1.2;
+                    }
                 }
             }
             // brighten the color
