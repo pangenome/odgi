@@ -6,6 +6,7 @@
 #include "algorithms/id_ordered_paths.hpp"
 #include "lodepng.h"
 #include <limits>
+#include "picosha2.h"
 #include <iostream>
 
 namespace odgi {
@@ -267,6 +268,7 @@ int main_viz(int argc, char** argv) {
     }
 
     graph.for_each_path_handle([&](const path_handle_t& path) {
+            // use a sha256 to get a few bytes that we'll use for a color
             std::string path_name = graph.get_path_name(path);
             bool is_aln = false;
             if (aln_mode) {
@@ -275,16 +277,14 @@ int main_viz(int argc, char** argv) {
                     is_aln = true;
                 }
             }
-            uint32_t path_name_hash = djb2_hash32(path_name.c_str());
-            uint8_t path_r = 0;
-            uint8_t path_b = 0;
-            uint8_t path_g = 0;
-            memcpy(&path_r, &path_name_hash, sizeof(uint8_t));
-            memcpy(&path_b, ((uint8_t*)&path_name_hash)+1, sizeof(uint8_t));
-            memcpy(&path_g, ((uint8_t*)&path_name_hash)+2, sizeof(uint8_t));
-            float path_r_f = (float)path_r/(float)255;
-            float path_g_f = (float)path_g/(float)255;
-            float path_b_f = (float)path_b/(float)255;
+            picosha2::byte_t hashed[picosha2::k_digest_size];
+            picosha2::hash256(path_name.begin(), path_name.end(), hashed, hashed + picosha2::k_digest_size);
+            uint8_t path_r = hashed[24];
+            uint8_t path_g = hashed[8];
+            uint8_t path_b = hashed[16];
+            float path_r_f = (float)path_r/(float)(std::numeric_limits<uint8_t>::max());
+            float path_g_f = (float)path_g/(float)(std::numeric_limits<uint8_t>::max());
+            float path_b_f = (float)path_b/(float)(std::numeric_limits<uint8_t>::max());
             float sum = path_r_f + path_g_f + path_b_f;
             path_r_f /= sum;
             path_g_f /= sum;
@@ -298,9 +298,11 @@ int main_viz(int argc, char** argv) {
                 path_g_f = (x + 0.5*9)/10;
                 path_b_f = (x + 0.5*9)/10;
             }
-            path_r = (uint8_t)std::round(255*std::min(path_r_f*1.5, 1.0));
-            path_g = (uint8_t)std::round(255*std::min(path_g_f*1.5, 1.0));
-            path_b = (uint8_t)std::round(255*std::min(path_b_f*1.5, 1.0));
+            // brighten the color
+            float f = std::min(1.8, 1.0/std::max(std::max(path_r_f, path_g_f), path_b_f));
+            path_r = (uint8_t)std::round(255*std::min(path_r_f*f, (float)1.0));
+            path_g = (uint8_t)std::round(255*std::min(path_g_f*f, (float)1.0));
+            path_b = (uint8_t)std::round(255*std::min(path_b_f*f, (float)1.0));
             std::cerr << "path " << as_integer(path) << " " << graph.get_path_name(path) << " " << path_r_f << " " << path_g_f << " " << path_b_f
                       << " " << (int)path_r << " " << (int)path_g << " " << (int)path_b << std::endl;
             /// Loop over all the occurrences along a path, from first through last
