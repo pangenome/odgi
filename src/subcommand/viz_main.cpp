@@ -82,6 +82,7 @@ int main_viz(int argc, char** argv) {
     args::ValueFlag<uint64_t> path_x_pad(parser, "N", "path x padding", {'X', "path-x-padding"});
     args::Flag path_per_row(parser, "bool", "display a single path per row rather than packing them", {'R', "path-per-row"});
     args::ValueFlag<float> link_path_pieces(parser, "FLOAT", "show thin links of this relative width to connect path pieces", {'L', "link-path-pieces"});
+    args::ValueFlag<std::string> alignment_prefix(parser, "STRING", "apply alignment-related visual motifs to paths with this name prefix", {'A', "alignment-prefix"});
     args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
     try {
@@ -146,6 +147,12 @@ int main_viz(int argc, char** argv) {
     image.resize(width * (height + path_space) * 4, 255);
     float scale_x = (float)width/(float)len;
     float scale_y = (float)height/(float)len;
+
+    bool aln_mode = !args::get(alignment_prefix).empty();
+    std::string aln_prefix;
+    if (aln_mode) {
+        aln_prefix = args::get(alignment_prefix);
+    }
 
     auto add_point = [&](const uint64_t& _x, const uint64_t& _y,
                          const uint8_t& _r, const uint8_t& _g, const uint8_t& _b) {
@@ -260,7 +267,15 @@ int main_viz(int argc, char** argv) {
     }
 
     graph.for_each_path_handle([&](const path_handle_t& path) {
-            uint32_t path_name_hash = djb2_hash32(graph.get_path_name(path).c_str());
+            std::string path_name = graph.get_path_name(path);
+            bool is_aln = false;
+            if (aln_mode) {
+                std::string::size_type n = path_name.find(aln_prefix);
+                if (n == 0) {
+                    is_aln = true;
+                }
+            }
+            uint32_t path_name_hash = djb2_hash32(path_name.c_str());
             uint8_t path_r = 0;
             uint8_t path_b = 0;
             uint8_t path_g = 0;
@@ -274,6 +289,15 @@ int main_viz(int argc, char** argv) {
             path_r_f /= sum;
             path_g_f /= sum;
             path_b_f /= sum;
+            if (is_aln) {
+                //path_r_f = 0.5;
+                //path_g_f = 0.5;
+                //path_b_f = 0.5;
+                float x = path_r_f;
+                path_r_f = (x + 0.5*9)/10;
+                path_g_f = (x + 0.5*9)/10;
+                path_b_f = (x + 0.5*9)/10;
+            }
             path_r = (uint8_t)std::round(255*std::min(path_r_f*1.5, 1.0));
             path_g = (uint8_t)std::round(255*std::min(path_g_f*1.5, 1.0));
             path_b = (uint8_t)std::round(255*std::min(path_b_f*1.5, 1.0));
