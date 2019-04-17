@@ -6,7 +6,7 @@
 #include "algorithms/id_ordered_paths.hpp"
 #include "lodepng.h"
 #include <limits>
-//#include "picosha2.h"
+#include "picosha2.h"
 #include <iostream>
 
 namespace odgi {
@@ -278,13 +278,12 @@ int main_viz(int argc, char** argv) {
                     is_aln = true;
                 }
             }
-            uint32_t path_name_hash = djb2_hash32(path_name.c_str());
-            uint8_t path_r = 0;
-            uint8_t path_b = 0;
-            uint8_t path_g = 0;
-            memcpy(&path_r, &path_name_hash, sizeof(uint8_t));
-            memcpy(&path_b, ((uint8_t*)&path_name_hash)+1, sizeof(uint8_t));
-            memcpy(&path_g, ((uint8_t*)&path_name_hash)+2, sizeof(uint8_t));
+            // use a sha256 to get a few bytes that we'll use for a color
+            picosha2::byte_t hashed[picosha2::k_digest_size];
+            picosha2::hash256(path_name.begin(), path_name.end(), hashed, hashed + picosha2::k_digest_size);
+            uint8_t path_r = hashed[24];
+            uint8_t path_g = hashed[8];
+            uint8_t path_b = hashed[16];
             float path_r_f = (float)path_r/(float)(std::numeric_limits<uint8_t>::max());
             float path_g_f = (float)path_g/(float)(std::numeric_limits<uint8_t>::max());
             float path_b_f = (float)path_b/(float)(std::numeric_limits<uint8_t>::max());
