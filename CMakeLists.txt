@@ -3,7 +3,7 @@
 cmake_minimum_required(VERSION 3.1)
 
 # Project's name
-project(dankgraph)
+project(odgi)
 # We build using c++14
 set(CMAKE_CXX_STANDARD 14)
 
@@ -11,11 +11,20 @@ set(CMAKE_CXX_STANDARD 14)
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O3 -g")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O3 -g")
 
+# Use openmp for parallelism, but it's configured differently on OSX
 find_package(OpenMP)
 if (OPENMP_FOUND)
-  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -fopenmp")
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -fopenmp")
-  set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+  if (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -fopenmp")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -fopenmp")
+    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS}")
+  elseif (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    # assumes clang build
+    # we can't reliably detect when we're using clang, so for the time being we assume
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -Xpreprocessor -fopenmp")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -Xpreprocessor -fopenmp")
+    set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS} -lomp")
+  endif()
 endif()
 
 # Set the output folder where your program will be created
@@ -99,7 +108,7 @@ set(tayweeargs_INCLUDE "${SOURCE_DIR}")
 # parallel bsort (header-only, so here we just check if we can build it)
 ExternalProject_Add(bsort
   GIT_REPOSITORY "https://github.com/ekg/bsort.git"
-  GIT_TAG "7891aae69ed685f982cfa04a1274170225fc1013"
+  GIT_TAG "c3ab0d3308424030e0a000645a26d2c10a59a124"
   UPDATE_COMMAND ""
   INSTALL_COMMAND "")
 ExternalProject_Get_property(bsort SOURCE_DIR)
