@@ -6,7 +6,7 @@
 #include "algorithms/id_ordered_paths.hpp"
 #include "lodepng.h"
 #include <limits>
-#include "picosha2.h"
+//#include "picosha2.h"
 #include <iostream>
 
 namespace odgi {
@@ -277,11 +277,13 @@ int main_viz(int argc, char** argv) {
                     is_aln = true;
                 }
             }
-            picosha2::byte_t hashed[picosha2::k_digest_size];
-            picosha2::hash256(path_name.begin(), path_name.end(), hashed, hashed + picosha2::k_digest_size);
-            uint8_t path_r = hashed[24];
-            uint8_t path_g = hashed[8];
-            uint8_t path_b = hashed[16];
+            uint32_t path_name_hash = djb2_hash32(path_name.c_str());
+            uint8_t path_r = 0;
+            uint8_t path_b = 0;
+            uint8_t path_g = 0;
+            memcpy(&path_r, &path_name_hash, sizeof(uint8_t));
+            memcpy(&path_b, ((uint8_t*)&path_name_hash)+1, sizeof(uint8_t));
+            memcpy(&path_g, ((uint8_t*)&path_name_hash)+2, sizeof(uint8_t));
             float path_r_f = (float)path_r/(float)(std::numeric_limits<uint8_t>::max());
             float path_g_f = (float)path_g/(float)(std::numeric_limits<uint8_t>::max());
             float path_b_f = (float)path_b/(float)(std::numeric_limits<uint8_t>::max());
@@ -290,22 +292,37 @@ int main_viz(int argc, char** argv) {
             path_g_f /= sum;
             path_b_f /= sum;
             if (is_aln) {
-                //path_r_f = 0.5;
-                //path_g_f = 0.5;
-                //path_b_f = 0.5;
                 float x = path_r_f;
                 path_r_f = (x + 0.5*9)/10;
                 path_g_f = (x + 0.5*9)/10;
                 path_b_f = (x + 0.5*9)/10;
+                // check the path orientations
+                uint64_t steps = 0;
+                uint64_t rev = 0;
+                graph.for_each_occurrence_in_path(path, [&](const occurrence_handle_t& occ) {
+                        handle_t h = graph.get_occurrence(occ);
+                        ++steps;
+                        rev += graph.get_is_reverse(h);
+                    });
+                bool is_rev = (float)rev/(float)steps > 0.5;
+                if (is_rev) {
+                    path_r_f = path_r_f * 0.9;
+                    path_g_f = path_g_f * 0.9;
+                    path_b_f = path_b_f * 1.2;
+                } else {
+                    path_b_f = path_b_f * 0.9;
+                    path_g_f = path_g_f * 0.9;
+                    path_r_f = path_r_f * 1.2;
+                }
             }
             // brighten the color
-            float f = std::min(1.8, 1.0/std::max(std::max(path_r_f, path_g_f), path_b_f));
+            float f = std::min(1.5, 1.0/std::max(std::max(path_r_f, path_g_f), path_b_f));
             path_r = (uint8_t)std::round(255*std::min(path_r_f*f, (float)1.0));
             path_g = (uint8_t)std::round(255*std::min(path_g_f*f, (float)1.0));
             path_b = (uint8_t)std::round(255*std::min(path_b_f*f, (float)1.0));
             std::cerr << "path " << as_integer(path) << " " << graph.get_path_name(path) << " " << path_r_f << " " << path_g_f << " " << path_b_f
                       << " " << (int)path_r << " " << (int)path_g << " " << (int)path_b << std::endl;
-            /// Loop over all the occurrences along a path, from first through last
+            /// Loop over all the occurrences along a path, from first through last and draw them
             uint64_t path_rank = as_integer(path);
             uint64_t step = 0;
             graph.for_each_occurrence_in_path(path, [&](const occurrence_handle_t& occ) {
