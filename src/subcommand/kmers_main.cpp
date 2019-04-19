@@ -52,9 +52,13 @@ int main_kmers(int argc, char** argv) {
     assert(args::get(kmer_length));
     std::string infile = args::get(dg_in_file);
     if (infile.size()) {
-        ifstream f(infile.c_str());
-        graph.load(f);
-        f.close();
+        if (infile == "-") {
+            graph.load(std::cin);
+        } else {
+            ifstream f(infile.c_str());
+            graph.load(f);
+            f.close();
+        }
     }
     if (args::get(threads)) {
         omp_set_num_threads(args::get(threads));

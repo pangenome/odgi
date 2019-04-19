@@ -123,9 +123,13 @@ int main_build(int argc, char** argv) {
     }
     std::string outfile = args::get(dg_out_file);
     if (outfile.size()) {
-        ofstream f(outfile.c_str());
-        graph.serialize(f);
-        f.close();
+        if (outfile == "-") {
+            graph.serialize(std::cout);
+        } else {
+            ofstream f(outfile.c_str());
+            graph.serialize(f);
+            f.close();
+        }
     }
     return 0;
 }

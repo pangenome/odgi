@@ -48,9 +48,13 @@ int main_sort(int argc, char** argv) {
     assert(argc > 0);
     std::string infile = args::get(dg_in_file);
     if (infile.size()) {
-        ifstream f(infile.c_str());
-        graph.load(f);
-        f.close();
+        if (infile == "-") {
+            graph.load(std::cin);
+        } else {
+            ifstream f(infile.c_str());
+            graph.load(f);
+            f.close();
+        }
     }
     if (args::get(show_sort)) {
         vector<handle_t> order = algorithms::topological_order(&graph);
@@ -74,9 +78,13 @@ int main_sort(int argc, char** argv) {
         if (args::get(paths_by_max_node_id)) {
             graph.apply_path_ordering(algorithms::id_ordered_paths(graph, true));
         }
-        ofstream f(outfile.c_str());
-        graph.serialize(f);
-        f.close();
+        if (outfile == "-") {
+            graph.serialize(std::cout);
+        } else {
+            ofstream f(outfile.c_str());
+            graph.serialize(f);
+            f.close();
+        }
     }
     return 0;
 }

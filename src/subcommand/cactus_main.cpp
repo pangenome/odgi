@@ -42,9 +42,13 @@ int main_cactus(int argc, char** argv) {
     assert(argc > 0);
     std::string infile = args::get(dg_in_file);
     if (infile.size()) {
-        ifstream f(infile.c_str());
-        graph.load(f);
-        f.close();
+        if (infile == "-") {
+            graph.load(std::cin);
+        } else {
+            ifstream f(infile.c_str());
+            graph.load(f);
+            f.close();
+        }
     }
     auto g = handle_graph_to_cactus(graph, {});
     stCactusGraph* cactus_graph = g.first;

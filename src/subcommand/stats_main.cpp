@@ -56,9 +56,13 @@ int main_stats(int argc, char** argv) {
     assert(argc > 0);
     std::string infile = args::get(dg_in_file);
     if (infile.size()) {
-        ifstream f(infile.c_str());
-        graph.load(f);
-        f.close();
+        if (infile == "-") {
+            graph.load(std::cin);
+        } else {
+            ifstream f(infile.c_str());
+            graph.load(f);
+            f.close();
+        }
     }
     if (args::get(summarize)) {
         uint64_t length_in_bp = 0, node_count = 0, edge_count = 0, path_count = 0;

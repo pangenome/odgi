@@ -54,9 +54,13 @@ int main_paths(int argc, char** argv) {
     assert(argc > 0);
     std::string infile = args::get(dg_in_file);
     if (infile.size()) {
-        ifstream f(infile.c_str());
-        graph.load(f);
-        f.close();
+        if (infile == "-") {
+            graph.load(std::cin);
+        } else {
+            ifstream f(infile.c_str());
+            graph.load(f);
+            f.close();
+        }
     }
 
     //args::Flag list_names(parser, "list-names", "list the paths in the graph", {'L', "list-paths"});

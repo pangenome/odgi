@@ -48,15 +48,21 @@ int main_prune(int argc, char** argv) {
         return 1;
     }
 
-    graph_t graph;
     assert(argc > 0);
     assert(args::get(kmer_length));
+
+    graph_t graph;
     std::string infile = args::get(dg_in_file);
     if (infile.size()) {
-        ifstream f(infile.c_str());
-        graph.load(f);
-        f.close();
+        if (infile == "-") {
+            graph.load(std::cin);
+        } else {
+            ifstream f(infile.c_str());
+            graph.load(f);
+            f.close();
+        }
     }
+
     if (args::get(threads)) {
         omp_set_num_threads(args::get(threads));
     }
@@ -84,9 +90,13 @@ int main_prune(int argc, char** argv) {
     }
     std::string outfile = args::get(dg_out_file);
     if (outfile.size()) {
-        ofstream f(outfile.c_str());
-        graph.serialize(f);
-        f.close();
+        if (outfile == "-") {
+            graph.serialize(std::cout);
+        } else {
+            ofstream f(outfile.c_str());
+            graph.serialize(f);
+            f.close();
+        }
     }
     return 0;
 }
