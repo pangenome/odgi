@@ -30,7 +30,7 @@ using namespace handlegraph;
 using nid_t = handlegraph::nid_t;
 
 class graph_t : public MutablePathDeletableHandleGraph {
-        
+
 public:
 
     graph_t(void) {
@@ -300,6 +300,9 @@ public:
     
     /// Remove all nodes and edges. Does not update any stored paths.
     void clear(void);
+
+    /// Remove all stored paths
+    void clear_paths(void);
     
     /// Swap the nodes corresponding to the given handles, in the ordering used
     /// by for_each_handle when looping over the graph. Other handles to the

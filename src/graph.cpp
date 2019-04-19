@@ -582,6 +582,17 @@ void graph_t::clear(void) {
     path_metadata_v.clear();
     path_name_map.clear();
 }
+
+void graph_t::clear_paths(void) {
+    for_each_handle([&](const handle_t& handle) {
+            node_t& node = node_v.at(number_bool_packing::unpack_number(handle));
+            node.clear_path_steps();
+        });
+    _path_count = 0;
+    _path_handle_next = 0;
+    path_metadata_v.clear();
+    path_name_map.clear();
+}
     
 /// Swap the nodes corresponding to the given handles, in the ordering used
 /// by for_each_handle when looping over the graph. Other handles to the

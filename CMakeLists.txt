@@ -235,12 +235,14 @@ add_executable(odgi
   ${CMAKE_SOURCE_DIR}/src/subcommand/viz_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/paths_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/cactus_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/prune_main.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/hash.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/is_single_stranded.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/remove_high_degree.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/prune.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/coverage.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/cycle_breaking_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/eades_algorithm.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/dagify.cpp
