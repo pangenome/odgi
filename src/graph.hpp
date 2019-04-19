@@ -345,6 +345,8 @@ public:
         return std::make_pair(parts.front(), parts.back());
     }
 
+    handle_t combine_handles(const std::vector<handle_t>& handles);
+
 /**
  * This is the interface for a handle graph with embedded paths where the paths can be modified.
  * Note that if the *graph* can also be modified, the implementation will also

@@ -236,6 +236,7 @@ add_executable(odgi
   ${CMAKE_SOURCE_DIR}/src/subcommand/paths_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/cactus_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/prune_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/simplify_main.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/hash.cpp
@@ -251,6 +252,7 @@ add_executable(odgi
   ${CMAKE_SOURCE_DIR}/src/algorithms/dfs.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/find_shortest_paths.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/id_ordered_paths.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/simple_components.cpp
   )
 add_dependencies(odgi sdsl-lite)
 add_dependencies(odgi dynamic)

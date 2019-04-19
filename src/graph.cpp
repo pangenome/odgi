@@ -336,10 +336,11 @@ handle_t graph_t::create_handle(const std::string& sequence, const nid_t& id) {
     assert(sequence.size());
     assert(id > 0);
     if (id > node_v.size()) {
-        uint64_t to_add = id - node_v.size(); // + 1e5;
+        uint64_t to_add = id - node_v.size();
         uint64_t old_size = node_v.size();
         // realloc
         node_v.resize((uint64_t)id);
+        _node_count = node_v.size();
         // mark empty nodes
         for (uint64_t i = 0; i < to_add; ++i) {
             // insert before final delimiter
@@ -362,8 +363,6 @@ handle_t graph_t::create_handle(const std::string& sequence, const nid_t& id) {
     // it's not deleted
     deleted_node_bv[handle_rank] = 0;
     --_deleted_node_count;
-    // increment node count
-    ++_node_count;
     // return handle
     return number_bool_packing::pack(handle_rank, 0);
 }
@@ -388,6 +387,7 @@ void graph_t::destroy_handle(const handle_t& handle) {
     for (auto& edge : edges_to_destroy) {
         destroy_edge(edge);
     }
+    /*
     // save the node sequence for stashing in the paths
     std::string seq = get_sequence(handle);
     // move the sequence of the node into each path that traverses it
@@ -407,16 +407,17 @@ void graph_t::destroy_handle(const handle_t& handle) {
             }
         }
     }
+    */
     // remove from the graph by hiding it (compaction later)
-    auto& node = node_v[number_bool_packing::unpack_number(handle)];
-    node.clear();
+    //auto& node = node_v[number_bool_packing::unpack_number(handle)];
+    //node.clear(); // don't clear...
     deleted_node_bv[number_bool_packing::unpack_number(handle)] = 1;
     // and from the set of hidden nodes, if it's a member
     if (graph_id_hidden_set.count(id)) {
         graph_id_hidden_set.erase(id);
         --_hidden_count;
     }
-    --_node_count;
+    //--_node_count;
     ++_deleted_node_count;
     // check if we should compact our deleted nodes storage
 }
@@ -828,7 +829,41 @@ std::vector<handle_t> graph_t::divide_handle(const handle_t& handle, const std::
     for (auto& h : edges_rev_rev) create_edge(h, rev_handles.front());
     return get_is_reverse(handle) ? rev_handles : handles;
 }
-    
+
+handle_t graph_t::combine_handles(const std::vector<handle_t>& handles) {
+    std::string seq;
+    for (auto& handle : handles) {
+        seq.append(get_sequence(handle));
+    }
+    handle_t combined = create_handle(seq);
+    // relink the inbound and outbound nodes
+    // get the edge context
+    vector<handle_t> edges_fwd_fwd;
+    vector<handle_t> edges_fwd_rev;
+    vector<handle_t> edges_rev_fwd;
+    vector<handle_t> edges_rev_rev;
+    follow_edges(handles.back(), false, [&](const handle_t& h) {
+            edges_fwd_fwd.push_back(h);
+        });
+    follow_edges(handles.front(), true, [&](const handle_t& h) {
+            edges_fwd_rev.push_back(h);
+        });
+    follow_edges(flip(handles.front()), false, [&](const handle_t& h) {
+            edges_rev_fwd.push_back(h);
+        });
+    follow_edges(flip(handles.back()), true, [&](const handle_t& h) {
+            edges_rev_rev.push_back(h);
+        });
+    // destroy the old handles
+    for (auto& handle : handles) {
+        destroy_handle(handle);
+    }
+    // connect the ends to the previous context
+    for (auto& h : edges_fwd_fwd) create_edge(combined, h);
+    for (auto& h : edges_fwd_rev) create_edge(h, combined);
+    for (auto& h : edges_rev_fwd) create_edge(flip(combined), h);
+    for (auto& h : edges_rev_rev) create_edge(h, flip(combined));
+}
 
 /**
  * This is the interface for a handle graph with embedded paths where the paths can be modified.

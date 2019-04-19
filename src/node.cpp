@@ -184,6 +184,10 @@ void node_t::remove_path_step(const uint64_t& rank) {
     set_layout(layout);
 }
 
+void node_t::clear(void) {
+    bytes = { 5, 0, 0, 0, 0 };
+}
+
 void node_t::clear_path_steps(void) {
     node_t::layout_t layout = get_layout();
     bytes.erase(bytes.begin()+layout.path_start(), bytes.end());

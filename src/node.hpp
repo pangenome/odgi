@@ -20,10 +20,6 @@ const uint8_t PATH_RECORD_LENGTH = 5;
 class node_t {
     std::vector<uint8_t> bytes{ 5, 0, 0, 0, 0 };
 public:
-    void clear(void) {
-        bytes.clear();
-        bytes = { 5, 0, 0, 0, 0 };
-    }
     struct layout_t {
         uint64_t data[5] = { 0, 0, 0, 0, 0 };
         inline const uint64_t layout_bytes(void) const { return data[0]; }
@@ -93,6 +89,7 @@ public:
     const std::vector<node_t::step_t> get_path_steps(void) const;
     const step_t get_path_step(const uint64_t& rank) const;
     void remove_path_step(const uint64_t& rank);
+    void clear(void);
     void clear_path_steps(void);
     uint64_t path_count(void) const;
     uint64_t serialize(std::ostream& out) const;
