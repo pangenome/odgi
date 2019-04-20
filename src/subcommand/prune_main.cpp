@@ -79,11 +79,10 @@ int main_prune(int argc, char** argv) {
     }
     if (args::get(min_coverage) || args::get(max_coverage)) {
         std::vector<handle_t> to_drop = algorithms::find_handles_exceeding_coverage_limits(graph, args::get(min_coverage), args::get(max_coverage));
-        std::cerr << "got " << to_drop.size() << " handles to drop" << std::endl;
+        //std::cerr << "got " << to_drop.size() << " handles to drop" << std::endl;
         for (auto& handle : to_drop) {
             graph.destroy_handle(handle);
         }
-        graph.display();
     }
     if (args::get(drop_paths)) {
         graph.clear_paths();

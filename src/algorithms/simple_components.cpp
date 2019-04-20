@@ -10,11 +10,12 @@ using namespace handlegraph;
 // changing the path space of the graph
 // does not respect stored paths
 std::vector<std::vector<handle_t>> simple_components(const HandleGraph& graph, uint64_t min_size) {
-    std::set<uint64_t> seen;
+    std::unordered_set<handle_t> seen;
     std::set<std::vector<uint64_t>> components;
     graph.for_each_handle([&](const handle_t& handle) {
-            if (!seen.count(graph.get_id(handle))) {
-                seen.insert(graph.get_id(handle));
+            if (!seen.count(handle)) {
+                //std::cerr << "on " << graph.get_id(handle) << std::endl;
+                //seen.insert(handle);
                 // go left and right through each as far as we have only single edges connecting us
                 // to nodes that have only single edges coming in or out
                 // that go to other nodes
@@ -23,24 +24,19 @@ std::vector<std::vector<handle_t>> simple_components(const HandleGraph& graph, u
                 // check the edge count of each node
                 // if it's > 2 then break
                 bool stop = false;
-                graph.follow_edges(handle, false, [&](const handle_t& next) {
-                        uint64_t left_edge_count = 0;
-                        graph.follow_edges(next, true, [&](const handle_t& h) { ++left_edge_count; });
-                        if (left_edge_count == 1 && !seen.count(graph.get_id(next))) {
-                            todo.insert(next);
-                        } else {
-                            stop = true;
-                        }
-                    });
+                todo.insert(handle);
                 while (!stop && todo.size() == 1) {
                     handle_t curr = *todo.begin();
-                    seen.insert(graph.get_id(curr));
+                    if (seen.count(curr)) { stop = true; break; }
+                    seen.insert(curr);
                     todo.clear();
-                    right_linear_component.push_back(curr);
+                    if (curr != handle) right_linear_component.push_back(curr);
                     graph.follow_edges(curr, false, [&](const handle_t& next) {
                             uint64_t left_edge_count = 0;
                             graph.follow_edges(next, true, [&](const handle_t& h) { ++left_edge_count; });
-                            if (left_edge_count == 1 && !seen.count(graph.get_id(next))) {
+                            //std::cerr << "node " << graph.get_id(next) << " left edge count " << left_edge_count << std::endl;
+                            if (graph.get_is_reverse(handle) == graph.get_is_reverse(next)
+                                && left_edge_count == 1) {
                                 todo.insert(next);
                             } else {
                                 stop = true;
@@ -49,25 +45,19 @@ std::vector<std::vector<handle_t>> simple_components(const HandleGraph& graph, u
                 }
                 stop = false;
                 todo.clear();
+                todo.insert(handle);
                 std::vector<handle_t> left_linear_component;
-                graph.follow_edges(handle, true, [&](const handle_t& prev) {
-                        uint64_t right_edge_count = 0;
-                        graph.follow_edges(prev, false, [&](const handle_t& h) { ++right_edge_count; });
-                        if (right_edge_count == 1 && !seen.count(graph.get_id(prev))) {
-                            todo.insert(prev);
-                        } else {
-                            stop = true;
-                        }
-                    });
                 while (!stop && todo.size() == 1) {
                     handle_t curr = *todo.begin();
-                    seen.insert(graph.get_id(curr));
+                    if (seen.count(curr)) { stop = true; break; }
+                    seen.insert(curr);
                     todo.clear();
-                    left_linear_component.push_back(curr);
+                    if (curr != handle) left_linear_component.push_back(curr);
                     graph.follow_edges(curr, true, [&](const handle_t& prev) {
                             uint64_t right_edge_count = 0;
                             graph.follow_edges(prev, false, [&](const handle_t& h) { ++right_edge_count; });
-                            if (right_edge_count == 1 && !seen.count(graph.get_id(prev))) {
+                            if (graph.get_is_reverse(handle) == graph.get_is_reverse(prev)
+                                && right_edge_count == 1) {
                                 todo.insert(prev);
                             } else {
                                 stop = true;
@@ -75,7 +65,7 @@ std::vector<std::vector<handle_t>> simple_components(const HandleGraph& graph, u
                         });
                 }
                 std::vector<uint64_t> linear_component;
-                linear_component.reserve(left_linear_component.size() + right_linear_component.size());
+                linear_component.reserve(left_linear_component.size() + 1 + right_linear_component.size());
                 for (auto i = left_linear_component.rbegin(); i != left_linear_component.rend(); ++i) {
                     linear_component.push_back(as_integer(*i));
                 }
@@ -86,6 +76,13 @@ std::vector<std::vector<handle_t>> simple_components(const HandleGraph& graph, u
                 if (linear_component.size() >= min_size) {
                     components.insert(linear_component);
                 }
+                /*
+                std::cerr << "got component ";
+                for (auto& i : linear_component) {
+                    std::cerr << graph.get_id(as_handle(i)) << ",";
+                }
+                std::cerr << std::endl;
+                */
             }
         });
     std::vector<std::vector<handle_t>> handle_components;

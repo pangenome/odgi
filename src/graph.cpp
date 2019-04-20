@@ -69,9 +69,9 @@ bool graph_t::follow_edges_impl(const handle_t& handle, bool go_left, const std:
             other_rev ^= 1;
             to_curr ^= 1;
         }
-        if (!go_left && !to_curr) {
+        if (!go_left && (!to_curr || other_id == node_id)) {
             result &= iteratee(get_handle(other_id, other_rev));
-        } else if (go_left && to_curr) {
+        } else if (go_left && (to_curr || other_id == node_id)) {
             result &= iteratee(get_handle(other_id, other_rev));
         }
         if (!result) break;
@@ -383,6 +383,12 @@ void graph_t::destroy_handle(const handle_t& handle) {
             edges_to_destroy.push_back(make_pair(fwd_handle, h)); });
     follow_edges(fwd_handle, true, [&edges_to_destroy,&fwd_handle,this](const handle_t& h) {
             edges_to_destroy.push_back(make_pair(h, fwd_handle)); });
+    /*
+    follow_edges(flip(fwd_handle), false, [&edges_to_destroy,&fwd_handle,this](const handle_t& h) {
+            edges_to_destroy.push_back(make_pair(flip(fwd_handle), h)); });
+    follow_edges(flip(fwd_handle), true, [&edges_to_destroy,&fwd_handle,this](const handle_t& h) {
+            edges_to_destroy.push_back(make_pair(h, flip(fwd_handle))); });
+    */
     // and then remove them
     for (auto& edge : edges_to_destroy) {
         destroy_edge(edge);

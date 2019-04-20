@@ -22,6 +22,7 @@ int main_simplify(int argc, char** argv) {
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store the graph self index in this file", {'o', "out"});
+    args::Flag debug(parser, "debug", "print information about the components", {'d', "debug"});
     args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
     try {
@@ -57,8 +58,17 @@ int main_simplify(int argc, char** argv) {
     }
     graph.clear_paths();
     std::vector<std::vector<handle_t>> linear_components = algorithms::simple_components(graph, 2);
-    //std::cerr << "there are " << linear_components.size() << " components" << std::endl;
-    uint64_t i = 0;
+    if (args::get(debug)) {
+        std::cerr << "there are " << linear_components.size() << " components" << std::endl;
+        uint64_t i = 0;
+        for (auto& v : linear_components) {
+            std::cerr << "component " << ++i << " ";
+            for (auto& n : v) {
+                std::cerr << graph.get_id(n) << (graph.get_is_reverse(n)?"-":"+") << ",";
+            }
+            std::cerr << std::endl;
+        }
+    }
     for (auto& v : linear_components) {
         graph.combine_handles(v);
     }
