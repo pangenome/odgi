@@ -54,29 +54,33 @@ std::string graph_t::get_sequence(const handle_t& handle) const {
 bool graph_t::follow_edges_impl(const handle_t& handle, bool go_left, const std::function<bool(const handle_t&)>& iteratee) const {
     const node_t& node = node_v.at(number_bool_packing::unpack_number(handle));
     bool is_rev = get_is_reverse(handle);
-    bool result = true;
     nid_t node_id = get_id(handle);
     const std::vector<uint64_t> node_edges = node.edges();
-    if (node_edges.size() == 0) return result;
-    for (uint64_t i = 0; i+1 < node_edges.size(); i+=2) {
+    if (node_edges.size() == 0) return true;
+    for (uint64_t i = 0; i < node_edges.size(); i+=2) {
         // unpack the edge
         uint64_t other_id = edge_delta_to_id(node_id, node_edges.at(i));
         uint8_t packed_edge = node_edges.at(i+1);
         bool on_rev = edge_helper::unpack_on_rev(packed_edge);
         bool other_rev = edge_helper::unpack_other_rev(packed_edge);
         bool to_curr = edge_helper::unpack_to_curr(packed_edge);
-        if (is_rev != on_rev) {
+        if (other_id == node_id && on_rev == other_rev) {
+            // non-inverting self loop
+            // we can go either direction
+            to_curr = go_left;
+            other_rev = is_rev;
+        } else if (is_rev != on_rev) {
             other_rev ^= 1;
             to_curr ^= 1;
         }
-        if (!go_left && (!to_curr || other_id == node_id)) {
-            result &= iteratee(get_handle(other_id, other_rev));
-        } else if (go_left && (to_curr || other_id == node_id)) {
-            result &= iteratee(get_handle(other_id, other_rev));
+        if (!go_left && !to_curr
+            || go_left && to_curr) {
+            if (!iteratee(get_handle(other_id, other_rev))) {
+                return false;
+            }
         }
-        if (!result) break;
     }
-    return result;
+    return true;
 }
 
     
@@ -414,9 +418,10 @@ void graph_t::destroy_handle(const handle_t& handle) {
         }
     }
     */
+    // clear the node storage
+    auto& node = node_v[number_bool_packing::unpack_number(handle)];
+    node.clear();
     // remove from the graph by hiding it (compaction later)
-    //auto& node = node_v[number_bool_packing::unpack_number(handle)];
-    //node.clear(); // don't clear...
     deleted_node_bv[number_bool_packing::unpack_number(handle)] = 1;
     // and from the set of hidden nodes, if it's a member
     if (graph_id_hidden_set.count(id)) {
@@ -452,10 +457,13 @@ void graph_t::rebuild_id_handle_mapping(void) {
     
 /// Create an edge connecting the given handles in the given order and orientations.
 /// Ignores existing edges.
-void graph_t::create_edge(const handle_t& left, const handle_t& right) {
+void graph_t::create_edge(const handle_t& left_h, const handle_t& right_h) {
     //if (has_edge(left, right)) return; // do nothing if edge exists
-    handle_t left_h = left, right_h = right;
-    canonicalize_edge(left_h, right_h);
+    /*
+    std::cerr << "create_edge " << get_id(left_h) << ":" << get_is_reverse(left_h)
+              << " -> "
+              << get_id(right_h) << ":" << get_is_reverse(right_h) << std::endl;
+    */
     if (has_edge(left_h, right_h)) return; // do nothing if edge exists
 
     uint64_t left_rank = number_bool_packing::unpack_number(left_h);
@@ -470,6 +478,8 @@ void graph_t::create_edge(const handle_t& left, const handle_t& right) {
                                          get_is_reverse(right_h),
                                          false));
 
+    ++_edge_count;
+    // only insert the second side if it's on a different node
     if (left_rank == right_rank) return;
 
     auto& right_node = node_v.at(right_rank);
@@ -478,9 +488,7 @@ void graph_t::create_edge(const handle_t& left, const handle_t& right) {
                                           get_is_reverse(left_h),
                                           true));
 
-    ++_edge_count;
 }
-
 
 uint64_t graph_t::edge_delta_to_id(uint64_t base, uint64_t delta) const {
     assert(delta != 0);
@@ -499,8 +507,6 @@ uint64_t graph_t::edge_to_delta(const handle_t& left, const handle_t& right) con
 }
 
 bool graph_t::has_edge(const handle_t& left, const handle_t& right) const {
-    auto& node_l = node_v[number_bool_packing::unpack_number(left)];
-    auto& node_r = node_v[number_bool_packing::unpack_number(right)];
     bool exists = false;
     follow_edges(left, false, [&right, &exists](const handle_t& next) {
             if (next == right) exists = true;
@@ -512,13 +518,7 @@ bool graph_t::has_edge(const handle_t& left, const handle_t& right) const {
 /// Remove the edge connecting the given handles in the given order and orientations.
 /// Ignores nonexistent edges.
 /// Does not update any stored paths.
-void graph_t::destroy_edge(const handle_t& left, const handle_t& right) {
-    //if (!has_edge(left, right)) return;
-    //std::cerr << "remove edge " << get_id(left) << " " << get_id(right) << std::endl;
-    handle_t left_h = left;
-    handle_t right_h = right;
-    canonicalize_edge(left_h, right_h);
-    
+void graph_t::destroy_edge(const handle_t& left_h, const handle_t& right_h) {
     uint64_t left_rank = number_bool_packing::unpack_number(left_h);
     uint64_t right_rank = number_bool_packing::unpack_number(right_h);
     auto& left_node = node_v.at(left_rank);
@@ -640,17 +640,14 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order, bool compact_id
                 ordered.create_edge(ordered.get_handle(ids[get_id(handle)], get_is_reverse(handle)),
                                     ordered.get_handle(ids[get_id(h)], get_is_reverse(h)));
             });
-        follow_edges(flip(handle), false, [&](const handle_t& h) {
-                ordered.create_edge(ordered.get_handle(ids[get_id(handle)], get_is_reverse(flip(handle))),
-                                    ordered.get_handle(ids[get_id(h)], get_is_reverse(h)));
+        follow_edges(handle, true, [&](const handle_t& h) {
+                ordered.create_edge(ordered.get_handle(ids[get_id(h)], get_is_reverse(h)),
+                                    ordered.get_handle(ids[get_id(handle)], get_is_reverse(handle)));
             });
     }
     // paths
-    //std::cerr << "paths" << std::endl;
     for_each_path_handle([&](const path_handle_t& old_path) {
-            //occurrence_handle_t occ = get_first_occurrence(p);
             path_handle_t new_path = ordered.create_path_handle(get_path_name(old_path));
-            //std::cerr << get_path_name(old_path) << std::endl;
             for_each_occurrence_in_path(old_path, [&](const occurrence_handle_t& occ) {
                     handle_t old_handle = get_occurrence(occ);
                     handle_t new_handle = ordered.get_handle(ids[get_id(old_handle)], get_is_reverse(old_handle));
@@ -854,21 +851,32 @@ handle_t graph_t::combine_handles(const std::vector<handle_t>& handles) {
     follow_edges(handles.front(), true, [&](const handle_t& h) {
             edges_fwd_rev.push_back(h);
         });
-    follow_edges(flip(handles.front()), false, [&](const handle_t& h) {
-            edges_rev_fwd.push_back(h);
-        });
-    follow_edges(flip(handles.back()), true, [&](const handle_t& h) {
-            edges_rev_rev.push_back(h);
-        });
     // destroy the old handles
     for (auto& handle : handles) {
         destroy_handle(handle);
     }
     // connect the ends to the previous context
-    for (auto& h : edges_fwd_fwd) create_edge(combined, h);
-    for (auto& h : edges_fwd_rev) create_edge(h, combined);
-    for (auto& h : edges_rev_fwd) create_edge(flip(combined), h);
-    for (auto& h : edges_rev_rev) create_edge(h, flip(combined));
+    // check that we're not trying to make edges that connect back with the nodes in the component
+    // there are three cases
+    // self looping, front and rear inverting
+    for (auto& h : edges_fwd_fwd) {
+        if (h == handles.front()) {
+            create_edge(combined, combined);
+        } else if (h == flip(handles.back())) {
+            create_edge(combined, flip(combined));
+        } else {
+            create_edge(combined, h);
+        }
+    }
+    for (auto& h : edges_fwd_rev) {
+        if (h == handles.back()) {
+            create_edge(combined, combined);
+        } else if (h == flip(handles.front())) {
+            create_edge(flip(combined), combined);
+        } else {
+            create_edge(h, combined);
+        }
+    }
 }
 
 /**
@@ -1169,25 +1177,29 @@ void graph_t::to_gfa(std::ostream& out) const {
     // for each node
     for_each_handle([&out,this](const handle_t& h) {
             out << "S\t" << get_id(h) << "\t" << get_sequence(h) << std::endl;
-            // get the forward edges from this handle
-            follow_edges(h, false, [&out, &h, this](const handle_t& a){
-                    if (as_integer(h) <= as_integer(a)) {
-                        out << "L\t" << get_id(h) << "\t"
-                            << (get_is_reverse(h)?"-":"+")
-                            << "\t" << get_id(a) << "\t"
-                            << (get_is_reverse(a)?"-":"+")
+            {
+                // use this direct iteration to avoid double counting edges
+                // we only consider write the edges relative to their start
+                const node_t& node = node_v.at(number_bool_packing::unpack_number(h));
+                bool is_rev = get_is_reverse(h);
+                nid_t node_id = get_id(h);
+                const std::vector<uint64_t> node_edges = node.edges();
+                for (uint64_t i = 0; i < node_edges.size(); i+=2) {
+                    // unpack the edge
+                    uint64_t other_id = edge_delta_to_id(node_id, node_edges.at(i));
+                    uint8_t packed_edge = node_edges.at(i+1);
+                    bool on_rev = edge_helper::unpack_on_rev(packed_edge);
+                    bool other_rev = edge_helper::unpack_other_rev(packed_edge);
+                    bool to_curr = edge_helper::unpack_to_curr(packed_edge);
+                    if (!to_curr) {
+                        out << "L\t" << node_id << "\t"
+                            << (on_rev?"-":"+")
+                            << "\t" << other_id << "\t"
+                            << (other_rev?"-":"+")
                             << "\t0M" << std::endl;
                     }
-                });
-            follow_edges(flip(h), false, [&out, &h, this](const handle_t& a){
-                    if (as_integer(h) <= as_integer(a)) {
-                        out << "L\t" << get_id(h) << "\t"
-                            << (get_is_reverse(h)?"+":"-")
-                            << "\t" << get_id(a) << "\t"
-                            << (get_is_reverse(a)?"-":"+")
-                            << "\t0M" << std::endl;
-                    }
-                });
+                }
+            }
         });
     for_each_path_handle([&out,this](const path_handle_t& p) {
             //occurrence_handle_t occ = get_first_occurrence(p);

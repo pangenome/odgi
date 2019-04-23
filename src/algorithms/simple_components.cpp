@@ -14,15 +14,13 @@ std::vector<std::vector<handle_t>> simple_components(const HandleGraph& graph, u
     std::set<std::vector<uint64_t>> components;
     graph.for_each_handle([&](const handle_t& handle) {
             if (!seen.count(handle)) {
-                //std::cerr << "on " << graph.get_id(handle) << std::endl;
-                //seen.insert(handle);
                 // go left and right through each as far as we have only single edges connecting us
                 // to nodes that have only single edges coming in or out
                 // that go to other nodes
                 std::vector<handle_t> right_linear_component;
                 std::unordered_set<handle_t> todo;
-                // check the edge count of each node
-                // if it's > 2 then break
+                // check the inbound edge count of each node in the direction we are walking
+                // if it's > 1 then don't pass through it
                 bool stop = false;
                 todo.insert(handle);
                 while (!stop && todo.size() == 1) {
@@ -34,7 +32,6 @@ std::vector<std::vector<handle_t>> simple_components(const HandleGraph& graph, u
                     graph.follow_edges(curr, false, [&](const handle_t& next) {
                             uint64_t left_edge_count = 0;
                             graph.follow_edges(next, true, [&](const handle_t& h) { ++left_edge_count; });
-                            //std::cerr << "node " << graph.get_id(next) << " left edge count " << left_edge_count << std::endl;
                             if (graph.get_is_reverse(handle) == graph.get_is_reverse(next)
                                 && left_edge_count == 1) {
                                 todo.insert(next);
@@ -76,13 +73,6 @@ std::vector<std::vector<handle_t>> simple_components(const HandleGraph& graph, u
                 if (linear_component.size() >= min_size) {
                     components.insert(linear_component);
                 }
-                /*
-                std::cerr << "got component ";
-                for (auto& i : linear_component) {
-                    std::cerr << graph.get_id(as_handle(i)) << ",";
-                }
-                std::cerr << std::endl;
-                */
             }
         });
     std::vector<std::vector<handle_t>> handle_components;

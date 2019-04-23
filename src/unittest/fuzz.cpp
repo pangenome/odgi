@@ -19,7 +19,7 @@ namespace unittest {
 using namespace std;
 using namespace handlegraph;
 
-TEST_CASE("Large random handle with high path depth work", "[handle][packed][hashgraph]") {
+TEST_CASE("Large random handle with high path depth work", "[fuzz]") {
     
     vector<MutablePathDeletableHandleGraph*> implementations;
     
