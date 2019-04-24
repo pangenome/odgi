@@ -129,6 +129,7 @@ int main_viz(int argc, char** argv) {
     }
     const char* filename = args::get(png_out_file).c_str();
 
+    // TODO this breaks for graphs that aren't compacted
     std::vector<uint64_t> position_map(graph.node_size()+1);
     std::vector<std::pair<uint64_t, uint64_t>> contacts;
     uint64_t len = 0;
