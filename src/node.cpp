@@ -144,11 +144,10 @@ void node_t::set_path_step(const uint64_t& rank, const step_t& step) {
     uint8_t* target = bytes.data()+offset;
     uint64_t old_size = sqvarint::bytes(target, PATH_RECORD_LENGTH);
     uint64_t new_size = sqvarint::length(step.data, PATH_RECORD_LENGTH);
+    std::vector<uint8_t>::iterator it = bytes.begin()+offset;
     if (new_size > old_size) {
-        std::vector<uint8_t>::iterator it(target);
         bytes.insert(it, new_size - old_size, 0);
     } else if (new_size < old_size) {
-        std::vector<uint8_t>::iterator it(target);
         bytes.erase(it, it + (old_size - new_size));
     }
     target = bytes.data() + offset; // recalculate target, as it may have moved due to resize!
@@ -178,8 +177,8 @@ void node_t::remove_path_step(const uint64_t& rank) {
     if (rank > layout.path_count()) assert(false);
     uint8_t* i = sqvarint::seek(bytes.data()+layout.path_start(), PATH_RECORD_LENGTH*rank);
     uint8_t* j = sqvarint::seek(i, PATH_RECORD_LENGTH);
-    bytes.erase((std::vector<uint8_t>::iterator)i,
-                (std::vector<uint8_t>::iterator)j);
+    bytes.erase(bytes.begin() + (i - bytes.data()),
+                bytes.begin() + (j - bytes.data()));
     layout.set_path_count(layout.path_count()-1);
     set_layout(layout);
 }
