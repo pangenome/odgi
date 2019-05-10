@@ -38,7 +38,7 @@ namespace betagraph{
         handlegraph::nid_t min_node_id = 0;
         handlegraph::nid_t max_node_id = std::numeric_limits<handlegraph::nid_t>::max();
     };
-    struct bpath_occurrence_t{
+    struct bpath_step_t{
         int32_t rank = 0;
         handlegraph::nid_t id;
     };
@@ -51,7 +51,7 @@ namespace betagraph{
 
     struct bpath_val_t{
         handlegraph::nid_t id;
-        std::vector<bpath_occurrence_t> occurrences;
+        std::vector<bpath_step_t> steps;
     };
 
 
@@ -68,8 +68,8 @@ namespace betagraph{
         std::string get_name(odgi::path_handle_t p) const{
             return nid_to_name.at(as_integer(p));
         };
-        size_t get_path_occurrence_count(odgi::path_handle_t p) const{
-            return paths.at(nid_to_name.at(as_integer(p))).occurrences.size();
+        size_t get_path_step_count(odgi::path_handle_t p) const{
+            return paths.at(nid_to_name.at(as_integer(p))).steps.size();
         };
 
     };

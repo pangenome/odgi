@@ -130,9 +130,9 @@ namespace betagraph{
         return paths.get_name(path_handle);
     }
     
-    /// Returns the number of node occurrences in the path
-    size_t BGraph::get_occurrence_count(const path_handle_t& path_handle) const{
-        return paths.get_path_occurrence_count(path_handle);
+    /// Returns the number of node steps in the path
+    size_t BGraph::get_step_count(const path_handle_t& path_handle) const{
+        return paths.get_path_step_count(path_handle);
     }
 
     /// Returns the number of paths stored in the graph
@@ -148,36 +148,36 @@ namespace betagraph{
         exit(1);
     }
     
-    /// Get a node handle (node ID and orientation) from a handle to an occurrence on a path
-    // handle_t BGraph::get_occurrence(const occurrence_handle_t& occurrence_handle) const{
+    /// Get a node handle (node ID and orientation) from a handle to an step on a path
+    // handle_t BGraph::get_step(const step_handle_t& step_handle) const{
 
     // }
     
-//     /// Get a handle to the first occurrence in a path.
+//     /// Get a handle to the first step in a path.
 //     /// The path MUST be nonempty.
-//     occurrence_handle_t get_first_occurrence(const path_handle_t& path_handle) const;
+//     step_handle_t get_first_step(const path_handle_t& path_handle) const;
     
-//     /// Get a handle to the last occurrence in a path
+//     /// Get a handle to the last step in a path
 //     /// The path MUST be nonempty.
-//     occurrence_handle_t get_last_occurrence(const path_handle_t& path_handle) const;
+//     step_handle_t get_last_step(const path_handle_t& path_handle) const;
     
-//     /// Returns true if the occurrence is not the last occurence on the path, else false
-//     bool has_next_occurrence(const occurrence_handle_t& occurrence_handle) const;
+//     /// Returns true if the step is not the last occurence on the path, else false
+//     bool has_next_step(const step_handle_t& step_handle) const;
     
-//     /// Returns true if the occurrence is not the first occurence on the path, else false
-//     bool has_previous_occurrence(const occurrence_handle_t& occurrence_handle) const;
+//     /// Returns true if the step is not the first occurence on the path, else false
+//     bool has_previous_step(const step_handle_t& step_handle) const;
     
-//     /// Returns a handle to the next occurrence on the path
-//     occurrence_handle_t get_next_occurrence(const occurrence_handle_t& occurrence_handle) const;
+//     /// Returns a handle to the next step on the path
+//     step_handle_t get_next_step(const step_handle_t& step_handle) const;
     
-//     /// Returns a handle to the previous occurrence on the path
-//     occurrence_handle_t get_previous_occurrence(const occurrence_handle_t& occurrence_handle) const;
+//     /// Returns a handle to the previous step on the path
+//     step_handle_t get_previous_step(const step_handle_t& step_handle) const;
     
-//     /// Returns a handle to the path that an occurrence is on
-//     path_handle_t get_path_handle_of_occurrence(const occurrence_handle_t& occurrence_handle) const;
+//     /// Returns a handle to the path that an step is on
+//     path_handle_t get_path_handle_of_step(const step_handle_t& step_handle) const;
     
-//     /// Returns the 0-based ordinal rank of a occurrence on a path
-//     size_t get_ordinal_rank_of_occurrence(const occurrence_handle_t& occurrence_handle) const;
+//     /// Returns the 0-based ordinal rank of a step on a path
+//     size_t get_ordinal_rank_of_step(const step_handle_t& step_handle) const;
 
 //     ////////////////////////////////////////////////////////////////////////////
 //     // Additional optional interface with a default implementation
@@ -190,14 +190,14 @@ namespace betagraph{
 //     // Concrete utility methods
 //     ////////////////////////////////////////////////////////////////////////////
 
-//     /// Loop over all the occurrences along a path, from first through last
-//     void for_each_occurrence_in_path(const path_handle_t& path, const std::function<void(const occurrence_handle_t&)>& iteratee) const;
+//     /// Loop over all the steps along a path, from first through last
+//     void for_each_step_in_path(const path_handle_t& path, const std::function<void(const step_handle_t&)>& iteratee) const;
 
 // /**
 //  * This is the interface for a handle graph that supports modification.
 //  */
 //     /*
-//      * Note: All operations may invalidate path handles and occurrence handles.
+//      * Note: All operations may invalidate path handles and step handles.
 //      */
     
 //     /// Create a new node with the given sequence and return the handle.
@@ -279,7 +279,7 @@ namespace betagraph{
 //  */
     
 //     /**
-//      * Destroy the given path. Invalidates handles to the path and its node occurrences.
+//      * Destroy the given path. Invalidates handles to the path and its node steps.
 //      */
 //     void destroy_path(const path_handle_t& path);
 
@@ -293,10 +293,10 @@ namespace betagraph{
     
 //     /**
 //      * Append a visit to a node to the given path. Returns a handle to the new
-//      * final occurrence on the path which is appended. Handles to prior
-//      * occurrences on the path, and to other paths, must remain valid.
+//      * final step on the path which is appended. Handles to prior
+//      * steps on the path, and to other paths, must remain valid.
 //      */
-//     occurrence_handle_t append_occurrence(const path_handle_t& path, const handle_t& to_append);
+//     step_handle_t append_step(const path_handle_t& path, const handle_t& to_append);
 
 
 };

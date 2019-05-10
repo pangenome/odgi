@@ -107,7 +107,7 @@ int main_build(int argc, char** argv) {
                     path = graph.get_path_handle(path_name);
                 }
                 handle_t occ = graph.get_handle(stol(node_id), is_rev);
-                graph.append_occurrence(path, occ);
+                graph.append_step(path, occ);
                 // ignores overlaps
             });
     }

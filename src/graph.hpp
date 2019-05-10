@@ -14,11 +14,19 @@
 #include <vector>
 #include <utility>
 #include <functional>
-#include "dna.hpp"
-#include <handlegraph/mutable_path_deletable_handle_graph.hpp>
+#include <handlegraph/types.hpp>
+#include <handlegraph/iteratee.hpp>
 #include <handlegraph/util.hpp>
+#include <handlegraph/handle_graph.hpp>
+#include <handlegraph/path_handle_graph.hpp>
+#include <handlegraph/mutable_handle_graph.hpp>
+#include <handlegraph/mutable_path_handle_graph.hpp>
+#include <handlegraph/mutable_path_mutable_handle_graph.hpp>
+#include <handlegraph/deletable_handle_graph.hpp>
+#include <handlegraph/mutable_path_deletable_handle_graph.hpp>
 #include "dynamic.hpp"
 #include "dynamic_types.hpp"
+#include "dna.hpp"
 #include "hash_map.hpp"
 #include "node.hpp"
 
@@ -39,62 +47,6 @@ public:
     }
 
     ~graph_t(void) { clear(); }
-
-    /*
-    /// Copy constructor.
-    graph_t(const graph_t& other) {
-        _max_node_id = other._max_node_id;
-        _min_node_id = other._min_node_id;
-        _node_count = other._node_count;
-        _edge_count = other._edge_count;
-        _path_count = other._path_count;
-        _path_handle_next = other._path_handle_next;
-        _deleted_node_count = other._deleted_node_count;
-        node_v = other.node_v;
-        deleted_node_bv = other.deleted_node_bv;
-        path_metadata_v = other.path_metadata_v;
-        path_name_map = other.path_name_map;
-    }
-
-    /// Move constructor.
-    graph_t(graph_t&& other) noexcept {
-        _max_node_id = other._max_node_id;
-        _min_node_id = other._min_node_id;
-        _node_count = other._node_count;
-        _edge_count = other._edge_count;
-        _path_count = other._path_count;
-        _path_handle_next = other._path_handle_next;
-        _deleted_node_count = other._deleted_node_count;
-        node_v = other.node_v;
-        deleted_node_bv = other.deleted_node_bv;
-        path_metadata_v = other.path_metadata_v;
-        path_name_map = other.path_name_map;
-    }
-
-    /// Copy assignment operator.
-    graph_t& operator=(const graph_t& other) {
-        graph_t tmp(other);
-        *this = std::move(tmp);
-        return *this;
-    }
-
-    /// Move assignment operator.
-    graph_t& operator=(graph_t&& other) noexcept {
-        // todo should we use std::swap ?
-        _max_node_id = other._max_node_id;
-        _min_node_id = other._min_node_id;
-        _node_count = other._node_count;
-        _edge_count = other._edge_count;
-        _path_count = other._path_count;
-        _path_handle_next = other._path_handle_next;
-        _deleted_node_count = other._deleted_node_count;
-        node_v = other.node_v;
-        deleted_node_bv = other.deleted_node_bv;
-        path_metadata_v = other.path_metadata_v;
-        path_name_map = other.path_name_map;
-        return *this;
-    }
-    */
 
     /// Method to check if a node exists by ID
     bool has_node(nid_t node_id) const;
@@ -157,13 +109,6 @@ public:
     /// information more efficiently can override this method.
     size_t get_degree(const handle_t& handle, bool go_left) const;
     
-    ////////////////////////////////////////////////////////////////////////////
-    // Concrete utility methods
-    ////////////////////////////////////////////////////////////////////////////
-    
-    /// Get a Protobuf Visit from a handle.
-    //Visit to_visit(const handle_t& handle) const;
-    
     /// Get the locally forward version of a handle
     handle_t forward(const handle_t& handle) const;
     
@@ -176,7 +121,7 @@ public:
     handle_t traverse_edge_handle(const edge_t& edge, const handle_t& left) const;
     
     ////////////////////////////////////////////////////////////////////////////
-    // Path handle interface that needs to be implemented
+    // Path handle interface
     ////////////////////////////////////////////////////////////////////////////
     
     /// Determine if a path name exists and is legal to get a path handle for.
@@ -189,76 +134,80 @@ public:
     /// Look up the name of a path from a handle to it
     std::string get_path_name(const path_handle_t& path_handle) const;
     
-    /// Returns the number of node occurrences in the path
-    size_t get_occurrence_count(const path_handle_t& path_handle) const;
+    /// Returns the number of node steps in the path
+    size_t get_step_count(const path_handle_t& path_handle) const;
 
     /// Returns the number of paths stored in the graph
     size_t get_path_count(void) const;
 
-    /// Returns a vector of all occurrences of a node on paths. Optionally restricts to
-    /// occurrences that match the handle in orientation.
-    std::vector<occurrence_handle_t> occurrences_of_handle(const handle_t& handle,
-                                                           bool match_orientation = false) const;
+    /// Returns a vector of all steps of a node on paths. Optionally restricts to
+    /// steps that match the handle in orientation.
+    std::vector<step_handle_t> steps_of_handle(const handle_t& handle,
+                                               bool match_orientation = false) const;
     
 protected:
     
     /// Execute a function on each path in the graph
     bool for_each_path_handle_impl(const std::function<bool(const path_handle_t&)>& iteratee) const;
 
-    /// Enumerate the path occurrences on a given handle (strand agnostic)
-    bool for_each_occurrence_on_handle_impl(const handle_t& handle, const std::function<bool(const occurrence_handle_t&)>& iteratee) const;
+    /// Enumerate the path steps on a given handle (strand agnostic)
+    bool for_each_step_on_handle_impl(const handle_t& handle, const std::function<bool(const step_handle_t&)>& iteratee) const;
     
 public:
 
-    /// Returns the number of node occurrences on the handle
-    size_t get_occurrence_count(const handle_t& handle) const;
+    /// Returns the number of node steps on the handle
+    size_t get_step_count(const handle_t& handle) const;
     
-    /// Get a node handle (node ID and orientation) from a handle to an occurrence on a path
-    handle_t get_occurrence(const occurrence_handle_t& occurrence_handle) const;
+    /// Get a node handle (node ID and orientation) from a handle to an step on a path
+    handle_t get_handle_of_step(const step_handle_t& step_handle) const;
 
-    /// Get a path handle (path ID) from a handle to an occurrence on a path
-    path_handle_t get_path(const occurrence_handle_t& occurrence_handle) const;
+    /// Get a path handle (path ID) from a handle to an step on a path
+    path_handle_t get_path(const step_handle_t& step_handle) const;
     
-    /// Get a handle to the first occurrence in a path.
+    /// Get a handle to the first step in a path.
     /// The path MUST be nonempty.
-    occurrence_handle_t get_first_occurrence(const path_handle_t& path_handle) const;
+    step_handle_t path_begin(const path_handle_t& path_handle) const;
     
-    /// Get a handle to the last occurrence in a path
+    /// Get a handle to the last step in a path
     /// The path MUST be nonempty.
-    occurrence_handle_t get_last_occurrence(const path_handle_t& path_handle) const;
-    
-    /// Returns true if the occurrence is not the last occurence on the path, else false
-    bool has_next_occurrence(const occurrence_handle_t& occurrence_handle) const;
-    
-    /// Returns true if the occurrence is not the first occurence on the path, else false
-    bool has_previous_occurrence(const occurrence_handle_t& occurrence_handle) const;
-    
-    /// Returns a handle to the next occurrence on the path
-    occurrence_handle_t get_next_occurrence(const occurrence_handle_t& occurrence_handle) const;
-    
-    /// Returns a handle to the previous occurrence on the path
-    occurrence_handle_t get_previous_occurrence(const occurrence_handle_t& occurrence_handle) const;
-    
-    /// Returns a handle to the path that an occurrence is on
-    path_handle_t get_path_handle_of_occurrence(const occurrence_handle_t& occurrence_handle) const;
-    
-    /// Returns the 0-based ordinal rank of a occurrence on a path
-    size_t get_ordinal_rank_of_occurrence(const occurrence_handle_t& occurrence_handle) const;
+    step_handle_t path_end(const path_handle_t& path_handle) const;
 
-    ////////////////////////////////////////////////////////////////////////////
-    // Additional optional interface with a default implementation
-    ////////////////////////////////////////////////////////////////////////////
+    /// Get the reverse end iterator
+    step_handle_t path_reverse_end_iterator(const path_handle_t& path_handle) const;
+
+    /// Get the forward end iterator
+    step_handle_t path_forward_end_iterator(const path_handle_t& path_handle) const;
+    
+    /// Returns true if the step is not the last step on the path, else false
+    bool has_next_step(const step_handle_t& step_handle) const;
+    
+    /// Returns true if the step is not the first step on the path, else false
+    bool has_previous_step(const step_handle_t& step_handle) const;
+    
+    /// Returns a handle to the next step on the path
+    step_handle_t get_next_step(const step_handle_t& step_handle) const;
+    
+    /// Returns a handle to the previous step on the path
+    step_handle_t get_previous_step(const step_handle_t& step_handle) const;
+    
+    /// Returns a handle to the path that an step is on
+    path_handle_t get_path_handle_of_step(const step_handle_t& step_handle) const;
+    
+    /// Returns the 0-based ordinal rank of a step on a path
+    size_t get_ordinal_rank_of_step(const step_handle_t& step_handle) const;
 
     /// Returns true if the given path is empty, and false otherwise
     bool is_empty(const path_handle_t& path_handle) const;
 
-    ////////////////////////////////////////////////////////////////////////////
-    // Concrete utility methods
-    ////////////////////////////////////////////////////////////////////////////
+    /// Loop over all the steps along a path, from first through last
+    void for_each_step_in_path(const path_handle_t& path, const std::function<void(const step_handle_t&)>& iteratee) const;
 
-    /// Loop over all the occurrences along a path, from first through last
-    void for_each_occurrence_in_path(const path_handle_t& path, const std::function<void(const occurrence_handle_t&)>& iteratee) const;
+    /// Returns true if the path is circular
+    bool get_is_circular(const path_handle_t& path_handle) const;
 
+    /// Set if the path is circular or not
+    void set_circularity(const path_handle_t& path_handle, bool circular);
+    
     /// Create a new node with the given sequence and return the handle.
     handle_t create_handle(const std::string& sequence);
 
@@ -356,7 +305,7 @@ public:
  */
     
     /**
-     * Destroy the given path. Invalidates handles to the path and its node occurrences.
+     * Destroy the given path. Invalidates handles to the path and its node steps.
      */
     void destroy_path(const path_handle_t& path);
 
@@ -366,27 +315,40 @@ public:
      * Returns a handle to the created empty path. Handles to other paths must
      * remain valid.
      */
-    path_handle_t create_path_handle(const std::string& name);
+    path_handle_t create_path_handle(const std::string& name,
+                                     bool is_circular = false);
+
+    /**
+     * Append a visit to a node to the given path. Returns a handle to the new
+     * final step on the path which is appended. Handles to prior
+     * steps on the path, and to other paths, must remain valid.
+     */
+    step_handle_t prepend_step(const path_handle_t& path, const handle_t& to_append);
     
     /**
      * Append a visit to a node to the given path. Returns a handle to the new
-     * final occurrence on the path which is appended. Handles to prior
-     * occurrences on the path, and to other paths, must remain valid.
+     * final step on the path which is appended. Handles to prior
+     * steps on the path, and to other paths, must remain valid.
      */
-    occurrence_handle_t append_occurrence(const path_handle_t& path, const handle_t& to_append);
+    step_handle_t append_step(const path_handle_t& path, const handle_t& to_append);
 
     /**
-     * Insert a visit to a node to the given path between the given occurrences.
-     * Returns a handle to the new occurrence on the path which is appended.
-     * Handles to prior occurrences on the path, and to other paths, must remain valid.
+     * Insert a visit to a node to the given path between the given steps.
+     * Returns a handle to the new step on the path which is appended.
+     * Handles to prior steps on the path, and to other paths, must remain valid.
      */
-    occurrence_handle_t insert_occurrence(const occurrence_handle_t& before, const occurrence_handle_t& after, const handle_t& to_insert);
+    step_handle_t insert_step(const step_handle_t& before, const step_handle_t& after, const handle_t& to_insert);
     
-    /// Set the occurrence to the given handle, possibly re-linking and cleaning up if needed
-    occurrence_handle_t set_occurrence(const occurrence_handle_t& occurrence_handle, const handle_t& handle);
+    /// Set the step to the given handle, possibly re-linking and cleaning up if needed
+    step_handle_t set_step(const step_handle_t& step_handle, const handle_t& handle);
 
-    /// Replace the occurrence with multiple handles
-    std::vector<occurrence_handle_t> replace_occurrence(const occurrence_handle_t& occurrence_handle, const std::vector<handle_t>& handles);
+    /// Replace the step with multiple handles
+    std::vector<step_handle_t> replace_step(const step_handle_t& step_handle, const std::vector<handle_t>& handles);
+
+    /// Replace the path range with the new segment
+    std::pair<step_handle_t, step_handle_t> rewrite_segment(const step_handle_t& segment_begin,
+                                                            const step_handle_t& segment_end,
+                                                            const std::vector<handle_t>& new_segment);
 
     /// A helper function to visualize the state of the graph
     void display(void) const;
@@ -446,9 +408,10 @@ private:
     
     struct path_metadata_t {
         uint64_t length;
-        occurrence_handle_t first;
-        occurrence_handle_t last;
+        step_handle_t first;
+        step_handle_t last;
         std::string name;
+        bool is_circular = false;
     };
     /// maps between path identifier and the start, end, and length of the path
     std::vector<path_metadata_t> path_metadata_v;
@@ -480,17 +443,17 @@ private:
     /// Helper to simplify removal of path handle records
     void destroy_path_handle_records(uint64_t i);
 
-    /// Helper to create the internal records for the occurrence
-    occurrence_handle_t create_occurrence(const path_handle_t& path, const handle_t& handle);
+    /// Helper to create the internal records for the step
+    step_handle_t create_step(const path_handle_t& path, const handle_t& handle);
 
-    /// Helper to destroy the internal records for the occurrence
-    void destroy_occurrence(const occurrence_handle_t& occurrence_handle);
+    /// Helper to destroy the internal records for the step
+    void destroy_step(const step_handle_t& step_handle);
 
     /// Helper to stitch up partially built paths
-    void link_occurrences(const occurrence_handle_t& from, const occurrence_handle_t& to);
+    void link_steps(const step_handle_t& from, const step_handle_t& to);
 
-    /// Decrement the occurrence rank references for this occurrence
-    void decrement_rank(const occurrence_handle_t& occurrence_handle);
+    /// Decrement the step rank references for this step
+    void decrement_rank(const step_handle_t& step_handle);
 
     /// Compact away the deleted nodes info
     //void rebuild_id_handle_mapping(void);

@@ -58,12 +58,12 @@ TEST_CASE("Large random handle with high path depth work", "[fuzz]") {
             handle_t last; // ...
             for (int i = 0; i < 100000; ++i) {
                 handle_t occ = handles.at(dist(rng)-1);
-                graph.append_occurrence(path, occ);
+                graph.append_step(path, occ);
                 if (i > 0) {
                     graph.create_edge(last, occ);
                     REQUIRE(graph.has_edge(last, occ));
                 }
-                REQUIRE(graph.get_occurrence_count(path) == i+1);
+                REQUIRE(graph.get_step_count(path) == i+1);
                 last = occ;
             }
         }

@@ -251,8 +251,8 @@ int main_viz(int argc, char** argv) {
             // get the block which this path covers
             uint64_t min_x = std::numeric_limits<uint64_t>::max();
             uint64_t max_x = std::numeric_limits<uint64_t>::min(); // 0
-            graph.for_each_occurrence_in_path(path, [&](const occurrence_handle_t& occ) {
-                    handle_t h = graph.get_occurrence(occ);
+            graph.for_each_step_in_path(path, [&](const step_handle_t& occ) {
+                    handle_t h = graph.get_handle_of_step(occ);
                     uint64_t p = position_map[number_bool_packing::unpack_number(h)];
                     min_x = std::min(min_x, p);
                     max_x = std::max(max_x, p+graph.get_length(h));
@@ -305,8 +305,8 @@ int main_viz(int argc, char** argv) {
                 if (args::get(show_strands)) {
                     uint64_t steps = 0;
                     uint64_t rev = 0;
-                    graph.for_each_occurrence_in_path(path, [&](const occurrence_handle_t& occ) {
-                            handle_t h = graph.get_occurrence(occ);
+                    graph.for_each_step_in_path(path, [&](const step_handle_t& occ) {
+                            handle_t h = graph.get_handle_of_step(occ);
                             ++steps;
                             rev += graph.get_is_reverse(h);
                         });
@@ -329,11 +329,11 @@ int main_viz(int argc, char** argv) {
             path_b = (uint8_t)std::round(255*std::min(path_b_f*f, (float)1.0));
             std::cerr << "path " << as_integer(path) << " " << graph.get_path_name(path) << " " << path_r_f << " " << path_g_f << " " << path_b_f
                       << " " << (int)path_r << " " << (int)path_g << " " << (int)path_b << std::endl;
-            /// Loop over all the occurrences along a path, from first through last and draw them
+            /// Loop over all the steps along a path, from first through last and draw them
             uint64_t path_rank = as_integer(path);
             uint64_t step = 0;
-            graph.for_each_occurrence_in_path(path, [&](const occurrence_handle_t& occ) {
-                    handle_t h = graph.get_occurrence(occ);
+            graph.for_each_step_in_path(path, [&](const step_handle_t& occ) {
+                    handle_t h = graph.get_handle_of_step(occ);
                     uint64_t p = position_map[number_bool_packing::unpack_number(h)];
                     uint64_t hl = graph.get_length(h);
                     // make contects for the bases in the node
@@ -347,8 +347,8 @@ int main_viz(int argc, char** argv) {
             if (args::get(link_path_pieces)) {
                 uint64_t min_x = std::numeric_limits<uint64_t>::max();
                 uint64_t max_x = std::numeric_limits<uint64_t>::min(); // 0
-                graph.for_each_occurrence_in_path(path, [&](const occurrence_handle_t& occ) {
-                        handle_t h = graph.get_occurrence(occ);
+                graph.for_each_step_in_path(path, [&](const step_handle_t& occ) {
+                        handle_t h = graph.get_handle_of_step(occ);
                         uint64_t p = position_map[number_bool_packing::unpack_number(h)];
                         min_x = std::min(min_x, p);
                         max_x = std::max(max_x, p+graph.get_length(h));

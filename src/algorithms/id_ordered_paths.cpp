@@ -9,8 +9,8 @@ std::vector<path_handle_t> id_ordered_paths(const PathHandleGraph& g, bool rev) 
     g.for_each_path_handle([&](const path_handle_t& p) {
             // get the min id
             uint64_t min_id = std::numeric_limits<uint64_t>::max();
-            g.for_each_occurrence_in_path(p, [&](const occurrence_handle_t& occ) {
-                    min_id = std::min((uint64_t)g.get_id(g.get_occurrence(occ)), min_id);
+            g.for_each_step_in_path(p, [&](const step_handle_t& occ) {
+                    min_id = std::min((uint64_t)g.get_id(g.get_handle_of_step(occ)), min_id);
                 });
             paths.push_back(make_pair(min_id, p));
         });

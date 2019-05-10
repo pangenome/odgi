@@ -87,7 +87,7 @@ int main_stats(int argc, char** argv) {
         std::map<uint64_t, uint64_t> unique_histogram;
         graph.for_each_handle([&](const handle_t& h) {
                 std::vector<uint64_t> paths_here;
-                graph.for_each_occurrence_on_handle(h, [&](const occurrence_handle_t& occ) {
+                graph.for_each_step_on_handle(h, [&](const step_handle_t& occ) {
                         paths_here.push_back(as_integer(graph.get_path(occ)));
                     });
                 std::sort(paths_here.begin(), paths_here.end());
@@ -108,7 +108,7 @@ int main_stats(int argc, char** argv) {
         std::map<std::set<uint64_t>, uint64_t> setcov;
         graph.for_each_handle([&](const handle_t& h) {
                 std::set<uint64_t> paths_here;
-                graph.for_each_occurrence_on_handle(h, [&](const occurrence_handle_t& occ) {
+                graph.for_each_step_on_handle(h, [&](const step_handle_t& occ) {
                         paths_here.insert(as_integer(graph.get_path(occ)));
                     });
                 setcov[paths_here] += graph.get_length(h);
@@ -126,7 +126,7 @@ int main_stats(int argc, char** argv) {
         std::map<std::vector<uint64_t>, uint64_t> setcov;
         graph.for_each_handle([&](const handle_t& h) {
                 std::vector<uint64_t> paths_here;
-                graph.for_each_occurrence_on_handle(h, [&](const occurrence_handle_t& occ) {
+                graph.for_each_step_on_handle(h, [&](const step_handle_t& occ) {
                         paths_here.push_back(as_integer(graph.get_path(occ)));
                     });
                 std::sort(paths_here.begin(), paths_here.end());
@@ -190,10 +190,10 @@ int main_stats(int argc, char** argv) {
             // build the intervals for each path we'll query
             itree_t itree(std::move(path_ivals)); //, 16, 1);
             uint64_t pos = 0;
-            graph.for_each_occurrence_in_path(graph.get_path_handle(x), [&](const occurrence_handle_t& occ) {
+            graph.for_each_step_in_path(graph.get_path_handle(x), [&](const step_handle_t& occ) {
                     std::vector<uint64_t> paths_here;
-                    handle_t h = graph.get_occurrence(occ);
-                    graph.for_each_occurrence_on_handle(h, [&](const occurrence_handle_t& occ) {
+                    handle_t h = graph.get_handle_of_step(occ);
+                    graph.for_each_step_on_handle(h, [&](const step_handle_t& occ) {
                             paths_here.push_back(as_integer(graph.get_path(occ)));
                         });
                     uint64_t len = graph.get_length(h);
