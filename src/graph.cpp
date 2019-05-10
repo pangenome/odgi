@@ -287,11 +287,15 @@ bool graph_t::has_previous_step(const step_handle_t& step_handle) const {
     return node.get_path_step(as_integers(step_handle)[1]).prev_id() != path_begin_marker;
 }
 
-/// Returns a handle to the next step on the path, which must exist
+/// Returns a handle to the next step on the path
+/// Returns the forward end iterator if none exists
 step_handle_t graph_t::get_next_step(const step_handle_t& step_handle) const {
     nid_t curr_id = as_integers(step_handle)[0];
     const node_t& node = node_v.at(get_node_rank(as_integers(step_handle)[0]));
     auto& step = node.get_path_step(as_integers(step_handle)[1]);
+    if (step.next_id() == path_end_marker) {
+        return path_forward_end_iterator(as_path_handle(0));
+    }
     step_handle_t next_step;
     as_integers(next_step)[0] = edge_delta_to_id(curr_id, step.next_id()-2);
     as_integers(next_step)[1] = step.next_rank();
@@ -303,6 +307,9 @@ step_handle_t graph_t::get_previous_step(const step_handle_t& step_handle) const
     nid_t curr_id = as_integers(step_handle)[0];
     const node_t& node = node_v.at(get_node_rank(as_integers(step_handle)[0]));
     auto& step = node.get_path_step(as_integers(step_handle)[1]);
+    if (step.prev_id() == path_begin_marker) {
+        return path_reverse_end_iterator(as_path_handle(0));
+    }
     step_handle_t prev_step;
     as_integers(prev_step)[0] = edge_delta_to_id(curr_id, step.prev_id()-2);
     as_integers(prev_step)[1] = step.prev_rank();
@@ -334,11 +341,18 @@ bool graph_t::is_empty(const path_handle_t& path_handle) const {
 /// Loop over all the steps along a path, from first through last
 void graph_t::for_each_step_in_path(const path_handle_t& path, const std::function<void(const step_handle_t&)>& iteratee) const {
     if (is_empty(path)) return;
-    step_handle_t step = path_begin(path);
+    bool is_circular = get_is_circular(path);
+    step_handle_t begin_step = path_begin(path);
+    step_handle_t step = begin_step; // copy
     iteratee(step); // run the first time
-    while (has_next_step(step)) {
+    bool keep_going = true;
+    while (keep_going) {
         step = get_next_step(step);
         iteratee(step);
+        if (!(is_circular && step != begin_step
+              || has_next_step(step))) {
+            keep_going = false;
+        }
     }
 }
     
@@ -1141,10 +1155,51 @@ std::pair<step_handle_t, step_handle_t> graph_t::rewrite_segment(const step_hand
                                                                  const step_handle_t& segment_end,
                                                                  const std::vector<handle_t>& new_segment) {
     // collect the steps to replace
+    std::vector<step_handle_t> steps;
+    std::string old_seq, new_seq;
+    //std::vector<handle_t> 
+    for (step_handle_t step = segment_begin; ; get_next_step(step)) {
+        steps.push_back(step);
+        old_seq.append(get_sequence(get_handle_of_step(step)));
+        if (step == segment_end) break;
+        if (!has_next_step(step)) {
+            std::cerr << "error [odgi::graph_t]: no next step found as expected in rewrite_segment" << std::endl;
+            assert(false);
+        }
+    }
+    for (auto& handle : new_segment) new_seq.append(get_sequence(handle));
+    // verify that we're making a valid rewrite    
+    assert(old_seq == new_seq);
     // find the before and after steps, which we'll link into
-    // check the path integrity
+    step_handle_t before = get_previous_step(segment_begin);
+    step_handle_t after = get_next_step(segment_begin);
+    // get the path metadata
+    path_handle_t path = get_path(segment_begin);
+    auto& path_meta = path_metadata_v[as_integer(path)];
     // delete the previous steps
-    // add the new steps
+    for (auto& step : steps) {
+        destroy_step(step);
+    }
+    // create the new steps
+    std::vector<step_handle_t> new_steps;
+    for (auto& handle : new_segment) {
+        new_steps.push_back(create_step(path, handle));
+    }
+    // link new steps together
+    for (uint64_t i = 0; i < new_steps.size()-1; ++i) {
+        link_steps(new_steps[i], new_steps[i+1]);
+    }
+    if (before != path_reverse_end_iterator(path)) {
+        link_steps(before, new_steps.front());
+    } else {
+        path_meta.first = new_steps.front();
+    }
+    if (after != path_reverse_end_iterator(path)) {
+        link_steps(new_steps.back(), after);
+    } else {
+        path_meta.last = new_steps.back();
+    }
+    path_meta.length += (new_steps.size() - steps.size());
 }
 
 void graph_t::display(void) const {
