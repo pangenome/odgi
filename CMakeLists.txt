@@ -90,7 +90,7 @@ set(gfakluge_LIB "${INSTALL_DIR}/src/gfakluge")
 # libhandlegraph (full build using its cmake config)
 ExternalProject_Add(handlegraph
   GIT_REPOSITORY "https://github.com/vgteam/libhandlegraph.git"
-  GIT_TAG "04688588e4ec840f18af74395d446e868fc13c12"
+  GIT_TAG "62bd408c3428e0a1f93528910415f68686912399"
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
   INSTALL_COMMAND "")
 ExternalProject_Get_property(handlegraph INSTALL_DIR)

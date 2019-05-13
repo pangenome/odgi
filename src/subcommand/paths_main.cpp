@@ -107,8 +107,8 @@ int main_paths(int argc, char** argv) {
             // walk the path, adding each position to the decomposition
             path_handle_t path = graph.get_path_handle(path_name);
             uint64_t pos = 0;
-            graph.for_each_occurrence_in_path(path, [&](const occurrence_handle_t& occ) {
-                    handle_t h = graph.get_occurrence(occ);
+            graph.for_each_step_in_path(path, [&](const step_handle_t& occ) {
+                    handle_t h = graph.get_handle_of_step(occ);
                     nid_t id = graph.get_id(h);
                     uint64_t len = graph.get_length(h);
                     for (uint64_t i = 0; i < len; ++i) {
