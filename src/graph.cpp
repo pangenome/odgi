@@ -809,13 +809,20 @@ std::vector<handle_t> graph_t::divide_handle(const handle_t& handle, const std::
     for_each_step_on_handle(handle, [&](const step_handle_t& step) {
             steps.push_back(step);
         });
+    // reverse the order to allow for safe rewriting
+    std::reverse(steps.begin(), steps.end());
+    /*
+    std::sort(steps.begin(), steps.end(), [](const step_handle_t& a, const step_handle_t& b) {
+            return as_integers(a)[0] == as_integers(b)[0] && as_integers(a)[1] > as_integers(b)[1]
+                || as_integers(a)[0] < as_integers(b)[0]; });
+    */
     // replace path steps with the new handles
     for (auto& step : steps) {
         handle_t h = get_handle_of_step(step);
         if (get_is_reverse(h)) {
-            replace_step(step, rev_handles);
+            rewrite_segment(step, step, rev_handles);
         } else {
-            replace_step(step, handles);
+            rewrite_segment(step, step, handles);
         }
     }
     node_v.at(number_bool_packing::unpack_number(handle)).clear_path_steps();
@@ -910,6 +917,11 @@ void graph_t::destroy_path(const path_handle_t& path) {
     for_each_step_in_path(path, [this,&path_v](const step_handle_t& step) {
             path_v.push_back(step);
         });
+    // this is order dependent...
+    // we need to destroy steps in their reverse ranks
+    std::sort(path_v.begin(), path_v.end(), [](const step_handle_t& a, const step_handle_t& b) {
+            return as_integers(a)[0] == as_integers(b)[0] && as_integers(a)[1] > as_integers(b)[1]
+                || as_integers(a)[0] < as_integers(b)[0]; });
     for (auto& step : path_v) {
         destroy_step(step);
     }
@@ -1068,7 +1080,7 @@ step_handle_t graph_t::append_step(const path_handle_t& path, const handle_t& to
 /// ranks used to refer to it
 void graph_t::decrement_rank(const step_handle_t& step_handle) {
     // what is the actual rank of this step?
-    //std::cerr << "in decrement rank " << as_integers(step_handle)[0] << std::endl;
+    //std::cerr << "in decrement rank " << as_integers(step_handle)[0] << ":" << as_integers(step_handle)[1] << std::endl;
     if (has_previous_step(step_handle)) {
         auto step = get_previous_step(step_handle);
         // decrement the rank information
@@ -1098,56 +1110,7 @@ void graph_t::decrement_rank(const step_handle_t& step_handle) {
 
 /// reassign the given step to the new handle
 step_handle_t graph_t::set_step(const step_handle_t& step_handle, const handle_t& assign_to) {
-    return replace_step(step_handle, { assign_to }).front();
-}
-
-std::vector<step_handle_t>
-graph_t::replace_step(const step_handle_t& step_handle,
-                      const std::vector<handle_t>& handles) {
-    // verify path integrity
-    const std::string prev_seq = get_sequence(get_handle_of_step(step_handle));
-    std::string new_seq;
-    for (auto& handle : handles) new_seq.append(get_sequence(handle));
-    assert(prev_seq == new_seq);
-    // find the current step
-    handle_t curr_handle = get_handle_of_step(step_handle);
-    // assert that we are not invalidating the path
-    assert(get_sequence(curr_handle) == get_sequence(assign_to));
-    // we should not try to use this to reassign things to the same node
-    for (auto& handle : handles) assert(curr_handle != handle);
-    // get the context
-    step_handle_t prev_step, next_step;
-    if (has_previous_step(step_handle)) {
-        prev_step = get_previous_step(step_handle);
-    } else {
-        as_integers(prev_step)[0] = 0;
-        as_integers(prev_step)[1] = 0;
-    }
-    if (has_next_step(step_handle)) {
-        next_step = get_next_step(step_handle);
-    } else {
-        as_integers(next_step)[0] = 0;
-        as_integers(next_step)[1] = 0;
-    }
-    // get the path
-    path_handle_t path = get_path(step_handle);
-    // determine the new steps
-    std::vector<step_handle_t> new_steps;
-    for (auto& handle : handles) {
-        new_steps.push_back(create_step(path, handle));
-    }
-    // link new steps
-    for (uint64_t i = 0; i < new_steps.size()-1; ++i) {
-        link_steps(new_steps[i], new_steps[i+1]);
-    }
-    // link to context
-    if (as_integers(prev_step)[0]) {
-        link_steps(prev_step, new_steps.front());
-    }
-    if (as_integers(next_step)[0]) {
-        link_steps(new_steps.back(), next_step);
-    }
-    return new_steps;
+    return rewrite_segment(step_handle, step_handle, { assign_to }).first;
 }
 
 /// Replace the path range with the new segment
@@ -1176,7 +1139,10 @@ std::pair<step_handle_t, step_handle_t> graph_t::rewrite_segment(const step_hand
     // get the path metadata
     path_handle_t path = get_path(segment_begin);
     auto& path_meta = path_metadata_v[as_integer(path)];
-    // delete the previous steps
+    // sort the steps so that we destroy from higher to lower ranks
+    std::sort(steps.begin(), steps.end(), [](const step_handle_t& a, const step_handle_t& b) {
+            return as_integers(a)[0] == as_integers(b)[0] && as_integers(a)[1] > as_integers(b)[1]
+                || as_integers(a)[0] < as_integers(b)[0]; });
     for (auto& step : steps) {
         destroy_step(step);
     }
@@ -1194,12 +1160,18 @@ std::pair<step_handle_t, step_handle_t> graph_t::rewrite_segment(const step_hand
     } else {
         path_meta.first = new_steps.front();
     }
-    if (after != path_reverse_end_iterator(path)) {
+    if (after != path_forward_end_iterator(path)) {
         link_steps(new_steps.back(), after);
     } else {
         path_meta.last = new_steps.back();
     }
+    // delete the previous steps
     path_meta.length += (new_steps.size() - steps.size());
+    if (new_steps.size()) {
+        return make_pair(new_steps.front(), new_steps.back());
+    } else {
+        return make_pair(path_reverse_end_iterator(path), path_forward_end_iterator(path));
+    }
 }
 
 void graph_t::display(void) const {
