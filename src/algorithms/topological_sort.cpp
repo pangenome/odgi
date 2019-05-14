@@ -262,7 +262,7 @@ std::vector<handle_t> topological_order(const HandleGraph* g) {
 std::vector<handle_t> lazy_topological_order_internal(const HandleGraph* g, bool lazier) {
     
     // map that will contain the orientation and the in degree for each node
-    unordered_map<handle_t, int64_t> inward_degree;
+    hash_map<handle_t, int64_t> inward_degree;
     inward_degree.reserve(g->node_size());
     
     // stack for the traversal
