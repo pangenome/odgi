@@ -15,11 +15,17 @@ using namespace handlegraph;
 #endif
         
         // decide which strand will be "forward" for each node
+        /*
         vector<handle_t> canonical_orientation = single_stranded_orientation(graph);
         if (canonical_orientation.size() < graph->node_size()) {
             cerr << "error:[eades_algorithm] Eades' algorithm only valid on graphs with a single stranded orientation" << endl;
             exit(1);
         }
+        */
+        vector<handle_t> canonical_orientation;
+        graph->for_each_handle([&canonical_orientation](const handle_t& h) {
+                canonical_orientation.push_back(h);
+            });
         
 #ifdef debug_eades
         cerr << "got canonical orientation:" << endl;

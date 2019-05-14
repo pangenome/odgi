@@ -49,7 +49,7 @@ std::vector<handle_t> tail_nodes(const HandleGraph* g) {
     
 }
 
-std::vector<handle_t> topological_order(const HandleGraph* g) {
+std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
     
     // Make a vector to hold the ordered and oriented nodes.
     std::vector<handle_t> sorted;
@@ -63,23 +63,28 @@ std::vector<handle_t> topological_order(const HandleGraph* g) {
     map<handlegraph::nid_t, handle_t> s;
 
     // We find the head and tails, if there are any
-    std::vector<handle_t> heads{head_nodes(g)};
+    //std::vector<handle_t> heads{head_nodes(g)};
     // No need to fetch the tails since we don't use them
 
     
     // Maps from node ID to first orientation we suggested for it.
     map<handlegraph::nid_t, handle_t> seeds;
     
-    
-    for(handle_t& head : heads) {
-        // Dump all the heads into the oriented set, rather than having them as
-        // seeds. We will only go for cycle-breaking seeds when we run out of
-        // heads. This is bad for contiguity/ordering consistency in cyclic
-        // graphs and reversing graphs, but makes sure we work out to just
-        // topological sort on DAGs. It mimics the effect we used to get when we
-        // joined all the head nodes to a new root head node and seeded that. We
-        // ignore tails since we only orient right from nodes we pick.
-        s[g->get_id(head)] = head;
+    // Dump all the heads into the oriented set, rather than having them as
+    // seeds. We will only go for cycle-breaking seeds when we run out of
+    // heads. This is bad for contiguity/ordering consistency in cyclic
+    // graphs and reversing graphs, but makes sure we work out to just
+    // topological sort on DAGs. It mimics the effect we used to get when we
+    // joined all the head nodes to a new root head node and seeded that. We
+    // ignore tails since we only orient right from nodes we pick.
+    if (use_heads) {
+        for(const handle_t& head : head_nodes(g)) {
+            s[g->get_id(head)] = head;
+        }
+    } else {
+        for(const handle_t& tail : tail_nodes(g)) {
+            s[g->get_id(tail)] = tail;
+        }
     }
 
     // We will use an ordered map handles by ID for nodes we have not visited
@@ -258,7 +263,33 @@ std::vector<handle_t> topological_order(const HandleGraph* g) {
     // Send away our sorted ordering.
     return sorted;
 }
-    
+
+std::vector<handle_t> two_way_topological_order(const HandleGraph* g) {
+    // take the average assigned order for each handle
+    hash_map<handle_t, uint64_t> avg_order;
+    uint64_t i = 0;
+    for (auto& handle : topological_order(g, true)) {
+        avg_order[handle] = ++i;
+    }
+    i = 0;
+    for (auto& handle : topological_order(g, false)) {
+        avg_order[handle] = max(avg_order[handle], (++i));
+    }
+    std::vector<std::pair<handle_t, uint64_t>> order;
+    for (auto& p : avg_order) {
+        order.push_back(p);
+    }
+    std::sort(order.begin(), order.end(), [](const std::pair<handle_t, uint64_t>& a,
+                                             const std::pair<handle_t, uint64_t>& b) {
+                  return a.second < b.second;
+              });
+    std::vector<handle_t> result;
+    for (auto& p : order) {
+        result.push_back(p.first);
+    }
+    return result;
+}
+
 std::vector<handle_t> lazy_topological_order_internal(const HandleGraph* g, bool lazier) {
     
     // map that will contain the orientation and the in degree for each node

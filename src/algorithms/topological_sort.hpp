@@ -57,7 +57,9 @@ std::vector<handle_t> tail_nodes(const HandleGraph* g);
  *                     (This helps start at natural entry points to cycles)
  *     return L (a topologically sorted order and orientation)
  */
-std::vector<handle_t> topological_order(const HandleGraph* g);
+std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads = true);
+
+std::vector<handle_t> two_way_topological_order(const HandleGraph* g);
 
 /**
  * Order the nodes in a graph using a topological sort. The sort is NOT guaranteed

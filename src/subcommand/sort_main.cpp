@@ -28,6 +28,7 @@ int main_sort(int argc, char** argv) {
     args::Flag cycle_breaking(parser, "cycle_breaking", "use a cycle breaking sort", {'b', "cycle-breaking"});
     args::Flag eades(parser, "eades", "use eades algorithm", {'e', "eades"});
     args::Flag lazy(parser, "lazy", "use lazy topological algorithm (DAG only)", {'l', "lazy"});
+    args::Flag two(parser, "two", "use two-way (max of head-first and tail-first) topological algorithm", {'w', "two-way"});
     args::Flag paths_by_min_node_id(parser, "paths-min", "sort paths by their lowest contained node id", {'P', "paths-min"});
     args::Flag paths_by_max_node_id(parser, "paths-max", "sort paths by their highest contained node id", {'M', "paths-max"});
     try {
@@ -69,6 +70,8 @@ int main_sort(int argc, char** argv) {
             graph.apply_ordering(algorithms::eades_algorithm(&graph), true);
         } else if (args::get(lazy)) {
             graph.apply_ordering(algorithms::lazy_topological_order(&graph), true);
+        } else if (args::get(two)) {
+            graph.apply_ordering(algorithms::two_way_topological_order(&graph), true);
         } else {
             graph.apply_ordering(algorithms::topological_order(&graph), true);
         }
