@@ -906,6 +906,7 @@ handle_t graph_t::combine_handles(const std::vector<handle_t>& handles) {
             create_edge(h, combined);
         }
     }
+    return combined;
 }
 
 /**
