@@ -68,6 +68,7 @@ int main_prune(int argc, char** argv) {
     }
     if (args::get(max_degree)) {
         algorithms::remove_high_degree_nodes(graph, args::get(max_degree));
+        graph.clear_paths();
     }
     if (args::get(max_furcations)) {
         std::vector<edge_t> to_prune = algorithms::find_edges_to_prune(graph, args::get(kmer_length), args::get(max_furcations));
@@ -75,6 +76,7 @@ int main_prune(int argc, char** argv) {
         for (auto& edge : to_prune) {
             graph.destroy_edge(edge);
         }
+        // we're just removing edges, so paths shouldn't be damaged
         std::cerr << "done prune" << std::endl;
     }
     if (args::get(min_coverage) || args::get(max_coverage)) {
@@ -83,6 +85,9 @@ int main_prune(int argc, char** argv) {
         for (auto& handle : to_drop) {
             graph.destroy_handle(handle);
         }
+        // remove the paths, because it's likely we have damaged some
+        // and at present, we have no mechanism to reconstruct them
+        graph.clear_paths();
     }
     if (args::get(drop_paths)) {
         graph.clear_paths();

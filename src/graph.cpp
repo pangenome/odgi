@@ -340,13 +340,18 @@ bool graph_t::is_empty(const path_handle_t& path_handle) const {
 
 /// Loop over all the steps along a path, from first through last
 void graph_t::for_each_step_in_path(const path_handle_t& path, const std::function<void(const step_handle_t&)>& iteratee) const {
+    std::cerr << "on path " << get_path_name(path) << std::endl;
     auto& p = path_metadata_v[as_integer(path)];
+    std::cerr << as_integer(path) << ":" << p.name << ":"
+              << as_integers(p.first)[0] << "/" << as_integers(p.first)[1] << "->"
+              << as_integers(p.last)[0] << "/" << as_integers(p.last)[1] << " ";
     if (is_empty(path)) return;
     bool is_circular = get_is_circular(path);
     step_handle_t begin_step = path_begin(path);
     step_handle_t step = begin_step; // copy
     bool keep_going = true;
     do {
+        std::cerr << "on step " << as_integers(step)[0] << ":" << as_integers(step)[1] << std::endl;
         iteratee(step);
         // if it's circular, and there is a next step that isn't the same as the beginning, continue
         // if it's not circular, and there is a next step, continue
