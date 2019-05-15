@@ -340,20 +340,29 @@ bool graph_t::is_empty(const path_handle_t& path_handle) const {
 
 /// Loop over all the steps along a path, from first through last
 void graph_t::for_each_step_in_path(const path_handle_t& path, const std::function<void(const step_handle_t&)>& iteratee) const {
+    auto& p = path_metadata_v[as_integer(path)];
     if (is_empty(path)) return;
     bool is_circular = get_is_circular(path);
     step_handle_t begin_step = path_begin(path);
     step_handle_t step = begin_step; // copy
-    iteratee(step); // run the first time
     bool keep_going = true;
-    while (keep_going) {
-        step = get_next_step(step);
+    do {
         iteratee(step);
-        if (!(is_circular && step != begin_step
-              || has_next_step(step))) {
-            keep_going = false;
+        // if it's circular, and there is a next step that isn't the same as the beginning, continue
+        // if it's not circular, and there is a next step, continue
+        if (is_circular) {
+            step = get_next_step(step);
+            if (step == begin_step) {
+                keep_going = false;
+            }
+        } else {
+            if (has_next_step(step)) {
+                step = get_next_step(step);
+            } else {
+                keep_going = false;
+            }
         }
-    }
+    } while (keep_going);
 }
     
 /// Create a new node with the given sequence and return the handle.
