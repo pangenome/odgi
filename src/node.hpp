@@ -18,24 +18,24 @@ const uint8_t PATH_RECORD_LENGTH = 5;
 
 /// A node object with the sequence, its edge lists, and paths
 class node_t {
-    std::vector<uint8_t> bytes{ 5, 0, 0, 0, 0 };
+    std::vector<uint8_t> bytes;
+    uint32_t _seq_bytes = 0;
+    uint32_t _edge_bytes = 0;
+    uint32_t _edge_count = 0;
+    uint32_t _path_bytes = 0;
+    uint32_t _path_count = 0;
 public:
-    struct layout_t {
-        uint64_t data[5] = { 0, 0, 0, 0, 0 };
-        inline const uint64_t layout_bytes(void) const { return data[0]; }
-        inline const uint64_t seq_start(void) const { return data[0]; }
-        inline const uint64_t seq_bytes(void) const { return data[1]; }
-        inline const uint64_t edge_start(void) const { return layout_bytes()+seq_bytes(); }
-        inline const uint64_t edge_count(void) const { return data[2]; }
-        inline const uint64_t edge_bytes(void) const { return data[3]; }
-        inline const uint64_t path_start(void) const { return layout_bytes()+seq_bytes()+edge_bytes(); }
-        inline const uint64_t path_count(void) const { return data[4]; }
-        inline void set_layout_bytes(const uint64_t& i) { data[0] = i; }
-        inline void set_seq_bytes(const uint64_t& i) { data[1] = i; }
-        inline void set_edge_count(const uint64_t& i) { data[2] = i; }
-        inline void set_edge_bytes(const uint64_t& i) { data[3] = i; }
-        inline void set_path_count(const uint64_t& i) { data[4] = i; }
-    };
+    inline const uint64_t seq_start(void) const { return 0; }
+    inline const uint64_t seq_bytes(void) const { return _seq_bytes; }
+    inline const uint64_t edge_start(void) const { return _seq_bytes; }
+    inline const uint64_t edge_count(void) const { return _edge_count; }
+    inline const uint64_t edge_bytes(void) const { return _edge_bytes; }
+    inline const uint64_t path_start(void) const { return _seq_bytes+_edge_bytes; }
+    inline const uint64_t path_count(void) const { return _path_count; }
+    inline void set_seq_bytes(const uint64_t& i) { _seq_bytes = i; }
+    inline void set_edge_count(const uint64_t& i) { _edge_count = i; }
+    inline void set_edge_bytes(const uint64_t& i) { _edge_bytes = i; }
+    inline void set_path_count(const uint64_t& i) { _path_count = i; }
     struct step_t {
         uint64_t data[5] = { 0, 0, 0, 0, 0 }; // PATH_RECORD_LENGTH
         step_t(void) { }
@@ -65,18 +65,12 @@ public:
         inline void set_next_id(const uint64_t& i) { data[3] = i; }
         inline void set_next_rank(const uint64_t& i) { data[4] = i; }
     };
-    layout_t get_layout(void) const;
-    layout_t set_layout(layout_t layout);
     uint64_t sequence_size(void) const;
     const std::string sequence(void) const;
     void set_sequence(const std::string& seq);
-    uint64_t edge_count_offset(void) const;
-    uint64_t edge_count(void) const;
-    uint64_t edge_offset(void) const;
     std::vector<uint64_t> edges(void) const;
     void add_edge(const uint64_t& relative_id, const uint64_t& edge_type);
     void remove_edge(const uint64_t& rank);
-    void set_edge_count(const uint64_t& count, const layout_t& layout);
     void add_path_step(const uint64_t& path_id, const bool& is_rev,
                        const uint64_t& prev_id, const uint64_t& prev_rank,
                        const uint64_t& next_id, const uint64_t& next_rank);
@@ -91,7 +85,6 @@ public:
     void remove_path_step(const uint64_t& rank);
     void clear(void);
     void clear_path_steps(void);
-    uint64_t path_count(void) const;
     uint64_t serialize(std::ostream& out) const;
     void load(std::istream& in);
     void display(void) const;
