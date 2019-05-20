@@ -50,7 +50,7 @@ std::vector<handle_t> tail_nodes(const HandleGraph* g) {
 }
 
 std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
-    
+
     // Make a vector to hold the ordered and oriented nodes.
     std::vector<handle_t> sorted;
     sorted.reserve(g->node_size());

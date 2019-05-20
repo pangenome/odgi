@@ -119,6 +119,7 @@ void node_t::set_path_step(const uint64_t& rank, const step_t& step) {
     }
     target = bytes.data() + offset; // recalculate target, as it may have moved due to resize!
     sqvarint::encode(step.data, target, 5);
+    if (rank == path_count()-1) set_path_last_bytes(new_size);
 }
 
 std::pair<std::map<uint64_t, std::pair<uint64_t, bool>>, // path fronts
@@ -194,7 +195,7 @@ uint64_t node_t::serialize(std::ostream& out) const {
     out.write((char*)&_edge_count, sizeof(uint32_t));
     out.write((char*)&_path_count, sizeof(uint32_t));
     out.write((char*)&_path_last_bytes, sizeof(uint8_t));
-    written += sizeof(uint32_t)*5;
+    written += sizeof(uint32_t)*4 + sizeof(uint8_t);
     uint64_t node_size = bytes.size();
     out.write((char*)&node_size, sizeof(node_size));
     written += sizeof(uint64_t);
