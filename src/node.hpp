@@ -6,6 +6,8 @@
 #include <string>
 #include <handlegraph/util.hpp>
 #include <vector>
+#include <map>
+#include <utility>
 #include <cstring>
 #include "varint.hpp"
 
@@ -81,7 +83,9 @@ public:
                        const uint64_t& prev_id, const uint64_t& prev_rank,
                        const uint64_t& next_id, const uint64_t& next_rank);
     void set_path_step(const uint64_t& rank, const step_t& step);
-    void flip_paths(const uint64_t& start_marker, const uint64_t& end_marker);
+    std::pair<std::map<uint64_t, std::pair<uint64_t, bool>>, // path fronts
+              std::map<uint64_t, std::pair<uint64_t, bool>>> // path backs
+         flip_paths(const uint64_t& start_marker, const uint64_t& end_marker);
     const std::vector<node_t::step_t> get_path_steps(void) const;
     const step_t get_path_step(const uint64_t& rank) const;
     void remove_path_step(const uint64_t& rank);

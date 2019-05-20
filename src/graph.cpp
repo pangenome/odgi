@@ -201,7 +201,7 @@ bool graph_t::for_each_step_on_handle_impl(const handle_t& handle, const std::fu
     uint64_t i = 0;
     for (auto& step : steps) {
         step_handle_t step_handle;
-        as_integers(step_handle)[0] = as_integer(number_bool_packing::pack(handle_n, is_rev ^ step.is_rev()));
+        as_integers(step_handle)[0] = as_integer(number_bool_packing::pack(handle_n, step.is_rev()));
         as_integers(step_handle)[1] = i++;
         flag &= iteratee(step_handle);
     }
@@ -211,7 +211,7 @@ bool graph_t::for_each_step_on_handle_impl(const handle_t& handle, const std::fu
 /// Returns a vector of all steps of a node on paths. Optionally restricts to
 /// steps that match the handle in orientation.
 std::vector<step_handle_t> graph_t::steps_of_handle(const handle_t& handle,
-                                                                bool match_orientation) const {
+                                                    bool match_orientation) const {
     std::vector<step_handle_t> res;
     for_each_step_on_handle(handle, [&](const step_handle_t& step) {
             handle_t h = get_handle_of_step(step);
@@ -757,9 +757,32 @@ handle_t graph_t::apply_orientation(const handle_t& handle) {
     // replace the handle sequence
     //set_handle_sequence(handle, seq);
     auto& node = node_v.at(number_bool_packing::unpack_number(handle));
-    
+
+    // flip the node sequence
     node.set_sequence(get_sequence(handle));
-    node.flip_paths(path_begin_marker, path_end_marker);
+
+    // we need to flip any stored path fronts and backs as well
+    std::pair<std::map<uint64_t, std::pair<uint64_t, bool>>, // path fronts
+              std::map<uint64_t, std::pair<uint64_t, bool>>> // path backs
+        path_rewrites = node.flip_paths(path_begin_marker, path_end_marker);
+    for (auto& r : path_rewrites.first) {
+        auto& p = path_metadata_v[r.first];
+        step_handle_t step;
+        as_integers(step)[0]
+            = as_integer(number_bool_packing::pack(number_bool_packing::unpack_number(handle),
+                                                   r.second.second));
+        as_integers(step)[1] = r.second.first;
+        p.first = step;
+    }
+    for (auto& r : path_rewrites.second) {
+        auto& p = path_metadata_v[r.first];
+        step_handle_t step;
+        as_integers(step)[0]
+            = as_integer(number_bool_packing::pack(number_bool_packing::unpack_number(handle),
+                                                   r.second.second));
+        as_integers(step)[1] = r.second.first;
+        p.last = step;
+    }
 
     // reconnect it to the graph
     for (auto& h : edges_fwd_fwd) {
@@ -957,7 +980,7 @@ path_handle_t graph_t::create_path_handle(const std::string& name, bool is_circu
     path_handle_t path = as_path_handle(_path_handle_next++);
     path_name_map[name] = as_integer(path);
     path_metadata_v.emplace_back();
-    auto& p = path_metadata_v.back(); //[as_integer(path)]; // set empty record
+    auto& p = path_metadata_v.back();
     step_handle_t step;
     as_integers(step)[0] = 0;
     as_integers(step)[1] = 0;

@@ -121,26 +121,40 @@ void node_t::set_path_step(const uint64_t& rank, const step_t& step) {
     sqvarint::encode(step.data, target, 5);
 }
 
-void node_t::flip_paths(const uint64_t& start_marker, const uint64_t& end_marker) {
+std::pair<std::map<uint64_t, std::pair<uint64_t, bool>>, // path fronts
+          std::map<uint64_t, std::pair<uint64_t, bool>>> // path backs
+node_t::flip_paths(const uint64_t& start_marker,
+                   const uint64_t& end_marker) {
     const std::vector<node_t::step_t> steps = get_path_steps();
     // remove all path steps
     uint64_t old_size = bytes.size();
     bytes.erase(bytes.begin()+path_start(), bytes.end());
     bytes.resize(old_size);
     uint8_t* target = bytes.data()+path_start();
-    // flip them and replace
+    // flip them and replace, recording which path starts and ends should be rewritten
+    std::pair<std::map<uint64_t, std::pair<uint64_t, bool>>,
+              std::map<uint64_t, std::pair<uint64_t, bool>>> path_start_end_rewrites;
+    uint64_t rank = 0;
     for (auto& step : steps) {
         // flip the step
         step_t flipped(step.path_id(), !step.is_rev(),
                        step.prev_id(), step.prev_rank(),
                        step.next_id(), step.next_rank());
+        if (step.prev_id() == start_marker) {
+            path_start_end_rewrites.first[step.path_id()] = std::make_pair(rank, !step.is_rev());
+        }
+        if (step.next_id() == end_marker) {
+            path_start_end_rewrites.second[step.path_id()] = std::make_pair(rank, !step.is_rev());
+        }
         target = sqvarint::encode(flipped.data, target, 5);
+        ++rank;
     }
     update_path_last_bytes();
+    return path_start_end_rewrites;
 }
 
 void node_t::remove_path_step(const uint64_t& rank) {
-    if (rank > path_count()) assert(false);
+    if (rank >= path_count()) assert(false);
     uint8_t* i = sqvarint::seek(bytes.data()+path_start(), PATH_RECORD_LENGTH*rank);
     uint8_t* j = sqvarint::seek(i, PATH_RECORD_LENGTH);
     bytes.erase(bytes.begin() + (i - bytes.data()),
@@ -151,6 +165,7 @@ void node_t::remove_path_step(const uint64_t& rank) {
 }
 
 void node_t::update_path_last_bytes(void) {
+    if (path_count() == 0) return;
     // gotta scan
     uint8_t* i = sqvarint::seek(bytes.data()+path_start(), PATH_RECORD_LENGTH*path_count()-1);
     uint8_t* j = sqvarint::seek(i, PATH_RECORD_LENGTH);
