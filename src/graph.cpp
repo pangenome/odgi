@@ -783,7 +783,6 @@ handle_t graph_t::apply_orientation(const handle_t& handle) {
         as_integers(step)[1] = r.second.first;
         p.last = step;
     }
-
     // reconnect it to the graph
     for (auto& h : edges_fwd_fwd) {
         create_edge(handle, h);

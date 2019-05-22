@@ -53,6 +53,7 @@ ExternalProject_Add(sdsl-lite
   GIT_REPOSITORY "https://github.com/simongog/sdsl-lite.git"
   GIT_TAG "d52aa9a71513d132e30c09491b5899af449ebb94"
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR} # TODO ADD static build flag
+  UPDATE_COMMAND ""
   INSTALL_COMMAND "")
 ExternalProject_Get_property(sdsl-lite INSTALL_DIR)
 set(sdsl-lite_INCLUDE "${INSTALL_DIR}/src/sdsl-lite-build/include")
@@ -63,7 +64,7 @@ set(sdsl-lite-divsufsort_LIB "${INSTALL_DIR}/src/sdsl-lite-build/external/libdiv
 # DYNAMIC (full build using its cmake config)
 ExternalProject_Add(dynamic
   GIT_REPOSITORY "https://github.com/vgteam/DYNAMIC.git"
-  GIT_TAG "615d8be5276bcd4c5a3d8e31679b4f8e81b2eefc"
+  GIT_TAG "625da93483a50cc9888270325017df4e7be9a36b"
   # we don't actually install dynamic... it's header only
   #CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
   UPDATE_COMMAND ""
@@ -79,6 +80,7 @@ ExternalProject_Add(gfakluge
   GIT_TAG "d99d927ab286c3dfaeb4db15c15d306d1fab0806"
   BUILD_IN_SOURCE TRUE
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR} # TODO ADD static build flag
+  UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   BUILD_COMMAND ""
   CONFIGURE_COMMAND "")
@@ -92,6 +94,7 @@ ExternalProject_Add(handlegraph
   GIT_REPOSITORY "https://github.com/vgteam/libhandlegraph.git"
   GIT_TAG "62bd408c3428e0a1f93528910415f68686912399"
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
+  UPDATE_COMMAND ""
   INSTALL_COMMAND "")
 ExternalProject_Get_property(handlegraph INSTALL_DIR)
 set(handlegraph_INCLUDE "${INSTALL_DIR}/src/handlegraph/src/include")
@@ -101,6 +104,7 @@ set(handlegraph_LIB "${INSTALL_DIR}/src/handlegraph-build")
 ExternalProject_Add(tayweeargs
   GIT_REPOSITORY "https://github.com/Taywee/args.git"
   GIT_TAG "3de44ec671db452cc0c4ef86399b108939768abb"
+  UPDATE_COMMAND ""
   INSTALL_COMMAND "")
 ExternalProject_Get_property(tayweeargs SOURCE_DIR)
 set(tayweeargs_INCLUDE "${SOURCE_DIR}")
@@ -131,6 +135,7 @@ ExternalProject_Add(backwardscpp
   GIT_REPOSITORY "https://github.com/bombela/backward-cpp.git"
   GIT_TAG "b353585d4bd19f9e51816bc11d2e53b0e5b4a760"
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
+  UPDATE_COMMAND ""
   INSTALL_COMMAND "")
 ExternalProject_Get_property(backwardscpp SOURCE_DIR)
 set(backwardscpp_INCLUDE "${SOURCE_DIR}")
@@ -141,6 +146,7 @@ ExternalProject_Add(sparsepp
   GIT_TAG "1c5a285e87b2244383efe0398f9992acd61234e9"
   BUILD_IN_SOURCE TRUE
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR} # TODO ADD static build flag
+  UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   BUILD_COMMAND ""
   CONFIGURE_COMMAND "")
@@ -152,6 +158,7 @@ set(sparsepp_LIB "${INSTALL_DIR}/src/sparsepp/sparsepp/")
 ExternalProject_Add(ska
   GIT_REPOSITORY "https://github.com/skarupke/flat_hash_map.git"
   GIT_TAG "2c4687431f978f02a3780e24b8b701d22aa32d9c"
+  UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   BUILD_COMMAND ""
   CONFIGURE_COMMAND "")
@@ -162,6 +169,7 @@ set(ska_INCLUDE "${SOURCE_DIR}")
 ExternalProject_Add(intervaltree
   GIT_REPOSITORY "https://github.com/ekg/intervaltree.git"
   GIT_TAG "e8082c74a6f5c18de99d8b4cc4a55e2e62a1150d"
+  UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   BUILD_COMMAND ""
   CONFIGURE_COMMAND "")
@@ -172,6 +180,7 @@ set(intervaltree_INCLUDE "${SOURCE_DIR}")
 ExternalProject_Add(lodepng
   GIT_REPOSITORY "https://github.com/ekg/lodepng.git"
   GIT_TAG "6b7f7b2b1c0eaab7042b0137fa19129618d1bb9f"
+  UPDATE_COMMAND ""
   INSTALL_COMMAND "")
 ExternalProject_Get_property(lodepng SOURCE_DIR)
 set(lodepng_INCLUDE "${SOURCE_DIR}")
@@ -181,6 +190,7 @@ set(lodepng_LIB "${SOURCE_DIR}/lib")
 ExternalProject_Add(structures
   GIT_REPOSITORY "https://github.com/jeizenga/structures.git"
   GIT_TAG "71722385665aa724b466889bbec1afbfd375201f"
+  UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   BUILD_COMMAND ""
   CONFIGURE_COMMAND "")
@@ -192,6 +202,7 @@ ExternalProject_Add(sonlib
   GIT_TAG "d25257e7ba615081078c41ac82dd70fffdc8baad"
   BUILD_IN_SOURCE TRUE
   INSTALL_COMMAND ""
+  UPDATE_COMMAND ""
   BUILD_COMMAND "make"
   CONFIGURE_COMMAND "")
 ExternalProject_Get_property(sonlib SOURCE_DIR)
@@ -202,6 +213,7 @@ set(sonLib_LIB "${SOURCE_DIR}/sonLib/lib")
 ExternalProject_Add(picosha256
   GIT_REPOSITORY "https://github.com/okdshin/PicoSHA2.git"
   GIT_TAG "b699e6c900be6e00152db5a3d123c1db42ea13d0"
+  UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   BUILD_COMMAND ""
   CONFIGURE_COMMAND "")

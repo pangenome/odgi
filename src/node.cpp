@@ -72,54 +72,36 @@ void node_t::add_path_step(const uint64_t& path_id, const bool& is_rev,
 
 void node_t::add_path_step(const node_t::step_t& step) {
     set_path_count(path_count()+1);
-    uint64_t step_bytes = sqvarint::length((uint64_t*)step.data, 5);
-    uint64_t old_size = bytes.size();
-    bytes.resize(old_size+step_bytes);
-    uint8_t* target = bytes.data() + old_size;
-    uint8_t* result = sqvarint::encode(step.data, target, 5);
-    assert(result - target == step_bytes);
-    set_path_last_bytes(step_bytes);
+    for (uint8_t i = 0; i < PATH_RECORD_LENGTH; ++i) {
+        path_steps.push_back(step.data[i]);
+    }
 }
 
 const std::vector<node_t::step_t> node_t::get_path_steps(void) const {
     if (path_count() == 0) return {};
     std::vector<node_t::step_t> steps(path_count());
-    uint8_t* target = (uint8_t*)bytes.data()+path_start();
     for (uint64_t i = 0; i < path_count(); ++i) {
-        auto& step = steps[i];
-        target = sqvarint::decode(&step.data[0], target, PATH_RECORD_LENGTH);
+        steps[i] = get_path_step(i);
     }
     return steps;
 }
 
 const node_t::step_t node_t::get_path_step(const uint64_t& rank) const {
+    if (rank >= path_count()) assert(false);
     node_t::step_t step;
-    if (rank == path_count()-1) {
-        sqvarint::decode(&step.data[0],
-                         (uint8_t*)bytes.data() + bytes.size() - path_last_bytes(),
-                         PATH_RECORD_LENGTH);
-    } else {
-        sqvarint::decode(&step.data[0],
-                         sqvarint::seek((uint8_t*)bytes.data() + path_start(), PATH_RECORD_LENGTH*rank),
-                         PATH_RECORD_LENGTH);
+    uint64_t offset = PATH_RECORD_LENGTH*rank;
+    for (uint8_t i = 0; i < PATH_RECORD_LENGTH; ++i) {
+        step.data[i] = path_steps.at(offset+i);
     }
     return step;
 }
 
 void node_t::set_path_step(const uint64_t& rank, const step_t& step) {
-    uint64_t offset = path_start()+sqvarint::bytes(bytes.data() + path_start(), PATH_RECORD_LENGTH*rank);
-    uint8_t* target = bytes.data()+offset;
-    uint64_t old_size = sqvarint::bytes(target, PATH_RECORD_LENGTH);
-    uint64_t new_size = sqvarint::length(step.data, PATH_RECORD_LENGTH);
-    std::vector<uint8_t>::iterator it = bytes.begin()+offset;
-    if (new_size > old_size) {
-        bytes.insert(it, new_size - old_size, 0);
-    } else if (new_size < old_size) {
-        bytes.erase(it, it + (old_size - new_size));
+    if (rank >= path_count()) assert(false);
+    uint64_t offset = PATH_RECORD_LENGTH*rank;
+    for (uint8_t i = 0; i < PATH_RECORD_LENGTH; ++i) {
+        path_steps.set(offset+i, step.data[i]);
     }
-    target = bytes.data() + offset; // recalculate target, as it may have moved due to resize!
-    sqvarint::encode(step.data, target, 5);
-    if (rank == path_count()-1) set_path_last_bytes(new_size);
 }
 
 std::pair<std::map<uint64_t, std::pair<uint64_t, bool>>, // path fronts
@@ -128,10 +110,7 @@ node_t::flip_paths(const uint64_t& start_marker,
                    const uint64_t& end_marker) {
     const std::vector<node_t::step_t> steps = get_path_steps();
     // remove all path steps
-    uint64_t old_size = bytes.size();
-    bytes.erase(bytes.begin()+path_start(), bytes.end());
-    bytes.resize(old_size);
-    uint8_t* target = bytes.data()+path_start();
+    clear_path_steps();
     // flip them and replace, recording which path starts and ends should be rewritten
     std::pair<std::map<uint64_t, std::pair<uint64_t, bool>>,
               std::map<uint64_t, std::pair<uint64_t, bool>>> path_start_end_rewrites;
@@ -147,30 +126,19 @@ node_t::flip_paths(const uint64_t& start_marker,
         if (step.next_id() == end_marker) {
             path_start_end_rewrites.second[step.path_id()] = std::make_pair(rank, !step.is_rev());
         }
-        target = sqvarint::encode(flipped.data, target, 5);
+        add_path_step(flipped);
         ++rank;
     }
-    update_path_last_bytes();
     return path_start_end_rewrites;
 }
 
 void node_t::remove_path_step(const uint64_t& rank) {
     if (rank >= path_count()) assert(false);
-    uint8_t* i = sqvarint::seek(bytes.data()+path_start(), PATH_RECORD_LENGTH*rank);
-    uint8_t* j = sqvarint::seek(i, PATH_RECORD_LENGTH);
-    bytes.erase(bytes.begin() + (i - bytes.data()),
-                bytes.begin() + (j - bytes.data()));
-    bool is_last = (rank == path_count()-1);
+    uint64_t offset = PATH_RECORD_LENGTH*rank;
+    for (uint8_t i = 0; i < PATH_RECORD_LENGTH; ++i) {
+        path_steps.remove(offset);
+    }
     set_path_count(path_count()-1);
-    if (is_last) update_path_last_bytes();
-}
-
-void node_t::update_path_last_bytes(void) {
-    if (path_count() == 0) return;
-    // gotta scan
-    uint8_t* i = sqvarint::seek(bytes.data()+path_start(), PATH_RECORD_LENGTH*path_count()-1);
-    uint8_t* j = sqvarint::seek(i, PATH_RECORD_LENGTH);
-    set_path_last_bytes(j - i);
 }
 
 void node_t::clear(void) {
@@ -178,14 +146,14 @@ void node_t::clear(void) {
     set_edge_bytes(0);
     set_edge_count(0);
     set_path_count(0);
-    set_path_last_bytes(0);
     bytes.clear();
+    clear_path_steps();
 }
 
 void node_t::clear_path_steps(void) {
-    bytes.erase(bytes.begin()+path_start(), bytes.end());
+    dyn::lciv<dyn::hacked_vector,256,1> null_iv;
+    path_steps = null_iv;
     set_path_count(0);
-    set_path_last_bytes(0);
 }
 
 uint64_t node_t::serialize(std::ostream& out) const {
@@ -194,13 +162,13 @@ uint64_t node_t::serialize(std::ostream& out) const {
     out.write((char*)&_edge_bytes, sizeof(uint32_t));
     out.write((char*)&_edge_count, sizeof(uint32_t));
     out.write((char*)&_path_count, sizeof(uint32_t));
-    out.write((char*)&_path_last_bytes, sizeof(uint8_t));
     written += sizeof(uint32_t)*4 + sizeof(uint8_t);
     uint64_t node_size = bytes.size();
     out.write((char*)&node_size, sizeof(node_size));
     written += sizeof(uint64_t);
     out.write((char*)bytes.data(), node_size*sizeof(uint8_t));
     written += sizeof(uint8_t)*node_size;
+    written += path_steps.serialize(out);
     return written;
 }
 
@@ -209,11 +177,11 @@ void node_t::load(std::istream& in) {
     in.read((char*)&_edge_bytes, sizeof(uint32_t));
     in.read((char*)&_edge_count, sizeof(uint32_t));
     in.read((char*)&_path_count, sizeof(uint32_t));
-    in.read((char*)&_path_last_bytes, sizeof(uint8_t));
     uint64_t node_size = 0;
     in.read((char*)&node_size, sizeof(node_size));
     bytes.resize(node_size);
     in.read((char*)bytes.data(), node_size*sizeof(uint8_t));
+    path_steps.load(in);
 }
 
 void node_t::display(void) const {
@@ -223,10 +191,20 @@ void node_t::display(void) const {
               << "edge_start " << edge_start() << " "
               << "edge_count " << edge_count() << " "
               << "edge_bytes " << edge_bytes() << " "
-              << "path_start " << path_start() << " "
               << "path_count " << path_count() << " | ";
     for (auto i : bytes) {
         std::cerr << (int) i << " ";
+    }
+    std::cerr << " | ";
+    if (path_count()) {
+        for (uint64_t i = 0; i < path_count(); ++i) {
+            std::cerr
+                << path_steps.at(i) << ":"
+                << path_steps.at(i+1) << ":"
+                << path_steps.at(i+2) << ":"
+                << path_steps.at(i+3) << ":"
+                << path_steps.at(i+4) << " ";
+        }
     }
     std::cerr << std::endl;
 }
