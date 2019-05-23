@@ -71,16 +71,16 @@ void node_t::add_path_step(const uint64_t& path_id, const bool& is_rev,
 }
 
 void node_t::add_path_step(const node_t::step_t& step) {
-    set_path_count(path_count()+1);
     for (uint8_t i = 0; i < PATH_RECORD_LENGTH; ++i) {
         path_steps.push_back(step.data[i]);
     }
 }
 
 const std::vector<node_t::step_t> node_t::get_path_steps(void) const {
-    if (path_count() == 0) return {};
-    std::vector<node_t::step_t> steps(path_count());
-    for (uint64_t i = 0; i < path_count(); ++i) {
+    uint64_t n_paths = path_count();
+    if (n_paths == 0) return {};
+    std::vector<node_t::step_t> steps(n_paths);
+    for (uint64_t i = 0; i < n_paths; ++i) {
         steps[i] = get_path_step(i);
     }
     return steps;
@@ -138,22 +138,19 @@ void node_t::remove_path_step(const uint64_t& rank) {
     for (uint8_t i = 0; i < PATH_RECORD_LENGTH; ++i) {
         path_steps.remove(offset);
     }
-    set_path_count(path_count()-1);
 }
 
 void node_t::clear(void) {
     set_seq_bytes(0);
     set_edge_bytes(0);
     set_edge_count(0);
-    set_path_count(0);
     bytes.clear();
     clear_path_steps();
 }
 
 void node_t::clear_path_steps(void) {
-    dyn::lciv<dyn::hacked_vector,256,1> null_iv;
+    lciv_iv null_iv;
     path_steps = null_iv;
-    set_path_count(0);
 }
 
 uint64_t node_t::serialize(std::ostream& out) const {
@@ -161,7 +158,6 @@ uint64_t node_t::serialize(std::ostream& out) const {
     out.write((char*)&_seq_bytes, sizeof(uint32_t));
     out.write((char*)&_edge_bytes, sizeof(uint32_t));
     out.write((char*)&_edge_count, sizeof(uint32_t));
-    out.write((char*)&_path_count, sizeof(uint32_t));
     written += sizeof(uint32_t)*4 + sizeof(uint8_t);
     uint64_t node_size = bytes.size();
     out.write((char*)&node_size, sizeof(node_size));
@@ -176,7 +172,6 @@ void node_t::load(std::istream& in) {
     in.read((char*)&_seq_bytes, sizeof(uint32_t));
     in.read((char*)&_edge_bytes, sizeof(uint32_t));
     in.read((char*)&_edge_count, sizeof(uint32_t));
-    in.read((char*)&_path_count, sizeof(uint32_t));
     uint64_t node_size = 0;
     in.read((char*)&node_size, sizeof(node_size));
     bytes.resize(node_size);

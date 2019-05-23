@@ -605,10 +605,7 @@ void graph_t::destroy_edge(const handle_t& left_h, const handle_t& right_h) {
         
 /// Remove all nodes and edges. Does not update any stored paths.
 void graph_t::clear(void) {
-    wt_str null_wt;
     suc_bv null_bv;
-    lciv_iv null_iv;
-    dyn::packed_vector null_pv;
     _max_node_id = 0;
     _min_node_id = 0;
     _node_count = 0;

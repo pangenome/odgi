@@ -367,7 +367,6 @@ private:
     /// Records the handle to node_id mapping
     /// Use the special value "0" to indicate deleted nodes so that
     /// handle references in the id_map and elsewhere are not immediately destroyed
-    //lciv_iv graph_id_iv;
     std::vector<node_t> node_v;
     /// Mark deleted nodes here for translating graph ids into internal ranks
     suc_bv deleted_node_bv;
