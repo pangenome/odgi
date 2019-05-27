@@ -5,7 +5,7 @@ extern "C" {
 #include "stCactusGraphs.h"
 }
 
-#define debug
+//#define debug
 
 namespace odgi {
 

@@ -67,6 +67,7 @@ int main_prune(int argc, char** argv) {
         omp_set_num_threads(args::get(threads));
     }
     if (args::get(max_degree)) {
+        graph.clear_paths();
         algorithms::remove_high_degree_nodes(graph, args::get(max_degree));
     }
     if (args::get(max_furcations)) {
@@ -75,10 +76,14 @@ int main_prune(int argc, char** argv) {
         for (auto& edge : to_prune) {
             graph.destroy_edge(edge);
         }
+        // we're just removing edges, so paths shouldn't be damaged
         std::cerr << "done prune" << std::endl;
     }
     if (args::get(min_coverage) || args::get(max_coverage)) {
         std::vector<handle_t> to_drop = algorithms::find_handles_exceeding_coverage_limits(graph, args::get(min_coverage), args::get(max_coverage));
+        // remove the paths, because it's likely we have damaged some
+        // and at present, we have no mechanism to reconstruct them
+        graph.clear_paths();
         //std::cerr << "got " << to_drop.size() << " handles to drop" << std::endl;
         for (auto& handle : to_drop) {
             graph.destroy_handle(handle);

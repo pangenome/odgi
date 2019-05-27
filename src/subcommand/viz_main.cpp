@@ -172,8 +172,8 @@ int main_viz(int argc, char** argv) {
     };
 
     auto add_edge = [&](const handle_t& h, const handle_t& o) {
-        auto& _a = position_map[number_bool_packing::unpack_number(h) + !number_bool_packing::unpack_bit(h)];
-        auto& _b = position_map[number_bool_packing::unpack_number(o) + !number_bool_packing::unpack_bit(o)];
+        uint64_t _a = position_map[number_bool_packing::unpack_number(h) + !number_bool_packing::unpack_bit(h)];
+        uint64_t _b = position_map[number_bool_packing::unpack_number(o) + number_bool_packing::unpack_bit(o)];
         uint64_t a = std::min(_a, _b);
         uint64_t b = std::max(_a, _b);
         uint64_t dist = b - a;
@@ -181,7 +181,7 @@ int main_viz(int argc, char** argv) {
         for ( ; i < dist; i+=1/scale_y) {
             add_point(a, i, 0, 0, 0);
         }
-        while (a < b) {
+        while (a <= b) {
             add_point(a, i, 0, 0, 0);
             a += 1/scale_x;
         }

@@ -19,14 +19,13 @@
 namespace odgi {
 namespace algorithms {
 
-using namespace std;
 using namespace handlegraph;
 
 /// Find all of the nodes with no edges on their left sides.
-vector<handle_t> head_nodes(const HandleGraph* g);
+std::vector<handle_t> head_nodes(const HandleGraph* g);
 
 /// Find all of the nodes with no edges on their right sides.
-vector<handle_t> tail_nodes(const HandleGraph* g);
+std::vector<handle_t> tail_nodes(const HandleGraph* g);
 
 /**
  * Order and orient the nodes in the graph using a topological sort. The sort is
@@ -58,7 +57,9 @@ vector<handle_t> tail_nodes(const HandleGraph* g);
  *                     (This helps start at natural entry points to cycles)
  *     return L (a topologically sorted order and orientation)
  */
-vector<handle_t> topological_order(const HandleGraph* g);
+std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads = true);
+
+std::vector<handle_t> two_way_topological_order(const HandleGraph* g);
 
 /**
  * Order the nodes in a graph using a topological sort. The sort is NOT guaranteed
@@ -66,7 +67,7 @@ vector<handle_t> topological_order(const HandleGraph* g);
  * is invalid in a graph that has any cycles. For safety, consider this property with
  * algorithms::is_directed_acyclic().
  */
-vector<handle_t> lazy_topological_order(const HandleGraph* g);
+std::vector<handle_t> lazy_topological_order(const HandleGraph* g);
     
 /**
  * Order the nodes in a graph using a topological sort. Similar to lazy_topological_order
@@ -74,7 +75,7 @@ vector<handle_t> lazy_topological_order(const HandleGraph* g);
  * any reversing edges. For safety, consider these properties with algorithms::is_acyclic()
  * and algorithms::is_single_stranded().
  */
-vector<handle_t> lazier_topological_order(const HandleGraph* g);
+std::vector<handle_t> lazier_topological_order(const HandleGraph* g);
 
 void topological_sort(MutableHandleGraph& g, bool compact_ids);
 

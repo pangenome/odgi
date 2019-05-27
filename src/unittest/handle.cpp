@@ -2038,6 +2038,7 @@ TEST_CASE("Deletable handle graphs with mutable paths work", "[handle][packed][h
                 if (i == 0) {
                     occ = graph.path_begin(p);
                 }
+
                 REQUIRE(graph.get_path_handle_of_step(occ) == p);
                 REQUIRE(graph.get_handle_of_step(occ) == occs[i]);
                 REQUIRE(graph.has_previous_step(occ) == (i > 0));
@@ -2047,7 +2048,7 @@ TEST_CASE("Deletable handle graphs with mutable paths work", "[handle][packed][h
                     occ = graph.get_next_step(occ);
                 }
             }
-            
+
             for (int i = occs.size() - 1; i >= 0; i--){
                 if (i == occs.size() - 1) {
                     occ = graph.path_end(p);
@@ -2130,6 +2131,7 @@ TEST_CASE("Deletable handle graphs with mutable paths work", "[handle][packed][h
         graph.append_step(p2, h1);
         graph.append_step(p2, graph.flip(h2));
         graph.append_step(p2, h3);
+
         check_path(p2, {h1, graph.flip(h2), h3});
         
         // graph can query steps of a node on paths
@@ -2152,7 +2154,6 @@ TEST_CASE("Deletable handle graphs with mutable paths work", "[handle][packed][h
         REQUIRE(found1);
         REQUIRE(found2);
         found1 = found2 = false;
-        
         occs = graph.steps_of_handle(h1, true);
         for (auto& occ : occs) {
             if (graph.get_path_handle_of_step(occ) == p1 &&
@@ -2167,6 +2168,7 @@ TEST_CASE("Deletable handle graphs with mutable paths work", "[handle][packed][h
                 REQUIRE(false);
             }
         }
+
         REQUIRE(found1);
         REQUIRE(found2);
         found1 = found2 = false;
@@ -2186,6 +2188,7 @@ TEST_CASE("Deletable handle graphs with mutable paths work", "[handle][packed][h
                 REQUIRE(false);
             }
         }
+
         occs = graph.steps_of_handle(graph.flip(h2), true);
         for (auto& occ : occs) {
             if (graph.get_path_handle_of_step(occ) == p2 &&
@@ -2200,7 +2203,7 @@ TEST_CASE("Deletable handle graphs with mutable paths work", "[handle][packed][h
         REQUIRE(found2);
         found1 = found2 = false;
         vector<handle_t> segments = graph.divide_handle(h2, {size_t(2), size_t(4)});
-        
+
         // graph preserves paths when dividing nodes
 
         check_path(p1, {h1, segments[0], segments[1], segments[2], h3});
@@ -2214,7 +2217,7 @@ TEST_CASE("Deletable handle graphs with mutable paths work", "[handle][packed][h
         REQUIRE(graph.get_path_count() == 3);
         
         // graph can destroy paths
-        
+
         graph.destroy_path(p3);
 
         REQUIRE(!graph.has_path("3"));
@@ -2239,7 +2242,6 @@ TEST_CASE("Deletable handle graphs with mutable paths work", "[handle][packed][h
         REQUIRE(found1);
         REQUIRE(found2);
         REQUIRE(!found3);
-
         // check flips to see if membership records are still functional
         check_flips(p1, {h1, segments[0], segments[1], segments[2], h3});
         check_flips(p2, {h1, graph.flip(segments[2]), graph.flip(segments[1]), graph.flip(segments[0]), h3});
