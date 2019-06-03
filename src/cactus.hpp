@@ -11,7 +11,7 @@
 #include <functional>
 #include <queue>
 
-#include "graph.hpp"
+#include "odgi.hpp"
 #include "hash_map.hpp"
 
 #include "algorithms/topological_sort.hpp"

@@ -3,7 +3,7 @@
 #include <handlegraph/handle_graph.hpp>
 #include <handlegraph/util.hpp>
 #include <vector>
-#include "graph.hpp"
+#include "odgi.hpp"
 #include "topological_sort.hpp"
 #include "eades_algorithm.hpp"
 #include "dagify.hpp"

@@ -1,5 +1,5 @@
 #include "subcommand.hpp"
-#include "graph.hpp"
+#include "odgi.hpp"
 #include "algorithms/kmer.hpp"
 #include "args.hxx"
 #include "threads.hpp"

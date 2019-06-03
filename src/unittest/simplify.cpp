@@ -3,7 +3,7 @@
 #include <handlegraph/handle_graph.hpp>
 #include <handlegraph/handle_graph.hpp>
 #include <handlegraph/util.hpp>
-#include "graph.hpp"
+#include "odgi.hpp"
 #include "algorithms/simple_components.hpp"
 #include "algorithms/topological_sort.hpp"
 
@@ -42,7 +42,7 @@ TEST_CASE("Graph simplification reduces a simple graph to a single node", "[simp
     graph.apply_ordering(algorithms::topological_order(&graph), true);
     SECTION("The graph is as expected") {
         REQUIRE(graph.get_sequence(graph.get_handle(1)) == "CAAATAAGAGTCTTG");
-        REQUIRE(graph.node_size() == 1);
+        REQUIRE(graph.get_node_count() == 1);
     }
 }
 

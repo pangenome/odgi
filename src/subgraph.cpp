@@ -98,7 +98,7 @@ bool SubHandleGraph::for_each_handle_impl(const std::function<bool(const handle_
     }
 }
     
-size_t SubHandleGraph::node_size() const {
+size_t SubHandleGraph::get_node_count() const {
     return contents.size();
 }
     

@@ -92,7 +92,7 @@ set(gfakluge_LIB "${INSTALL_DIR}/src/gfakluge")
 # libhandlegraph (full build using its cmake config)
 ExternalProject_Add(handlegraph
   GIT_REPOSITORY "https://github.com/vgteam/libhandlegraph.git"
-  GIT_TAG "62bd408c3428e0a1f93528910415f68686912399"
+  GIT_TAG "2f7300c96399a76cad23861bedbfcfb00bed3e13"
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
   UPDATE_COMMAND ""
   INSTALL_COMMAND "")
@@ -224,7 +224,7 @@ set(CMAKE_BUILD_TYPE Release)
 
 # set up our target executable and specify its dependencies and includes
 add_executable(odgi
-  ${CMAKE_SOURCE_DIR}/src/graph.cpp
+  ${CMAKE_SOURCE_DIR}/src/odgi.cpp
   ${CMAKE_SOURCE_DIR}/src/main.cpp
   ${CMAKE_SOURCE_DIR}/src/crash.cpp
   ${CMAKE_SOURCE_DIR}/src/position.cpp
@@ -311,10 +311,7 @@ target_link_libraries(odgi
   "${sonLib_LIB}/3EdgeConnected.a"
   "${sonLib_LIB}/sonLib.a"
   "-ldl"
-#  "-ltcmalloc_minimal"
   )
-
-#set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ltcmalloc")
 
 if (APPLE)
 elseif (TRUE)

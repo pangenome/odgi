@@ -53,7 +53,7 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
 
     // Make a vector to hold the ordered and oriented nodes.
     std::vector<handle_t> sorted;
-    sorted.reserve(g->node_size());
+    sorted.reserve(g->get_node_count());
     
     // Instead of actually removing edges, we add them to this set of masked edges.
     hash_set<pair<handle_t, handle_t> > masked_edges;
@@ -294,7 +294,7 @@ std::vector<handle_t> lazy_topological_order_internal(const HandleGraph* g, bool
     
     // map that will contain the orientation and the in degree for each node
     hash_map<handle_t, int64_t> inward_degree;
-    inward_degree.reserve(g->node_size());
+    inward_degree.reserve(g->get_node_count());
     
     // stack for the traversal
     std::vector<handle_t> stack;
@@ -316,7 +316,7 @@ std::vector<handle_t> lazy_topological_order_internal(const HandleGraph* g, bool
         // get an orientation over which we can consider the graph single stranded
         std::vector<handle_t> orientation = single_stranded_orientation(g);
         
-        if (orientation.size() != g->node_size()) {
+        if (orientation.size() != g->get_node_count()) {
             cerr << "error:[algorithms] attempting to use lazy topological sort on unorientable graph" << endl;
             assert(false);
         }
@@ -336,7 +336,7 @@ std::vector<handle_t> lazy_topological_order_internal(const HandleGraph* g, bool
     
     // the return value
     std::vector<handle_t> order;
-    order.reserve(g->node_size());
+    order.reserve(g->get_node_count());
     
     while (!stack.empty()) {
         // get a head node off the queue
@@ -361,7 +361,7 @@ std::vector<handle_t> lazy_topological_order_internal(const HandleGraph* g, bool
         });
     }
     
-    if (order.size() != g->node_size()) {
+    if (order.size() != g->get_node_count()) {
         cerr << "error:[algorithms] lazy topological sort is invalid on non-DAG graph, cannot complete algorithm" << endl;
         assert(false);
     }
