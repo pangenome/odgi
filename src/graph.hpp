@@ -85,7 +85,7 @@ protected:
 public:
     /// Return the number of nodes in the graph
     /// TODO: can't be node_count because XG has a field named node_count.
-    size_t node_size(void) const;
+    size_t get_node_count(void) const;
     
     /// Return the smallest ID in the graph, or some smaller number if the
     /// smallest ID is unavailable. Return value is unspecified if the graph is empty.
@@ -167,16 +167,21 @@ public:
     /// Get a handle to the first step in a path.
     /// The path MUST be nonempty.
     step_handle_t path_begin(const path_handle_t& path_handle) const;
-    
-    /// Get a handle to the last step in a path
-    /// The path MUST be nonempty.
+
+    /// Get a handle to a fictitious handle one past the end of the path
     step_handle_t path_end(const path_handle_t& path_handle) const;
 
-    /// Get the reverse end iterator
-    step_handle_t path_reverse_end_iterator(const path_handle_t& path_handle) const;
+    /// Get a handle to the last step, which is arbitrary in the case of a circular path
+    step_handle_t path_back(const path_handle_t& path_handle) const;
 
-    /// Get the forward end iterator
-    step_handle_t path_forward_end_iterator(const path_handle_t& path_handle) const;
+    /// Get a handle to a fictitious handle one past the start of the path
+    step_handle_t path_front_end(const path_handle_t& path_handle) const;
+
+    /// Returns true if the step handle is a front end magic handle
+    bool is_path_front_end(const step_handle_t& step_handle) const;
+
+    /// Returns true if the step handle is an end magic handle
+    bool is_path_end(const step_handle_t& step_handle) const;
     
     /// Returns true if the step is not the last step on the path, else false
     bool has_next_step(const step_handle_t& step_handle) const;
@@ -265,6 +270,9 @@ public:
     /// Reorder the graph's internal structure to match that given.
     /// Optionally compact the id space of the graph to match the ordering, from 1->|ordering|.
     void apply_ordering(const std::vector<handle_t>& order, bool compact_ids = false);
+
+    /// Organize the graph for better performance and memory use
+    void optimize(bool allow_id_reassignment = true);
 
     /// Reorder the graph's paths as given.
     void apply_path_ordering(const std::vector<path_handle_t>& order);

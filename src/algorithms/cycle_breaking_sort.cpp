@@ -7,7 +7,7 @@ namespace algorithms {
 using namespace handlegraph;
 
 std::vector<handle_t> cycle_breaking_sort(const graph_t& graph) {
-    std::vector<std::vector<uint64_t> > rank(graph.node_size());
+    std::vector<std::vector<uint64_t> > rank(graph.get_node_count());
     uint64_t i = 0;
     uint64_t j = 0;
     dfs(graph,

@@ -33,7 +33,7 @@ using namespace handlegraph;
         
         // the return value
         vector<handle_t> orientation;
-        orientation.reserve(graph->node_size());
+        orientation.reserve(graph->get_node_count());
         
         // keep track of which nodes have already been oriented and which orientation
         unordered_map<handlegraph::nid_t, bool> recorded_orientation;
@@ -84,7 +84,7 @@ using namespace handlegraph;
             }
             
             // continue if there's any more to do and we haven't failed
-            return orientation.size() < graph->node_size() && !failed;
+            return orientation.size() < graph->get_node_count() && !failed;
         });
         
         // if we failed, we return an empty vector as a sentinel

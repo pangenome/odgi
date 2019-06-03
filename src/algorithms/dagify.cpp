@@ -18,7 +18,7 @@ using namespace handlegraph;
         // generate a canonical orientation across the graph
         std::vector<handle_t> orientation = single_stranded_orientation(graph);
         
-        if (orientation.size() < graph->node_size()) {
+        if (orientation.size() < graph->get_node_count()) {
             cerr << "error:[dagify] Dagify algorithm only valid on graphs with a single stranded orientation, consider using split_strands first" << endl;
             exit(1);
         }
