@@ -8,7 +8,7 @@
 #include <handlegraph/handle_graph.hpp>
 #include <handlegraph/handle_graph.hpp>
 #include <handlegraph/util.hpp>
-#include "graph.hpp"
+#include "odgi.hpp"
 
 #include <iostream>
 #include <limits>

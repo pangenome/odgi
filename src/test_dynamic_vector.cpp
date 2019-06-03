@@ -1,4 +1,4 @@
-#include "graph.hpp"
+#include "odgi.hpp"
 #include "dynamic_structs.hpp"
 
 using namespace dg;

@@ -1,5 +1,5 @@
 #include "subcommand.hpp"
-#include "graph.hpp"
+#include "odgi.hpp"
 //#include "gfakluge.hpp"
 #include "args.hxx"
 //#include "io_helper.hpp"

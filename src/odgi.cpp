@@ -2,7 +2,7 @@
 //  graph.cpp
 //  
 
-#include "graph.hpp"
+#include "odgi.hpp"
 
 namespace odgi {
 

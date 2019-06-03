@@ -1,5 +1,5 @@
 #include "subcommand.hpp"
-#include "graph.hpp"
+#include "odgi.hpp"
 #include "args.hxx"
 #include "cactus.hpp"
 
