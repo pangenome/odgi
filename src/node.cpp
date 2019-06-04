@@ -49,7 +49,6 @@ void node_t::add_edge(const uint64_t& relative_id, const uint64_t& edge_type) {
 
 void node_t::remove_edge(const uint64_t& rank) {
     assert(rank < edge_count());
-    if (rank > edge_count()) assert(false);
     uint64_t edge_offset = edge_start() + sqvarint::bytes(bytes.data()+edge_start(), EDGE_RECORD_LENGTH*rank);
     // a bit redundant
     uint64_t j = sqvarint::bytes(bytes.data()+edge_offset, EDGE_RECORD_LENGTH);
@@ -100,7 +99,7 @@ void node_t::set_path_step(const uint64_t& rank, const step_t& step) {
     if (rank >= path_count()) assert(false);
     uint64_t offset = PATH_RECORD_LENGTH*rank;
     for (uint8_t i = 0; i < PATH_RECORD_LENGTH; ++i) {
-        path_steps.set(offset+i, step.data[i]);
+        path_steps[offset+i] = step.data[i];
     }
 }
 
@@ -149,7 +148,7 @@ void node_t::clear(void) {
 }
 
 void node_t::clear_path_steps(void) {
-    lciv_iv null_iv;
+    dyn::hacked_vector null_iv;
     path_steps = null_iv;
 }
 

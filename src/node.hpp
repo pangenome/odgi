@@ -9,7 +9,6 @@
 #include <utility>
 #include <cstring>
 #include "dynamic.hpp"
-#include "dynamic_types.hpp"
 #include "varint.hpp"
 
 namespace odgi {
@@ -22,7 +21,7 @@ const uint8_t PATH_RECORD_LENGTH = 5;
 /// A node object with the sequence, its edge lists, and paths
 class node_t {
     std::vector<uint8_t> bytes;
-    lciv_iv path_steps;
+    dyn::hacked_vector path_steps;
     uint32_t _seq_bytes = 0;
     uint32_t _edge_bytes = 0;
     uint32_t _edge_count = 0;
