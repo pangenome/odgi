@@ -6,8 +6,7 @@
 //  main dynamic compact graph definition
 //
 
-#ifndef dgraph_hpp
-#define dgraph_hpp
+#pragma once
 
 #include <cstdio>
 #include <cstdint>
@@ -471,13 +470,7 @@ private:
 
 };
 
-const static uint64_t path_begin_marker = 0; //std::numeric_limits<uint64_t>::max()-1;
-const static uint64_t path_end_marker = 1; // std::numeric_limits<uint64_t>::max();
-
-// avoid undefined reference error
-//const uint64_t graph_t::path_begin_marker;
-//const uint64_t graph_t::path_end_marker;
+const static uint64_t path_begin_marker = 0;
+const static uint64_t path_end_marker = 1;
 
 } // end dankness
-
-#endif /* dgraph_hpp */

@@ -1,5 +1,4 @@
-#ifndef VG_ALGORITHMS_TOPOLOGICAL_SORT_HPP_INCLUDED
-#define VG_ALGORITHMS_TOPOLOGICAL_SORT_HPP_INCLUDED
+#pragma once
 
 /**
  * \file topological_sort.hpp
@@ -13,6 +12,8 @@
 #include <iostream>
 #include "../hash_map.hpp"
 #include <handlegraph/handle_graph.hpp>
+#include <handlegraph/util.hpp>
+#include "dynamic.hpp"
 #include "apply_bulk_modifications.hpp"
 #include "is_single_stranded.hpp"
 
@@ -81,5 +82,3 @@ void topological_sort(MutableHandleGraph& g, bool compact_ids);
 
 }
 }
-
-#endif
