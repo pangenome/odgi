@@ -76,7 +76,8 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
     // No need to fetch the tails since we don't use them
     
     // Maps from node ID to first orientation we suggested for it.
-    map<handlegraph::nid_t, handle_t> seeds;
+    dyn::succinct_bitvector<dyn::spsi<dyn::packed_vector,256,16> > seeds;
+    dyn::hacked_vector seeds_rev;
 
     // Dump all the heads into the oriented set, rather than having them as
     // seeds. We will only go for cycle-breaking seeds when we run out of
@@ -101,6 +102,8 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
     //map<handlegraph::nid_t, handle_t> unvisited;
     for (uint64_t i = 0; i <= max_handle_rank; ++i) {
         unvisited.push_back(0);
+        seeds.push_back(0);
+        seeds_rev.push_back(0);
     }
     g->for_each_handle([&](const handle_t& found) {
             uint64_t rank = number_bool_packing::unpack_number(found);
@@ -111,9 +114,11 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
 
         // Put something in s. First go through seeds until we can find one
         // that's not already oriented.
-        while(s.rank1(s.size())==0 && !seeds.empty()) {
+        while(s.rank1(s.size())==0 && seeds.rank1(seeds.size())!=0) {
             // Look at the first seed
-            auto first_seed = (*seeds.begin()).second;
+            //auto first_seed = (*seeds.begin()).second;
+            uint64_t seed_rank = seeds.select1(0);
+            handle_t first_seed = number_bool_packing::pack(seed_rank, seeds_rev.at(seed_rank));
 
             if(unvisited.at(number_bool_packing::unpack_number(first_seed))) {
                 // We have an unvisited seed. Use it
@@ -126,7 +131,8 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
                 unvisited.set(number_bool_packing::unpack_number(first_seed), 0);
             }
             // Whether we used the seed or not, don't keep it around
-            seeds.erase(seeds.begin());
+            //seeds.erase(seeds.begin());
+            seeds[seed_rank] = 0;
         }
 
         if(s.rank1(s.size())==0) {
@@ -191,6 +197,8 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
             // See what all comes next, minus deleted edges.
             g->follow_edges(n, false, [&](const handle_t& next_node) {
 
+                    uint64_t next_node_rank = number_bool_packing::unpack_number(next_node);
+
                     // Look at the edge
                     auto edge = g->edge_handle(n, next_node);
                     if (masked_edges.count(edge)) {
@@ -200,7 +208,7 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
 
 #ifdef debug
 #pragma omp critical (cerr)
-                    cerr << handle_helper::unpack_number(next_node) << endl;
+                    cerr << next_node_rank << endl;
                     cerr << "\tHas edge to " << g->get_id(next_node) << " orientation " << g->get_is_reverse(next_node) << endl;
 #endif
 
@@ -216,7 +224,7 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
                     // Mask the edge
                     masked_edges.insert(edge);
 
-                    if(unvisited.at(number_bool_packing::unpack_number(next_node))) {
+                    if(unvisited.at(next_node_rank)) {
                         // We haven't already started here as an arbitrary cycle entry point
 
 #ifdef debug
@@ -245,18 +253,19 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
                             cerr << "\t\t\tIs last incoming edge" << endl;
 #endif
                             // Keep this orientation and put it here
-                            s.set(number_bool_packing::unpack_number(next_node), 1);
+                            s.set(next_node_rank, 1);
                             // Remember that we've visited and oriented this node, so we
                             // don't need to use it as a seed.
-                            unvisited.set(number_bool_packing::unpack_number(next_node), 0);
+                            unvisited.set(next_node_rank, 0);
 
-                        } else if(!seeds.count(g->get_id(next_node))) {
+                        } else if (!seeds[next_node_rank]) {
                             // We came to this node in this orientation; when we need a
                             // new node and orientation to start from (i.e. an entry
                             // point to the node's cycle), we might as well pick this
                             // one.
                             // Only take it if we don't already know of an orientation for this node.
-                            seeds[g->get_id(next_node)] = next_node;
+                            seeds[next_node_rank] = 1;
+                            seeds_rev[next_node_rank] = number_bool_packing::unpack_bit(next_node);
 
 #ifdef debug
 #pragma omp critical (cerr)
