@@ -56,7 +56,43 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
     sorted.reserve(g->get_node_count());
     
     // Instead of actually removing edges, we add them to this set of masked edges.
-    hash_set<pair<handle_t, handle_t> > masked_edges;
+    dyn::succinct_bitvector<dyn::spsi<dyn::packed_vector,256,16> > masked_edges_bv;
+    dyn::lciv<dyn::hacked_vector,256,16> masked_edges_iv;
+
+    auto delta_to_handle = [&](const handle_t& base, uint64_t delta) {
+        assert(delta != 0);
+        if (delta == 1) {
+            return base;
+        } else if (delta % 2 == 0) {
+            return as_handle(as_integer(base) + delta/2);
+        } else {
+            return as_handle(as_integer(base) - (delta-1)/2);
+        }
+    };
+
+    auto edge_to_delta = [&](const edge_t& edge) {
+        int64_t delta = as_integer(edge.second) - as_integer(edge.first);
+        return (delta == 0 ? 1 : (delta > 0 ? 2*abs(delta) : 2*abs(delta)+1));
+    };
+
+    auto mask_edge = [&](const edge_t& edge) {
+        uint64_t idx = masked_edges_bv.select1(as_integer(edge.first));
+        masked_edges_iv.insert(idx+1, edge_to_delta(edge));
+        masked_edges_bv.insert(idx+1, 0);
+    };
+
+    auto is_masked_edge = [&](const edge_t& edge) {
+        uint64_t from_idx = as_integer(edge.first);
+        uint64_t to_idx = as_integer(edge.second);
+        uint64_t begin_edge = masked_edges_bv.select1(from_idx);
+        uint64_t end_edge = masked_edges_bv.select1(from_idx+1);
+        for (uint64_t i = begin_edge; i < end_edge; ++i) {
+            if (as_integer(delta_to_handle(edge.first, masked_edges_iv.at(i))) == to_idx) {
+                return true;
+            }
+        }
+        return false;
+    };
     
     // This (s) is our set of oriented nodes.
     // using a map instead of a set ensures a stable sort across different systems
@@ -69,6 +105,10 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
         });
     for (uint64_t i = 0; i <= max_handle_rank; ++i) {
         s.push_back(0);
+        masked_edges_bv.push_back(1);
+        masked_edges_bv.push_back(1);
+        masked_edges_iv.push_back(0);
+        masked_edges_iv.push_back(0);
     }
 
     // We find the head and tails, if there are any
@@ -170,7 +210,7 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
                     if(!unvisited.at(number_bool_packing::unpack_number(prev_node))) {
                         // Look at the edge
                         auto edge = g->edge_handle(prev_node, n);
-                        if (masked_edges.count(edge)) {
+                        if (is_masked_edge(edge)) {
                             // We removed this edge, so skip it.
                             return;
                         }
@@ -182,7 +222,7 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
 #endif
 
                         // Mask the edge
-                        masked_edges.insert(edge);
+                        mask_edge(edge);
                     
 #ifdef debug
 #pragma omp critical (cerr)
@@ -201,7 +241,7 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
 
                     // Look at the edge
                     auto edge = g->edge_handle(n, next_node);
-                    if (masked_edges.count(edge)) {
+                    if (is_masked_edge(edge)) {
                         // We removed this edge, so skip it.
                         return;
                     }
@@ -222,7 +262,7 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
 #endif
 
                     // Mask the edge
-                    masked_edges.insert(edge);
+                    mask_edge(edge);
 
                     if(unvisited.at(next_node_rank)) {
                         // We haven't already started here as an arbitrary cycle entry point
@@ -237,7 +277,7 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
                                 // Get a handle for each incoming edge
                                 auto prev_edge = g->edge_handle(prev_node, next_node);
 
-                                if (!masked_edges.count(prev_edge)) {
+                                if (!is_masked_edge(prev_edge)) {
                                     // We found such an edghe and can stop looking
                                     unmasked_incoming_edge = true;
                                     return false;
