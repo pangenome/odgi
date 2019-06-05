@@ -60,16 +60,24 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
     
     // This (s) is our set of oriented nodes.
     // using a map instead of a set ensures a stable sort across different systems
-    map<handlegraph::nid_t, handle_t> s;
+    //map<handlegraph::nid_t, handle_t> s;
+    dyn::succinct_bitvector<dyn::spsi<dyn::packed_vector,256,16> > s;
+    uint64_t max_handle_rank = 0;
+    g->for_each_handle([&](const handle_t& found) {
+            max_handle_rank = std::max(max_handle_rank,
+                                       number_bool_packing::unpack_number(found));
+        });
+    for (uint64_t i = 0; i <= max_handle_rank; ++i) {
+        s.push_back(0);
+    }
 
     // We find the head and tails, if there are any
     //std::vector<handle_t> heads{head_nodes(g)};
     // No need to fetch the tails since we don't use them
-
     
     // Maps from node ID to first orientation we suggested for it.
     map<handlegraph::nid_t, handle_t> seeds;
-    
+
     // Dump all the heads into the oriented set, rather than having them as
     // seeds. We will only go for cycle-breaking seeds when we run out of
     // heads. This is bad for contiguity/ordering consistency in cyclic
@@ -79,11 +87,11 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
     // ignore tails since we only orient right from nodes we pick.
     if (use_heads) {
         for(const handle_t& head : head_nodes(g)) {
-            s[g->get_id(head)] = head;
+            s.set(number_bool_packing::unpack_number(head), 1);
         }
     } else {
         for(const handle_t& tail : tail_nodes(g)) {
-            s[g->get_id(tail)] = tail;
+            s.set(number_bool_packing::unpack_number(tail), 1);
         }
     }
 
@@ -91,15 +99,19 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
     // yet. This ensures a consistent sort order across systems.
     dyn::succinct_bitvector<dyn::spsi<dyn::packed_vector,256,16> > unvisited;
     //map<handlegraph::nid_t, handle_t> unvisited;
+    for (uint64_t i = 0; i <= max_handle_rank; ++i) {
+        unvisited.push_back(0);
+    }
     g->for_each_handle([&](const handle_t& found) {
-            unvisited.push_back(!s.count(g->get_id(found)));
+            uint64_t rank = number_bool_packing::unpack_number(found);
+            unvisited.set(rank, !s.at(rank));
     });
 
-    while(unvisited.rank1(unvisited.size())!=0 || !s.empty()) {
+    while(unvisited.rank1(unvisited.size())!=0 || s.rank1(s.size())!=0) {
 
         // Put something in s. First go through seeds until we can find one
         // that's not already oriented.
-        while(s.empty() && !seeds.empty()) {
+        while(s.rank1(s.size())==0 && !seeds.empty()) {
             // Look at the first seed
             auto first_seed = (*seeds.begin()).second;
 
@@ -110,14 +122,14 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
                 cerr << "Starting from seed " << g->get_id(first_seed) << " orientation " << g->get_is_reverse(first_seed) << endl;
 #endif
 
-                s[g->get_id(first_seed)] = first_seed;
+                s.set(number_bool_packing::unpack_number(first_seed), 1);
                 unvisited.set(number_bool_packing::unpack_number(first_seed), 0);
             }
             // Whether we used the seed or not, don't keep it around
             seeds.erase(seeds.begin());
         }
 
-        if(s.empty()) {
+        if(s.rank1(s.size())==0) {
             // If we couldn't find a seed, just grab any old node.
             // Since map order is stable across systems, we can take the first node by id and put it locally forward.
             /*
@@ -128,15 +140,15 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
             */
 
             uint64_t h = unvisited.select1(0);
-            handle_t handle = number_bool_packing::pack(h, false);
-            s[g->get_id(handle)] = handle;
+            s.set(h, 1);
             unvisited.set(h, 0);
         }
 
-        while (!s.empty()) {
+        while (s.rank1(s.size())!=0) {
             // Grab an oriented node
-            auto n = s.begin()->second;
-            s.erase(g->get_id(n));
+            uint64_t i = s.select1(0);
+            s.set(i, 0);
+            handle_t n = number_bool_packing::pack(i, false);
             // Emit it
             sorted.push_back(n);
 #ifdef debug
@@ -233,7 +245,7 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
                             cerr << "\t\t\tIs last incoming edge" << endl;
 #endif
                             // Keep this orientation and put it here
-                            s[g->get_id(next_node)] = next_node;
+                            s.set(number_bool_packing::unpack_number(next_node), 1);
                             // Remember that we've visited and oriented this node, so we
                             // don't need to use it as a seed.
                             unvisited.set(number_bool_packing::unpack_number(next_node), 0);
