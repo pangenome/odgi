@@ -49,7 +49,7 @@ std::vector<handle_t> tail_nodes(const HandleGraph* g) {
     
 }
 
-std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
+std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads, bool progress_reporting) {
 
     // Make a vector to hold the ordered and oriented nodes.
     std::vector<handle_t> sorted;
@@ -197,6 +197,11 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
             handle_t n = number_bool_packing::pack(i, false);
             // Emit it
             sorted.push_back(n);
+            if (progress_reporting && sorted.size() % 1000 == 0) {
+                uint64_t i = sorted.size();
+                uint64_t c = g->get_node_count();
+                std::cerr << "topological sort " << i << " of " << c << " ~ " << (float)i/(float)c * 100 << "%" << "\r";
+            }
 #ifdef debug
 #pragma omp critical (cerr)
             cerr << "Using oriented node " << g->get_id(n) << " orientation " << g->get_is_reverse(n) << endl;
@@ -320,6 +325,11 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
                     }
                 });
         }
+    }
+    if (progress_reporting && sorted.size()) {
+        uint64_t i = sorted.size();
+        uint64_t c = g->get_node_count();
+        std::cerr << "topological sort " << i << " of " << c << " ~ " << "100.0000%" << std::endl;
     }
 
     // Send away our sorted ordering.
