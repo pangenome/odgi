@@ -49,27 +49,76 @@ std::vector<handle_t> tail_nodes(const HandleGraph* g) {
     
 }
 
-std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
+std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads, bool progress_reporting) {
 
     // Make a vector to hold the ordered and oriented nodes.
     std::vector<handle_t> sorted;
     sorted.reserve(g->get_node_count());
     
     // Instead of actually removing edges, we add them to this set of masked edges.
-    hash_set<pair<handle_t, handle_t> > masked_edges;
+    dyn::succinct_bitvector<dyn::spsi<dyn::packed_vector,256,16> > masked_edges_bv;
+    dyn::lciv<dyn::hacked_vector,256,16> masked_edges_iv;
+
+    auto delta_to_handle = [&](const handle_t& base, uint64_t delta) {
+        assert(delta != 0);
+        if (delta == 1) {
+            return base;
+        } else if (delta % 2 == 0) {
+            return as_handle(as_integer(base) + delta/2);
+        } else {
+            return as_handle(as_integer(base) - (delta-1)/2);
+        }
+    };
+
+    auto edge_to_delta = [&](const edge_t& edge) {
+        int64_t delta = as_integer(edge.second) - as_integer(edge.first);
+        return (delta == 0 ? 1 : (delta > 0 ? 2*abs(delta) : 2*abs(delta)+1));
+    };
+
+    auto mask_edge = [&](const edge_t& edge) {
+        uint64_t idx = masked_edges_bv.select1(as_integer(edge.first));
+        masked_edges_iv.insert(idx+1, edge_to_delta(edge));
+        masked_edges_bv.insert(idx+1, 0);
+    };
+
+    auto is_masked_edge = [&](const edge_t& edge) {
+        uint64_t from_idx = as_integer(edge.first);
+        uint64_t to_idx = as_integer(edge.second);
+        uint64_t begin_edge = masked_edges_bv.select1(from_idx);
+        uint64_t end_edge = masked_edges_bv.select1(from_idx+1);
+        for (uint64_t i = begin_edge; i < end_edge; ++i) {
+            if (as_integer(delta_to_handle(edge.first, masked_edges_iv.at(i))) == to_idx) {
+                return true;
+            }
+        }
+        return false;
+    };
     
     // This (s) is our set of oriented nodes.
     // using a map instead of a set ensures a stable sort across different systems
-    map<handlegraph::nid_t, handle_t> s;
+    //map<handlegraph::nid_t, handle_t> s;
+    dyn::succinct_bitvector<dyn::spsi<dyn::packed_vector,256,16> > s;
+    uint64_t max_handle_rank = 0;
+    g->for_each_handle([&](const handle_t& found) {
+            max_handle_rank = std::max(max_handle_rank,
+                                       number_bool_packing::unpack_number(found));
+        });
+    for (uint64_t i = 0; i <= max_handle_rank; ++i) {
+        s.push_back(0);
+        masked_edges_bv.push_back(1);
+        masked_edges_bv.push_back(1);
+        masked_edges_iv.push_back(0);
+        masked_edges_iv.push_back(0);
+    }
 
     // We find the head and tails, if there are any
     //std::vector<handle_t> heads{head_nodes(g)};
     // No need to fetch the tails since we don't use them
-
     
     // Maps from node ID to first orientation we suggested for it.
-    map<handlegraph::nid_t, handle_t> seeds;
-    
+    dyn::succinct_bitvector<dyn::spsi<dyn::packed_vector,256,16> > seeds;
+    dyn::hacked_vector seeds_rev;
+
     // Dump all the heads into the oriented set, rather than having them as
     // seeds. We will only go for cycle-breaking seeds when we run out of
     // heads. This is bad for contiguity/ordering consistency in cyclic
@@ -79,65 +128,80 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
     // ignore tails since we only orient right from nodes we pick.
     if (use_heads) {
         for(const handle_t& head : head_nodes(g)) {
-            s[g->get_id(head)] = head;
+            s.set(number_bool_packing::unpack_number(head), 1);
         }
     } else {
         for(const handle_t& tail : tail_nodes(g)) {
-            s[g->get_id(tail)] = tail;
+            s.set(number_bool_packing::unpack_number(tail), 1);
         }
     }
 
     // We will use an ordered map handles by ID for nodes we have not visited
     // yet. This ensures a consistent sort order across systems.
-    map<handlegraph::nid_t, handle_t> unvisited;
+    dyn::succinct_bitvector<dyn::spsi<dyn::packed_vector,256,16> > unvisited;
+    //map<handlegraph::nid_t, handle_t> unvisited;
+    for (uint64_t i = 0; i <= max_handle_rank; ++i) {
+        unvisited.push_back(0);
+        seeds.push_back(0);
+        seeds_rev.push_back(0);
+    }
     g->for_each_handle([&](const handle_t& found) {
-        if (!s.count(g->get_id(found))) {
-            // Only nodes that aren't yet in s are unvisited.
-            // Nodes in s are visited but just need to be added tot he ordering.
-            unvisited.emplace(g->get_id(found), found);
-        }
+            uint64_t rank = number_bool_packing::unpack_number(found);
+            unvisited.set(rank, !s.at(rank));
     });
 
-    while(!unvisited.empty() || !s.empty()) {
+    while(unvisited.rank1(unvisited.size())!=0 || s.rank1(s.size())!=0) {
 
         // Put something in s. First go through seeds until we can find one
         // that's not already oriented.
-        while(s.empty() && !seeds.empty()) {
+        while(s.rank1(s.size())==0 && seeds.rank1(seeds.size())!=0) {
             // Look at the first seed
-            auto first_seed = (*seeds.begin()).second;
+            //auto first_seed = (*seeds.begin()).second;
+            uint64_t seed_rank = seeds.select1(0);
+            handle_t first_seed = number_bool_packing::pack(seed_rank, seeds_rev.at(seed_rank));
 
-            if(unvisited.count(g->get_id(first_seed))) {
+            if(unvisited.at(number_bool_packing::unpack_number(first_seed))) {
                 // We have an unvisited seed. Use it
 #ifdef debug
 #pragma omp critical (cerr)
                 cerr << "Starting from seed " << g->get_id(first_seed) << " orientation " << g->get_is_reverse(first_seed) << endl;
 #endif
 
-                s[g->get_id(first_seed)] = first_seed;
-                unvisited.erase(g->get_id(first_seed));
+                s.set(number_bool_packing::unpack_number(first_seed), 1);
+                unvisited.set(number_bool_packing::unpack_number(first_seed), 0);
             }
             // Whether we used the seed or not, don't keep it around
-            seeds.erase(seeds.begin());
+            //seeds.erase(seeds.begin());
+            seeds[seed_rank] = 0;
         }
 
-        if(s.empty()) {
+        if(s.rank1(s.size())==0) {
             // If we couldn't find a seed, just grab any old node.
             // Since map order is stable across systems, we can take the first node by id and put it locally forward.
+            /*
 #ifdef debug
 #pragma omp critical (cerr)
-            cerr << "Starting from arbitrary node " << unvisited.begin()->first << " locally forward" << endl;
+            cerr << "Starting from arbitrary node " << unvisited.select1(0) << " locally forward" << endl;
 #endif
+            */
 
-            s[unvisited.begin()->first] = unvisited.begin()->second;
-            unvisited.erase(unvisited.begin()->first);
+            uint64_t h = unvisited.select1(0);
+            s.set(h, 1);
+            unvisited.set(h, 0);
         }
 
-        while (!s.empty()) {
+        while (s.rank1(s.size())!=0) {
             // Grab an oriented node
-            auto n = s.begin()->second;
-            s.erase(g->get_id(n));
+            uint64_t i = s.select1(0);
+            s.set(i, 0);
+            handle_t n = number_bool_packing::pack(i, false);
             // Emit it
             sorted.push_back(n);
+            if (progress_reporting && sorted.size() % 1000 == 0) {
+                uint64_t i = sorted.size();
+                uint64_t c = g->get_node_count();
+                std::cerr << "topological sort " << i << " of " << c << " ~ " << (float)i/(float)c * 100 << "%" << "\r";
+            }
 #ifdef debug
 #pragma omp critical (cerr)
             cerr << "Using oriented node " << g->get_id(n) << " orientation " << g->get_is_reverse(n) << endl;
@@ -148,116 +212,124 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads) {
             // reversing self loop on a cycle entry point is a special case of
             // this.
             g->follow_edges(n, true, [&](const handle_t& prev_node) {
-                if(!unvisited.count(g->get_id(prev_node))) {
-                    // Look at the edge
-                    auto edge = g->edge_handle(prev_node, n);
-                    if (masked_edges.count(edge)) {
-                        // We removed this edge, so skip it.
-                        return;
-                    }
+                    if(!unvisited.at(number_bool_packing::unpack_number(prev_node))) {
+                        // Look at the edge
+                        auto edge = g->edge_handle(prev_node, n);
+                        if (is_masked_edge(edge)) {
+                            // We removed this edge, so skip it.
+                            return;
+                        }
                     
 #ifdef debug
 #pragma omp critical (cerr)
-                    cerr << "\tHas left-side edge to cycle entry point " << g->get_id(prev_node)
-                         << " orientation " << g->get_is_reverse(prev_node) << endl;
+                        cerr << "\tHas left-side edge to cycle entry point " << g->get_id(prev_node)
+                             << " orientation " << g->get_is_reverse(prev_node) << endl;
 #endif
 
-                    // Mask the edge
-                    masked_edges.insert(edge);
+                        // Mask the edge
+                        mask_edge(edge);
                     
 #ifdef debug
 #pragma omp critical (cerr)
-                    cerr << "\t\tEdge: " << g->get_id(edge.first) << " " << g->get_is_reverse(edge.first)
-                        << " -> " << g->get_id(edge.second) << " " << g->get_is_reverse(edge.second) << endl;
+                        cerr << "\t\tEdge: " << g->get_id(edge.first) << " " << g->get_is_reverse(edge.first)
+                             << " -> " << g->get_id(edge.second) << " " << g->get_is_reverse(edge.second) << endl;
 #endif
-                }
-            });
+                    }
+                });
 
             // All other connections and self loops are handled by looking off the right side.
 
             // See what all comes next, minus deleted edges.
             g->follow_edges(n, false, [&](const handle_t& next_node) {
 
-                // Look at the edge
-                auto edge = g->edge_handle(n, next_node);
-                if (masked_edges.count(edge)) {
-                    // We removed this edge, so skip it.
-                    return;
-                }
+                    uint64_t next_node_rank = number_bool_packing::unpack_number(next_node);
+
+                    // Look at the edge
+                    auto edge = g->edge_handle(n, next_node);
+                    if (is_masked_edge(edge)) {
+                        // We removed this edge, so skip it.
+                        return;
+                    }
 
 #ifdef debug
 #pragma omp critical (cerr)
-                cerr << handle_helper::unpack_number(next_node) << endl;
-                cerr << "\tHas edge to " << g->get_id(next_node) << " orientation " << g->get_is_reverse(next_node) << endl;
+                    cerr << next_node_rank << endl;
+                    cerr << "\tHas edge to " << g->get_id(next_node) << " orientation " << g->get_is_reverse(next_node) << endl;
 #endif
 
-                // Mask the edge connecting these nodes in this order and
-                // relative orientation, so we can't traverse it again
+                    // Mask the edge connecting these nodes in this order and
+                    // relative orientation, so we can't traverse it again
 
 #ifdef debug
 #pragma omp critical (cerr)
-                cerr << "\t\tEdge: " << g->get_id(edge.first) << " " << g->get_is_reverse(edge.first)
-                    << " -> " << g->get_id(edge.second) << " " << g->get_is_reverse(edge.second) << endl;
+                    cerr << "\t\tEdge: " << g->get_id(edge.first) << " " << g->get_is_reverse(edge.first)
+                         << " -> " << g->get_id(edge.second) << " " << g->get_is_reverse(edge.second) << endl;
 #endif
 
-                // Mask the edge
-                masked_edges.insert(edge);
+                    // Mask the edge
+                    mask_edge(edge);
 
-                if(unvisited.count(g->get_id(next_node))) {
-                    // We haven't already started here as an arbitrary cycle entry point
+                    if(unvisited.at(next_node_rank)) {
+                        // We haven't already started here as an arbitrary cycle entry point
 
 #ifdef debug
 #pragma omp critical (cerr)
-                    cerr << "\t\tAnd node hasn't been visited yet" << endl;
+                        cerr << "\t\tAnd node hasn't been visited yet" << endl;
 #endif
 
-                    bool unmasked_incoming_edge = false;
-                    g->follow_edges(next_node, true, [&](const handle_t& prev_node) {
-                        // Get a handle for each incoming edge
-                        auto prev_edge = g->edge_handle(prev_node, next_node);
-                        
-                        if (!masked_edges.count(prev_edge)) {
-                            // We found such an edghe and can stop looking
-                            unmasked_incoming_edge = true;
-                            return false;
+                        bool unmasked_incoming_edge = false;
+                        g->follow_edges(next_node, true, [&](const handle_t& prev_node) {
+                                // Get a handle for each incoming edge
+                                auto prev_edge = g->edge_handle(prev_node, next_node);
+
+                                if (!is_masked_edge(prev_edge)) {
+                                    // We found such an edghe and can stop looking
+                                    unmasked_incoming_edge = true;
+                                    return false;
+                                }
+                                // Otherwise check all the edges on the left of this handle
+                                return true;
+                            });
+
+                        if(!unmasked_incoming_edge) {
+
+#ifdef debug
+#pragma omp critical (cerr)
+                            cerr << "\t\t\tIs last incoming edge" << endl;
+#endif
+                            // Keep this orientation and put it here
+                            s.set(next_node_rank, 1);
+                            // Remember that we've visited and oriented this node, so we
+                            // don't need to use it as a seed.
+                            unvisited.set(next_node_rank, 0);
+
+                        } else if (!seeds[next_node_rank]) {
+                            // We came to this node in this orientation; when we need a
+                            // new node and orientation to start from (i.e. an entry
+                            // point to the node's cycle), we might as well pick this
+                            // one.
+                            // Only take it if we don't already know of an orientation for this node.
+                            seeds[next_node_rank] = 1;
+                            seeds_rev[next_node_rank] = number_bool_packing::unpack_bit(next_node);
+
+#ifdef debug
+#pragma omp critical (cerr)
+                            cerr << "\t\t\tSuggests seed " << g->get_id(next_node) << " orientation " << g->get_is_reverse(next_node) << endl;
+#endif
                         }
-                        // Otherwise check all the edges on the left of this handle
-                        return true;
-                    });
-
-                    if(!unmasked_incoming_edge) {
-
+                    } else {
 #ifdef debug
 #pragma omp critical (cerr)
-                        cerr << "\t\t\tIs last incoming edge" << endl;
-#endif
-                        // Keep this orientation and put it here
-                        s[g->get_id(next_node)] = next_node;
-                        // Remember that we've visited and oriented this node, so we
-                        // don't need to use it as a seed.
-                        unvisited.erase(g->get_id(next_node));
-
-                    } else if(!seeds.count(g->get_id(next_node))) {
-                        // We came to this node in this orientation; when we need a
-                        // new node and orientation to start from (i.e. an entry
-                        // point to the node's cycle), we might as well pick this
-                        // one.
-                        // Only take it if we don't already know of an orientation for this node.
-                        seeds[g->get_id(next_node)] = next_node;
-
-#ifdef debug
-#pragma omp critical (cerr)
-                        cerr << "\t\t\tSuggests seed " << g->get_id(next_node) << " orientation " << g->get_is_reverse(next_node) << endl;
+                        cerr << "\t\tAnd node was already visited (to break a cycle)" << endl;
 #endif
                     }
-                } else {
-#ifdef debug
-#pragma omp critical (cerr)
-                    cerr << "\t\tAnd node was already visited (to break a cycle)" << endl;
-#endif
-                }
-            });
+                });
         }
+    }
+    if (progress_reporting && sorted.size()) {
+        uint64_t i = sorted.size();
+        uint64_t c = g->get_node_count();
+        std::cerr << "topological sort " << i << " of " << c << " ~ " << "100.0000%" << std::endl;
     }
 
     // Send away our sorted ordering.

@@ -1,5 +1,4 @@
-#ifndef VG_ALGORITHMS_TOPOLOGICAL_SORT_HPP_INCLUDED
-#define VG_ALGORITHMS_TOPOLOGICAL_SORT_HPP_INCLUDED
+#pragma once
 
 /**
  * \file topological_sort.hpp
@@ -13,6 +12,8 @@
 #include <iostream>
 #include "../hash_map.hpp"
 #include <handlegraph/handle_graph.hpp>
+#include <handlegraph/util.hpp>
+#include "dynamic.hpp"
 #include "apply_bulk_modifications.hpp"
 #include "is_single_stranded.hpp"
 
@@ -57,7 +58,7 @@ std::vector<handle_t> tail_nodes(const HandleGraph* g);
  *                     (This helps start at natural entry points to cycles)
  *     return L (a topologically sorted order and orientation)
  */
-std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads = true);
+std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads = true, bool progress_reporting = false);
 
 std::vector<handle_t> two_way_topological_order(const HandleGraph* g);
 
@@ -81,5 +82,3 @@ void topological_sort(MutableHandleGraph& g, bool compact_ids);
 
 }
 }
-
-#endif
