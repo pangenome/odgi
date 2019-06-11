@@ -220,6 +220,26 @@ ExternalProject_Add(picosha256
 ExternalProject_Get_property(picosha256 SOURCE_DIR)
 set(picosha256_INCLUDE "${SOURCE_DIR}")
 
+# mmmultimap (memory mapped multimap)
+ExternalProject_Add(mmmultimap
+  GIT_REPOSITORY "https://github.com/ekg/mmmultimap.git"
+  GIT_TAG "9a7c6dc3550c5fc495a3331cc7c3219ae574b5ca"
+  BUILD_COMMAND ""
+  UPDATE_COMMAND ""
+  INSTALL_COMMAND "")
+ExternalProject_Get_property(mmmultimap SOURCE_DIR)
+set(mmmultimap_INCLUDE "${SOURCE_DIR}/src")
+
+# In-place Parallel Super Scalar Samplesort (IPS⁴o), header only
+ExternalProject_Add(ips4o
+  GIT_REPOSITORY "https://github.com/SaschaWitt/ips4o.git"
+  GIT_TAG "bff3ccf0bf349497f2bb10f825d160b792236367"
+  INSTALL_COMMAND ""
+  BUILD_COMMAND ""
+  CONFIGURE_COMMAND "")
+ExternalProject_Get_property(ips4o SOURCE_DIR)
+set(ips4o_INCLUDE "${SOURCE_DIR}")
+
 set(CMAKE_BUILD_TYPE Release)
 
 # set up our target executable and specify its dependencies and includes
@@ -233,6 +253,7 @@ add_executable(odgi
   ${CMAKE_SOURCE_DIR}/src/node.cpp
   ${CMAKE_SOURCE_DIR}/src/subgraph.cpp
   ${CMAKE_SOURCE_DIR}/src/cactus.cpp
+  ${CMAKE_SOURCE_DIR}/src/kmer.cpp
   #${CMAKE_SOURCE_DIR}/src/snarls.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/driver.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/handle.cpp
@@ -281,6 +302,8 @@ add_dependencies(odgi lodepng)
 add_dependencies(odgi structures)
 add_dependencies(odgi sonlib)
 add_dependencies(odgi picosha256)
+add_dependencies(odgi mmmultimap)
+add_dependencies(odgi ips4o)
 target_include_directories(odgi PUBLIC
   "${CMAKE_SOURCE_DIR}/src"
   "${sdsl-lite_INCLUDE}"
@@ -300,7 +323,9 @@ target_include_directories(odgi PUBLIC
   "${structures_INCLUDE}"
   "${sonLib_lib_INCLUDE}"
   "${sonLib_inc_INCLUDE}"
-  "${picosha256_INCLUDE}")
+  "${picosha256_INCLUDE}"
+  "${mmmultimap_INCLUDE}"
+  "${ips4o_INCLUDE}")
 target_link_libraries(odgi
   "${sdsl-lite_LIB}/libsdsl.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort.a"
@@ -310,6 +335,7 @@ target_link_libraries(odgi
   "${sonLib_LIB}/stPinchesAndCacti.a"
   "${sonLib_LIB}/3EdgeConnected.a"
   "${sonLib_LIB}/sonLib.a"
+  "-latomic"
   "-ldl"
   )
 

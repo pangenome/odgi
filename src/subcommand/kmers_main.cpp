@@ -8,6 +8,9 @@
 #include "algorithms/prune.hpp"
 #include "algorithms/remove_high_degree.hpp"
 #include <chrono>
+#include "mmmultimap.hpp"
+#include "mmmultiset.hpp"
+#include "kmer.hpp"
 
 namespace odgi {
 
@@ -30,6 +33,7 @@ int main_kmers(int argc, char** argv) {
     args::ValueFlag<uint64_t> max_furcations(parser, "N", "break at edges that would be induce this many furcations in a kmer", {'e', "max-furcations"});
     args::ValueFlag<uint64_t> max_degree(parser, "N", "remove nodes that have degree greater that this level", {'D', "max-degree"});
     args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
+    args::ValueFlag<std::string> temp_base(parser, "FILE", "use this temporary file base during index generation", {'b', "tmp-base"});
     args::Flag kmers_stdout(parser, "", "write the kmers to stdout", {'c', "stdout"});
 
     try {
@@ -76,8 +80,8 @@ int main_kmers(int argc, char** argv) {
         std::cerr << "done prune" << std::endl;
     }
     */
-    std::vector<std::vector<kmer_t>> buffers(get_thread_count());
     if (args::get(kmers_stdout)) {
+        std::vector<std::vector<kmer_t>> buffers(get_thread_count());
         algorithms::for_each_kmer(graph, args::get(kmer_length), args::get(max_furcations), [&](const kmer_t& kmer) {
                 int tid = omp_get_thread_num();
                 auto& buffer = buffers.at(tid);
@@ -101,47 +105,37 @@ int main_kmers(int argc, char** argv) {
         std::cout.flush();
     } else {
         //ska::flat_hash_map<uint32_t, uint32_t> kmer_table;
-        vector<uint64_t> kmers;
-        uint64_t seen_kmers = 0;
-        algorithms::for_each_kmer(graph, args::get(kmer_length), args::get(max_furcations), [&](const kmer_t& kmer) {
-                //int tid = omp_get_thread_num();
-//#pragma omp atomic
-                uint64_t hash = djb2_hash64(kmer.seq.c_str());
-                //if (hash % 31 == 0) {
-#pragma omp critical (kmers)
-                    kmers.push_back(hash);
-                    //}
-                /*
-#pragma omp critical (cerr)
-                if (seen_kmers % 100000 == 0) {
-                    std::cerr << seen_kmers << " " << kmer_table.size() << "\r";
-                } else {
-                    ++seen_kmers;
-                }
-                */
-            });
-        std::cerr << std::endl;
-        std::sort(kmers.begin(), kmers.end());
-        kmers.erase(std::unique(kmers.begin(), kmers.end()), kmers.end());
-        boophf_t * bphf = new boomphf::mphf<uint64_t,hasher_t>(kmers.size(),kmers,get_thread_count());
+        //vector<uint64_t> kmers;
+        std::vector<uint64_t> unique_kmers;
+        {
+            mmmulti::set<uint64_t> kmers(args::get(temp_base));
+            uint64_t seen_kmers = 0;
+            uint64_t k = args::get(kmer_length);
+            algorithms::for_each_kmer(graph, k, args::get(max_furcations), [&](const kmer_t& kmer) {
+                    //uint64_t hash = djb2_hash64(kmer.seq.c_str());
+                    bool is_dna = true;
+                    uint64_t kint = kmer::seq2bit(kmer.seq.c_str(), k, is_dna);
+                    if (is_dna) kmers.append(kint);
+                });
+            kmers.index();
+            kmers.for_each_value_count([&](const uint64_t& v, const uint64_t& count) {
+                    unique_kmers.push_back(v);
+                });
+        }
+        std::remove(args::get(temp_base).c_str());
+        //std::cerr << std::endl;
+        //std::sort(kmers.begin(), kmers.end());
+        //kmers.erase(std::unique(kmers.begin(), kmers.end()), kmers.end());
+        boophf_t* bphf = new boomphf::mphf<uint64_t,hasher_t>(unique_kmers.size(),unique_kmers,get_thread_count());
         //kmers.clear();
         std::cerr << "querying kmers" << std::endl;
         chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
-        for (auto& hash : kmers) {
+        for (auto& hash : unique_kmers) {
             bphf->lookup(hash);
         }
         chrono::high_resolution_clock::time_point t2 = chrono::high_resolution_clock::now();
         auto used_time = chrono::duration_cast<std::chrono::nanoseconds>(t2 - t1).count();
-        std::cerr << "done with " << kmers.size() << " @ " << (double)used_time/(double)kmers.size() << "ns/kmer" << std::endl;
-        /*
-        algorithms::for_each_kmer(graph, args::get(kmer_length), [&](const kmer_t& kmer) {
-                uint64_t hash = djb2_hash64(kmer.seq.c_str());
-                bphf->lookup(hash);
-#pragma omp atomic
-                ++seen_kmers;
-            });
-        std::cerr << "done with " << seen_kmers << " kmers" << std::endl;
-        */
+        std::cerr << "done with " << unique_kmers.size() << " @ " << (double)used_time/(double)unique_kmers.size() << "ns/kmer" << std::endl;
         delete bphf;
     }
     return 0;
