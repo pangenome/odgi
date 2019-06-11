@@ -16,7 +16,8 @@ namespace odgi {
 
     /// Fills a handle graph with an instantiation of a sequence graph from a GFA file.
     /// Handle graph must be empty when passed into function.
-    void gfa_to_handle(const string& gfa_filename, MutablePathMutableHandleGraph* graph,
+    void gfa_to_handle(const string& gfa_filename,
+                       handlegraph::MutablePathMutableHandleGraph* graph,
                        bool show_progress = false);
 
 }

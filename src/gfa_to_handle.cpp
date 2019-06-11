@@ -2,7 +2,7 @@
 
 namespace odgi {
 
-    void gfa_to_handle(const string& gfa_filename, MutablePathMutableHandleGraph* graph,
+    void gfa_to_handle(const string& gfa_filename, handlegraph::MutablePathMutableHandleGraph* graph,
                        bool show_progress) {
         
         char* filename = (char*)gfa_filename.c_str();
@@ -21,7 +21,7 @@ namespace odgi {
         uint64_t i = 0;
         gg.for_each_sequence_line_in_file(filename, [&](gfak::sequence_elem s) {
             uint64_t id = stol(s.name);
-            graph.create_handle(s.sequence, id);
+            graph->create_handle(s.sequence, id);
             if (show_progress) {
                 if (i % 1000 == 0) std::cerr << "node " << i << "\r";
                 ++i;
@@ -32,9 +32,9 @@ namespace odgi {
         }
         gg.for_each_edge_line_in_file(filename, [&](gfak::edge_elem e) {
             if (e.source_name.empty()) return;
-            handle_t a = graph.get_handle(stol(e.source_name), !e.source_orientation_forward);
-            handle_t b = graph.get_handle(stol(e.sink_name), !e.sink_orientation_forward);
-            graph.create_edge(a, b);
+            handle_t a = graph->get_handle(stol(e.source_name), !e.source_orientation_forward);
+            handle_t b = graph->get_handle(stol(e.sink_name), !e.sink_orientation_forward);
+            graph->create_edge(a, b);
             if (show_progress) {
                 if (i % 1000 == 0) std::cerr << "edge " << i << "\r";
                 ++i;
@@ -47,16 +47,16 @@ namespace odgi {
             path_handle_t path;
             std::string path_name = path_name_raw;
             path_name.erase(std::remove_if(path_name.begin(), path_name.end(), [](char c) { return std::isspace(c); }), path_name.end());
-            if (!graph.has_path(path_name)) {
+            if (!graph->has_path(path_name)) {
                 if (show_progress) {
                     std::cerr << "path " << ++i << "\r";
                 }
-                path = graph.create_path_handle(path_name);
+                path = graph->create_path_handle(path_name);
             } else {
-                path = graph.get_path_handle(path_name);
+                path = graph->get_path_handle(path_name);
             }
-            handle_t occ = graph.get_handle(stol(node_id), is_rev);
-            graph.append_step(path, occ);
+            handle_t occ = graph->get_handle(stol(node_id), is_rev);
+            graph->append_step(path, occ);
             // ignores overlaps
         });
     }
