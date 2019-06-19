@@ -691,9 +691,11 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
     uint64_t max_handle_rank = 0;
     uint64_t min_handle_rank = std::numeric_limits<uint64_t>::max();
     for_each_handle([&](const handle_t& handle) {
-            max_handle_rank = std::max(max_handle_rank,
-                                       number_bool_packing::unpack_number(handle));
-        });
+        max_handle_rank = std::max(max_handle_rank,
+                                   number_bool_packing::unpack_number(handle));
+        min_handle_rank = std::min(min_handle_rank,
+                                   number_bool_packing::unpack_number(handle));
+    });
     if (max_handle_rank > 0) {
         ids.resize(max_handle_rank - min_handle_rank + 1);
     }
