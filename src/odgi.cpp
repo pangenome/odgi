@@ -689,35 +689,43 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
     //hash_map<nid_t, nid_t> ids;
     std::vector<nid_t> ids;
     uint64_t max_handle_rank = 0;
+    uint64_t min_handle_rank = std::numeric_limits<uint64_t>::max();
     for_each_handle([&](const handle_t& handle) {
             max_handle_rank = std::max(max_handle_rank,
                                        number_bool_packing::unpack_number(handle));
         });
-    ids.resize(max_handle_rank);
+    if (max_handle_rank > 0) {
+        ids.resize(max_handle_rank - min_handle_rank + 1);
+    }
     // establish id mapping
     if (compact_ids) {
         for (uint64_t i = 0; i < order->size(); ++i) {
-            ids[number_bool_packing::unpack_number(order->at(i))] = i+1;
+            ids[number_bool_packing::unpack_number(order->at(i)) - min_handle_rank] = i+1;
         }
     } else {
         for (uint64_t i = 0; i < order->size(); ++i) {
             auto& handle = order->at(i);
-            ids[number_bool_packing::unpack_number(handle)] = get_id(handle);
+            ids[number_bool_packing::unpack_number(handle) - min_handle_rank] = get_id(handle);
         }
     }
     // nodes
     for (auto& handle : *order) {
-        ordered.create_handle(get_sequence(handle), ids[number_bool_packing::unpack_number(handle)]);
+        ordered.create_handle(get_sequence(handle),
+                              ids[number_bool_packing::unpack_number(handle) - min_handle_rank]);
     }
     // edges
     for (auto& handle : *order) {
         follow_edges(handle, false, [&](const handle_t& h) {
-                ordered.create_edge(ordered.get_handle(ids[number_bool_packing::unpack_number(handle)], get_is_reverse(handle)),
-                                    ordered.get_handle(ids[number_bool_packing::unpack_number(h)], get_is_reverse(h)));
+                ordered.create_edge(ordered.get_handle(ids[number_bool_packing::unpack_number(handle) - min_handle_rank],
+                                                       get_is_reverse(handle)),
+                                    ordered.get_handle(ids[number_bool_packing::unpack_number(h) - min_handle_rank],
+                                                       get_is_reverse(h)));
             });
         follow_edges(handle, true, [&](const handle_t& h) {
-                ordered.create_edge(ordered.get_handle(ids[number_bool_packing::unpack_number(h)], get_is_reverse(h)),
-                                    ordered.get_handle(ids[number_bool_packing::unpack_number(handle)], get_is_reverse(handle)));
+                ordered.create_edge(ordered.get_handle(ids[number_bool_packing::unpack_number(h) - min_handle_rank],
+                                                       get_is_reverse(h)),
+                                    ordered.get_handle(ids[number_bool_packing::unpack_number(handle) - min_handle_rank],
+                                                       get_is_reverse(handle)));
             });
     }
     // paths
@@ -725,7 +733,8 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
             path_handle_t new_path = ordered.create_path_handle(get_path_name(old_path));
             for_each_step_in_path(old_path, [&](const step_handle_t& step) {
                     handle_t old_handle = get_handle_of_step(step);
-                    handle_t new_handle = ordered.get_handle(ids[number_bool_packing::unpack_number(old_handle)], get_is_reverse(old_handle));
+                    handle_t new_handle = ordered.get_handle(ids[number_bool_packing::unpack_number(old_handle) - min_handle_rank],
+                                                             get_is_reverse(old_handle));
                     ordered.append_step(new_path, new_handle);
                 });
         });
