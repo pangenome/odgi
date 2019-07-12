@@ -31,6 +31,9 @@ int main_sort(int argc, char** argv) {
     args::Flag two(parser, "two", "use two-way (max of head-first and tail-first) topological algorithm", {'w', "two-way"});
     args::Flag paths_by_min_node_id(parser, "paths-min", "sort paths by their lowest contained node id", {'P', "paths-min"});
     args::Flag paths_by_max_node_id(parser, "paths-max", "sort paths by their highest contained node id", {'M', "paths-max"});
+    args::Flag paths_by_avg_node_id(parser, "paths-avg", "sort paths by their average contained node id", {'A', "paths-avg"});
+    args::Flag paths_by_avg_node_id_rev(parser, "paths-avg-rev", "sort paths in reverse by their average contained node id", {'R', "paths-avg-rev"});
+    args::ValueFlag<std::string> path_delim(parser, "path-delim", "sort paths in bins by their prefix up to this delemiter", {'D', "path-delim"});
     args::Flag progress(parser, "progress", "display progress of the sort", {'p', "progress"});
     args::Flag optimize(parser, "optimize", "use the MutableHandleGraph::optimize method", {'O', "optimize"});
     try {
@@ -83,10 +86,16 @@ int main_sort(int argc, char** argv) {
             graph.apply_ordering(algorithms::cycle_breaking_sort(graph), true);
         }
         if (args::get(paths_by_min_node_id)) {
-            graph.apply_path_ordering(algorithms::id_ordered_paths(graph, false));
+            graph.apply_path_ordering(algorithms::prefix_and_id_ordered_paths(graph, args::get(path_delim), false, false));
         }
         if (args::get(paths_by_max_node_id)) {
-            graph.apply_path_ordering(algorithms::id_ordered_paths(graph, true));
+            graph.apply_path_ordering(algorithms::prefix_and_id_ordered_paths(graph, args::get(path_delim), false, true));
+        }
+        if (args::get(paths_by_avg_node_id)) {
+            graph.apply_path_ordering(algorithms::prefix_and_id_ordered_paths(graph, args::get(path_delim), true, false));
+        }
+        if (args::get(paths_by_avg_node_id_rev)) {
+            graph.apply_path_ordering(algorithms::prefix_and_id_ordered_paths(graph, args::get(path_delim), true, true));
         }
         if (outfile == "-") {
             graph.serialize(std::cout);
