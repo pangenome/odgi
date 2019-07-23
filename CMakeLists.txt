@@ -316,5 +316,7 @@ target_link_libraries(odgi
 
 if (APPLE)
 elseif (TRUE)
-  set(CMAKE_EXE_LINKER_FLAGS "-static")
+  if (BUILD_STATIC)
+    set(CMAKE_EXE_LINKER_FLAGS "-static")
+  endif()
 endif()
