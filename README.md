@@ -19,7 +19,18 @@ Initially, `odgi` has been developed to allow in-memory manipulation of graphs p
 
 ## building
 
-`cmake -H. -Bbuild && cmake --build build -- -j 3`
+```
+cmake -H. -Bbuild && cmake --build build -- -j 3
+```
+
+To build a static executable, use:
+
+```
+cmake -DBUILD_STATIC=1 -H. -Bbuild && cmake --build build -- -j 3
+```
+
+You'll need to set this flag to 0 or remove and rebuild your build directory if you want to unset this build behavior and get a dynamic binary again.
+Static builds are unlikely to be supported on OSX, and require appropriate static libraries on linux.
 
 ## supported functionality
 
