@@ -283,6 +283,8 @@ add_executable(odgi
   )
 add_dependencies(odgi sdsl-lite)
 add_dependencies(odgi dynamic)
+add_dependencies(odgi hopscotch_map)
+add_dependencies(odgi backwardscpp)
 add_dependencies(odgi gfakluge)
 add_dependencies(odgi handlegraph)
 add_dependencies(odgi tayweeargs)
