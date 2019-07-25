@@ -64,7 +64,7 @@ set(sdsl-lite-divsufsort_LIB "${INSTALL_DIR}/src/sdsl-lite-build/external/libdiv
 # DYNAMIC (full build using its cmake config)
 ExternalProject_Add(dynamic
   GIT_REPOSITORY "https://github.com/vgteam/DYNAMIC.git"
-  GIT_TAG "c8a87a12aec9d71a2e4151027dbcedd673e1e277"
+  GIT_TAG "0da557fbd0613377bbde26dd60ded655bea58d3b"
   # we don't actually install dynamic... it's header only
   #CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
   UPDATE_COMMAND ""
@@ -73,6 +73,18 @@ ExternalProject_Add(dynamic
   CONFIGURE_COMMAND "")
 ExternalProject_Get_property(dynamic INSTALL_DIR)
 set(dynamic_INCLUDE "${INSTALL_DIR}/src/dynamic/include")
+
+# hopscotch_map (required by DYNAMIC)
+ExternalProject_Add(hopscotch_map
+  GIT_REPOSITORY "https://github.com/Tessil/hopscotch-map.git"
+  # we don't actually install hopscotch_map... it's header only
+  #CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
+  UPDATE_COMMAND ""
+  INSTALL_COMMAND ""
+  BUILD_COMMAND ""
+  CONFIGURE_COMMAND "")
+ExternalProject_Get_property(hopscotch_map INSTALL_DIR)
+set(hopscotch_map_INCLUDE "${INSTALL_DIR}/src/hopscotch_map/include")
 
 # gfakluge (now header only)
 ExternalProject_Add(gfakluge
@@ -271,12 +283,15 @@ add_executable(odgi
   )
 add_dependencies(odgi sdsl-lite)
 add_dependencies(odgi dynamic)
+add_dependencies(odgi hopscotch_map)
+add_dependencies(odgi backwardscpp)
 add_dependencies(odgi gfakluge)
 add_dependencies(odgi handlegraph)
 add_dependencies(odgi tayweeargs)
 add_dependencies(odgi bbhash)
 add_dependencies(odgi sparsepp)
 add_dependencies(odgi ska)
+add_dependencies(odgi intervaltree)
 add_dependencies(odgi bsort)
 add_dependencies(odgi lodepng)
 add_dependencies(odgi structures)
@@ -287,6 +302,7 @@ target_include_directories(odgi PUBLIC
   "${sdsl-lite_INCLUDE}"
   "${sdsl-lite-divsufsort_INCLUDE}"
   "${dynamic_INCLUDE}"
+  "${hopscotch_map_INCLUDE}"
   "${gfakluge_INCLUDE}"
   "${gfakluge_tinyFA_INCLUDE}"
   "${handlegraph_INCLUDE}"
