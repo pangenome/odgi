@@ -19,6 +19,15 @@ namespace odgi {
          graph_t graph(num_nodes+1); // include delimiter
          */
         uint64_t i = 0;
+        uint64_t min_id = std::numeric_limits<uint64_t>::max();
+        uint64_t max_id = std::numeric_limits<uint64_t>::min();
+        gg.for_each_sequence_line_in_file(filename, [&](gfak::sequence_elem s) {
+                uint64_t id = stol(s.name);
+                min_id = std::min(min_id, id);
+                max_id = std::max(max_id, id);
+            });
+        graph->set_id_increment(min_id);
+        // set the min id as an offset
         gg.for_each_sequence_line_in_file(filename, [&](gfak::sequence_elem s) {
             uint64_t id = stol(s.name);
             graph->create_handle(s.sequence, id);

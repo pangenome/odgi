@@ -77,7 +77,7 @@ set(dynamic_INCLUDE "${INSTALL_DIR}/src/dynamic/include")
 # gfakluge (now header only)
 ExternalProject_Add(gfakluge
   GIT_REPOSITORY "https://github.com/vgteam/gfakluge.git"
-  GIT_TAG "644f90e07a46b5a16469f1c2e597085fb776bcf8"
+  GIT_TAG "3b9faa69fc27f34b9f65d78dd66bc4c97f11014b"
   BUILD_IN_SOURCE TRUE
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR} # TODO ADD static build flag
   UPDATE_COMMAND ""
@@ -220,7 +220,8 @@ ExternalProject_Add(picosha256
 ExternalProject_Get_property(picosha256 SOURCE_DIR)
 set(picosha256_INCLUDE "${SOURCE_DIR}")
 
-set(CMAKE_BUILD_TYPE Release)
+#set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
 
 # set up our target executable and specify its dependencies and includes
 add_executable(odgi

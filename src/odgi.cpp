@@ -24,7 +24,12 @@ nid_t graph_t::get_id(const handle_t& handle) const {
 
 /// get the backing node for a given node id
 uint64_t graph_t::get_node_rank(const nid_t& node_id) const {
-    return node_id - 1;
+    return node_id - _id_increment - 1;
+}
+
+/// set the id increment, used when the graph starts at a high id to reduce loading costs
+void graph_t::set_id_increment(const nid_t& min_id) {
+    _id_increment = min_id;
 }
     
 /// Get the orientation of a handle
