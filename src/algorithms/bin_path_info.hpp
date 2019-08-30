@@ -18,10 +18,16 @@ namespace algorithms {
 using namespace std;
 using namespace handlegraph;
 
-void bin_path_coverage(const PathHandleGraph& graph,
-                       const std::string& prefix_delimiter,
-                       const uint64_t& num_bins,
-                       std::vector<std::pair<std::string, std::vector<double>>>& table);
+struct pathinfo_t {
+    double mean_cov;
+    double mean_inv;
+    double mean_pos;
+};
+
+void bin_path_info(const PathHandleGraph& graph,
+                   const std::string& prefix_delimiter,
+                   const uint64_t& num_bins,
+                   std::vector<std::pair<std::string, std::vector<pathinfo_t>>>& table);
 
 }
 }

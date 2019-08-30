@@ -3,10 +3,10 @@
 namespace odgi {
 namespace algorithms {
 
-void bin_path_coverage(const PathHandleGraph& graph,
-                       const std::string& prefix_delimiter,
-                       const uint64_t& num_bins,
-                       std::vector<std::pair<std::string, std::vector<double>>>& table) {
+void bin_path_info(const PathHandleGraph& graph,
+                   const std::string& prefix_delimiter,
+                   const uint64_t& num_bins,
+                   std::vector<std::pair<std::string, std::vector<pathinfo_t>>>& table) {
     // the graph must be compacted for this to work
     std::vector<uint64_t> position_map(graph.get_node_count()+1);
     std::vector<std::pair<uint64_t, uint64_t>> contacts;
@@ -46,26 +46,39 @@ void bin_path_coverage(const PathHandleGraph& graph,
         row.first = *path_prefix_order_itr++;
         row.second.resize(num_bins);
     }
+    std::unordered_map<path_handle_t, uint64_t> path_length;
     graph.for_each_path_handle([&](const path_handle_t& path) {
             auto& path_rank = path_prefix_rank[get_path_prefix(path)];
             auto& row = table[path_rank].second;
             // walk the path and aggregate
+            uint64_t path_pos = 0;
             graph.for_each_step_in_path(path, [&](const step_handle_t& occ) {
                     handle_t h = graph.get_handle_of_step(occ);
+                    bool is_rev = graph.get_is_reverse(h);
                     uint64_t p = position_map[number_bool_packing::unpack_number(h)];
                     uint64_t hl = graph.get_length(h);
                     // make contects for the bases in the node
-                    //std::cerr << p << std::endl;
                     for (uint64_t k = 0; k < hl; ++k) {
                         double x = std::floor((double)(p+k)/(double)len * num_bins);
-                        ++row[x];
+                        ++row[x].mean_cov;
+                        if (is_rev) {
+                            ++row[x].mean_inv;
+                        }
+                        row[x].mean_pos += path_pos++;
                     }
                 });
+            path_length[path] = path_pos;
         });
     double bp_per_bin = (double)len / (double)num_bins;
     for (auto& row : table) {
+        uint64_t plen = path_length[graph.get_path_handle(row.first)];
         for (auto& v : row.second) {
-            v /= bp_per_bin;
+            v.mean_inv /= (v.mean_cov ? v.mean_cov : 1);
+            v.mean_cov /= bp_per_bin;
+            v.mean_pos /= bp_per_bin * plen * v.mean_cov;
+            //v.mean_pos /= plen;
+            //v.mean_pos /= v.mean_cov;
+            //if (v.mean_pos > 1) v.mean_pos = 1; // repeats can make this go over 1
         }
     }
 }

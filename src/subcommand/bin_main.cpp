@@ -21,7 +21,8 @@ int main_bin(int argc, char** argv) {
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store the graph in this file", {'o', "out"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-    args::Flag coverage(parser, "coverage", "bin average path coverage across the graph", {'c', "coverage"});
+    // we now do both coverage and orientation
+    //args::Flag coverage(parser, "coverage", "bin average path coverage across the graph", {'c', "coverage"});
     args::ValueFlag<std::string> path_delim(parser, "path-delim", "sort paths in bins by their prefix up to this delemiter", {'D', "path-delim"});
     args::ValueFlag<uint64_t> num_bins(parser, "N", "number of bins", {'n', "num-bins"});
     try {
@@ -53,14 +54,16 @@ int main_bin(int argc, char** argv) {
     }
 
     // our aggregation matrix
-    std::vector<std::pair<std::string, std::vector<double>>> table;
-    if (args::get(coverage)) {
-        algorithms::bin_path_coverage(graph, args::get(path_delim), args::get(num_bins), table);
-    }
-    std::cout << "path.name" << "\t" << "bin" << "\t" << "mean.cov" << std::endl;
+    std::vector<std::pair<std::string, std::vector<algorithms::pathinfo_t>>> table;
+    algorithms::bin_path_info(graph, args::get(path_delim), args::get(num_bins), table);
+    std::cout << "path.name" << "\t" << "bin" << "\t" << "mean.cov" << "\t" << "mean.inv" << "\t" << "mean.pos" << std::endl;
     for (auto& row : table) {
         for (uint64_t i = 0; i < row.second.size(); ++i) {
-            std::cout << row.first << "\t" << i+1 << "\t" << row.second[i] << std::endl;
+            auto& info = row.second[i];
+            if (info.mean_cov) {
+                auto& name = row.first;
+                std::cout << name << "\t" << i+1 << "\t" << info.mean_cov << "\t" << info.mean_inv << "\t" << info.mean_pos << std::endl;
+            }
         }
     }
 
