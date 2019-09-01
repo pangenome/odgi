@@ -76,9 +76,6 @@ void bin_path_info(const PathHandleGraph& graph,
             v.mean_inv /= (v.mean_cov ? v.mean_cov : 1);
             v.mean_cov /= bp_per_bin;
             v.mean_pos /= bp_per_bin * plen * v.mean_cov;
-            //v.mean_pos /= plen;
-            //v.mean_pos /= v.mean_cov;
-            //if (v.mean_pos > 1) v.mean_pos = 1; // repeats can make this go over 1
         }
     }
 }
