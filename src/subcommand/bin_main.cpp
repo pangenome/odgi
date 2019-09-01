@@ -23,7 +23,8 @@ int main_bin(int argc, char** argv) {
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     // we now do both coverage and orientation
     //args::Flag coverage(parser, "coverage", "bin average path coverage across the graph", {'c', "coverage"});
-    args::ValueFlag<std::string> path_delim(parser, "path-delim", "sort paths in bins by their prefix up to this delemiter", {'D', "path-delim"});
+    args::ValueFlag<std::string> path_delim(parser, "path-delim", "annotate rows by prefix and suffix of this delimiter", {'D', "path-delim"});
+    args::Flag aggregate_delim(parser, "aggregate_delim", "aggregate on path prefix delimiter", {'a', "aggregate-delim"});
     args::ValueFlag<uint64_t> num_bins(parser, "N", "number of bins", {'n', "num-bins"});
     try {
         parser.ParseCLI(argc, argv);
@@ -53,16 +54,41 @@ int main_bin(int argc, char** argv) {
         }
     }
 
+    std::string delim = args::get(path_delim);
+    bool agg_delim = args::get(aggregate_delim);
+    auto get_path_prefix = [&](const std::string& path_name) -> std::string {
+        if (agg_delim || delim.empty()) {
+            return "NA";
+        } else {
+            return path_name.substr(0, path_name.find(delim));
+        }
+    };
+    auto get_path_suffix = [&](const std::string& path_name) -> std::string {
+        if (agg_delim || delim.empty()) {
+            return "NA";
+        } else {
+            return path_name.substr(path_name.find(delim)+1);
+        }
+    };
+
     // our aggregation matrix
     std::vector<std::pair<std::string, std::vector<algorithms::pathinfo_t>>> table;
-    algorithms::bin_path_info(graph, args::get(path_delim), args::get(num_bins), table);
-    std::cout << "path.name" << "\t" << "bin" << "\t" << "mean.cov" << "\t" << "mean.inv" << "\t" << "mean.pos" << std::endl;
+    algorithms::bin_path_info(graph, (args::get(aggregate_delim) ? args::get(path_delim) : ""), args::get(num_bins), table);
+    std::cout << "path.name" << "\t" << "path.prefix" << "\t" << "path.suffix" << "\t" << "bin" << "\t" << "mean.cov" << "\t" << "mean.inv" << "\t" << "mean.pos" << std::endl;
     for (auto& row : table) {
+        auto& name = row.first;
+        std::string name_prefix = get_path_prefix(name);
+        std::string name_suffix = get_path_suffix(name);
         for (uint64_t i = 0; i < row.second.size(); ++i) {
             auto& info = row.second[i];
             if (info.mean_cov) {
-                auto& name = row.first;
-                std::cout << name << "\t" << i+1 << "\t" << info.mean_cov << "\t" << info.mean_inv << "\t" << info.mean_pos << std::endl;
+                std::cout << name << "\t"
+                          << name_prefix << "\t"
+                          << name_suffix << "\t"
+                          << i+1 << "\t"
+                          << info.mean_cov << "\t"
+                          << info.mean_inv << "\t"
+                          << info.mean_pos << std::endl;
             }
         }
     }
