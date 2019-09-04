@@ -25,6 +25,7 @@ int main_sort(int argc, char** argv) {
     args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store the graph in this file", {'o', "out"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     args::Flag show_sort(parser, "show", "write the sort order mapping", {'S', "show"});
+    args::ValueFlag<std::string> sort_order_in(parser, "FILE", "load the sort order from this file", {'s', "sort-order"});
     args::Flag cycle_breaking(parser, "cycle_breaking", "use a cycle breaking sort", {'b', "cycle-breaking"});
     args::Flag eades(parser, "eades", "use eades algorithm", {'e', "eades"});
     args::Flag lazy(parser, "lazy", "use lazy topological algorithm (DAG only)", {'l', "lazy"});
@@ -64,7 +65,7 @@ int main_sort(int argc, char** argv) {
         }
     }
     if (args::get(show_sort)) {
-        vector<handle_t> order = (args::get(lazy) ? algorithms::lazy_topological_order(&graph) : algorithms::topological_order(&graph));
+        std::vector<handle_t> order = (args::get(lazy) ? algorithms::lazy_topological_order(&graph) : algorithms::topological_order(&graph));
         for (auto& handle : order) {
             std::cout << graph.get_id(handle) << std::endl;
         }
@@ -79,6 +80,14 @@ int main_sort(int argc, char** argv) {
             graph.apply_ordering(algorithms::two_way_topological_order(&graph), true);
         } else if (args::get(optimize)) {
             graph.optimize();
+        } else if (!args::get(sort_order_in).empty()) {
+            std::vector<handle_t> given_order;
+            std::string buf;
+            std::ifstream in_order(args::get(sort_order_in).c_str());
+            while (std::getline(in_order, buf)) {
+                given_order.push_back(graph.get_handle(std::stol(buf)));
+            }
+            graph.apply_ordering(given_order, true);
         } else {
             graph.apply_ordering(algorithms::topological_order(&graph, true, args::get(progress)), true);
         }
