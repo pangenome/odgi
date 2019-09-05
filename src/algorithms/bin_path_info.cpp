@@ -5,8 +5,9 @@ namespace algorithms {
 
 void bin_path_info(const PathHandleGraph& graph,
                    const std::string& prefix_delimiter,
-                   const uint64_t& num_bins,
-                   std::vector<std::pair<std::string, std::vector<pathinfo_t>>>& table) {
+                   const std::function<void(const std::string&, const hash_map<uint64_t, algorithms::path_info_t>&)>& handle_path,
+                   uint64_t num_bins,
+                   uint64_t bin_width) {
     // the graph must be compacted for this to work
     std::vector<uint64_t> position_map(graph.get_node_count()+1);
     std::vector<std::pair<uint64_t, uint64_t>> contacts;
@@ -16,68 +17,59 @@ void bin_path_info(const PathHandleGraph& graph,
             uint64_t hl = graph.get_length(h);
             len += hl;
         });
+    if (!num_bins) {
+        num_bins = len / bin_width + (len % bin_width ? 1 : 0);
+    } else if (!bin_width) {
+        bin_width = len / num_bins;
+        num_bins = len / bin_width + (len % bin_width ? 1 : 0);
+    }
     position_map[position_map.size()-1] = len;
-    // find the prefix order based on existing set
-    std::unordered_set<std::string> seen_prefixes;
-    std::unordered_map<std::string, uint64_t> path_prefix_rank;
-    auto get_path_prefix = [&](const path_handle_t& p) -> std::string {
-        std::string path_name = graph.get_path_name(p);
-        if (prefix_delimiter.empty()) {
-            return path_name;
-        } else {
-            return path_name.substr(0, path_name.find(prefix_delimiter));
-        }
-    };
-    graph.for_each_path_handle([&](const path_handle_t& p) {
-            std::string path_prefix = get_path_prefix(p);
-            if (!seen_prefixes.count(path_prefix)) {
-                path_prefix_rank[path_prefix] = seen_prefixes.size();
-                seen_prefixes.insert(path_prefix);
-            }
-        });
-    std::vector<std::string> path_prefix_order(seen_prefixes.size());
-    for (auto& p : path_prefix_rank) {
-        path_prefix_order[p.second] = p.first;
-    }
-    // resize the aggregation matrix
-    table.resize(path_prefix_rank.size());
-    auto path_prefix_order_itr = path_prefix_order.begin();
-    for (auto& row : table) {
-        row.first = *path_prefix_order_itr++;
-        row.second.resize(num_bins);
-    }
-    std::unordered_map<path_handle_t, uint64_t> path_length;
+    hash_map<path_handle_t, uint64_t> path_length;
     graph.for_each_path_handle([&](const path_handle_t& path) {
-            auto& path_rank = path_prefix_rank[get_path_prefix(path)];
-            auto& row = table[path_rank].second;
+            hash_map<uint64_t, path_info_t> table;
             // walk the path and aggregate
             uint64_t path_pos = 0;
+            int64_t last_bin = -1; // flag meaning "null bin"
+            uint64_t last_pos_in_bin = 0;
+            bool last_is_rev = false;
             graph.for_each_step_in_path(path, [&](const step_handle_t& occ) {
                     handle_t h = graph.get_handle_of_step(occ);
                     bool is_rev = graph.get_is_reverse(h);
                     uint64_t p = position_map[number_bool_packing::unpack_number(h)];
                     uint64_t hl = graph.get_length(h);
+                    // detect bin crossings
                     // make contects for the bases in the node
                     for (uint64_t k = 0; k < hl; ++k) {
-                        double x = std::floor((double)(p+k)/(double)len * num_bins);
-                        ++row[x].mean_cov;
-                        if (is_rev) {
-                            ++row[x].mean_inv;
+                        int64_t curr_bin = (p+k) / bin_width;
+                        uint64_t curr_pos_in_bin = (p+k) - (curr_bin * bin_width);
+                        if (curr_bin != last_bin) {
+                            // bin cross!
+                            table[curr_bin].begins.push_back({last_bin,last_pos_in_bin,curr_pos_in_bin,path_pos,is_rev});
+                            if (last_bin >= 0) {
+                                table[last_bin].ends.push_back({curr_bin,curr_pos_in_bin,last_pos_in_bin,path_pos-1,last_is_rev});
+                            }
                         }
-                        row[x].mean_pos += path_pos++;
+                        ++table[curr_bin].mean_cov;
+                        if (is_rev) {
+                            ++table[curr_bin].mean_inv;
+                        }
+                        table[curr_bin].mean_pos += path_pos++;
+                        last_bin = curr_bin;
+                        last_is_rev = is_rev;
+                        last_pos_in_bin = curr_pos_in_bin;
                     }
                 });
-            path_length[path] = path_pos;
+            // record the last one
+            table[last_bin].ends.push_back({-1,0,last_pos_in_bin,path_pos-1,last_is_rev});
+            uint64_t path_length = path_pos;
+            for (auto& entry : table) {
+                auto& v = entry.second;
+                v.mean_inv /= (v.mean_cov ? v.mean_cov : 1);
+                v.mean_cov /= bin_width;
+                v.mean_pos /= bin_width * path_length * v.mean_cov;
+            }
+            handle_path(graph.get_path_name(path), table);
         });
-    double bp_per_bin = (double)len / (double)num_bins;
-    for (auto& row : table) {
-        uint64_t plen = path_length[graph.get_path_handle(row.first)];
-        for (auto& v : row.second) {
-            v.mean_inv /= (v.mean_cov ? v.mean_cov : 1);
-            v.mean_cov /= bp_per_bin;
-            v.mean_pos /= bp_per_bin * plen * v.mean_cov;
-        }
-    }
 }
 
 }
