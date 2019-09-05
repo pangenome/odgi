@@ -27,6 +27,7 @@ int main_paths(int argc, char** argv) {
     args::Flag list_names(parser, "list-names", "list the paths in the graph", {'L', "list-paths"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the index from this file", {'i', "idx"});
     args::ValueFlag<std::string> overlaps_file(parser, "FILE", "Each line in (tab-delimited) FILE lists a grouping and a path. For each group we will provide pairwise overlap statistics for each pairing.", {'O', "overlaps"});
+    args::Flag haplo_matrix(parser, "blocks", "write the paths in an approximate binary haplotype matrix based on the graph sort order", {'H', "haplotypes"});
     args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
     try {
@@ -69,7 +70,26 @@ int main_paths(int argc, char** argv) {
                 std::cout << graph.get_path_name(p) << std::endl;
             });
     }
-    
+
+    if (args::get(haplo_matrix)) {
+        std::cout << "node.id";
+        graph.for_each_path_handle([&](const path_handle_t& p) {
+                std::cout << "\t" << graph.get_path_name(p);
+            });
+        std::cout << std::endl;
+        graph.for_each_handle([&](const handle_t& handle) {
+                std::vector<uint64_t> row(graph.get_path_count());
+                graph.for_each_step_on_handle(handle, [&](const step_handle_t& step) {
+                        row[as_integer(graph.get_path(step))] = 1;
+                    });
+                std::cout << graph.get_id(handle);
+                for (auto& v : row) {
+                    std::cout << "\t" << v;
+                }
+                std::cout << std::endl;
+            });
+    }
+
     if (!args::get(overlaps_file).empty()) {
         std::string line;
         ska::flat_hash_map<std::string, std::vector<std::string> > path_sets;
