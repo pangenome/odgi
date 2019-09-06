@@ -17,11 +17,13 @@ using namespace handlegraph;
         
         // generate a canonical orientation across the graph
         std::vector<handle_t> orientation = single_stranded_orientation(graph);
-        
+
+        /*
         if (orientation.size() < graph->get_node_count()) {
             cerr << "error:[dagify] Dagify algorithm only valid on graphs with a single stranded orientation, consider using split_strands first" << endl;
             exit(1);
         }
+        */
         
 #ifdef debug_dagify
         cerr << "got canonical orientation:" << endl;
@@ -79,8 +81,13 @@ using namespace handlegraph;
                 subgraph.add_handle(graph->get_handle(node_id));
             }
             
-            // get a layout with a low FAS
-            std::vector<handle_t> layout = eades_algorithm(&subgraph);
+            // get a layout with a low FAS, generic to any kind of graph
+            std::vector<handle_t> layout;
+            if (subgraph.get_node_count() > 1000) {
+                layout = topological_order(&subgraph);
+            } else {
+                subgraph.for_each_handle([&](const handle_t& handle) { layout.push_back(handle); });
+            }
             
             // make sure the layout matches the canonical orientation of the graph
             if (graph->get_is_reverse(layout.front()) != reversed_nodes.count(graph->get_id(layout.front()))) {
@@ -265,7 +272,7 @@ using namespace handlegraph;
 #ifdef debug_dagify
         cerr << "adding edges between SCCs" << endl;
 #endif
-        
+
         // add edges between the strongly connected components
         graph->for_each_edge([&](const edge_t& canonical_edge) {
             if (component_of[graph->get_id(canonical_edge.first)] != component_of[graph->get_id(canonical_edge.second)]) {
@@ -278,12 +285,15 @@ using namespace handlegraph;
                                canonical_edge);
                 
                 // connect the last copy of the first node to all copies of the second
-                const handle_t& from = injector[edge.first].back();
-                for (const handle_t& to : injector[edge.second]) {
-                    into->create_edge(from, to);
+                auto& injector_at_edge = injector[edge.first];
+                if (!injector_at_edge.empty()) {
+                    const handle_t& from = injector_at_edge.back();
+                    for (const handle_t& to : injector[edge.second]) {
+                        into->create_edge(from, to);
 #ifdef debug_dagify
-                    cerr << "\t" << into->get_id(from) << (into->get_is_reverse(from) ? "-" : "+") << " -> " << into->get_id(to) << (into->get_is_reverse(to) ? "-" : "+") << endl;
+                        cerr << "\t" << into->get_id(from) << (into->get_is_reverse(from) ? "-" : "+") << " -> " << into->get_id(to) << (into->get_is_reverse(to) ? "-" : "+") << endl;
 #endif
+                    }
                 }
             }
             

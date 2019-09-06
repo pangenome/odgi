@@ -42,7 +42,7 @@ using namespace handlegraph;
         auto assign_bucket = [&](const int64_t& in_degree, const int64_t& out_degree) {
             return out_degree - in_degree + int64_t(canonical_orientation.size()) - 2;
         };
-        vector<list<handle_t>> delta_buckets(canonical_orientation.size() > 1 ? 2 * canonical_orientation.size() - 3 : 0);
+        map<int64_t, list<handle_t>> delta_buckets; //(canonical_orientation.size() > 1 ? 2 * canonical_orientation.size() - 3 : 0);
         
         
         vector<handle_t> sources;
@@ -224,7 +224,7 @@ using namespace handlegraph;
                 cerr << "adding node " << graph->get_id(next) << (graph->get_is_reverse(next) ? "-" : "+") << " from delta bucket " << max_delta_bucket << endl;
 #endif
                 
-                bucket.pop_back();
+                if (bucket.size()) bucket.pop_back();
                 degree_info.erase(next);
                 
                 // add it to the layout

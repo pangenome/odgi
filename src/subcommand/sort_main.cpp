@@ -5,6 +5,7 @@
 #include "algorithms/eades_algorithm.hpp"
 #include "algorithms/cycle_breaking_sort.hpp"
 #include "algorithms/id_ordered_paths.hpp"
+#include "algorithms/dagify.hpp"
 
 namespace odgi {
 
@@ -27,6 +28,7 @@ int main_sort(int argc, char** argv) {
     args::Flag show_sort(parser, "show", "write the sort order mapping", {'S', "show"});
     args::ValueFlag<std::string> sort_order_in(parser, "FILE", "load the sort order from this file", {'s', "sort-order"});
     args::Flag cycle_breaking(parser, "cycle_breaking", "use a cycle breaking sort", {'b', "cycle-breaking"});
+    args::Flag dagify(parser, "dagify", "sort on the basis of the DAGified graph", {'d', "dagify-sort"});
     args::Flag eades(parser, "eades", "use eades algorithm", {'e', "eades"});
     args::Flag lazy(parser, "lazy", "use lazy topological algorithm (DAG only)", {'l', "lazy"});
     args::Flag two(parser, "two", "use two-way (max of head-first and tail-first) topological algorithm", {'w', "two-way"});
@@ -88,6 +90,22 @@ int main_sort(int argc, char** argv) {
                 given_order.push_back(graph.get_handle(std::stol(buf)));
             }
             graph.apply_ordering(given_order, true);
+        } else if (args::get(dagify)) {
+            // make a dagified copy, get its sort, and apply the order to our graph
+            graph_t into;
+            auto dagified_to_orig = algorithms::dagify(&graph, &into, 1);
+            auto order = algorithms::topological_order(&into, true, args::get(progress));
+            // translate the order
+            ska::flat_hash_set<handlegraph::nid_t> seen;
+            std::vector<handle_t> translated_order;
+            for (auto& handle : order) {
+                handlegraph::nid_t id = dagified_to_orig[into.get_id(handle)];
+                if (!seen.count(id)) {
+                    translated_order.push_back(graph.get_handle(id));
+                    seen.insert(id);
+                }
+            }
+            graph.apply_ordering(translated_order, true);
         } else {
             graph.apply_ordering(algorithms::topological_order(&graph, true, args::get(progress)), true);
         }
