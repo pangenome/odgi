@@ -49,7 +49,7 @@ std::vector<handle_t> tail_nodes(const HandleGraph* g) {
     
 }
 
-std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads, bool progress_reporting) {
+std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads, bool use_tails, bool progress_reporting) {
 
     // Make a vector to hold the ordered and oriented nodes.
     std::vector<handle_t> sorted;
@@ -126,17 +126,15 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads, bo
     // topological sort on DAGs. It mimics the effect we used to get when we
     // joined all the head nodes to a new root head node and seeded that. We
     // ignore tails since we only orient right from nodes we pick.
-    /*
     if (use_heads) {
         for(const handle_t& head : head_nodes(g)) {
             s.set(number_bool_packing::unpack_number(head), 1);
         }
-    } else {
+    } else if (use_tails) {
         for(const handle_t& tail : tail_nodes(g)) {
             s.set(number_bool_packing::unpack_number(tail), 1);
         }
     }
-    */
 
     // We will use an ordered map handles by ID for nodes we have not visited
     // yet. This ensures a consistent sort order across systems.

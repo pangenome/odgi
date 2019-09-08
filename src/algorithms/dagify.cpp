@@ -83,8 +83,9 @@ using namespace handlegraph;
             
             // get a layout with a low FAS, generic to any kind of graph
             std::vector<handle_t> layout;
+            // but only if it's large enough to justify our dynamic data structure costs
             if (subgraph.get_node_count() > 1000) {
-                layout = topological_order(&subgraph);
+                layout = topological_order(&subgraph, false, false); // sort without heads or tails
             } else {
                 subgraph.for_each_handle([&](const handle_t& handle) { layout.push_back(handle); });
             }
