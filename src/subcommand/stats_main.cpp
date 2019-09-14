@@ -25,6 +25,7 @@ int main_stats(int argc, char** argv) {
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the index from this file", {'i', "idx"});
     args::Flag summarize(parser, "summarize", "summarize the graph properties and dimensions", {'S', "summarize"});
+    args::Flag base_content(parser, "base-content", "describe the base content of the graph", {'b', "base-content"});
     args::Flag path_coverage(parser, "coverage", "provide a histogram of path coverage over bases in the graph", {'C', "coverage"});
     args::Flag path_setcov(parser, "setcov", "provide a histogram of coverage over unique sets of paths", {'V', "set-coverage"});
     args::Flag path_multicov(parser, "multicov", "provide a histogram of coverage over unique multisets of paths", {'M', "multi-coverage"});
@@ -81,6 +82,20 @@ int main_stats(int argc, char** argv) {
         std::cerr << "nodes:\t" << node_count << std::endl;
         std::cerr << "edges:\t" << edge_count << std::endl;
         std::cerr << "paths:\t" << path_count << std::endl;
+    }
+    if (args::get(base_content)) {
+        std::vector<uint64_t> chars(256);
+        graph.for_each_handle([&](const handle_t& h) {
+                std::string seq = graph.get_sequence(h);
+                for (auto c : seq) {
+                    ++chars[c];
+                }
+            });
+        for (uint64_t i = 0; i < 256; ++i) {
+            if (chars[i]) {
+                std::cout << (char)i << "\t" << chars[i] << std::endl;
+            }
+        }
     }
     if (args::get(path_coverage)) {
         std::map<uint64_t, uint64_t> full_histogram;
