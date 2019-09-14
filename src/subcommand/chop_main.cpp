@@ -66,9 +66,7 @@ int main_chop(int argc, char** argv) {
         // get divide points
         uint64_t length = graph.get_length(handle);
         std::vector<size_t> offsets;
-        std::cerr << "node " << graph.get_id(handle) << " " << graph.get_length(handle) << std::endl;
         for (uint64_t i = max_node_length; i < length; i+=max_node_length) {
-            std::cerr << "cutting at " << i << std::endl;
             offsets.push_back(i);
         }
         graph.divide_handle(handle, offsets);
