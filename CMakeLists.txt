@@ -266,6 +266,7 @@ add_executable(odgi
   ${CMAKE_SOURCE_DIR}/src/subcommand/subset_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/bin_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/matrix_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/chop_main.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/hash.cpp

@@ -28,7 +28,7 @@ int main_stats(int argc, char** argv) {
     args::Flag path_coverage(parser, "coverage", "provide a histogram of path coverage over bases in the graph", {'C', "coverage"});
     args::Flag path_setcov(parser, "setcov", "provide a histogram of coverage over unique sets of paths", {'V', "set-coverage"});
     args::Flag path_multicov(parser, "multicov", "provide a histogram of coverage over unique multisets of paths", {'M', "multi-coverage"});
-    args::ValueFlag<std::string> path_bedmulticov(parser, "BED", "for each BED entry, provide a histogram of coverage over unique multisets of paths", {'B', "bed-multicov"});
+    args::ValueFlag<std::string> path_bedmulticov(parser, "BED", "for each BED entry, provide a table of path coverage over unique multisets of paths in the graph. Each unique multiset of paths overlapping a given BED interval is described in terms of its length relative to the total interval, the number of path traversals, and unique paths involved in these traversals.", {'B', "bed-multicov"});
     args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
     try {
@@ -173,14 +173,14 @@ int main_stats(int argc, char** argv) {
         // the header
         std::cout << "path.name" << "\t"
                   << "bed.name" << "\t"
-                  << "ival.start" << "\t"
-                  << "ival.stop" << "\t"
-                  << "ival.len" << "\t"
-                  << "state.len" << "\t"
-                  << "frac" << "\t"
-                  << "paths.size" << "\t"
-                  << "uniq.size" << "\t"
-                  << "paths" << std::endl;
+                  << "bed.start" << "\t"
+                  << "bed.stop" << "\t"
+                  << "bed.len" << "\t"
+                  << "path.set.state.len" << "\t"
+                  << "path.set.frac" << "\t"
+                  << "path.traversals" << "\t"
+                  << "uniq.paths.in.state" << "\t"
+                  << "path.multiset" << std::endl;
 
 #pragma omp parallel for
         for (uint64_t k = 0; k < path_names.size(); ++k) {
