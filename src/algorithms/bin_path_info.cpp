@@ -31,7 +31,7 @@ void bin_path_info(const PathHandleGraph& graph,
             std::map<uint64_t, path_info_t> bins;
             // walk the path and aggregate
             uint64_t path_pos = 0;
-            int64_t last_bin = -1; // flag meaning "null bin"
+            int64_t last_bin = 0; // flag meaning "null bin"
             uint64_t last_pos_in_bin = 0;
             bool last_is_rev = false;
             graph.for_each_step_in_path(path, [&](const step_handle_t& occ) {
@@ -42,9 +42,9 @@ void bin_path_info(const PathHandleGraph& graph,
                     // detect bin crossings
                     // make contects for the bases in the node
                     for (uint64_t k = 0; k < hl; ++k) {
-                        int64_t curr_bin = (p+k) / bin_width;
+                        int64_t curr_bin = (p+k) / bin_width + 1;
                         uint64_t curr_pos_in_bin = (p+k) - (curr_bin * bin_width);
-                        if (curr_bin != last_bin && std::abs(curr_bin-last_bin) > 1) {
+                        if (curr_bin != last_bin && std::abs(curr_bin-last_bin) > 1 || last_bin == 0) {
                             // bin cross!
                             links.push_back(std::make_pair(last_bin,curr_bin));
                         }
@@ -58,6 +58,7 @@ void bin_path_info(const PathHandleGraph& graph,
                         last_pos_in_bin = curr_pos_in_bin;
                     }
                 });
+            links.push_back(std::make_pair(last_bin,0));
             uint64_t path_length = path_pos;
             for (auto& entry : bins) {
                 auto& v = entry.second;

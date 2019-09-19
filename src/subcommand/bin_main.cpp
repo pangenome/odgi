@@ -97,8 +97,8 @@ int main_bin(int argc, char** argv) {
             auto& info = entry_it->second;
             std::cout << "[" << bin_id << ","
                       << info.mean_cov << ","
-                      << info.mean_inv << "]";
-                //<< info.mean_pos << "]"; // omitted for now
+                      << info.mean_inv << ","
+                      << info.mean_pos << "]";
             if (i+1 != bins.size()) {
                 std::cout << ",";
             }
