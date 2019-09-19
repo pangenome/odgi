@@ -1230,6 +1230,8 @@ std::pair<step_handle_t, step_handle_t> graph_t::rewrite_segment(const step_hand
     // verify that we're making a valid rewrite    
     assert(old_seq == new_seq);
     // find the before and after steps, which we'll link into
+    bool is_begin = !has_previous_step(segment_begin);
+    bool is_end = !has_next_step(segment_begin);
     step_handle_t before = get_previous_step(segment_begin);
     step_handle_t after = get_next_step(segment_begin);
     // get the path metadata
@@ -1251,12 +1253,12 @@ std::pair<step_handle_t, step_handle_t> graph_t::rewrite_segment(const step_hand
     for (uint64_t i = 0; i < new_steps.size()-1; ++i) {
         link_steps(new_steps[i], new_steps[i+1]);
     }
-    if (before != path_front_end(path)) {
+    if (!is_begin) {
         link_steps(before, new_steps.front());
     } else {
         path_meta.first = new_steps.front();
     }
-    if (after != path_end(path)) {
+    if (!is_end) {
         link_steps(new_steps.back(), after);
     } else {
         path_meta.last = new_steps.back();
