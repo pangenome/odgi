@@ -77,60 +77,52 @@ int main_bin(int argc, char** argv) {
         return 1;
     }
 
-    std::function<void(const std::string&, const hash_map<uint64_t, algorithms::path_info_t>&)> write_json
+    std::function<void(const std::string&,
+                       const std::vector<std::pair<uint64_t, uint64_t>>&,
+                       const std::map<uint64_t, algorithms::path_info_t>&)> write_json
         = [&](const std::string& path_name,
-              const hash_map<uint64_t, algorithms::path_info_t>& table) {
+              const std::vector<std::pair<uint64_t, uint64_t>>& links,
+              const std::map<uint64_t, algorithms::path_info_t>& bins) {
         std::string name_prefix = get_path_prefix(path_name);
         std::string name_suffix = get_path_suffix(path_name);
-        for (auto& entry : table) {
-            auto& bin_id = entry.first;
-            auto& info = entry.second;
-            if (info.mean_cov) {
-                std::cout << "{\"path_name\":\"" << path_name << "\",";
-                if (!delim.empty()) {
-                    std::cout << "\"path_name_prefix\":\"" << name_prefix << "\","
-                              << "\"path_name_suffix\":\"" << name_suffix << "\",";
-                }
-                std::cout << "\"bin_id\":" << bin_id << ","
-                          << "\"mean_cov\":" << info.mean_cov << ","
-                          << "\"mean_inv\":" << info.mean_inv << ","
-                          << "\"mean_pos\":" << info.mean_pos << ","
-                          << "\"begins\":[";
-                for (uint64_t i = 0; i < info.begins.size(); ++i) {
-                    auto& p = info.begins[i];
-                    std::cout << "[" << p.other_bin << ","
-                              << p.pos_in_other_bin << ","
-                              << p.pos_in_this_bin << ","
-                              << p.pos_in_path << ","
-                              << (p.is_rev?"true":"false") << "]";
-                    if (i+1 < info.begins.size()) {
-                        std::cout << ",";
-                    }
-                }
-                std::cout << "],"
-                          << "\"ends\":[";
-                for (uint64_t i = 0; i < info.ends.size(); ++i) {
-                    auto& p = info.ends[i];
-                    std::cout << "[" << p.other_bin << ","
-                              << p.pos_in_other_bin << ","
-                              << p.pos_in_this_bin << ","
-                              << p.pos_in_path << ","
-                              << (p.is_rev?"true":"false") << "]";
-                    if (i+1 < info.ends.size()) {
-                        std::cout << ",";
-                    }
-                }
-                std::cout << "]}" << std::endl;
-            }
+        std::cout << "{\"path_name\":\"" << path_name << "\",";
+        if (!delim.empty()) {
+            std::cout << "\"path_name_prefix\":\"" << name_prefix << "\","
+                      << "\"path_name_suffix\":\"" << name_suffix << "\",";
         }
+        std::cout << "\"bins\":[";
+        auto entry_it = bins.begin();
+        for (uint64_t i = 0; i < bins.size(); ++i) {
+            auto& bin_id = entry_it->first;
+            auto& info = entry_it->second;
+            std::cout << "[" << bin_id << ","
+                      << info.mean_cov << ","
+                      << info.mean_inv << "]";
+                //<< info.mean_pos << "]"; // omitted for now
+            if (i+1 != bins.size()) {
+                std::cout << ",";
+            }
+            ++entry_it;
+        }
+        std::cout << "],";
+        std::cout << "\"links\":[";
+        for (uint64_t i = 0; i < links.size(); ++i) {
+            auto& link = links[i];
+            std::cout << "[" << link.first << "," << link.second << "]";
+            if (i+1 < links.size()) std::cout << ",";
+        }
+        std::cout << "]}" << std::endl;
     };
 
-    std::function<void(const std::string&, const hash_map<uint64_t, algorithms::path_info_t>&)> write_tsv
+    std::function<void(const std::string&,
+                       const std::vector<std::pair<uint64_t, uint64_t>>&,
+                       const std::map<uint64_t, algorithms::path_info_t>&)> write_tsv
         = [&](const std::string& path_name,
-              const hash_map<uint64_t, algorithms::path_info_t>& table) {
+              const std::vector<std::pair<uint64_t, uint64_t>>& links,
+              const std::map<uint64_t, algorithms::path_info_t>& bins) {
         std::string name_prefix = get_path_prefix(path_name);
         std::string name_suffix = get_path_suffix(path_name);
-        for (auto& entry : table) {
+        for (auto& entry : bins) {
             auto& bin_id = entry.first;
             auto& info = entry.second;
             if (info.mean_cov) {
