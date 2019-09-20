@@ -132,7 +132,7 @@ int main_bin(int argc, char** argv) {
                           << bin_id << "\t"
                           << info.mean_cov << "\t"
                           << info.mean_inv << "\t"
-                          << info.mean_pos << "\t" << std::endl;
+                          << info.mean_pos << std::endl;
             }
         }
     };
