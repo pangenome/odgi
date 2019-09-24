@@ -1,0 +1,38 @@
+#pragma once
+
+#include <vector>
+#include <utility>
+#include <algorithm>
+#include <limits>
+#include <cmath>
+#include <iostream>
+#include <unordered_set>
+#include <unordered_map>
+#include <map>
+#include <handlegraph/handle_graph.hpp>
+#include <handlegraph/util.hpp>
+#include <handlegraph/path_handle_graph.hpp>
+
+namespace odgi {
+namespace algorithms {
+
+using namespace std;
+using namespace handlegraph;
+
+struct path_info_t {
+    double mean_cov;
+    double mean_inv;
+    double mean_pos;
+};
+
+void bin_path_info(const PathHandleGraph& graph,
+                   const std::string& prefix_delimiter,
+                   const std::function<void(const std::string&,
+                                            const std::vector<std::pair<uint64_t, uint64_t>>&,
+                                            const std::map<uint64_t, algorithms::path_info_t>&)>& handle_path,
+                   uint64_t num_bins = 0,
+                   uint64_t bin_width = 0);
+
+
+}
+}
