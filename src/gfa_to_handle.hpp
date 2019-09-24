@@ -10,6 +10,7 @@
 
 #include "gfakluge.hpp"
 #include <iostream>
+#include <limits>
 #include <handlegraph/mutable_path_mutable_handle_graph.hpp>
 
 namespace odgi {
