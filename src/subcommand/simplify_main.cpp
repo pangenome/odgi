@@ -42,7 +42,6 @@ int main_simplify(int argc, char** argv) {
 
     graph_t graph;
     assert(argc > 0);
-    assert(args::get(kmer_length));
     std::string infile = args::get(dg_in_file);
     if (infile.size()) {
         if (infile == "-") {

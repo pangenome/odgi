@@ -14,12 +14,12 @@ bool graph_t::has_node(nid_t node_id) const {
 
 /// Look up the handle for the node with the given ID in the given orientation
 handle_t graph_t::get_handle(const nid_t& node_id, bool is_reverse) const {
-    return number_bool_packing::pack(node_id-1, is_reverse);
+    return number_bool_packing::pack(get_node_rank(node_id), is_reverse);
 }
 
 /// Get the ID from a handle
 nid_t graph_t::get_id(const handle_t& handle) const {
-    return number_bool_packing::unpack_number(handle)+1;
+    return number_bool_packing::unpack_number(handle) + 1 + _id_increment;
 }
 
 /// get the backing node for a given node id
@@ -1390,6 +1390,8 @@ uint64_t graph_t::serialize(std::ostream& out) {
     written += sizeof(_path_handle_next);
     out.write((char*)&_deleted_node_count,sizeof(_deleted_node_count));
     written += sizeof(_deleted_node_count);
+    out.write((char*)&_id_increment,sizeof(_id_increment));
+    written += sizeof(_id_increment);
     assert(_node_count == node_v.size());
     for (auto& node : node_v) {
         written += node.serialize(out);
@@ -1435,6 +1437,7 @@ void graph_t::load(std::istream& in) {
     in.read((char*)&_path_count,sizeof(_path_count));
     in.read((char*)&_path_handle_next,sizeof(_path_handle_next));
     in.read((char*)&_deleted_node_count,sizeof(_deleted_node_count));
+    in.read((char*)&_id_increment,sizeof(_id_increment));
     node_v.resize(_node_count);
     for (size_t i = 0; i < _node_count; ++i) {
         auto& node = node_v[i];

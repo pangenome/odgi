@@ -60,7 +60,6 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads, bo
     dyn::lciv<dyn::hacked_vector,256,16> masked_edges_iv;
 
     auto delta_to_handle = [&](const handle_t& base, uint64_t delta) {
-        assert(delta != 0);
         if (delta == 1) {
             return base;
         } else if (delta % 2 == 0) {
