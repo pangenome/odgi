@@ -25,10 +25,11 @@ int main_stats(int argc, char** argv) {
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the index from this file", {'i', "idx"});
     args::Flag summarize(parser, "summarize", "summarize the graph properties and dimensions", {'S', "summarize"});
+    args::Flag base_content(parser, "base-content", "describe the base content of the graph", {'b', "base-content"});
     args::Flag path_coverage(parser, "coverage", "provide a histogram of path coverage over bases in the graph", {'C', "coverage"});
     args::Flag path_setcov(parser, "setcov", "provide a histogram of coverage over unique sets of paths", {'V', "set-coverage"});
     args::Flag path_multicov(parser, "multicov", "provide a histogram of coverage over unique multisets of paths", {'M', "multi-coverage"});
-    args::ValueFlag<std::string> path_bedmulticov(parser, "BED", "for each BED entry, provide a histogram of coverage over unique multisets of paths", {'B', "bed-multicov"});
+    args::ValueFlag<std::string> path_bedmulticov(parser, "BED", "for each BED entry, provide a table of path coverage over unique multisets of paths in the graph. Each unique multiset of paths overlapping a given BED interval is described in terms of its length relative to the total interval, the number of path traversals, and unique paths involved in these traversals.", {'B', "bed-multicov"});
     args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
     try {
@@ -81,6 +82,20 @@ int main_stats(int argc, char** argv) {
         std::cerr << "nodes:\t" << node_count << std::endl;
         std::cerr << "edges:\t" << edge_count << std::endl;
         std::cerr << "paths:\t" << path_count << std::endl;
+    }
+    if (args::get(base_content)) {
+        std::vector<uint64_t> chars(256);
+        graph.for_each_handle([&](const handle_t& h) {
+                std::string seq = graph.get_sequence(h);
+                for (auto c : seq) {
+                    ++chars[c];
+                }
+            });
+        for (uint64_t i = 0; i < 256; ++i) {
+            if (chars[i]) {
+                std::cout << (char)i << "\t" << chars[i] << std::endl;
+            }
+        }
     }
     if (args::get(path_coverage)) {
         std::map<uint64_t, uint64_t> full_histogram;
@@ -173,14 +188,14 @@ int main_stats(int argc, char** argv) {
         // the header
         std::cout << "path.name" << "\t"
                   << "bed.name" << "\t"
-                  << "ival.start" << "\t"
-                  << "ival.stop" << "\t"
-                  << "ival.len" << "\t"
-                  << "state.len" << "\t"
-                  << "frac" << "\t"
-                  << "paths.size" << "\t"
-                  << "uniq.size" << "\t"
-                  << "paths" << std::endl;
+                  << "bed.start" << "\t"
+                  << "bed.stop" << "\t"
+                  << "bed.len" << "\t"
+                  << "path.set.state.len" << "\t"
+                  << "path.set.frac" << "\t"
+                  << "path.traversals" << "\t"
+                  << "uniq.paths.in.state" << "\t"
+                  << "path.multiset" << std::endl;
 
 #pragma omp parallel for
         for (uint64_t k = 0; k < path_names.size(); ++k) {

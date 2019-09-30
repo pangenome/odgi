@@ -9,7 +9,6 @@ using namespace odgi::subcommand;
 
 int main_bin(int argc, char** argv) {
 
-    // trick argumentparser to do the right thing with the subcommand
     for (uint64_t i = 1; i < argc-1; ++i) {
         argv[i] = argv[i+1];
     }
@@ -21,11 +20,11 @@ int main_bin(int argc, char** argv) {
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store the graph in this file", {'o', "out"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-    // we now do both coverage and orientation
-    //args::Flag coverage(parser, "coverage", "bin average path coverage across the graph", {'c', "coverage"});
     args::ValueFlag<std::string> path_delim(parser, "path-delim", "annotate rows by prefix and suffix of this delimiter", {'D', "path-delim"});
-    args::Flag aggregate_delim(parser, "aggregate_delim", "aggregate on path prefix delimiter", {'a', "aggregate-delim"});
+    args::Flag output_json(parser, "write-json", "write JSON format output including additional path positional information", {'j', "json"});
+    args::Flag aggregate_delim(parser, "aggregate-delim", "aggregate on path prefix delimiter", {'a', "aggregate-delim"});
     args::ValueFlag<uint64_t> num_bins(parser, "N", "number of bins", {'n', "num-bins"});
+    args::ValueFlag<uint64_t> bin_width(parser, "bp", "width of each bin in basepairs along the graph vector", {'w', "bin-width"});
     try {
         parser.ParseCLI(argc, argv);
     } catch (args::Help) {
@@ -72,25 +71,81 @@ int main_bin(int argc, char** argv) {
     };
 
     // our aggregation matrix
-    std::vector<std::pair<std::string, std::vector<algorithms::pathinfo_t>>> table;
-    algorithms::bin_path_info(graph, (args::get(aggregate_delim) ? args::get(path_delim) : ""), args::get(num_bins), table);
-    std::cout << "path.name" << "\t" << "path.prefix" << "\t" << "path.suffix" << "\t" << "bin" << "\t" << "mean.cov" << "\t" << "mean.inv" << "\t" << "mean.pos" << std::endl;
-    for (auto& row : table) {
-        auto& name = row.first;
-        std::string name_prefix = get_path_prefix(name);
-        std::string name_suffix = get_path_suffix(name);
-        for (uint64_t i = 0; i < row.second.size(); ++i) {
-            auto& info = row.second[i];
+    std::vector<std::pair<std::string, std::vector<algorithms::path_info_t>>> table;
+    if (args::get(num_bins) + args::get(bin_width) == 0) {
+        std::cerr << "[odgi bin] error: a bin width or a bin count is required" << std::endl;
+        return 1;
+    }
+
+    std::function<void(const std::string&,
+                       const std::vector<std::pair<uint64_t, uint64_t>>&,
+                       const std::map<uint64_t, algorithms::path_info_t>&)> write_json
+        = [&](const std::string& path_name,
+              const std::vector<std::pair<uint64_t, uint64_t>>& links,
+              const std::map<uint64_t, algorithms::path_info_t>& bins) {
+        std::string name_prefix = get_path_prefix(path_name);
+        std::string name_suffix = get_path_suffix(path_name);
+        std::cout << "{\"path_name\":\"" << path_name << "\",";
+        if (!delim.empty()) {
+            std::cout << "\"path_name_prefix\":\"" << name_prefix << "\","
+                      << "\"path_name_suffix\":\"" << name_suffix << "\",";
+        }
+        std::cout << "\"bins\":[";
+        auto entry_it = bins.begin();
+        for (uint64_t i = 0; i < bins.size(); ++i) {
+            auto& bin_id = entry_it->first;
+            auto& info = entry_it->second;
+            std::cout << "[" << bin_id << ","
+                      << info.mean_cov << ","
+                      << info.mean_inv << ","
+                      << info.mean_pos << "]";
+            if (i+1 != bins.size()) {
+                std::cout << ",";
+            }
+            ++entry_it;
+        }
+        std::cout << "],";
+        std::cout << "\"links\":[";
+        for (uint64_t i = 0; i < links.size(); ++i) {
+            auto& link = links[i];
+            std::cout << "[" << link.first << "," << link.second << "]";
+            if (i+1 < links.size()) std::cout << ",";
+        }
+        std::cout << "]}" << std::endl;
+    };
+
+    std::function<void(const std::string&,
+                       const std::vector<std::pair<uint64_t, uint64_t>>&,
+                       const std::map<uint64_t, algorithms::path_info_t>&)> write_tsv
+        = [&](const std::string& path_name,
+              const std::vector<std::pair<uint64_t, uint64_t>>& links,
+              const std::map<uint64_t, algorithms::path_info_t>& bins) {
+        std::string name_prefix = get_path_prefix(path_name);
+        std::string name_suffix = get_path_suffix(path_name);
+        for (auto& entry : bins) {
+            auto& bin_id = entry.first;
+            auto& info = entry.second;
             if (info.mean_cov) {
-                std::cout << name << "\t"
+                std::cout << path_name << "\t"
                           << name_prefix << "\t"
                           << name_suffix << "\t"
-                          << i+1 << "\t"
+                          << bin_id << "\t"
                           << info.mean_cov << "\t"
                           << info.mean_inv << "\t"
                           << info.mean_pos << std::endl;
             }
         }
+    };
+
+    if (args::get(output_json)) {
+        algorithms::bin_path_info(graph, (args::get(aggregate_delim) ? args::get(path_delim) : ""),
+                                  write_json,
+                                  args::get(num_bins), args::get(bin_width));
+    } else {
+        std::cout << "path.name" << "\t" << "path.prefix" << "\t" << "path.suffix" << "\t" << "bin" << "\t" << "mean.cov" << "\t" << "mean.inv" << "\t" << "mean.pos" << std::endl;
+        algorithms::bin_path_info(graph, (args::get(aggregate_delim) ? args::get(path_delim) : ""),
+                                  write_tsv,
+                                  args::get(num_bins), args::get(bin_width));
     }
 
     return 0;

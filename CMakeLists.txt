@@ -89,7 +89,7 @@ set(hopscotch_map_INCLUDE "${INSTALL_DIR}/src/hopscotch_map/include")
 # gfakluge (now header only)
 ExternalProject_Add(gfakluge
   GIT_REPOSITORY "https://github.com/vgteam/gfakluge.git"
-  GIT_TAG "644f90e07a46b5a16469f1c2e597085fb776bcf8"
+  GIT_TAG "d65e688b6f2d301ad953da578f3cf35e68feb452"
   BUILD_IN_SOURCE TRUE
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR} # TODO ADD static build flag
   UPDATE_COMMAND ""
@@ -104,7 +104,7 @@ set(gfakluge_LIB "${INSTALL_DIR}/src/gfakluge")
 # libhandlegraph (full build using its cmake config)
 ExternalProject_Add(handlegraph
   GIT_REPOSITORY "https://github.com/vgteam/libhandlegraph.git"
-  GIT_TAG "47791b556bb963d7f1922548cf512749e59dab86"
+  GIT_TAG "541b97315fd413846f5a76476907f8d2b2276242"
   CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
   UPDATE_COMMAND ""
   INSTALL_COMMAND "")
@@ -233,6 +233,7 @@ ExternalProject_Get_property(picosha256 SOURCE_DIR)
 set(picosha256_INCLUDE "${SOURCE_DIR}")
 
 set(CMAKE_BUILD_TYPE Release)
+#set(CMAKE_BUILD_TYPE Debug)
 
 # set up our target executable and specify its dependencies and includes
 add_executable(odgi
@@ -266,6 +267,7 @@ add_executable(odgi
   ${CMAKE_SOURCE_DIR}/src/subcommand/subset_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/bin_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/matrix_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/chop_main.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/hash.cpp

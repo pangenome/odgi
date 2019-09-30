@@ -8,13 +8,13 @@ namespace odgi {
 
 using namespace odgi::subcommand;
 
-int main_simplify(int argc, char** argv) {
+int main_chop(int argc, char** argv) {
 
     // trick argumentparser to do the right thing with the subcommand
     for (uint64_t i = 1; i < argc-1; ++i) {
         argv[i] = argv[i+1];
     }
-    std::string prog_name = "odgi simplify";
+    std::string prog_name = "odgi chop";
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
@@ -22,8 +22,8 @@ int main_simplify(int argc, char** argv) {
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store the graph self index in this file", {'o', "out"});
+    args::ValueFlag<uint64_t> chop_to(parser, "N", "divide nodes to be shorter than this length", {'c', "chop-to"});
     args::Flag debug(parser, "debug", "print information about the components", {'d', "debug"});
-    args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
     try {
         parser.ParseCLI(argc, argv);
@@ -52,25 +52,25 @@ int main_simplify(int argc, char** argv) {
             f.close();
         }
     }
-    if (args::get(threads)) {
-        omp_set_num_threads(args::get(threads));
-    }
-    graph.clear_paths();
-    std::vector<std::vector<handle_t>> linear_components = algorithms::simple_components(graph, 2);
-    if (args::get(debug)) {
-        std::cerr << "there are " << linear_components.size() << " components" << std::endl;
-        uint64_t i = 0;
-        for (auto& v : linear_components) {
-            std::cerr << "component " << ++i << " ";
-            for (auto& n : v) {
-                std::cerr << graph.get_id(n) << (graph.get_is_reverse(n)?"-":"+") << ",";
+
+    uint64_t max_node_length = args::get(chop_to);
+    std::vector<handle_t> to_chop;
+    graph.for_each_handle([&](const handle_t& handle) {
+            if (graph.get_length(handle) > max_node_length) {
+                to_chop.push_back(handle);
             }
-            std::cerr << std::endl;
+        });
+
+    for (auto& handle : to_chop) {
+        // get divide points
+        uint64_t length = graph.get_length(handle);
+        std::vector<size_t> offsets;
+        for (uint64_t i = max_node_length; i < length; i+=max_node_length) {
+            offsets.push_back(i);
         }
+        graph.divide_handle(handle, offsets);
     }
-    for (auto& v : linear_components) {
-        graph.combine_handles(v);
-    }
+    
     std::string outfile = args::get(dg_out_file);
     if (outfile.size()) {
         if (outfile == "-") {
@@ -84,8 +84,8 @@ int main_simplify(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand odgi_simplify("simplify", "merge unbranching linear components into single nodes",
-                                PIPELINE, 3, main_simplify);
+static Subcommand odgi_chop("chop", "chop long nodes into short ones while preserving topology",
+                            PIPELINE, 3, main_chop);
 
 
 }

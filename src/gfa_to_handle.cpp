@@ -19,9 +19,19 @@ namespace odgi {
          graph_t graph(num_nodes+1); // include delimiter
          */
         uint64_t i = 0;
+        uint64_t min_id = std::numeric_limits<uint64_t>::max();
+        uint64_t max_id = std::numeric_limits<uint64_t>::min();
+        gg.for_each_sequence_line_in_file(filename, [&](gfak::sequence_elem s) {
+                uint64_t id = stol(s.name);
+                min_id = std::min(min_id, id);
+                max_id = std::max(max_id, id);
+            });
+        uint64_t id_increment = min_id - 1;
+        graph->set_id_increment(id_increment);
+        // set the min id as an offset
         gg.for_each_sequence_line_in_file(filename, [&](gfak::sequence_elem s) {
             uint64_t id = stol(s.name);
-            graph->create_handle(s.sequence, id);
+            graph->create_handle(s.sequence, id - id_increment);
             if (show_progress) {
                 if (i % 1000 == 0) std::cerr << "node " << i << "\r";
                 ++i;
@@ -43,7 +53,12 @@ namespace odgi {
         if (show_progress) {
             i = 0; std::cerr << std::endl;
         }
-        gg.for_each_path_element_in_file(filename, [&](const std::string& path_name_raw, const std::string& node_id, bool is_rev, const std::string& cigar) {
+        gg.for_each_path_element_in_file(filename, [&](const std::string& path_name_raw,
+                                                       const std::string& node_id,
+                                                       bool is_rev,
+                                                       const std::string& cigar,
+                                                       bool is_empty,
+                                                       bool is_circular) {
             handlegraph::path_handle_t path;
             std::string path_name = path_name_raw;
             path_name.erase(std::remove_if(path_name.begin(), path_name.end(), [](char c) { return std::isspace(c); }), path_name.end());
@@ -57,7 +72,6 @@ namespace odgi {
             }
             handlegraph::handle_t occ = graph->get_handle(stol(node_id), is_rev);
             graph->append_step(path, occ);
-            // ignores overlaps
         });
     }
 }
