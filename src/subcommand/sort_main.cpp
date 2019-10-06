@@ -32,6 +32,7 @@ int main_sort(int argc, char** argv) {
     args::Flag eades(parser, "eades", "use eades algorithm", {'e', "eades"});
     args::Flag lazy(parser, "lazy", "use lazy topological algorithm (DAG only)", {'l', "lazy"});
     args::Flag two(parser, "two", "use two-way (max of head-first and tail-first) topological algorithm", {'w', "two-way"});
+    args::Flag no_seeds(parser, "no-seeds", "don't use heads or tails to seed topological sort", {'n', "no-seeds"});
     args::Flag paths_by_min_node_id(parser, "paths-min", "sort paths by their lowest contained node id", {'P', "paths-min"});
     args::Flag paths_by_max_node_id(parser, "paths-max", "sort paths by their highest contained node id", {'M', "paths-max"});
     args::Flag paths_by_avg_node_id(parser, "paths-avg", "sort paths by their average contained node id", {'A', "paths-avg"});
@@ -94,7 +95,7 @@ int main_sort(int argc, char** argv) {
             // make a dagified copy, get its sort, and apply the order to our graph
             graph_t into;
             auto dagified_to_orig = algorithms::dagify(&graph, &into, 1);
-            auto order = algorithms::topological_order(&into, true, args::get(progress));
+            auto order = algorithms::topological_order(&into, true, false, args::get(progress));
             // translate the order
             ska::flat_hash_set<handlegraph::nid_t> seen;
             std::vector<handle_t> translated_order;
@@ -106,11 +107,12 @@ int main_sort(int argc, char** argv) {
                 }
             }
             graph.apply_ordering(translated_order, true);
-        } else {
-            graph.apply_ordering(algorithms::topological_order(&graph, true, args::get(progress)), true);
-        }
-        if (args::get(cycle_breaking)) {
+        } else if (args::get(cycle_breaking)) {
             graph.apply_ordering(algorithms::cycle_breaking_sort(graph), true);
+        } else if (args::get(no_seeds)) {
+            graph.apply_ordering(algorithms::topological_order(&graph, false, false, args::get(progress)), true);
+        } else {
+            graph.apply_ordering(algorithms::topological_order(&graph, true, false, args::get(progress)), true);
         }
         if (args::get(paths_by_min_node_id)) {
             graph.apply_path_ordering(algorithms::prefix_and_id_ordered_paths(graph, args::get(path_delim), false, false));
