@@ -27,7 +27,7 @@ int main_unitig(int argc, char** argv) {
     args::Flag fake_fastq(parser, "fake", "write unitigs as FASTQ with fixed quality", {'f', "fake-fastq"});
     args::ValueFlag<uint64_t> unitig_to(parser, "N", "continue unitigs with a random walk in the graph so that they are at least this length", {'t', "sample-to"});
     args::ValueFlag<uint64_t> unitig_plus(parser, "N", "continue unitigs with a random walk in the graph this far past their natural end", {'p', "sample-plus"});
-    //args::Flag debug(parser, "debug", "print information about the components", {'d', "debug"});
+    args::ValueFlag<uint64_t> min_begin_node_length(parser, "N", "only begin unitigs from nodes of this length", {'l', "min-begin-node-length"});
 
     try {
         parser.ParseCLI(argc, argv);
@@ -66,6 +66,15 @@ int main_unitig(int argc, char** argv) {
     std::random_device rseed;
     std::mt19937 rgen(rseed()); // mersenne_twister
     uint64_t unitig_num = 0;
+
+    if (args::get(min_begin_node_length)) {
+        uint64_t min_length = args::get(min_begin_node_length);
+        graph.for_each_handle([&](const handle_t& handle) {
+                if (graph.get_length(handle) < min_length) {
+                    seen_handles[graph.get_id(handle)] = true;
+                }
+            });
+    }
 
     graph.for_each_handle([&](const handle_t& handle) {
             if (!seen_handles.at(graph.get_id(handle))) {
