@@ -65,6 +65,7 @@ int main_unitig(int argc, char** argv) {
 
     std::random_device rseed;
     std::mt19937 rgen(rseed()); // mersenne_twister
+    uint64_t unitig_num = 0;
 
     graph.for_each_handle([&](const handle_t& handle) {
             if (!seen_handles.at(graph.get_id(handle))) {
@@ -144,10 +145,14 @@ int main_unitig(int argc, char** argv) {
                 } else {
                     std::cout << ">";
                 }
-                for (auto& h : unitig) {
-                    std::cout << graph.get_id(h) << (graph.get_is_reverse(h) ? "-" : "+") << ",";
+                std::cout << "unitig" << ++unitig_num;
+                std::cout << " length=" << unitig_length;
+                std::cout << " path=";
+                for (uint64_t i = 0; i < unitig.size(); ++i) {
+                    auto& h = unitig.at(i);
+                    std::cout << graph.get_id(h) << (graph.get_is_reverse(h) ? "-" : "+") << (i+1 < unitig.size() ? "," : "");
                 }
-                std::cout << " length=" << unitig_length << std::endl;
+                std::cout << std::endl;
                 for (auto& h : unitig) {
                     std::cout << graph.get_sequence(h);
                 }
