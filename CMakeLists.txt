@@ -259,6 +259,7 @@ add_executable(odgi
   ${CMAKE_SOURCE_DIR}/src/subcommand/sort_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/view_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/kmers_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/unitig_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/viz_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/paths_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/cactus_main.cpp

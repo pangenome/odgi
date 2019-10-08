@@ -4,7 +4,7 @@
 #include "args.hxx"
 #include <cstdio>
 #include <algorithm>
-//#include "io_helper.hpp"
+#include "algorithms/topological_sort.hpp"
 
 namespace odgi {
 
@@ -25,6 +25,7 @@ int main_build(int argc, char** argv) {
     args::ValueFlag<std::string> gfa_file(parser, "FILE", "construct the graph from this GFA input file", {'g', "gfa"});
     args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store the graph self index in this file", {'o', "out"});
     args::Flag to_gfa(parser, "to_gfa", "write the graph to stdout in GFA format", {'G', "to-gfa"});
+    args::Flag toposort(parser, "sort", "apply generalized topological sort to the graph and set node ids to order", {'s', "sort"});
     args::Flag debug(parser, "debug", "enable debugging", {'d', "debug"});
     args::Flag progress(parser, "progress", "show progress updates", {'p', "progress"});
     try {
@@ -60,6 +61,9 @@ int main_build(int argc, char** argv) {
     }
     if (args::get(progress)) {
         std::cerr << std::endl;
+    }
+    if (args::get(toposort)) {
+        graph.apply_ordering(algorithms::topological_order(&graph, true, args::get(progress)), true);
     }
     // here we should measure memory usage etc.
     if (args::get(debug)) {
