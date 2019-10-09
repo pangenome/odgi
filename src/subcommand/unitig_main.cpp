@@ -79,24 +79,34 @@ int main_unitig(int argc, char** argv) {
     graph.for_each_handle([&](const handle_t& handle) {
             if (!seen_handles.at(graph.get_id(handle))) {
                 seen_handles[graph.get_id(handle)] = true;
+                std::unordered_set<handle_t> seen_in_unitig;
                 // extend the unitig
                 std::deque<handle_t> unitig;
                 unitig.push_back(handle);
                 handle_t curr = handle;
+                seen_in_unitig.insert(curr);
                 while (graph.get_degree(curr, false) == 1) {
                     graph.follow_edges(curr, false, [&](const handle_t& n) {
                             curr = n;
                         });
+                    if (seen_in_unitig.count(curr)) {
+                        break;
+                    }
                     unitig.push_back(curr);
                     seen_handles[graph.get_id(curr)] = true;
+                    seen_in_unitig.insert(curr);
                 }
                 curr = handle;
                 while (graph.get_degree(curr, true) == 1) {
                     graph.follow_edges(curr, true, [&](const handle_t& n) {
                             curr = n;
                         });
+                    if (seen_in_unitig.count(curr)) {
+                        break;
+                    }
                     unitig.push_front(curr);
                     seen_handles[graph.get_id(curr)] = true;
+                    seen_in_unitig.insert(curr);
                 }
                 // if we should extend further, do it
                 uint64_t unitig_length = 0;
