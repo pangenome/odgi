@@ -3,7 +3,7 @@
 language: cpp
 compiler: gcc
 sudo: required
-dist: xenial
+dist: bionic
 #before_install:
 install:
   - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo add-apt-repository -y ppa:jonathonf/gcc-7.1; sudo apt-get update -qy; sudo apt-get install -qy gcc-7 g++-7; fi
