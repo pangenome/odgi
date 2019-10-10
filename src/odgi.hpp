@@ -82,6 +82,7 @@ protected:
     bool for_each_handle_impl(const std::function<bool(const handle_t&)>& iteratee, bool parallel = false) const;
     
 public:
+
     /// Return the number of nodes in the graph
     /// TODO: can't be node_count because XG has a field named node_count.
     size_t get_node_count(void) const;
@@ -346,7 +347,6 @@ public:
     /**
      * Insert a visit to a node to the given path between the given steps.
      * Returns a handle to the new step on the path which is appended.
-
      * Handles to prior steps on the path, and to other paths, must remain valid.
      */
     step_handle_t insert_step(const step_handle_t& before, const step_handle_t& after, const handle_t& to_insert);

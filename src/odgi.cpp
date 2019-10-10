@@ -52,7 +52,7 @@ std::string graph_t::get_sequence(const handle_t& handle) const {
     auto& seq = node_v.at(number_bool_packing::unpack_number(handle)).sequence();
     return (get_is_reverse(handle) ? reverse_complement(seq) : seq);
 }
-    
+
 /// Loop over all the handles to next/previous (right/left) nodes. Passes
 /// them to a callback which returns false to stop iterating and true to
 /// continue. Returns true if we finished and false if we stopped early.
@@ -88,7 +88,6 @@ bool graph_t::follow_edges_impl(const handle_t& handle, bool go_left, const std:
     return true;
 }
 
-    
 /// Loop over all the nodes in the graph in their local forward
 /// orientations, in their internal stored order. Stop if the iteratee
 /// returns false. Can be told to run in parallel, in which case stopping
@@ -145,6 +144,21 @@ size_t graph_t::get_degree(const handle_t& handle, bool go_left) const {
     size_t degree = 0;
     follow_edges(handle, go_left, [&degree](const handle_t& h) { ++degree; });
     return degree;
+}
+
+/// Get the locally forward version of a handle
+handle_t graph_t::forward(const handle_t& handle) const {
+    if (get_is_reverse(handle)) {
+        return flip(handle);
+    } else {
+        return handle;
+    }
+}
+
+/// A pair of handles can be used as an edge. When so used, the handles have a
+/// canonical order and orientation.
+edge_t graph_t::edge_handle(const handle_t& left, const handle_t& right) const {
+    return std::make_pair(left, right);
 }
     
 /**
@@ -364,6 +378,11 @@ path_handle_t graph_t::get_path_handle_of_step(const step_handle_t& step_handle)
 ////////////////////////////////////////////////////////////////////////////
 // Additional optional interface with a default implementation
 ////////////////////////////////////////////////////////////////////////////
+
+/// Returns the 0-based ordinal rank of a step on a path
+size_t graph_t::get_ordinal_rank_of_step(const step_handle_t& step_handle) const {
+    return 0; // no implementation of this in odgi (yet)
+}
 
 /// Returns true if the given path is empty, and false otherwise
 bool graph_t::is_empty(const path_handle_t& path_handle) const {
@@ -1207,6 +1226,12 @@ void graph_t::decrement_rank(const step_handle_t& step_handle) {
         auto& p = path_metadata_v[as_integer(get_path(step_handle))];
         --as_integers(p.last)[1];
     }
+}
+
+// Insert a visit to a node to the given path between the given steps.
+step_handle_t graph_t::insert_step(const step_handle_t& before, const step_handle_t& after, const handle_t& to_insert) {
+    auto p = rewrite_segment(before, after, { to_insert });
+    return get_next_step(p.first);
 }
 
 /// reassign the given step to the new handle
