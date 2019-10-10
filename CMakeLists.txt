@@ -233,18 +233,16 @@ ExternalProject_Get_property(picosha256 SOURCE_DIR)
 set(picosha256_INCLUDE "${SOURCE_DIR}")
 
 # pybind11
-
 #ExternalProject_Add(pybind11
 #    GIT_REPOSITORY https://github.com/pybind/pybind11.git 
 #    GIT_TAG v2.2.4
 #    CONFIGURE_COMMAND ""
 #    BUILD_COMMAND ""
-#    INSTALL_COMMAND ""
-#)
+#    INSTALL_COMMAND "")
 #ExternalProject_Get_Property(pybind11 SOURCE_DIR)
 #set(pybind11_INCLUDE_DIRS ${SOURCE_DIR}/include)
-#set(pybind11_DIR ${SOURCE_DIR}/pybind11/tools)
-#set(pybind11_DIR "${SOURCE_DIR}") # CACHE PATH "")
+#set(pybind11_DIR ${SOURCE_DIR})
+#add_subdirectory(${pybind11_DIR})
 
 set(CMAKE_BUILD_TYPE Release)
 #set(CMAKE_BUILD_TYPE Debug)
@@ -367,15 +365,16 @@ add_executable(odgi
 target_link_libraries(odgi ${odgi_LIBS})
 set_target_properties(odgi PROPERTIES OUTPUT_NAME "odgi")
 
-find_package(pybind11)
-if(pybind11_FOUND)
-  #message("system wide pybind11 installation found")
-  pybind11_add_module(odgi_pybind11 "${CMAKE_SOURCE_DIR}/src/pythonmodule.cpp")
-  add_dependencies(odgi_pybind11 ${odgi_DEPS} libodgi)
-  target_include_directories(odgi_pybind11 PUBLIC ${odgi_INCLUDES})
-  target_link_libraries(odgi_pybind11 PRIVATE "${CMAKE_SOURCE_DIR}/lib/libodgi.a" "${odgi_LIBS}")
-  set_target_properties(odgi_pybind11 PROPERTIES OUTPUT_NAME "odgi")
+if (NOT EXISTS ${CMAKE_SOURCE_DIR}/deps/pybind11/CMakeLists.txt)
+  execute_process(COMMAND git submodule update --init --recursive)
 endif()
+
+add_subdirectory(deps/pybind11)
+pybind11_add_module(odgi_pybind11 "${CMAKE_SOURCE_DIR}/src/pythonmodule.cpp")
+add_dependencies(odgi_pybind11 ${odgi_DEPS} libodgi)
+target_include_directories(odgi_pybind11 PUBLIC ${odgi_INCLUDES})
+target_link_libraries(odgi_pybind11 PRIVATE "${CMAKE_SOURCE_DIR}/lib/libodgi.a" "${odgi_LIBS}")
+set_target_properties(odgi_pybind11 PROPERTIES OUTPUT_NAME "odgi")
 
 if (APPLE)
 elseif (TRUE)
