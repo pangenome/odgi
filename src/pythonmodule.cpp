@@ -5,26 +5,23 @@
 // Pybind11
 #include <pybind11/pybind11.h>
 #include <pybind11/common.h>
-#include <pybind11/numpy.h>
-#include <pybind11/stl.h>
+//#include <pybind11/numpy.h>
+//#include <pybind11/stl.h>
 //using namespace pybind11 as py;
 namespace py = pybind11;
 
-
-PYBIND11_MODULE(odgi_pybind11, m)
+PYBIND11_MODULE(odgi, m)
 {
 
     // Expose class Graph to Python.
     py::class_<odgi::graph_t>(m, "graph", "the odgi graph type")
+        .def(py::init())
         .def("has_node",
               &odgi::graph_t::has_node,
-             "Return true if the given node is in the graph.",
-             py::arg("node_id"))
+             "Return true if the given node is in the graph.")
         .def("get_handle",
              &odgi::graph_t::get_handle,
-             "Return the handle for the given node id.",
-             py::arg("node_id"),
-             py::arg("is_reverse") = false)
+             "Return the handle for the given node id.")
         .def("get_id",
              &odgi::graph_t::get_id,
              "Return the id of the given handle.",

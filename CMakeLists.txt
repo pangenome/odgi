@@ -250,9 +250,8 @@ set(CMAKE_BUILD_TYPE Release)
 #set(CMAKE_BUILD_TYPE Debug)
 
 # set up our target executable and specify its dependencies and includes
-add_executable(odgi
+add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/odgi.cpp
-  ${CMAKE_SOURCE_DIR}/src/main.cpp
   ${CMAKE_SOURCE_DIR}/src/crash.cpp
   ${CMAKE_SOURCE_DIR}/src/position.cpp
   ${CMAKE_SOURCE_DIR}/src/gfa_to_handle.cpp
@@ -319,8 +318,7 @@ set(odgi_DEPS
     structures
     sonlib
     picosha256)
-add_dependencies(odgi ${odgi_DEPS})
-
+add_dependencies(odgi_objs ${odgi_DEPS})
 
 set(odgi_INCLUDES
   "${CMAKE_SOURCE_DIR}/src"
@@ -353,19 +351,30 @@ set(odgi_LIBS
   "${sonLib_LIB}/stPinchesAndCacti.a"
   "${sonLib_LIB}/3EdgeConnected.a"
   "${sonLib_LIB}/sonLib.a"
-  "-ldl"
-  )
+  "-ldl")
 
-target_include_directories(odgi PUBLIC ${odgi_INCLUDES})
+target_include_directories(odgi_objs PUBLIC ${odgi_INCLUDES})
+set_target_properties(odgi_objs PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+
+
+add_library(libodgi STATIC $<TARGET_OBJECTS:odgi_objs>)
+set_target_properties(libodgi PROPERTIES OUTPUT_NAME "odgi")
+set_target_properties(libodgi PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+
+add_executable(odgi
+  $<TARGET_OBJECTS:odgi_objs>
+  ${CMAKE_SOURCE_DIR}/src/main.cpp)
 target_link_libraries(odgi ${odgi_LIBS})
+set_target_properties(odgi PROPERTIES OUTPUT_NAME "odgi")
 
 find_package(pybind11)
 if(pybind11_FOUND)
-  message("system wide pybind11 installation found\n")
+  #message("system wide pybind11 installation found")
   pybind11_add_module(odgi_pybind11 "${CMAKE_SOURCE_DIR}/src/pythonmodule.cpp")
-  add_dependencies(odgi_pybind11 ${odgi_DEPS})
+  add_dependencies(odgi_pybind11 ${odgi_DEPS} libodgi)
   target_include_directories(odgi_pybind11 PUBLIC ${odgi_INCLUDES})
-  target_link_libraries(odgi_pybind11 PRIVATE ${odgi_LIBS})
+  target_link_libraries(odgi_pybind11 PRIVATE "${CMAKE_SOURCE_DIR}/lib/libodgi.a" "${odgi_LIBS}")
+  set_target_properties(odgi_pybind11 PROPERTIES OUTPUT_NAME "odgi")
 endif()
 
 if (APPLE)
