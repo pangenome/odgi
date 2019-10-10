@@ -51,13 +51,13 @@ PYBIND11_MODULE(odgi, m)
              &odgi::graph_t::get_sequence,
              py::arg("handle"))
          .def("follow_edges",
-             [](const odgi::graph_t& g, const handlegraph::handle_t& handle, bool go_left, const std::function<bool(const handlegraph::handle_t&)>& iteratee) {
-                 return g.follow_edges(handle, go_left, iteratee);
-             },
+              [](const odgi::graph_t& g, const handlegraph::handle_t& handle, bool go_left, const std::function<bool(const handlegraph::handle_t&)>& iteratee) {
+                  return g.follow_edges(handle, go_left, [&iteratee](const handlegraph::handle_t& h) { iteratee(h); return true; });
+              },
              "Follow edges starting at a given node.")
         .def("for_each_handle",
              [](const odgi::graph_t& g, const std::function<bool(const handlegraph::handle_t&)>& iteratee, bool parallel) {
-                 return g.for_each_handle(iteratee, parallel);
+                 return g.for_each_handle([&iteratee](const handlegraph::handle_t& h){ iteratee(h); return true; }, parallel);
              },
              "Iterate over all the nodes in the graph.",
              py::arg("iteratee"),
@@ -104,14 +104,18 @@ PYBIND11_MODULE(odgi, m)
         .def("for_each_path_handle",
              [](const odgi::graph_t& g,
                 const std::function<bool(const handlegraph::path_handle_t&)>& iteratee) {
-                 return g.for_each_path_handle(iteratee);
+                 return g.for_each_path_handle([&iteratee](const handlegraph::path_handle_t& p) {
+                         iteratee(p); return true;
+                     });
              },
              "Invoke the callback for each path in the graph.")
         .def("for_each_step_on_handle",
              [](const odgi::graph_t& g,
                 const handlegraph::handle_t& handle,
                 const std::function<bool(const handlegraph::step_handle_t&)>& iteratee) {
-                 return g.for_each_step_on_handle(handle, iteratee);
+                 return g.for_each_step_on_handle(handle, [&iteratee](const handlegraph::step_handle_t& s) {
+                         iteratee(s); return true;
+                     });
              },
              "Invoke the callback for each of the steps on a given handle.")
         .def("get_step_count",
