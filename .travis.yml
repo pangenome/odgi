@@ -5,6 +5,6 @@ compiler: gcc
 sudo: required
 dist: bionic
 install:
-    sudo apt-get update -qy; sudo apt-get install -qy python-dev python3-dev
+    sudo apt-get update -qy; sudo apt-get install -qy python-dev python3-dev python3.7-dev
 script:
   - cmake -H. -Bbuild && cmake --build build -- -j 4 && echo Testing && bin/odgi test && cd lib && python -c 'import odgi; g = odgi.graph()'
