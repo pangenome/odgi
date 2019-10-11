@@ -4,11 +4,7 @@ language: cpp
 compiler: gcc
 sudo: required
 dist: bionic
-python:
-    - 3.7
-#before_install:
-#install:
-#  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo add-apt-repository -y ppa:jonathonf/gcc-7.1; sudo apt-get update -qy; sudo apt-get install -qy gcc-7 g++-7; fi
-#  - if [[ "$TRAVIS_OS_NAME" == "linux" ]]; then sudo update-alternatives --install /usr/bin/gcc gcc /usr/bin/gcc-7 60 --slave /usr/bin/g++ g++ /usr/bin/g++-7; fi
+install:
+    sudo apt-get update -qy; sudo apt-get install -qy python-dev python3-dev
 script:
   - cmake -H. -Bbuild && cmake --build build -- -j 4 && echo Testing && bin/odgi test && cd lib && python -c 'import odgi; g = odgi.graph()'
