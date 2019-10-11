@@ -135,7 +135,7 @@ PYBIND11_MODULE(odgi, m)
              "Return a step handle to a fictitious handle one past the end of the path.")
         .def("path_back",
              &odgi::graph_t::path_back,
-             "Return a step handle to the last step, which is arbitrary in the case of a circular path.")
+             "Return a step handle to the last step, which is arbitrary in the case\nof a circular path.")
         .def("path_front_end",
              &odgi::graph_t::path_front_end,
              "Return a step handle to a fictitious handle one past the start of the path.")
@@ -153,10 +153,10 @@ PYBIND11_MODULE(odgi, m)
              "Returns true if the step is not the first step on the path, else false.")
         .def("get_next_step",
              &odgi::graph_t::get_next_step,
-             "Returns a handle to the next step on the path. Calling on an end marker step returns the same end marker.")
+             "Returns a handle to the next step on the path. Calling on an end marker\nstep returns the same end marker.")
         .def("get_previous_step",
              &odgi::graph_t::get_previous_step,
-             "Returns a handle to the previous step on the path. Calling on a front end marker step returns the same end marker.")
+             "Returns a handle to the previous step on the path. Calling on a front\nend marker step returns the same end marker.")
         .def("get_path_handle_of_step",
              &odgi::graph_t::get_path_handle_of_step,
              "Returns a handle to the path that an step is on.")
@@ -183,10 +183,9 @@ PYBIND11_MODULE(odgi, m)
         .def("create_handle",
              [](odgi::graph_t& g, const std::string& sequence, const handlegraph::nid_t& id) { return g.create_handle(sequence, id); },
              "Create a new node with the given sequence and return the handle.")
-        //--
         .def("destroy_handle",
              &odgi::graph_t::destroy_handle,
-             "Remove the node belonging to the given handle and all of its edges. Does not update any stored paths. Invalidates the destroyed handle.")
+             "Remove the node belonging to the given handle and all of its edges.\nDoes not update any stored paths.\nInvalidates the destroyed handle.")
         .def("create_edge",
              [](odgi::graph_t& g, const handlegraph::handle_t& from, const handlegraph::handle_t& to) { return g.create_edge(from, to); },
              "Create an edge connecting the given handles in the given order and orientations.")
@@ -210,7 +209,7 @@ PYBIND11_MODULE(odgi, m)
              "Remove all stored paths.")
         .def("apply_ordering",
              &odgi::graph_t::apply_ordering,
-             "Reorder the graph's internal structure to match that given. Optionally compact the id space of the graph to match the ordering, from 1->|ordering|.",
+             "Reorder the graph's internal structure to match that given.\nOptionally compact the id space of the graph to match the ordering, from 1->|ordering|.",
              py::arg("order"),
              py::arg("compact_ids") = false)
         .def("optimize",
@@ -222,17 +221,17 @@ PYBIND11_MODULE(odgi, m)
              "Reorder the graph's paths as given.")
         .def("apply_orientation",
              &odgi::graph_t::apply_orientation,
-             "Alter the node that the given handle corresponds to so the orientation indicated by the handle becomes the node's local forward orientation. Updates all links and path steps to match the new orientation.")
+             "Alter the node that the given handle corresponds to so the orientation indicated\nby the handle becomes the node's local forward orientation.\nUpdates all links and path steps to match the new orientation.")
         .def("divide_handle",
              [](odgi::graph_t& g, const handlegraph::handle_t& handle, const std::vector<size_t>& offsets) {
                  return g.divide_handle(handle, offsets);
              },
-             "Split a handle's underlying node at the given offsets in the handle's orientation. Returns the handles to the new parts.")
+             "Split a handle's underlying node at the given offsets in the handle's orientation.\nReturns the handles to the new parts.")
         .def("divide_handle",
              [](odgi::graph_t& g, const handlegraph::handle_t& handle, size_t offset) {
                  return g.divide_handle(handle, offset);
              },
-             "Split a handle's underlying node at the given offset in the handle's orientation. Returns the handles to the new parts.")
+             "Split a handle's underlying node at the given offset in the handle's orientation.\nReturns the handles to the new parts.")
         .def("combine_handles",
              &odgi::graph_t::combine_handles,
              "Join handles into a new node, returning the handle of the new node.")
@@ -241,24 +240,24 @@ PYBIND11_MODULE(odgi, m)
              "Destroy the given path. Invalidates handles to the path and its node steps.")
         .def("create_path_handle",
              &odgi::graph_t::create_path_handle,
-             "Create a path with the given name. The caller must ensure that no path with the given name already exists.",
+             "Create a path with the given name. The caller must ensure that no path with the\ngiven name already exists.",
              py::arg("name"),
              py::arg("is_circular") = false)
         .def("prepend_step",
              &odgi::graph_t::prepend_step,
-             "Append a visit to a node to the given path. Returns a handle to the new final step on the path which is appended.")
+             "Append a visit to a node to the given path.\nReturns a handle to the new final step on the path which is appended.")
         .def("append_step",
              &odgi::graph_t::append_step,
-             "Append a visit to a node to the given path. Returns a handle to the new final step on the path which is appended.")
+             "Append a visit to a node to the given path.\nReturns a handle to the new final step\non the path which is appended.")
         .def("insert_step",
              &odgi::graph_t::insert_step,
-             "Insert a visit to a node to the given path between the given steps. Returns a handle to the new step on the path which is appended.")
+             "Insert a visit to a node to the given path between the given steps.\nReturns a handle to the new step on the path which is appended.")
         .def("set_step",
              &odgi::graph_t::set_step,
              "Set the step to the given handle, possibly re-linking and cleaning up if needed.")
         .def("rewrite_segment",
              &odgi::graph_t::rewrite_segment,
-             "Replace the path range with the new segment, returning the new start and end step handles for the segment.")
+             "Replace the path range with the new segment,\nreturning the new start and end step handles for the segment.")
         /*
         .def("display",
              &odgi::graph_t::display,
