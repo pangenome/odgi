@@ -400,25 +400,16 @@ bool graph_t::is_empty(const path_handle_t& path_handle) const {
 void graph_t::for_each_step_in_path(const path_handle_t& path, const std::function<void(const step_handle_t&)>& iteratee) const {
     auto& p = path_metadata_v[as_integer(path)];
     if (is_empty(path)) return;
-    bool is_circular = get_is_circular(path);
-    step_handle_t begin_step = path_begin(path);
-    step_handle_t step = begin_step; // copy
+    step_handle_t step = path_begin(path);
+    step_handle_t end_step = path_back(path);
     bool keep_going = true;
     do {
         iteratee(step);
-        // if it's circular, and there is a next step that isn't the same as the beginning, continue
-        // if it's not circular, and there is a next step, continue
-        if (is_circular) {
+        // in circular paths, we'll always have a next step, so we always check if we're at our path's last step
+        if (step != end_step && has_next_step(step)) {
             step = get_next_step(step);
-            if (step == begin_step) {
-                keep_going = false;
-            }
         } else {
-            if (has_next_step(step)) {
-                step = get_next_step(step);
-            } else {
-                keep_going = false;
-            }
+            keep_going = false;
         }
     } while (keep_going);
 }
@@ -1394,6 +1385,9 @@ void graph_t::to_gfa(std::ostream& out) const {
                     out << get_length(get_handle_of_step(step)) << "M";
                     if (has_next_step(step)) out << ",";
                 });
+            if (get_is_circular(p)) {
+                out << "\t" << "TP:Z:circular";
+            }
             out << std::endl;
         });
 }
