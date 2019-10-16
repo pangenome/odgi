@@ -77,6 +77,13 @@ int main_bin(int argc, char** argv) {
         return 1;
     }
 
+    std::function<void(const uint64_t&,
+                       const std::string&)> write_seq_json
+        = [&](const uint64_t& bin_id, const std::string& seq) {
+        std::cout << "{\"bin_id\":" << bin_id << ","
+                  << "\"sequence\":\"" << seq << "\"}" << std::endl;
+    };
+
     std::function<void(const std::string&,
                        const std::vector<std::pair<uint64_t, uint64_t>>&,
                        const std::map<uint64_t, algorithms::path_info_t>&)> write_json
@@ -114,6 +121,11 @@ int main_bin(int argc, char** argv) {
         std::cout << "]}" << std::endl;
     };
 
+    std::function<void(const uint64_t&,
+                       const std::string&)> write_seq_noop
+        = [&](const uint64_t& bin_id, const std::string& seq) {
+    };
+
     std::function<void(const std::string&,
                        const std::vector<std::pair<uint64_t, uint64_t>>&,
                        const std::map<uint64_t, algorithms::path_info_t>&)> write_tsv
@@ -139,12 +151,12 @@ int main_bin(int argc, char** argv) {
 
     if (args::get(output_json)) {
         algorithms::bin_path_info(graph, (args::get(aggregate_delim) ? args::get(path_delim) : ""),
-                                  write_json,
+                                  write_json, write_seq_json,
                                   args::get(num_bins), args::get(bin_width));
     } else {
         std::cout << "path.name" << "\t" << "path.prefix" << "\t" << "path.suffix" << "\t" << "bin" << "\t" << "mean.cov" << "\t" << "mean.inv" << "\t" << "mean.pos" << std::endl;
         algorithms::bin_path_info(graph, (args::get(aggregate_delim) ? args::get(path_delim) : ""),
-                                  write_tsv,
+                                  write_tsv, write_seq_noop,
                                   args::get(num_bins), args::get(bin_width));
     }
 
