@@ -1381,10 +1381,11 @@ void graph_t::to_gfa(std::ostream& out) const {
                     if (has_next_step(step)) out << ",";
                 });
             out << "\t";
-            for_each_step_in_path(p, [this,&out](const step_handle_t& step) {
-                    out << get_length(get_handle_of_step(step)) << "M";
-                    if (has_next_step(step)) out << ",";
-                });
+            uint64_t steps_for_asterisk = get_step_count(p)-1;
+            for (uint64_t i = 0; i < steps_for_asterisk; ++i) {
+                out << "*";
+                if (i < steps_for_asterisk-1) out << ",";
+            }
             if (get_is_circular(p)) {
                 out << "\t" << "TP:Z:circular";
             }
