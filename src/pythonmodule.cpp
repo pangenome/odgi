@@ -16,9 +16,20 @@ PYBIND11_MODULE(odgi, m)
 
     py::class_<handlegraph::handle_t>(m, "handle", "the handle, which refers to oriented nodes");
     py::class_<handlegraph::path_handle_t>(m, "path_handle", "the path handle type, which refers to paths");
-    py::class_<handlegraph::step_handle_t>(m, "step_handle", "the step handle type, which refers to path paths");
-    py::class_<handlegraph::edge_t>(m, "edge", "edges link two handles together");
-
+    py::class_<handlegraph::step_handle_t>(m, "step_handle", "the step handle type, which refers to path paths")
+        .def("first", [](handlegraph::step_handle_t &step_handle) {
+                return (reinterpret_cast<const int64_t*>(&step_handle)[0]);
+        })
+        .def("second", [](handlegraph::step_handle_t &step_handle) {
+                return (reinterpret_cast<const int64_t*>(&step_handle)[1]);
+        });
+    py::class_<handlegraph::edge_t>(m, "edge", "edges link two handles together")
+        .def("first", [](const handlegraph::edge_t &edge_handle) {
+                return (&edge_handle)->first;
+        })
+        .def("second", [](const handlegraph::edge_t &edge_handle) {
+                return (&edge_handle)->second;
+        });
     // Expose class Graph to Python.
     py::class_<odgi::graph_t>(m, "graph", "the odgi graph type")
         .def(py::init())
