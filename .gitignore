@@ -3,5 +3,6 @@
 *~
 build/
 bin/
+lib/
 test/
 .gdb_history

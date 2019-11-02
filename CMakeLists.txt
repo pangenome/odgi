@@ -232,13 +232,24 @@ ExternalProject_Add(picosha256
 ExternalProject_Get_property(picosha256 SOURCE_DIR)
 set(picosha256_INCLUDE "${SOURCE_DIR}")
 
+# pybind11
+#ExternalProject_Add(pybind11
+#    GIT_REPOSITORY https://github.com/pybind/pybind11.git 
+#    GIT_TAG v2.2.4
+#    CONFIGURE_COMMAND ""
+#    BUILD_COMMAND ""
+#    INSTALL_COMMAND "")
+#ExternalProject_Get_Property(pybind11 SOURCE_DIR)
+#set(pybind11_INCLUDE_DIRS ${SOURCE_DIR}/include)
+#set(pybind11_DIR ${SOURCE_DIR})
+#add_subdirectory(${pybind11_DIR})
+
 set(CMAKE_BUILD_TYPE Release)
 #set(CMAKE_BUILD_TYPE Debug)
 
 # set up our target executable and specify its dependencies and includes
-add_executable(odgi
+add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/odgi.cpp
-  ${CMAKE_SOURCE_DIR}/src/main.cpp
   ${CMAKE_SOURCE_DIR}/src/crash.cpp
   ${CMAKE_SOURCE_DIR}/src/position.cpp
   ${CMAKE_SOURCE_DIR}/src/gfa_to_handle.cpp
@@ -259,6 +270,7 @@ add_executable(odgi
   ${CMAKE_SOURCE_DIR}/src/subcommand/sort_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/view_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/kmers_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/unitig_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/viz_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/paths_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/cactus_main.cpp
@@ -286,23 +298,27 @@ add_executable(odgi
   ${CMAKE_SOURCE_DIR}/src/algorithms/simple_components.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_info.cpp
   )
-add_dependencies(odgi sdsl-lite)
-add_dependencies(odgi dynamic)
-add_dependencies(odgi hopscotch_map)
-add_dependencies(odgi backwardscpp)
-add_dependencies(odgi gfakluge)
-add_dependencies(odgi handlegraph)
-add_dependencies(odgi tayweeargs)
-add_dependencies(odgi bbhash)
-add_dependencies(odgi sparsepp)
-add_dependencies(odgi ska)
-add_dependencies(odgi intervaltree)
-add_dependencies(odgi bsort)
-add_dependencies(odgi lodepng)
-add_dependencies(odgi structures)
-add_dependencies(odgi sonlib)
-add_dependencies(odgi picosha256)
-target_include_directories(odgi PUBLIC
+
+set(odgi_DEPS 
+    sdsl-lite
+    dynamic
+    hopscotch_map
+    backwardscpp
+    gfakluge
+    handlegraph
+    tayweeargs
+    bbhash
+    sparsepp
+    ska
+    intervaltree
+    bsort
+    lodepng
+    structures
+    sonlib
+    picosha256)
+add_dependencies(odgi_objs ${odgi_DEPS})
+
+set(odgi_INCLUDES
   "${CMAKE_SOURCE_DIR}/src"
   "${sdsl-lite_INCLUDE}"
   "${sdsl-lite-divsufsort_INCLUDE}"
@@ -323,7 +339,8 @@ target_include_directories(odgi PUBLIC
   "${sonLib_lib_INCLUDE}"
   "${sonLib_inc_INCLUDE}"
   "${picosha256_INCLUDE}")
-target_link_libraries(odgi
+
+set(odgi_LIBS
   "${sdsl-lite_LIB}/libsdsl.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort64.a"
@@ -332,8 +349,32 @@ target_link_libraries(odgi
   "${sonLib_LIB}/stPinchesAndCacti.a"
   "${sonLib_LIB}/3EdgeConnected.a"
   "${sonLib_LIB}/sonLib.a"
-  "-ldl"
-  )
+  "-ldl")
+
+target_include_directories(odgi_objs PUBLIC ${odgi_INCLUDES})
+set_target_properties(odgi_objs PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+
+
+add_library(libodgi STATIC $<TARGET_OBJECTS:odgi_objs>)
+set_target_properties(libodgi PROPERTIES OUTPUT_NAME "odgi")
+set_target_properties(libodgi PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+
+add_executable(odgi
+  $<TARGET_OBJECTS:odgi_objs>
+  ${CMAKE_SOURCE_DIR}/src/main.cpp)
+target_link_libraries(odgi ${odgi_LIBS})
+set_target_properties(odgi PROPERTIES OUTPUT_NAME "odgi")
+
+if (NOT EXISTS ${CMAKE_SOURCE_DIR}/deps/pybind11/CMakeLists.txt)
+  execute_process(COMMAND git submodule update --init --recursive)
+endif()
+
+add_subdirectory(deps/pybind11)
+pybind11_add_module(odgi_pybind11 "${CMAKE_SOURCE_DIR}/src/pythonmodule.cpp")
+add_dependencies(odgi_pybind11 ${odgi_DEPS} libodgi)
+target_include_directories(odgi_pybind11 PUBLIC ${odgi_INCLUDES})
+target_link_libraries(odgi_pybind11 PRIVATE "${CMAKE_SOURCE_DIR}/lib/libodgi.a" "${odgi_LIBS}")
+set_target_properties(odgi_pybind11 PROPERTIES OUTPUT_NAME "odgi")
 
 if (APPLE)
 elseif (TRUE)

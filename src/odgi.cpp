@@ -52,7 +52,7 @@ std::string graph_t::get_sequence(const handle_t& handle) const {
     auto& seq = node_v.at(number_bool_packing::unpack_number(handle)).sequence();
     return (get_is_reverse(handle) ? reverse_complement(seq) : seq);
 }
-    
+
 /// Loop over all the handles to next/previous (right/left) nodes. Passes
 /// them to a callback which returns false to stop iterating and true to
 /// continue. Returns true if we finished and false if we stopped early.
@@ -88,7 +88,6 @@ bool graph_t::follow_edges_impl(const handle_t& handle, bool go_left, const std:
     return true;
 }
 
-    
 /// Loop over all the nodes in the graph in their local forward
 /// orientations, in their internal stored order. Stop if the iteratee
 /// returns false. Can be told to run in parallel, in which case stopping
@@ -145,6 +144,21 @@ size_t graph_t::get_degree(const handle_t& handle, bool go_left) const {
     size_t degree = 0;
     follow_edges(handle, go_left, [&degree](const handle_t& h) { ++degree; });
     return degree;
+}
+
+/// Get the locally forward version of a handle
+handle_t graph_t::forward(const handle_t& handle) const {
+    if (get_is_reverse(handle)) {
+        return flip(handle);
+    } else {
+        return handle;
+    }
+}
+
+/// A pair of handles can be used as an edge. When so used, the handles have a
+/// canonical order and orientation.
+edge_t graph_t::edge_handle(const handle_t& left, const handle_t& right) const {
+    return std::make_pair(left, right);
 }
     
 /**
@@ -365,6 +379,11 @@ path_handle_t graph_t::get_path_handle_of_step(const step_handle_t& step_handle)
 // Additional optional interface with a default implementation
 ////////////////////////////////////////////////////////////////////////////
 
+/// Returns the 0-based ordinal rank of a step on a path
+size_t graph_t::get_ordinal_rank_of_step(const step_handle_t& step_handle) const {
+    return 0; // no implementation of this in odgi (yet)
+}
+
 /// Returns true if the given path is empty, and false otherwise
 bool graph_t::is_empty(const path_handle_t& path_handle) const {
     return get_step_count(path_handle) == 0;
@@ -381,25 +400,16 @@ bool graph_t::is_empty(const path_handle_t& path_handle) const {
 void graph_t::for_each_step_in_path(const path_handle_t& path, const std::function<void(const step_handle_t&)>& iteratee) const {
     auto& p = path_metadata_v[as_integer(path)];
     if (is_empty(path)) return;
-    bool is_circular = get_is_circular(path);
-    step_handle_t begin_step = path_begin(path);
-    step_handle_t step = begin_step; // copy
+    step_handle_t step = path_begin(path);
+    step_handle_t end_step = path_back(path);
     bool keep_going = true;
     do {
         iteratee(step);
-        // if it's circular, and there is a next step that isn't the same as the beginning, continue
-        // if it's not circular, and there is a next step, continue
-        if (is_circular) {
+        // in circular paths, we'll always have a next step, so we always check if we're at our path's last step
+        if (step != end_step && has_next_step(step)) {
             step = get_next_step(step);
-            if (step == begin_step) {
-                keep_going = false;
-            }
         } else {
-            if (has_next_step(step)) {
-                step = get_next_step(step);
-            } else {
-                keep_going = false;
-            }
+            keep_going = false;
         }
     } while (keep_going);
 }
@@ -1209,6 +1219,12 @@ void graph_t::decrement_rank(const step_handle_t& step_handle) {
     }
 }
 
+// Insert a visit to a node to the given path between the given steps.
+step_handle_t graph_t::insert_step(const step_handle_t& before, const step_handle_t& after, const handle_t& to_insert) {
+    auto p = rewrite_segment(before, after, { to_insert });
+    return get_next_step(p.first);
+}
+
 /// reassign the given step to the new handle
 step_handle_t graph_t::set_step(const step_handle_t& step_handle, const handle_t& assign_to) {
     return rewrite_segment(step_handle, step_handle, { assign_to }).first;
@@ -1365,10 +1381,14 @@ void graph_t::to_gfa(std::ostream& out) const {
                     if (has_next_step(step)) out << ",";
                 });
             out << "\t";
-            for_each_step_in_path(p, [this,&out](const step_handle_t& step) {
-                    out << get_length(get_handle_of_step(step)) << "M";
-                    if (has_next_step(step)) out << ",";
-                });
+            uint64_t steps_for_asterisk = get_step_count(p)-1;
+            for (uint64_t i = 0; i < steps_for_asterisk; ++i) {
+                out << "*";
+                if (i < steps_for_asterisk-1) out << ",";
+            }
+            if (get_is_circular(p)) {
+                out << "\t" << "TP:Z:circular";
+            }
             out << std::endl;
         });
 }
