@@ -22,7 +22,7 @@ PYBIND11_MODULE(odgi, m)
         .def("path_id", [](handlegraph::step_handle_t &step_handle) {
                 return (reinterpret_cast<const int64_t*>(&step_handle)[0]) >> 1;
         })
-        .def("is_Reverse", [](handlegraph::step_handle_t &step_handle) {
+        .def("is_reverse", [](handlegraph::step_handle_t &step_handle) {
                 return (reinterpret_cast<const int64_t*>(&step_handle)[0]) & 1;
         })
         .def("prev_id", [](handlegraph::step_handle_t &step_handle) {
@@ -36,6 +36,14 @@ PYBIND11_MODULE(odgi, m)
         })
         .def("next_rank", [](handlegraph::step_handle_t &step_handle) {
                 return (reinterpret_cast<const int64_t*>(&step_handle)[4]);
+        })
+        .def("__eq__", [](const handlegraph::step_handle_t &self, handlegraph::step_handle_t &step_handle2) {
+            for (uint i=0;i<8;i++) {
+                if ((reinterpret_cast<const int64_t*>(&self)[i]) != (reinterpret_cast<const int64_t*>(&step_handle2)[i])){
+                    return false;
+                }
+            }
+            return true;
         });
     py::class_<handlegraph::edge_t>(m, "edge", "edges link two handles together")
         .def("first", [](const handlegraph::edge_t &edge_handle) {
