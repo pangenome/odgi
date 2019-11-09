@@ -134,7 +134,7 @@ int main_stats(int argc, char** argv) {
             for (auto& i : p.first) {
                 std::cout << graph.get_path_name(as_path_handle(i)) << ",";
             }
-            std::cerr << std::endl;
+            std::cout << std::endl;
         }
     }
     if (args::get(path_multicov)) {
