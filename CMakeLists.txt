@@ -121,16 +121,6 @@ ExternalProject_Add(tayweeargs
 ExternalProject_Get_property(tayweeargs SOURCE_DIR)
 set(tayweeargs_INCLUDE "${SOURCE_DIR}")
 
-# parallel bsort (header-only, so here we just check if we can build it)
-ExternalProject_Add(bsort
-  GIT_REPOSITORY "https://github.com/ekg/bsort.git"
-  GIT_TAG "c3ab0d3308424030e0a000645a26d2c10a59a124"
-  UPDATE_COMMAND ""
-  INSTALL_COMMAND "")
-ExternalProject_Get_property(bsort SOURCE_DIR)
-set(bsort_INCLUDE "${SOURCE_DIR}/src")
-set(bsort_LIB "${SOURCE_DIR}/lib")
-
 # BBHash perfect hasher
 ExternalProject_Add(bbhash
   GIT_REPOSITORY "https://github.com/vgteam/BBHash.git"
@@ -311,7 +301,6 @@ set(odgi_DEPS
     sparsepp
     ska
     intervaltree
-    bsort
     lodepng
     structures
     sonlib
@@ -334,7 +323,6 @@ set(odgi_INCLUDES
   "${intervaltree_INCLUDE}"
   "${lodepng_INCLUDE}"
   "${bbhash_INCLUDE}"
-  "${bsort_INCLUDE}"
   "${structures_INCLUDE}"
   "${sonLib_lib_INCLUDE}"
   "${sonLib_inc_INCLUDE}"
