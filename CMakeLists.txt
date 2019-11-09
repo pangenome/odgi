@@ -222,6 +222,17 @@ ExternalProject_Add(picosha256
 ExternalProject_Get_property(picosha256 SOURCE_DIR)
 set(picosha256_INCLUDE "${SOURCE_DIR}")
 
+# SGD based graph layout
+ExternalProject_Add(sgd2
+  GIT_REPOSITORY "https://github.com/ekg/sgd2.git"
+  GIT_TAG "3cb6ffe65dc14bf580866519e62d9b52964bdcae"
+  UPDATE_COMMAND ""
+  INSTALL_COMMAND ""
+  BUILD_COMMAND ""
+  CONFIGURE_COMMAND "")
+ExternalProject_Get_property(sgd2 SOURCE_DIR)
+set(sgd2_INCLUDE "${SOURCE_DIR}/src")
+
 # pybind11
 #ExternalProject_Add(pybind11
 #    GIT_REPOSITORY https://github.com/pybind/pybind11.git 
@@ -304,7 +315,8 @@ set(odgi_DEPS
     lodepng
     structures
     sonlib
-    picosha256)
+    picosha256
+    sgd2)
 add_dependencies(odgi_objs ${odgi_DEPS})
 
 set(odgi_INCLUDES
@@ -326,7 +338,8 @@ set(odgi_INCLUDES
   "${structures_INCLUDE}"
   "${sonLib_lib_INCLUDE}"
   "${sonLib_inc_INCLUDE}"
-  "${picosha256_INCLUDE}")
+  "${picosha256_INCLUDE}"
+  "${sgd2_INCLUDE}")
 
 set(odgi_LIBS
   "${sdsl-lite_LIB}/libsdsl.a"
