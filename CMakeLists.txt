@@ -281,6 +281,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/bin_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/matrix_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/chop_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/layout_main.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/hash.cpp
@@ -298,6 +299,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/id_ordered_paths.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/simple_components.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_info.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/sgd_layout.cpp
   )
 
 set(odgi_DEPS 
