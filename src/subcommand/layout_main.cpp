@@ -10,8 +10,7 @@ namespace odgi {
 using namespace odgi::subcommand;
 
 
-void draw_svg(ostream& out, const std::vector<double>& X, const HandleGraph& graph) {
-    double scale = 5.0;
+void draw_svg(ostream& out, const std::vector<double>& X, const HandleGraph& graph, double scale) {
     double border = 10.0;
     double min_x = 0;
     double min_y = 0;
@@ -64,7 +63,7 @@ int main_layout(int argc, char** argv) {
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
-    args::ArgumentParser parser("draw 2D layouts of the graph using stocastic gradient descent");
+    args::ArgumentParser parser("draw 2D layouts of the graph using stocastic gradient descent (the graph must be sorted and id-compacted)");
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> svg_out_file(parser, "FILE", "write the SVG rendering to this file", {'o', "out"});
@@ -72,6 +71,7 @@ int main_layout(int argc, char** argv) {
     args::ValueFlag<uint64_t> num_pivots(parser, "N", "number of pivots for sparse layout (default 200)", {'p', "n-pivots"});
     args::ValueFlag<double> eps_rate(parser, "N", "learning rate for SGD layout (default 0.01)", {'e', "eps"});
     args::ValueFlag<double> x_pad(parser, "N", "padding between connected component layouts (default 10.0)", {'x', "x-padding"});
+    args::ValueFlag<double> render_scale(parser, "N", "SVG scaling (default 5.0)", {'R', "render-scale"});
     args::Flag debug(parser, "debug", "print information about the layout", {'d', "debug"});
 
     try {
@@ -93,6 +93,7 @@ int main_layout(int argc, char** argv) {
     uint64_t n_pivots = !args::get(num_pivots) ? 200 : args::get(num_pivots);
     double eps = !args::get(eps_rate) ? 0.01 : args::get(eps_rate);
     double x_padding = !args::get(x_pad) ? 10.0 : args::get(x_pad);
+    double svg_scale = !args::get(render_scale) ? 5.0 : args::get(render_scale);
     
     graph_t graph;
     assert(argc > 0);
@@ -112,10 +113,10 @@ int main_layout(int argc, char** argv) {
     std::string outfile = args::get(svg_out_file);
     if (outfile.size()) {
         if (outfile == "-") {
-            draw_svg(std::cout, layout, graph);
+            draw_svg(std::cout, layout, graph, svg_scale);
         } else {
             ofstream f(outfile.c_str());
-            draw_svg(f, layout, graph);
+            draw_svg(f, layout, graph, svg_scale);
             f.close();
         }
     }
