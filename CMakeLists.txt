@@ -233,6 +233,15 @@ ExternalProject_Add(sgd2
 ExternalProject_Get_property(sgd2 SOURCE_DIR)
 set(sgd2_INCLUDE "${SOURCE_DIR}/src")
 
+ExternalProject_Add(mondriaan
+  GIT_REPOSITORY "https://github.com/ekg/mondriaan.git"
+  GIT_TAG "7d840484ec49b31c99d5ab5c72a737596d82aa4e"
+  UPDATE_COMMAND ""
+  INSTALL_COMMAND "")
+ExternalProject_Get_property(mondriaan SOURCE_DIR)
+set(mondriaan_INCLUDE "${SOURCE_DIR}/src")
+set(mondriaan_LIB "${SOURCE_DIR}/lib")
+
 # pybind11
 #ExternalProject_Add(pybind11
 #    GIT_REPOSITORY https://github.com/pybind/pybind11.git 
@@ -300,6 +309,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/simple_components.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_info.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/sgd_layout.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/mondriaan_sort.cpp
   )
 
 set(odgi_DEPS 
@@ -318,7 +328,8 @@ set(odgi_DEPS
     structures
     sonlib
     picosha256
-    sgd2)
+    sgd2
+    mondriaan)
 add_dependencies(odgi_objs ${odgi_DEPS})
 
 set(odgi_INCLUDES
@@ -341,7 +352,8 @@ set(odgi_INCLUDES
   "${sonLib_lib_INCLUDE}"
   "${sonLib_inc_INCLUDE}"
   "${picosha256_INCLUDE}"
-  "${sgd2_INCLUDE}")
+  "${sgd2_INCLUDE}"
+  "${mondriaan_INCLUDE}")
 
 set(odgi_LIBS
   "${sdsl-lite_LIB}/libsdsl.a"
@@ -352,6 +364,7 @@ set(odgi_LIBS
   "${sonLib_LIB}/stPinchesAndCacti.a"
   "${sonLib_LIB}/3EdgeConnected.a"
   "${sonLib_LIB}/sonLib.a"
+  "${mondriaan_LIB}/libmondriaan.a"
   "-ldl")
 
 target_include_directories(odgi_objs PUBLIC ${odgi_INCLUDES})
