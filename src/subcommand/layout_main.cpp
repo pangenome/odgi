@@ -68,7 +68,7 @@ int main_layout(int argc, char** argv) {
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> svg_out_file(parser, "FILE", "write the SVG rendering to this file", {'o', "out"});
     args::ValueFlag<uint64_t> iter_max(parser, "N", "maximum number of iterations to run the layout (default 30)", {'m', "iter-max"});
-    args::ValueFlag<uint64_t> num_pivots(parser, "N", "number of pivots for sparse layout (default 200)", {'p', "n-pivots"});
+    args::ValueFlag<uint64_t> num_pivots(parser, "N", "number of pivots for sparse layout (default 0, non-sparse layout)", {'p', "n-pivots"});
     args::ValueFlag<double> eps_rate(parser, "N", "learning rate for SGD layout (default 0.01)", {'e', "eps"});
     args::ValueFlag<double> x_pad(parser, "N", "padding between connected component layouts (default 10.0)", {'x', "x-padding"});
     args::ValueFlag<double> render_scale(parser, "N", "SVG scaling (default 5.0)", {'R', "render-scale"});
@@ -90,7 +90,7 @@ int main_layout(int argc, char** argv) {
     }
 
     uint64_t t_max = !args::get(iter_max) ? 30 : args::get(iter_max);
-    uint64_t n_pivots = !args::get(num_pivots) ? 200 : args::get(num_pivots);
+    uint64_t n_pivots = !args::get(num_pivots) ? 0 : args::get(num_pivots);
     double eps = !args::get(eps_rate) ? 0.01 : args::get(eps_rate);
     double x_padding = !args::get(x_pad) ? 10.0 : args::get(x_pad);
     double svg_scale = !args::get(render_scale) ? 5.0 : args::get(render_scale);

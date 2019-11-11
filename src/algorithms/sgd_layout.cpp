@@ -39,8 +39,11 @@ std::vector<double> sgd_layout(const HandleGraph& graph, uint64_t pivots, uint64
             X[i] = dist(rng);
         }
         // do layout
-        sgd2::layout_sparse_unweighted(n, X.data(), I.size(), I.data(), J.data(), pivots, t_max, eps);
-        //sgd2::layout_unweighted(n, X.data(), I.size(), I.data(), J.data(), t_max, eps);
+        if (pivots > 0) {
+            sgd2::layout_sparse_unweighted(n, X.data(), I.size(), I.data(), J.data(), pivots, t_max, eps);
+        } else {
+            sgd2::layout_unweighted(n, X.data(), I.size(), I.data(), J.data(), t_max, eps);
+        }
 
         for (uint64_t i = 0; i < 2*n; i+=2) {
             //std::cerr << "i = " << i << std::endl;
