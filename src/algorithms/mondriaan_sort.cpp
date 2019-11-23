@@ -104,22 +104,7 @@ void mondriaan_main(int argc, char **argv) {
 
     /* Get the parameters from the command line and initialise Options */
     SetDefaultOptions(&Options);
-    
-    if (!SetOptionsFromFile(&Options, "Mondriaan.defaults")) {
-        fprintf(stderr, "main(): warning, cannot set options from 'Mondriaan.defaults', using default options and creating standard 'Mondriaan.defaults'!\n");
-        
-        File = fopen("Mondriaan.defaults", "w");
-        
-        if (File != NULL) {
-            ExportDefaultOptions(File);
-            SetDefaultOptions(&Options);
-            fclose(File);
-        }
-        else {
-            fprintf(stderr, "main(): Unable to create 'Mondriaan.defaults'!\n");
-        }
-    }
-    
+
     if (!GetParameters(&Options, argc, argv)) {
         fprintf(stderr, "main(): invalid command line parameters!\n");
         exit(-1);
@@ -903,12 +888,58 @@ void mondriaan_main(int argc, char **argv) {
 
 } /* end main */
 
-std::vector<handle_t> mondriaan_sort(const HandleGraph& graph) {
+
+
+std::vector<handle_t> mondriaan_sort(const PathHandleGraph& graph,
+                                     uint64_t n_parts, double eps,
+                                     bool weight_by_edge_depth, bool weight_by_edge_delta) {
     // set up input
     // write to file
+    //std::string tempname = std::tmpnam(nullptr);
+    if (!n_parts) n_parts = 1; // force 1
+    std::string tempname = temp_file::create();
+    std::cerr << "using tempname " << tempname << std::endl;
+    std::string outmtx = tempname + ".mtx";
+    std::ofstream out(outmtx.c_str());
+    algorithms::write_as_sparse_matrix(out, graph, weight_by_edge_depth, weight_by_edge_delta);
+    out.close();
     // set up mondriaan command line
+    //Mondriaan DRB1-3123.mtx 8 1 -Permute=SBD -EnforceSymmetricPermutation=yes -Coarsening_StopRatio=1 -SplitStrategy=finegrain -Iterative_Refinement=always -Coarsening_InprodScaling=max -VectorPartition_Step3=decrease -Coarsening_InprodMatchingOrder=incrwgt -Coarsening_NetScaling=no -Coarsening_MatchingStrategy=ata -Coarsening_MatchingATAMatcher=greedy -SquareMatrix_DistributeVectorsEqual_AddDummies=no -ImproveFreeNonzeros=no -LoadbalanceStrategy=increase
+    std::vector<std::string> args = {
+        "Mondriaan",
+        outmtx,
+        std::to_string(n_parts),
+        std::to_string(eps),
+        "-EnforceSymmetricPermutation=yes",
+        "-Coarsening_StopRatio=1",
+        "-SplitStrategy=finegrain",
+        "-Iterative_Refinement=always",
+        "-Coarsening_InprodScaling=max",
+        "-VectorPartition_Step3=decrease",
+        "-Coarsening_InprodMatchingOrder=incrwgt",
+        "-Coarsening_NetScaling=no",
+        "-Coarsening_MatchingStrategy=ata",
+        "-Coarsening_MatchingATAMatcher=greedy",
+        "-SquareMatrix_DistributeVectorsEqual_AddDummies=no",
+        "-ImproveFreeNonzeros=no",
+        "-LoadbalanceStrategy=increase"
+    };
+    char* argvec[args.size()];
+    for (uint8_t i = 0; i < args.size(); ++i) {
+        argvec[i] = (char*)args[i].c_str();
+    }
+    mondriaan_main((int)args.size(), argvec);
     // get the symmetric permutation of the matrix
-    // clean up temp files
+    // read in -col#
+    std::string orderfile = outmtx + "-col" + std::to_string(n_parts);
+    std::vector<handle_t> given_order;
+    std::string buf;
+    std::ifstream in_order(orderfile.c_str());
+    while (std::getline(in_order, buf)) {
+        given_order.push_back(graph.get_handle(std::stol(buf)));
+    }
+    return given_order;
+    // TODO: clean up temp files ... right now done automatically
 }
 
 }

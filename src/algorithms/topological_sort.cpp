@@ -133,6 +133,8 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads, bo
         for(const handle_t& tail : tail_nodes(g)) {
             s.set(number_bool_packing::unpack_number(tail), 1);
         }
+    } else {
+        s.set(0, 1);
     }
 
     // We will use an ordered map handles by ID for nodes we have not visited

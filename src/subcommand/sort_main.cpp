@@ -6,6 +6,7 @@
 #include "algorithms/cycle_breaking_sort.hpp"
 #include "algorithms/id_ordered_paths.hpp"
 #include "algorithms/dagify.hpp"
+#include "algorithms/mondriaan_sort.hpp"
 
 namespace odgi {
 
@@ -32,6 +33,8 @@ int main_sort(int argc, char** argv) {
     args::Flag eades(parser, "eades", "use eades algorithm", {'e', "eades"});
     args::Flag lazy(parser, "lazy", "use lazy topological algorithm (DAG only)", {'l', "lazy"});
     args::Flag two(parser, "two", "use two-way (max of head-first and tail-first) topological algorithm", {'w', "two-way"});
+    args::Flag mondriaan(parser, "mondriaan", "use sparse matrix diagonalization to sort the graph", {'m', "mondriaan"});
+    args::ValueFlag<uint64_t> mondriaan_n_parts(parser, "mondriaan-n-parts", "number of partitions for mondriaan", {'N', "mondriaan-n-parts"});
     args::Flag no_seeds(parser, "no-seeds", "don't use heads or tails to seed topological sort", {'n', "no-seeds"});
     args::Flag paths_by_min_node_id(parser, "paths-min", "sort paths by their lowest contained node id", {'P', "paths-min"});
     args::Flag paths_by_max_node_id(parser, "paths-max", "sort paths by their highest contained node id", {'M', "paths-max"});
@@ -111,6 +114,8 @@ int main_sort(int argc, char** argv) {
             graph.apply_ordering(algorithms::cycle_breaking_sort(graph), true);
         } else if (args::get(no_seeds)) {
             graph.apply_ordering(algorithms::topological_order(&graph, false, false, args::get(progress)), true);
+        } else if (args::get(mondriaan)) {
+            graph.apply_ordering(algorithms::mondriaan_sort(graph, args::get(mondriaan_n_parts), 1.0, false, false), true);
         } else {
             graph.apply_ordering(algorithms::topological_order(&graph, true, false, args::get(progress)), true);
         }

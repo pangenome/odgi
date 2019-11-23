@@ -7,9 +7,12 @@
  */
 
 #include <iostream>
+#include <fstream>
 #include "../hash_map.hpp"
 #include <handlegraph/handle_graph.hpp>
 #include <handlegraph/util.hpp>
+#include "matrix_writer.hpp"
+#include "temp_file.hpp"
 
 #define GAINBUCKET_ARRAY
 #define MONDRIAANVERSION "\"4.2.1\""
@@ -32,7 +35,10 @@ using namespace handlegraph;
 
 void mondriaan_main(int argc, char** argv);
 
-std::vector<handle_t> mondriaan_sort(const HandleGraph& graph);
+std::vector<handle_t> mondriaan_sort(const PathHandleGraph& graph,
+                                     uint64_t n_parts, double eps,
+                                     bool weight_by_edge_depth, bool weight_by_edge_delta);
+
 
 }
 }

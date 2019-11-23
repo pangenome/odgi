@@ -310,6 +310,8 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_info.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/sgd_layout.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/mondriaan_sort.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/matrix_writer.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/temp_file.cpp
   )
 
 set(odgi_DEPS 
