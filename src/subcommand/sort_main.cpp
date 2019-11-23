@@ -33,15 +33,17 @@ int main_sort(int argc, char** argv) {
     args::Flag eades(parser, "eades", "use eades algorithm", {'e', "eades"});
     args::Flag lazy(parser, "lazy", "use lazy topological algorithm (DAG only)", {'l', "lazy"});
     args::Flag two(parser, "two", "use two-way (max of head-first and tail-first) topological algorithm", {'w', "two-way"});
-    args::Flag mondriaan(parser, "mondriaan", "use sparse matrix diagonalization to sort the graph", {'m', "mondriaan"});
-    args::ValueFlag<uint64_t> mondriaan_n_parts(parser, "mondriaan-n-parts", "number of partitions for mondriaan", {'N', "mondriaan-n-parts"});
     args::Flag no_seeds(parser, "no-seeds", "don't use heads or tails to seed topological sort", {'n', "no-seeds"});
-    args::Flag paths_by_min_node_id(parser, "paths-min", "sort paths by their lowest contained node id", {'P', "paths-min"});
+    args::Flag mondriaan(parser, "mondriaan", "use sparse matrix diagonalization to sort the graph", {'m', "mondriaan"});
+    args::ValueFlag<uint64_t> mondriaan_n_parts(parser, "N", "number of partitions for mondriaan", {'N', "mondriaan-n-parts"});
+    
+    args::ValueFlag<std::string> pipeline(parser, "STRING", "apply a series of sorts, based on single-character command line arguments to this command, with 's' the default sort", {'p', "pipeline"});
+    args::Flag paths_by_min_node_id(parser, "paths-min", "sort paths by their lowest contained node id", {'L', "paths-min"});
     args::Flag paths_by_max_node_id(parser, "paths-max", "sort paths by their highest contained node id", {'M', "paths-max"});
     args::Flag paths_by_avg_node_id(parser, "paths-avg", "sort paths by their average contained node id", {'A', "paths-avg"});
     args::Flag paths_by_avg_node_id_rev(parser, "paths-avg-rev", "sort paths in reverse by their average contained node id", {'R', "paths-avg-rev"});
     args::ValueFlag<std::string> path_delim(parser, "path-delim", "sort paths in bins by their prefix up to this delemiter", {'D', "path-delim"});
-    args::Flag progress(parser, "progress", "display progress of the sort", {'p', "progress"});
+    args::Flag progress(parser, "progress", "display progress of the sort", {'P', "progress"});
     args::Flag optimize(parser, "optimize", "use the MutableHandleGraph::optimize method", {'O', "optimize"});
     try {
         parser.ParseCLI(argc, argv);
@@ -76,6 +78,26 @@ int main_sort(int argc, char** argv) {
             std::cout << graph.get_id(handle) << std::endl;
         }
     }
+
+    // helper, TODO: move into its own file
+    // make a dagified copy, get its sort, and apply the order to our graph
+    auto dagify_sort = [&](const graph_t& graph) {
+        graph_t into;
+        auto dagified_to_orig = algorithms::dagify(&graph, &into, 1);
+        auto order = algorithms::topological_order(&into, true, false, args::get(progress));
+        // translate the order
+        ska::flat_hash_set<handlegraph::nid_t> seen;
+        std::vector<handle_t> translated_order;
+        for (auto& handle : order) {
+            handlegraph::nid_t id = dagified_to_orig[into.get_id(handle)];
+            if (!seen.count(id)) {
+                translated_order.push_back(graph.get_handle(id));
+                seen.insert(id);
+            }
+        }
+        return translated_order;
+    };
+
     std::string outfile = args::get(dg_out_file);
     if (outfile.size()) {
         if (args::get(eades)) {
@@ -95,27 +117,47 @@ int main_sort(int argc, char** argv) {
             }
             graph.apply_ordering(given_order, true);
         } else if (args::get(dagify)) {
-            // make a dagified copy, get its sort, and apply the order to our graph
-            graph_t into;
-            auto dagified_to_orig = algorithms::dagify(&graph, &into, 1);
-            auto order = algorithms::topological_order(&into, true, false, args::get(progress));
-            // translate the order
-            ska::flat_hash_set<handlegraph::nid_t> seen;
-            std::vector<handle_t> translated_order;
-            for (auto& handle : order) {
-                handlegraph::nid_t id = dagified_to_orig[into.get_id(handle)];
-                if (!seen.count(id)) {
-                    translated_order.push_back(graph.get_handle(id));
-                    seen.insert(id);
-                }
-            }
-            graph.apply_ordering(translated_order, true);
+            graph.apply_ordering(dagify_sort(graph), true);
         } else if (args::get(cycle_breaking)) {
             graph.apply_ordering(algorithms::cycle_breaking_sort(graph), true);
         } else if (args::get(no_seeds)) {
             graph.apply_ordering(algorithms::topological_order(&graph, false, false, args::get(progress)), true);
         } else if (args::get(mondriaan)) {
             graph.apply_ordering(algorithms::mondriaan_sort(graph, args::get(mondriaan_n_parts), 1.0, false, false), true);
+        } else if (!args::get(pipeline).empty()) {
+            // for each sort type, apply it to the graph
+            std::vector<handle_t> order;
+            for (auto c : args::get(pipeline)) {
+                switch (c) {
+                case 's':
+                    order = algorithms::topological_order(&graph, true, false, args::get(progress));
+                    break;
+                case 'n':
+                    order = algorithms::topological_order(&graph, false, false, args::get(progress));
+                    break;
+                case 'e':
+                    order = algorithms::eades_algorithm(&graph);
+                    break;
+                case 'd':
+                    order = dagify_sort(graph);
+                    break;
+                case 'b':
+                    order = algorithms::cycle_breaking_sort(graph);
+                    break;
+                case 'l':
+                    order = algorithms::lazy_topological_order(&graph);
+                    break;
+                case 't':
+                    order = algorithms::two_way_topological_order(&graph);
+                    break;
+                case 'm':
+                    order = algorithms::mondriaan_sort(graph, args::get(mondriaan_n_parts), 1.0, false, false);
+                    break;
+                default:
+                    break;
+                }
+                graph.apply_ordering(order, true);
+            }
         } else {
             graph.apply_ordering(algorithms::topological_order(&graph, true, false, args::get(progress)), true);
         }
