@@ -4,27 +4,36 @@ namespace odgi {
 namespace algorithms {
 
 std::vector<handle_t> dagify_sort(const HandleGraph& base, MutableHandleGraph& split, MutableHandleGraph& into) {
-    auto split_to_orig = algorithms::split_strands(&base, &split);
-    auto dagified_to_split = algorithms::dagify(&split, &into, 1);
+    //auto split_to_orig = algorithms::split_strands(&base, &split);
+    auto dagified_to_base = algorithms::dagify(&base, &into, 1);
     auto dagified_to_orig = [&](handlegraph::nid_t id) {
-        return split_to_orig[dagified_to_split[id]];
+        //return split_to_orig[dagified_to_split[id]];
+        return dagified_to_base[id];
     };
     auto order = algorithms::topological_order(&into, true, false);
-    // translate the order
-    std::reverse(order.begin(), order.end());
-    ska::flat_hash_set<handlegraph::nid_t> seen;
-    std::vector<handle_t> translated_order;
-    for (auto& handle : order) {
-        //assert(dagified_to_orig.find(into.get_id(handle)) != dagified_to_orig.end());
-        auto vs_orig = dagified_to_orig(into.get_id(handle));
-        handlegraph::nid_t id = vs_orig.first;
-        //assert(id > 0);
-        if (!seen.count(id)) {
-            translated_order.push_back(base.get_handle(id));
-            seen.insert(id);
-        }
+    // find the mean position in the order for each original handle
+    ska::flat_hash_map<handlegraph::nid_t, std::pair<uint64_t, uint64_t>> pos_accum;
+    for (uint64_t i = 0; i < order.size(); ++i) {
+        auto& handle = order[i];
+        handlegraph::nid_t id = dagified_to_orig(into.get_id(handle));
+        pos_accum[id].first += i;
+        ++pos_accum[id].second;
     }
-    std::reverse(translated_order.begin(), translated_order.end());
+    // sort the original ids by their average position in the dagified sort
+    std::vector<std::pair<handlegraph::nid_t, double>> avg_pos; avg_pos.reserve(pos_accum.size());
+    for (auto& e : pos_accum) {
+        avg_pos.push_back(std::make_pair(e.first, (double)e.second.first/(double)e.second.second));
+    }
+    std::sort(avg_pos.begin(), avg_pos.end(),
+              [](const std::pair<handlegraph::nid_t, double>& a,
+                 const std::pair<handlegraph::nid_t, double>& b) {
+                  return a.second < b.second;
+              });
+    std::vector<handle_t> translated_order;
+    for (auto& e : avg_pos) {
+        translated_order.push_back(base.get_handle(e.first));
+    }
+    //std::reverse(translated_order.begin(), translated_order.end());
     assert(translated_order.size() == base.get_node_count());
     return translated_order;
 }
