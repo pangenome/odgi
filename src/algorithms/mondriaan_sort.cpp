@@ -897,6 +897,7 @@ std::vector<handle_t> mondriaan_sort(const PathHandleGraph& graph,
     // write to file
     //std::string tempname = std::tmpnam(nullptr);
     if (!n_parts) n_parts = 1; // force 1
+    n_parts = std::min(n_parts, graph.get_node_count());
     if (eps == 0) eps = 1.0;
     std::string tempname = temp_file::create();
     std::string outmtx = tempname + ".mtx";
