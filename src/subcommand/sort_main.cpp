@@ -7,6 +7,7 @@
 #include "algorithms/id_ordered_paths.hpp"
 #include "algorithms/dagify.hpp"
 #include "algorithms/split_strands.hpp"
+#include "algorithms/dagify_sort.hpp"
 #include "algorithms/random_order.hpp"
 #include "algorithms/mondriaan_sort.hpp"
 
@@ -84,30 +85,6 @@ int main_sort(int argc, char** argv) {
 
     // helper, TODO: move into its own file
     // make a dagified copy, get its sort, and apply the order to our graph
-    auto dagify_sort = [&](const graph_t& base) {
-        graph_t split, into;
-        auto split_to_orig = algorithms::split_strands(&base, &split);
-        auto dagified_to_split = algorithms::dagify(&split, &into, 1);
-        auto dagified_to_orig = [&](handlegraph::nid_t id) {
-            return split_to_orig[dagified_to_split[id]];
-        };
-        auto order = algorithms::topological_order(&into, true, false, args::get(progress));
-        // translate the order
-        ska::flat_hash_set<handlegraph::nid_t> seen;
-        std::vector<handle_t> translated_order;
-        for (auto& handle : order) {
-            //assert(dagified_to_orig.find(into.get_id(handle)) != dagified_to_orig.end());
-            auto vs_orig = dagified_to_orig(into.get_id(handle));
-            handlegraph::nid_t id = vs_orig.first;
-            //assert(id > 0);
-            if (!seen.count(id)) {
-                translated_order.push_back(base.get_handle(id));
-                seen.insert(id);
-            }
-        }
-        assert(translated_order.size() == base.get_node_count());
-        return translated_order;
-    };
 
     std::string outfile = args::get(dg_out_file);
     if (outfile.size()) {
@@ -128,7 +105,8 @@ int main_sort(int argc, char** argv) {
             }
             graph.apply_ordering(given_order, true);
         } else if (args::get(dagify)) {
-            graph.apply_ordering(dagify_sort(graph), true);
+            graph_t split, into;
+            graph.apply_ordering(algorithms::dagify_sort(graph, split, into), true);
         } else if (args::get(cycle_breaking)) {
             graph.apply_ordering(algorithms::cycle_breaking_sort(graph), true);
         } else if (args::get(no_seeds)) {
@@ -152,7 +130,10 @@ int main_sort(int argc, char** argv) {
                     order = algorithms::eades_algorithm(&graph);
                     break;
                 case 'd':
-                    order = dagify_sort(graph);
+                {
+                    graph_t split, into;
+                    order = algorithms::dagify_sort(graph, split, into);
+                }
                     break;
                 case 'b':
                     order = algorithms::cycle_breaking_sort(graph);

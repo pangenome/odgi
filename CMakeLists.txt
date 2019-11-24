@@ -302,6 +302,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/random_order.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/eades_algorithm.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/dagify.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/dagify_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/split_strands.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/strongly_connected_components.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/weakly_connected_components.cpp
