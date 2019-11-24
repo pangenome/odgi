@@ -254,8 +254,8 @@ set(mondriaan_LIB "${SOURCE_DIR}/lib")
 #set(pybind11_DIR ${SOURCE_DIR})
 #add_subdirectory(${pybind11_DIR})
 
-set(CMAKE_BUILD_TYPE Release)
-#set(CMAKE_BUILD_TYPE Debug)
+#set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
 
 # set up our target executable and specify its dependencies and includes
 add_library(odgi_objs OBJECT
@@ -301,6 +301,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/cycle_breaking_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/eades_algorithm.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/dagify.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/split_strands.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/strongly_connected_components.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/weakly_connected_components.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/dfs.cpp

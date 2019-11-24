@@ -6,6 +6,7 @@
 #include "algorithms/cycle_breaking_sort.hpp"
 #include "algorithms/id_ordered_paths.hpp"
 #include "algorithms/dagify.hpp"
+#include "algorithms/split_strands.hpp"
 #include "algorithms/mondriaan_sort.hpp"
 
 namespace odgi {
@@ -81,20 +82,28 @@ int main_sort(int argc, char** argv) {
 
     // helper, TODO: move into its own file
     // make a dagified copy, get its sort, and apply the order to our graph
-    auto dagify_sort = [&](const graph_t& graph) {
-        graph_t into;
-        auto dagified_to_orig = algorithms::dagify(&graph, &into, 1);
+    auto dagify_sort = [&](const graph_t& base) {
+        graph_t split, into;
+        auto split_to_orig = algorithms::split_strands(&base, &split);
+        auto dagified_to_split = algorithms::dagify(&split, &into, 1);
+        auto dagified_to_orig = [&](handlegraph::nid_t id) {
+            return split_to_orig[dagified_to_split[id]];
+        };
         auto order = algorithms::topological_order(&into, true, false, args::get(progress));
         // translate the order
         ska::flat_hash_set<handlegraph::nid_t> seen;
         std::vector<handle_t> translated_order;
         for (auto& handle : order) {
-            handlegraph::nid_t id = dagified_to_orig[into.get_id(handle)];
+            //assert(dagified_to_orig.find(into.get_id(handle)) != dagified_to_orig.end());
+            auto vs_orig = dagified_to_orig(into.get_id(handle));
+            handlegraph::nid_t id = vs_orig.first;
+            //assert(id > 0);
             if (!seen.count(id)) {
-                translated_order.push_back(graph.get_handle(id));
+                translated_order.push_back(base.get_handle(id));
                 seen.insert(id);
             }
         }
+        assert(translated_order.size() == base.get_node_count());
         return translated_order;
     };
 
@@ -147,7 +156,7 @@ int main_sort(int argc, char** argv) {
                 case 'l':
                     order = algorithms::lazy_topological_order(&graph);
                     break;
-                case 't':
+                case 'w':
                     order = algorithms::two_way_topological_order(&graph);
                     break;
                 case 'm':

@@ -133,8 +133,6 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads, bo
         for(const handle_t& tail : tail_nodes(g)) {
             s.set(number_bool_packing::unpack_number(tail), 1);
         }
-    } else {
-        s.set(0, 1);
     }
 
     // We will use an ordered map handles by ID for nodes we have not visited
@@ -332,6 +330,8 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads, bo
         uint64_t c = g->get_node_count();
         std::cerr << "topological sort " << i << " of " << c << " ~ " << "100.0000%" << std::endl;
     }
+
+    assert(sorted.size() == g->get_node_count());
 
     // Send away our sorted ordering.
     return sorted;

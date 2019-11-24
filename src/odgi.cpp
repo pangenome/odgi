@@ -701,7 +701,6 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
         order = &order_in;
     }
     // nodes
-    //hash_map<nid_t, nid_t> ids;
     std::vector<nid_t> ids;
     uint64_t max_handle_rank = 0;
     uint64_t min_handle_rank = std::numeric_limits<uint64_t>::max();
@@ -732,6 +731,7 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
     }
     // edges
     for (auto& handle : *order) {
+        node_t& node = node_v.at(number_bool_packing::unpack_number(handle));        
         follow_edges(handle, false, [&](const handle_t& h) {
                 ordered.create_edge(ordered.get_handle(ids[number_bool_packing::unpack_number(handle) - min_handle_rank],
                                                        get_is_reverse(handle)),

@@ -898,13 +898,11 @@ std::vector<handle_t> mondriaan_sort(const PathHandleGraph& graph,
     //std::string tempname = std::tmpnam(nullptr);
     if (!n_parts) n_parts = 1; // force 1
     std::string tempname = temp_file::create();
-    std::cerr << "using tempname " << tempname << std::endl;
     std::string outmtx = tempname + ".mtx";
     std::ofstream out(outmtx.c_str());
     algorithms::write_as_sparse_matrix(out, graph, weight_by_edge_depth, weight_by_edge_delta);
     out.close();
     // set up mondriaan command line
-    //Mondriaan DRB1-3123.mtx 8 1 -Permute=SBD -EnforceSymmetricPermutation=yes -Coarsening_StopRatio=1 -SplitStrategy=finegrain -Iterative_Refinement=always -Coarsening_InprodScaling=max -VectorPartition_Step3=decrease -Coarsening_InprodMatchingOrder=incrwgt -Coarsening_NetScaling=no -Coarsening_MatchingStrategy=ata -Coarsening_MatchingATAMatcher=greedy -SquareMatrix_DistributeVectorsEqual_AddDummies=no -ImproveFreeNonzeros=no -LoadbalanceStrategy=increase
     std::vector<std::string> args = {
         "Mondriaan",
         outmtx,
