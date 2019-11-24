@@ -299,6 +299,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/prune.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/coverage.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/cycle_breaking_sort.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/random_order.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/eades_algorithm.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/dagify.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/split_strands.cpp

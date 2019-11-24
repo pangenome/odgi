@@ -897,6 +897,7 @@ std::vector<handle_t> mondriaan_sort(const PathHandleGraph& graph,
     // write to file
     //std::string tempname = std::tmpnam(nullptr);
     if (!n_parts) n_parts = 1; // force 1
+    if (eps == 0) eps = 1.0;
     std::string tempname = temp_file::create();
     std::string outmtx = tempname + ".mtx";
     std::ofstream out(outmtx.c_str());
@@ -908,19 +909,20 @@ std::vector<handle_t> mondriaan_sort(const PathHandleGraph& graph,
         outmtx,
         std::to_string(n_parts),
         std::to_string(eps),
+        "-Permute=SBD",
         "-EnforceSymmetricPermutation=yes",
-        "-Coarsening_StopRatio=1",
-        "-SplitStrategy=finegrain",
-        "-Iterative_Refinement=always",
-        "-Coarsening_InprodScaling=max",
-        "-VectorPartition_Step3=decrease",
-        "-Coarsening_InprodMatchingOrder=incrwgt",
-        "-Coarsening_NetScaling=no",
+        //"-Coarsening_StopRatio=1",
+        //"-SplitStrategy=finegrain",
+        //"-Iterative_Refinement=always",
+        //"-Coarsening_InprodScaling=max",
+        //"-VectorPartition_Step3=decrease",
+        //"-Coarsening_InprodMatchingOrder=incrwgt",
+        //"-Coarsening_NetScaling=no",
         "-Coarsening_MatchingStrategy=ata",
         "-Coarsening_MatchingATAMatcher=greedy",
-        "-SquareMatrix_DistributeVectorsEqual_AddDummies=no",
-        "-ImproveFreeNonzeros=no",
-        "-LoadbalanceStrategy=increase"
+        //"-SquareMatrix_DistributeVectorsEqual_AddDummies=no",
+        //"-ImproveFreeNonzeros=no",
+        //"-LoadbalanceStrategy=increase"
     };
     char* argvec[args.size()];
     for (uint8_t i = 0; i < args.size(); ++i) {
