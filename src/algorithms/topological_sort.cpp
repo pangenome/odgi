@@ -49,7 +49,7 @@ std::vector<handle_t> tail_nodes(const HandleGraph* g) {
     
 }
 
-std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads, bool progress_reporting) {
+std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads, bool use_tails, bool progress_reporting) {
 
     // Make a vector to hold the ordered and oriented nodes.
     std::vector<handle_t> sorted;
@@ -129,7 +129,7 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads, bo
         for(const handle_t& head : head_nodes(g)) {
             s.set(number_bool_packing::unpack_number(head), 1);
         }
-    } else {
+    } else if (use_tails) {
         for(const handle_t& tail : tail_nodes(g)) {
             s.set(number_bool_packing::unpack_number(tail), 1);
         }
@@ -330,6 +330,8 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads, bo
         uint64_t c = g->get_node_count();
         std::cerr << "topological sort " << i << " of " << c << " ~ " << "100.0000%" << std::endl;
     }
+
+    assert(sorted.size() == g->get_node_count());
 
     // Send away our sorted ordering.
     return sorted;

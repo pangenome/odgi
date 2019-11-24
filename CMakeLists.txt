@@ -121,16 +121,6 @@ ExternalProject_Add(tayweeargs
 ExternalProject_Get_property(tayweeargs SOURCE_DIR)
 set(tayweeargs_INCLUDE "${SOURCE_DIR}")
 
-# parallel bsort (header-only, so here we just check if we can build it)
-ExternalProject_Add(bsort
-  GIT_REPOSITORY "https://github.com/ekg/bsort.git"
-  GIT_TAG "c3ab0d3308424030e0a000645a26d2c10a59a124"
-  UPDATE_COMMAND ""
-  INSTALL_COMMAND "")
-ExternalProject_Get_property(bsort SOURCE_DIR)
-set(bsort_INCLUDE "${SOURCE_DIR}/src")
-set(bsort_LIB "${SOURCE_DIR}/lib")
-
 # BBHash perfect hasher
 ExternalProject_Add(bbhash
   GIT_REPOSITORY "https://github.com/vgteam/BBHash.git"
@@ -232,6 +222,26 @@ ExternalProject_Add(picosha256
 ExternalProject_Get_property(picosha256 SOURCE_DIR)
 set(picosha256_INCLUDE "${SOURCE_DIR}")
 
+# SGD based graph layout
+ExternalProject_Add(sgd2
+  GIT_REPOSITORY "https://github.com/ekg/sgd2.git"
+  GIT_TAG "3cb6ffe65dc14bf580866519e62d9b52964bdcae"
+  UPDATE_COMMAND ""
+  INSTALL_COMMAND ""
+  BUILD_COMMAND ""
+  CONFIGURE_COMMAND "")
+ExternalProject_Get_property(sgd2 SOURCE_DIR)
+set(sgd2_INCLUDE "${SOURCE_DIR}/src")
+
+ExternalProject_Add(mondriaan
+  GIT_REPOSITORY "https://github.com/ekg/mondriaan.git"
+  GIT_TAG "7d840484ec49b31c99d5ab5c72a737596d82aa4e"
+  UPDATE_COMMAND ""
+  INSTALL_COMMAND "")
+ExternalProject_Get_property(mondriaan SOURCE_DIR)
+set(mondriaan_INCLUDE "${SOURCE_DIR}/src")
+set(mondriaan_LIB "${SOURCE_DIR}/lib")
+
 # pybind11
 #ExternalProject_Add(pybind11
 #    GIT_REPOSITORY https://github.com/pybind/pybind11.git 
@@ -244,8 +254,8 @@ set(picosha256_INCLUDE "${SOURCE_DIR}")
 #set(pybind11_DIR ${SOURCE_DIR})
 #add_subdirectory(${pybind11_DIR})
 
-set(CMAKE_BUILD_TYPE Release)
-#set(CMAKE_BUILD_TYPE Debug)
+#set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
 
 # set up our target executable and specify its dependencies and includes
 add_library(odgi_objs OBJECT
@@ -280,6 +290,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/bin_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/matrix_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/chop_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/layout_main.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/hash.cpp
@@ -288,8 +299,11 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/prune.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/coverage.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/cycle_breaking_sort.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/random_order.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/eades_algorithm.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/dagify.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/dagify_sort.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/split_strands.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/strongly_connected_components.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/weakly_connected_components.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/dfs.cpp
@@ -297,6 +311,10 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/id_ordered_paths.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/simple_components.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_info.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/sgd_layout.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/mondriaan_sort.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/matrix_writer.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/temp_file.cpp
   )
 
 set(odgi_DEPS 
@@ -311,11 +329,12 @@ set(odgi_DEPS
     sparsepp
     ska
     intervaltree
-    bsort
     lodepng
     structures
     sonlib
-    picosha256)
+    picosha256
+    sgd2
+    mondriaan)
 add_dependencies(odgi_objs ${odgi_DEPS})
 
 set(odgi_INCLUDES
@@ -334,11 +353,12 @@ set(odgi_INCLUDES
   "${intervaltree_INCLUDE}"
   "${lodepng_INCLUDE}"
   "${bbhash_INCLUDE}"
-  "${bsort_INCLUDE}"
   "${structures_INCLUDE}"
   "${sonLib_lib_INCLUDE}"
   "${sonLib_inc_INCLUDE}"
-  "${picosha256_INCLUDE}")
+  "${picosha256_INCLUDE}"
+  "${sgd2_INCLUDE}"
+  "${mondriaan_INCLUDE}")
 
 set(odgi_LIBS
   "${sdsl-lite_LIB}/libsdsl.a"
@@ -349,6 +369,7 @@ set(odgi_LIBS
   "${sonLib_LIB}/stPinchesAndCacti.a"
   "${sonLib_LIB}/3EdgeConnected.a"
   "${sonLib_LIB}/sonLib.a"
+  "${mondriaan_LIB}/libmondriaan.a"
   "-ldl")
 
 target_include_directories(odgi_objs PUBLIC ${odgi_INCLUDES})

@@ -1,5 +1,4 @@
-#ifndef VG_ALGORITHMS_SPLIT_STRANDS_HPP_INCLUDED
-#define VG_ALGORITHMS_SPLIT_STRANDS_HPP_INCLUDED
+#pragma once
 
 /**
  * \file split_strands.hpp
@@ -9,15 +8,16 @@
 
 #include <handlegraph/handle_graph.hpp>
 #include <handlegraph/mutable_handle_graph.hpp>
-#include "../utility.hpp"
-
+//#include "../utility.hpp"
+#include "dna.hpp"
+#include "hash_map.hpp"
+#include <utility>
 #include <unordered_set>
 #include <unordered_map>
 
-namespace vg {
+namespace odgi {
 namespace algorithms {
 
-using namespace std;
 using namespace handlegraph;
 
     /// Fills a MutableHandleGraph 'into' with a graph that has the same sequence and path
@@ -26,10 +26,8 @@ using namespace handlegraph;
     /// complement sequence. Returns a map that translates node IDs from 'into' to their
     /// node ID and orientation in 'source'. Reports an error and exits if 'into' is not
     /// empty.
-    unordered_map<handlegraph::nid_t, pair<handlegraph::nid_t, bool>> split_strands(const HandleGraph* source,
-                                                                                  MutableHandleGraph* into);
+ska::flat_hash_map<handlegraph::nid_t, std::pair<handlegraph::nid_t, bool>> split_strands(const HandleGraph* source,
+                                                                                          MutableHandleGraph* into);
 
 }
 }
-
-#endif
