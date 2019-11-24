@@ -147,6 +147,13 @@ int main_sort(int argc, char** argv) {
                 case 'r':
                     order = algorithms::random_order(graph);
                     break;
+                case 'f':
+                    order.clear();
+                    graph.for_each_handle([&order](const handle_t& handle) {
+                            order.push_back(handle);
+                        });
+                    std::reverse(order.begin(), order.end());
+                    break;
                 case 'm':
                     order = algorithms::mondriaan_sort(graph, args::get(mondriaan_n_parts), 1.0, false, false);
                     break;
