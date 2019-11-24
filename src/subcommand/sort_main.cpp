@@ -41,6 +41,7 @@ int main_sort(int argc, char** argv) {
     args::Flag mondriaan(parser, "mondriaan", "use sparse matrix diagonalization to sort the graph", {'m', "mondriaan"});
     args::ValueFlag<uint64_t> mondriaan_n_parts(parser, "N", "number of partitions for mondriaan", {'N', "mondriaan-n-parts"});
     args::ValueFlag<double> mondriaan_epsilon(parser, "N", "epsilon parameter to mondriaan", {'E', "mondriaan-epsilon"});
+    args::Flag mondriaan_path_weight(parser, "path-weight", "weight mondriaan input matrix by path coverage of edges", {'W', "mondriaan-path-weight"});
     args::ValueFlag<std::string> pipeline(parser, "STRING", "apply a series of sorts, based on single-character command line arguments to this command, with 's' the default sort", {'p', "pipeline"});
     args::Flag paths_by_min_node_id(parser, "paths-min", "sort paths by their lowest contained node id", {'L', "paths-min"});
     args::Flag paths_by_max_node_id(parser, "paths-max", "sort paths by their highest contained node id", {'M', "paths-max"});
@@ -112,7 +113,10 @@ int main_sort(int argc, char** argv) {
         } else if (args::get(no_seeds)) {
             graph.apply_ordering(algorithms::topological_order(&graph, false, false, args::get(progress)), true);
         } else if (args::get(mondriaan)) {
-            graph.apply_ordering(algorithms::mondriaan_sort(graph, args::get(mondriaan_n_parts), args::get(mondriaan_epsilon), false, false), true);
+            graph.apply_ordering(algorithms::mondriaan_sort(graph,
+                                                            args::get(mondriaan_n_parts),
+                                                            args::get(mondriaan_epsilon),
+                                                            args::get(mondriaan_path_weight), false), true);
         } else if (args::get(randomize)) {
             graph.apply_ordering(algorithms::random_order(graph), true);
         } else if (!args::get(pipeline).empty()) {
@@ -155,7 +159,11 @@ int main_sort(int argc, char** argv) {
                     std::reverse(order.begin(), order.end());
                     break;
                 case 'm':
-                    order = algorithms::mondriaan_sort(graph, args::get(mondriaan_n_parts), 1.0, false, false);
+
+                    order = algorithms::mondriaan_sort(graph,
+                                                       args::get(mondriaan_n_parts),
+                                                       args::get(mondriaan_epsilon),
+                                                       args::get(mondriaan_path_weight), false);
                     break;
                 default:
                     break;
