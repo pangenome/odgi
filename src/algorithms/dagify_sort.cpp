@@ -4,18 +4,19 @@ namespace odgi {
 namespace algorithms {
 
 std::vector<handle_t> dagify_sort(const HandleGraph& base, MutableHandleGraph& split, MutableHandleGraph& into) {
-    //auto split_to_orig = algorithms::split_strands(&base, &split);
-    auto dagified_to_base = algorithms::dagify(&base, &into, 1);
+    auto split_to_orig = algorithms::split_strands(&base, &split);
+    auto dagified_to_split = algorithms::dagify(&split, &into, 1);
     auto dagified_to_orig = [&](handlegraph::nid_t id) {
-        //return split_to_orig[dagified_to_split[id]];
-        return dagified_to_base[id];
+        return split_to_orig[dagified_to_split[id]];
     };
     auto order = algorithms::topological_order(&into, true, false);
     // find the mean position in the order for each original handle
     ska::flat_hash_map<handlegraph::nid_t, std::pair<uint64_t, uint64_t>> pos_accum;
     for (uint64_t i = 0; i < order.size(); ++i) {
         auto& handle = order[i];
-        handlegraph::nid_t id = dagified_to_orig(into.get_id(handle));
+        auto e = dagified_to_orig(into.get_id(handle));
+        if (e.second) continue;
+        handlegraph::nid_t id = e.first;
         pos_accum[id].first += i;
         ++pos_accum[id].second;
     }
