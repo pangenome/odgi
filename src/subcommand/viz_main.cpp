@@ -327,8 +327,8 @@ int main_viz(int argc, char** argv) {
             path_r = (uint8_t)std::round(255*std::min(path_r_f*f, (float)1.0));
             path_g = (uint8_t)std::round(255*std::min(path_g_f*f, (float)1.0));
             path_b = (uint8_t)std::round(255*std::min(path_b_f*f, (float)1.0));
-            std::cerr << "path " << as_integer(path) << " " << graph.get_path_name(path) << " " << path_r_f << " " << path_g_f << " " << path_b_f
-                      << " " << (int)path_r << " " << (int)path_g << " " << (int)path_b << std::endl;
+            //std::cerr << "path " << as_integer(path) << " " << graph.get_path_name(path) << " " << path_r_f << " " << path_g_f << " " << path_b_f
+            //          << " " << (int)path_r << " " << (int)path_g << " " << (int)path_b << std::endl;
             /// Loop over all the steps along a path, from first through last and draw them
             uint64_t path_rank = as_integer(path);
             uint64_t step = 0;
