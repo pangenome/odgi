@@ -13,7 +13,6 @@ void bin_path_info(const PathHandleGraph& graph,
                    uint64_t bin_width) {
     // the graph must be compacted for this to work
     std::vector<uint64_t> position_map(graph.get_node_count()+1);
-    std::vector<std::pair<uint64_t, uint64_t>> links;
     uint64_t len = 0;
     std::string graph_seq;
     graph.for_each_handle([&](const handle_t& h) {
@@ -36,6 +35,7 @@ void bin_path_info(const PathHandleGraph& graph,
     graph_seq.clear(); // clean up
     std::unordered_map<path_handle_t, uint64_t> path_length;
     graph.for_each_path_handle([&](const path_handle_t& path) {
+            std::vector<std::pair<uint64_t, uint64_t>> links;
             std::map<uint64_t, path_info_t> bins;
             // walk the path and aggregate
             uint64_t path_pos = 0;
