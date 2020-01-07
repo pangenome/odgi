@@ -50,9 +50,8 @@ include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 
 # sdsl-lite (full build using its cmake config)
 ExternalProject_Add(sdsl-lite
-  GIT_REPOSITORY "${CMAKE_SOURCE_DIR}/deps/sdsl-lite"
-  GIT_TAG "d52aa9a71513d132e30c09491b5899af449ebb94"
-  CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR} # TODO ADD static build flag
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/sdsl-lite"
+  CMAKE_ARGS "${CMAKE_ARGS};-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>"
   UPDATE_COMMAND ""
   INSTALL_COMMAND "")
 ExternalProject_Get_property(sdsl-lite INSTALL_DIR)
@@ -63,64 +62,49 @@ set(sdsl-lite-divsufsort_LIB "${INSTALL_DIR}/src/sdsl-lite-build/external/libdiv
 
 # DYNAMIC (full build using its cmake config)
 ExternalProject_Add(dynamic
-  GIT_REPOSITORY "${CMAKE_SOURCE_DIR}/deps/DYNAMIC"
-  #GIT_REPOSITORY "https://github.com/vgteam/DYNAMIC.git"
-  GIT_TAG "0da557fbd0613377bbde26dd60ded655bea58d3b"
-  # we don't actually install dynamic... it's header only
-  #CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/DYNAMIC"
   UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   BUILD_COMMAND ""
   CONFIGURE_COMMAND "")
-ExternalProject_Get_property(dynamic INSTALL_DIR)
-set(dynamic_INCLUDE "${INSTALL_DIR}/src/dynamic/include")
+ExternalProject_Get_property(dynamic SOURCE_DIR)
+set(dynamic_INCLUDE "${SOURCE_DIR}/include")
 
 # hopscotch_map (required by DYNAMIC)
 ExternalProject_Add(hopscotch_map
-  GIT_REPOSITORY "${CMAKE_SOURCE_DIR}/deps/hopscotch-map"
-  #GIT_REPOSITORY "https://github.com/Tessil/hopscotch-map.git"
-  # we don't actually install hopscotch_map... it's header only
-  #CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/hopscotch-map"
   UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   BUILD_COMMAND ""
   CONFIGURE_COMMAND "")
-ExternalProject_Get_property(hopscotch_map INSTALL_DIR)
-set(hopscotch_map_INCLUDE "${INSTALL_DIR}/src/hopscotch_map/include")
+ExternalProject_Get_property(hopscotch_map SOURCE_DIR)
+set(hopscotch_map_INCLUDE "${SOURCE_DIR}/include")
 
 # gfakluge (now header only)
 ExternalProject_Add(gfakluge
-  GIT_REPOSITORY "${CMAKE_SOURCE_DIR}/deps/gfakluge"
-  #GIT_REPOSITORY "https://github.com/vgteam/gfakluge.git"
-  GIT_TAG "d65e688b6f2d301ad953da578f3cf35e68feb452"
-  BUILD_IN_SOURCE TRUE
-  CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR} # TODO ADD static build flag
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/gfakluge"
+  CMAKE_ARGS "${CMAKE_ARGS};-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>"
   UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   BUILD_COMMAND ""
   CONFIGURE_COMMAND "")
+ExternalProject_Get_property(gfakluge SOURCE_DIR)
+set(gfakluge_INCLUDE "${SOURCE_DIR}/src")
+set(gfakluge_tinyFA_INCLUDE "${SOURCE_DIR}/src/tinyFA")
 ExternalProject_Get_property(gfakluge INSTALL_DIR)
-set(gfakluge_INCLUDE "${INSTALL_DIR}/src/gfakluge/src")
-set(gfakluge_tinyFA_INCLUDE "${INSTALL_DIR}/src/gfakluge/src/tinyFA")
 set(gfakluge_LIB "${INSTALL_DIR}/src/gfakluge")
 
 # libhandlegraph (full build using its cmake config)
 ExternalProject_Add(handlegraph
-  GIT_REPOSITORY "${CMAKE_SOURCE_DIR}/deps/libhandlegraph"
-  #GIT_REPOSITORY "https://github.com/vgteam/libhandlegraph.git"
-  GIT_TAG "541b97315fd413846f5a76476907f8d2b2276242"
-  CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
-  UPDATE_COMMAND ""
-  INSTALL_COMMAND "")
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/libhandlegraph"
+  CMAKE_ARGS "${CMAKE_ARGS};-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>")
 ExternalProject_Get_property(handlegraph INSTALL_DIR)
-set(handlegraph_INCLUDE "${INSTALL_DIR}/src/handlegraph/src/include")
-set(handlegraph_LIB "${INSTALL_DIR}/src/handlegraph-build")
+set(handlegraph_INCLUDE "${INSTALL_DIR}/include")
+set(handlegraph_LIB "${INSTALL_DIR}/lib")
 
 # taywee's C++ args library, header only
 ExternalProject_Add(tayweeargs
-  GIT_REPOSITORY "${CMAKE_SOURCE_DIR}/deps/args"
-  #GIT_REPOSITORY "https://github.com/Taywee/args.git"
-  GIT_TAG "3de44ec671db452cc0c4ef86399b108939768abb"
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/args"
   UPDATE_COMMAND ""
   INSTALL_COMMAND "")
 ExternalProject_Get_property(tayweeargs SOURCE_DIR)
@@ -128,9 +112,7 @@ set(tayweeargs_INCLUDE "${SOURCE_DIR}")
 
 # BBHash perfect hasher
 ExternalProject_Add(bbhash
-  GIT_REPOSITORY "${CMAKE_SOURCE_DIR}/deps/BBHash"
-  #GIT_REPOSITORY "https://github.com/vgteam/BBHash.git"
-  GIT_TAG "ccc22805eae48aca2a01a7ff5ef8e002857020d3"
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/BBHash"
   UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   BUILD_COMMAND ""
@@ -140,10 +122,8 @@ set(bbhash_INCLUDE "${SOURCE_DIR}")
 
 # backwardscpp
 ExternalProject_Add(backwardscpp
-  GIT_REPOSITORY "${CMAKE_SOURCE_DIR}/deps/backward-cpp"
-  #GIT_REPOSITORY "https://github.com/bombela/backward-cpp.git"
-  GIT_TAG "b353585d4bd19f9e51816bc11d2e53b0e5b4a760"
-  CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/backward-cpp"
+  CMAKE_ARGS "${CMAKE_ARGS};-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>"
   UPDATE_COMMAND ""
   INSTALL_COMMAND "")
 ExternalProject_Get_property(backwardscpp SOURCE_DIR)
@@ -151,24 +131,21 @@ set(backwardscpp_INCLUDE "${SOURCE_DIR}")
 
 # sparsepp
 ExternalProject_Add(sparsepp
-  GIT_REPOSITORY "${CMAKE_SOURCE_DIR}/deps/sparsepp"
-  #GIT_REPOSITORY "https://github.com/edawson/sparsepp.git"
-  GIT_TAG "1c5a285e87b2244383efe0398f9992acd61234e9"
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/sparsepp"
   BUILD_IN_SOURCE TRUE
-  CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR} # TODO ADD static build flag
+  CMAKE_ARGS "${CMAKE_ARGS};-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>"
   UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   BUILD_COMMAND ""
   CONFIGURE_COMMAND "")
+ExternalProject_Get_property(sparsepp SOURCE_DIR)
+set(sparsepp_INCLUDE "${SOURCE_DIR}/sparsepp/")
 ExternalProject_Get_property(sparsepp INSTALL_DIR)
-set(sparsepp_INCLUDE "${INSTALL_DIR}/src/sparsepp/sparsepp/")
 set(sparsepp_LIB "${INSTALL_DIR}/src/sparsepp/sparsepp/")
 
 # ska
 ExternalProject_Add(ska
-  GIT_REPOSITORY "${CMAKE_SOURCE_DIR}/deps/flat_hash_map"
-  #GIT_REPOSITORY "https://github.com/skarupke/flat_hash_map.git"
-  GIT_TAG "2c4687431f978f02a3780e24b8b701d22aa32d9c"
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/flat_hash_map"
   UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   BUILD_COMMAND ""
@@ -178,9 +155,7 @@ set(ska_INCLUDE "${SOURCE_DIR}")
 
 # intervaltree
 ExternalProject_Add(intervaltree
-  GIT_REPOSITORY "${CMAKE_SOURCE_DIR}/deps/intervaltree"
-  #GIT_REPOSITORY "https://github.com/ekg/intervaltree.git"
-  GIT_TAG "e8082c74a6f5c18de99d8b4cc4a55e2e62a1150d"
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/intervaltree"
   UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   BUILD_COMMAND ""
@@ -190,9 +165,7 @@ set(intervaltree_INCLUDE "${SOURCE_DIR}")
 
 # lodepng
 ExternalProject_Add(lodepng
-  GIT_REPOSITORY "${CMAKE_SOURCE_DIR}/deps/lodepng"
-  #GIT_REPOSITORY "https://github.com/ekg/lodepng.git"
-  GIT_TAG "6b7f7b2b1c0eaab7042b0137fa19129618d1bb9f"
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/lodepng"
   UPDATE_COMMAND ""
   INSTALL_COMMAND "")
 ExternalProject_Get_property(lodepng SOURCE_DIR)
@@ -201,9 +174,7 @@ set(lodepng_LIB "${SOURCE_DIR}/lib")
 
 # structures
 ExternalProject_Add(structures
-  GIT_REPOSITORY "${CMAKE_SOURCE_DIR}/deps/structures"
-  #GIT_REPOSITORY "https://github.com/jeizenga/structures.git"
-  GIT_TAG "71722385665aa724b466889bbec1afbfd375201f"
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/structures"
   UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   BUILD_COMMAND ""
@@ -212,9 +183,7 @@ ExternalProject_Get_property(structures SOURCE_DIR)
 set(structures_INCLUDE "${SOURCE_DIR}/src/include")
 
 ExternalProject_Add(sonlib
-  GIT_REPOSITORY "${CMAKE_SOURCE_DIR}/deps/pinchSonLib"
-  #GIT_REPOSITORY "https://github.com/vgteam/pinchSonLib.git"
-  GIT_TAG "d25257e7ba615081078c41ac82dd70fffdc8baad"
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/pinchSonLib"
   BUILD_IN_SOURCE TRUE
   INSTALL_COMMAND ""
   UPDATE_COMMAND ""
@@ -226,9 +195,7 @@ set(sonLib_lib_INCLUDE "${SOURCE_DIR}/sonLib/lib")
 set(sonLib_LIB "${SOURCE_DIR}/sonLib/lib")
 
 ExternalProject_Add(picosha256
-  GIT_REPOSITORY "${CMAKE_SOURCE_DIR}/deps/PicoSHA2"
-  #GIT_REPOSITORY "https://github.com/okdshin/PicoSHA2.git"
-  GIT_TAG "b699e6c900be6e00152db5a3d123c1db42ea13d0"
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/PicoSHA2"
   UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   BUILD_COMMAND ""
@@ -238,9 +205,7 @@ set(picosha256_INCLUDE "${SOURCE_DIR}")
 
 # SGD based graph layout
 ExternalProject_Add(sgd2
-  GIT_REPOSITORY "${CMAKE_SOURCE_DIR}/deps/sgd2"
-  #GIT_REPOSITORY "https://github.com/ekg/sgd2.git"
-  GIT_TAG "3cb6ffe65dc14bf580866519e62d9b52964bdcae"
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/sgd2"
   UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   BUILD_COMMAND ""
@@ -249,9 +214,7 @@ ExternalProject_Get_property(sgd2 SOURCE_DIR)
 set(sgd2_INCLUDE "${SOURCE_DIR}/src")
 
 ExternalProject_Add(mondriaan
-  GIT_REPOSITORY "${CMAKE_SOURCE_DIR}/deps/mondriaan"
-  #GIT_REPOSITORY "https://github.com/ekg/mondriaan.git"
-  GIT_TAG "7d840484ec49b31c99d5ab5c72a737596d82aa4e"
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/mondriaan"
   UPDATE_COMMAND ""
   INSTALL_COMMAND "")
 ExternalProject_Get_property(mondriaan SOURCE_DIR)
