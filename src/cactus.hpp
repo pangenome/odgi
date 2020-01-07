@@ -14,11 +14,11 @@
 #include "odgi.hpp"
 #include "hash_map.hpp"
 
-#include "algorithms/topological_sort.hpp"
-#include "algorithms/weakly_connected_components.hpp"
-#include "algorithms/strongly_connected_components.hpp"
-#include "algorithms/find_shortest_paths.hpp"
-#include "algorithms/dfs.hpp"
+#include "topological_sort.hpp"
+#include "weakly_connected_components.hpp"
+#include "strongly_connected_components.hpp"
+#include "find_shortest_paths.hpp"
+#include "dfs.hpp"
 
 //#include "types.hpp"
 //#include "utility.hpp"

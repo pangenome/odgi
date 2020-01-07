@@ -307,6 +307,7 @@ add_dependencies(odgi_objs ${odgi_DEPS})
 
 set(odgi_INCLUDES
   "${CMAKE_SOURCE_DIR}/src"
+  "${CMAKE_SOURCE_DIR}/src/algorithms"
   "${sdsl-lite_INCLUDE}"
   "${sdsl-lite-divsufsort_INCLUDE}"
   "${dynamic_INCLUDE}"
@@ -339,13 +340,77 @@ set(odgi_LIBS
   "${mondriaan_LIB}/libmondriaan.a"
   "-ldl")
 
+set(odgi_HEADERS
+  ${CMAKE_SOURCE_DIR}/src/phf.hpp
+  ${CMAKE_SOURCE_DIR}/src/position.hpp
+  ${CMAKE_SOURCE_DIR}/src/gfa_to_handle.hpp
+  ${CMAKE_SOURCE_DIR}/src/node.hpp
+  ${CMAKE_SOURCE_DIR}/src/hash_map.hpp
+  ${CMAKE_SOURCE_DIR}/src/dynamic_types.hpp
+  ${CMAKE_SOURCE_DIR}/src/varint.hpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/subcommand.hpp
+  ${CMAKE_SOURCE_DIR}/src/odgi.hpp
+  ${CMAKE_SOURCE_DIR}/src/dynamic_structs.hpp
+  ${CMAKE_SOURCE_DIR}/src/threads.hpp
+  ${CMAKE_SOURCE_DIR}/src/btypes.hpp
+  ${CMAKE_SOURCE_DIR}/src/subgraph.hpp
+  ${CMAKE_SOURCE_DIR}/src/cactus.hpp
+  ${CMAKE_SOURCE_DIR}/src/split.hpp
+  ${CMAKE_SOURCE_DIR}/src/unittest/driver.hpp
+  ${CMAKE_SOURCE_DIR}/src/io_helper.hpp
+  ${CMAKE_SOURCE_DIR}/src/dna.hpp
+  ${CMAKE_SOURCE_DIR}/src/bgraph.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/random_order.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/split_strands.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/strongly_connected_components.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/is_acyclic.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/apply_bulk_modifications.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/coverage.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/a_star.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/weakly_connected_components.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/reverse_complement.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/extract_connecting_graph.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/extract_extending_graph.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/find_shortest_paths.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/temp_file.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/sorted_id_ranges.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/distance_to_tail.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/is_single_stranded.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/remove_high_degree.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/shortest_cycle.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/cycle_breaking_sort.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/id_ordered_paths.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/extract_containing_graph.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/extend.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/eades_algorithm.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/dagify.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/dfs.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/prune.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/count_walks.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/simple_components.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/id_sort.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/mondriaan_sort.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/matrix_writer.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/distance_to_head.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_info.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/sgd_layout.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/dagify_sort.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/hash.hpp)
+
 target_include_directories(odgi_objs PUBLIC ${odgi_INCLUDES})
 set_target_properties(odgi_objs PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 
+add_library(libodgi_static STATIC $<TARGET_OBJECTS:odgi_objs>)
+set_target_properties(libodgi_static PROPERTIES OUTPUT_NAME "odgi")
+set_target_properties(libodgi_static PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+add_library(libodgi_shared SHARED $<TARGET_OBJECTS:odgi_objs>)
+set_target_properties(libodgi_shared PROPERTIES OUTPUT_NAME "odgi")
+set_target_properties(libodgi_shared PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 
-add_library(libodgi STATIC $<TARGET_OBJECTS:odgi_objs>)
-set_target_properties(libodgi PROPERTIES OUTPUT_NAME "odgi")
-set_target_properties(libodgi PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+set_target_properties(libodgi_static PROPERTIES PUBLIC_HEADER "${odgi_HEADERS}")
+set_target_properties(libodgi_shared PROPERTIES PUBLIC_HEADER "${odgi_HEADERS}")
 
 add_executable(odgi
   $<TARGET_OBJECTS:odgi_objs>
@@ -359,13 +424,14 @@ endif()
 
 add_subdirectory(deps/pybind11)
 pybind11_add_module(odgi_pybind11 "${CMAKE_SOURCE_DIR}/src/pythonmodule.cpp")
-add_dependencies(odgi_pybind11 ${odgi_DEPS} libodgi)
+add_dependencies(odgi_pybind11 ${odgi_DEPS} libodgi_static)
 target_include_directories(odgi_pybind11 PUBLIC ${odgi_INCLUDES})
 target_link_libraries(odgi_pybind11 PRIVATE "${CMAKE_SOURCE_DIR}/lib/libodgi.a" "${odgi_LIBS}")
 set_target_properties(odgi_pybind11 PROPERTIES OUTPUT_NAME "odgi")
 
 install(TARGETS odgi DESTINATION bin)
-install(TARGETS libodgi LIBRARY DESTINATION lib PUBLIC_HEADER DESTINATION include)
+install(TARGETS libodgi_static ARCHIVE DESTINATION lib LIBRARY DESTINATION lib PUBLIC_HEADER DESTINATION include/odgi)
+install(TARGETS libodgi_shared ARCHIVE DESTINATION lib LIBRARY DESTINATION lib PUBLIC_HEADER DESTINATION include/odgi)
 install(TARGETS odgi_pybind11 LIBRARY DESTINATION lib)
 
 if (APPLE)

@@ -9,7 +9,7 @@
 #include <handlegraph/handle_graph.hpp>
 #include <vector>
 #include <random>
-#include "algorithms/weakly_connected_components.hpp"
+#include "weakly_connected_components.hpp"
 
 namespace odgi {
 namespace algorithms {
