@@ -364,6 +364,10 @@ target_include_directories(odgi_pybind11 PUBLIC ${odgi_INCLUDES})
 target_link_libraries(odgi_pybind11 PRIVATE "${CMAKE_SOURCE_DIR}/lib/libodgi.a" "${odgi_LIBS}")
 set_target_properties(odgi_pybind11 PROPERTIES OUTPUT_NAME "odgi")
 
+install(TARGETS odgi DESTINATION bin)
+install(TARGETS libodgi LIBRARY DESTINATION lib PUBLIC_HEADER DESTINATION include)
+install(TARGETS odgi_pybind11 LIBRARY DESTINATION lib)
+
 if (APPLE)
 elseif (TRUE)
   if (BUILD_STATIC)
