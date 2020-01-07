@@ -120,15 +120,6 @@ ExternalProject_Add(bbhash
 ExternalProject_Get_property(bbhash SOURCE_DIR)
 set(bbhash_INCLUDE "${SOURCE_DIR}")
 
-# backwardscpp
-ExternalProject_Add(backwardscpp
-  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/backward-cpp"
-  CMAKE_ARGS "${CMAKE_ARGS};-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>"
-  UPDATE_COMMAND ""
-  INSTALL_COMMAND "")
-ExternalProject_Get_property(backwardscpp SOURCE_DIR)
-set(backwardscpp_INCLUDE "${SOURCE_DIR}")
-
 # sparsepp
 ExternalProject_Add(sparsepp
   SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/sparsepp"
@@ -239,7 +230,6 @@ set(CMAKE_BUILD_TYPE Debug)
 # set up our target executable and specify its dependencies and includes
 add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/odgi.cpp
-  ${CMAKE_SOURCE_DIR}/src/crash.cpp
   ${CMAKE_SOURCE_DIR}/src/position.cpp
   ${CMAKE_SOURCE_DIR}/src/gfa_to_handle.cpp
   ${CMAKE_SOURCE_DIR}/src/threads.cpp
@@ -300,7 +290,6 @@ set(odgi_DEPS
     sdsl-lite
     dynamic
     hopscotch_map
-    backwardscpp
     gfakluge
     handlegraph
     tayweeargs
@@ -326,7 +315,6 @@ set(odgi_INCLUDES
   "${gfakluge_tinyFA_INCLUDE}"
   "${handlegraph_INCLUDE}"
   "${tayweeargs_INCLUDE}"
-  "${backwardscpp_INCLUDE}"
   "${sparsepp_INCLUDE}"
   "${ska_INCLUDE}"
   "${intervaltree_INCLUDE}"

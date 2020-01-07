@@ -22,9 +22,6 @@
 [submodule "deps/BBHash"]
 	path = deps/BBHash
 	url = https://github.com/vgteam/BBHash.git
-[submodule "deps/backward-cpp"]
-	path = deps/backward-cpp
-	url = https://github.com/bombela/backward-cpp.git
 [submodule "deps/sparsepp"]
 	path = deps/sparsepp
 	url = https://github.com/edawson/sparsepp.git
