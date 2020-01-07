@@ -1,6 +1,3 @@
-// Needed for crash.hpp to work because it uses newer types
-#define _POSIX_C_SOURCE 200809L
-
 #include <iostream>
 #include <fstream>
 #include <ctime>
@@ -12,11 +9,8 @@
 // New subcommand system provides all the subcommands that used to live here
 #include "subcommand/subcommand.hpp"
 
-//#include "crash.hpp"
-
 using namespace std;
 using namespace odgi;
-
 
 void odgi_help(char** argv) {
     cerr << "odgi: dynamic succinct variation graph tool" << endl
@@ -43,13 +37,6 @@ int main(int argc, char *argv[]) __attribute__((__target__("arch=x86-64")));
 
 int main(int argc, char *argv[]) {
 
-    // Make sure the system meets system requirements (i.e. has all the instructions we need)
-    //preflight_check();
-    //odgi::enable_crash_handling();
-
-    // Set up stack trace support from crash.hpp
-    //enable_crash_handling();
-    
     // set a higher value for tcmalloc warnings
     setenv("TCMALLOC_LARGE_ALLOC_REPORT_THRESHOLD", "1000000000000000", 1);
 

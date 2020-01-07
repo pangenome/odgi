@@ -1,3 +1,51 @@
 [submodule "deps/pybind11"]
 	path = deps/pybind11
 	url = https://github.com/pybind/pybind11.git
+[submodule "deps/sdsl-lite"]
+	path = deps/sdsl-lite
+	url = https://github.com/simongog/sdsl-lite.git
+[submodule "deps/DYNAMIC"]
+	path = deps/DYNAMIC
+	url = https://github.com/vgteam/DYNAMIC.git
+[submodule "deps/hopscotch-map"]
+	path = deps/hopscotch-map
+	url = https://github.com/Tessil/hopscotch-map.git
+[submodule "deps/gfakluge"]
+	path = deps/gfakluge
+	url = https://github.com/vgteam/gfakluge.git
+[submodule "deps/libhandlegraph"]
+	path = deps/libhandlegraph
+	url = https://github.com/vgteam/libhandlegraph.git
+[submodule "deps/args"]
+	path = deps/args
+	url = https://github.com/Taywee/args.git
+[submodule "deps/BBHash"]
+	path = deps/BBHash
+	url = https://github.com/vgteam/BBHash.git
+[submodule "deps/sparsepp"]
+	path = deps/sparsepp
+	url = https://github.com/edawson/sparsepp.git
+[submodule "deps/flat_hash_map"]
+	path = deps/flat_hash_map
+	url = https://github.com/skarupke/flat_hash_map.git
+[submodule "deps/intervaltree"]
+	path = deps/intervaltree
+	url = https://github.com/ekg/intervaltree.git
+[submodule "deps/lodepng"]
+	path = deps/lodepng
+	url = https://github.com/ekg/lodepng.git
+[submodule "deps/pinchSonLib"]
+	path = deps/pinchSonLib
+	url = https://github.com/vgteam/pinchSonLib.git
+[submodule "deps/PicoSHA2"]
+	path = deps/PicoSHA2
+	url = https://github.com/okdshin/PicoSHA2.git
+[submodule "deps/sgd2"]
+	path = deps/sgd2
+	url = https://github.com/ekg/sgd2.git
+[submodule "deps/mondriaan"]
+	path = deps/mondriaan
+	url = https://github.com/ekg/mondriaan.git
+[submodule "deps/structures"]
+	path = deps/structures
+	url = https://github.com/jeizenga/structures.git

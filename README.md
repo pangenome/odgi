@@ -20,6 +20,8 @@ Initially, `odgi` has been developed to allow in-memory manipulation of graphs p
 ## building
 
 ```
+git clone --recursive https://github.com/vgteam/odgi.git
+cd odgi
 cmake -H. -Bbuild && cmake --build build -- -j 3
 ```
 

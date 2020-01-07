@@ -50,9 +50,8 @@ include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 
 # sdsl-lite (full build using its cmake config)
 ExternalProject_Add(sdsl-lite
-  GIT_REPOSITORY "https://github.com/simongog/sdsl-lite.git"
-  GIT_TAG "d52aa9a71513d132e30c09491b5899af449ebb94"
-  CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR} # TODO ADD static build flag
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/sdsl-lite"
+  CMAKE_ARGS "${CMAKE_ARGS};-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>"
   UPDATE_COMMAND ""
   INSTALL_COMMAND "")
 ExternalProject_Get_property(sdsl-lite INSTALL_DIR)
@@ -63,59 +62,49 @@ set(sdsl-lite-divsufsort_LIB "${INSTALL_DIR}/src/sdsl-lite-build/external/libdiv
 
 # DYNAMIC (full build using its cmake config)
 ExternalProject_Add(dynamic
-  GIT_REPOSITORY "https://github.com/vgteam/DYNAMIC.git"
-  GIT_TAG "0da557fbd0613377bbde26dd60ded655bea58d3b"
-  # we don't actually install dynamic... it's header only
-  #CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/DYNAMIC"
   UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   BUILD_COMMAND ""
   CONFIGURE_COMMAND "")
-ExternalProject_Get_property(dynamic INSTALL_DIR)
-set(dynamic_INCLUDE "${INSTALL_DIR}/src/dynamic/include")
+ExternalProject_Get_property(dynamic SOURCE_DIR)
+set(dynamic_INCLUDE "${SOURCE_DIR}/include")
 
 # hopscotch_map (required by DYNAMIC)
 ExternalProject_Add(hopscotch_map
-  GIT_REPOSITORY "https://github.com/Tessil/hopscotch-map.git"
-  # we don't actually install hopscotch_map... it's header only
-  #CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/hopscotch-map"
   UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   BUILD_COMMAND ""
   CONFIGURE_COMMAND "")
-ExternalProject_Get_property(hopscotch_map INSTALL_DIR)
-set(hopscotch_map_INCLUDE "${INSTALL_DIR}/src/hopscotch_map/include")
+ExternalProject_Get_property(hopscotch_map SOURCE_DIR)
+set(hopscotch_map_INCLUDE "${SOURCE_DIR}/include")
 
 # gfakluge (now header only)
 ExternalProject_Add(gfakluge
-  GIT_REPOSITORY "https://github.com/vgteam/gfakluge.git"
-  GIT_TAG "d65e688b6f2d301ad953da578f3cf35e68feb452"
-  BUILD_IN_SOURCE TRUE
-  CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR} # TODO ADD static build flag
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/gfakluge"
+  CMAKE_ARGS "${CMAKE_ARGS};-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>"
   UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   BUILD_COMMAND ""
   CONFIGURE_COMMAND "")
+ExternalProject_Get_property(gfakluge SOURCE_DIR)
+set(gfakluge_INCLUDE "${SOURCE_DIR}/src")
+set(gfakluge_tinyFA_INCLUDE "${SOURCE_DIR}/src/tinyFA")
 ExternalProject_Get_property(gfakluge INSTALL_DIR)
-set(gfakluge_INCLUDE "${INSTALL_DIR}/src/gfakluge/src")
-set(gfakluge_tinyFA_INCLUDE "${INSTALL_DIR}/src/gfakluge/src/tinyFA")
 set(gfakluge_LIB "${INSTALL_DIR}/src/gfakluge")
 
 # libhandlegraph (full build using its cmake config)
 ExternalProject_Add(handlegraph
-  GIT_REPOSITORY "https://github.com/vgteam/libhandlegraph.git"
-  GIT_TAG "541b97315fd413846f5a76476907f8d2b2276242"
-  CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
-  UPDATE_COMMAND ""
-  INSTALL_COMMAND "")
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/libhandlegraph"
+  CMAKE_ARGS "${CMAKE_ARGS};-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>")
 ExternalProject_Get_property(handlegraph INSTALL_DIR)
-set(handlegraph_INCLUDE "${INSTALL_DIR}/src/handlegraph/src/include")
-set(handlegraph_LIB "${INSTALL_DIR}/src/handlegraph-build")
+set(handlegraph_INCLUDE "${INSTALL_DIR}/include")
+set(handlegraph_LIB "${INSTALL_DIR}/lib")
 
 # taywee's C++ args library, header only
 ExternalProject_Add(tayweeargs
-  GIT_REPOSITORY "https://github.com/Taywee/args.git"
-  GIT_TAG "3de44ec671db452cc0c4ef86399b108939768abb"
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/args"
   UPDATE_COMMAND ""
   INSTALL_COMMAND "")
 ExternalProject_Get_property(tayweeargs SOURCE_DIR)
@@ -123,8 +112,7 @@ set(tayweeargs_INCLUDE "${SOURCE_DIR}")
 
 # BBHash perfect hasher
 ExternalProject_Add(bbhash
-  GIT_REPOSITORY "https://github.com/vgteam/BBHash.git"
-  GIT_TAG "ccc22805eae48aca2a01a7ff5ef8e002857020d3"
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/BBHash"
   UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   BUILD_COMMAND ""
@@ -132,34 +120,23 @@ ExternalProject_Add(bbhash
 ExternalProject_Get_property(bbhash SOURCE_DIR)
 set(bbhash_INCLUDE "${SOURCE_DIR}")
 
-# backwardscpp
-ExternalProject_Add(backwardscpp
-  GIT_REPOSITORY "https://github.com/bombela/backward-cpp.git"
-  GIT_TAG "b353585d4bd19f9e51816bc11d2e53b0e5b4a760"
-  CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR}
-  UPDATE_COMMAND ""
-  INSTALL_COMMAND "")
-ExternalProject_Get_property(backwardscpp SOURCE_DIR)
-set(backwardscpp_INCLUDE "${SOURCE_DIR}")
-
 # sparsepp
 ExternalProject_Add(sparsepp
-  GIT_REPOSITORY "https://github.com/edawson/sparsepp.git"
-  GIT_TAG "1c5a285e87b2244383efe0398f9992acd61234e9"
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/sparsepp"
   BUILD_IN_SOURCE TRUE
-  CMAKE_ARGS -DCMAKE_INSTALL_PREFIX:PATH=${INSTALL_DIR} # TODO ADD static build flag
+  CMAKE_ARGS "${CMAKE_ARGS};-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>"
   UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   BUILD_COMMAND ""
   CONFIGURE_COMMAND "")
+ExternalProject_Get_property(sparsepp SOURCE_DIR)
+set(sparsepp_INCLUDE "${SOURCE_DIR}/sparsepp/")
 ExternalProject_Get_property(sparsepp INSTALL_DIR)
-set(sparsepp_INCLUDE "${INSTALL_DIR}/src/sparsepp/sparsepp/")
 set(sparsepp_LIB "${INSTALL_DIR}/src/sparsepp/sparsepp/")
 
 # ska
 ExternalProject_Add(ska
-  GIT_REPOSITORY "https://github.com/skarupke/flat_hash_map.git"
-  GIT_TAG "2c4687431f978f02a3780e24b8b701d22aa32d9c"
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/flat_hash_map"
   UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   BUILD_COMMAND ""
@@ -169,8 +146,7 @@ set(ska_INCLUDE "${SOURCE_DIR}")
 
 # intervaltree
 ExternalProject_Add(intervaltree
-  GIT_REPOSITORY "https://github.com/ekg/intervaltree.git"
-  GIT_TAG "e8082c74a6f5c18de99d8b4cc4a55e2e62a1150d"
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/intervaltree"
   UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   BUILD_COMMAND ""
@@ -180,8 +156,7 @@ set(intervaltree_INCLUDE "${SOURCE_DIR}")
 
 # lodepng
 ExternalProject_Add(lodepng
-  GIT_REPOSITORY "https://github.com/ekg/lodepng.git"
-  GIT_TAG "6b7f7b2b1c0eaab7042b0137fa19129618d1bb9f"
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/lodepng"
   UPDATE_COMMAND ""
   INSTALL_COMMAND "")
 ExternalProject_Get_property(lodepng SOURCE_DIR)
@@ -190,8 +165,7 @@ set(lodepng_LIB "${SOURCE_DIR}/lib")
 
 # structures
 ExternalProject_Add(structures
-  GIT_REPOSITORY "https://github.com/jeizenga/structures.git"
-  GIT_TAG "71722385665aa724b466889bbec1afbfd375201f"
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/structures"
   UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   BUILD_COMMAND ""
@@ -200,8 +174,7 @@ ExternalProject_Get_property(structures SOURCE_DIR)
 set(structures_INCLUDE "${SOURCE_DIR}/src/include")
 
 ExternalProject_Add(sonlib
-  GIT_REPOSITORY "https://github.com/vgteam/pinchSonLib.git"
-  GIT_TAG "d25257e7ba615081078c41ac82dd70fffdc8baad"
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/pinchSonLib"
   BUILD_IN_SOURCE TRUE
   INSTALL_COMMAND ""
   UPDATE_COMMAND ""
@@ -213,8 +186,7 @@ set(sonLib_lib_INCLUDE "${SOURCE_DIR}/sonLib/lib")
 set(sonLib_LIB "${SOURCE_DIR}/sonLib/lib")
 
 ExternalProject_Add(picosha256
-  GIT_REPOSITORY "https://github.com/okdshin/PicoSHA2.git"
-  GIT_TAG "b699e6c900be6e00152db5a3d123c1db42ea13d0"
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/PicoSHA2"
   UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   BUILD_COMMAND ""
@@ -224,8 +196,7 @@ set(picosha256_INCLUDE "${SOURCE_DIR}")
 
 # SGD based graph layout
 ExternalProject_Add(sgd2
-  GIT_REPOSITORY "https://github.com/ekg/sgd2.git"
-  GIT_TAG "3cb6ffe65dc14bf580866519e62d9b52964bdcae"
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/sgd2"
   UPDATE_COMMAND ""
   INSTALL_COMMAND ""
   BUILD_COMMAND ""
@@ -234,8 +205,7 @@ ExternalProject_Get_property(sgd2 SOURCE_DIR)
 set(sgd2_INCLUDE "${SOURCE_DIR}/src")
 
 ExternalProject_Add(mondriaan
-  GIT_REPOSITORY "https://github.com/ekg/mondriaan.git"
-  GIT_TAG "7d840484ec49b31c99d5ab5c72a737596d82aa4e"
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/mondriaan"
   UPDATE_COMMAND ""
   INSTALL_COMMAND "")
 ExternalProject_Get_property(mondriaan SOURCE_DIR)
@@ -260,7 +230,6 @@ set(CMAKE_BUILD_TYPE Debug)
 # set up our target executable and specify its dependencies and includes
 add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/odgi.cpp
-  ${CMAKE_SOURCE_DIR}/src/crash.cpp
   ${CMAKE_SOURCE_DIR}/src/position.cpp
   ${CMAKE_SOURCE_DIR}/src/gfa_to_handle.cpp
   ${CMAKE_SOURCE_DIR}/src/threads.cpp
@@ -321,7 +290,6 @@ set(odgi_DEPS
     sdsl-lite
     dynamic
     hopscotch_map
-    backwardscpp
     gfakluge
     handlegraph
     tayweeargs
@@ -339,6 +307,7 @@ add_dependencies(odgi_objs ${odgi_DEPS})
 
 set(odgi_INCLUDES
   "${CMAKE_SOURCE_DIR}/src"
+  "${CMAKE_SOURCE_DIR}/src/algorithms"
   "${sdsl-lite_INCLUDE}"
   "${sdsl-lite-divsufsort_INCLUDE}"
   "${dynamic_INCLUDE}"
@@ -347,7 +316,6 @@ set(odgi_INCLUDES
   "${gfakluge_tinyFA_INCLUDE}"
   "${handlegraph_INCLUDE}"
   "${tayweeargs_INCLUDE}"
-  "${backwardscpp_INCLUDE}"
   "${sparsepp_INCLUDE}"
   "${ska_INCLUDE}"
   "${intervaltree_INCLUDE}"
@@ -372,13 +340,77 @@ set(odgi_LIBS
   "${mondriaan_LIB}/libmondriaan.a"
   "-ldl")
 
+set(odgi_HEADERS
+  ${CMAKE_SOURCE_DIR}/src/phf.hpp
+  ${CMAKE_SOURCE_DIR}/src/position.hpp
+  ${CMAKE_SOURCE_DIR}/src/gfa_to_handle.hpp
+  ${CMAKE_SOURCE_DIR}/src/node.hpp
+  ${CMAKE_SOURCE_DIR}/src/hash_map.hpp
+  ${CMAKE_SOURCE_DIR}/src/dynamic_types.hpp
+  ${CMAKE_SOURCE_DIR}/src/varint.hpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/subcommand.hpp
+  ${CMAKE_SOURCE_DIR}/src/odgi.hpp
+  ${CMAKE_SOURCE_DIR}/src/dynamic_structs.hpp
+  ${CMAKE_SOURCE_DIR}/src/threads.hpp
+  ${CMAKE_SOURCE_DIR}/src/btypes.hpp
+  ${CMAKE_SOURCE_DIR}/src/subgraph.hpp
+  ${CMAKE_SOURCE_DIR}/src/cactus.hpp
+  ${CMAKE_SOURCE_DIR}/src/split.hpp
+  ${CMAKE_SOURCE_DIR}/src/unittest/driver.hpp
+  ${CMAKE_SOURCE_DIR}/src/io_helper.hpp
+  ${CMAKE_SOURCE_DIR}/src/dna.hpp
+  ${CMAKE_SOURCE_DIR}/src/bgraph.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/random_order.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/split_strands.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/strongly_connected_components.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/is_acyclic.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/apply_bulk_modifications.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/coverage.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/a_star.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/weakly_connected_components.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/reverse_complement.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/extract_connecting_graph.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/extract_extending_graph.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/find_shortest_paths.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/temp_file.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/sorted_id_ranges.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/distance_to_tail.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/is_single_stranded.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/remove_high_degree.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/shortest_cycle.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/cycle_breaking_sort.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/id_ordered_paths.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/extract_containing_graph.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/extend.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/eades_algorithm.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/dagify.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/dfs.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/prune.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/count_walks.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/simple_components.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/id_sort.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/mondriaan_sort.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/matrix_writer.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/distance_to_head.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_info.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/sgd_layout.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/dagify_sort.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/hash.hpp)
+
 target_include_directories(odgi_objs PUBLIC ${odgi_INCLUDES})
 set_target_properties(odgi_objs PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 
+add_library(libodgi_static STATIC $<TARGET_OBJECTS:odgi_objs>)
+set_target_properties(libodgi_static PROPERTIES OUTPUT_NAME "odgi")
+set_target_properties(libodgi_static PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+add_library(libodgi_shared SHARED $<TARGET_OBJECTS:odgi_objs>)
+set_target_properties(libodgi_shared PROPERTIES OUTPUT_NAME "odgi")
+set_target_properties(libodgi_shared PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 
-add_library(libodgi STATIC $<TARGET_OBJECTS:odgi_objs>)
-set_target_properties(libodgi PROPERTIES OUTPUT_NAME "odgi")
-set_target_properties(libodgi PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
+set_target_properties(libodgi_static PROPERTIES PUBLIC_HEADER "${odgi_HEADERS}")
+set_target_properties(libodgi_shared PROPERTIES PUBLIC_HEADER "${odgi_HEADERS}")
 
 add_executable(odgi
   $<TARGET_OBJECTS:odgi_objs>
@@ -392,10 +424,15 @@ endif()
 
 add_subdirectory(deps/pybind11)
 pybind11_add_module(odgi_pybind11 "${CMAKE_SOURCE_DIR}/src/pythonmodule.cpp")
-add_dependencies(odgi_pybind11 ${odgi_DEPS} libodgi)
+add_dependencies(odgi_pybind11 ${odgi_DEPS} libodgi_static)
 target_include_directories(odgi_pybind11 PUBLIC ${odgi_INCLUDES})
 target_link_libraries(odgi_pybind11 PRIVATE "${CMAKE_SOURCE_DIR}/lib/libodgi.a" "${odgi_LIBS}")
 set_target_properties(odgi_pybind11 PROPERTIES OUTPUT_NAME "odgi")
+
+install(TARGETS odgi DESTINATION bin)
+install(TARGETS libodgi_static ARCHIVE DESTINATION lib LIBRARY DESTINATION lib PUBLIC_HEADER DESTINATION include/odgi)
+install(TARGETS libodgi_shared ARCHIVE DESTINATION lib LIBRARY DESTINATION lib PUBLIC_HEADER DESTINATION include/odgi)
+install(TARGETS odgi_pybind11 LIBRARY DESTINATION lib)
 
 if (APPLE)
 elseif (TRUE)
