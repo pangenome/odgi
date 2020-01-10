@@ -16,6 +16,7 @@
 #include "dynamic.hpp"
 #include "apply_bulk_modifications.hpp"
 #include "is_single_stranded.hpp"
+#include "bfs.hpp"
 
 namespace odgi {
 namespace algorithms {
@@ -82,6 +83,9 @@ std::vector<handle_t> lazy_topological_order(const HandleGraph* g);
 std::vector<handle_t> lazier_topological_order(const HandleGraph* g);
 
 void topological_sort(MutableHandleGraph& g, bool compact_ids);
+
+std::vector<handle_t> breadth_first_topological_order(const HandleGraph& g,
+                                                      bool use_heads = false, bool use_tails = false);
 
 }
 }

@@ -456,6 +456,80 @@ void topological_sort(MutableHandleGraph& g, bool compact_ids) {
     g.apply_ordering(topological_order(&g), compact_ids);
 }
 
+std::vector<handle_t> breadth_first_topological_order(const HandleGraph& g,
+                                                      bool use_heads, bool use_tails) {
+
+    // This (s) is our set of oriented nodes.
+    //dyn::succinct_bitvector<dyn::spsi<dyn::packed_vector,256,16> > s;
+    uint64_t min_handle_rank = 0;
+    uint64_t max_handle_rank = 0;
+    g.for_each_handle([&](const handle_t& found) {
+                          uint64_t handle_rank = number_bool_packing::unpack_number(found);
+                          min_handle_rank = std::min(min_handle_rank, handle_rank);
+                          max_handle_rank = std::max(max_handle_rank, handle_rank);
+                      });
+
+    // Start with the heads of the graph.
+    // We could also just use the first node of the graph.
+    std::vector<handle_t> seeds;
+    if (use_heads) {
+        seeds = head_nodes(&g);
+    } else if (use_tails) {
+        seeds = tail_nodes(&g);
+    } else {
+        handle_t min_handle = number_bool_packing::pack(min_handle_rank, false);
+        seeds = { min_handle };
+    }
+
+    // We need to keep track of the nodes we haven't visited to seed subsequent
+    // runs of the BFS
+    dyn::succinct_bitvector<dyn::spsi<dyn::packed_vector,256,16> > unvisited;
+    for (uint64_t i = 0; i <= max_handle_rank; ++i) {
+        unvisited.push_back(1);
+    }
+    /*
+    g.for_each_handle([&](const handle_t& found) {
+                          uint64_t rank = number_bool_packing::unpack_number(found);
+                          unvisited.set(rank, 1);
+                      });
+    */
+
+    std::vector<handle_t> order;
+    while (unvisited.rank1(unvisited.size())!=0) {
+        /*
+        std::cerr << "unvisited size " << unvisited.rank1(unvisited.size()) << std::endl;
+        for (uint64_t i = 0; i < unvisited.size(); ++i) {
+            std::cerr << unvisited.at(i);
+        }
+        std::cerr << std::endl;
+        */
+        bfs(g,
+            [&](const handle_t& h) {
+                uint64_t i = number_bool_packing::unpack_number(h);
+                if (unvisited.at(i)) {
+                    order.push_back(h);
+                    unvisited.set(i, 0);
+                    return true;
+                } else {
+                    return false;
+                }
+            },
+            [](void) { return false; },
+            seeds,
+            { });
+        // get another seed
+        if (unvisited.rank1(unvisited.size())!=0) {
+            uint64_t i = unvisited.select1(0);
+            handle_t h = number_bool_packing::pack(i, false);
+            seeds = { h };
+        }
+    }
+    //std::cerr << "order size " << order.size() << " graph size " << g.get_node_count() << std::endl;
+    //assert(order.size() == g.get_node_count());
+
+    return order;
+}
+
 }
 
 }

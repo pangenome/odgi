@@ -287,6 +287,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/strongly_connected_components.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/weakly_connected_components.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/dfs.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/bfs.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/find_shortest_paths.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/id_ordered_paths.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/simple_components.cpp
