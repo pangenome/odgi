@@ -494,7 +494,7 @@ std::vector<handle_t> breadth_first_topological_order(const HandleGraph& g,
                       });
     */
 
-    std::vector<handle_t> order;
+    std::vector<std::pair<handle_t, uint64_t>> order_length;
     while (unvisited.rank1(unvisited.size())!=0) {
         /*
         std::cerr << "unvisited size " << unvisited.rank1(unvisited.size()) << std::endl;
@@ -504,15 +504,14 @@ std::vector<handle_t> breadth_first_topological_order(const HandleGraph& g,
         std::cerr << std::endl;
         */
         bfs(g,
-            [&](const handle_t& h) {
+            [&order_length,&unvisited](const handle_t& h, const uint64_t& l) {
                 uint64_t i = number_bool_packing::unpack_number(h);
-                if (unvisited.at(i)) {
-                    order.push_back(h);
-                    unvisited.set(i, 0);
-                    return true;
-                } else {
-                    return false;
-                }
+                order_length.push_back(std::make_pair(h,l));
+                unvisited.set(i, 0);
+            },
+            [&unvisited](const handle_t& h) {
+                uint64_t i = number_bool_packing::unpack_number(h);
+                return unvisited.at(i)==0;
             },
             [](void) { return false; },
             seeds,
@@ -526,6 +525,14 @@ std::vector<handle_t> breadth_first_topological_order(const HandleGraph& g,
     }
     //std::cerr << "order size " << order.size() << " graph size " << g.get_node_count() << std::endl;
     //assert(order.size() == g.get_node_count());
+    std::sort(order_length.begin(), order_length.end(),
+              [](const std::pair<handle_t, uint64_t>& a,
+                 const std::pair<handle_t, uint64_t>& b) {
+                  return a.second < b.second;
+              });
+
+    std::vector<handle_t> order;
+    for (auto& o : order_length) order.push_back(o.first);
 
     return order;
 }

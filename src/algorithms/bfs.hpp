@@ -13,11 +13,18 @@ using namespace handlegraph;
 
 void bfs(
     const HandleGraph& graph,
-    const std::function<bool(const handle_t&)>& handle_begin_fn,  // called when node orientation is first encountered, return true to continue
-    const std::function<bool(void)>& break_fn,                    // called to check if we should stop the DFS; we stop when true is returned.
-    //const std::function<void(const edge_t&)>& edge_fn,            // called when an edge is encountered
-    const std::vector<handle_t>& sources,                         // start only at these node traversals
-    const std::vector<handle_t>& sinks                            // when hitting a sink, don't keep walking
+    // called when a given node orientation is first encountered
+    // the second parameter gives the cumulative length from the search root that led to this handle
+    // return true to continue through this node, false to treat it like a sink
+    const std::function<void(const handle_t&, const uint64_t&)>& handle_fn,
+    // have we seen this handle before?
+    const std::function<bool(const handle_t&)>& seen_fn,
+    // called to check if we should stop the DFS; we stop when true is returned.
+    const std::function<bool(void)>& break_fn,
+    // start only at these node traversals
+    const std::vector<handle_t>& sources,
+    // when hitting a sink, don't keep walking
+    const std::vector<handle_t>& sinks
     );
 
 }

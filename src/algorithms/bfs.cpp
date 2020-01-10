@@ -9,48 +9,54 @@ using namespace handlegraph;
 // breadth first search across handles in the graph
 void bfs(
     const HandleGraph& graph,
-    const std::function<bool(const handle_t&)>& handle_begin_fn,  // called when node orientation is first encountered, return true to continue
-    const std::function<bool(void)>& break_fn,                    // called to check if we should stop the DFS; we stop when true is returned.
-    //const std::function<void(const edge_t&)>& edge_fn,            // called when an edge is encountered
-    const std::vector<handle_t>& sources,                         // start only at these node traversals
-    const std::vector<handle_t>& sinks                            // when hitting a sink, don't keep walking
+    // called when a given node orientation is first encountered
+    // the second parameter gives the cumulative length from the search root that led to this handle
+    const std::function<void(const handle_t&, const uint64_t&)>& handle_fn,
+    // have we seen this handle before?
+    const std::function<bool(const handle_t&)>& seen_fn,
+    // called to check if we should stop the DFS; we stop when true is returned.
+    const std::function<bool(void)>& break_fn,
+    // start only at these node traversals
+    const std::vector<handle_t>& sources,
+    // when hitting a sink, don't keep walking
+    const std::vector<handle_t>& sinks
     ) {
-
-    ska::flat_hash_set<handle_t> seen;  // handles we've seen
 
     ska::flat_hash_set<handle_t> stops; // sinks
     for (auto& handle : sinks) {
         stops.insert(handle);
     }
 
-    std::deque<handle_t> todo; // our traversal front
+    struct handle_length_t {
+        handle_t handle;
+        uint64_t length;
+    };
+    std::deque<handle_length_t> todo; // our traversal front
     for (auto& handle : sources) {
-        todo.push_front(handle);
+        todo.push_front({handle, 0});
     }
 
     while (!todo.empty()) {
         // get our next handle
-        handle_t handle = todo.back();
+        handle_t handle = todo.back().handle;
+        uint64_t curr_length = todo.back().length + graph.get_length(handle);
         // pop the handle off the back of the queue
         todo.pop_back();
-        if (!seen.count(handle)) {
-            // record that we've visited the node
-            seen.insert(handle);
+        if (!seen_fn(handle)) {
             // handle the handle
-            if (handle_begin_fn(handle)) {
-                // check if we've hit our break condition
-                if (break_fn()) { return; }
-                // check if we should stop here
-                if (!stops.count(handle)) {
-                    // add the next nodes to our queue
-                    graph.follow_edges(
-                        handle, false,
-                        [&todo,&seen](const handle_t& next) {
-                            if (!seen.count(next)) {
-                                todo.push_back(next);
-                            }
-                        });
-                }
+            handle_fn(handle, curr_length);
+            // check if we've hit our break condition
+            if (break_fn()) { return; }
+            // check if we should stop here
+            if (!stops.count(handle)) {
+                // add the next nodes to our queue
+                graph.follow_edges(
+                    handle, false,
+                    [&todo,&seen_fn,&curr_length](const handle_t& next) {
+                        if (!seen_fn(next)) {
+                            todo.push_back({next, curr_length});
+                        }
+                    });
             }
         }
     }
