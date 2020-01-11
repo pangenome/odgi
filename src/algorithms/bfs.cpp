@@ -19,7 +19,9 @@ void bfs(
     // start only at these node traversals
     const std::vector<handle_t>& sources,
     // when hitting a sink, don't keep walking
-    const std::vector<handle_t>& sinks
+    const std::vector<handle_t>& sinks,
+    // do we use a bidirectional search
+    bool bidirectional
     ) {
 
     ska::flat_hash_set<handle_t> stops; // sinks
@@ -50,13 +52,16 @@ void bfs(
             // check if we should stop here
             if (!stops.count(handle)) {
                 // add the next nodes to our queue
-                graph.follow_edges(
-                    handle, false,
-                    [&todo,&seen_fn,&curr_length](const handle_t& next) {
-                        if (!seen_fn(next)) {
-                            todo.push_back({next, curr_length});
-                        }
-                    });
+                auto enqueue
+                    = [&todo,&seen_fn,&curr_length](const handle_t& next) {
+                          if (!seen_fn(next)) {
+                              todo.push_back({next, curr_length});
+                          }
+                      };
+                graph.follow_edges(handle, false, enqueue);
+                if (bidirectional) {
+                    graph.follow_edges(handle, true, enqueue);
+                }
             }
         }
     }

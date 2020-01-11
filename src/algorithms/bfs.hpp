@@ -24,7 +24,9 @@ void bfs(
     // start only at these node traversals
     const std::vector<handle_t>& sources,
     // when hitting a sink, don't keep walking
-    const std::vector<handle_t>& sinks
+    const std::vector<handle_t>& sinks,
+    // do we use a bidirectional search
+    bool bidirectional = false
     );
 
 }
