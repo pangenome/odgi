@@ -15,6 +15,7 @@ std::vector<handle_t> cycle_breaking_sort(const graph_t& graph) {
         [&](const handle_t& handle) {
             rank[number_bool_packing::unpack_number(handle)] = { j, i++, number_bool_packing::unpack_number(handle) };
         },
+        [&](const handle_t& handle) { return false; },
         [&](void) { return false; },
         [&](const edge_t& e) { },
         [&](const edge_t& e) { ++j; },

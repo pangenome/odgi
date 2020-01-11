@@ -11,6 +11,7 @@ void dfs(
     const HandleGraph& graph,
     const std::function<void(const handle_t&)>& handle_begin_fn,  // called when node orientation is first encountered
     const std::function<void(const handle_t&)>& handle_end_fn,    // called when node orientation goes out of scope
+    const std::function<bool(const handle_t&)>& handle_skip_fn,   // tells us if we should skip the handle
     const std::function<bool(void)>& break_fn,                    // called to check if we should stop the DFS; we stop when true is returned.
     const std::function<void(const edge_t&)>& edge_fn,            // called when an edge is encountered
     const std::function<void(const edge_t&)>& tree_fn,            // called when an edge forms part of the DFS spanning tree
@@ -57,14 +58,16 @@ void dfs(
             // traversal.
             auto& es = edges[root];
             // follow edges?
-            graph.follow_edges(root, false, [&](const handle_t& next) {
-                    es.push_back(graph.edge_handle(root, next));
-                    
+            graph.follow_edges(
+                root, false,
+                [&](const handle_t& next) {
+                    if (!handle_skip_fn(next)) {
+                        es.push_back(graph.edge_handle(root, next));
 #ifdef debug
-                    cerr << "\t\tWill need to investigate edge to "
-                        << graph.get_id(next) << " " << graph.get_is_reverse(next) << endl;
+                        cerr << "\t\tWill need to investigate edge to "
+                             << graph.get_id(next) << " " << graph.get_is_reverse(next) << endl;
 #endif
-                    
+                    }
                 });
                 
             todo.push_back(Frame(root, es.begin(), es.end()));
@@ -72,7 +75,7 @@ void dfs(
             handle_begin_fn(root);
             // and check if we should break
             if (break_fn()) {
-                return true;
+                return false;
             }
         }
         // now begin the search rooted at this NodeTraversal
@@ -136,20 +139,26 @@ void dfs(
                     // only walk out of handle that are not the sink
                     if (sinks.empty() || sinks.count(handle) == false) {
                         // follow edges?
-                        graph.follow_edges(handle, false, [&](const handle_t& next) {
-                                es.push_back(graph.edge_handle(handle, next));
-                                
+                        graph.follow_edges(
+                            handle, false,
+                            [&](const handle_t& next) {
+                                if (!handle_skip_fn(next)) {
+                                    es.push_back(graph.edge_handle(handle, next));
 #ifdef debug
-                                cerr << "\t\t\tWill need to investigate edge to "
-                                    << graph.get_id(next) << " " << graph.get_is_reverse(next) << endl;
+                                    cerr << "\t\t\tWill need to investigate edge to "
+                                         << graph.get_id(next) << " " << graph.get_is_reverse(next) << endl;
 #endif
-                                
+                                }
                             });
                     }
                     edges_begin = es.begin();
                     edges_end = es.end();
                     // run our discovery-time callback
                     handle_begin_fn(handle);
+
+                    if (break_fn()) {
+                        return false;
+                    }
                     
                     // We will continue with edges_begin and edges_end and handle adjusted to this new loaded stack frame.
                     
@@ -200,14 +209,15 @@ void dfs(
 }
 
 void dfs(const HandleGraph& graph,
-                      const std::function<void(const handle_t&)>& handle_begin_fn,
-                      const std::function<void(const handle_t&)>& handle_end_fn,
-                      const std::vector<handle_t>& sources,
-                      const ska::flat_hash_set<handle_t>& sinks) {
+         const std::function<void(const handle_t&)>& handle_begin_fn,
+         const std::function<void(const handle_t&)>& handle_end_fn,
+         const std::vector<handle_t>& sources,
+         const ska::flat_hash_set<handle_t>& sinks) {
     auto edge_noop = [](const edge_t& e) { };
     dfs(graph,
         handle_begin_fn,
         handle_end_fn,
+        [](const handle_t& h) { return false; },
         [](void) { return false; },
         edge_noop,
         edge_noop,
@@ -218,15 +228,37 @@ void dfs(const HandleGraph& graph,
 }
 
 void dfs(const HandleGraph& graph,
-                      const std::function<void(const handle_t&)>& handle_begin_fn,
-                      const std::function<void(const handle_t&)>& handle_end_fn,
-                      const std::function<bool(void)>& break_fn) {
+         const std::function<void(const handle_t&)>& handle_begin_fn,
+         const std::function<void(const handle_t&)>& handle_end_fn,
+         const std::function<bool(const handle_t&)>& handle_skip_fn,
+         const std::function<bool(void)>& break_fn,
+         const std::vector<handle_t>& sources) {
+    auto edge_noop = [](const edge_t& e) { };
+    ska::flat_hash_set<handle_t> empty_sinks;
+    dfs(graph,
+        handle_begin_fn,
+        handle_end_fn,
+        handle_skip_fn,
+        break_fn,
+        edge_noop,
+        edge_noop,
+        edge_noop,
+        edge_noop,
+        sources,
+        empty_sinks);
+}
+
+void dfs(const HandleGraph& graph,
+         const std::function<void(const handle_t&)>& handle_begin_fn,
+         const std::function<void(const handle_t&)>& handle_end_fn,
+         const std::function<bool(void)>& break_fn) {
     auto edge_noop = [](const edge_t& e) { };
     std::vector<handle_t> empty_sources;
     ska::flat_hash_set<handle_t> empty_sinks;
     dfs(graph,
         handle_begin_fn,
         handle_end_fn,
+        [](const handle_t& h) { return false; },
         break_fn,
         edge_noop,
         edge_noop,

@@ -17,6 +17,7 @@
 #include "apply_bulk_modifications.hpp"
 #include "is_single_stranded.hpp"
 #include "bfs.hpp"
+#include "dfs.hpp"
 
 namespace odgi {
 namespace algorithms {
@@ -86,6 +87,10 @@ void topological_sort(MutableHandleGraph& g, bool compact_ids);
 
 std::vector<handle_t> breadth_first_topological_order(const HandleGraph& g,
                                                       bool use_heads = false, bool use_tails = false);
+
+std::vector<handle_t> depth_first_topological_order(const HandleGraph& g, const uint64_t& chunk_size,
+                                                    bool use_heads = false, bool use_tails = false);
+//bool use_heads = false, bool use_tails = false);
 
 }
 }

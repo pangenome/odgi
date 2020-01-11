@@ -893,27 +893,26 @@ std::pair<stCactusGraph*, stList*> handle_graph_to_cactus(PathHandleGraph& graph
             };
             
             algorithms::dfs(graph,
-                handle_noop,
-                handle_noop,
-                dfs_break,
-                [&](const edge_t& edge) {
-                    // We found an edge out of an oriented node we are investigating.
-                    
-                    if (edge.second == break_handle) {
-                        // This edge is into the thing we are looking for an edge into.
-                        // It isn't out of the other side because we never explore there.
-                        found = true;
-                    } else if (edge.first == graph.flip(break_handle)) {
-                        // This edge is into the thing we are looking for, but spelled the other way.
-                        found = true;
-                    }
-                },
-                edge_noop,
-                edge_noop,
-                edge_noop,
-                dfs_sources,
-                dfs_sinks);
-                
+                            handle_noop,
+                            handle_noop,
+                            [](const handle_t& handle) { return false; },
+                            dfs_break,
+                            [&](const edge_t& edge) {
+                                // We found an edge out of an oriented node we are investigating.
+                                if (edge.second == break_handle) {
+                                    // This edge is into the thing we are looking for an edge into.
+                                    // It isn't out of the other side because we never explore there.
+                                    found = true;
+                                } else if (edge.first == graph.flip(break_handle)) {
+                                    // This edge is into the thing we are looking for, but spelled the other way.
+                                    found = true;
+                                }
+                            },
+                            edge_noop,
+                            edge_noop,
+                            edge_noop,
+                            dfs_sources,
+                            dfs_sinks);
             if (found) {
                 // This node is on a normal, 2-edge-connected cycle
             
