@@ -710,9 +710,7 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
         min_handle_rank = std::min(min_handle_rank,
                                    number_bool_packing::unpack_number(handle));
     });
-    if (max_handle_rank > 0) {
-        ids.resize(max_handle_rank - min_handle_rank + 1);
-    }
+    ids.resize(max_handle_rank - min_handle_rank + 1);
     // establish id mapping
     if (compact_ids) {
         for (uint64_t i = 0; i < order->size(); ++i) {
