@@ -898,6 +898,12 @@ std::vector<handle_t> mondriaan_sort(const PathHandleGraph& graph,
     //std::string tempname = std::tmpnam(nullptr);
     if (!n_parts) n_parts = 1; // force 1
     n_parts = std::min(n_parts, graph.get_node_count());
+    // escape if we only have one node
+    if (graph.get_node_count() == 1) {
+        handle_t handle;
+        graph.for_each_handle([&handle](const handle_t& h) { handle = h; });
+        return { handle };
+    }
     if (eps == 0) eps = 1.0;
     std::string tempname = temp_file::create();
     std::string outmtx = tempname + ".mtx";
