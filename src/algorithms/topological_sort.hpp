@@ -90,7 +90,6 @@ std::vector<handle_t> breadth_first_topological_order(const HandleGraph& g,
 
 std::vector<handle_t> depth_first_topological_order(const HandleGraph& g, const uint64_t& chunk_size,
                                                     bool use_heads = false, bool use_tails = false);
-//bool use_heads = false, bool use_tails = false);
 
 }
 }
