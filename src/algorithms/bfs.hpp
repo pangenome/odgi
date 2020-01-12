@@ -14,9 +14,10 @@ using namespace handlegraph;
 void bfs(
     const HandleGraph& graph,
     // called when a given node orientation is first encountered
-    // the second parameter gives the cumulative length from the search root that led to this handle
+    // the second parameter gives the rank of the root among the input set of seeds
+    // the third parameter gives the cumulative length from the search root that led to this handle
     // return true to continue through this node, false to treat it like a sink
-    const std::function<void(const handle_t&, const uint64_t&)>& handle_fn,
+    const std::function<void(const handle_t&, const uint64_t&, const uint64_t&)>& handle_fn,
     // have we seen this handle before?
     const std::function<bool(const handle_t&)>& seen_fn,
     // called to check if we should stop the DFS; we stop when true is returned.
@@ -28,6 +29,12 @@ void bfs(
     // do we use a bidirectional search
     bool bidirectional = false
     );
+
+struct bfs_state_t {
+    handle_t handle;
+    uint64_t root;
+    uint64_t length;
+};
 
 }
 }

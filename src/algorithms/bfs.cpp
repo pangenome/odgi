@@ -10,8 +10,10 @@ using namespace handlegraph;
 void bfs(
     const HandleGraph& graph,
     // called when a given node orientation is first encountered
-    // the second parameter gives the cumulative length from the search root that led to this handle
-    const std::function<void(const handle_t&, const uint64_t&)>& handle_fn,
+    // the second parameter gives the rank of the root among the input set of seeds
+    // the third parameter gives the cumulative length from the search root that led to this handle
+    // return true to continue through this node, false to treat it like a sink
+    const std::function<void(const handle_t&, const uint64_t&, const uint64_t&)>& handle_fn,
     // have we seen this handle before?
     const std::function<bool(const handle_t&)>& seen_fn,
     // called to check if we should stop the DFS; we stop when true is returned.
@@ -29,33 +31,33 @@ void bfs(
         stops.insert(handle);
     }
 
-    struct handle_length_t {
-        handle_t handle;
-        uint64_t length;
-    };
-    std::deque<handle_length_t> todo; // our traversal front
+    std::deque<bfs_state_t> todo; // our traversal front
+    uint64_t seed_rank = 0;
     for (auto& handle : sources) {
-        todo.push_front({handle, 0});
+        todo.push_front({handle, seed_rank++, 0});
     }
 
     while (!todo.empty()) {
         // get our next handle
-        handle_t handle = todo.back().handle;
-        uint64_t curr_length = todo.back().length + graph.get_length(handle);
+        auto& curr = todo.back();
+        handle_t handle = curr.handle;
+        uint64_t root = curr.root;
+        uint64_t curr_length = curr.length + graph.get_length(handle);
         // pop the handle off the back of the queue
         todo.pop_back();
         if (!seen_fn(handle)) {
             // handle the handle
-            handle_fn(handle, curr_length);
+            handle_fn(handle, root, curr_length);
             // check if we've hit our break condition
             if (break_fn()) { return; }
             // check if we should stop here
             if (!stops.count(handle)) {
                 // add the next nodes to our queue
-                auto enqueue
-                    = [&todo,&seen_fn,&curr_length](const handle_t& next) {
+                auto enqueue =
+                    [&todo,&seen_fn,&root,&curr_length]
+                    (const handle_t& next) {
                           if (!seen_fn(next)) {
-                              todo.push_back({next, curr_length});
+                              todo.push_back({next, root, curr_length});
                           }
                       };
                 graph.follow_edges(handle, false, enqueue);

@@ -494,8 +494,10 @@ std::vector<handle_t> breadth_first_topological_order(const HandleGraph& g,
                       });
     */
 
+    uint64_t prev_max_root = 0;
     uint64_t prev_max_length = 0;
-    std::vector<std::pair<handle_t, uint64_t>> order_length;
+    
+    std::vector<bfs_state_t> order_raw;
     while (unvisited.rank1(unvisited.size())!=0) {
         /*
         std::cerr << "unvisited size " << unvisited.rank1(unvisited.size()) << std::endl;
@@ -504,11 +506,16 @@ std::vector<handle_t> breadth_first_topological_order(const HandleGraph& g,
         }
         std::cerr << std::endl;
         */
+        uint64_t curr_max_root = 0;
         uint64_t curr_max_length = 0;
         bfs(g,
-            [&order_length,&unvisited,&prev_max_length,&curr_max_length](const handle_t& h, const uint64_t& l) {
+            [&order_raw,&unvisited,
+             &prev_max_root,&curr_max_root,
+             &prev_max_length,&curr_max_length]
+            (const handle_t& h, const uint64_t& r, const uint64_t& l) {
                 uint64_t i = number_bool_packing::unpack_number(h);
-                order_length.push_back(std::make_pair(h,l+prev_max_length));
+                order_raw.push_back({h, r+prev_max_root, l+prev_max_length});
+                curr_max_root = std::max(r+prev_max_root, curr_max_root);
                 curr_max_length = std::max(l+prev_max_length, curr_max_length);
                 unvisited.set(i, 0);
             },
@@ -526,18 +533,19 @@ std::vector<handle_t> breadth_first_topological_order(const HandleGraph& g,
             handle_t h = number_bool_packing::pack(i, false);
             seeds = { h };
         }
+        prev_max_root = curr_max_root;
         prev_max_length = curr_max_length;
     }
     //std::cerr << "order size " << order.size() << " graph size " << g.get_node_count() << std::endl;
     //assert(order.size() == g.get_node_count());
-    std::sort(order_length.begin(), order_length.end(),
-              [](const std::pair<handle_t, uint64_t>& a,
-                 const std::pair<handle_t, uint64_t>& b) {
-                  return a.second < b.second;
+    std::sort(order_raw.begin(), order_raw.end(),
+              [](const bfs_state_t& a,
+                 const bfs_state_t& b) {
+                  return a.root < b.root || a.root == b.root && a.length < b.length;
               });
 
     std::vector<handle_t> order;
-    for (auto& o : order_length) order.push_back(o.first);
+    for (auto& o : order_raw) order.push_back(o.handle);
 
     return order;
 }
