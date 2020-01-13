@@ -56,10 +56,10 @@ int main_paths(int argc, char** argv) {
     std::string infile = args::get(dg_in_file);
     if (infile.size()) {
         if (infile == "-") {
-            graph.load(std::cin);
+            graph.deserialize(std::cin);
         } else {
             ifstream f(infile.c_str());
-            graph.load(f);
+            graph.deserialize(f);
             f.close();
         }
     }
