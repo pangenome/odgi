@@ -34,6 +34,7 @@ int main_sort(int argc, char** argv) {
     args::Flag cycle_breaking(parser, "cycle_breaking", "use a cycle breaking sort", {'c', "cycle-breaking"});
     args::Flag breadth_first(parser, "breadth_first", "use a breadth first topological sort", {'b', "breadth-first"});
     args::Flag depth_first(parser, "depth_first", "use a chunked depth first topological sort", {'z', "depth-first"});
+    args::ValueFlag<uint64_t> breadth_first_chunk(parser, "N", "chunk size for breadth first topological sort", {'B', "breadth-first-chunk"});
     args::ValueFlag<uint64_t> depth_first_chunk(parser, "N", "chunk size for depth first topological sort", {'Z', "depth-first-chunk"});
     args::Flag dagify(parser, "dagify", "sort on the basis of the DAGified graph", {'d', "dagify-sort"});
     args::Flag eades(parser, "eades", "use eades algorithm", {'e', "eades"});
@@ -87,6 +88,11 @@ int main_sort(int argc, char** argv) {
         }
     }
 
+    uint64_t df_chunk_size = args::get(depth_first_chunk);
+    df_chunk_size = df_chunk_size ? df_chunk_size : 1000;
+    uint64_t bf_chunk_size = args::get(breadth_first_chunk);
+    bf_chunk_size = bf_chunk_size ? bf_chunk_size : std::numeric_limits<uint64_t>::max();
+
     // helper, TODO: move into its own file
     // make a dagified copy, get its sort, and apply the order to our graph
 
@@ -121,11 +127,9 @@ int main_sort(int argc, char** argv) {
                                                             args::get(mondriaan_epsilon),
                                                             args::get(mondriaan_path_weight), false), true);
         } else if (args::get(breadth_first)) {
-            graph.apply_ordering(algorithms::breadth_first_topological_order(graph), true);
+            graph.apply_ordering(algorithms::breadth_first_topological_order(graph, bf_chunk_size), true);
         } else if (args::get(depth_first)) {
-            uint64_t chunk_size = args::get(depth_first_chunk);
-            chunk_size = chunk_size ? chunk_size : 1000;
-            graph.apply_ordering(algorithms::depth_first_topological_order(graph, chunk_size), true);
+            graph.apply_ordering(algorithms::depth_first_topological_order(graph, df_chunk_size), true);
         } else if (args::get(randomize)) {
             graph.apply_ordering(algorithms::random_order(graph), true);
         } else if (!args::get(pipeline).empty()) {
@@ -152,14 +156,10 @@ int main_sort(int argc, char** argv) {
                     order = algorithms::cycle_breaking_sort(graph);
                     break;
                 case 'b':
-                    order = algorithms::breadth_first_topological_order(graph);
+                    order = algorithms::breadth_first_topological_order(graph, bf_chunk_size);
                     break;
                 case 'z':
-                {
-                    uint64_t chunk_size = args::get(depth_first_chunk);
-                    chunk_size = chunk_size ? chunk_size : 1000;
-                    order = algorithms::depth_first_topological_order(graph, chunk_size);
-                }
+                    order = algorithms::depth_first_topological_order(graph, df_chunk_size);
                     break;
                 case 'l':
                     order = algorithms::lazy_topological_order(&graph);
