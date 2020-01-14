@@ -684,6 +684,35 @@ void graph_t::optimize(bool allow_id_reassignment) {
     apply_ordering({}, true);
 }
 
+void graph_t::reassign_node_ids(const std::function<nid_t(const nid_t&)>& get_new_id) {
+    graph_t reassigned;
+    // nodes
+    for_each_handle(
+        [&](const handle_t& handle) {
+            reassigned.create_handle(get_sequence(handle), get_new_id(get_id(handle)));
+        });
+    // edges
+    for_each_edge(
+        [&](const edge_t& edge) {
+            reassigned.create_edge(reassigned.get_handle(get_new_id(get_id(edge.first)), get_is_reverse(edge.first)),
+                                   reassigned.get_handle(get_new_id(get_id(edge.second)), get_is_reverse(edge.second)));
+        });
+    // paths
+    for_each_path_handle(
+        [&](const path_handle_t& old_path) {
+            path_handle_t new_path = reassigned.create_path_handle(get_path_name(old_path));
+            for_each_step_in_path(
+                old_path,
+                [&](const step_handle_t& step) {
+                    handle_t old_handle = get_handle_of_step(step);
+                    handle_t new_handle = reassigned.get_handle(get_new_id(get_id(old_handle)),
+                                                                get_is_reverse(old_handle));
+                    reassigned.append_step(new_path, new_handle);
+                });
+        });
+    *this = reassigned;
+}
+
 /// Reorder the graph's internal structure to match that given.
 /// Optionally compact the id space of the graph to match the ordering, from 1->|ordering|.
 void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact_ids) {
@@ -710,9 +739,7 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
         min_handle_rank = std::min(min_handle_rank,
                                    number_bool_packing::unpack_number(handle));
     });
-    if (max_handle_rank > 0) {
-        ids.resize(max_handle_rank - min_handle_rank + 1);
-    }
+    ids.resize(max_handle_rank - min_handle_rank + 1);
     // establish id mapping
     if (compact_ids) {
         for (uint64_t i = 0; i < order->size(); ++i) {
@@ -1393,7 +1420,11 @@ void graph_t::to_gfa(std::ostream& out) const {
         });
 }
 
-uint64_t graph_t::serialize(std::ostream& out) {
+uint32_t graph_t::get_magic_number(void) const {
+    return 1988148666ul;
+}
+
+void graph_t::serialize_members(std::ostream& out) const {
     //rebuild_id_handle_mapping();
     uint64_t written = 0;
     out.write((char*)&_max_node_id,sizeof(_max_node_id));
@@ -1445,10 +1476,9 @@ uint64_t graph_t::serialize(std::ostream& out) {
         out.write((char*)&p.second,sizeof(p.second));
         written += sizeof(p.second);
     }
-    return written;
 }
 
-void graph_t::load(std::istream& in) {
+void graph_t::deserialize_members(std::istream& in) {
     //uint64_t written = 0;
     in.read((char*)&_max_node_id,sizeof(_max_node_id));
     in.read((char*)&_min_node_id,sizeof(_min_node_id));

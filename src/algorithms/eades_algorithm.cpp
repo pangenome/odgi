@@ -17,7 +17,7 @@ using namespace handlegraph;
         // decide which strand will be "forward" for each node
         /*
         vector<handle_t> canonical_orientation = single_stranded_orientation(graph);
-        if (canonical_orientation.size() < graph->node_size()) {
+        if (canonical_orientation.size() < graph->get_node_count()) {
             cerr << "error:[eades_algorithm] Eades' algorithm only valid on graphs with a single stranded orientation" << endl;
             exit(1);
         }
@@ -26,14 +26,14 @@ using namespace handlegraph;
         graph->for_each_handle([&canonical_orientation](const handle_t& h) {
                 canonical_orientation.push_back(h);
             });
-        
+
 #ifdef debug_eades
         cerr << "got canonical orientation:" << endl;
         for (const handle_t& h : canonical_orientation) {
             cerr << "\t" << graph->get_id(h) << (graph->get_is_reverse(h) ? "-" : "+") << endl;
         }
 #endif
-        
+
         // maps handles to records of ((in-degree, out-degree), bucket position)
         unordered_map<handle_t, pair<pair<int64_t, int64_t>, list<handle_t>::iterator>> degree_info;
         

@@ -23,6 +23,7 @@
 #include <handlegraph/mutable_path_mutable_handle_graph.hpp>
 #include <handlegraph/deletable_handle_graph.hpp>
 #include <handlegraph/mutable_path_deletable_handle_graph.hpp>
+#include <handlegraph/serializable_handle_graph.hpp>
 #include "dynamic.hpp"
 #include "dynamic_types.hpp"
 #include "dna.hpp"
@@ -36,7 +37,7 @@ using namespace handlegraph;
 // Resolve ambiguous nid_t typedef by putting it in our namespace.
 using nid_t = handlegraph::nid_t;
 
-class graph_t : public MutablePathDeletableHandleGraph {
+class graph_t : public MutablePathDeletableHandleGraph, public SerializableHandleGraph {
 
 public:
 
@@ -278,6 +279,9 @@ public:
     /// Organize the graph for better performance and memory use
     void optimize(bool allow_id_reassignment = true);
 
+    /// Reassign the node ids
+    void reassign_node_ids(const std::function<nid_t(const nid_t&)>& get_new_id);
+
     /// Reorder the graph's paths as given.
     void apply_path_ordering(const std::vector<path_handle_t>& order);
     
@@ -365,11 +369,14 @@ public:
     /// Convert to GFA (for debugging)
     void to_gfa(std::ostream& out) const;
 
+    /// Magic number header for serialization
+    uint32_t get_magic_number(void) const;
+
     /// Serialize
-    uint64_t serialize(std::ostream& out);
+    void serialize_members(std::ostream& out) const;
 
     /// Load
-    void load(std::istream& in);
+    void deserialize_members(std::istream& in);
 
 /// These are the backing data structures that we use to fulfill the above functions
 

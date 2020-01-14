@@ -281,7 +281,7 @@ PYBIND11_MODULE(odgi, m)
         .def("load",
              [](odgi::graph_t& g, const std::string& file) {
                  std::ifstream in(file.c_str());
-                 g.load(in);
+                 g.deserialize(in);
              },
              "Load the graph from the given file.")
         // Definition of class_<odgi::graph_t> ends here.
