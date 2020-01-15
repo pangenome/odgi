@@ -227,7 +227,7 @@ g.get_node_count() # 16
 We can also add edges:
 
 ```python
-g.add_edge(g.get_handle(15), h) # connects node 15 to 16
+g.create_edge(g.get_handle(15), h) # connects node 15 to 16
 ```
 
 And add path steps:
