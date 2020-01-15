@@ -1,4 +1,4 @@
-odgi python API
+python API
 ****************
 
 .. automodule:: odgi

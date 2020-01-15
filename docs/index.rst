@@ -9,12 +9,13 @@ Welcome to odgi's documentation!
 .. toctree::
    :maxdepth: 2
 
-   install
-   odgi
+   rst/install
+   rst/tutorial
+   rst/api
 
-Indices and tables
-==================
+------
+Index
+------
 
 * :ref:`genindex`
-* :ref:`modindex`
 * :ref:`search`

@@ -5,29 +5,39 @@ Setup
 Build directions
 =================
 
-.. code-block:: bash
-   
-    mkdir build
-    cd build
-    cmake ..
-    make
+It is straightforward to build ODGI on a unix-based machine.
+First, obtain a copy of the rep and its submodules:
 
-To make a local copy of the documentation
+.. code-block:: bash 
+
+   git clone --recursive https://github.com/vgteam/odgi.git
+   cd odgi
+
+Then build through cmake:
 
 .. code-block:: bash
-   
+
+   mkdir build
+   cd build
+   cmake ..
+   make
+
+To make a local copy of the documentation:
+
+.. code-block:: bash
+
    cd docs
    make html
 
 ================
-Python Usage directions
+Python Usage
 ================
 
-To use ODGI in python, make sure that lib/odgi.cpython*.so file is on your python path and run ``import odgi``.
+To import ODGI in python, make sure that the compiled ``lib/odgi.cpython*.so`` file is on your python path and run ``import odgi``.
 
-You can add /lib to your path within python as follows
+To add ``lib`` to your python path from within a script:
 
 .. code-block:: python
 
    import sys
-   sys.append.path("./lib")
+   sys.path.append("./lib")
