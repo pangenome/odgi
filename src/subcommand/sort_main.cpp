@@ -60,6 +60,7 @@ int main_sort(int argc, char** argv) {
     args::ValueFlag<std::string> path_delim(parser, "path-delim", "sort paths in bins by their prefix up to this delemiter", {'D', "path-delim"});
     args::Flag progress(parser, "progress", "display progress of the sort", {'P', "progress"});
     args::Flag optimize(parser, "optimize", "use the MutableHandleGraph::optimize method", {'O', "optimize"});
+    args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel sorters (currently only SGD is supported)", {'t', "threads"});
     try {
         parser.ParseCLI(argc, argv);
     } catch (args::Help) {
@@ -96,19 +97,14 @@ int main_sort(int argc, char** argv) {
     }
     */
 
-    uint64_t df_chunk_size = args::get(depth_first_chunk);
-    df_chunk_size = df_chunk_size ? df_chunk_size : 1000;
-    uint64_t bf_chunk_size = args::get(breadth_first_chunk);
-    bf_chunk_size = bf_chunk_size ? bf_chunk_size : std::numeric_limits<uint64_t>::max();
-
-    uint64_t sgd_bandwidth = args::get(lsgd_bandwidth);
-    sgd_bandwidth = sgd_bandwidth ? sgd_bandwidth : 100;
-    double sgd_iter_max = args::get(lsgd_iter_max);
-    sgd_iter_max = sgd_iter_max ? sgd_iter_max : 30;
-    double sgd_eps = args::get(lsgd_eps);
-    sgd_eps = sgd_eps ? sgd_eps : 0.01;
-    double sgd_delta = args::get(lsgd_delta);
-    sgd_delta = sgd_delta ? sgd_delta : 0;
+    // default settings
+    uint64_t df_chunk_size = args::get(depth_first_chunk) ? args::get(depth_first_chunk) : 1000;
+    uint64_t bf_chunk_size = args::get(breadth_first_chunk) ? args::get(breadth_first_chunk) : std::numeric_limits<uint64_t>::max();
+    uint64_t sgd_bandwidth = args::get(lsgd_bandwidth) ? args::get(lsgd_bandwidth) : 100;
+    double sgd_iter_max = args::get(lsgd_iter_max) ? args::get(lsgd_iter_max) : 30;
+    double sgd_eps = args::get(lsgd_eps) ? args::get(lsgd_eps) : 0.01;
+    double sgd_delta = args::get(lsgd_delta) ? args::get(lsgd_delta) : 0;
+    uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
 
     // helper, TODO: move into its own file
     // make a dagified copy, get its sort, and apply the order to our graph
@@ -146,7 +142,8 @@ int main_sort(int argc, char** argv) {
                                                               sgd_bandwidth,
                                                               sgd_iter_max,
                                                               sgd_eps,
-                                                              sgd_delta));
+                                                              sgd_delta,
+                                                              num_threads));
         } else if (args::get(breadth_first)) {
             graph.apply_ordering(algorithms::breadth_first_topological_order(graph, bf_chunk_size), true);
         } else if (args::get(depth_first)) {
@@ -193,7 +190,8 @@ int main_sort(int argc, char** argv) {
                                                          sgd_bandwidth,
                                                          sgd_iter_max,
                                                          sgd_eps,
-                                                         sgd_delta);
+                                                         sgd_delta,
+                                                         num_threads);
                     break;
                 case 'f':
                     order.clear();

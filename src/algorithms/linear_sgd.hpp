@@ -6,6 +6,10 @@
 #include <algorithm>
 #include <random>
 #include <set>
+#include <thread>
+#include <mutex>
+#include <atomic>
+#include <chrono>
 #include <handlegraph/handle_graph.hpp>
 #include <handlegraph/path_handle_graph.hpp>
 #include <handlegraph/util.hpp>
@@ -28,7 +32,8 @@ std::vector<double> linear_sgd(const HandleGraph& graph,
                                const uint64_t& bandwidth,
                                const uint64_t& t_max,
                                const double& eps,
-                               const double& delta);
+                               const double& delta,
+                               const uint64_t& nthreads);
 
 // find pairs of handles to operate on, searching up to bandwidth steps, recording their graph distance
 std::vector<sgd_term_t> linear_sgd_search(const HandleGraph& graph, const uint64_t& bandwidth);
@@ -42,7 +47,8 @@ std::vector<handle_t> linear_sgd_order(const HandleGraph& graph,
                                        const uint64_t& bandwidth,
                                        const uint64_t& t_max,
                                        const double& eps,
-                                       const double& delta);
+                                       const double& delta,
+                                       const uint64_t& nthreads);
 
 }
 }
