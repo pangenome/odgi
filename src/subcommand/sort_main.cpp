@@ -10,6 +10,7 @@
 #include "algorithms/dagify_sort.hpp"
 #include "algorithms/random_order.hpp"
 #include "algorithms/mondriaan_sort.hpp"
+#include "algorithms/linear_sgd.hpp"
 
 namespace odgi {
 
@@ -29,7 +30,7 @@ int main_sort(int argc, char** argv) {
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store the graph in this file", {'o', "out"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-    args::Flag show_sort(parser, "show", "write the sort order mapping", {'S', "show"});
+    //args::Flag show_sort(parser, "show", "write the sort order mapping", {'S', "show"});
     args::ValueFlag<std::string> sort_order_in(parser, "FILE", "load the sort order from this file", {'s', "sort-order"});
     args::Flag cycle_breaking(parser, "cycle_breaking", "use a cycle breaking sort", {'c', "cycle-breaking"});
     args::Flag breadth_first(parser, "breadth_first", "use a breadth first topological sort", {'b', "breadth-first"});
@@ -38,7 +39,12 @@ int main_sort(int argc, char** argv) {
     args::ValueFlag<uint64_t> depth_first_chunk(parser, "N", "chunk size for depth first topological sort", {'Z', "depth-first-chunk"});
     args::Flag dagify(parser, "dagify", "sort on the basis of the DAGified graph", {'d', "dagify-sort"});
     args::Flag eades(parser, "eades", "use eades algorithm", {'e', "eades"});
-    args::Flag lazy(parser, "lazy", "use lazy topological algorithm (DAG only)", {'l', "lazy"});
+    //args::Flag lazy(parser, "lazy", "use lazy topological algorithm (DAG only)", {'l', "lazy"});
+    args::Flag lsgd(parser, "linear-sgd", "apply 1D (linear) SGD algorithm to organize graph", {'S', "linear-sgd"});
+    args::ValueFlag<uint64_t> lsgd_bandwidth(parser, "sgd-bandwidth", "bandwidth of linear SGD model", {'O', "sgd-bandwidth"});
+    args::ValueFlag<uint64_t> lsgd_iter_max(parser, "sgd-iter-max", "max number of iterations for linear SGD model", {'T', "sgd-iter-max"});
+    args::ValueFlag<double> lsgd_eps(parser, "sgd-eps", "learning rate for linear SGD model", {'V', "sgd-eps"});
+    args::ValueFlag<double> lsgd_delta(parser, "sgd-delta", "learning rate for linear SGD model", {'C', "sgd-delta"});
     args::Flag two(parser, "two", "use two-way (max of head-first and tail-first) topological algorithm", {'w', "two-way"});
     args::Flag randomize(parser, "random", "randomly sort the graph", {'r', "random"});
     args::Flag no_seeds(parser, "no-seeds", "don't use heads or tails to seed topological sort", {'n', "no-seeds"});
@@ -81,17 +87,28 @@ int main_sort(int argc, char** argv) {
             f.close();
         }
     }
+    /*
     if (args::get(show_sort)) {
         std::vector<handle_t> order = (args::get(lazy) ? algorithms::lazy_topological_order(&graph) : algorithms::topological_order(&graph));
         for (auto& handle : order) {
             std::cout << graph.get_id(handle) << std::endl;
         }
     }
+    */
 
     uint64_t df_chunk_size = args::get(depth_first_chunk);
     df_chunk_size = df_chunk_size ? df_chunk_size : 1000;
     uint64_t bf_chunk_size = args::get(breadth_first_chunk);
     bf_chunk_size = bf_chunk_size ? bf_chunk_size : std::numeric_limits<uint64_t>::max();
+
+    uint64_t sgd_bandwidth = args::get(lsgd_bandwidth);
+    sgd_bandwidth = sgd_bandwidth ? sgd_bandwidth : 100;
+    double sgd_iter_max = args::get(lsgd_iter_max);
+    sgd_iter_max = sgd_iter_max ? sgd_iter_max : 30;
+    double sgd_eps = args::get(lsgd_eps);
+    sgd_eps = sgd_eps ? sgd_eps : 0.01;
+    double sgd_delta = args::get(lsgd_delta);
+    sgd_delta = sgd_delta ? sgd_delta : 0;
 
     // helper, TODO: move into its own file
     // make a dagified copy, get its sort, and apply the order to our graph
@@ -100,8 +117,6 @@ int main_sort(int argc, char** argv) {
     if (outfile.size()) {
         if (args::get(eades)) {
             graph.apply_ordering(algorithms::eades_algorithm(&graph), true);
-        } else if (args::get(lazy)) {
-            graph.apply_ordering(algorithms::lazy_topological_order(&graph), true);
         } else if (args::get(two)) {
             graph.apply_ordering(algorithms::two_way_topological_order(&graph), true);
         } else if (args::get(optimize)) {
@@ -126,6 +141,12 @@ int main_sort(int argc, char** argv) {
                                                             args::get(mondriaan_n_parts),
                                                             args::get(mondriaan_epsilon),
                                                             args::get(mondriaan_path_weight), false), true);
+        } else if (args::get(lsgd)) {
+            graph.apply_ordering(algorithms::linear_sgd_order(graph,
+                                                              sgd_bandwidth,
+                                                              sgd_iter_max,
+                                                              sgd_eps,
+                                                              sgd_delta));
         } else if (args::get(breadth_first)) {
             graph.apply_ordering(algorithms::breadth_first_topological_order(graph, bf_chunk_size), true);
         } else if (args::get(depth_first)) {
@@ -161,14 +182,18 @@ int main_sort(int argc, char** argv) {
                 case 'z':
                     order = algorithms::depth_first_topological_order(graph, df_chunk_size);
                     break;
-                case 'l':
-                    order = algorithms::lazy_topological_order(&graph);
-                    break;
                 case 'w':
                     order = algorithms::two_way_topological_order(&graph);
                     break;
                 case 'r':
                     order = algorithms::random_order(graph);
+                    break;
+                case 'S':
+                    order = algorithms::linear_sgd_order(graph,
+                                                         sgd_bandwidth,
+                                                         sgd_iter_max,
+                                                         sgd_eps,
+                                                         sgd_delta);
                     break;
                 case 'f':
                     order.clear();

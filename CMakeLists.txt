@@ -298,6 +298,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/matrix_writer.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/temp_file.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/linear_index.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/linear_sgd.cpp
   )
 
 set(odgi_DEPS 
