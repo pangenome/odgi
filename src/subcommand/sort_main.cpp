@@ -42,6 +42,8 @@ int main_sort(int argc, char** argv) {
     //args::Flag lazy(parser, "lazy", "use lazy topological algorithm (DAG only)", {'l', "lazy"});
     args::Flag lsgd(parser, "linear-sgd", "apply 1D (linear) SGD algorithm to organize graph", {'S', "linear-sgd"});
     args::ValueFlag<uint64_t> lsgd_bandwidth(parser, "sgd-bandwidth", "bandwidth of linear SGD model", {'O', "sgd-bandwidth"});
+    args::ValueFlag<double> lsgd_sampling_rate(parser, "sgd-sampling-rate", "rate to sample pairs of nodes, scaled by squared graph distance", {'Q', "sgd-sampling-rate"});
+    args::Flag lsgd_use_paths(parser, "sgd-use-paths", "use paths to structure internode distances in SGD", {'K', "sgd-use-paths"});
     args::ValueFlag<uint64_t> lsgd_iter_max(parser, "sgd-iter-max", "max number of iterations for linear SGD model", {'T', "sgd-iter-max"});
     args::ValueFlag<double> lsgd_eps(parser, "sgd-eps", "learning rate for linear SGD model", {'V', "sgd-eps"});
     args::ValueFlag<double> lsgd_delta(parser, "sgd-delta", "learning rate for linear SGD model", {'C', "sgd-delta"});
@@ -101,10 +103,12 @@ int main_sort(int argc, char** argv) {
     uint64_t df_chunk_size = args::get(depth_first_chunk) ? args::get(depth_first_chunk) : 1000;
     uint64_t bf_chunk_size = args::get(breadth_first_chunk) ? args::get(breadth_first_chunk) : std::numeric_limits<uint64_t>::max();
     uint64_t sgd_bandwidth = args::get(lsgd_bandwidth) ? args::get(lsgd_bandwidth) : 100;
+    double sgd_sampling_rate = args::get(lsgd_sampling_rate) ? args::get(lsgd_sampling_rate) : 10;
     double sgd_iter_max = args::get(lsgd_iter_max) ? args::get(lsgd_iter_max) : 30;
     double sgd_eps = args::get(lsgd_eps) ? args::get(lsgd_eps) : 0.01;
     double sgd_delta = args::get(lsgd_delta) ? args::get(lsgd_delta) : 0;
     uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+    bool sgd_use_paths = args::get(lsgd_use_paths);
 
     // helper, TODO: move into its own file
     // make a dagified copy, get its sort, and apply the order to our graph
@@ -140,6 +144,8 @@ int main_sort(int argc, char** argv) {
         } else if (args::get(lsgd)) {
             graph.apply_ordering(algorithms::linear_sgd_order(graph,
                                                               sgd_bandwidth,
+                                                              sgd_sampling_rate,
+                                                              sgd_use_paths,
                                                               sgd_iter_max,
                                                               sgd_eps,
                                                               sgd_delta,
@@ -188,6 +194,8 @@ int main_sort(int argc, char** argv) {
                 case 'S':
                     order = algorithms::linear_sgd_order(graph,
                                                          sgd_bandwidth,
+                                                         sgd_sampling_rate,
+                                                         sgd_use_paths,
                                                          sgd_iter_max,
                                                          sgd_eps,
                                                          sgd_delta,

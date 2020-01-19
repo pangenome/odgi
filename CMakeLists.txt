@@ -223,6 +223,14 @@ ExternalProject_Get_property(mondriaan SOURCE_DIR)
 set(mondriaan_INCLUDE "${SOURCE_DIR}/src")
 set(mondriaan_LIB "${SOURCE_DIR}/lib")
 
+ExternalProject_Add(libbf
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/libbf"
+  CMAKE_ARGS "${CMAKE_ARGS};-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>")
+ExternalProject_Get_property(libbf INSTALL_DIR)
+#message(STATUS "libbf target " ${INSTALL_DIR})
+set(libbf_INCLUDE "${INSTALL_DIR}/include")
+set(libbf_LIB "${INSTALL_DIR}/lib")
+
 # pybind11
 #ExternalProject_Add(pybind11
 #    GIT_REPOSITORY https://github.com/pybind/pybind11.git 
@@ -317,7 +325,8 @@ set(odgi_DEPS
     sonlib
     picosha256
     sgd2
-    mondriaan)
+    mondriaan
+    libbf)
 add_dependencies(odgi_objs ${odgi_DEPS})
 
 set(odgi_INCLUDES
@@ -341,7 +350,8 @@ set(odgi_INCLUDES
   "${sonLib_inc_INCLUDE}"
   "${picosha256_INCLUDE}"
   "${sgd2_INCLUDE}"
-  "${mondriaan_INCLUDE}")
+  "${mondriaan_INCLUDE}"
+  "${libbf_INCLUDE}")
 
 set(odgi_LIBS
   "${sdsl-lite_LIB}/libsdsl.a"
@@ -353,6 +363,7 @@ set(odgi_LIBS
   "${sonLib_LIB}/3EdgeConnected.a"
   "${sonLib_LIB}/sonLib.a"
   "${mondriaan_LIB}/libmondriaan.a"
+  "${libbf_LIB}/libbf.a"
   "-ldl")
 
 set(odgi_HEADERS

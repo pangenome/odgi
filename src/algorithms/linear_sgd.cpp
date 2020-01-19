@@ -3,8 +3,10 @@
 namespace odgi {
 namespace algorithms {
 
-std::vector<double> linear_sgd(const HandleGraph& graph,
+std::vector<double> linear_sgd(const PathHandleGraph& graph,
                                const uint64_t& bandwidth,
+                               const double& sampling_rate,
+                               const bool& use_paths,
                                const uint64_t& t_max,
                                const double& eps,
                                const double& delta,
@@ -21,7 +23,12 @@ std::vector<double> linear_sgd(const HandleGraph& graph,
             len += graph.get_length(handle);
         });
     // run banded BFSs in the graph to build our terms
-    std::vector<sgd_term_t> terms = linear_sgd_search(graph, bandwidth);
+    std::vector<sgd_term_t> terms;
+    if (use_paths) {
+        terms = linear_sgd_path_search(graph, bandwidth, sampling_rate);
+    } else {
+        terms = linear_sgd_search(graph, bandwidth, sampling_rate);
+    }
     // locks for each term
     std::vector<std::mutex> term_mutexes(terms.size());
     // get our schedule
@@ -47,16 +54,17 @@ std::vector<double> linear_sgd(const HandleGraph& graph,
         [&](void) {
             while (work_todo.load()) {
                 if (term_updates.load() > terms.size()) {
-                    std::cerr << iteration
-                              << ", eta: " << eta.load()
-                              << ", Delta: " << Delta_max.load()
-                              << " terms " << terms.size()
-                              << " updates " << term_updates.load() << std::endl;
                     if (++iteration > t_max) {
                         work_todo.store(false);
                     } else if (Delta_max.load() <= delta) { // nb: this will also break at 0
                         work_todo.store(false);
                     } else {
+//#pragma omp critical (cerr)
+                        std::cerr << iteration
+                                  << ", eta: " << eta.load()
+                                  << ", Delta: " << Delta_max.load()
+                                  << " terms " << terms.size()
+                                  << " updates " << term_updates.load() << std::endl;
                         eta.store(etas[iteration]); // update our learning rate
                         Delta_max.store(delta); // set our delta max to the threshold
                     }
@@ -88,19 +96,31 @@ std::vector<double> linear_sgd(const HandleGraph& graph,
                     // identities
                     uint64_t i = number_bool_packing::unpack_number(t.i);
                     uint64_t j = number_bool_packing::unpack_number(t.j);
+//#pragma omp critical (cerr)
+//                  std::cerr << "nodes are " << graph.get_id(t.i) << " and " << graph.get_id(t.j) << std::endl;
                     // distance == magnitude in our 1D situation
                     double dx = X[i].load()-X[j].load(); //, dy = X[i*2+1]-X[j*2+1];
+                    if (dx == 0) {
+                        dx = 1e-9; // avoid nan
+                    }
+//#pragma omp critical (cerr)
+//                    std::cerr << "distance is " << dx << " but should be " << d_ij << std::endl;
                     //double mag = dx; //sqrt(dx*dx + dy*dy);
                     double mag = sqrt(dx*dx);
                     // check distances for early stopping
                     double Delta = mu * (mag-d_ij) / 2;
                     // try until we succeed. risky.
-                    while (Delta > Delta_max.load()) {
-                        Delta_max.store(Delta);
+                    double Delta_abs = std::abs(Delta);
+//#pragma omp critical (cerr)
+//                    std::cerr << "Delta_abs " << Delta_abs << std::endl;
+                    while (Delta_abs > Delta_max.load()) {
+                        Delta_max.store(Delta_abs);
                     }
                     // calculate update
                     double r = Delta / mag;
                     double r_x = r * dx;
+//#pragma omp critical (cerr)
+//                    std::cerr << "r_x is " << r_x << std::endl;
                     // update our positions (atomically)
                     X[i].store(X[i].load()-r_x);
                     X[j].store(X[j].load()+r_x); 
@@ -133,48 +153,112 @@ std::vector<double> linear_sgd(const HandleGraph& graph,
 
 // find pairs of handles to operate on, searching up to bandwidth steps, recording their graph distance
 std::vector<sgd_term_t> linear_sgd_search(const HandleGraph& graph,
-                                          const uint64_t& bandwidth) {
+                                          const uint64_t& bandwidth,
+                                          const double& sampling_rate) {
     std::vector<sgd_term_t> terms;
-    ska::flat_hash_set<std::pair<handle_t, handle_t>> seen_pairs;
+    uint64_t graph_length = 0;
+    graph.for_each_handle([&](const handle_t& h) { graph_length += graph.get_length(h); });
+    double bp_per_node = (double)graph_length/graph.get_node_count();
+    bf::basic_bloom_filter seen_pairs(0.9, graph.get_node_count() * bandwidth / bp_per_node);
+    std::hash<std::pair<handle_t,handle_t>> hasher;
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<double> dis(0.0, 1.0);
     graph.for_each_handle(
         [&](const handle_t& h) {
-            uint64_t seen_steps = 0;
+            uint64_t seen_bp = 0;
+            uint64_t h_id = graph.get_id(h);
             ska::flat_hash_set<handle_t> seen;
             bfs(graph,
                 [&](const handle_t& n, const uint64_t& depth, const uint64_t& dist) {
                     seen.insert(n);
-                    if (n != h) {
+                    if (graph.get_id(n) != h_id) {
                         double weight = 1.0 / ((double)dist*dist);
-                        if (!seen_pairs.count(std::make_pair(h, n))
-                            && !seen_pairs.count(std::make_pair(n, h))) {
-                            terms.push_back(sgd_term_t(h, n, dist, weight));
-                            seen_pairs.insert(std::make_pair(h, n));
+                        //double weight = 1.0 / dist;
+                        // term inclusion is probabilistic, scaled by distance
+                        // so as to include longer-range connections
+                        if (!seen_pairs.lookup(hasher(std::make_pair(h, n)))
+                            && !seen_pairs.lookup(hasher(std::make_pair(n, h)))) {
+                            double v = dis(gen);
+                            if (v < sampling_rate / dist) {
+                                terms.push_back(sgd_term_t(h, n, dist, weight));
+                                seen_pairs.add(hasher(std::make_pair(h, n)));
+                            }
                         }
-                        ++seen_steps;
+                        seen_bp += graph.get_length(n);
                     }
                 },
                 [&](const handle_t& n) { return seen.count(n) > 0; },
-                [&](void) { return seen_steps > bandwidth; },
+                [&](void) { return seen_bp > bandwidth; },
                 { h },
                 { },
                 false);
         });
-    // todo take unique terms
-    /*
-    std::sort(terms.begin(), terms.end(),
-              [](const sgd_term_t& a,
-                 const sgd_term_t& b) {
-                  auto& a_i = as_integer(a.i);
-                  auto& a_j = as_integer(a.j);
-                  auto& b_i = as_integer(b.i);
-                  auto& b_j = as_integer(b.j);
-                  return a_i < b_i || a_i == b_i && a_j < b_j;
-              });
-    std::sort(terms.begin(), terms.end(),
-    */
     return terms;
 }
 
+// find pairs of handles to operate on, searching up to bandwidth steps, recording their graph distance
+std::vector<sgd_term_t> linear_sgd_path_search(const PathHandleGraph& graph,
+                                               const uint64_t& bandwidth,
+                                               const double& sampling_rate) {
+    std::vector<sgd_term_t> terms;
+    uint64_t graph_length = 0;
+    graph.for_each_handle([&](const handle_t& h) { graph_length += graph.get_length(h); });
+    double bp_per_node = (double)graph_length/graph.get_node_count();
+    bf::basic_bloom_filter seen_pairs(0.9, graph.get_node_count() * bandwidth / bp_per_node);
+    std::hash<std::pair<handle_t,handle_t>> hasher;
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_real_distribution<double> dis(0.0, 1.0);
+    // iterate over nodes, following the paths they are on out
+    graph.for_each_handle(
+        [&](const handle_t& h) {
+            uint64_t h_id = graph.get_id(h);
+            graph.for_each_step_on_handle(
+                h,
+                [&](const step_handle_t& step) {
+                    step_handle_t s = step;
+                    uint64_t dist = graph.get_length(h);
+                    while (graph.has_next_step(s) && dist < bandwidth/2) {
+                        s = graph.get_next_step(s);
+                        handle_t n = graph.get_handle_of_step(s);
+                        if (graph.get_id(n) != h_id) {
+                            double weight = 1.0 / ((double)dist*dist);
+                            //double weight = 1.0 / dist;
+                            if (!seen_pairs.lookup(hasher(std::make_pair(h, n)))
+                                && !seen_pairs.lookup(hasher(std::make_pair(n, h)))) {
+                                double v = dis(gen);
+                                if (v < sampling_rate / dist) {
+                                    terms.push_back(sgd_term_t(h, n, dist, weight));
+                                    seen_pairs.add(hasher(std::make_pair(h, n)));
+                                }
+                            }
+                        }
+                        dist += graph.get_length(n);
+                    }
+                    dist = 0;
+                    s = step;
+                    while (graph.has_previous_step(s) && dist < bandwidth/2) {
+                        s = graph.get_previous_step(s);
+                        handle_t n = graph.get_handle_of_step(s);
+                        dist += graph.get_length(n);
+                        if (graph.get_id(n) != h_id) {
+                            double weight = 1.0 / ((double)dist*dist);
+                            //double weight = 1.0 / dist;
+                            if (!seen_pairs.lookup(hasher(std::make_pair(h, n)))
+                                && !seen_pairs.lookup(hasher(std::make_pair(n, h)))) {
+                                double v = dis(gen);
+                                if (v < sampling_rate / dist) {
+                                    terms.push_back(sgd_term_t(h, n, dist, weight));
+                                    seen_pairs.add(hasher(std::make_pair(h, n)));
+                                }
+                            }
+                        }
+                    }
+                });
+        });
+    return terms;
+}
 
 std::vector<double> linear_sgd_schedule(const std::vector<sgd_term_t> &terms,
                                         const uint64_t& t_max,
@@ -198,13 +282,15 @@ std::vector<double> linear_sgd_schedule(const std::vector<sgd_term_t> &terms,
     return etas;
 }
 
-std::vector<handle_t> linear_sgd_order(const HandleGraph& graph,
+std::vector<handle_t> linear_sgd_order(const PathHandleGraph& graph,
                                        const uint64_t& bandwidth,
+                                       const double& sampling_rate,
+                                       const bool& use_paths,
                                        const uint64_t& t_max,
                                        const double& eps,
                                        const double& delta,
                                        const uint64_t& nthreads) {
-    std::vector<double> layout = linear_sgd(graph, bandwidth, t_max, eps, delta, nthreads);
+    std::vector<double> layout = linear_sgd(graph, bandwidth, sampling_rate, use_paths, t_max, eps, delta, nthreads);
     std::vector<std::pair<double, handle_t>> layout_handles;
     uint64_t i = 0;
     graph.for_each_handle([&i,&layout,&layout_handles](const handle_t& handle) {
