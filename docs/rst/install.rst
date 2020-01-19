@@ -33,11 +33,13 @@ To make a local copy of the documentation:
 Python Usage
 ================
 
-To import ODGI in python, make sure that the compiled ``lib/odgi.cpython*.so`` file is on your python path and run ``import odgi``.
+To import ODGI in python, make sure that the compiled ``lib/odgi.cpython*.so`` file is on your `PYTHONPATH` or added to your python path through `sys.path.append` and run ``import odgi``.
 
-To add ``lib`` to your python path from within a script:
+For example, assuming that your current working directory is the root of the odgi project:
 
 .. code-block:: python
 
    import sys
    sys.path.append("./lib")
+   import odgi
+
