@@ -99,7 +99,7 @@ std::vector<double> linear_sgd(const PathHandleGraph& graph,
 //#pragma omp critical (cerr)
 //                  std::cerr << "nodes are " << graph.get_id(t.i) << " and " << graph.get_id(t.j) << std::endl;
                     // distance == magnitude in our 1D situation
-                    double dx = X[i].load()-X[j].load(); //, dy = X[i*2+1]-X[j*2+1];
+                    double dx = X[i].load()-X[j].load();
                     if (dx == 0) {
                         dx = 1e-9; // avoid nan
                     }
