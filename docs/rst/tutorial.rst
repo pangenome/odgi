@@ -14,7 +14,7 @@ This graph is a combination of nodes (labelled as `n0`, `n1`, ..., `n9`) and dir
 ODGI Objects
 =============
 
-Edges and Nodes are accessed through a :class:`odgi.graph` object.  Individual nodes in the graph are pointed at by :class:`odgi.handle`.
+*Edges* and *nodes* are accessed through a :class:`odgi.graph` object.  Individual nodes in the graph are pointed at by :class:`odgi.handle`.
 
 Paths in the graph and accessed through :class:`odgi.path_handle`, which is a series of :class:`odgi.step_handle` linked together.  Each :class:`odgi.step_handle` is points to the node in that step, and also contains directional information regarding the nodes preceeding and following it.
 
@@ -51,19 +51,45 @@ Now we link together these nodes using their handles. Note that each of these ha
         gr.create_edge(n[8], n[9])
         gr.create_edge(n[8], n[5])
 
-
 Traversing Edges
 ================
-*Do something here that involves iterator methods and/or following path methods!*
+If we wanted to traverse these edges, we could do it using the iterator method :func:`odgi.graph.follow_edges`.
+
+.. code-block:: python
+
+        def next_node_list(handle):
+                lis = []
+                gr.follow_edges(handle, False, lambda y: lis.append(y))
+                return lis
+        
+        print(f'n0: {gr.get_sequence(n[0])}')
+        next_node = next_node_list(n[0])[0]
+        print(f'n1: {gr.get_sequence(next_node)}')
+        next_node = next_node_list(next_node)[0]
+        print(f'n2: {gr.get_sequence(next_node)}')
+
+Which will output the following:
+
+.. code-block::
+        
+        n0: CGA
+        n1: TTGG
+        n2: CCGT
+
+A map of the data can be generated using :func:`odgi.graph.to_gfa`, which will work regardless of any internal loops
+
+.. code-block:: python
+
+        print(gr.to_gfa())
 
 Creating a Path
 ===============
 
-Say we want to create the following path through this graph:
+Generating a linear sequence from this graph could be done in infinitely many ways, due to the interal loop betwee `n5`, `n6`, and `n8`.  If we wanted to define a single consensus sequence, we would do this by defining a path.
 
 .. image:: /img/exampleGraphPath.png
 
-To do this, we would need to create a :class:`odgi.path_handle` in the graph, and then append each :class:`odgi.handle` to the end of the path.
+To create the hilighted path, we would need to create a :class:`odgi.path_handle` in the graph, and then append each :class:`odgi.handle` to the end of the path.
 
 .. code-block:: python
 
