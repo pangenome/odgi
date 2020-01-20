@@ -14,11 +14,13 @@ This graph is a combination of nodes (labelled as `n0`, `n1`, ..., `n9`) and dir
 ODGI Objects
 =============
 
-Both :class:`odgi.edge` and :class:`odgi.node` are classes that are created and accessed through a :class:`odgi.graph` object.  Individual nodes in the graph are pointed at by :class:`odgi.handle`.
+Edges and Nodes are accessed through a :class:`odgi.graph` object.  Individual nodes in the graph are pointed at by :class:`odgi.handle`.
 
-Routes are stored in the graph and accessed through :class:`odgi.path_handle`, which is a series of :class:`odgi.step_handle` linked together.  Each :class:`odgi.step_handle` is points to the node in that step, and also contains
+Paths in the graph and accessed through :class:`odgi.path_handle`, which is a series of :class:`odgi.step_handle` linked together.  Each :class:`odgi.step_handle` is points to the node in that step, and also contains directional information regarding the nodes preceeding and following it.
 
 Handles are pointers to specific pieces of the graph, and it is not possible to operate on them directly, aside from comparing whether the objects are equal.  To get information regarding the object that each handle is pointing to, it is necessary to use the corresponding `get` accessor method in :class:`odgi.graph`.
+
+Reference materials for these methods can be found at the :ref:`api`, as well as the :ref:`glossary`, which contains lists sorted by object type for :ref:`accessor`, :ref:`mutator`, and :ref:`iterator`.
 
 Making a Graph
 ===============
@@ -49,6 +51,10 @@ Now we link together these nodes using their handles. Note that each of these ha
         gr.create_edge(n[8], n[9])
         gr.create_edge(n[8], n[5])
 
+
+Traversing Edges
+================
+*Do something here that involves iterator methods and/or following path methods!*
 
 Creating a Path
 ===============
@@ -113,52 +119,44 @@ Which will output the following:
         ACA
         ATATAAC
 
-Manipulating a path
-===================
-
-.. DANGER::
-        Right now none of this works, because insert_step seems to cause a memory leak. 
-
-Say you wanted to edit this path to add the following edges in blue:
-
-.. image:: /img/exampleGraphPath2.png
-
-First, you need to get the step handles corresponding to `n6` and `n7`, and then insert the new nodes to the path with :func:`odgi.graph.insert_step`. *Note that if you had saved the step handles during path creation, it would not be necessary to traverse the path at this step. Decide which objects to save in memory depending on your application*
-
-.. code-block:: python
-
-        step = gr.path_begin(path)
-        while(gr.get_handle_of_step(step) != n[6]):
-                step = gr.get_next_step(step)
-        # now step corresponds to the step handle preceeding our insertion
-        next_step = gr.get_next_step(step)
-        step = gr.insert_step(step, next_step, n[8]) #1
-        step = gr.insert_step(step, next_step, n[5]) #2
-        step = gr.insert_step(step, next_step, n[6]) #3
-
-Each call to :func:`odgi.graph.insert_step` returns the step handle pointing to the inserted node.  
-
-During the process of amending the path, the graph looks as follows:
-
-.. figure:: /img/exampleGraphPath.png
-        :align: center
+..
+        commenting out this section because path manipulation doesn't seem to work right now
+        Manipulating a path
+        ===================
+        .. DANGER::
+                Right now none of this works, because insert_step seems to cause a memory leak. 
         
-        Path before additions
-
-.. figure:: /img/exampleGraphPath3.png
-        :align: center
+        Say you wanted to edit this path to add the following edges in blue:
+        .. image:: /img/exampleGraphPath2.png
         
-        Path after line #1
-
-.. figure:: /img/exampleGraphPath4.png
-        :align: center
+        First, you need to get the step handles corresponding to `n6` and `n7`, and then insert the new nodes to the path with :func:`odgi.graph.insert_step`. *Note that if you had saved the step handles during path creation, it would not be necessary to traverse the path at this step. Decide which objects to save in memory depending on your application*
+        .. code-block:: python
+                step = gr.path_begin(path)
+                while(gr.get_handle_of_step(step) != n[6]):
+                        step = gr.get_next_step(step)
+                # now step corresponds to the step handle preceeding our insertion
+                next_step = gr.get_next_step(step)
+                step = gr.insert_step(step, next_step, n[8]) #1
+                step = gr.insert_step(step, next_step, n[5]) #2
+                step = gr.insert_step(step, next_step, n[6]) #3
+        Each call to :func:`odgi.graph.insert_step` returns the step handle pointing to the inserted node.  
+        During the process of amending the path, the graph looks as follows:
+        .. figure:: /img/exampleGraphPath.png
+                :align: center
+                
+                Path before additions
+        .. figure:: /img/exampleGraphPath3.png
+                :align: center
+                
+                Path after line #1
+        .. figure:: /img/exampleGraphPath4.png
+                :align: center
+                
+                Path after line #2
+        .. figure:: /img/exampleGraphPath2.png
+                :align: center
         
-        Path after line #2
-
-.. figure:: /img/exampleGraphPath2.png
-        :align: center
-        
-        Path after line #3
+                Path after line #3
 
 *******************************
 Saving and Loading ODGI Graphs

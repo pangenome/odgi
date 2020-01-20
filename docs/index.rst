@@ -11,6 +11,7 @@ Welcome to odgi's documentation!
 
    rst/install
    rst/tutorial
+   rst/glossary
    rst/api
 
 ------
