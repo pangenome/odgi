@@ -159,7 +159,7 @@ std::vector<sgd_term_t> linear_sgd_search(const HandleGraph& graph,
     uint64_t graph_length = 0;
     graph.for_each_handle([&](const handle_t& h) { graph_length += graph.get_length(h); });
     double bp_per_node = (double)graph_length/graph.get_node_count();
-    bf::basic_bloom_filter seen_pairs(0.9, graph.get_node_count() * bandwidth / bp_per_node);
+    bf::basic_bloom_filter seen_pairs(0.01, graph.get_node_count() * bandwidth / bp_per_node);
     std::hash<std::pair<handle_t,handle_t>> hasher;
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -205,7 +205,7 @@ std::vector<sgd_term_t> linear_sgd_path_search(const PathHandleGraph& graph,
     uint64_t graph_length = 0;
     graph.for_each_handle([&](const handle_t& h) { graph_length += graph.get_length(h); });
     double bp_per_node = (double)graph_length/graph.get_node_count();
-    bf::basic_bloom_filter seen_pairs(0.9, graph.get_node_count() * bandwidth / bp_per_node);
+    bf::basic_bloom_filter seen_pairs(0.01, graph.get_node_count() * bandwidth / bp_per_node);
     std::hash<std::pair<handle_t,handle_t>> hasher;
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -219,7 +219,7 @@ std::vector<sgd_term_t> linear_sgd_path_search(const PathHandleGraph& graph,
                 [&](const step_handle_t& step) {
                     step_handle_t s = step;
                     uint64_t dist = graph.get_length(h);
-                    while (graph.has_next_step(s) && dist < bandwidth/2) {
+                    while (graph.has_next_step(s) && dist < bandwidth) {
                         s = graph.get_next_step(s);
                         handle_t n = graph.get_handle_of_step(s);
                         if (graph.get_id(n) != h_id) {
@@ -235,25 +235,6 @@ std::vector<sgd_term_t> linear_sgd_path_search(const PathHandleGraph& graph,
                             }
                         }
                         dist += graph.get_length(n);
-                    }
-                    dist = 0;
-                    s = step;
-                    while (graph.has_previous_step(s) && dist < bandwidth/2) {
-                        s = graph.get_previous_step(s);
-                        handle_t n = graph.get_handle_of_step(s);
-                        dist += graph.get_length(n);
-                        if (graph.get_id(n) != h_id) {
-                            double weight = 1.0 / ((double)dist*dist);
-                            //double weight = 1.0 / dist;
-                            if (!seen_pairs.lookup(hasher(std::make_pair(h, n)))
-                                && !seen_pairs.lookup(hasher(std::make_pair(n, h)))) {
-                                double v = dis(gen);
-                                if (v < sampling_rate / dist) {
-                                    terms.push_back(sgd_term_t(h, n, dist, weight));
-                                    seen_pairs.add(hasher(std::make_pair(h, n)));
-                                }
-                            }
-                        }
                     }
                 });
         });
