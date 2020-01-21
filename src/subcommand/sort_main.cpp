@@ -41,12 +41,12 @@ int main_sort(int argc, char** argv) {
     args::Flag eades(parser, "eades", "use eades algorithm", {'e', "eades"});
     //args::Flag lazy(parser, "lazy", "use lazy topological algorithm (DAG only)", {'l', "lazy"});
     args::Flag lsgd(parser, "linear-sgd", "apply 1D (linear) SGD algorithm to organize graph", {'S', "linear-sgd"});
-    args::ValueFlag<uint64_t> lsgd_bandwidth(parser, "sgd-bandwidth", "bandwidth of linear SGD model", {'O', "sgd-bandwidth"});
-    args::ValueFlag<double> lsgd_sampling_rate(parser, "sgd-sampling-rate", "rate to sample pairs of nodes, scaled by squared graph distance", {'Q', "sgd-sampling-rate"});
+    args::ValueFlag<uint64_t> lsgd_bandwidth(parser, "sgd-bandwidth", "bandwidth of linear SGD model (default: 1000)", {'O', "sgd-bandwidth"});
+    args::ValueFlag<double> lsgd_sampling_rate(parser, "sgd-sampling-rate", "sample pairs of nodes with probability distance between them divided by the sampling rate (default: 20)", {'Q', "sgd-sampling-rate"});
     args::Flag lsgd_use_paths(parser, "sgd-use-paths", "use paths to structure internode distances in SGD", {'K', "sgd-use-paths"});
-    args::ValueFlag<uint64_t> lsgd_iter_max(parser, "sgd-iter-max", "max number of iterations for linear SGD model", {'T', "sgd-iter-max"});
-    args::ValueFlag<double> lsgd_eps(parser, "sgd-eps", "learning rate for linear SGD model", {'V', "sgd-eps"});
-    args::ValueFlag<double> lsgd_delta(parser, "sgd-delta", "learning rate for linear SGD model", {'C', "sgd-delta"});
+    args::ValueFlag<uint64_t> lsgd_iter_max(parser, "sgd-iter-max", "max number of iterations for linear SGD model (default: 30)", {'T', "sgd-iter-max"});
+    args::ValueFlag<double> lsgd_eps(parser, "sgd-eps", "final learning rate for linear SGD model (default: 0.01)", {'V', "sgd-eps"});
+    args::ValueFlag<double> lsgd_delta(parser, "sgd-delta", "threshold of maximum node displacement (approximately in bp) at which to stop SGD (default: 0)", {'C', "sgd-delta"});
     args::Flag two(parser, "two", "use two-way (max of head-first and tail-first) topological algorithm", {'w', "two-way"});
     args::Flag randomize(parser, "random", "randomly sort the graph", {'r', "random"});
     args::Flag no_seeds(parser, "no-seeds", "don't use heads or tails to seed topological sort", {'n', "no-seeds"});
@@ -102,8 +102,8 @@ int main_sort(int argc, char** argv) {
     // default settings
     uint64_t df_chunk_size = args::get(depth_first_chunk) ? args::get(depth_first_chunk) : 1000;
     uint64_t bf_chunk_size = args::get(breadth_first_chunk) ? args::get(breadth_first_chunk) : std::numeric_limits<uint64_t>::max();
-    uint64_t sgd_bandwidth = args::get(lsgd_bandwidth) ? args::get(lsgd_bandwidth) : 100;
-    double sgd_sampling_rate = args::get(lsgd_sampling_rate) ? args::get(lsgd_sampling_rate) : 10;
+    uint64_t sgd_bandwidth = args::get(lsgd_bandwidth) ? args::get(lsgd_bandwidth) : 1000;
+    double sgd_sampling_rate = args::get(lsgd_sampling_rate) ? args::get(lsgd_sampling_rate) : 20;
     double sgd_iter_max = args::get(lsgd_iter_max) ? args::get(lsgd_iter_max) : 30;
     double sgd_eps = args::get(lsgd_eps) ? args::get(lsgd_eps) : 0.01;
     double sgd_delta = args::get(lsgd_delta) ? args::get(lsgd_delta) : 0;
