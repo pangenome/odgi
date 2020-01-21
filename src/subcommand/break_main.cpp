@@ -71,7 +71,7 @@ int main_break(int argc, char** argv) {
             = algorithms::break_cycles(graph,
                                        args::get(max_cycle_size),
                                        args::get(max_search_bp));
-        if (removed_edges) {
+        if (removed_edges > 0) {
             graph.clear_paths();
         }
     }

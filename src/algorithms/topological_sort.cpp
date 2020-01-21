@@ -521,22 +521,23 @@ std::vector<handle_t> breadth_first_topological_order(const HandleGraph& g, cons
                 seen_bp += g.get_length(h);
                 unvisited.set(i, 0);
             },
-            [&unvisited](const handle_t& l, const handle_t& h) {
+            [&unvisited](const handle_t& h) {
                 uint64_t i = number_bool_packing::unpack_number(h);
                 return unvisited.at(i)==0;
             },
+            [](const handle_t& l, const handle_t& h) { return false; },
             [&seen_bp,&chunk_size](void) { return seen_bp > chunk_size; },
             seeds,
             { },
             false); // don't use bidirectional search
         // get another seed
+        prev_max_root = curr_max_root;
+        prev_max_length = curr_max_length;
         if (unvisited.rank1(unvisited.size())!=0) {
             uint64_t i = unvisited.select1(0);
             handle_t h = number_bool_packing::pack(i, false);
             seeds = { h };
         }
-        prev_max_root = curr_max_root;
-        prev_max_length = curr_max_length;
     }
     //std::cerr << "order size " << order.size() << " graph size " << g.get_node_count() << std::endl;
     //assert(order.size() == g.get_node_count());

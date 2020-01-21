@@ -209,7 +209,6 @@ int main_sort(int argc, char** argv) {
                     std::reverse(order.begin(), order.end());
                     break;
                 case 'm':
-
                     order = algorithms::mondriaan_sort(graph,
                                                        args::get(mondriaan_n_parts),
                                                        args::get(mondriaan_epsilon),
@@ -217,6 +216,11 @@ int main_sort(int argc, char** argv) {
                     break;
                 default:
                     break;
+                }
+                if (order.size() != graph.get_node_count()) {
+                    std::cerr << "[odgi sort] Error: expected " << graph.get_node_count() << " handles in the order "
+                              << "but got " << order.size() << std::endl;
+                    assert(false);
                 }
                 graph.apply_ordering(order, true);
             }

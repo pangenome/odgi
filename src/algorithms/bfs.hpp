@@ -1,6 +1,7 @@
 #pragma once
 
 #include <handlegraph/handle_graph.hpp>
+#include <handlegraph/util.hpp>
 #include <vector>
 #include <set>
 #include <deque>
@@ -19,8 +20,10 @@ void bfs(
     // the fourth parameter gives the search depth at this point
     // return true to continue through this node, false to treat it like a sink
     const std::function<void(const handle_t&, const uint64_t&, const uint64_t&, const uint64_t&)>& handle_fn,
-    // the edge we will traverse to get to a new handle, returns true if we should continue
-    const std::function<bool(const handle_t&, const handle_t&)>& seen_fn,
+    // should we consider this handle and its edges?, returns false if we should continue
+    const std::function<bool(const handle_t&)>& seen_handle_fn,
+    // the edge we will traverse to get to a new handle, returns false if we should continue across the edge
+    const std::function<bool(const handle_t&, const handle_t&)>& seen_edge_fn,
     // called to check if we should stop the DFS; we stop when true is returned.
     const std::function<bool(void)>& break_fn,
     // start only at these node traversals

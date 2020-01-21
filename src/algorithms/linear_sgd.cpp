@@ -188,7 +188,8 @@ std::vector<sgd_term_t> linear_sgd_search(const HandleGraph& graph,
                         seen_bp += graph.get_length(n);
                     }
                 },
-                [&](const handle_t& l, const handle_t& n) { return seen.count(n) > 0; },
+                [&](const handle_t& n) { return seen.count(n) > 0; },
+                [](const handle_t& l, const handle_t& n) { return false; },
                 [&](void) { return seen_bp > bandwidth; },
                 { h },
                 { },

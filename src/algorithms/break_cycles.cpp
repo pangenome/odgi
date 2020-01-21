@@ -52,6 +52,7 @@ std::vector<edge_t> edges_inducing_cycles(
                     }
                     seen_bp += graph.get_length(h);
                 },
+                [](const handle_t& h) { return false; },
                 [&root_handle,&edges_to_remove](const handle_t& p, const handle_t& h) {
                     edge_t e = std::make_pair(p, h);
                     if (h == root_handle) {

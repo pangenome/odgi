@@ -10,7 +10,8 @@ using namespace handlegraph;
 void bfs(
     const HandleGraph& graph,
     const std::function<void(const handle_t&, const uint64_t&, const uint64_t&, const uint64_t&)>& handle_fn,
-    const std::function<bool(const handle_t&, const handle_t&)>& seen_fn,
+    const std::function<bool(const handle_t&)>& seen_handle_fn,
+    const std::function<bool(const handle_t&, const handle_t&)>& seen_edge_fn,
     const std::function<bool(void)>& break_fn,
     const std::vector<handle_t>& sources,
     const std::vector<handle_t>& sinks,
@@ -37,29 +38,29 @@ void bfs(
         uint64_t curr_depth = curr.depth;
         // pop the handle off the back of the queue
         todo.pop_back();
-        //if (!seen_fn(handle)) {
-        // handle the handle
-        handle_fn(handle, root, curr_length, curr_depth);
-        curr_length += graph.get_length(handle);
-        ++curr_depth;
-        // check if we've hit our break condition
-        if (break_fn()) { return; }
-        // check if we should stop here
-        if (!stops.count(handle)) {
-            // add the next nodes to our queue
-            auto enqueue =
-                [&todo,&handle,&seen_fn,&root,&curr_length,&curr_depth]
-                (const handle_t& next) {
-                    if (!seen_fn(handle, next)) {
-                        todo.push_back({next, root, curr_length, curr_depth});
-                    }
-                };
-            graph.follow_edges(handle, false, enqueue);
-            if (bidirectional) {
-                graph.follow_edges(handle, true, enqueue);
+        if (!seen_handle_fn(handle)) {
+            // handle the handle
+            handle_fn(handle, root, curr_length, curr_depth);
+            curr_length += graph.get_length(handle);
+            ++curr_depth;
+            // check if we've hit our break condition
+            if (break_fn()) { return; }
+            // check if we should stop here
+            if (!stops.count(handle)) {
+                // add the next nodes to our queue
+                auto enqueue =
+                    [&todo,&handle,&seen_edge_fn,&root,&curr_length,&curr_depth]
+                    (const handle_t& next) {
+                        if (!seen_edge_fn(handle, next)) {
+                            todo.push_back({next, root, curr_length, curr_depth});
+                        }
+                    };
+                graph.follow_edges(handle, false, enqueue);
+                if (bidirectional) {
+                    graph.follow_edges(handle, true, enqueue);
+                }
             }
         }
-        //}
     }
 }
 
