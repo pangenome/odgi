@@ -76,7 +76,7 @@ Which will output the following:
         n1: TTGG
         n2: CCGT
 
-A map of the data can be generated using :func:`odgi.graph.to_gfa`, which will work regardless of any internal loops
+A map of the data can be generated using :func:`odgi.graph.to_gfa`.
 
 .. code-block:: python
 
@@ -85,7 +85,7 @@ A map of the data can be generated using :func:`odgi.graph.to_gfa`, which will w
 Creating a Path
 ===============
 
-Generating a linear sequence from this graph could be done in infinitely many ways, due to the interal loop betwee `n5`, `n6`, and `n8`.  If we wanted to define a single consensus sequence, we would do this by defining a path.
+Generating a linear sequence from this graph could be done in infinitely many ways, due to the interal loop between `n5`, `n6`, and `n8`.  If we wanted to define a single consensus sequence, we would do this by defining a path.
 
 .. image:: /img/exampleGraphPath.png
 
@@ -187,3 +187,50 @@ Which will output the following:
 *******************************
 Saving and Loading ODGI Graphs
 *******************************
+
+Graphs can be saved and loaded through the :func:`odgi.graph.serialize` and :func:`odgi.graph.load` methods.  
+
+Graph File Example
+==================
+
+If you wish to save the graph from the above session, that can be done with:
+
+.. code-block:: python
+
+        gr.serialize("example_graph.odgi")
+
+This can be loaded into a new python session by using:
+
+.. code-block:: python
+        
+        gr = odgi.graph()
+        gr.load("example_graph.odgi")
+
+Loading in Pre-Existing Data
+============================
+
+Provided that data has been serialized in ODGI format, it is possible to read it directly from a file.  Download :download:`this file <../exdata/cactus-brca2.odgi>` and load it into python with:
+
+.. code-block:: python
+        
+        brca2 = odgi.graph()
+        brca2.load("cactus-brca2.odgi")
+
+We can poke around this data and get the sequence of the path with:
+
+.. code-block:: python
+
+        path_handle = [] 
+        handles = []
+        brca2.for_each_path_handle(lambda y: path_handle.append(y))
+        brca2.for_each_step_in_path(path_handle[0], 
+                lambda y: handles.append(brca2.get_handle_of_step(y)))
+        sequence = ""
+        for handle in handles:
+                sequence += brca2.get_sequence(handle)
+        print(sequence)
+
+Reading in a Graph from a Different Format
+==========================================
+
+Graph assembies can be created with `VG <https://github.com/vgteam/vg>`_.  Currently the method to convert to odgi format is broken, but graphs can be converted to .json format and subsequently converted to odgi with :download:`this script <../exdata/jsoner.py>`.
