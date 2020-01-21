@@ -42,12 +42,13 @@ void bfs(
         auto& curr = todo.back();
         handle_t handle = curr.handle;
         uint64_t root = curr.root;
-        uint64_t curr_length = curr.length + graph.get_length(handle);
+        uint64_t curr_length = curr.length;
         // pop the handle off the back of the queue
         todo.pop_back();
         if (!seen_fn(handle)) {
             // handle the handle
             handle_fn(handle, root, curr_length);
+            curr_length += graph.get_length(handle);
             // check if we've hit our break condition
             if (break_fn()) { return; }
             // check if we should stop here

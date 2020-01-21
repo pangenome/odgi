@@ -49,3 +49,6 @@
 [submodule "deps/structures"]
 	path = deps/structures
 	url = https://github.com/jeizenga/structures.git
+[submodule "deps/libbf"]
+	path = deps/libbf
+	url = https://github.com/ekg/libbf.git
