@@ -16,10 +16,11 @@ void bfs(
     // called when a given node orientation is first encountered
     // the second parameter gives the rank of the root among the input set of seeds
     // the third parameter gives the cumulative length from the search root that led to this handle
+    // the fourth parameter gives the search depth at this point
     // return true to continue through this node, false to treat it like a sink
-    const std::function<void(const handle_t&, const uint64_t&, const uint64_t&)>& handle_fn,
-    // have we seen this handle before?
-    const std::function<bool(const handle_t&)>& seen_fn,
+    const std::function<void(const handle_t&, const uint64_t&, const uint64_t&, const uint64_t&)>& handle_fn,
+    // the edge we will traverse to get to a new handle, returns true if we should continue
+    const std::function<bool(const handle_t&, const handle_t&)>& seen_fn,
     // called to check if we should stop the DFS; we stop when true is returned.
     const std::function<bool(void)>& break_fn,
     // start only at these node traversals
@@ -34,6 +35,7 @@ struct bfs_state_t {
     handle_t handle;
     uint64_t root;
     uint64_t length;
+    uint64_t depth;
 };
 
 }

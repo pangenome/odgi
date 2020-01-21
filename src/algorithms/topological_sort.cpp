@@ -513,7 +513,7 @@ std::vector<handle_t> breadth_first_topological_order(const HandleGraph& g, cons
             [&g,&order_raw,&unvisited,&seen_bp,
              &prev_max_root,&curr_max_root,
              &prev_max_length,&curr_max_length]
-            (const handle_t& h, const uint64_t& r, const uint64_t& l) {
+            (const handle_t& h, const uint64_t& r, const uint64_t& l, const uint64_t& d) {
                 uint64_t i = number_bool_packing::unpack_number(h);
                 order_raw.push_back({h, r+prev_max_root, l+prev_max_length});
                 curr_max_root = std::max(r+prev_max_root, curr_max_root);
@@ -521,7 +521,7 @@ std::vector<handle_t> breadth_first_topological_order(const HandleGraph& g, cons
                 seen_bp += g.get_length(h);
                 unvisited.set(i, 0);
             },
-            [&unvisited](const handle_t& h) {
+            [&unvisited](const handle_t& l, const handle_t& h) {
                 uint64_t i = number_bool_packing::unpack_number(h);
                 return unvisited.at(i)==0;
             },
