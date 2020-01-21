@@ -18,13 +18,13 @@ int main_break(int argc, char** argv) {
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
-    args::ArgumentParser parser("break cycles in the graph");
+    args::ArgumentParser parser("break cycles in the graph (drops paths)");
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> odgi_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> odgi_out_file(parser, "FILE", "store the graph in this file", {'o', "out"});
     args::ValueFlag<uint64_t> max_cycle_size(parser, "N", "maximum cycle length to break", {'c', "cycle-max-bp"});
     args::ValueFlag<uint64_t> max_search_bp(parser, "N", "maximum number of bp per BFS from any node", {'s', "max-search-bp"});
-    //args::Flag debug(parser, "debug", "print information about the layout", {'d', "debug"});
+    args::Flag show(parser, "show", "print edges we would remove", {'d', "show"});
 
     try {
         parser.ParseCLI(argc, argv);
@@ -55,14 +55,25 @@ int main_break(int argc, char** argv) {
     }
 
     // break cycles
-    std::vector<edge_t> cycle_edges = algorithms::edges_inducing_cycles(graph,
-                                                                        args::get(max_cycle_size),
-                                                                        args::get(max_search_bp));
-    for (auto& e : cycle_edges) {
-        std::cerr << graph.get_id(e.first) << (graph.get_is_reverse(e.first)?"-":"+")
-                  << " -> "
-                  << graph.get_id(e.second) << (graph.get_is_reverse(e.second)?"-":"+")
-                  << std::endl;
+    if (args::get(show)) {
+        std::vector<edge_t> cycle_edges
+            = algorithms::edges_inducing_cycles(graph,
+                                                args::get(max_cycle_size),
+                                                args::get(max_search_bp));
+        for (auto& e : cycle_edges) {
+            std::cout << graph.get_id(e.first) << (graph.get_is_reverse(e.first)?"-":"+")
+                      << " -> "
+                      << graph.get_id(e.second) << (graph.get_is_reverse(e.second)?"-":"+")
+                      << std::endl;
+        }
+    } else {
+        uint64_t removed_edges
+            = algorithms::break_cycles(graph,
+                                       args::get(max_cycle_size),
+                                       args::get(max_search_bp));
+        if (removed_edges) {
+            graph.clear_paths();
+        }
     }
 
     std::string outfile = args::get(odgi_out_file);

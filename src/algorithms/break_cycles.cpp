@@ -81,6 +81,18 @@ std::vector<edge_t> edges_inducing_cycles(
     return edges;
 }
 
+uint64_t break_cycles(
+    DeletableHandleGraph& graph,
+    const uint64_t& max_cycle_size,
+    const uint64_t& max_search_bp) {
+
+    std::vector<edge_t> edges_to_remove = edges_inducing_cycles(graph, max_cycle_size, max_search_bp);
+    for (auto& edge : edges_to_remove) {
+        graph.destroy_edge(edge);
+    }
+    return edges_to_remove.size();
+}
+
 }
 
 }
