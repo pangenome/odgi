@@ -170,7 +170,7 @@ std::vector<sgd_term_t> linear_sgd_search(const HandleGraph& graph,
             uint64_t h_id = graph.get_id(h);
             ska::flat_hash_set<handle_t> seen;
             bfs(graph,
-                [&](const handle_t& n, const uint64_t& depth, const uint64_t& dist) {
+                [&](const handle_t& n, const uint64_t& root, const uint64_t& dist, const uint64_t& depth) {
                     seen.insert(n);
                     if (graph.get_id(n) != h_id) {
                         double weight = 1.0 / ((double)dist*dist);
@@ -189,6 +189,7 @@ std::vector<sgd_term_t> linear_sgd_search(const HandleGraph& graph,
                     }
                 },
                 [&](const handle_t& n) { return seen.count(n) > 0; },
+                [](const handle_t& l, const handle_t& n) { return false; },
                 [&](void) { return seen_bp > bandwidth; },
                 { h },
                 { },
