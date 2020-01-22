@@ -60,11 +60,13 @@ std::vector<double> linear_sgd(const PathHandleGraph& graph,
                         work_todo.store(false);
                     } else {
 //#pragma omp critical (cerr)
+                        /*
                         std::cerr << iteration
                                   << ", eta: " << eta.load()
                                   << ", Delta: " << Delta_max.load()
                                   << " terms " << terms.size()
                                   << " updates " << term_updates.load() << std::endl;
+                        */
                         eta.store(etas[iteration]); // update our learning rate
                         Delta_max.store(delta); // set our delta max to the threshold
                     }
