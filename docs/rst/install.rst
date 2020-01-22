@@ -6,7 +6,7 @@ Build directions
 =================
 
 It is straightforward to build ODGI on a unix-based machine.
-First, obtain a copy of the rep and its submodules:
+First, obtain a copy of the repository and its submodules:
 
 .. code-block:: bash 
 
