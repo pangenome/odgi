@@ -87,16 +87,46 @@ std::vector<edge_t> edges_inducing_cycles(
     return edges;
 }
 
+std::vector<edge_t> edges_inducing_cycles_iter(
+    const HandleGraph& graph,
+    const uint64_t& max_cycle_size,
+    const uint64_t& max_search_bp,
+    const uint64_t& iter_max) {
+    std::vector<edge_t> cycle_edges;
+    for (uint64_t i = 0; i < iter_max; ++i) {
+        std::vector<edge_t> new_cycle_edges
+            = algorithms::edges_inducing_cycles(graph,
+                                                max_cycle_size,
+                                                max_search_bp);
+        if (new_cycle_edges.empty()) break;
+        cycle_edges.reserve(cycle_edges.size() + new_cycle_edges.size());
+        cycle_edges.insert(cycle_edges.end(), new_cycle_edges.begin(), new_cycle_edges.end());
+    }
+    return cycle_edges;
+}
+
 uint64_t break_cycles(
     DeletableHandleGraph& graph,
     const uint64_t& max_cycle_size,
-    const uint64_t& max_search_bp) {
+    const uint64_t& max_search_bp,
+    const uint64_t& iter_max) {
 
-    std::vector<edge_t> edges_to_remove = edges_inducing_cycles(graph, max_cycle_size, max_search_bp);
-    for (auto& edge : edges_to_remove) {
-        graph.destroy_edge(edge);
+    uint64_t removed_edges = 0;
+    for (uint64_t i = 0; i < iter_max; ++i) {
+        std::vector<edge_t> edges_to_remove
+            = algorithms::edges_inducing_cycles(graph,
+                                                max_cycle_size,
+                                                max_search_bp);
+        if (edges_to_remove.empty()) {
+            break;
+        }
+        for (auto& edge : edges_to_remove) {
+            graph.destroy_edge(edge);
+        }
+        removed_edges += edges_to_remove.size();
     }
-    return edges_to_remove.size();
+
+    return removed_edges;
 }
 
 }

@@ -18,11 +18,12 @@ std::vector<edge_t> edges_inducing_cycles(
     const uint64_t& max_cycle_size,
     const uint64_t& max_search_bp);
 
-// breaks cycles, returning how many edges we removed
+// breaks cycles, returning how many edges we removed, iterating up to iter_max times
 uint64_t break_cycles(
     DeletableHandleGraph& graph,
     const uint64_t& max_cycle_size,
-    const uint64_t& max_search_bp);
+    const uint64_t& max_search_bp,
+    const uint64_t& iter_max);
 
 }
 
