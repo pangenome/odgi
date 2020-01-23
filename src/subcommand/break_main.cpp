@@ -24,6 +24,7 @@ int main_break(int argc, char** argv) {
     args::ValueFlag<std::string> odgi_out_file(parser, "FILE", "store the graph in this file", {'o', "out"});
     args::ValueFlag<uint64_t> max_cycle_size(parser, "N", "maximum cycle length to break", {'c', "cycle-max-bp"});
     args::ValueFlag<uint64_t> max_search_bp(parser, "N", "maximum number of bp per BFS from any node", {'s', "max-search-bp"});
+    args::ValueFlag<uint64_t> repeat_up_to(parser, "N", "iterate cycle breaking up to N times, or stop if no new edges are removed", {'u', "repeat-up-to"});
     args::Flag show(parser, "show", "print edges we would remove", {'d', "show"});
 
     try {
@@ -54,6 +55,8 @@ int main_break(int argc, char** argv) {
         }
     }
 
+    uint64_t iter_max = args::get(repeat_up_to) ? args::get(repeat_up_to) : 1;
+
     // break cycles
     if (args::get(show)) {
         std::vector<edge_t> cycle_edges
@@ -70,7 +73,8 @@ int main_break(int argc, char** argv) {
         uint64_t removed_edges
             = algorithms::break_cycles(graph,
                                        args::get(max_cycle_size),
-                                       args::get(max_search_bp));
+                                       args::get(max_search_bp),
+                                       iter_max);
         if (removed_edges > 0) {
             graph.clear_paths();
         }
