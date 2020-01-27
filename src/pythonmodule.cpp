@@ -54,7 +54,7 @@ PYBIND11_MODULE(odgi, m)
               [](const odgi::graph_t& g, const handlegraph::handle_t& handle, bool go_left, const std::function<bool(const handlegraph::handle_t&)>& iteratee) {
                   return g.follow_edges(handle, go_left, [&iteratee](const handlegraph::handle_t& h) { iteratee(h); return true; });
               },
-             "Follow edges starting at a given node.")
+             "Loop over all the gandles to next/previous (False and True, respectively) nodes. Passes them to a callback which returns False to stop iterating and True to continue.  Returns True if we finished and False if we stopped early.")
         .def("for_each_handle",
              [](const odgi::graph_t& g, const std::function<bool(const handlegraph::handle_t&)>& iteratee, bool parallel) {
                  return g.for_each_handle([&iteratee](const handlegraph::handle_t& h){ iteratee(h); return true; }, parallel);
