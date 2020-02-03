@@ -209,7 +209,7 @@ This can be loaded into a new python session by using:
 Loading in Pre-Existing Data
 ============================
 
-Provided that data has been serialized in ODGI format, it is possible to read it directly from a file.  Download :download:`this file <../exdata/cactus-brca2.odgi>` and load it into python with:
+Provided that data has been serialized in ODGI format, it is possible to read it directly from a file.  Download a `*.odgi file` and load it into python with:
 
 .. code-block:: python
         
