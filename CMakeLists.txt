@@ -184,18 +184,6 @@ ExternalProject_Add(structures
 ExternalProject_Get_property(structures SOURCE_DIR)
 set(structures_INCLUDE "${SOURCE_DIR}/src/include")
 
-ExternalProject_Add(sonlib
-  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/pinchSonLib"
-  BUILD_IN_SOURCE TRUE
-  INSTALL_COMMAND ""
-  UPDATE_COMMAND ""
-  BUILD_COMMAND "make"
-  CONFIGURE_COMMAND "")
-ExternalProject_Get_property(sonlib SOURCE_DIR)
-set(sonLib_inc_INCLUDE "${SOURCE_DIR}/sonLib/C/inc")
-set(sonLib_lib_INCLUDE "${SOURCE_DIR}/sonLib/lib")
-set(sonLib_LIB "${SOURCE_DIR}/sonLib/lib")
-
 ExternalProject_Add(picosha256
   SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/PicoSHA2"
   UPDATE_COMMAND ""
@@ -255,7 +243,6 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/split.cpp
   ${CMAKE_SOURCE_DIR}/src/node.cpp
   ${CMAKE_SOURCE_DIR}/src/subgraph.cpp
-  ${CMAKE_SOURCE_DIR}/src/cactus.cpp
   #${CMAKE_SOURCE_DIR}/src/snarls.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/driver.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/handle.cpp
@@ -271,7 +258,6 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/unitig_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/viz_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/paths_main.cpp
-  ${CMAKE_SOURCE_DIR}/src/subcommand/cactus_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/prune_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/simplify_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/subset_main.cpp
@@ -324,7 +310,6 @@ set(odgi_DEPS
     intervaltree
     lodepng
     structures
-    sonlib
     picosha256
     sgd2
     mondriaan
@@ -348,8 +333,6 @@ set(odgi_INCLUDES
   "${lodepng_INCLUDE}"
   "${bbhash_INCLUDE}"
   "${structures_INCLUDE}"
-  "${sonLib_lib_INCLUDE}"
-  "${sonLib_inc_INCLUDE}"
   "${picosha256_INCLUDE}"
   "${sgd2_INCLUDE}"
   "${mondriaan_INCLUDE}"
@@ -361,9 +344,6 @@ set(odgi_LIBS
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort64.a"
   "${handlegraph_LIB}/libhandlegraph.a"
   "${lodepng_LIB}/liblodepng.a"
-  "${sonLib_LIB}/stPinchesAndCacti.a"
-  "${sonLib_LIB}/3EdgeConnected.a"
-  "${sonLib_LIB}/sonLib.a"
   "${mondriaan_LIB}/libmondriaan.a"
   "${libbf_LIB}/libbf.a"
   "-ldl")
@@ -382,7 +362,6 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/threads.hpp
   ${CMAKE_SOURCE_DIR}/src/btypes.hpp
   ${CMAKE_SOURCE_DIR}/src/subgraph.hpp
-  ${CMAKE_SOURCE_DIR}/src/cactus.hpp
   ${CMAKE_SOURCE_DIR}/src/split.hpp
   ${CMAKE_SOURCE_DIR}/src/unittest/driver.hpp
   ${CMAKE_SOURCE_DIR}/src/io_helper.hpp

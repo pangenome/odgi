@@ -34,9 +34,6 @@
 [submodule "deps/lodepng"]
 	path = deps/lodepng
 	url = https://github.com/ekg/lodepng.git
-[submodule "deps/pinchSonLib"]
-	path = deps/pinchSonLib
-	url = https://github.com/vgteam/pinchSonLib.git
 [submodule "deps/PicoSHA2"]
 	path = deps/PicoSHA2
 	url = https://github.com/okdshin/PicoSHA2.git
