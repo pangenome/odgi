@@ -1,5 +1,7 @@
 # odgi
 
+[![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat)](http://bioconda.github.io/recipes/odgi/README.html)
+
 ## optimized dynamic genome/graph implemenation
 
 Representing large genomic [variation graphs](https://github.com/vgteam/vg) with minimal memory overhead requires a careful encoding of the graph entities.
