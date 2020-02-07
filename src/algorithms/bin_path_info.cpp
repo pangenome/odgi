@@ -3,13 +3,6 @@
 namespace odgi {
 namespace algorithms {
 
-int signum(double value){
-	/*Used for approximating medians without a list.  Caps values at -1,0, or 1 */
-	if(value < -1){ return -1;}
-	if(value > 1){return 1;}
-	return 0;
-}
-
 void bin_path_info(const PathHandleGraph& graph,
                    const std::string& prefix_delimiter,
                    const std::function<void(const std::string&,
