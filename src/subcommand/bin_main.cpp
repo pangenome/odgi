@@ -105,7 +105,8 @@ int main_bin(int argc, char** argv) {
             std::cout << "[" << bin_id << ","
                       << info.mean_cov << ","
                       << info.mean_inv << ","
-                      << info.mean_pos << "]";
+                      << info.mean_pos << ","
+					  << info.center_nucleotide << "]";
             if (i+1 != bins.size()) {
                 std::cout << ",";
             }
@@ -144,7 +145,8 @@ int main_bin(int argc, char** argv) {
                           << bin_id << "\t"
                           << info.mean_cov << "\t"
                           << info.mean_inv << "\t"
-                          << info.mean_pos << std::endl;
+                          << info.mean_pos << "\t"
+						  << info.center_nucleotide << std::endl;
             }
         }
     };

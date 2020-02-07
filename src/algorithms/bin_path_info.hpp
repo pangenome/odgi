@@ -23,6 +23,7 @@ struct path_info_t {
     double mean_cov;
     double mean_inv;
     double mean_pos;
+    long int center_nucleotide;
 };
 
 void bin_path_info(const PathHandleGraph& graph,
