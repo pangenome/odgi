@@ -3,6 +3,13 @@
 namespace odgi {
 namespace algorithms {
 
+int signum(double value){
+	/*Used for approximating medians without a list.  Caps values at -1,0, or 1 */
+	if(value < -1){ return -1;}
+	if(value > 1){return 1;}
+	return 0;
+}
+
 void bin_path_info(const PathHandleGraph& graph,
                    const std::string& prefix_delimiter,
                    const std::function<void(const std::string&,
@@ -41,7 +48,7 @@ void bin_path_info(const PathHandleGraph& graph,
             uint64_t path_pos = 0;
             int64_t last_bin = 0; // flag meaning "null bin"
             uint64_t last_pos_in_bin = 0;
-	    uint64_t nucleotide_count = 0;
+            uint64_t nucleotide_count = 0;
             bool last_is_rev = false;
             graph.for_each_step_in_path(path, [&](const step_handle_t& occ) {
                     handle_t h = graph.get_handle_of_step(occ);
@@ -62,8 +69,8 @@ void bin_path_info(const PathHandleGraph& graph,
                             ++bins[curr_bin].mean_inv;
                         }
                         bins[curr_bin].mean_pos += path_pos++;
-			nucleotide_count += 1;
-			bins[curr_bin].center_nucleotide += nucleotide_count;
+                        nucleotide_count += 1;
+						bins[curr_bin].position_history.push_back(nucleotide_count);
                         last_bin = curr_bin;
                         last_is_rev = is_rev;
                         last_pos_in_bin = curr_pos_in_bin;
@@ -75,11 +82,9 @@ void bin_path_info(const PathHandleGraph& graph,
             for (auto& entry : bins) {
                 auto& v = entry.second;
                 v.mean_inv /= (v.mean_cov ? v.mean_cov : 1);
-		v.center_nucleotide /= v.mean_cov; // center_nucleotide is a sum of posititions, dividing by hits gets you average nucleotide position
                 v.mean_cov /= bin_width;
-		//mean_pos starts as the number of bins  -.5 to place it in the center
-		//v.center_nucleotide = int(v.center_nucleotide - 0.5) * bin_width; 
                 v.mean_pos /= bin_width * path_length * v.mean_cov;
+				v.center_nucleotide = v.position_history[v.position_history.size()/2];
             }
             handle_path(graph.get_path_name(path), links, bins);
         });
