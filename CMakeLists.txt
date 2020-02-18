@@ -267,6 +267,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/layout_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/flatten_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/break_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/find_bin.main.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/hash.cpp
@@ -294,8 +295,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/temp_file.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/linear_index.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/linear_sgd.cpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/break_cycles.cpp
-  )
+  ${CMAKE_SOURCE_DIR}/src/algorithms/break_cycles.cpp)
 
 set(odgi_DEPS 
     sdsl-lite

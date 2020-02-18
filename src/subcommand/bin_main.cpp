@@ -23,7 +23,7 @@ int main_bin(int argc, char** argv) {
     args::ValueFlag<std::string> path_delim(parser, "path-delim", "annotate rows by prefix and suffix of this delimiter", {'D', "path-delim"});
     args::Flag output_json(parser, "write-json", "write JSON format output including additional path positional information", {'j', "json"});
     args::Flag aggregate_delim(parser, "aggregate-delim", "aggregate on path prefix delimiter", {'a', "aggregate-delim"});
-    args::Flag index_json(parser, "index-json", "index the bins in the JSON by path position", {'b', "index-json"});
+    args::Flag index_json(parser, "index-bins", "index the bins in the JSON by path position", {'b', "bin-index"});
     args::ValueFlag<uint64_t> num_bins(parser, "N", "number of bins", {'n', "num-bins"});
     args::ValueFlag<uint64_t> bin_width(parser, "bp", "width of each bin in basepairs along the graph vector", {'w', "bin-width"});
     try {
