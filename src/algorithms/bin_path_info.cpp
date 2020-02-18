@@ -63,7 +63,10 @@ void bin_path_info(const PathHandleGraph& graph,
                         }
                         bins[curr_bin].mean_pos += path_pos++;
                         nucleotide_count += 1;
-						bins[curr_bin].position_history.push_back(nucleotide_count);
+						if(bins[curr_bin].first_nucleotide == 0){
+							bins[curr_bin].first_nucleotide = nucleotide_count;
+						}
+						bins[curr_bin].last_nucleotide = nucleotide_count;
                         last_bin = curr_bin;
                         last_is_rev = is_rev;
                         last_pos_in_bin = curr_pos_in_bin;
@@ -77,7 +80,6 @@ void bin_path_info(const PathHandleGraph& graph,
                 v.mean_inv /= (v.mean_cov ? v.mean_cov : 1);
                 v.mean_cov /= bin_width;
                 v.mean_pos /= bin_width * path_length * v.mean_cov;
-				v.center_nucleotide = v.position_history[v.position_history.size()/2];
             }
             handle_path(graph.get_path_name(path), links, bins);
         });

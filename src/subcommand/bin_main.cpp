@@ -106,7 +106,8 @@ int main_bin(int argc, char** argv) {
                       << info.mean_cov << ","
                       << info.mean_inv << ","
                       << info.mean_pos << ","
-					  << info.center_nucleotide << "]";
+					  << info.first_nucleotide << ","
+					  << info.last_nucleotide << "]";
             if (i+1 != bins.size()) {
                 std::cout << ",";
             }
@@ -146,7 +147,8 @@ int main_bin(int argc, char** argv) {
                           << info.mean_cov << "\t"
                           << info.mean_inv << "\t"
                           << info.mean_pos << "\t"
-						  << info.center_nucleotide << std::endl;
+						  << info.first_nucleotide << "\t"
+						  << info.last_nucleotide << std::endl;
             }
         }
     };
