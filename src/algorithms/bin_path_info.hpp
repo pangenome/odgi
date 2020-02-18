@@ -31,9 +31,9 @@ void bin_path_info(const PathHandleGraph& graph,
                                             const std::vector<std::pair<uint64_t, uint64_t>>&,
                                             const std::map<uint64_t, algorithms::path_info_t>&)>& handle_path,
                    const std::function<void(const uint64_t&, const std::string&)>& handle_sequence,
+                   // const std::function<void(const std::map<std::string&, std::vector<uint64_t&>>)> handle_index, // TODO @ekg Is this correct like that?
                    uint64_t num_bins = 0,
-                   uint64_t bin_width = 0);
-
-
+                   uint64_t bin_width = 0,
+                   bool index_json = false);
 }
 }

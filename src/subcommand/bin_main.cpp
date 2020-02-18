@@ -23,6 +23,7 @@ int main_bin(int argc, char** argv) {
     args::ValueFlag<std::string> path_delim(parser, "path-delim", "annotate rows by prefix and suffix of this delimiter", {'D', "path-delim"});
     args::Flag output_json(parser, "write-json", "write JSON format output including additional path positional information", {'j', "json"});
     args::Flag aggregate_delim(parser, "aggregate-delim", "aggregate on path prefix delimiter", {'a', "aggregate-delim"});
+    args::Flag index_json(parser, "index-json", "index the bins in the JSON by path position", {'b', "index-json"});
     args::ValueFlag<uint64_t> num_bins(parser, "N", "number of bins", {'n', "num-bins"});
     args::ValueFlag<uint64_t> bin_width(parser, "bp", "width of each bin in basepairs along the graph vector", {'w', "bin-width"});
     try {
@@ -149,15 +150,22 @@ int main_bin(int argc, char** argv) {
         }
     };
 
+    /*
+    std::function<void(const std::map<std::string&,std::vector<uint64_t&>>)> write_json_index
+        = [&] (const std::map<std::string&, std::vector<unit64_t&>> bin_index) {
+                // TODO @ekg I need to write out the compressed integer vector map in a way I can read it in easily.
+    };
+     */
+
     if (args::get(output_json)) {
         algorithms::bin_path_info(graph, (args::get(aggregate_delim) ? args::get(path_delim) : ""),
-                                  write_json, write_seq_json,
-                                  args::get(num_bins), args::get(bin_width));
+                                  write_json, write_seq_json, // write_json_index, // TODO @ekg Do I need a "write_json_index" here?
+                                  args::get(num_bins), args::get(bin_width), args::get(index_json)); // TODO @ekg I added the boolean from the args here.
     } else {
         std::cout << "path.name" << "\t" << "path.prefix" << "\t" << "path.suffix" << "\t" << "bin" << "\t" << "mean.cov" << "\t" << "mean.inv" << "\t" << "mean.pos" << std::endl;
         algorithms::bin_path_info(graph, (args::get(aggregate_delim) ? args::get(path_delim) : ""),
-                                  write_tsv, write_seq_noop,
-                                  args::get(num_bins), args::get(bin_width));
+                                  write_tsv, write_seq_noop, // write_json_index // TODO @ekg Is there a way to only optionally add an argument?
+                                  args::get(num_bins), args::get(bin_width), args::get(index_json)); // TODO @ekg I added the boolean from the args here.
     }
 
     return 0;
