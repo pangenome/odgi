@@ -13,6 +13,13 @@
 #include <handlegraph/util.hpp>
 #include <handlegraph/path_handle_graph.hpp>
 
+#include "sdsl/coder_elias_delta.hpp"
+#include "sdsl/coder_elias_gamma.hpp"
+#include "sdsl/coder_fibonacci.hpp"
+#include "sdsl/dac_vector.hpp"
+#include "sdsl/enc_vector.hpp"
+#include "sdsl/vlc_vector.hpp"
+
 namespace odgi {
 namespace algorithms {
 

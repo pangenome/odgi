@@ -10,7 +10,7 @@ namespace odgi {
         for (uint64_t i = 1; i < argc-1; ++i) {
             argv[i] = argv[i+1];
         }
-        std::string prog_name = "odgi find_bin";
+        const std::string prog_name = "odgi find_bin";
         argv[0] = (char*)prog_name.c_str();
         --argc;
 
@@ -33,7 +33,7 @@ namespace odgi {
             return 1;
         }
 
-        std::string pos = args::get(path_position);
+        const std::string pos = args::get(path_position);
 
         std::cout << "\"path_position entered\": " << pos << std::endl;
 

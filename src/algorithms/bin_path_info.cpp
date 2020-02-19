@@ -1,8 +1,19 @@
 #include <stdint.h>
+#include <cstdint>
+#include <random>
+#include <chrono>
+#include <string>
+#include <fstream>
+
 #include "bin_path_info.hpp"
 
 namespace odgi {
 namespace algorithms {
+
+    template<typename T> size_t get_nbytes(const T &c) {
+        std::ofstream ofs("/dev/null");
+        return c.serialize(ofs);
+    }
 
 void bin_path_info(const PathHandleGraph& graph,
                    const std::string& prefix_delimiter,
@@ -39,7 +50,6 @@ void bin_path_info(const PathHandleGraph& graph,
     std::unordered_map<path_handle_t, uint64_t> path_length;
 
     // path position index for the bins
-    // TODO @ekg I need a compressed integer vector here and not the usual uint64_t I guess?
     std::map<std::string, std::vector<uint64_t>> bin_index;
 
     graph.for_each_path_handle([&](const path_handle_t& path) {
@@ -51,10 +61,11 @@ void bin_path_info(const PathHandleGraph& graph,
             int64_t last_bin = 0; // flag meaning "null bin"
             uint64_t last_pos_in_bin = 0;
             bool last_is_rev = false;
+
+            // this is a dynamic integer vector
+            std::vector<uint64_t> path_bin_vec;
+
             graph.for_each_step_in_path(path, [&](const step_handle_t& occ) {
-                    // TODO @ekg I want to initialize a compressed integer vector with the total number of nucleotides of the current path as its size
-                    std::vector<uint64_t > compressed_integer_vector;
-                    // TODO @ekg After initialization do I add the vector now to our map or shall I do that later, after the vector is fully filled?
 
                     handle_t h = graph.get_handle_of_step(occ);
                     bool is_rev = graph.get_is_reverse(h);
@@ -76,7 +87,7 @@ void bin_path_info(const PathHandleGraph& graph,
 
                         path_pos++;
                         // FIXME at the current path position we add the current bin we are in into the compressed integer vector
-                        // compressed_integer_vector[path_pos] = curr_bin;
+                        path_bin_vec.push_back(curr_bin);
 
                         bins[curr_bin].mean_pos += path_pos;
                         last_bin = curr_bin;
@@ -85,7 +96,6 @@ void bin_path_info(const PathHandleGraph& graph,
                     }
                 });
             links.push_back(std::make_pair(last_bin,0));
-            // TODO @ekg Are we able to know the actual path length earlier? How would I build up the compressed integer vector, if not?
             uint64_t path_length = path_pos;
             for (auto& entry : bins) {
                 auto& v = entry.second;
@@ -94,6 +104,27 @@ void bin_path_info(const PathHandleGraph& graph,
                 v.mean_pos /= bin_width * path_length * v.mean_cov;
             }
             std::string path_name = graph.get_path_name(path);
+
+            std::cout << "compression_method" << '\t' << "path_name" << '\t' << "num_bytes" << "\n";
+            // TODO Get the template from  https://github.com/dnbaker/sdsl-vec-test/blob/master/src/sdsl-vec-test.cpp so that I can reuse code.
+
+            // create a compressed integer vector via sdsl-lite
+            sdsl::enc_vector<sdsl::coder::elias_gamma> elias_gamma_path_bin_vec(path_bin_vec);
+            size_t nb = get_nbytes(elias_gamma_path_bin_vec);
+            std::cout << "elias_gamma" << '\t' << path_name << '\t' << nb  << "\n";
+            // nb = get_nbytes(path_bin_vec); FIXME @ekg This does not work, any ideas? In https://github.com/dnbaker/sdsl-vec-test/blob/master/src/sdsl-vec-test.cpp it seems to work that way.
+            // std::cout << "uncompressed" << '\t' << path_name << '\t' << nb  << "\n"; TODO
+            sdsl::enc_vector<sdsl::coder::elias_delta> elias_delta_path_bin_vec(path_bin_vec);
+            nb = get_nbytes(elias_delta_path_bin_vec);
+            std::cout << "elias_delta" << '\t' << path_name << '\t' << nb  << "\n";
+
+            sdsl::enc_vector<sdsl::coder::fibonacci> fibonacci_path_bin_vec(path_bin_vec);
+            nb = get_nbytes(fibonacci_path_bin_vec);
+            std::cout << "fibonacci" << '\t' << path_name << '\t' << nb  << "\n";
+
+            sdsl::vlc_vector<sdsl::coder::elias_gamma> vlc_elias_gamma_path_bin_vec(path_bin_vec);
+            nb = get_nbytes(vlc_elias_gamma_path_bin_vec);
+            std::cout << "vlc_elias_gamma" << '\t' << path_name << '\t' << nb  << "\n";
 
             // FIXME @ekg I want to add the compressed_integer_vector of the current path to the map. However, the variable won't be reachable any more. Any workarounds?
             // bin_index[path_name] = compressed_integer_vector
