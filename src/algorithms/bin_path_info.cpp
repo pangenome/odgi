@@ -41,6 +41,7 @@ void bin_path_info(const PathHandleGraph& graph,
             uint64_t path_pos = 0;
             int64_t last_bin = 0; // flag meaning "null bin"
             uint64_t last_pos_in_bin = 0;
+            uint64_t nucleotide_count = 0;
             bool last_is_rev = false;
             graph.for_each_step_in_path(path, [&](const step_handle_t& occ) {
                     handle_t h = graph.get_handle_of_step(occ);
@@ -61,6 +62,11 @@ void bin_path_info(const PathHandleGraph& graph,
                             ++bins[curr_bin].mean_inv;
                         }
                         bins[curr_bin].mean_pos += path_pos++;
+                        nucleotide_count += 1;
+						if(bins[curr_bin].first_nucleotide == 0){
+							bins[curr_bin].first_nucleotide = nucleotide_count;
+						}
+						bins[curr_bin].last_nucleotide = nucleotide_count;
                         last_bin = curr_bin;
                         last_is_rev = is_rev;
                         last_pos_in_bin = curr_pos_in_bin;
@@ -68,6 +74,7 @@ void bin_path_info(const PathHandleGraph& graph,
                 });
             links.push_back(std::make_pair(last_bin,0));
             uint64_t path_length = path_pos;
+	    uint64_t end_nucleotide = nucleotide_count;
             for (auto& entry : bins) {
                 auto& v = entry.second;
                 v.mean_inv /= (v.mean_cov ? v.mean_cov : 1);
