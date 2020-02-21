@@ -15,6 +15,14 @@ namespace algorithms {
         return c.serialize(ofs);
     }
 
+    template<typename CompressedVectorType>
+    size_t perform_compression(const std::vector<std::uint64_t> &vec, std::string name, std::ofstream &file) {
+        CompressedVectorType yo(vec);
+        size_t nb = get_nbytes(yo);
+        file << name << '\t' << nb  << "\n";
+        return nb;
+    }
+
 void bin_path_info(const PathHandleGraph& graph,
                    const std::string& prefix_delimiter,
                    const std::function<void(const std::string&,
@@ -24,7 +32,12 @@ void bin_path_info(const PathHandleGraph& graph,
                    // const std::function<void(const std::map<std::string&, std::vector<uint64_t&>>) handle_index, // TODO @ekg I did not read up yet about pointers again. Would "&" be appropriate here?
                    uint64_t num_bins,
                    uint64_t bin_width,
-                   bool index_json) {
+                   bool index_json,
+                   const std::string& eval_out_file) {
+    // FIXME This is to evaluate the compression algorithms
+    std::ofstream myfile;
+    myfile.open (eval_out_file);
+
     // the graph must be compacted for this to work
     std::vector<uint64_t> position_map(graph.get_node_count()+1);
     uint64_t len = 0;
@@ -101,7 +114,7 @@ void bin_path_info(const PathHandleGraph& graph,
                 });
             links.push_back(std::make_pair(last_bin,0));
             uint64_t path_length = path_pos;
-	    uint64_t end_nucleotide = nucleotide_count;
+	        uint64_t end_nucleotide = nucleotide_count;
             for (auto& entry : bins) {
                 auto& v = entry.second;
                 v.mean_inv /= (v.mean_cov ? v.mean_cov : 1);
@@ -110,26 +123,25 @@ void bin_path_info(const PathHandleGraph& graph,
             }
             std::string path_name = graph.get_path_name(path);
 
-            std::cout << "compression_method" << '\t' << "path_name" << '\t' << "num_bytes" << "\n";
+            myfile << path_name << ": " << path_length << "\n";
+
+            myfile << "compression_method" << '\t' << "num_bytes" << "\n";
             // TODO Get the template from  https://github.com/dnbaker/sdsl-vec-test/blob/master/src/sdsl-vec-test.cpp so that I can reuse code.
 
             // create a compressed integer vector via sdsl-lite
-            sdsl::enc_vector<sdsl::coder::elias_gamma> elias_gamma_path_bin_vec(path_bin_vec);
-            size_t nb = get_nbytes(elias_gamma_path_bin_vec);
-            std::cout << "elias_gamma" << '\t' << path_name << '\t' << nb  << "\n";
+            perform_compression<sdsl::enc_vector<sdsl::coder::elias_gamma>>(path_bin_vec, "enc_elias_gamma", myfile);
             // nb = get_nbytes(path_bin_vec); FIXME @ekg This does not work, any ideas? In https://github.com/dnbaker/sdsl-vec-test/blob/master/src/sdsl-vec-test.cpp it seems to work that way.
             // std::cout << "uncompressed" << '\t' << path_name << '\t' << nb  << "\n"; TODO
-            sdsl::enc_vector<sdsl::coder::elias_delta> elias_delta_path_bin_vec(path_bin_vec);
-            nb = get_nbytes(elias_delta_path_bin_vec);
-            std::cout << "elias_delta" << '\t' << path_name << '\t' << nb  << "\n";
-
-            sdsl::enc_vector<sdsl::coder::fibonacci> fibonacci_path_bin_vec(path_bin_vec);
-            nb = get_nbytes(fibonacci_path_bin_vec);
-            std::cout << "fibonacci" << '\t' << path_name << '\t' << nb  << "\n";
-
-            sdsl::vlc_vector<sdsl::coder::elias_gamma> vlc_elias_gamma_path_bin_vec(path_bin_vec);
-            nb = get_nbytes(vlc_elias_gamma_path_bin_vec);
-            std::cout << "vlc_elias_gamma" << '\t' << path_name << '\t' << nb  << "\n";
+            perform_compression<sdsl::enc_vector<sdsl::coder::elias_delta>>(path_bin_vec, "enc_elias_delta", myfile);
+            perform_compression<sdsl::enc_vector<sdsl::coder::fibonacci>>(path_bin_vec, "enc_fibonacci", myfile);
+            perform_compression<sdsl::vlc_vector<sdsl::coder::elias_gamma>>(path_bin_vec, "vlc_elias_gamma", myfile);
+            perform_compression<sdsl::vlc_vector<sdsl::coder::elias_delta>>(path_bin_vec, "vlc_elias_delta", myfile);
+            perform_compression<sdsl::vlc_vector<sdsl::coder::fibonacci>>(path_bin_vec, "vlc_fibonacci", myfile);
+            perform_compression<sdsl::dac_vector<>>(path_bin_vec, "dac_default", myfile);
+            perform_compression<sdsl::dac_vector<8>>(path_bin_vec, "dac_8", myfile);
+            perform_compression<sdsl::dac_vector<16>>(path_bin_vec, "dac_16", myfile);
+            perform_compression<sdsl::dac_vector<32>>(path_bin_vec, "dac_32", myfile);
+            perform_compression<sdsl::dac_vector<2>>(path_bin_vec, "dac_2", myfile);
 
             // FIXME @ekg I want to add the compressed_integer_vector of the current path to the map. However, the variable won't be reachable any more. Any workarounds?
             // bin_index[path_name] = compressed_integer_vector
@@ -138,6 +150,7 @@ void bin_path_info(const PathHandleGraph& graph,
             // }
             handle_path(graph.get_path_name(path), links, bins);
         });
+    myfile.close();
 }
 
 }

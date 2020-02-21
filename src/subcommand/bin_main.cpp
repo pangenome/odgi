@@ -26,6 +26,8 @@ int main_bin(int argc, char** argv) {
     args::Flag index_json(parser, "index-bins", "index the bins in the JSON by path position", {'b', "bin-index"});
     args::ValueFlag<uint64_t> num_bins(parser, "N", "number of bins", {'n', "num-bins"});
     args::ValueFlag<uint64_t> bin_width(parser, "bp", "width of each bin in basepairs along the graph vector", {'w', "bin-width"});
+    // FIXME Just to evaluate the compression rate
+    args::ValueFlag<std::string> eval_out_file(parser, "FILE", "store the evaluation in this file", {'e', "eval"});
     try {
         parser.ParseCLI(argc, argv);
     } catch (args::Help) {
@@ -164,7 +166,7 @@ int main_bin(int argc, char** argv) {
     if (args::get(output_json)) {
         algorithms::bin_path_info(graph, (args::get(aggregate_delim) ? args::get(path_delim) : ""),
                                   write_json, write_seq_json, // write_json_index, // TODO @ekg Do I need a "write_json_index" here?
-                                  args::get(num_bins), args::get(bin_width), args::get(index_json)); // TODO @ekg I added the boolean from the args here.
+                                  args::get(num_bins), args::get(bin_width), args::get(index_json), args::get(eval_out_file)); // TODO @ekg I added the boolean from the args here.
     } else {
         std::cout << "path.name" << "\t" << "path.prefix" << "\t" << "path.suffix" << "\t" << "bin" << "\t" << "mean.cov" << "\t" << "mean.inv" << "\t" << "mean.pos" << std::endl;
         algorithms::bin_path_info(graph, (args::get(aggregate_delim) ? args::get(path_delim) : ""),

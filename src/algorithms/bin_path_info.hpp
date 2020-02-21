@@ -43,6 +43,7 @@ void bin_path_info(const PathHandleGraph& graph,
                    // const std::function<void(const std::map<std::string&, std::vector<uint64_t&>>)> handle_index, // TODO @ekg Is this correct like that?
                    uint64_t num_bins = 0,
                    uint64_t bin_width = 0,
-                   bool index_json = false);
+                   bool index_json = false,
+                   const std::string& eval_out_file = "");
 }
 }
