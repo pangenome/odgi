@@ -60,13 +60,29 @@ namespace xp {
         size_t edge_count = 0;
         size_t path_count = 0;
 
+        ////////////////////////////////////////////////////////////////////////////
+        // Here is the handle graph API
+        ////////////////////////////////////////////////////////////////////////////
+
+        /// Look up the handle for the node with the given ID in the given orientation
+        virtual handlegraph::handle_t get_handle(const nid_t& node_id, bool is_reverse = false) const;
+
         // Build the path index from a simple graph.
         void from_handle_graph(const handlegraph::HandleGraph &graph);
 
-        // TODO Do we want to support from GFA?
+        /// Use external enumerators to drive graph construction.
+        /// The order in which nodes are enumerated becomes the XP's node order.
+        /// Note that we will get the best efficiency if the graph is enumerated in topological order.
+        void from_enumerators(const std::function<void(const std::function<void(const std::string& seq, const nid_t& node_id)>&)>& for_each_sequence,
+                              const std::function<void(const std::function<void(const nid_t& from, const bool& from_rev,
+                                                                                const nid_t& to, const bool& to_rev)>&)>& for_each_edge,
+                              const std::function<void(const std::function<void(const std::string& path_name,
+                                                                                const nid_t& node_id, const bool& is_rev,
+                                                                                const std::string& cigar, const bool& is_empty,
+                                                                                const bool& is_circular)>&)>& for_each_path_element,
+                              bool validate = false, std::string basename = "");
 
         // Get our magic number
-        // TODO @ekg Do we need this? How would it look like?
         uint32_t get_magic_number(void) const;
 
         // Load this XP index from a stream. Throw an XPFormatError if the stream
@@ -81,13 +97,25 @@ namespace xp {
         // Alias for serialize_and_measure().
         void serialize_members(std::ostream& out) const;
 
-        // For a given path name and nucleotide position return its rank
-        size_t path_pos_to_rank(std::string& path_name, uint64_t pos); // TODO @ekg Or is it size_t here?
-        // TODO We might need some helper functions for the above
+        /// Look up the path handle for the given path name
+        handlegraph::path_handle_t get_path_handle(const std::string& path_name) const;
 
-        // TODO We need to store our XPPaths somewhere
+        /// Get the step at a given position
+        handlegraph::step_handle_t get_step_at_position(const handlegraph::path_handle_t& path, const size_t& position) const;
+
+        char start_marker = '#';
+        char end_marker = '$';
 
     private:
+        ////////////////////////////////////////////////////////////////////////////
+        // And here are the bits for tracking actual node IDs
+        ////////////////////////////////////////////////////////////////////////////
+
+        // maintain old ids from input, ranked as in s_iv and s_bv
+        int64_t min_id = 0; // id ranges don't have to start at 0
+        int64_t max_id = 0;
+        sdsl::int_vector<> r_iv; // ids-id_min is the rank
+
         ////////////////////////////////////////////////////////////////////////////
         // Here is path storage
         ////////////////////////////////////////////////////////////////////////////
@@ -99,6 +127,8 @@ namespace xp {
         sdsl::rank_support_v<1> pn_bv_rank;
         sdsl::bit_vector::select_1_type pn_bv_select;
         sdsl::int_vector<> pi_iv; // path ids by rank in the path names
+
+        sdsl::int_vector<> position_map; // store each offset of each node in the sequence vector
 
         std::vector<XPPath*> paths; // path structure
 
@@ -137,13 +167,12 @@ namespace xp {
         XPPath& operator=(const XPPath& other) = delete;
         XPPath& operator=(XPPath&& other) = delete;
         handlegraph::handle_t min_handle;
-        // TODO @ekg Do I need all of them? As far as I got it I don't need offsets?
+
         sdsl::enc_vector<> handles;
         //sdsl::rrr_vector directions; // forward or backward through nodes
         sdsl::rrr_vector<> offsets;
         sdsl::rrr_vector<>::rank_1_type offsets_rank;
         sdsl::rrr_vector<>::select_1_type offsets_select;
-        // TODO €ekg Do we need that?
         bool is_circular = false;
 
         void load(std::istream& in);
@@ -153,7 +182,31 @@ namespace xp {
                          std::string name = "") const;
 
         size_t step_rank_at_position(size_t pos) const;
-
-        // TODO @ekg do I need more functionality here?
     };
 }
+
+/**
+ * Temporary files. Create with create() and remove with remove(). All
+ * temporary files will be deleted when the program exits normally or with
+ * std::exit(). The files will be created in a directory determined from
+ * environment variables, though this can be overridden with set_dir().
+ * The interface is thread-safe.
+ */
+namespace temp_file {
+
+/// Create a temporary file starting with the given base name
+    std::string create(const std::string& base);
+
+/// Create a temporary file
+    std::string create();
+
+/// Remove a temporary file
+    void remove(const std::string& filename);
+
+/// Set a temp dir, overriding system defaults and environment variables.
+    void set_dir(const std::string& new_temp_dir);
+
+/// Get the current temp dir
+    std::string get_dir();
+
+} // namespace temp_file

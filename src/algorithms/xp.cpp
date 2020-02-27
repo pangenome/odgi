@@ -4,6 +4,8 @@
 
 namespace xp {
 
+    using namespace handlegraph;
+
     ////////////////////////////////////////////////////////////////////////////
     // Here is XP
     ////////////////////////////////////////////////////////////////////////////
@@ -39,7 +41,7 @@ namespace xp {
         from_enumerators(for_each_sequence, for_each_edge, for_each_path_element, false);
     }
 
-    void XG::from_enumerators(const std::function<void(const std::function<void(const std::string& seq, const nid_t& node_id)>&)>& for_each_sequence,
+    void XP::from_enumerators(const std::function<void(const std::function<void(const std::string& seq, const nid_t& node_id)>&)>& for_each_sequence,
                               const std::function<void(const std::function<void(const nid_t& from, const bool& from_rev,
                                                                                 const nid_t& to, const bool& to_rev)>&)>& for_each_edge,
                               const std::function<void(const std::function<void(const std::string& path_name,
@@ -93,180 +95,6 @@ namespace xp {
               << path_count << " paths" << std::endl
               << "node ids run from " << min_id << " to " << max_id << std::endl;
 #endif
-
-        // FIXME CUT OFF FROM HERE
-        /**
-        // set up our compressed representation
-        sdsl::int_vector<> i_iv;
-        sdsl::util::assign(s_iv, sdsl::int_vector<>(seq_length, 0, 3));
-        sdsl::util::assign(s_bv, sdsl::bit_vector(seq_length+1));
-        sdsl::util::assign(i_iv, sdsl::int_vector<>(node_count));
-        sdsl::util::assign(r_iv, sdsl::int_vector<>(max_id-min_id+1)); // note: possibly discontinuous
-
-        // for each node in the sequence
-        // concatenate the labels into the s_iv
-#ifdef VERBOSE_DEBUG
-        cerr << "storing node labels" << endl;
-#endif
-        size_t r = 1;
-        // first make i_iv and r_iv
-        for_each_sequence([&](const std::string& seq, const nid_t& id) {
-            i_iv[r-1] = id;
-            // store ids to rank mapping
-            r_iv[id-min_id] = r;
-            ++r;
-        });
-        sdsl::util::bit_compress(i_iv);
-        sdsl::util::bit_compress(r_iv);
-
-        // then make s_bv and s_iv
-        size_t j = 0;
-        for_each_sequence([&](const std::string& seq, const nid_t& id) {
-            //size_t i = r_iv[id-min_id]-1;
-            s_bv[j] = 1; // record node start
-            for (auto c : seq) {
-                s_iv[j++] = dna3bit(c); // store sequence
-            }
-        });
-        s_bv[seq_length] = 1;
-
-        // to label the paths we'll need to compress and index our vectors
-        sdsl::util::bit_compress(s_iv);
-        sdsl::util::assign(s_bv_rank, sdsl::rank_support_v<1>(&s_bv));
-        sdsl::util::assign(s_bv_select, sdsl::bit_vector::select_1_type(&s_bv));
-
-        // now that we've set up our sequence indexes, we can build the locally traversable graph storage
-
-        auto temp_get_handle = [&](const nid_t& id, bool orientation) {
-            uint64_t handle_rank = r_iv[id-min_id];
-            return number_bool_packing::pack(handle_rank, orientation);
-        };
-        auto temp_node_size = [&](const nid_t& id) {
-            uint64_t handle_rank = r_iv[id-min_id];
-            return s_bv_select(handle_rank+1)-s_bv_select(handle_rank);
-        };
-        auto temp_get_id = [&](const handle_t& h) {
-            return i_iv[number_bool_packing::unpack_number(h)-1];
-        };
-
-#ifdef VERBOSE_DEBUG
-        cerr << "collecting edges " << endl;
-#endif
-
-        // first, we need to collect the edges for each node
-        // we use the mmmultimap here to reduce in-memory costs to a minimum
-        std::string edge_f_t_idx = basename + ".from_to.mm";
-        std::string edge_t_f_idx = basename + ".to_from.mm";
-        auto edge_from_to_mm = std::make_unique<mmmulti::map<uint64_t, uint64_t>>(edge_f_t_idx);
-        auto edge_to_from_mm = std::make_unique<mmmulti::map<uint64_t, uint64_t>>(edge_t_f_idx);
-        for_each_edge([&](const nid_t& from_id, const bool& from_rev, const nid_t& to_id, const bool& to_rev) {
-            handle_t from_handle = temp_get_handle(from_id, from_rev);
-            handle_t to_handle = temp_get_handle(to_id, to_rev);
-            edge_from_to_mm->append(as_integer(from_handle), as_integer(to_handle));
-            edge_to_from_mm->append(as_integer(to_handle), as_integer(from_handle));
-        });
-        handle_t max_handle = number_bool_packing::pack(r_iv.size(), true);
-        edge_from_to_mm->index(as_integer(max_handle));
-        edge_to_from_mm->index(as_integer(max_handle));
-
-        // calculate g_iv size
-        size_t g_iv_size =
-                node_count * G_NODE_HEADER_LENGTH // record headers
-                + edge_count * 2 * G_EDGE_LENGTH; // edges (stored twice)
-        sdsl::util::assign(g_iv, sdsl::int_vector<>(g_iv_size));
-        sdsl::util::assign(g_bv, sdsl::bit_vector(g_iv_size));
-
-#ifdef VERBOSE_DEBUG
-        cerr << "computing graph vector " << endl;
-#endif
-
-        int64_t g = 0; // pointer into g_iv and g_bv
-        for (int64_t i = 0; i < node_count; ++i) {
-            nid_t id = i_iv[i];
-#ifdef VERBOSE_DEBUG
-            if (i % 1000 == 0) cerr << i << " of " << node_count << " ~ " << (float)i/(float)node_count * 100 << "%" << "\r";
-#endif
-            handle_t handle = temp_get_handle(id, false);
-            //std::cerr << "id " << id << std::endl;
-            g_bv[g] = 1; // mark record start for later query
-            g_iv[g++] = id;
-            g_iv[g++] = node_vector_offset(id);
-            g_iv[g++] = temp_node_size(id);
-            size_t to_edge_count = 0;
-            size_t from_edge_count = 0;
-            size_t to_edge_count_idx = g++;
-            size_t from_edge_count_idx = g++;
-            // write the edges in id-based format
-            // we will next convert these into relative format
-            for (auto orientation : { false, true }) {
-                handle_t to = temp_get_handle(id, orientation);
-                //std::cerr << "looking at to handle " << number_bool_packing::unpack_number(to) << ":" << number_bool_packing::unpack_bit(to) << std::endl;
-                edge_to_from_mm->for_unique_values_of(as_integer(to), [&](const uint64_t& _from) {
-                    handle_t from = as_handle(_from);
-                    //std::cerr << "edge to " << number_bool_packing::unpack_number(from) << ":" << number_bool_packing::unpack_bit(from)
-                    //<< " -> " << number_bool_packing::unpack_number(to) << ":" << number_bool_packing::unpack_bit(to) << std::endl;
-                    g_iv[g++] = temp_get_id(from);
-                    g_iv[g++] = edge_type(from, to);
-                    ++to_edge_count;
-                });
-            }
-            g_iv[to_edge_count_idx] = to_edge_count;
-            for (auto orientation : { false, true }) {
-                handle_t from = temp_get_handle(id, orientation);
-                //std::cerr << "looking at from handle " << number_bool_packing::unpack_number(from) << ":" << number_bool_packing::unpack_bit(from) << std::endl;
-                edge_from_to_mm->for_unique_values_of(as_integer(from), [&](const uint64_t& _to) {
-                    handle_t to = as_handle(_to);
-                    //std::cerr << "edge from " << number_bool_packing::unpack_number(from) << ":" << number_bool_packing::unpack_bit(from)
-                    //<< " -> " << number_bool_packing::unpack_number(to) << ":" << number_bool_packing::unpack_bit(to) << std::endl;
-                    g_iv[g++] = temp_get_id(to);
-                    g_iv[g++] = edge_type(from, to);
-                    ++from_edge_count;
-                });
-            }
-            g_iv[from_edge_count_idx] = from_edge_count;
-        }
-
-#ifdef VERBOSE_DEBUG
-        std::cerr << node_count << " of " << node_count << " ~ 100.0000%" << std::endl;
-#endif
-
-        // cleanup our mmmultimap
-        edge_from_to_mm.reset();
-        edge_to_from_mm.reset();
-        std::remove(edge_f_t_idx.c_str());
-        std::remove(edge_t_f_idx.c_str());
-
-        // set up rank and select supports on g_bv so we can locate nodes in g_iv
-        sdsl::util::assign(g_bv_rank, sdsl::rank_support_v<1>(&g_bv));
-        sdsl::util::assign(g_bv_select, sdsl::bit_vector::select_1_type(&g_bv));
-
-#ifdef VERBOSE_DEBUG
-        cerr << "making graph vector relativistic " << endl;
-#endif
-
-        // convert the edges in g_iv to relativistic form
-        for (int64_t i = 0; i < node_count; ++i) {
-            int64_t id = i_iv[i];
-            // find the start of the node's record in g_iv
-            int64_t g = g_bv_select(id_to_rank(id));
-            // get to the edges to
-            int edges_to_count = g_iv[g+G_NODE_TO_COUNT_OFFSET];
-            int edges_from_count = g_iv[g+G_NODE_FROM_COUNT_OFFSET];
-            int64_t t = g + G_NODE_HEADER_LENGTH;
-            int64_t f = g + G_NODE_HEADER_LENGTH + G_EDGE_LENGTH * edges_to_count;
-            for (int64_t j = t; j < f; ) {
-                g_iv[j] = g_bv_select(id_to_rank(g_iv[j])) - g;
-                j += 2;
-            }
-            for (int64_t j = f; j < f + G_EDGE_LENGTH * edges_from_count; ) {
-                g_iv[j] = g_bv_select(id_to_rank(g_iv[j])) - g;
-                j += 2;
-            }
-        }
-        sdsl::util::clear(i_iv);
-        sdsl::util::bit_compress(g_iv);
-        **/
-        // FIXME END OF CUT OFF
 
 #ifdef VERBOSE_DEBUG
         cerr << "storing paths" << endl;
@@ -358,272 +186,21 @@ namespace xp {
         sdsl::store_to_file((const char*)path_names.c_str(), path_name_file);
         sdsl::construct(pn_csa, path_name_file, 1);
 
-        // FIXME CUT OFF FROM HERE
-#ifdef VERBOSE_DEBUG
-        cerr << "computing node to path membership" << endl;
-#endif
-
-        // create the node-to-path indexes
-        index_node_to_path(basename);
-
-        // validate the graph
-        if (validate) {
-            // do we get the correct sequences when looking up handles by id?
-            for_each_sequence([&](const std::string& seq, const nid_t& id) {
-                handle_t handle = get_handle(id);
-                if (seq != get_sequence(handle)) {
-                    std::cerr << "mismatch in handle sequence for " << id << std::endl;
-                    exit(1);
-                }
-                if (get_id(handle) != id) {
-                    std::cerr << "mismatch in id for " << id << std::endl;
-                    exit(1);
-                }
-            });
-            // do we have the correct set of edges?
-            for_each_edge([&](const nid_t& from_id, const bool& from_rev, const nid_t& to_id, const bool& to_rev) {
-                handle_t from_handle = get_handle(from_id, from_rev);
-                handle_t to_handle = get_handle(to_id, to_rev);
-                bool seen_to = false;
-                follow_edges(from_handle, false, [&](const handle_t& h) {
-                    //std::cerr << "fwd I see edge " << get_id(from_handle) << ":" << get_is_reverse(from_handle) << " -> " << get_id(h) << ":" << get_is_reverse(h) << std::endl;
-                    //std::cerr << as_integer(h) << " ==? " << as_integer(to_handle) << std::endl;
-                    if (h == to_handle) {
-                        seen_to = true;
-                    }
-                });
-                bool seen_from = false;
-                follow_edges(to_handle, true, [&](const handle_t& h) {
-                    //std::cerr << "rev I see edge " << get_id(h) << ":" << get_is_reverse(h) << " -> " << get_id(to_handle) << ":" << get_is_reverse(to_handle) << std::endl;
-                    //std::cerr << as_integer(h) << " ==? " << as_integer(from_handle) << std::endl;
-                    if (h == from_handle) {
-                        seen_from = true;
-                    }
-                });
-                if (!seen_to) {
-                    std::cerr << "can't find to edge for " << get_id(from_handle) << ":" << get_is_reverse(from_handle)
-                              << " -> " << get_id(to_handle) << ":" << get_is_reverse(to_handle) << std::endl;
-                    exit(1);
-                }
-                if (!seen_from) {
-                    std::cerr << "can't find from edge for " << get_id(from_handle) << ":" << get_is_reverse(from_handle)
-                              << " -> " << get_id(to_handle) << ":" << get_is_reverse(to_handle) << std::endl;
-                    exit(1);
-                }
-            });
-            // do our stored paths match those in the input?
-
-            std::string curr_path_name;
-            std::vector<handle_t> curr_path_steps;
-            size_t curr_node_count = 0;
-            bool curr_is_circular = false; // TODO, use TP:Z:circular tag... we'll have to fish this out of the file
-            uint64_t p_handle = 0;
-            auto check_accumulated_path = [&](void) {
-                ++p_handle;
-                // only check if we had a path to build
-                if (curr_path_steps.empty()) return;
-                auto& path = *paths[p_handle-1];
-                // check that the path name is correct
-                if (get_path_name(as_path_handle(p_handle)) != curr_path_name) {
-                    std::cerr << "path name mismatch " << get_path_name(as_path_handle(p_handle)) << " != " << curr_path_name << std::endl;
-                    exit(1);
-                }
-                // check that the path handles are correct
-                for (uint64_t i = 0; i < curr_path_steps.size(); ++i) {
-                    if (path.handle(i) != curr_path_steps[i]) {
-                        std::cerr << "handle mismatch " << get_id(path.handle(i)) << " != " << get_id(curr_path_steps[i]) << " in path " << curr_path_name << std::endl;
-                        exit(1);
-                    }
-                }
-                // check that the path positions are correct
-                uint64_t pos = 0;
-                path_handle_t path_handle = as_path_handle(p_handle);
-                //std::cerr << "on path " << curr_path_name << std::endl;
-                //const std::function<bool(const step_handle_t&, const bool&, const uint64_t&)>& iteratee) const;
-                for (uint64_t i = 0; i < curr_path_steps.size(); ++i) {
-                    handle_t handle = curr_path_steps[i];
-                    //std::cerr << "looking at node " << get_id(handle) << " on path " << curr_path_name << std::endl;
-                    uint64_t handle_length = get_length(handle);
-                    for (uint64_t j = 0; j < handle_length; ++j) {
-                        handle_t handle_at = path.handle_at_position(pos+j);
-                        if (handle != handle_at) {
-                            std::cerr << "handle at position mismatch " << get_id(handle) << " != " << get_id(handle_at)
-                                      << " in path " << curr_path_name << " at position " << pos+j << std::endl;
-                            exit(1);
-                        }
-                    }
-                    bool path_seen = false;
-                    auto check_pos_index = [&](const step_handle_t& step, const bool& is_rev, const uint64_t& pos) {
-                        // check that the step handle is the same as this handle
-                        //std::cerr << "checking " << get_id(handle) << " on " << curr_path_name << std::endl;
-                        path_handle_t path_handle_of = get_path_handle_of_step(step);
-                        if (path_handle == path_handle_of && as_integers(step)[1] == i) {
-                            //std::cerr << "found matching step handle" << std::endl;
-                            handle_t oriented_handle = !get_is_reverse(handle) && is_rev ? flip(handle) : handle;
-                            handle_t handle_at = get_handle_of_step(step);
-                            if (oriented_handle != handle_at) {
-                                std::cerr << "handle at step mismatch " << get_id(oriented_handle) << " != " << get_id(handle_at)
-                                          << " in path " << curr_path_name << std::endl;
-                                std::cerr << "handle " << as_integer(handle_at) << " != " << as_integer(oriented_handle) << std::endl;
-                                exit(1);
-                            }
-                            handle_t handle_at_pos = path.handle_at_position(pos);
-                            if (handle_at != handle_at_pos) {
-                                std::cerr << "handle at position mismatch " << get_id(handle_at) << " != " << get_id(handle_at_pos)
-                                          << " in path " << curr_path_name << " at position " << pos << std::endl;
-                                exit(1);
-                            }
-                            path_seen = true;
-                            return false;
-                        }
-                        return true;
-                    };
-                    // verify that we have the right position in the node to path position index
-                    for_each_step_position_on_handle(handle, check_pos_index);
-                    if (!path_seen) {
-                        std::cerr << "didn't find path " << curr_path_name << " in reverse index for " << get_id(handle) << std::endl;
-                        exit(1);
-                    }
-                    pos += get_length(handle);
-                }
-            };
-            for_each_path_element([&](const std::string& path_name, const nid_t& node_id, const bool& is_rev, const std::string& cigar, const bool& is_empty, const bool& is_circular) {
-                if (path_name != curr_path_name && !curr_path_name.empty()) {
-                    // check the last path we've accumulated
-                    check_accumulated_path();
-                    curr_path_steps.clear();
-                }
-                curr_path_name = path_name;
-                if (!is_empty) {
-                    curr_path_steps.push_back(get_handle(node_id, is_rev));
-                }
-            });
-            // check the last path
-            check_accumulated_path();
-            curr_path_steps.clear();
-        }
-
-//#define DEBUG_CONSTRUCTION
-#ifdef DEBUG_CONSTRUCTION
-        cerr << "|g_iv| = " << size_in_mega_bytes(g_iv) << endl;
-    cerr << "|g_bv| = " << size_in_mega_bytes(g_bv) << endl;
-    cerr << "|s_iv| = " << size_in_mega_bytes(s_iv) << endl;
-
-    cerr << "|r_iv| = " << size_in_mega_bytes(r_iv) << endl;
-
-    cerr << "|s_bv| = " << size_in_mega_bytes(s_bv) << endl;
-
-    long double paths_mb_size = 0;
-    cerr << "|pn_iv| = " << size_in_mega_bytes(pn_iv) << endl;
-    paths_mb_size += size_in_mega_bytes(pn_iv);
-    cerr << "|pn_csa| = " << size_in_mega_bytes(pn_csa) << endl;
-    paths_mb_size += size_in_mega_bytes(pn_csa);
-    cerr << "|pn_bv| = " << size_in_mega_bytes(pn_bv) << endl;
-    paths_mb_size += size_in_mega_bytes(pn_bv);
-    paths_mb_size += size_in_mega_bytes(pn_bv_rank);
-    paths_mb_size += size_in_mega_bytes(pn_bv_select);
-    paths_mb_size += size_in_mega_bytes(pi_iv);
-    cerr << "|np_iv| = " << size_in_mega_bytes(np_iv) << endl;
-    paths_mb_size += size_in_mega_bytes(np_iv);
-    cerr << "|np_bv| = " << size_in_mega_bytes(np_bv) << endl;
-    paths_mb_size += size_in_mega_bytes(np_bv);
-    paths_mb_size += size_in_mega_bytes(np_bv_select);
-    cerr << "total paths size " << paths_mb_size << endl;
-
-    float path_ids_mb_size=0;
-    float path_dir_mb_size=0;
-    float path_pos_mb_size=0;
-    float path_ranks_mb_size=0;
-    float path_offsets_mb_size=0;
-    for (size_t i = 0; i < paths.size(); i++) {
-        // Go through paths by number, so we can determine rank
-        XGPath* path = paths[i];
-        path_ids_mb_size += size_in_mega_bytes(path->ids);
-        path_dir_mb_size += size_in_mega_bytes(path->directions);
-        path_pos_mb_size += size_in_mega_bytes(path->positions);
-        path_ranks_mb_size += size_in_mega_bytes(path->ranks);
-        path_offsets_mb_size += size_in_mega_bytes(path->offsets);
     }
-    cerr << "path ids size " << path_ids_mb_size << endl;
-    cerr << "path directions size " << path_dir_mb_size << endl;
-    cerr << "path positions size " << path_pos_mb_size << endl;
-    cerr << "path ranks size " << path_ranks_mb_size << endl;
-    cerr << "path offsets size " << path_offsets_mb_size << endl;
 
-#endif
 
-        bool print_graph = false;
-        if (print_graph) {
-            cerr << "printing graph" << endl;
-            // we have to print the relativistic graph manually because the default sdsl printer assumes unsigned integers are stored in it
-            for (size_t i = 0; i < g_iv.size(); ++i) {
-                cerr << (int64_t)g_iv[i] << " ";
-            } cerr << endl;
-            for (int64_t i = 0; i < node_count; ++i) {
-                int64_t id = rank_to_id(i+1);
-                // find the start of the node's record in g_iv
-                int64_t g = g_bv_select(id_to_rank(id));
-                // get to the edges to
-                int edges_to_count = g_iv[g+G_NODE_TO_COUNT_OFFSET];
-                int edges_from_count = g_iv[g+G_NODE_FROM_COUNT_OFFSET];
-                int sequence_size = g_iv[g+G_NODE_LENGTH_OFFSET];
-                size_t seq_start = g_iv[g+G_NODE_SEQ_START_OFFSET];
-                cerr << id << " ";
-                for (int64_t j = seq_start; j < seq_start+sequence_size; ++j) {
-                    cerr << revdna3bit(s_iv[j]);
-                } cerr << " : ";
-                int64_t t = g + G_NODE_HEADER_LENGTH;
-                int64_t f = g + G_NODE_HEADER_LENGTH + G_EDGE_LENGTH * edges_to_count;
-                cerr << " from ";
-                for (int64_t j = t; j < f; ) {
-                    cerr << rank_to_id(g_bv_rank(g+g_iv[j])+1) << " ";
-                    j += 2;
-                }
-                cerr << " to ";
-                for (int64_t j = f; j < f + G_EDGE_LENGTH * edges_from_count; ) {
-                    cerr << rank_to_id(g_bv_rank(g+g_iv[j])+1) << " ";
-                    j += 2;
-                }
-                cerr << endl;
-            }
-            cerr << s_iv << endl;
-            for (size_t i = 0; i < s_iv.size(); ++i) {
-                cerr << revdna3bit(s_iv[i]);
-            } cerr << endl;
-            cerr << s_bv << endl;
-            cerr << "paths (" << paths.size() << ")" << endl;
-            for (size_t i = 0; i < paths.size(); i++) {
-                // Go through paths by number, so we can determine rank
-                XGPath* path = paths[i];
-                cerr << get_path_name(as_path_handle(i + 1)) << endl;
-                // manually print IDs because simplified wavelet tree doesn't support ostream for some reason
-                for (size_t j = 0; j + 1 < path->handles.size(); j++) {
-                    cerr << get_id(path->handle(j)) << " ";
-                }
-                if (path->handles.size() > 0) {
-                    cerr << get_id(path->handle(path->handles.size() - 1));
-                }
-                cerr << endl;
-                cerr << path->offsets << endl;
-            }
-            cerr << np_bv << endl;
-            cerr << np_iv << endl;
-            cerr << nx_iv << endl;
-
-        }
-
-    }
 
     // FIXME This was directly copied from xg.cpp
     uint32_t XP::get_magic_number(void) const {
         return 4143290017ul;
     }
 
-    void XG::serialize_members(ostream& out) const {
+    void XP::serialize_members(ostream& out) const {
         serialize_and_measure(out);
     }
 
     // TODO Clean this up.
+    /**
     size_t XG::serialize_and_measure(ostream& out, sdsl::structure_tree_node* s, std::string name) const {
 
         sdsl::structure_tree_node* child = sdsl::structure_tree::add_child(s, name, sdsl::util::class_name(*this));
@@ -690,6 +267,7 @@ namespace xp {
         return written;
 
     }
+    **/
 
     void XP::deserialize_members(std::istream& in) {
         // simple alias to match an external interface
@@ -697,6 +275,7 @@ namespace xp {
     }
 
     // FIXME This does not work as it is.
+    /**
     void XG::load(std::istream& in) {
 
         if (!in.good()) {
@@ -921,6 +500,7 @@ namespace xp {
             throw e;
         }
     }
+     **/
 
 
     ////////////////////////////////////////////////////////////////////////////
@@ -931,7 +511,6 @@ namespace xp {
         return offsets_rank(pos+1)-1;
     }
 
-    // TODO @ekg Do I need to write out all of these for our purpose?
     size_t XPPath::serialize(std::ostream& out,
                              sdsl::structure_tree_node* v,
                              std::string name) const {
@@ -1036,4 +615,110 @@ namespace xp {
         offsets_select.load(in, &offsets);
         sdsl::read_member(is_circular, in);
     }
+}
+
+namespace temp_file {
+
+// We use this to make the API thread-safe
+    std::recursive_mutex monitor;
+
+    std::string temp_dir;
+
+/// Because the names are in a static object, we can delete them when
+/// std::exit() is called.
+    struct Handler {
+        std::set<std::string> filenames;
+        std::string parent_directory;
+        ~Handler() {
+            // No need to lock in static destructor
+            for (auto& filename : filenames) {
+                std::remove(filename.c_str());
+            }
+            if (!parent_directory.empty()) {
+                // There may be extraneous files in the directory still (like .fai files)
+                auto directory = opendir(parent_directory.c_str());
+
+                dirent* dp;
+                while ((dp = readdir(directory)) != nullptr) {
+                    // For every item still in it, delete it.
+                    // TODO: Maybe eventually recursively delete?
+                    std::remove((parent_directory + "/" + dp->d_name).c_str());
+                }
+                closedir(directory);
+
+                // Delete the directory itself
+                std::remove(parent_directory.c_str());
+            }
+        }
+    } handler;
+
+    std::string create(const std::string& base) {
+        std::lock_guard<recursive_mutex> lock(monitor);
+
+        if (handler.parent_directory.empty()) {
+            // Make a parent directory for our temp files
+            string tmpdirname_cpp = get_dir() + "/xp-XXXXXX";
+            char* tmpdirname = new char[tmpdirname_cpp.length() + 1];
+            strcpy(tmpdirname, tmpdirname_cpp.c_str());
+            auto got = mkdtemp(tmpdirname);
+            if (got != nullptr) {
+                // Save the directory we got
+                handler.parent_directory = got;
+            } else {
+                cerr << "[xp]: couldn't create temp directory: " << tmpdirname << endl;
+                exit(1);
+            }
+            delete [] tmpdirname;
+        }
+
+        std::string tmpname = handler.parent_directory + "/" + base + "XXXXXX";
+        // hack to use mkstemp to get us a safe temporary file name
+        int fd = mkstemp(&tmpname[0]);
+        if(fd != -1) {
+            // we don't leave it open; we are assumed to open it again externally
+            close(fd);
+        } else {
+            cerr << "[xp]: couldn't create temp file on base "
+                 << base << " : " << tmpname << endl;
+            exit(1);
+        }
+        handler.filenames.insert(tmpname);
+        return tmpname;
+    }
+
+    std::string create() {
+        // No need to lock as we call this thing that locks
+        return create("xp-");
+    }
+
+    void remove(const std::string& filename) {
+        std::lock_guard<recursive_mutex> lock(monitor);
+
+        std::remove(filename.c_str());
+        handler.filenames.erase(filename);
+    }
+
+    void set_dir(const std::string& new_temp_dir) {
+        std::lock_guard<recursive_mutex> lock(monitor);
+
+        temp_dir = new_temp_dir;
+    }
+
+    std::string get_dir() {
+        std::lock_guard<recursive_mutex> lock(monitor);
+
+        // Get the default temp dir from environment variables.
+        if (temp_dir.empty()) {
+            const char* system_temp_dir = nullptr;
+            for(const char* var_name : {"TMPDIR", "TMP", "TEMP", "TEMPDIR", "USERPROFILE"}) {
+                if (system_temp_dir == nullptr) {
+                    system_temp_dir = getenv(var_name);
+                }
+            }
+            temp_dir = (system_temp_dir == nullptr ? "/tmp" : system_temp_dir);
+        }
+
+        return temp_dir;
+    }
+
 }
