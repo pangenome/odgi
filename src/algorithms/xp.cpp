@@ -1,6 +1,12 @@
 #include "xp.hpp"
 
+#include <bitset>
 #include <arpa/inet.h>
+#include <mutex>
+
+#include <handlegraph/util.hpp>
+
+#include "gfakluge.hpp"
 
 namespace xp {
 
@@ -16,6 +22,34 @@ namespace xp {
             delete paths.back();
             paths.pop_back();
         }
+    }
+
+    size_t XP::id_to_rank(const nid_t& id) const {
+        size_t x = id-min_id;
+        if (x < 0 || x >= r_iv.size()) return 0;
+        return r_iv[x];
+    }
+
+    handle_t XP::get_handle(const nid_t& node_id, bool is_reverse) const {
+        // Handles will be g vector index with is_reverse in the low bit
+
+        // What rank are we looking for?
+        size_t node_rank = id_to_rank(node_id);
+
+        if (node_rank == 0) {
+            throw std::runtime_error("Attempted to get handle for node " + std::to_string(node_id) + " not present in graph");
+        }
+
+        // Where in the g vector do we need to be
+        uint64_t g = g_bv_select(node_rank);
+
+        if (g + G_NODE_HEADER_LENGTH > g_iv.size()) {
+            throw std::runtime_error("Handle for node " + std::to_string(node_id) + " with g vector offset " +
+                                std::to_string(g) + " is too close to end of g vector at " + std::to_string(g_iv.size()));
+        }
+
+        // And set the high bit if it's reverse
+        return handlegraph::number_bool_packing::pack(g, is_reverse);
     }
 
     /// build the graph from a graph handle
@@ -38,9 +72,12 @@ namespace xp {
                                                                   const std::string& cigar, const bool& is_empty, const bool& is_circular)>& lambda) {
             // no-op
         };
-        from_enumerators(for_each_sequence, for_each_edge, for_each_path_element, false);
+        // FIXME
+        // from_enumerators(for_each_sequence, for_each_edge, for_each_path_element, false);
     }
 
+    // TODO
+    /**
     void XP::from_enumerators(const std::function<void(const std::function<void(const std::string& seq, const nid_t& node_id)>&)>& for_each_sequence,
                               const std::function<void(const std::function<void(const nid_t& from, const bool& from_rev,
                                                                                 const nid_t& to, const bool& to_rev)>&)>& for_each_edge,
@@ -187,6 +224,7 @@ namespace xp {
         sdsl::construct(pn_csa, path_name_file, 1);
 
     }
+     **/
 
 
 
@@ -195,8 +233,9 @@ namespace xp {
         return 4143290017ul;
     }
 
-    void XP::serialize_members(ostream& out) const {
-        serialize_and_measure(out);
+    void XP::serialize_members(std::ostream& out) const {
+        // FIXME
+        // serialize_and_measure(out);
     }
 
     // TODO Clean this up.
@@ -271,7 +310,8 @@ namespace xp {
 
     void XP::deserialize_members(std::istream& in) {
         // simple alias to match an external interface
-        load(in);
+        // FIXME
+        // load(in);
     }
 
     // FIXME This does not work as it is.
@@ -502,6 +542,10 @@ namespace xp {
     }
      **/
 
+    size_t XP::get_length(const handle_t& handle) const {
+        return g_iv[handlegraph::number_bool_packing::unpack_number(handle) + G_NODE_LENGTH_OFFSET];
+    }
+
 
     ////////////////////////////////////////////////////////////////////////////
     // Here is XPPath
@@ -529,7 +573,7 @@ namespace xp {
     XPPath::XPPath(const std::string& path_name,
                    const std::vector<handle_t>& path,
                    bool is_circular,
-                   XG& graph) {
+                   XP& graph) {
 
 #ifdef debug_path_index
         std::cerr << "Constructing xgpath for path with handles:" << std::endl;
@@ -614,6 +658,15 @@ namespace xp {
         offsets_rank.load(in, &offsets);
         offsets_select.load(in, &offsets);
         sdsl::read_member(is_circular, in);
+    }
+
+    handle_t XPPath::local_handle(const handle_t& handle) const {
+        if (as_integer(handle) < as_integer(min_handle)) {
+            throw std::runtime_error("Handle with value " + std::to_string(as_integer(handle)) +
+                                     " cannot be converted to local space based at min handle with value " + std::to_string(as_integer(min_handle)));
+        } else {
+            return as_handle(as_integer(handle)-as_integer(min_handle));
+        }
     }
 }
 

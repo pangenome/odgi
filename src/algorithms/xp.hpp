@@ -1,12 +1,26 @@
 #pragma once
 
-#include "sdsl/bit_vectors.hpp"
-#include "sdsl/enc_vector.hpp"
-#include "sdsl/dac_vector.hpp"
-#include "sdsl/vlc_vector.hpp"
-#include "sdsl/wavelet_trees.hpp"
-#include "sdsl/csa_wt.hpp"
-#include "sdsl/suffix_arrays.hpp"
+#include <iostream>
+#include <fstream>
+#include <map>
+#include <queue>
+#include <omp.h>
+#include <unordered_map>
+#include <unordered_set>
+#include <string>
+#include <functional>
+#include <utility>
+#include <tuple>
+#include <sys/types.h>
+#include <dirent.h>
+
+#include <sdsl/bit_vectors.hpp>
+#include <sdsl/enc_vector.hpp>
+#include <sdsl/dac_vector.hpp>
+#include <sdsl/vlc_vector.hpp>
+#include <sdsl/wavelet_trees.hpp>
+#include <sdsl/csa_wt.hpp>
+#include <sdsl/suffix_arrays.hpp>
 
 #include <handlegraph/types.hpp>
 #include <handlegraph/iteratee.hpp>
@@ -40,9 +54,9 @@ namespace xp {
         // Here are the ways we can construct an XP object from a graph
         ////////////////////////////////////////////////////////////////////////////
 
-        XP(void) = default;
+        XP() = default;
 
-        ~XP(void);
+        ~XP();
 
         // We cannot move, assign, or copy until we add code to point sdsl supports
         // at the new addresses for their vectors.
@@ -67,6 +81,8 @@ namespace xp {
         /// Look up the handle for the node with the given ID in the given orientation
         virtual handlegraph::handle_t get_handle(const nid_t& node_id, bool is_reverse = false) const;
 
+        size_t id_to_rank(const nid_t& id) const;
+
         // Build the path index from a simple graph.
         void from_handle_graph(const handlegraph::HandleGraph &graph);
 
@@ -83,7 +99,7 @@ namespace xp {
                               bool validate = false, std::string basename = "");
 
         // Get our magic number
-        uint32_t get_magic_number(void) const;
+        uint32_t get_magic_number() const;
 
         // Load this XP index from a stream. Throw an XPFormatError if the stream
         // does not produce a valid XP file.
@@ -103,10 +119,59 @@ namespace xp {
         /// Get the step at a given position
         handlegraph::step_handle_t get_step_at_position(const handlegraph::path_handle_t& path, const size_t& position) const;
 
+        /// Get the length of a node
+        virtual size_t get_length(const handlegraph::handle_t& handle) const;
+
         char start_marker = '#';
         char end_marker = '$';
 
     private:
+        ////////////////////////////////////////////////////////////////////////////
+        // Here is the New Way (locally traversable graph storage)
+        // Everything should be rewritten in terms of these members
+        ////////////////////////////////////////////////////////////////////////////
+
+        /// locally traversable graph storage
+        ///
+        /// Encoding designed for efficient compression, cache locality, and relativistic traversal of the graph.
+        ///
+        /// node := { header, edges_to, edges_from }
+        /// header := { node_id, node_start, node_length, edges_to_count, edges_from_count }
+        /// node_id := integer
+        /// node_start := integer (offset in s_iv)
+        /// node_length := integer
+        /// edges_to_count := integer
+        /// edges_from_count := integer
+        /// edges_to := { edge_to, ... }
+        /// edges_from := { edge_from, ... }
+        /// edge_to := { offset_to_previous_node, edge_type }
+        /// edge_to := { offset_to_next_node, edge_type }
+        sdsl::int_vector<> g_iv;
+        /// delimit node records to allow lookup of nodes in g_civ by rank
+        sdsl::bit_vector g_bv;
+        sdsl::rank_support_v<1> g_bv_rank;
+        sdsl::bit_vector::select_1_type g_bv_select;
+
+        // Let's define some offset ints
+        const static int G_NODE_ID_OFFSET = 0;
+        const static int G_NODE_SEQ_START_OFFSET = 1;
+        const static int G_NODE_LENGTH_OFFSET = 2;
+        const static int G_NODE_TO_COUNT_OFFSET = 3;
+        const static int G_NODE_FROM_COUNT_OFFSET = 4;
+        const static int G_NODE_HEADER_LENGTH = 5;
+
+        const static int G_EDGE_OFFSET_OFFSET = 0;
+        const static int G_EDGE_TYPE_OFFSET = 1;
+        const static int G_EDGE_LENGTH = 2;
+
+        // And the edge types (so we don't confuse our magic numbers)
+        const static int EDGE_TYPE_MIN = 1;
+        const static int EDGE_TYPE_END_START = 1;
+        const static int EDGE_TYPE_END_END = 2;
+        const static int EDGE_TYPE_START_START = 3;
+        const static int EDGE_TYPE_START_END = 4;
+        const static int EDGE_TYPE_MAX = 4;
+
         ////////////////////////////////////////////////////////////////////////////
         // And here are the bits for tracking actual node IDs
         ////////////////////////////////////////////////////////////////////////////
@@ -148,8 +213,8 @@ namespace xp {
 
     class XPPath {
     public:
-        XPPath(void) = default;
-        ~XPPath(void) = default;
+        XPPath() = default;
+        ~XPPath() = default;
         // Path name is required here only for complaining intelligently when
         // something goes wrong. We can also spit out the total unique members,
         // because in here is the most efficient place to count them.
@@ -182,6 +247,7 @@ namespace xp {
                          std::string name = "") const;
 
         size_t step_rank_at_position(size_t pos) const;
+        handlegraph::handle_t local_handle(const handlegraph::handle_t& handle) const;
     };
 }
 
