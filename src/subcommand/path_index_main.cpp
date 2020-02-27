@@ -1,11 +1,12 @@
 #include "subcommand.hpp"
 #include "odgi.hpp"
 #include "args.hxx"
-// #include "algorithms/XP.hpp" TODO I will implement an XP class comparable to XG + XGPath, but only for paths.
+#include "algorithms/XP.hpp" TODO I will implement an XP class comparable to XG + XGPath, but only for paths.
 
 namespace odgi {
 
     using namespace odgi::subcommand;
+    using namespace xp;
 
     int main_path_index(int argc, char** argv) {
 
@@ -51,6 +52,8 @@ namespace odgi {
         }
         // TODO Get graph_handle. @ekg Is the graph_t already a graph_handle?
         // TODO Build the index.
+        XP path_index;
+        XPPath test;
         // XP index = XP::from_handle_graph(graph);
         // TODO Open stream to idx_out_file.
         // index.serialize_members(out);

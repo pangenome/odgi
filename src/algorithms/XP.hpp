@@ -15,12 +15,10 @@
 #include <handlegraph/path_position_handle_graph.hpp>
 #include <handlegraph/serializable_handle_graph.hpp>
 
-#ifndef ODGI_XP_HPP
-#define ODGI_XP_HPP
-
-#endif //ODGI_XP_HPP
-
 namespace xp {
+
+    class XPPath;
+
     /**
  * Thrown when attempting to interpret invalid data as an XP index.
  */
@@ -31,7 +29,7 @@ namespace xp {
  /**
  * Provides succinct storage for the positional paths of a graph.
  */
-    class XP : public PathPositionHandleGraph, public SerializableHandleGraph, public VectorizableHandleGraph {
+    class XP : public handlegraph::PathPositionHandleGraph, public handlegraph::SerializableHandleGraph, public handlegraph::VectorizableHandleGraph {
     public:
 
         ////////////////////////////////////////////////////////////////////////////
@@ -53,7 +51,7 @@ namespace xp {
         XP &operator=(XP &&other) = delete;
 
         // Build the path index from a simple graph.
-        void from_handle_graph(const HandleGraph &graph);
+        void from_handle_graph(const handlegraph::HandleGraph &graph);
 
         // TODO Do we want to support from GFA?
 
@@ -116,9 +114,9 @@ namespace xp {
         // something goes wrong. We can also spit out the total unique members,
         // because in here is the most efficient place to count them.
         XPPath(const std::string& path_name,
-               const std::vector<handle_t>& path,
+               const std::vector<handlegraph::handle_t>& path,
                bool is_circular,
-               XG& graph);
+               XP& graph);
         // Path names are stored in the XG object, in a compressed fashion, and are
         // not duplicated here.
 
@@ -129,11 +127,13 @@ namespace xp {
         XPPath& operator=(const XPPath& other) = delete;
         XPPath& operator=(XPPath&& other) = delete;
         handlegraph::handle_t min_handle;
+        // TODO @ekg Do I need all of them? As far as I got it I don't need offsets?
         sdsl::enc_vector<> handles;
         //sdsl::rrr_vector directions; // forward or backward through nodes
         sdsl::rrr_vector<> offsets;
         sdsl::rrr_vector<>::rank_1_type offsets_rank;
         sdsl::rrr_vector<>::select_1_type offsets_select;
+        // TODO €ekg Do we need that?
         bool is_circular = false;
 
         void load(std::istream& in);
@@ -146,5 +146,4 @@ namespace xp {
 
         size_t step_rank_at_position(size_t pos) const;
     };
-
 }
