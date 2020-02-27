@@ -62,7 +62,7 @@ namespace xp {
         ////////////////////////////////////////////////////////////////////////////
 
         /// Build the path index from a simple graph.
-        void from_handle_graph(const handlegraph::HandleGraph &graph);
+        void from_handle_graph(const handlegraph::PathHandleGraph& graph);
 
         /// Look up the handle for the node with the given ID in the given orientation
         // TODO If not implemented, the linker crashes because of virtual declaration.
@@ -129,7 +129,6 @@ namespace xp {
         handlegraph::handle_t min_handle;
 
         sdsl::enc_vector<> handles;
-        //sdsl::rrr_vector directions; // forward or backward through nodes
         sdsl::rrr_vector<> offsets;
         sdsl::rrr_vector<>::rank_1_type offsets_rank;
         sdsl::rrr_vector<>::select_1_type offsets_select;

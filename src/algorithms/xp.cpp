@@ -17,8 +17,29 @@ namespace xp {
     }
 
     /// build the graph from a graph handle
-    void XP::from_handle_graph(const HandleGraph& graph) {
+    void XP::from_handle_graph(const PathHandleGraph& graph) {
+        // the graph must be compacted for this to work
+        std::vector<uint64_t> position_map(graph.get_node_count()+1);
+        uint64_t len = 0;
+        graph.for_each_handle([&](const handle_t& h) {
+            position_map[number_bool_packing::unpack_number(h)] = len;
+            uint64_t hl = graph.get_length(h);
+            len += hl;
+        });
+        position_map[position_map.size()-1] = len;
+        std::cout << "The current graph to index has nucleotide length: " << len << std::endl;
 
+        graph.for_each_path_handle([&](const path_handle_t& path) {
+            std::vector<handle_t> p;
+            graph.for_each_step_in_path(path, [&](const step_handle_t& occ) {
+                handle_t h = graph.get_handle_of_step(occ);
+                p.push_back(h);
+                uint64_t hl = graph.get_length(h);
+            });
+            std::string path_name = graph.get_path_name(path);
+            std::cout << "Indexing: " << path_name << std::endl;
+            XPPath* path_index = new XPPath(path_name, p, false, graph);
+        });
     }
 
     ////////////////////////////////////////////////////////////////////////////

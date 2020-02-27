@@ -50,10 +50,8 @@ namespace odgi {
                 f.close();
             }
         }
-        // TODO Get graph_handle. @ekg Is the graph_t already a graph_handle?
-        // TODO Build the index.
         XP path_index;
-        // path_index.from_handle_graph(graph);
+        path_index.from_handle_graph(graph);
         // TODO Open stream to idx_out_file.
         // index.serialize_members(out);
         std::cout << "The current graph has " << graph.get_node_count() << " number of nodes." << std::endl;
