@@ -29,7 +29,9 @@ namespace xp {
  /**
  * Provides succinct storage for the positional paths of a graph.
  */
-    class XP : public handlegraph::PathPositionHandleGraph, public handlegraph::SerializableHandleGraph, public handlegraph::VectorizableHandleGraph {
+    // class XP : public handlegraph::PathPositionHandleGraph, public handlegraph::SerializableHandleGraph, public handlegraph::VectorizableHandleGraph {
+    // TODO @ekg Do I need any of these abstract classes? I would have to implement a huge amount of functions. See path_handle_graph.hpp for example.
+    class XP {
     public:
 
         ////////////////////////////////////////////////////////////////////////////
