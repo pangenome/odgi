@@ -295,7 +295,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/linear_index.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/linear_sgd.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/break_cycles.cpp
-  )
+        src/subcommand/path_index_main.cpp)
 
 set(odgi_DEPS 
     sdsl-lite
