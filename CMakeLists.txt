@@ -295,7 +295,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/linear_index.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/linear_sgd.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/break_cycles.cpp
-        src/subcommand/path_index_main.cpp)
+  ${CMAKE_SOURCE_DIR}/src/subcommand/path_index_main.cpp)
 
 set(odgi_DEPS 
     sdsl-lite
@@ -404,7 +404,8 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_info.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/sgd_layout.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/dagify_sort.hpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/hash.hpp)
+  ${CMAKE_SOURCE_DIR}/src/algorithms/hash.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/XP.hpp)
 
 target_include_directories(odgi_objs PUBLIC ${odgi_INCLUDES})
 set_target_properties(odgi_objs PROPERTIES POSITION_INDEPENDENT_CODE TRUE)

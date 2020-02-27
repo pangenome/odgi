@@ -1,7 +1,7 @@
 #include "subcommand.hpp"
 #include "odgi.hpp"
 #include "args.hxx"
-// #include "algorithms/XP.hpp" TODO I will implement an XP class comparable to XG + XGPath, but only for paths
+// #include "algorithms/XP.hpp" TODO I will implement an XP class comparable to XG + XGPath, but only for paths.
 
 namespace odgi {
 
@@ -49,10 +49,11 @@ namespace odgi {
                 f.close();
             }
         }
-        // TODO get graph handle
-        // TODO build the index
-        // XP index = XP::from_handle_graph(graph_handle)
-        // index.serialize_members(idx_out_file)
+        // TODO Get graph_handle. @ekg Is the graph_t already a graph_handle?
+        // TODO Build the index.
+        // XP index = XP::from_handle_graph(graph);
+        // TODO Open stream to idx_out_file.
+        // index.serialize_members(out);
         std::cout << "The current graph has " << graph.get_node_count() << " number of nodes." << std::endl;
 
         return 0;
