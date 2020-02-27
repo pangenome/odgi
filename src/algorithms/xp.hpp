@@ -17,6 +17,8 @@
 
 namespace xp {
 
+    using nid_t = handlegraph::nid_t;
+
     class XPPath;
 
     /**
@@ -52,13 +54,19 @@ namespace xp {
 
         XP &operator=(XP &&other) = delete;
 
+        // General public statistics
+        size_t seq_length = 0;
+        size_t node_count = 0;
+        size_t edge_count = 0;
+        size_t path_count = 0;
+
         // Build the path index from a simple graph.
         void from_handle_graph(const handlegraph::HandleGraph &graph);
 
         // TODO Do we want to support from GFA?
 
         // Get our magic number
-        // TODO @ekg Do we need this?
+        // TODO @ekg Do we need this? How would it look like?
         uint32_t get_magic_number(void) const;
 
         // Load this XP index from a stream. Throw an XPFormatError if the stream
@@ -119,7 +127,7 @@ namespace xp {
                const std::vector<handlegraph::handle_t>& path,
                bool is_circular,
                XP& graph);
-        // Path names are stored in the XG object, in a compressed fashion, and are
+        // Path names are stored in the XP object, in a compressed fashion, and are
         // not duplicated here.
 
         // These contain rank and select supports and so cannot move or be copied
@@ -144,8 +152,8 @@ namespace xp {
                          sdsl::structure_tree_node* v = NULL,
                          std::string name = "") const;
 
-        bool is_reverse(size_t offset) const;
-
         size_t step_rank_at_position(size_t pos) const;
+
+        // TODO @ekg do I need more functionality here?
     };
 }
