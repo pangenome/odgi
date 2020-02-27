@@ -34,14 +34,6 @@ namespace xp {
     using nid_t = handlegraph::nid_t;
 
     class XPPath;
-
-    /**
- * Thrown when attempting to interpret invalid data as an XP index.
- */
-    class XPFormatError : public std::runtime_error {
-        // Use the runtime_error constructor
-        using std::runtime_error::runtime_error;
-    };
  /**
  * Provides succinct storage for the positional paths of a graph.
  */
@@ -69,24 +61,25 @@ namespace xp {
         // Here is the handle graph API
         ////////////////////////////////////////////////////////////////////////////
 
+        /// Build the path index from a simple graph.
+        void from_handle_graph(const handlegraph::HandleGraph &graph);
+
         /// Look up the handle for the node with the given ID in the given orientation
-        virtual handlegraph::handle_t get_handle(const nid_t& node_id, bool is_reverse = false) const;
+        // TODO If not implemented, the linker crashes because of virtual declaration.
+        // virtual handlegraph::handle_t get_handle(const nid_t& node_id, bool is_reverse = false) const;
 
         size_t id_to_rank(const nid_t& id) const;
 
-        // Build the path index from a simple graph.
-        void from_handle_graph(const handlegraph::HandleGraph &graph);
-
-        // Load this XP index from a stream. Throw an XPFormatError if the stream
-        // does not produce a valid XP file.
+        /// Load this XP index from a stream. Throw an XPFormatError if the stream
+        /// does not produce a valid XP file.
         void load(std::istream& in);
 
-        // Alias for load() to match the SerializableHandleGraph interface.
+        /// Alias for load() to match the SerializableHandleGraph interface.
         void deserialize_members(std::istream& in);
 
-        // Write this XP index to a stream.
+        /// Write this XP index to a stream.
         size_t serialize_and_measure(std::ostream& out, sdsl::structure_tree_node* s = nullptr, std::string name = "") const;
-        // Alias for serialize_and_measure().
+        /// Alias for serialize_and_measure().
         void serialize_members(std::ostream& out) const;
 
         /// Look up the path handle for the given path name
@@ -152,6 +145,7 @@ namespace xp {
 
         handlegraph::handle_t local_handle(const handlegraph::handle_t& handle) const;
     };
+
 }
 
 /**

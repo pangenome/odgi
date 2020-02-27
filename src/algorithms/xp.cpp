@@ -1,13 +1,5 @@
 #include "xp.hpp"
 
-#include <bitset>
-#include <arpa/inet.h>
-#include <mutex>
-
-#include <handlegraph/util.hpp>
-
-#include "gfakluge.hpp"
-
 namespace xp {
 
     using namespace handlegraph;
@@ -17,7 +9,7 @@ namespace xp {
     ////////////////////////////////////////////////////////////////////////////
 
     XP::~XP(void) {
-        // Clean up any created XGPaths
+        // Clean up any created XPPaths
         while (!paths.empty()) {
             delete paths.back();
             paths.pop_back();
@@ -28,7 +20,6 @@ namespace xp {
     void XP::from_handle_graph(const HandleGraph& graph) {
 
     }
-
 
     ////////////////////////////////////////////////////////////////////////////
     // Here is XPPath
@@ -59,7 +50,7 @@ namespace xp {
                    const handlegraph::PathHandleGraph& graph) {
 
 #ifdef debug_path_index
-        std::cerr << "Constructing xgpath for path with handles:" << std::endl;
+        std::cerr << "Constructing xppath for path with handles:" << std::endl;
     for (handle_t visiting : path) {
         std::cerr << "\t" << as_integer(visiting) << std::endl;
     }
