@@ -117,7 +117,7 @@ namespace xp {
         size_t get_bin_id(const std::string &path_name, const size_t &nuc_pos, const size_t &bin_size) const;
 
         /// Get the path of the given path name
-        XPPath& get_path(const std::string& name) const;
+        const XPPath& get_path(const std::string& name) const;
 
         size_t path_count = 0;
 
@@ -190,30 +190,30 @@ namespace xp {
 
     };
 
-}
-
-/**
+    /**
  * Temporary files. Create with create() and remove with remove(). All
  * temporary files will be deleted when the program exits normally or with
  * std::exit(). The files will be created in a directory determined from
  * environment variables, though this can be overridden with set_dir().
  * The interface is thread-safe.
  */
-namespace temp_file {
+    namespace temp_file {
 
 /// Create a temporary file starting with the given base name
-    std::string create(const std::string &base);
+        std::string create(const std::string &base);
 
 /// Create a temporary file
-    std::string create();
+        std::string create();
 
 /// Remove a temporary file
-    void remove(const std::string &filename);
+        void remove(const std::string &filename);
 
 /// Set a temp dir, overriding system defaults and environment variables.
-    void set_dir(const std::string &new_temp_dir);
+        void set_dir(const std::string &new_temp_dir);
 
 /// Get the current temp dir
-    std::string get_dir();
+        std::string get_dir();
 
-} // namespace temp_file
+    } // namespace temp_file
+
+}

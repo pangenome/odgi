@@ -241,13 +241,15 @@ namespace xp {
         return xppath.handle(as_integers(step_handle)[1]);
     }
 
-    XPPath& XP::get_path(const std::string &name) const {
-        // TODO @ekg How do I do this?!
+    const XPPath& XP::get_path(const std::string &name) const {
         handlegraph::path_handle_t p_h = get_path_handle(name);
-        return *paths[0];
+        return *paths[as_integer(p_h)];
     }
 
     size_t XP::get_bin_id(const std::string &path_name, const size_t &nuc_pos, const size_t &bin_size) const {
+        const XPPath& xppath = get_path(path_name);
+        size_t step_rank = xppath.step_rank_at_position(nuc_pos);
+
         // get the path handle of the given path name
         handlegraph::path_handle_t p_h = get_path_handle(path_name);
         // Is the given path name even in the index?!
@@ -255,20 +257,25 @@ namespace xp {
             std::cerr << "The given path name " << path_name << " is not in the index." << std::endl;
             exit(1);
         }
-        // TODO @ekg I guess the nucleotide position is wrong here?!
-        step_handle_t step_pos = get_step_at_position(p_h, nuc_pos);
+        step_handle_t step_pos = get_step_at_position(p_h, step_rank);
         handle_t p = get_handle_of_step(step_pos);
-        // Position offset in pangenome
-        uint64_t pangenome_offset = pos_map_iv[number_bool_packing::unpack_number(p)];
-        // TODO Remove this.
-        std::cout << "[GET BIN ID]: Pangenome offeset: " << pangenome_offset << std::endl;
-        // TODO @ekg I am missing rank(5) -> 2
-        XPPath& xppath = get_path(path_name);
-        // size_t step_rank = step_rank_at_position(nuc_pos); FIXME This does not work.
 
-        size_t pos_in_pangenome = pangenome_offset; // FIXME + step_rank;
+        // handle position
+        uint64_t handle_pos = pos_map_iv[number_bool_packing::unpack_number(p)];
+        // length of the handle
+        uint64_t next_handle_pos = pos_map_iv[number_bool_packing::unpack_number(p) + 1];
+        uint64_t node_length = next_handle_pos - handle_pos;
+        std::cout << "[GET BIN ID]: Handle position: " << handle_pos << std::endl;
+        bool is_rev = number_bool_packing::unpack_bit(p);
+        uint64_t handle_start_offset_in_path = xppath.offsets_select(step_rank);
+        // FIXME Adjust this for both strands!!!
+        uint64_t offset_in_handle = nuc_pos - handle_start_offset_in_path;
+        if (is_rev) {
+            offset_in_handle = node_length - offset_in_handle - 1;
+        }
+        size_t pos_in_pangenome = handle_pos + offset_in_handle;
 
-        return 0;
+        return pos_in_pangenome;
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -401,110 +408,110 @@ namespace xp {
     handle_t XPPath::external_handle(const handle_t& handle) const {
         return as_handle(as_integer(handle)+as_integer(min_handle));
     }
-}
 
-namespace temp_file {
+    namespace temp_file {
 
 // We use this to make the API thread-safe
-    std::recursive_mutex monitor;
+        std::recursive_mutex monitor;
 
-    std::string temp_dir;
+        std::string temp_dir;
 
 /// Because the names are in a static object, we can delete them when
 /// std::exit() is called.
-    struct Handler {
-        std::set<std::string> filenames;
-        std::string parent_directory;
+        struct Handler {
+            std::set<std::string> filenames;
+            std::string parent_directory;
 
-        ~Handler() {
-            // No need to lock in static destructor
-            for (auto &filename : filenames) {
-                std::remove(filename.c_str());
-            }
-            if (!parent_directory.empty()) {
-                // There may be extraneous files in the directory still (like .fai files)
-                auto directory = opendir(parent_directory.c_str());
-
-                dirent *dp;
-                while ((dp = readdir(directory)) != nullptr) {
-                    // For every item still in it, delete it.
-                    // TODO: Maybe eventually recursively delete?
-                    std::remove((parent_directory + "/" + dp->d_name).c_str());
+            ~Handler() {
+                // No need to lock in static destructor
+                for (auto &filename : filenames) {
+                    std::remove(filename.c_str());
                 }
-                closedir(directory);
+                if (!parent_directory.empty()) {
+                    // There may be extraneous files in the directory still (like .fai files)
+                    auto directory = opendir(parent_directory.c_str());
 
-                // Delete the directory itself
-                std::remove(parent_directory.c_str());
+                    dirent *dp;
+                    while ((dp = readdir(directory)) != nullptr) {
+                        // For every item still in it, delete it.
+                        // TODO: Maybe eventually recursively delete?
+                        std::remove((parent_directory + "/" + dp->d_name).c_str());
+                    }
+                    closedir(directory);
+
+                    // Delete the directory itself
+                    std::remove(parent_directory.c_str());
+                }
             }
-        }
-    } handler;
+        } handler;
 
-    std::string create(const std::string &base) {
-        std::lock_guard<std::recursive_mutex> lock(monitor);
+        std::string create(const std::string &base) {
+            std::lock_guard<std::recursive_mutex> lock(monitor);
 
-        if (handler.parent_directory.empty()) {
-            // Make a parent directory for our temp files
-            std::string tmpdirname_cpp = get_dir() + "/xp-XXXXXX";
-            char *tmpdirname = new char[tmpdirname_cpp.length() + 1];
-            std::strcpy(tmpdirname, tmpdirname_cpp.c_str());
-            auto got = mkdtemp(tmpdirname);
-            if (got != nullptr) {
-                // Save the directory we got
-                handler.parent_directory = got;
+            if (handler.parent_directory.empty()) {
+                // Make a parent directory for our temp files
+                std::string tmpdirname_cpp = get_dir() + "/xp-XXXXXX";
+                char *tmpdirname = new char[tmpdirname_cpp.length() + 1];
+                std::strcpy(tmpdirname, tmpdirname_cpp.c_str());
+                auto got = mkdtemp(tmpdirname);
+                if (got != nullptr) {
+                    // Save the directory we got
+                    handler.parent_directory = got;
+                } else {
+                    std::cerr << "[xp]: couldn't create temp directory: " << tmpdirname << std::endl;
+                    exit(1);
+                }
+                delete[] tmpdirname;
+            }
+
+            std::string tmpname = handler.parent_directory + "/" + base + "XXXXXX";
+            // hack to use mkstemp to get us a safe temporary file name
+            int fd = mkstemp(&tmpname[0]);
+            if (fd != -1) {
+                // we don't leave it open; we are assumed to open it again externally
+                close(fd);
             } else {
-                std::cerr << "[xp]: couldn't create temp directory: " << tmpdirname << std::endl;
+                std::cerr << "[xp]: couldn't create temp file on base "
+                          << base << " : " << tmpname << std::endl;
                 exit(1);
             }
-            delete[] tmpdirname;
+            handler.filenames.insert(tmpname);
+            return tmpname;
         }
 
-        std::string tmpname = handler.parent_directory + "/" + base + "XXXXXX";
-        // hack to use mkstemp to get us a safe temporary file name
-        int fd = mkstemp(&tmpname[0]);
-        if (fd != -1) {
-            // we don't leave it open; we are assumed to open it again externally
-            close(fd);
-        } else {
-            std::cerr << "[xp]: couldn't create temp file on base "
-                      << base << " : " << tmpname << std::endl;
-            exit(1);
+        std::string create() {
+            // No need to lock as we call this thing that locks
+            return create("xp-");
         }
-        handler.filenames.insert(tmpname);
-        return tmpname;
-    }
 
-    std::string create() {
-        // No need to lock as we call this thing that locks
-        return create("xp-");
-    }
+        void remove(const std::string &filename) {
+            std::lock_guard<std::recursive_mutex> lock(monitor);
 
-    void remove(const std::string &filename) {
-        std::lock_guard<std::recursive_mutex> lock(monitor);
+            std::remove(filename.c_str());
+            handler.filenames.erase(filename);
+        }
 
-        std::remove(filename.c_str());
-        handler.filenames.erase(filename);
-    }
+        void set_dir(const std::string &new_temp_dir) {
+            std::lock_guard<std::recursive_mutex> lock(monitor);
 
-    void set_dir(const std::string &new_temp_dir) {
-        std::lock_guard<std::recursive_mutex> lock(monitor);
+            temp_dir = new_temp_dir;
+        }
 
-        temp_dir = new_temp_dir;
-    }
+        std::string get_dir() {
+            std::lock_guard<std::recursive_mutex> lock(monitor);
 
-    std::string get_dir() {
-        std::lock_guard<std::recursive_mutex> lock(monitor);
-
-        // Get the default temp dir from environment variables.
-        if (temp_dir.empty()) {
-            const char *system_temp_dir = nullptr;
-            for (const char *var_name : {"TMPDIR", "TMP", "TEMP", "TEMPDIR", "USERPROFILE"}) {
-                if (system_temp_dir == nullptr) {
-                    system_temp_dir = getenv(var_name);
+            // Get the default temp dir from environment variables.
+            if (temp_dir.empty()) {
+                const char *system_temp_dir = nullptr;
+                for (const char *var_name : {"TMPDIR", "TMP", "TEMP", "TEMPDIR", "USERPROFILE"}) {
+                    if (system_temp_dir == nullptr) {
+                        system_temp_dir = getenv(var_name);
+                    }
                 }
+                temp_dir = (system_temp_dir == nullptr ? "/tmp" : system_temp_dir);
             }
-            temp_dir = (system_temp_dir == nullptr ? "/tmp" : system_temp_dir);
-        }
 
-        return temp_dir;
+            return temp_dir;
+        }
     }
 }
