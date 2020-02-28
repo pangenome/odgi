@@ -268,7 +268,7 @@ namespace xp {
         std::cout << "[GET BIN ID]: Handle position: " << handle_pos << std::endl;
         bool is_rev = number_bool_packing::unpack_bit(p);
         uint64_t handle_start_offset_in_path = xppath.offsets_select(step_rank);
-        // FIXME Adjust this for both strands!!!
+        // Adjust this for both strands!!!
         uint64_t offset_in_handle = nuc_pos - handle_start_offset_in_path;
         if (is_rev) {
             offset_in_handle = node_length - offset_in_handle - 1;

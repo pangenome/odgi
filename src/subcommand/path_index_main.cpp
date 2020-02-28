@@ -13,7 +13,7 @@ namespace odgi {
         for (uint64_t i = 1; i < argc-1; ++i) {
             argv[i] = argv[i+1];
         }
-        const std::string prog_name = "odgi path index";
+        const std::string prog_name = "odgi pathindex";
         argv[0] = (char*)prog_name.c_str();
         --argc;
 
@@ -80,7 +80,7 @@ namespace odgi {
         return 0;
     }
 
-    static Subcommand odgi_path_index("path_index", "create a path index for a given graph",
+    static Subcommand odgi_path_index("pathindex", "create a path index for a given graph",
                                PIPELINE, 3, main_path_index);
 
 
