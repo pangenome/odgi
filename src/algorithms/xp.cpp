@@ -241,7 +241,7 @@ namespace xp {
         return xppath.handle(as_integers(step_handle)[1]);
     }
 
-    const XPPath& XP::get_path(const std::string &name) const {
+    XPPath& XP::get_path(const std::string &name) const {
         // TODO @ekg How do I do this?!
         handlegraph::path_handle_t p_h = get_path_handle(name);
         return *paths[0];
