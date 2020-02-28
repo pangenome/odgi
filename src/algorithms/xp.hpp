@@ -88,6 +88,11 @@ namespace xp {
         /// Get the step at a given position
         handlegraph::step_handle_t get_step_at_position(const handlegraph::path_handle_t& path, const size_t& position) const;
 
+        size_t path_count = 0;
+
+        char start_marker = '#';
+        char end_marker = '$';
+
     private:
         ////////////////////////////////////////////////////////////////////////////
         // Here is path storage

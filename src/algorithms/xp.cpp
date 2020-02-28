@@ -21,6 +21,12 @@ namespace xp {
 
     /// build the graph from a graph handle
     void XP::from_handle_graph(const PathHandleGraph& graph) {
+        // create temporary file for path names
+        std::string basename;
+        if (basename.empty()) {
+            basename = temp_file::create();
+        }
+        std::string path_names;
         // the graph must be compacted for this to work
         sdsl::int_vector<> position_map;
         sdsl::util::assign(position_map, sdsl::int_vector<>(graph.get_node_count()+1));
@@ -31,7 +37,7 @@ namespace xp {
             len += hl;
         });
         position_map[position_map.size()-1] = len;
-        std::cout << "The current graph to index has nucleotide length: " << len << std::endl;
+        std::cout << "[XP CONSTRUCTION]: The current graph to index has nucleotide length: " << len << std::endl;
 
         graph.for_each_path_handle([&](const path_handle_t& path) {
             std::vector<handle_t> p;
@@ -41,14 +47,40 @@ namespace xp {
                 uint64_t hl = graph.get_length(h);
             });
             std::string path_name = graph.get_path_name(path);
-            std::cout << "Indexing: " << path_name << std::endl;
+            std::cout << "[XP CONSTRUCTION]: Indexing: " << path_name << std::endl;
             XPPath* path_index = new XPPath(path_name, p, false, graph);
             // Add path_index to paths.
             paths.push_back(path_index);
-
             // TODO Take care of path names somehow.
+            path_names += start_marker + path_name + end_marker;
         });
+        // assign the position map iv
         sdsl::util::assign(pos_map_iv, sdsl::enc_vector<>(position_map));
+        // set the path counts
+        path_count = paths.size();
+
+        // handle path names
+        sdsl::util::assign(pn_iv, sdsl::int_vector<>(path_names.size()));
+        sdsl::util::assign(pn_bv, sdsl::bit_vector(path_names.size()));
+        // now record path name starts
+        for (size_t i = 0; i < path_names.size(); ++i) {
+            pn_iv[i] = path_names[i];
+            if (path_names[i] == start_marker) {
+                pn_bv[i] = 1; // register name start
+            }
+        }
+        sdsl::util::assign(pn_bv_rank, sdsl::rank_support_v<1>(&pn_bv));
+        sdsl::util::assign(pn_bv_select, sdsl::bit_vector::select_1_type(&pn_bv));
+
+        // write path names to temp file
+        std::string path_name_file = basename + ".pathnames.iv";
+        std::cout << "[XP CONSTRUCTION]: Paths Temporary File Name: " << path_name_file << std::endl;
+        sdsl::store_to_file((const char*)path_names.c_str(), path_name_file);
+        // read file and construct compressed suffix array
+        sdsl::construct(pn_csa, path_name_file, 1);
+        // remove the file
+        temp_file::remove(path_name_file);
+        std::cout << "[XP CONSTRUCTION]: pn_csa size: " << pn_csa.size() << std::endl;
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -215,7 +247,7 @@ namespace temp_file {
 
         if (handler.parent_directory.empty()) {
             // Make a parent directory for our temp files
-            std::string tmpdirname_cpp = get_dir() + "/xg-XXXXXX";
+            std::string tmpdirname_cpp = get_dir() + "/xp-XXXXXX";
             char *tmpdirname = new char[tmpdirname_cpp.length() + 1];
             std::strcpy(tmpdirname, tmpdirname_cpp.c_str());
             auto got = mkdtemp(tmpdirname);
@@ -223,7 +255,7 @@ namespace temp_file {
                 // Save the directory we got
                 handler.parent_directory = got;
             } else {
-                std::cerr << "[xg]: couldn't create temp directory: " << tmpdirname << std::endl;
+                std::cerr << "[xp]: couldn't create temp directory: " << tmpdirname << std::endl;
                 exit(1);
             }
             delete[] tmpdirname;
@@ -236,7 +268,7 @@ namespace temp_file {
             // we don't leave it open; we are assumed to open it again externally
             close(fd);
         } else {
-            std::cerr << "[xg]: couldn't create temp file on base "
+            std::cerr << "[xp]: couldn't create temp file on base "
                       << base << " : " << tmpname << std::endl;
             exit(1);
         }
@@ -246,7 +278,7 @@ namespace temp_file {
 
     std::string create() {
         // No need to lock as we call this thing that locks
-        return create("xg-");
+        return create("xp-");
     }
 
     void remove(const std::string &filename) {

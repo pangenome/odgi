@@ -50,11 +50,13 @@ namespace odgi {
                 f.close();
             }
         }
+        std::cout << "The current graph has " << graph.get_node_count() << " number of nodes." << std::endl;
+
         XP path_index;
         path_index.from_handle_graph(graph);
         // TODO Open stream to idx_out_file.
         // index.serialize_members(out);
-        std::cout << "The current graph has " << graph.get_node_count() << " number of nodes." << std::endl;
+        std::cout << "Indexed " << path_index.path_count << " paths." << std::endl;
         return 0;
     }
 
