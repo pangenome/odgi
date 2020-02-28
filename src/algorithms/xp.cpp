@@ -20,7 +20,7 @@ namespace xp {
     }
 
     /// build the graph from a graph handle
-    void XP::from_handle_graph(const PathHandleGraph& graph) {
+    void XP::from_handle_graph(const PathHandleGraph &graph) {
         // create temporary file for path names
         std::string basename;
         if (basename.empty()) {
@@ -29,26 +29,26 @@ namespace xp {
         std::string path_names;
         // the graph must be compacted for this to work
         sdsl::int_vector<> position_map;
-        sdsl::util::assign(position_map, sdsl::int_vector<>(graph.get_node_count()+1));
+        sdsl::util::assign(position_map, sdsl::int_vector<>(graph.get_node_count() + 1));
         uint64_t len = 0;
-        graph.for_each_handle([&](const handle_t& h) {
+        graph.for_each_handle([&](const handle_t &h) {
             position_map[number_bool_packing::unpack_number(h)] = len;
             uint64_t hl = graph.get_length(h);
             len += hl;
         });
-        position_map[position_map.size()-1] = len;
+        position_map[position_map.size() - 1] = len;
         std::cout << "[XP CONSTRUCTION]: The current graph to index has nucleotide length: " << len << std::endl;
 
-        graph.for_each_path_handle([&](const path_handle_t& path) {
+        graph.for_each_path_handle([&](const path_handle_t &path) {
             std::vector<handle_t> p;
-            graph.for_each_step_in_path(path, [&](const step_handle_t& occ) {
+            graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
                 handle_t h = graph.get_handle_of_step(occ);
                 p.push_back(h);
                 uint64_t hl = graph.get_length(h);
             });
             std::string path_name = graph.get_path_name(path);
             std::cout << "[XP CONSTRUCTION]: Indexing: " << path_name << std::endl;
-            XPPath* path_index = new XPPath(path_name, p, false, graph);
+            XPPath *path_index = new XPPath(path_name, p, false, graph);
             // Add path_index to paths.
             paths.push_back(path_index);
             // TODO Take care of path names somehow.
@@ -74,31 +74,32 @@ namespace xp {
 
         // write path names to temp file
         std::string path_name_file = basename + ".pathnames.iv";
-        sdsl::store_to_file((const char*)path_names.c_str(), path_name_file);
+        sdsl::store_to_file((const char *) path_names.c_str(), path_name_file);
         // read file and construct compressed suffix array
         sdsl::construct(pn_csa, path_name_file, 1);
         std::cout << "[XP CONSTRUCTION]: pn_csa size: " << pn_csa.size() << std::endl;
     }
 
-    std::string XP::get_path_name(const handlegraph::path_handle_t& path_handle) const {
+    std::string XP::get_path_name(const handlegraph::path_handle_t &path_handle) const {
         uint64_t rank = as_integer(path_handle);
-        size_t start = pn_bv_select(rank)+1; // step past '#'
-        size_t end = rank == path_count ? pn_iv.size() : pn_bv_select(rank+1);
+        size_t start = pn_bv_select(rank) + 1; // step past '#'
+        size_t end = rank == path_count ? pn_iv.size() : pn_bv_select(rank + 1);
         end -= 1;  // step before '$'
-        std::string name; name.resize(end-start);
+        std::string name;
+        name.resize(end - start);
         for (size_t i = start; i < end; ++i) {
-            name[i-start] = pn_iv[i];
+            name[i - start] = pn_iv[i];
         }
         return name;
     }
 
-    void XP::serialize_members(std::ostream& out) const {
+    void XP::serialize_members(std::ostream &out) const {
         serialize_and_measure(out);
     }
 
-    size_t XP::serialize_and_measure(std::ostream& out, sdsl::structure_tree_node* s, std::string name) const {
+    size_t XP::serialize_and_measure(std::ostream &out, sdsl::structure_tree_node *s, std::string name) const {
 
-        sdsl::structure_tree_node* child = sdsl::structure_tree::add_child(s, name, sdsl::util::class_name(*this));
+        sdsl::structure_tree_node *child = sdsl::structure_tree::add_child(s, name, sdsl::util::class_name(*this));
         size_t written = 0;
 
         // Do the magic number
@@ -122,8 +123,9 @@ namespace xp {
         paths_written += pi_iv.serialize(out, paths_child, "path_ids");
 
         for (size_t i = 0; i < paths.size(); i++) {
-            XPPath* path = paths[i];
-            paths_written += path->serialize(out, paths_child, "path:" + XP::get_path_name(handlegraph::as_path_handle(i+1)));
+            XPPath *path = paths[i];
+            paths_written += path->serialize(out, paths_child,
+                                             "path:" + XP::get_path_name(handlegraph::as_path_handle(i + 1)));
         }
 
         sdsl::structure_tree::add_size(paths_child, paths_written);
@@ -133,12 +135,12 @@ namespace xp {
         return written;
     }
 
-    void XP::deserialize_members(std::istream& in) {
+    void XP::deserialize_members(std::istream &in) {
         // simple alias to match an external interface
         load(in);
     }
 
-    void XP::load(std::istream& in) {
+    void XP::load(std::istream &in) {
 
         if (!in.good()) {
             throw XPFormatError("Index file does not exist or index stream cannot be read");
@@ -181,17 +183,84 @@ namespace xp {
                 path->load(in);
                 paths.push_back(path);
             }
-        } catch (const XPFormatError& e) {
+        } catch (const XPFormatError &e) {
             // Pass XGFormatErrors through
             throw e;
-        } catch (const std::bad_alloc& e) {
+        } catch (const std::bad_alloc &e) {
             // We get std::bad_alloc generally if we try to read arbitrary data as an xg index.
             throw XPFormatError("XP input data not in XP version " + std::to_string(42) + " format (" + e.what() + ")");
-        } catch (const std::exception& e) {
+        } catch (const std::exception &e) {
             // Other things will get re-thrown with a hint.
-            std::cerr << "error [xp]: Unexpected error parsing XP data. Is it in version " << "EASTER EGG" << " XP format?" << std::endl;
+            std::cerr << "error [xp]: Unexpected error parsing XP data. Is it in version " << "EASTER EGG"
+                      << " XP format?" << std::endl;
             throw e;
         }
+    }
+
+    path_handle_t XP::get_path_handle(const std::string& path_name) const {
+        // find the name in the csa
+        std::string query = start_marker + path_name + end_marker;
+        auto occs = locate(pn_csa, query);
+        if (occs.size() > 1) {
+            std::cerr << "error [xp]: multiple hits for " << query << std::endl;
+            exit(1);
+        }
+        if(occs.size() == 0) {
+            // This path does not exist. Give back 0, which can never be a real path
+            // rank.
+            return as_path_handle(0);
+        }
+        return as_path_handle(pn_bv_rank(occs[0])+1); // step past '#'
+    }
+
+    size_t XP::get_path_length(const path_handle_t& path_handle) const {
+        return paths[as_integer(path_handle) - 1]->offsets.size();
+    }
+
+    /// Get the step at a given position
+    step_handle_t XP::get_step_at_position(const path_handle_t& path, const size_t& position) const {
+
+        if (position >= get_path_length(path)) {
+            throw std::runtime_error("Cannot get position " + std::to_string(position) + " along path " +
+                                get_path_name(path) + " of length " + std::to_string(get_path_length(path)));
+        }
+
+        const auto& xppath = *paths[as_integer(path) - 1];
+        step_handle_t step;
+        as_integers(step)[0] = as_integer(path);
+        as_integers(step)[1] = xppath.step_rank_at_position(position);
+        return step;
+    }
+
+    path_handle_t XP::get_path_handle_of_step(const step_handle_t& step_handle) const {
+        return as_path_handle(as_integers(step_handle)[0]);
+    }
+
+    handle_t XP::get_handle_of_step(const step_handle_t& step_handle) const {
+        const auto& xppath = *paths[as_integer(get_path_handle_of_step(step_handle)) - 1];
+        return xppath.handle(as_integers(step_handle)[1]);
+    }
+
+    size_t XP::get_bin_id(const std::string &path_name, const size_t &nuc_pos, const size_t &bin_size) const {
+        // get the path handle of the given path name
+        handlegraph::path_handle_t p_h = get_path_handle(path_name);
+        // Is the given path name even in the index?!
+        if (p_h == as_path_handle(0)) {
+            std::cerr << "The given path name " << path_name << " is not in the index." << std::endl;
+            exit(1);
+        }
+        step_handle_t step_pos = get_step_at_position(p_h, nuc_pos);
+        handle_t p = get_handle_of_step(step_pos);
+        // Position offset in pangenome
+        uint64_t pangenome_offset = pos_map_iv[number_bool_packing::unpack_number(p)];
+        // TODO Remove this.
+        std::cout << "[GET BIN ID]: Pangenome offeset: " << pangenome_offset << std::endl;
+        // TODO @ekg I am missing rank(5) -> 2
+        // size_t step_rank = step_rank_at_position(nuc_pos); FIXME This does not work.
+
+        size_t pos_in_pangenome = pangenome_offset; // FIXME + step_rank;
+
+        return 0;
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -199,13 +268,13 @@ namespace xp {
     ////////////////////////////////////////////////////////////////////////////
 
     size_t XPPath::step_rank_at_position(size_t pos) const {
-        return offsets_rank(pos+1)-1;
+        return offsets_rank(pos + 1) - 1;
     }
 
-    size_t XPPath::serialize(std::ostream& out,
-                             sdsl::structure_tree_node* v,
+    size_t XPPath::serialize(std::ostream &out,
+                             sdsl::structure_tree_node *v,
                              std::string name) const {
-        sdsl::structure_tree_node* child = sdsl::structure_tree::add_child(v, name, sdsl::util::class_name(*this));
+        sdsl::structure_tree_node *child = sdsl::structure_tree::add_child(v, name, sdsl::util::class_name(*this));
         size_t written = 0;
         written += sdsl::write_member(min_handle, out, child, "min_handle" + name);
         written += handles.serialize(out, child, "path_handles_" + name);
@@ -217,10 +286,10 @@ namespace xp {
         return written;
     }
 
-    XPPath::XPPath(const std::string& path_name,
-                   const std::vector<handle_t>& path,
+    XPPath::XPPath(const std::string &path_name,
+                   const std::vector<handle_t> &path,
                    bool is_circular,
-                   const handlegraph::PathHandleGraph& graph) {
+                   const handlegraph::PathHandleGraph &graph) {
 
 #ifdef debug_path_index
         std::cerr << "Constructing xppath for path with handles:" << std::endl;
@@ -260,7 +329,7 @@ namespace xp {
 
         // determine total length and record handles
         for (size_t i = 0; i < path.size(); ++i) {
-            const handle_t& handle = path[i];
+            const handle_t &handle = path[i];
             path_length += graph.get_length(handle);
             handles_iv[i] = as_integer(local_handle(handle));
 
@@ -285,7 +354,7 @@ namespace xp {
         //cerr << "path " << path_name << " has " << path.size() << endl;
         for (size_t i = 0; i < path.size(); ++i) {
             //cerr << i << endl;
-            auto& handle = path[i];
+            auto &handle = path[i];
             // record position of node
             offsets_bv[path_off] = 1;
             // and update the offset counter
@@ -298,7 +367,7 @@ namespace xp {
         sdsl::util::assign(offsets_select, sdsl::rrr_vector<>::select_1_type(&offsets));
     }
 
-    void XPPath::load(std::istream& in) {
+    void XPPath::load(std::istream &in) {
         sdsl::read_member(min_handle, in);
         handles.load(in);
         offsets.load(in);
@@ -307,13 +376,22 @@ namespace xp {
         sdsl::read_member(is_circular, in);
     }
 
-    handle_t XPPath::local_handle(const handle_t& handle) const {
+    handle_t XPPath::local_handle(const handle_t &handle) const {
         if (as_integer(handle) < as_integer(min_handle)) {
             throw std::runtime_error("Handle with value " + std::to_string(as_integer(handle)) +
-                                     " cannot be converted to local space based at min handle with value " + std::to_string(as_integer(min_handle)));
+                                     " cannot be converted to local space based at min handle with value " +
+                                     std::to_string(as_integer(min_handle)));
         } else {
-            return as_handle(as_integer(handle)-as_integer(min_handle));
+            return as_handle(as_integer(handle) - as_integer(min_handle));
         }
+    }
+
+    handle_t XPPath::handle(size_t offset) const {
+        return external_handle(as_handle(handles[offset]));
+    }
+
+    handle_t XPPath::external_handle(const handle_t& handle) const {
+        return as_handle(as_integer(handle)+as_integer(min_handle));
     }
 }
 
