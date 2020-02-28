@@ -117,7 +117,7 @@ namespace xp {
         size_t get_bin_id(const std::string &path_name, const size_t &nuc_pos, const size_t &bin_size) const;
 
         /// Get the path of the given path name
-        const XPPath& get_path(const std::string& name) const;
+        XPPath& get_path(const std::string& name) const;
 
         size_t path_count = 0;
 

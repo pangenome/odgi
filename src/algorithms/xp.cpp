@@ -241,6 +241,12 @@ namespace xp {
         return xppath.handle(as_integers(step_handle)[1]);
     }
 
+    const XPPath& XP::get_path(const std::string &name) const {
+        // TODO @ekg How do I do this?!
+        handlegraph::path_handle_t p_h = get_path_handle(name);
+        return *paths[0];
+    }
+
     size_t XP::get_bin_id(const std::string &path_name, const size_t &nuc_pos, const size_t &bin_size) const {
         // get the path handle of the given path name
         handlegraph::path_handle_t p_h = get_path_handle(path_name);
@@ -249,6 +255,7 @@ namespace xp {
             std::cerr << "The given path name " << path_name << " is not in the index." << std::endl;
             exit(1);
         }
+        // TODO @ekg I guess the nucleotide position is wrong here?!
         step_handle_t step_pos = get_step_at_position(p_h, nuc_pos);
         handle_t p = get_handle_of_step(step_pos);
         // Position offset in pangenome
@@ -256,6 +263,7 @@ namespace xp {
         // TODO Remove this.
         std::cout << "[GET BIN ID]: Pangenome offeset: " << pangenome_offset << std::endl;
         // TODO @ekg I am missing rank(5) -> 2
+        XPPath& xppath = get_path(path_name);
         // size_t step_rank = step_rank_at_position(nuc_pos); FIXME This does not work.
 
         size_t pos_in_pangenome = pangenome_offset; // FIXME + step_rank;
