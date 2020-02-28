@@ -54,9 +54,14 @@ namespace odgi {
 
         XP path_index;
         path_index.from_handle_graph(graph);
-        // TODO Open stream to idx_out_file.
-        // index.serialize_members(out);
         std::cout << "Indexed " << path_index.path_count << " paths." << std::endl;
+
+        // writ out the index
+        std::ofstream out;
+        out.open(args::get(idx_out_file));
+        std::cout << "Writing index to disk..." << std::endl;
+        path_index.serialize_members(out);
+
         return 0;
     }
 

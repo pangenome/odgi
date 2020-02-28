@@ -83,6 +83,60 @@ namespace xp {
         std::cout << "[XP CONSTRUCTION]: pn_csa size: " << pn_csa.size() << std::endl;
     }
 
+    std::string XP::get_path_name(const handlegraph::path_handle_t& path_handle) const {
+        uint64_t rank = as_integer(path_handle);
+        size_t start = pn_bv_select(rank)+1; // step past '#'
+        size_t end = rank == path_count ? pn_iv.size() : pn_bv_select(rank+1);
+        end -= 1;  // step before '$'
+        std::string name; name.resize(end-start);
+        for (size_t i = start; i < end; ++i) {
+            name[i-start] = pn_iv[i];
+        }
+        return name;
+    }
+
+    void XP::serialize_members(std::ostream& out) const {
+        serialize_and_measure(out);
+    }
+
+    size_t XP::serialize_and_measure(std::ostream& out, sdsl::structure_tree_node* s, std::string name) const {
+
+        sdsl::structure_tree_node* child = sdsl::structure_tree::add_child(s, name, sdsl::util::class_name(*this));
+        size_t written = 0;
+
+        // Do the magic number
+        out << "XP";
+        written += 2;
+
+        // POSITION MAP STUFF
+        // TODO write out position_map_iv
+        
+        // PATH STUFF
+        written += sdsl::write_member(path_count, out, child, "path_count");
+
+        // Treat the paths as their own node
+        size_t paths_written = 0;
+        auto paths_child = sdsl::structure_tree::add_child(child, "paths", sdsl::util::class_name(*this));
+
+        paths_written += pn_iv.serialize(out, paths_child, "path_names");
+        paths_written += pn_csa.serialize(out, paths_child, "path_names_csa");
+        paths_written += pn_bv.serialize(out, paths_child, "path_names_starts");
+        paths_written += pn_bv_rank.serialize(out, paths_child, "path_names_starts_rank");
+        paths_written += pn_bv_select.serialize(out, paths_child, "path_names_starts_select");
+        paths_written += pi_iv.serialize(out, paths_child, "path_ids");
+
+        for (size_t i = 0; i < paths.size(); i++) {
+            XPPath* path = paths[i];
+            paths_written += path->serialize(out, paths_child, "path:" + XP::get_path_name(handlegraph::as_path_handle(i+1)));
+        }
+
+        sdsl::structure_tree::add_size(paths_child, paths_written);
+        written += paths_written;
+
+        sdsl::structure_tree::add_size(child, written);
+        return written;
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     // Here is XPPath
     ////////////////////////////////////////////////////////////////////////////

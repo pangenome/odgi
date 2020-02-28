@@ -88,6 +88,9 @@ namespace xp {
         /// Get the step at a given position
         handlegraph::step_handle_t get_step_at_position(const handlegraph::path_handle_t& path, const size_t& position) const;
 
+        /// Look up the name of a path from a handle to it
+        std::string get_path_name(const handlegraph::path_handle_t& path_handle) const;
+
         size_t path_count = 0;
 
         char start_marker = '#';
