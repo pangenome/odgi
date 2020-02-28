@@ -74,7 +74,6 @@ namespace xp {
 
         // write path names to temp file
         std::string path_name_file = basename + ".pathnames.iv";
-        std::cout << "[XP CONSTRUCTION]: Paths Temporary File Name: " << path_name_file << std::endl;
         sdsl::store_to_file((const char*)path_names.c_str(), path_name_file);
         // read file and construct compressed suffix array
         sdsl::construct(pn_csa, path_name_file, 1);
@@ -109,8 +108,7 @@ namespace xp {
         written += 2;
 
         // POSITION MAP STUFF
-        // TODO write out position_map_iv
-        
+        written += sdsl::write_member(pos_map_iv, out, child, "position_map");
         // PATH STUFF
         written += sdsl::write_member(path_count, out, child, "path_count");
 
@@ -135,6 +133,68 @@ namespace xp {
 
         sdsl::structure_tree::add_size(child, written);
         return written;
+    }
+
+    void XP::deserialize_members(std::istream& in) {
+        // simple alias to match an external interface
+        load(in);
+    }
+
+    void XP::load(std::istream& in) {
+
+        if (!in.good()) {
+            throw XPFormatError("Index file does not exist or index stream cannot be read");
+        }
+
+        // We need to look for the magic value
+        // TODO @ekg is this necessary?!
+        char buffer;
+        in.get(buffer);
+        if (buffer == 'X') {
+            in.get(buffer);
+            if (buffer == 'P') {
+                // We found the magic value!
+
+            } else {
+                // Put back both characters
+                in.unget();
+                in.unget();
+            }
+        } else {
+            // Put back the one character
+            in.unget();
+        }
+
+        try {
+            sdsl::read_member(pos_map_iv, in);
+            sdsl::read_member(path_count, in);
+
+            pn_iv.load(in);
+            pn_csa.load(in);
+            pn_bv.load(in);
+            pn_bv_rank.load(in, &pn_bv);
+            pn_bv_select.load(in, &pn_bv);
+            pi_iv.load(in);
+
+            for (size_t i = 0; i < path_count; ++i) {
+                auto path = new XPPath;
+                // Load the path, giving it the file version and a
+                // rank-to-ID comversion function for format upgrade
+                // purposes.
+                path->load(in);
+                paths.push_back(path);
+            }
+        } catch (const XPFormatError& e) {
+            // Pass XGFormatErrors through
+            throw e;
+        } catch (const std::bad_alloc& e) {
+            // We get std::bad_alloc generally if we try to read arbitrary data as an xg index.
+            throw XPFormatError("XP input data not in XP version " + std::to_string(42) + " format (" + e.what() + ")");
+        } catch (const std::exception& e) {
+            // Other things will get re-thrown with a hint.
+            std::cerr << "error [xp]: Unexpected error parsing XP data. Is it in version " << "EASTER EGG" << " XP format?" << std::endl;
+            throw e;
+        }
     }
 
     ////////////////////////////////////////////////////////////////////////////

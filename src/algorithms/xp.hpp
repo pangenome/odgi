@@ -34,6 +34,14 @@ namespace xp {
     using nid_t = handlegraph::nid_t;
 
     class XPPath;
+
+    /**
+ * Thrown when attempting to interpret invalid data as an XP index.
+ */
+    class XPFormatError : public std::runtime_error {
+        // Use the runtime_error constructor
+        using std::runtime_error::runtime_error;
+    };
  /**
  * Provides succinct storage for the positional paths of a graph.
  */

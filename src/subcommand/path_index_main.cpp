@@ -61,6 +61,15 @@ namespace odgi {
         out.open(args::get(idx_out_file));
         std::cout << "Writing index to disk..." << std::endl;
         path_index.serialize_members(out);
+        out.close();
+
+        std::cout << "Reading index from disk " << args::get(idx_out_file) << std::endl;
+        XP path_index_1;
+        std::ifstream in;
+        in.open(args::get(idx_out_file));
+        path_index_1.load(in);
+        in.close();
+        std::cout << "Loaded index has " << path_index_1.path_count << " paths." << std::endl;
 
         return 0;
     }
