@@ -77,8 +77,6 @@ namespace xp {
         sdsl::store_to_file((const char*)path_names.c_str(), path_name_file);
         // read file and construct compressed suffix array
         sdsl::construct(pn_csa, path_name_file, 1);
-        // remove the file
-        temp_file::remove(path_name_file);
         std::cout << "[XP CONSTRUCTION]: pn_csa size: " << pn_csa.size() << std::endl;
     }
 
@@ -108,7 +106,7 @@ namespace xp {
         written += 2;
 
         // POSITION MAP STUFF
-        written += sdsl::write_member(pos_map_iv, out, child, "position_map");
+        written += pos_map_iv.serialize(out, child, "position_map");
         // PATH STUFF
         written += sdsl::write_member(path_count, out, child, "path_count");
 
@@ -166,9 +164,8 @@ namespace xp {
         }
 
         try {
-            sdsl::read_member(pos_map_iv, in);
+            pos_map_iv.load(in);
             sdsl::read_member(path_count, in);
-
             pn_iv.load(in);
             pn_csa.load(in);
             pn_bv.load(in);
