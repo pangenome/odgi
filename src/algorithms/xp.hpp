@@ -101,7 +101,7 @@ namespace xp {
         sdsl::bit_vector::select_1_type pn_bv_select;
         sdsl::int_vector<> pi_iv; // path ids by rank in the path names
 
-        sdsl::int_vector<> position_map; // store each offset of each node in the sequence vector
+        sdsl::enc_vector<> pos_map_iv; // store each offset of each node in the sequence vector
 
         std::vector<XPPath*> paths; // path structure
     };
