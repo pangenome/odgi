@@ -177,6 +177,7 @@ namespace xp {
             sdsl::read_member(path_count, in);
             pn_iv.load(in);
             pn_csa.load(in);
+            std::cout << "[XP LOAD] pn_csa_size: " << pn_csa.size() << std::endl;
             pn_bv.load(in);
             pn_bv_rank.load(in, &pn_bv);
             pn_bv_select.load(in, &pn_bv);
@@ -256,6 +257,7 @@ namespace xp {
     }
 
     size_t XP::get_bin_id(const std::string &path_name, const size_t &nuc_pos, const size_t &bin_size) const {
+        std::cout << "[GET_BIN_ID]: path_name: " << path_name << std::endl;
         const XPPath& xppath = get_path(path_name);
         if (xppath.offsets.size() < nuc_pos) {
             return 0;
@@ -446,6 +448,26 @@ namespace xp {
         offsets_rank.load(in, &offsets);
         offsets_select.load(in, &offsets);
         sdsl::read_member(is_circular, in);
+
+#ifdef debug_load_xppath
+        std::cout << "[XPPATH LOAD]: offsets: ";
+        for (size_t i = 0; i < offsets.size(); i++) {
+            std::cout << offsets[i];
+        }
+        std::cout << std::endl;
+
+        std::cout << "[XPPATH LOAD]: offsets_rank: ";
+        for (size_t i = 0; i < offsets_rank.size(); i++) {
+            std::cout << offsets_rank(i+1) - 1;
+        }
+        std::cout << std::endl;
+
+        std::cout << "[XPPATH LOAD]: offsets_select: ";
+        for (size_t i = 1; i <= offsets_select.size(); ++i) {
+            std::cout << offsets_select(i) << ",";
+        }
+        std::cout << std::endl;
+#endif
     }
 
     handle_t XPPath::local_handle(const handle_t &handle) const {
