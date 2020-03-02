@@ -54,10 +54,10 @@ namespace odgi {
 
         XP path_index;
         path_index.from_handle_graph(graph);
-        std::cout << "Indexed " << path_index.path_count << " paths." << std::endl;
+        std::cout << "Indexed " << path_index.path_count << " paths." << std::endl << std::endl;
 
-        size_t bin_id = path_index.get_bin_id("5", 2, 2);
-        std::cout << "Pangenome position for input \"5\":2:2 and constructed index is: " << bin_id << std::endl;
+        size_t bin_id = path_index.get_bin_id("5", 5, 2);
+        std::cout << "Pangenome position for input \"5\":5:2 and constructed index is: " << bin_id << std::endl;
 
         // writ out the index
         std::ofstream out;
