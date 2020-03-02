@@ -301,6 +301,7 @@ namespace xp {
     ////////////////////////////////////////////////////////////////////////////
 
     size_t XPPath::step_rank_at_position(size_t pos) const {
+        std::cerr << "[STEP_RANK_AT_POSITION] getting step rank at position " << pos << std::endl;
         return offsets_rank(pos + 1) - 1;
     }
 
@@ -418,12 +419,12 @@ namespace xp {
 
         std::cout << "[XPPATH CONSTRUCTION]: offsets_rank: ";
         for (size_t i = 0; i < offsets_rank.size(); i++) {
-            std::cout << offsets_rank(i);
+            std::cout << offsets_rank(i+1) - 1;
         }
         std::cout << std::endl;
 
         std::cout << "[XPPATH CONSTRUCTION]: offsets_select: ";
-        for (size_t i = 0; i < offsets_select.size(); i++) {
+        for (size_t i = 1; i <= path.size(); ++i) {
             std::cout << offsets_select(i) << ",";
         }
         std::cout << std::endl;
