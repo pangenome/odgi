@@ -57,7 +57,7 @@ namespace odgi {
         std::cout << "Indexed " << path_index.path_count << " paths." << std::endl;
 
         size_t bin_id = path_index.get_bin_id("5", 2, 2);
-        std::cout << "Bin id for input \"5\":2:2 and constructed index is: " << bin_id << std::endl;
+        std::cout << "Pangenome position for input \"5\":2:2 and constructed index is: " << bin_id << std::endl;
 
         // writ out the index
         std::ofstream out;
@@ -78,7 +78,7 @@ namespace odgi {
         //std::cout << "Bin id for input \"5\":2:2 and constructed index is: " << bin_id << std::endl;
 
         size_t bin_id_1 = path_index_1.get_bin_id("2196", 2, 2);
-        std::cout << "Bin id for input \"5\":2:2 and loaded index is: " << bin_id_1 << std::endl;
+        std::cout << "Pangenome position \"5\":2:2 and loaded index is: " << bin_id_1 << std::endl;
 
         return 0;
     }

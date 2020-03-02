@@ -244,14 +244,16 @@ namespace xp {
         // TODO @ekg How can I find out if there are things in a path handle?
         // TODO @ekg How can I find out what things are in a path handle?
         handlegraph::path_handle_t p_h = get_path_handle(name);
-        return *paths[as_integer(p_h)];
+        std::cout << "[GET PATH]: path_handle: " << as_integer(p_h) << std::endl;
+        return *paths[as_integer(p_h) - 1];
     }
 
     size_t XP::get_bin_id(const std::string &path_name, const size_t &nuc_pos, const size_t &bin_size) const {
         // TODO does this work?!
         const XPPath& xppath = get_path(path_name);
-        std::cout << "[GET_BIN_ID]: xppath.is_ciruclar: " << xppath.is_circular << std::endl;
+        std::cout << "[GET_BIN_ID]: xppath.is_circular: " << xppath.is_circular << std::endl;
         size_t step_rank = xppath.step_rank_at_position(nuc_pos);
+        std::cout << "[GET_BIN_ID]: step_rank: " << step_rank << std::endl;
 
         // get the path handle of the given path name
         handlegraph::path_handle_t p_h = get_path_handle(path_name);
@@ -267,6 +269,7 @@ namespace xp {
         uint64_t handle_pos = pos_map_iv[number_bool_packing::unpack_number(p)];
         // length of the handle
         uint64_t next_handle_pos = pos_map_iv[number_bool_packing::unpack_number(p) + 1];
+        std::cout << "[GET BIN ID]: next_handle_pos " << next_handle_pos << std::endl;
         uint64_t node_length = next_handle_pos - handle_pos;
         std::cout << "[GET BIN ID]: Handle position: " << handle_pos << std::endl;
         bool is_rev = number_bool_packing::unpack_bit(p);
@@ -286,10 +289,6 @@ namespace xp {
     ////////////////////////////////////////////////////////////////////////////
 
     size_t XPPath::step_rank_at_position(size_t pos) const {
-        std::cout << "offsets_rank size: " << handles.size() << std::endl;
-        for(int i = 0; i < offsets_rank.size(); ++i)
-            std::cout << "offsets_rank: " << offsets_rank(i) << ' ';
-        std::cout << std::endl;
         return offsets_rank(pos + 1) - 1;
     }
 
