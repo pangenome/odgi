@@ -257,7 +257,10 @@ namespace xp {
 
     size_t XP::get_bin_id(const std::string &path_name, const size_t &nuc_pos, const size_t &bin_size) const {
         const XPPath& xppath = get_path(path_name);
-        size_t step_rank = xppath.step_rank_at_position(nuc_pos);
+        if (xppath.offsets.size() < nuc_pos) {
+            return 0;
+        }
+        size_t step_rank = xppath.step_rank_at_position(nuc_pos - 1);
         std::cout << "[GET_BIN_ID]: step_rank: " << step_rank << std::endl;
 
         // get the path handle of the given path name
@@ -268,7 +271,7 @@ namespace xp {
             exit(1);
         }
         // FIXME @ekg I think the something in the following 2 lines is not working. But I don't know how to print out a step handle.
-        step_handle_t step_pos = get_step_at_position(p_h, nuc_pos);
+        step_handle_t step_pos = get_step_at_position(p_h, nuc_pos - 1);
         std::cout << "[GET_BIN_ID]: step_pos: " << as_integers(step_pos)[0] << as_integers(step_pos)[1] << std::endl;
         handle_t p = get_handle_of_step(step_pos);
         std::cout << "[GET_BIN_ID]: handle of step_pos: " << as_integer(p) << std::endl;

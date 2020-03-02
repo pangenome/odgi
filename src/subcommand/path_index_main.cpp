@@ -58,12 +58,12 @@ namespace odgi {
 
         size_t bin_id = path_index.get_bin_id("5", 2, 2);
         std::cout << "Pangenome position for input \"5\":2:2 and constructed index is: " << bin_id << std::endl;
-        bin_id = path_index.get_bin_id("5", 4, 2);
-        std::cout << "Pangenome position for input \"5\":4:2 and constructed index is: " << bin_id << std::endl;
-        bin_id = path_index.get_bin_id("5", 5, 2);
-        std::cout << "Pangenome position for input \"5\":5:2 and constructed index is: " << bin_id << std::endl;
         bin_id = path_index.get_bin_id("5", 13, 2);
         std::cout << "Pangenome position for input \"5\":13:2 and constructed index is: " << bin_id << std::endl;
+        bin_id = path_index.get_bin_id("5", 5, 2);
+        std::cout << "Pangenome position for input \"5\":5:2 and constructed index is: " << bin_id << std::endl;
+        bin_id = path_index.get_bin_id("5", 12, 2);
+        std::cout << "Pangenome position for input \"5\":12:2 and constructed index is: " << bin_id << std::endl;
         bin_id = path_index.get_bin_id("5", 234, 2);
         std::cout << "Pangenome position for input \"5\":234:2 and constructed index is: " << bin_id << std::endl;
 
