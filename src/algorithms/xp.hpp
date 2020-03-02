@@ -74,10 +74,6 @@ namespace xp {
         /// Build the path index from a simple graph.
         void from_handle_graph(const handlegraph::PathHandleGraph &graph);
 
-        /// Look up the handle for the node with the given ID in the given orientation
-        // TODO If not implemented, the linker crashes because of virtual declaration.
-        // virtual handlegraph::handle_t get_handle(const nid_t& node_id, bool is_reverse = false) const;
-
         size_t id_to_rank(const nid_t &id) const;
 
         /// Load this XP index from a stream. Throw an XPFormatError if the stream

@@ -50,11 +50,14 @@ namespace odgi {
                 f.close();
             }
         }
-        std::cout << "The current graph has " << graph.get_node_count() << " number of nodes." << std::endl;
+        std::cout << "The current graph has " << graph.get_node_count() << " nodes." << std::endl;
 
         XP path_index;
         path_index.from_handle_graph(graph);
         std::cout << "Indexed " << path_index.path_count << " paths." << std::endl;
+
+        size_t bin_id = path_index.get_bin_id("5", 2, 2);
+        std::cout << "Bin id for input \"5\":2:2 and constructed index is: " << bin_id << std::endl;
 
         // writ out the index
         std::ofstream out;
@@ -71,11 +74,11 @@ namespace odgi {
         in.close();
         std::cout << "Loaded index has " << path_index_1.path_count << " paths." << std::endl;
 
-        size_t bin_id = path_index.get_bin_id("2196", 2, 2);
-        std::cout << "Bin id for input \"2196\":2:2 and constructed index is: " << bin_id << std::endl;
+        //TODO size_t bin_id = path_index.get_bin_id("5", 2, 2);
+        //std::cout << "Bin id for input \"5\":2:2 and constructed index is: " << bin_id << std::endl;
 
         size_t bin_id_1 = path_index_1.get_bin_id("2196", 2, 2);
-        std::cout << "Bin id for input \"2196\":2:2 and loaded index is: " << bin_id_1 << std::endl;
+        std::cout << "Bin id for input \"5\":2:2 and loaded index is: " << bin_id_1 << std::endl;
 
         return 0;
     }

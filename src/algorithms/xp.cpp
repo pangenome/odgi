@@ -219,7 +219,6 @@ namespace xp {
 
     /// Get the step at a given position
     step_handle_t XP::get_step_at_position(const path_handle_t& path, const size_t& position) const {
-
         if (position >= get_path_length(path)) {
             throw std::runtime_error("Cannot get position " + std::to_string(position) + " along path " +
                                 get_path_name(path) + " of length " + std::to_string(get_path_length(path)));
@@ -242,12 +241,16 @@ namespace xp {
     }
 
     const XPPath& XP::get_path(const std::string &name) const {
+        // TODO @ekg How can I find out if there are things in a path handle?
+        // TODO @ekg How can I find out what things are in a path handle?
         handlegraph::path_handle_t p_h = get_path_handle(name);
         return *paths[as_integer(p_h)];
     }
 
     size_t XP::get_bin_id(const std::string &path_name, const size_t &nuc_pos, const size_t &bin_size) const {
+        // TODO does this work?!
         const XPPath& xppath = get_path(path_name);
+        std::cout << "[GET_BIN_ID]: xppath.is_ciruclar: " << xppath.is_circular << std::endl;
         size_t step_rank = xppath.step_rank_at_position(nuc_pos);
 
         // get the path handle of the given path name
@@ -283,6 +286,10 @@ namespace xp {
     ////////////////////////////////////////////////////////////////////////////
 
     size_t XPPath::step_rank_at_position(size_t pos) const {
+        std::cout << "offsets_rank size: " << handles.size() << std::endl;
+        for(int i = 0; i < offsets_rank.size(); ++i)
+            std::cout << "offsets_rank: " << offsets_rank(i) << ' ';
+        std::cout << std::endl;
         return offsets_rank(pos + 1) - 1;
     }
 
@@ -380,6 +387,11 @@ namespace xp {
         // and set up rank/select dictionary on them
         sdsl::util::assign(offsets_rank, sdsl::rrr_vector<>::rank_1_type(&offsets));
         sdsl::util::assign(offsets_select, sdsl::rrr_vector<>::select_1_type(&offsets));
+
+        // FIXME @ekg This works.
+        std::cout << "[XPPATH CONSTRUCTION]: handles_iv.size(): " << handles_iv.size() << std::endl;
+        std::cout << "[XPPATH CONSTRUCTION]: handles.size(): " << handles.size() << std::endl;
+
     }
 
     void XPPath::load(std::istream &in) {
