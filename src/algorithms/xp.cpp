@@ -268,10 +268,11 @@ namespace xp {
             exit(1);
         }
         // FIXME @ekg I think the something in the following 2 lines is not working. But I don't know how to print out a step handle.
-        step_handle_t step_pos = get_step_at_position(p_h, step_rank + 1);
+        step_handle_t step_pos = get_step_at_position(p_h, nuc_pos);
         std::cout << "[GET_BIN_ID]: step_pos: " << as_integers(step_pos)[0] << as_integers(step_pos)[1] << std::endl;
         handle_t p = get_handle_of_step(step_pos);
         std::cout << "[GET_BIN_ID]: handle of step_pos: " << as_integer(p) << std::endl;
+        // p = as_handle(as_integer(p) + 1);
 
         // handle position
         uint64_t handle_pos = pos_map_iv[number_bool_packing::unpack_number(p)];
