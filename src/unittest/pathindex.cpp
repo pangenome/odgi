@@ -57,8 +57,9 @@ namespace odgi {
                 REQUIRE(path_index.get_path_handle_of_step(s_h_i) == graph.get_path_handle_of_step(s_h_g));
                 */
 
-                // FIXME @ekg This does not run through.
-                // REQUIRE(as_integer(path_index.get_path_handle("5")) == as_integer(graph.get_path_handle("5")));
+                // We have to add +1 in the graph space, because of the different handle implementation in XP
+                // Explanation by Erik: https://github.com/vgteam/odgi/pull/82#discussion_r387129361.
+                REQUIRE(as_integer(path_index.get_path_handle("5")) == as_integer(graph.get_path_handle("5"))+ 1);
             }
 
             SECTION("The index has path and position") {
@@ -69,6 +70,18 @@ namespace odgi {
                 REQUIRE(!path_index.has_position("5", 45));
                 REQUIRE(!path_index.has_position("4", 5));
                 REQUIRE(!path_index.has_position("4", 45));
+            }
+
+            // TODO
+            SECTION("Retrieving pangenome position") {
+
+            }
+
+            // TODO
+            // Write index to temporary file
+            // Load index from temporary file
+            SECTION("The loaded index mirrors the constructed one") {
+
             }
 
         }
