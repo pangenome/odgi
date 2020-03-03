@@ -50,7 +50,6 @@ int main_prune(int argc, char** argv) {
     }
 
     assert(argc > 0);
-    assert(args::get(kmer_length));
 
     graph_t graph;
     std::string infile = args::get(dg_in_file);
