@@ -267,7 +267,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/layout_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/flatten_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/break_main.cpp
-  ${CMAKE_SOURCE_DIR}/src/subcommand/path_index_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/pathindex_main.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/hash.cpp
