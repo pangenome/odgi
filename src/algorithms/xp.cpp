@@ -280,13 +280,13 @@ namespace xp {
 #ifdef debug_get_pangenome_pos
         std::cerr << "[GET_PANGENOME_POS]: p_h: " << as_integer(p_h) << std::endl;
 #endif
-        // TODO Is the given path name even in the index?! Move this more to the top so it breaks before checking the nuc_pos.
+        // Is the given path name even in the index?!
         if (p_h == as_path_handle(0)) {
             std::cerr << "The given path name " << path_name << " is not in the index." << std::endl;
             exit(1);
         }
         const XPPath& xppath = get_path(path_name);
-        // TODO Is the nucleotide position there?!
+        // Is the nucleotide position there?!
         if (xppath.offsets.size() < nuc_pos) {
             return 0;
         }
