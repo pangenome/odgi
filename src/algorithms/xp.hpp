@@ -109,6 +109,9 @@ namespace xp {
         /// Look up the name of a path from a handle to it
         std::string get_path_name(const handlegraph::path_handle_t &path_handle) const;
 
+        /// Look up the pangenome position by given path name and nucleotide position
+        size_t get_pangenome_pos(const std::string &path_name, const size_t &nuc_pos) const;
+
         /// Look up the bin id by given path name, nucleotide position and bin size
         size_t get_bin_id(const std::string &path_name, const size_t &nuc_pos, const size_t &bin_size) const;
 

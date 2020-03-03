@@ -37,13 +37,14 @@ namespace xp {
             len += hl;
         });
         position_map[position_map.size() - 1] = len;
-
-        std::cout << "[XP CONSTRUCTION]: The current graph to index has nucleotide length: " << len << std::endl;
-        std::cout << "[XP CONSTRUCTION]: position_map: ";
+#ifdef debug_from_handle_graph
+        std::err << "[XP CONSTRUCTION]: The current graph to index has nucleotide length: " << len << std::endl;
+        std::err << "[XP CONSTRUCTION]: position_map: ";
         for (size_t i = 0; i < position_map.size() - 1; i++) {
-            std::cout << position_map[i] << ",";
+            std::cerr << position_map[i] << ",";
         }
-        std::cout << position_map[position_map.size() - 1] << std::endl;
+        std::err << position_map[position_map.size() - 1] << std::endl;
+#endif
 
         graph.for_each_path_handle([&](const path_handle_t &path) {
             std::vector<handle_t> p;
@@ -53,19 +54,19 @@ namespace xp {
                 uint64_t hl = graph.get_length(h);
             });
             std::string path_name = graph.get_path_name(path);
-            std::cout << "[XP CONSTRUCTION]: Indexing: " << path_name << std::endl;
+            std::cout << "[XP CONSTRUCTION]: Indexing path: " << path_name << std::endl;
             XPPath *path_index = new XPPath(path_name, p, false, graph);
             // Add path_index to paths.
             paths.push_back(path_index);
-            // TODO Take care of path names somehow.
             path_names += start_marker + path_name + end_marker;
         });
         // assign the position map iv
         sdsl::util::assign(pos_map_iv, sdsl::enc_vector<>(position_map));
         // set the path counts
         path_count = paths.size();
+#ifdef from_handle_graph
         std::cout << "[XP CONSTRUCTION]: path_count: " << path_count << std::endl;
-
+#endif
         // handle path names
         sdsl::util::assign(pn_iv, sdsl::int_vector<>(path_names.size()));
         sdsl::util::assign(pn_bv, sdsl::bit_vector(path_names.size()));
@@ -84,7 +85,6 @@ namespace xp {
         sdsl::store_to_file((const char *) path_names.c_str(), path_name_file);
         // read file and construct compressed suffix array
         sdsl::construct(pn_csa, path_name_file, 1);
-        std::cout << "[XP CONSTRUCTION]: pn_csa size: " << pn_csa.size() << std::endl;
     }
 
     std::string XP::get_path_name(const handlegraph::path_handle_t &path_handle) const {
@@ -154,7 +154,6 @@ namespace xp {
         }
 
         // We need to look for the magic value
-        // TODO @ekg is this necessary?!
         char buffer;
         in.get(buffer);
         if (buffer == 'X') {
@@ -177,7 +176,6 @@ namespace xp {
             sdsl::read_member(path_count, in);
             pn_iv.load(in);
             pn_csa.load(in);
-            std::cout << "[XP LOAD] pn_csa_size: " << pn_csa.size() << std::endl;
             pn_bv.load(in);
             pn_bv_rank.load(in, &pn_bv);
             pn_bv_select.load(in, &pn_bv);
@@ -249,51 +247,63 @@ namespace xp {
     }
 
     const XPPath& XP::get_path(const std::string &name) const {
-        // TODO @ekg How can I find out if there are things in a path handle?
-        // TODO @ekg How can I find out what things are in a path handle?
         handlegraph::path_handle_t p_h = get_path_handle(name);
-        std::cout << "[GET PATH]: path_handle: " << as_integer(p_h) << std::endl;
         return *paths[as_integer(p_h) - 1];
     }
 
-    size_t XP::get_bin_id(const std::string &path_name, const size_t &nuc_pos, const size_t &bin_size) const {
-        std::cout << "[GET_BIN_ID]: path_name: " << path_name << std::endl;
+    size_t XP::get_pangenome_pos(const std::string &path_name, const size_t &nuc_pos) const {
+#ifdef debug_get_pangenome_pos
+        std::cerr << "[GET_PANGENOME_POS]: path_name: " << path_name << std::endl;
+#endif
         const XPPath& xppath = get_path(path_name);
+        // TODO Is the nucleotide position there?!
         if (xppath.offsets.size() < nuc_pos) {
             return 0;
         }
         size_t step_rank = xppath.step_rank_at_position(nuc_pos - 1);
-        std::cout << "[GET_BIN_ID]: step_rank: " << step_rank << std::endl;
-
+#ifdef debug_get_pangenome_pos
+        std::cerr << "[GET_PANGENOME_POS]: step_rank: " << step_rank << std::endl;
+#endif
         // get the path handle of the given path name
         handlegraph::path_handle_t p_h = get_path_handle(path_name);
-        // Is the given path name even in the index?!
+#ifdef debug_get_pangenome_pos
+        std::cerr << "[GET_PANGENOME_POS]: p_h: " << as_integer(p_h) << std::endl;
+#endif
+        // TODO Is the given path name even in the index?! Move this more to the top so it breaks before checking the nuc_pos.
         if (p_h == as_path_handle(0)) {
             std::cerr << "The given path name " << path_name << " is not in the index." << std::endl;
             exit(1);
         }
-        // FIXME @ekg I think the something in the following 2 lines is not working. But I don't know how to print out a step handle.
         step_handle_t step_pos = get_step_at_position(p_h, nuc_pos - 1);
-        std::cout << "[GET_BIN_ID]: step_pos: " << as_integers(step_pos)[0] << as_integers(step_pos)[1] << std::endl;
+#ifdef debug_get_pangenome_pos
+        std::cerr << "[GET_PANGENOME_POS]: step_pos: " << as_integers(step_pos)[0] << as_integers(step_pos)[1] << std::endl;
+#endif
         handle_t p = get_handle_of_step(step_pos);
-        std::cout << "[GET_BIN_ID]: handle of step_pos: " << as_integer(p) << std::endl;
+#ifdef debug_get_pangenome_pos
+        std::cerr << "[GET_PANGENOME_POS]: handle_t of step_pos: " << as_integer(p) << std::endl;
+#endif
         // p = as_handle(as_integer(p) + 1);
 
         // handle position
         uint64_t handle_pos = pos_map_iv[number_bool_packing::unpack_number(p)];
-        std::cout << "[GET_BIN_ID]: Handle position: " << handle_pos << std::endl;
+#ifdef debug_get_pangenome_pos
+        std::cerr << "[GET_PANGENOME_POS]: handle_pos: " << handle_pos << std::endl;
+#endif
         // length of the handle
         uint64_t next_handle_pos = pos_map_iv[number_bool_packing::unpack_number(p) + 1];
-        std::cout << "[GET_BIN_ID]: next_handle_pos: " << next_handle_pos << std::endl;
+#ifdef debug_get_pangenome_pos
+        std::cerr << "[GET_PANGENOME_POS]: next_handle_pos: " << next_handle_pos << std::endl;
+#endif
         uint64_t node_length = next_handle_pos - handle_pos;
-        std::cout << "[GET_BIN_ID]: node_length: " << node_length << std::endl;
+#ifdef debug_get_pangenome_pos
+        std::cerr << "[GET_PANGENOME_POS]: node_length: " << node_length << std::endl;
+#endif
         bool is_rev = number_bool_packing::unpack_bit(p);
-        // TODO @ekg The "+ 1" here was the trick.
-        uint64_t handle_start_offset_in_path = xppath.offsets_select(step_rank + 1);
-        std::cout << "[GET_BIN_ID]: handle_start_offest_in_path: " << handle_start_offset_in_path << std::endl;
         // Adjust this for both strands!!!
-        uint64_t offset_in_handle = nuc_pos - handle_start_offset_in_path;
-        std::cout << "[GET_BIN_ID]: offset_in_handle: " << offset_in_handle << std::endl;
+        uint64_t offset_in_handle = nuc_pos - as_integer(p);
+#ifdef debug_get_pangenome_pos
+        std::cerr << "[GET_PANGENOME_POS]: offset_in_handle: " << offset_in_handle << std::endl;
+#endif
         if (is_rev) {
             offset_in_handle = node_length - offset_in_handle - 1;
         }
@@ -307,7 +317,6 @@ namespace xp {
     ////////////////////////////////////////////////////////////////////////////
 
     size_t XPPath::step_rank_at_position(size_t pos) const {
-        std::cerr << "[STEP_RANK_AT_POSITION] getting step rank at position " << pos << std::endl;
         return offsets_rank(pos + 1) - 1;
     }
 
@@ -331,7 +340,7 @@ namespace xp {
                    bool is_circular,
                    const handlegraph::PathHandleGraph &graph) {
 
-#ifdef debug_path_index
+#ifdef debug_xppath
         std::cerr << "Constructing xppath for path with handles:" << std::endl;
     for (handle_t visiting : path) {
         std::cerr << "\t" << as_integer(visiting) << std::endl;
@@ -363,34 +372,27 @@ namespace xp {
         }
         min_handle = as_handle(min_handle_int);
 
-#ifdef debug_path_index
+#ifdef debug_xppath
         std::cerr << "Basing on minimum handle value " << as_integer(min_handle) << " (aka " << min_handle_int << ")" << std::endl;
 #endif
-        // FIXME
-        std::cout << "[XPPATH CONSTRUCTION]: Basing on minimum handle value " << as_integer(min_handle) << " (aka " << min_handle_int << ")" << std::endl;
         // determine total length and record handles
         for (size_t i = 0; i < path.size(); ++i) {
             const handle_t &handle = path[i];
             path_length += graph.get_length(handle);
             handles_iv[i] = as_integer(local_handle(handle));
 
-#ifdef debug_path_index
+#ifdef debug_xppath
             std::cerr << "Recorded handle as " << handles_iv[i] << std::endl;
 #endif
-            // FIXME
-            std::cout << "[XPPATH CONSTRUCTION]: Recorded handle as " << handles_iv[i] << std::endl;
             // we will explode if the node isn't in the graph
         }
         sdsl::util::assign(handles, sdsl::enc_vector<>(handles_iv));
 
-#ifdef debug_path_index
+#ifdef debug_xppath
         for (size_t i = 0; i < path.size(); i++) {
         std::cerr << "Encoded handle as " << handles[i] << std::endl;
     }
 #endif
-        for (size_t i = 0; i < path.size(); i++) {
-            std::cout << "[XPPATH CONSTRUCTION]: Encoded handle as " << handles[i] << std::endl;
-        }
         // make the bitvector for path offsets
         sdsl::bit_vector offsets_bv;
         sdsl::util::assign(offsets_bv, sdsl::bit_vector(path_length));
@@ -410,35 +412,31 @@ namespace xp {
         sdsl::util::assign(offsets_rank, sdsl::rrr_vector<>::rank_1_type(&offsets));
         sdsl::util::assign(offsets_select, sdsl::rrr_vector<>::select_1_type(&offsets));
 
-        // FIXME
-        std::cout << "[XPPATH CONSTRUCTION]: offsets_bv: ";
+#ifdef debug_xppath
+        std::cerr << "[XPPATH CONSTRUCTION]: offsets_bv: ";
         for (size_t i = 0; i < offsets_bv.size(); i++) {
-            std::cout << offsets_bv[i];
+            std::cerr << offsets_bv[i];
         }
-        std::cout << std::endl;
+        std::cerr << std::endl;
 
-        std::cout << "[XPPATH CONSTRUCTION]: offsets: ";
+        std::cerr << "[XPPATH CONSTRUCTION]: offsets: ";
         for (size_t i = 0; i < offsets.size(); i++) {
-            std::cout << offsets[i];
+            std::cerr << offsets[i];
         }
-        std::cout << std::endl;
+        std::cerr << std::endl;
 
-        std::cout << "[XPPATH CONSTRUCTION]: offsets_rank: ";
+        std::cerr << "[XPPATH CONSTRUCTION]: offsets_rank: ";
         for (size_t i = 0; i < offsets_rank.size(); i++) {
-            std::cout << offsets_rank(i+1) - 1;
+            std::cerr << offsets_rank(i+1) - 1;
         }
-        std::cout << std::endl;
+        std::cerr << std::endl;
 
-        std::cout << "[XPPATH CONSTRUCTION]: offsets_select: ";
+        std::cerr << "[XPPATH CONSTRUCTION]: offsets_select: ";
         for (size_t i = 1; i <= path.size(); ++i) {
-            std::cout << offsets_select(i) << ",";
+            std::cerr << offsets_select(i) << ",";
         }
-        std::cout << std::endl;
-
-        // FIXME @ekg This works.
-        std::cout << "[XPPATH CONSTRUCTION]: handles_iv.size(): " << handles_iv.size() << std::endl;
-        std::cout << "[XPPATH CONSTRUCTION]: handles.size(): " << handles.size() << std::endl;
-
+        std::cerr << std::endl;
+#endif
     }
 
     void XPPath::load(std::istream &in) {
