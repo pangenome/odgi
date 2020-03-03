@@ -62,9 +62,6 @@ namespace odgi {
             std::cout << "Indexed " << path_index.path_count << " paths." << std::endl;
         }
 
-        // TODO check if the path name exists
-        // TODO check if the position exists
-
 #ifdef debug_pathindex
         size_t pangenome_pos = path_index.get_pangenome_pos("5", 1);
         std::cerr << "Pangenome position for input \"5\":1 in constructed index is: " << pangenome_pos << std::endl;
@@ -92,9 +89,19 @@ namespace odgi {
         path_index_1.load(in);
         in.close();
 
-        // TODO CHECK IF PATH IS IN GRAPH JESUS CHRIST
         size_t bin_id_1 = path_index_1.get_pangenome_pos("5", 5);
         std::cout << "Pangenome position \"5\":5 in loaded index is: " << bin_id_1 << std::endl;
+        bin_id_1 = path_index_1.get_pangenome_pos("5-", 5);
+        std::cout << "Pangenome position \"5-\":5 in loaded index is: " << bin_id_1 << std::endl;
+        bin_id_1 = path_index_1.get_pangenome_pos("5", 12);
+        std::cout << "Pangenome position \"5-\":12 in loaded index is: " << bin_id_1 << std::endl;
+
+        std::cout << path_index_1.has_path("5") << std::endl;
+        std::cout << path_index_1.has_path("5-") << std::endl;
+        std::cout << path_index.has_path("34adf") << std::endl;
+        std::cout << path_index.has_position("5", 3) << std::endl;
+        std::cout << path_index.has_position("5", 45) << std::endl;
+        std::cout << path_index.has_position("543", 3) << std::endl;
 
         return 0;
     }

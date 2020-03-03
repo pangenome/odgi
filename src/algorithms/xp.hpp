@@ -74,8 +74,6 @@ namespace xp {
         /// Build the path index from a simple graph.
         void from_handle_graph(const handlegraph::PathHandleGraph &graph);
 
-        size_t id_to_rank(const nid_t &id) const;
-
         /// Load this XP index from a stream. Throw an XPFormatError if the stream
         /// does not produce a valid XP file.
         void load(std::istream &in);
@@ -89,6 +87,11 @@ namespace xp {
 
         /// Alias for serialize_and_measure().
         void serialize_members(std::ostream &out) const;
+
+        /// Is this path in the index?
+        bool has_path(const std::string& path_name) const;
+
+        bool has_position(const std::string& path_name, size_t nuc_pos) const;
 
         /// Look up the path handle for the given path name
         handlegraph::path_handle_t get_path_handle(const std::string &path_name) const;

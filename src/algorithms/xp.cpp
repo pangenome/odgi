@@ -203,6 +203,26 @@ namespace xp {
         }
     }
 
+    bool XP::has_path(const std::string& path_name) const {
+        // find the name in the csa
+        std::string query = start_marker + path_name + end_marker;
+        auto occs = locate(pn_csa, query);
+        if (occs.size() > 1) {
+            std::cerr << "error [xp]: multiple hits for " << query << std::endl;
+            exit(1);
+        }
+        return !(occs.size() == 0);
+    }
+
+    bool XP::has_position(const std::string& path_name, size_t nuc_pos) const {
+        if (has_path(path_name)) {
+            const XPPath& xppath = get_path(path_name);
+            return !(xppath.offsets.size() < nuc_pos);
+        } else {
+            return false;
+        }
+    }
+
     path_handle_t XP::get_path_handle(const std::string& path_name) const {
         // find the name in the csa
         std::string query = start_marker + path_name + end_marker;
@@ -255,11 +275,6 @@ namespace xp {
 #ifdef debug_get_pangenome_pos
         std::cerr << "[GET_PANGENOME_POS]: path_name: " << path_name << std::endl;
 #endif
-        const XPPath& xppath = get_path(path_name);
-        // TODO Is the nucleotide position there?!
-        if (xppath.offsets.size() < nuc_pos) {
-            return 0;
-        }
         // get the path handle of the given path name
         handlegraph::path_handle_t p_h = get_path_handle(path_name);
 #ifdef debug_get_pangenome_pos
@@ -270,6 +285,12 @@ namespace xp {
             std::cerr << "The given path name " << path_name << " is not in the index." << std::endl;
             exit(1);
         }
+        const XPPath& xppath = get_path(path_name);
+        // TODO Is the nucleotide position there?!
+        if (xppath.offsets.size() < nuc_pos) {
+            return 0;
+        }
+
         step_handle_t step_pos = get_step_at_position(p_h, nuc_pos - 1);
 #ifdef debug_get_pangenome_pos
         std::cerr << "[GET_PANGENOME_POS]: step_pos: path_handle_t: " << as_integers(step_pos)[0] << " step_rank_at_position: " << as_integers(step_pos)[1] << std::endl;
