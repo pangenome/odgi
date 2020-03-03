@@ -54,7 +54,7 @@ namespace xp {
                 uint64_t hl = graph.get_length(h);
             });
             std::string path_name = graph.get_path_name(path);
-            std::cout << "[XP CONSTRUCTION]: Indexing path: " << path_name << std::endl;
+            // std::cout << "[XP CONSTRUCTION]: Indexing path: " << path_name << std::endl;
             XPPath *path_index = new XPPath(path_name, p, false, graph);
             // Add path_index to paths.
             paths.push_back(path_index);

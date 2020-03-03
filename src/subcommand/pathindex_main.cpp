@@ -3,8 +3,6 @@
 #include "args.hxx"
 #include "algorithms/xp.hpp"
 
-#define debug_pathindex true
-
 namespace odgi {
 
     using namespace odgi::subcommand;

@@ -248,6 +248,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/unittest/handle.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/fuzz.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/simplify.cpp
+  ${CMAKE_SOURCE_DIR}/src/unittest/pathindex.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/subcommand.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/build_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/test_main.cpp
