@@ -260,10 +260,6 @@ namespace xp {
         if (xppath.offsets.size() < nuc_pos) {
             return 0;
         }
-        size_t step_rank = xppath.step_rank_at_position(nuc_pos - 1);
-#ifdef debug_get_pangenome_pos
-        std::cerr << "[GET_PANGENOME_POS]: step_rank: " << step_rank << std::endl;
-#endif
         // get the path handle of the given path name
         handlegraph::path_handle_t p_h = get_path_handle(path_name);
 #ifdef debug_get_pangenome_pos
@@ -276,8 +272,9 @@ namespace xp {
         }
         step_handle_t step_pos = get_step_at_position(p_h, nuc_pos - 1);
 #ifdef debug_get_pangenome_pos
-        std::cerr << "[GET_PANGENOME_POS]: step_pos: " << as_integers(step_pos)[0] << as_integers(step_pos)[1] << std::endl;
+        std::cerr << "[GET_PANGENOME_POS]: step_pos: path_handle_t: " << as_integers(step_pos)[0] << " step_rank_at_position: " << as_integers(step_pos)[1] << std::endl;
 #endif
+        // via step_rank_at_position of step_pos[1] we get the handle of that step_pos
         handle_t p = get_handle_of_step(step_pos);
 #ifdef debug_get_pangenome_pos
         std::cerr << "[GET_PANGENOME_POS]: handle_t of step_pos: " << as_integer(p) << std::endl;
