@@ -5,6 +5,7 @@
 #include "algorithms/prune.hpp"
 #include "algorithms/coverage.hpp"
 #include "algorithms/remove_high_degree.hpp"
+#include "algorithms/cut_tips.hpp"
 
 namespace odgi {
 
@@ -30,7 +31,7 @@ int main_prune(int argc, char** argv) {
     args::ValueFlag<uint64_t> min_coverage(parser, "N", "remove nodes covered by fewer than this number of path steps", {'c', "min-coverage"});
     args::ValueFlag<uint64_t> max_coverage(parser, "N", "remove nodes covered by more than this number of path steps", {'C', "max-coverage"});
     args::Flag drop_paths(parser, "bool", "remove the paths from the graph", {'D', "drop-paths"});
-    args::ValueFlag<uint64_t> cut_tips(parser, "N", "remove nodes which are graph tips", {'T', "cut-tips"});
+    args::Flag cut_tips(parser, "bool", "remove nodes which are graph tips", {'T', "cut-tips"});
     args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
     try {
@@ -88,6 +89,9 @@ int main_prune(int argc, char** argv) {
         for (auto& handle : to_drop) {
             graph.destroy_handle(handle);
         }
+    }
+    if (args::get(cut_tips)) {
+        algorithms::cut_tips(graph);
     }
     if (args::get(drop_paths)) {
         graph.clear_paths();
