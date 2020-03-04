@@ -87,34 +87,34 @@ namespace odgi {
 
             SECTION("The index has path and position") {
                 REQUIRE(!path_index.has_path("4"));
-                REQUIRE(path_index.has_position("5", 5));
-                REQUIRE(path_index.has_position("5", 1));
-                REQUIRE(path_index.has_position("5", 13));
-                REQUIRE(!path_index.has_position("5", 45));
-                REQUIRE(!path_index.has_position("4", 5));
-                REQUIRE(!path_index.has_position("4", 45));
-                REQUIRE(path_index.has_position("5-", 5));
-                REQUIRE(path_index.has_position("5-", 1));
-                REQUIRE(path_index.has_position("5-", 13));
-                REQUIRE(!path_index.has_position("5-", 45));
-                REQUIRE(!path_index.has_position("4-", 5));
-                REQUIRE(!path_index.has_position("4+", 45));
+                REQUIRE(path_index.has_position("5", 4));
+                REQUIRE(path_index.has_position("5", 0));
+                REQUIRE(path_index.has_position("5", 12));
+                REQUIRE(!path_index.has_position("5", 44));
+                REQUIRE(!path_index.has_position("4", 4));
+                REQUIRE(!path_index.has_position("4", 44));
+                REQUIRE(path_index.has_position("5-", 4));
+                REQUIRE(path_index.has_position("5-", 0));
+                REQUIRE(path_index.has_position("5-", 12));
+                REQUIRE(!path_index.has_position("5-", 44));
+                REQUIRE(!path_index.has_position("4-", 4));
+                REQUIRE(!path_index.has_position("4+", 44));
             }
 
             SECTION("Retrieving pangenome position from constructed index") {
+                REQUIRE(path_index.get_pangenome_pos("5", 0) == 0);
                 REQUIRE(path_index.get_pangenome_pos("5", 1) == 1);
-                REQUIRE(path_index.get_pangenome_pos("5", 2) == 2);
-                REQUIRE(path_index.get_pangenome_pos("5", 13) == 14);
-                REQUIRE(path_index.get_pangenome_pos("5", 5) == 6);
                 REQUIRE(path_index.get_pangenome_pos("5", 12) == 13);
+                REQUIRE(path_index.get_pangenome_pos("5", 4) == 5);
+                REQUIRE(path_index.get_pangenome_pos("5", 11) == 12);
                 REQUIRE(path_index.get_pangenome_pos("5", 24) == 0);
                 REQUIRE(path_index.get_pangenome_pos("4", 1) == 0);
+                REQUIRE(path_index.get_pangenome_pos("5-", 0) == 0);
                 REQUIRE(path_index.get_pangenome_pos("5-", 1) == 1);
-                REQUIRE(path_index.get_pangenome_pos("5-", 2) == 2);
-                REQUIRE(path_index.get_pangenome_pos("5-", 6) == 9);
-                REQUIRE(path_index.get_pangenome_pos("5-", 13) == 14);
-                REQUIRE(path_index.get_pangenome_pos("5-", 5) == 6);
-                REQUIRE(path_index.get_pangenome_pos("5-", 12) == 13);
+                REQUIRE(path_index.get_pangenome_pos("5-", 5) == 8);
+                REQUIRE(path_index.get_pangenome_pos("5-", 12) == 6);
+                REQUIRE(path_index.get_pangenome_pos("5-", 4) == 7);
+                REQUIRE(path_index.get_pangenome_pos("5-", 11) == 5);
                 REQUIRE(path_index.get_pangenome_pos("5-", 24) == 0);
                 REQUIRE(path_index.get_pangenome_pos("4", 1) == 0);
             }
@@ -160,20 +160,20 @@ namespace odgi {
 
             SECTION("The loaded index has path and position") {
                 REQUIRE(!loaded_path_index.has_path("4"));
-                REQUIRE(loaded_path_index.has_position("5", 5));
-                REQUIRE(loaded_path_index.has_position("5", 1));
-                REQUIRE(loaded_path_index.has_position("5", 13));
-                REQUIRE(!loaded_path_index.has_position("5", 45));
-                REQUIRE(!loaded_path_index.has_position("4", 5));
-                REQUIRE(!loaded_path_index.has_position("4", 45));
+                REQUIRE(loaded_path_index.has_position("5", 4));
+                REQUIRE(loaded_path_index.has_position("5", 0));
+                REQUIRE(loaded_path_index.has_position("5", 12));
+                REQUIRE(!loaded_path_index.has_position("5", 44));
+                REQUIRE(!loaded_path_index.has_position("4", 4));
+                REQUIRE(!loaded_path_index.has_position("4", 44));
             }
 
             SECTION("Retrieving pangenome position from loaded index") {
+                REQUIRE(loaded_path_index.get_pangenome_pos("5", 0) == 0);
                 REQUIRE(loaded_path_index.get_pangenome_pos("5", 1) == 1);
-                REQUIRE(loaded_path_index.get_pangenome_pos("5", 2) == 2);
-                REQUIRE(loaded_path_index.get_pangenome_pos("5", 13) == 14);
-                REQUIRE(loaded_path_index.get_pangenome_pos("5", 5) == 6);
                 REQUIRE(loaded_path_index.get_pangenome_pos("5", 12) == 13);
+                REQUIRE(loaded_path_index.get_pangenome_pos("5", 4) == 5);
+                REQUIRE(loaded_path_index.get_pangenome_pos("5", 11) == 12);
                 REQUIRE(loaded_path_index.get_pangenome_pos("5", 24) == 0);
                 REQUIRE(loaded_path_index.get_pangenome_pos("4", 1) == 0);
             }

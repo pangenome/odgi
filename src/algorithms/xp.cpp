@@ -221,7 +221,7 @@ namespace xp {
     bool XP::has_position(const std::string& path_name, size_t nuc_pos) const {
         if (has_path(path_name)) {
             const XPPath& xppath = get_path(path_name);
-            return !(xppath.offsets.size() < nuc_pos);
+            return xppath.offsets.size() > nuc_pos;
         } else {
             return false;
         }
@@ -297,14 +297,14 @@ namespace xp {
             return 0;
         }
 
-        step_handle_t step_pos = get_step_at_position(p_h, nuc_pos - 1);
+        step_handle_t step_handle = get_step_at_position(p_h, nuc_pos);
 #ifdef debug_get_pangenome_pos
-        std::cerr << "[GET_PANGENOME_POS]: step_pos: path_handle_t: " << as_integers(step_pos)[0] << " step_rank_at_position: " << as_integers(step_pos)[1] << std::endl;
+        std::cerr << "[GET_PANGENOME_POS]: step_handle: path_handle_t: " << as_integers(step_handle)[0] << " step_rank_at_position: " << as_integers(step_handle)[1] << std::endl;
 #endif
-        // via step_rank_at_position of step_pos[1] we get the handle of that step_pos
-        handle_t p = get_handle_of_step(step_pos);
+        // via step_rank_at_position of step_handle[1] we get the handle of that step_handle
+        handle_t p = get_handle_of_step(step_handle);
 #ifdef debug_get_pangenome_pos
-        std::cerr << "[GET_PANGENOME_POS]: handle_t of step_pos: " << as_integer(p) << std::endl;
+        std::cerr << "[GET_PANGENOME_POS]: handle_t of step_handle: " << as_integer(p) << std::endl;
 #endif
         // p = as_handle(as_integer(p) + 1);
 
@@ -324,19 +324,29 @@ namespace xp {
 #endif
         bool is_rev = number_bool_packing::unpack_bit(p);
         // Adjust this for both strands!!!
-        uint64_t offset_in_handle = nuc_pos - as_integer(p);
+        size_t step_rank = xppath.step_rank_at_position(nuc_pos);
+#ifdef debug_get_pangenome_pos
+        std::cerr << "[GET_PANGENOME_POS]: offset_in_handle: " << xppath.offsets_select(step_rank+1) << std::endl;
+#endif
+        uint64_t offset_in_handle = nuc_pos - xppath.offsets_select(step_rank+1);
 #ifdef debug_get_pangenome_pos
         std::cerr << "[GET_PANGENOME_POS]: offset_in_handle: " << offset_in_handle << std::endl;
 #endif
         if (is_rev) {
+#ifdef debug_get_pangenome_pos
             std::cerr << "WE LANDED IN REVERSE." << std::endl;
             std::cerr << "[GET_PANGENOME_POS]: IS_REV offset_in_handle 1: " << offset_in_handle << std::endl;
             std::cerr << "[GET_PANGENOME_POS]: IS_REV node_length: " << node_length << std::endl;
+#endif
             // offset_in_handle = node_length - offset_handle - 1;
             offset_in_handle = offset_in_handle - node_length - 1;
+#ifdef debug_get_pangenome_pos
             std::cerr << "[GET_PANGENOME_POS]: IS_REV offset_in_handle 2: " << offset_in_handle << std::endl;
+#endif
         }
+#ifdef debug_get_pangenome_pos
         std::cerr << "[GET_PANGENOME_POS]: IS_REV handle_pos: " << handle_pos << std::endl;
+#endif
         size_t pos_in_pangenome = handle_pos + offset_in_handle;
 
         return pos_in_pangenome;
