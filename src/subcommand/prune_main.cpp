@@ -30,7 +30,7 @@ int main_prune(int argc, char** argv) {
     args::ValueFlag<uint64_t> max_degree(parser, "N", "remove nodes that have degree greater that this level", {'d', "max-degree"});
     args::ValueFlag<uint64_t> min_coverage(parser, "N", "remove nodes covered by fewer than this number of path steps", {'c', "min-coverage"});
     args::ValueFlag<uint64_t> max_coverage(parser, "N", "remove nodes covered by more than this number of path steps", {'C', "max-coverage"});
-    args::Flag edge_coverage(parser, "bool", "remove edges outside of the min and max coverage", {'E', "edge-coverage"});
+    args::Flag edge_coverage(parser, "bool", "remove edges outside of the min and max coverage (rather than nodes)", {'E', "edge-coverage"});
     args::ValueFlag<uint64_t> best_edges(parser, "N", "keep only the N most-covered inbound and outbound edge of each node", {'b', "best-edges"});
     args::Flag drop_paths(parser, "bool", "remove the paths from the graph", {'D', "drop-paths"});
     args::Flag cut_tips(parser, "bool", "remove nodes which are graph tips", {'T', "cut-tips"});
@@ -74,18 +74,20 @@ int main_prune(int argc, char** argv) {
     }
     if (args::get(max_furcations)) {
         std::vector<edge_t> to_prune = algorithms::find_edges_to_prune(graph, args::get(kmer_length), args::get(max_furcations));
-        std::cerr << "edges to prune: " << to_prune.size() << std::endl;
+        //std::cerr << "edges to prune: " << to_prune.size() << std::endl;
         for (auto& edge : to_prune) {
             graph.destroy_edge(edge);
         }
         // we're just removing edges, so paths shouldn't be damaged
-        std::cerr << "done prune" << std::endl;
+        //std::cerr << "done prune" << std::endl;
     }
     if (args::get(min_coverage) || args::get(max_coverage) || args::get(best_edges)) {
-        std::vector<handle_t> handles_to_drop = algorithms::find_handles_exceeding_coverage_limits(graph, args::get(min_coverage), args::get(max_coverage));
+        std::vector<handle_t> handles_to_drop;
         std::vector<edge_t> edges_to_drop_coverage, edges_to_drop_best;
         if (args::get(edge_coverage)) {
             edges_to_drop_coverage = algorithms::find_edges_exceeding_coverage_limits(graph, args::get(min_coverage), args::get(max_coverage));
+        } else {
+            handles_to_drop = algorithms::find_handles_exceeding_coverage_limits(graph, args::get(min_coverage), args::get(max_coverage));
         }
         if (args::get(best_edges)) {
             edges_to_drop_best = algorithms::keep_mutual_best_edges(graph, args::get(best_edges));
