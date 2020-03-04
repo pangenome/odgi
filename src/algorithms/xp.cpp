@@ -293,9 +293,10 @@ namespace xp {
         }
         const XPPath& xppath = get_path(path_name);
         // Is the nucleotide position there?!
-        if (xppath.offsets.size() < nuc_pos) {
+        if (xppath.offsets.size() = nuc_pos) {
             return 0;
         }
+        std::cerr << std::endl;
 
         step_handle_t step_pos = get_step_at_position(p_h, nuc_pos - 1);
 #ifdef debug_get_pangenome_pos
@@ -329,14 +330,17 @@ namespace xp {
         std::cerr << "[GET_PANGENOME_POS]: offset_in_handle: " << offset_in_handle << std::endl;
 #endif
         if (is_rev) {
+#ifdef debug_get_pangenom_pos
             std::cerr << "WE LANDED IN REVERSE." << std::endl;
             std::cerr << "[GET_PANGENOME_POS]: IS_REV offset_in_handle 1: " << offset_in_handle << std::endl;
             std::cerr << "[GET_PANGENOME_POS]: IS_REV node_length: " << node_length << std::endl;
+#endif
             // offset_in_handle = node_length - offset_handle - 1;
             offset_in_handle = offset_in_handle - node_length - 1;
+#ifdef debug_get_pangenome_pos
             std::cerr << "[GET_PANGENOME_POS]: IS_REV offset_in_handle 2: " << offset_in_handle << std::endl;
+#endif
         }
-        std::cerr << "[GET_PANGENOME_POS]: IS_REV handle_pos: " << handle_pos << std::endl;
         size_t pos_in_pangenome = handle_pos + offset_in_handle;
 
         return pos_in_pangenome;

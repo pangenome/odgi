@@ -45,6 +45,12 @@ namespace odgi {
             graph.append_step(five_m, n4);
             graph.append_step(five_m, n3);
 
+            // TODO REMOVE THIS
+            std::ofstream o;
+            o.open("/home/heumos/Downloads/ODGI_BIN_INDEXY/pathindex.gfa");
+            graph.to_gfa(o);
+            o.close();
+
             // just test if the graph generation worked roughly
             SECTION("The graph is as expected") {
                 REQUIRE(graph.get_node_count() == 4);
