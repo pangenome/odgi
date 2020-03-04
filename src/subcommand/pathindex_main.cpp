@@ -40,7 +40,7 @@ namespace odgi {
         // read in the graph
         graph_t graph;
         assert(argc > 0);
-        std::string infile = args::get(dg_in_file);
+        const std::string infile = args::get(dg_in_file);
         if (infile.size()) {
             if (infile == "-") {
                 graph.deserialize(std::cin);

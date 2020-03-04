@@ -87,6 +87,10 @@ namespace xp {
         sdsl::construct(pn_csa, path_name_file, 1);
     }
 
+    std::vector<XPPath *> XP::get_paths() const {
+        return this->paths;
+    }
+
     std::string XP::get_path_name(const handlegraph::path_handle_t &path_handle) const {
         uint64_t rank = as_integer(path_handle);
         size_t start = pn_bv_select(rank) + 1; // step past '#'
@@ -282,8 +286,10 @@ namespace xp {
 #endif
         // Is the given path name even in the index?!
         if (p_h == as_path_handle(0)) {
-            std::cerr << "The given path name " << path_name << " is not in the index." << std::endl;
-            exit(1);
+            // std::cerr << "The given path name " << path_name << " is not in the index." << std::endl;
+            // exit(1);
+            // As we assume the user knows what this method is doing, we return 0.
+            return 0;
         }
         const XPPath& xppath = get_path(path_name);
         // Is the nucleotide position there?!
@@ -323,8 +329,13 @@ namespace xp {
         std::cerr << "[GET_PANGENOME_POS]: offset_in_handle: " << offset_in_handle << std::endl;
 #endif
         if (is_rev) {
+            std::cerr << "WE LANDED IN REVERSE." << std::endl;
+            std::cerr << "[GET_PANGENOME_POS]: IS_REV offset_in_handle 1: " << offset_in_handle << std::endl;
+            std::cerr << "[GET_PANGENOME_POS]: IS_REV node_length: " << node_length << std::endl;
             offset_in_handle = node_length - offset_in_handle - 1;
+            std::cerr << "[GET_PANGENOME_POS]: IS_REV offset_in_handle 2: " << offset_in_handle << std::endl;
         }
+        std::cerr << "[GET_PANGENOME_POS]: IS_REV handle_pos: " << handle_pos << std::endl;
         size_t pos_in_pangenome = handle_pos + offset_in_handle;
 
         return pos_in_pangenome;
