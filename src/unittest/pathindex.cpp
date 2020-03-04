@@ -30,6 +30,8 @@ namespace odgi {
             graph.create_edge(n3, n4);
             graph.create_edge(n1, n4);
             graph.create_edge(n4, n3_m);
+            // TODO REMOVE THIS
+            graph.create_edge(n4, n3);
 
             graph.create_path_handle("5", false);
             path_handle_t five = graph.get_path_handle("5");
@@ -41,7 +43,7 @@ namespace odgi {
             path_handle_t five_m = graph.get_path_handle("5-");
             graph.append_step(five_m, n1);
             graph.append_step(five_m, n4);
-            graph.append_step(five_m, n3_m);
+            graph.append_step(five_m, n3);
 
             // just test if the graph generation worked roughly
             SECTION("The graph is as expected") {
@@ -52,6 +54,8 @@ namespace odgi {
                 REQUIRE(graph.get_length(n1) == 4);
                 REQUIRE(graph.get_length(n3_m) == 2);
                 REQUIRE(graph.get_length(n3) == 2);
+                REQUIRE(graph.get_sequence(n1) == "AGGA");
+                REQUIRE(graph.get_sequence(n3_m) == "GA");
             }
 
             XP path_index;
@@ -107,6 +111,7 @@ namespace odgi {
                 REQUIRE(path_index.get_pangenome_pos("4", 1) == 0);
                 REQUIRE(path_index.get_pangenome_pos("5-", 1) == 1);
                 REQUIRE(path_index.get_pangenome_pos("5-", 2) == 2);
+                REQUIRE(path_index.get_pangenome_pos("5-", 6) == 9);
                 REQUIRE(path_index.get_pangenome_pos("5-", 13) == 14);
                 REQUIRE(path_index.get_pangenome_pos("5-", 5) == 6);
                 REQUIRE(path_index.get_pangenome_pos("5-", 12) == 13);

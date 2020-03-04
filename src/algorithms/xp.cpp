@@ -332,7 +332,8 @@ namespace xp {
             std::cerr << "WE LANDED IN REVERSE." << std::endl;
             std::cerr << "[GET_PANGENOME_POS]: IS_REV offset_in_handle 1: " << offset_in_handle << std::endl;
             std::cerr << "[GET_PANGENOME_POS]: IS_REV node_length: " << node_length << std::endl;
-            offset_in_handle = node_length - offset_in_handle - 1;
+            // offset_in_handle = node_length - offset_handle - 1;
+            offset_in_handle = offset_in_handle - node_length - 1;
             std::cerr << "[GET_PANGENOME_POS]: IS_REV offset_in_handle 2: " << offset_in_handle << std::endl;
         }
         std::cerr << "[GET_PANGENOME_POS]: IS_REV handle_pos: " << handle_pos << std::endl;
