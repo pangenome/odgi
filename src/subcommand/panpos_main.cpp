@@ -37,6 +37,8 @@ namespace odgi {
             std::cout << parser;
             return 1;
         }
+
+        // TODO KEEP IN MIND THAT THE WHOLE THING IS BASED ON A 0 POSITIONING!
         /*
 
         // writ out the index

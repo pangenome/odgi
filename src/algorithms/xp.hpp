@@ -28,6 +28,11 @@ namespace xp {
         using std::runtime_error::runtime_error;
     };
 
+    class XPQueryError : public std::runtime_error {
+        // Use the runtime_error constructor
+        using std::runtime_error::runtime_error;
+    };
+
     /**
     * Provides succinct storage for the positional paths of a graph.
     */
@@ -109,6 +114,10 @@ namespace xp {
         const XPPath& get_path(const std::string& name) const;
 
         std::vector<XPPath *> get_paths() const;
+
+        const sdsl::enc_vector<>& get_pos_map_iv() const;
+
+        const sdsl::int_vector<>& get_pn_iv() const;
 
         size_t path_count = 0;
 

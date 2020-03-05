@@ -275,6 +275,14 @@ namespace xp {
         return *paths[as_integer(p_h) - 1];
     }
 
+    const sdsl::enc_vector<>& XP::get_pos_map_iv() const {
+        return pos_map_iv;
+    }
+
+    const sdsl::int_vector<>& XP::get_pn_iv() const {
+        return pn_iv;
+    }
+
     size_t XP::get_pangenome_pos(const std::string &path_name, const size_t &nuc_pos) const {
 #ifdef debug_get_pangenome_pos
         std::cerr << "[GET_PANGENOME_POS]: path_name: " << path_name << std::endl;
@@ -286,17 +294,15 @@ namespace xp {
 #endif
         // Is the given path name even in the index?!
         if (p_h == as_path_handle(0)) {
-            // std::cerr << "The given path name " << path_name << " is not in the index." << std::endl;
-            // exit(1);
-            // As we assume the user knows what this method is doing, we return 0.
-            return 0;
+            std::cerr << "The given path name " << path_name << " is not in the index." << std::endl;
+            exit(1);
         }
         const XPPath& xppath = get_path(path_name);
         // Is the nucleotide position there?!
-        if (xppath.offsets.size() = nuc_pos) {
-            return 0;
+        if (xppath.offsets.size() <= nuc_pos) {
+            std::cerr << "The given path " << path_name << " with nucleotide position " << nuc_pos << " is not in the index." << std::endl;
+            exit(1);
         }
-        std::cerr << std::endl;
 
         step_handle_t step_handle = get_step_at_position(p_h, nuc_pos);
 #ifdef debug_get_pangenome_pos
@@ -339,8 +345,7 @@ namespace xp {
             std::cerr << "[GET_PANGENOME_POS]: IS_REV offset_in_handle 1: " << offset_in_handle << std::endl;
             std::cerr << "[GET_PANGENOME_POS]: IS_REV node_length: " << node_length << std::endl;
 #endif
-            // offset_in_handle = node_length - offset_handle - 1;
-            offset_in_handle = offset_in_handle - node_length - 1;
+            offset_in_handle = node_length - offset_in_handle - 1;
 #ifdef debug_get_pangenome_pos
             std::cerr << "[GET_PANGENOME_POS]: IS_REV offset_in_handle 2: " << offset_in_handle << std::endl;
 #endif
