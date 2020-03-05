@@ -38,37 +38,41 @@ namespace odgi {
             return 1;
         }
 
-        // TODO KEEP IN MIND THAT THE WHOLE THING IS BASED ON A 0 POSITIONING!
-        /*
+        if (!dg_in_file) {
+            cerr << "Please enter a file to read the index from." << endl;
+            exit(1);
+        }
+        if (!path_name) {
+            cerr << "Please enter a valid path name to extract the pangenome position from." << endl;
+            exit(1);
+        }
+        if (!nuc_pos) {
+            cerr << "Please enter a valid nucleotide position to extract the corresponding pangenome position from." << endl;
+            exit(1);
+        }
 
-        // writ out the index
-        std::ofstream out;
-        out.open(args::get(idx_out_file));
-        std::cout << "Writing index to " << args::get(idx_out_file) << std::endl;
-        path_index.serialize_members(out);
-        out.close();
-
-        std::cout << "Reading index from " << args::get(idx_out_file) << std::endl;
-        XP path_index_1;
+        XP path_index;
         std::ifstream in;
-        in.open(args::get(idx_out_file));
-        path_index_1.load(in);
+        in.open(args::get(dg_in_file));
+        path_index.load(in);
         in.close();
 
-        size_t bin_id_1 = path_index_1.get_pangenome_pos("5", 5);
-        std::cout << "Pangenome position \"5\":5 in loaded index is: " << bin_id_1 << std::endl;
-        bin_id_1 = path_index_1.get_pangenome_pos("5-", 5);
-        std::cout << "Pangenome position \"5-\":5 in loaded index is: " << bin_id_1 << std::endl;
-        bin_id_1 = path_index_1.get_pangenome_pos("5", 12);
-        std::cout << "Pangenome position \"5-\":12 in loaded index is: " << bin_id_1 << std::endl;
+        // we have a 0-based positioning
+        uint64_t nucleotide_pos = args::get(nuc_pos) - 1;
+        std::string p_name = args::get(path_name);
 
-        std::cout << path_index_1.has_path("5") << std::endl;
-        std::cout << path_index_1.has_path("5-") << std::endl;
-        std::cout << path_index.has_path("34adf") << std::endl;
-        std::cout << path_index.has_position("5", 3) << std::endl;
-        std::cout << path_index.has_position("5", 45) << std::endl;
-        std::cout << path_index.has_position("543", 3) << std::endl;
-         */
+        if (!path_index.has_path(p_name)) {
+            std::cerr << "The given path name " << p_name << " is not in the index." << std::endl;
+            exit(1);
+        }
+
+        if (!path_index.has_position(p_name, nucleotide_pos)) {
+            std::cerr << "The given path " << p_name << " with nucleotide position " << nuc_pos << " is not in the index." << std::endl;
+            exit(1);
+        }
+
+        size_t pangenome_pos = path_index.get_pangenome_pos(p_name, nucleotide_pos) + 1;
+        cout << pangenome_pos << endl;
 
         return 0;
     }
