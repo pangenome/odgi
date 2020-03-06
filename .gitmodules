@@ -49,3 +49,6 @@
 [submodule "deps/libbf"]
 	path = deps/libbf
 	url = https://github.com/ekg/libbf.git
+[submodule "deps/cpp-httplib"]
+	path = deps/cpp-httplib
+	url = https://github.com/yhirose/cpp-httplib.git
