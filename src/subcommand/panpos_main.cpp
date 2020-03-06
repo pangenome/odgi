@@ -1,5 +1,4 @@
 #include "subcommand.hpp"
-#include "odgi.hpp"
 #include "args.hxx"
 #include "algorithms/xp.hpp"
 
@@ -39,15 +38,15 @@ namespace odgi {
         }
 
         if (!dg_in_file) {
-            cerr << "Please enter a file to read the index from." << endl;
+            std::cerr << "Please enter a file to read the index from." << std::endl;
             exit(1);
         }
         if (!path_name) {
-            cerr << "Please enter a valid path name to extract the pangenome position from." << endl;
+            std::cerr << "Please enter a valid path name to extract the pangenome position from." << std::endl;
             exit(1);
         }
         if (!nuc_pos) {
-            cerr << "Please enter a valid nucleotide position to extract the corresponding pangenome position from." << endl;
+            std::cerr << "Please enter a valid nucleotide position to extract the corresponding pangenome position from." << std::endl;
             exit(1);
         }
 
@@ -72,7 +71,7 @@ namespace odgi {
         }
 
         size_t pangenome_pos = path_index.get_pangenome_pos(p_name, nucleotide_pos) + 1;
-        cout << pangenome_pos << endl;
+        std::cout << pangenome_pos << std::endl;
 
         return 0;
     }

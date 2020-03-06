@@ -219,6 +219,16 @@ ExternalProject_Get_property(libbf INSTALL_DIR)
 set(libbf_INCLUDE "${INSTALL_DIR}/include")
 set(libbf_LIB "${INSTALL_DIR}/lib")
 
+# httplib for HTTP server
+ExternalProject_Add(httplib
+        SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/cpp-httplib"
+        UPDATE_COMMAND ""
+        INSTALL_COMMAND ""
+        BUILD_COMMAND ""
+        CONFIGURE_COMMAND "")
+ExternalProject_Get_property(httplib SOURCE_DIR)
+set(httplib_INCLUDE "${SOURCE_DIR}")
+
 # pybind11
 #ExternalProject_Add(pybind11
 #    GIT_REPOSITORY https://github.com/pybind/pybind11.git 
@@ -270,6 +280,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/break_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/pathindex_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/panpos_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/server_main.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/hash.cpp
@@ -316,7 +327,8 @@ set(odgi_DEPS
     picosha256
     sgd2
     mondriaan
-    libbf)
+    libbf
+    httplib)
 add_dependencies(odgi_objs ${odgi_DEPS})
 
 set(odgi_INCLUDES
@@ -339,7 +351,8 @@ set(odgi_INCLUDES
   "${picosha256_INCLUDE}"
   "${sgd2_INCLUDE}"
   "${mondriaan_INCLUDE}"
-  "${libbf_INCLUDE}")
+  "${libbf_INCLUDE}"
+  "${httplib_INCLUDE}")
 
 set(odgi_LIBS
   "${sdsl-lite_LIB}/libsdsl.a"
