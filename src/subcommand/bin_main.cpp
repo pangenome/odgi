@@ -25,6 +25,7 @@ int main_bin(int argc, char** argv) {
     args::Flag aggregate_delim(parser, "aggregate-delim", "aggregate on path prefix delimiter", {'a', "aggregate-delim"});
     args::ValueFlag<uint64_t> num_bins(parser, "N", "number of bins", {'n', "num-bins"});
     args::ValueFlag<uint64_t> bin_width(parser, "bp", "width of each bin in basepairs along the graph vector", {'w', "bin-width"});
+    args::Flag write_seqs_not(parser, "write-seqs-not", "don't write out the sequences for each bin", {'s', "no-seqs"});
     try {
         parser.ParseCLI(argc, argv);
     } catch (args::Help) {
@@ -80,8 +81,12 @@ int main_bin(int argc, char** argv) {
     std::function<void(const uint64_t&,
                        const std::string&)> write_seq_json
         = [&](const uint64_t& bin_id, const std::string& seq) {
-        std::cout << "{\"bin_id\":" << bin_id << ","
-                  << "\"sequence\":\"" << seq << "\"}" << std::endl;
+        if (args::get(write_seqs_not)) {
+            std::cout << "{\"bin_id\":" << bin_id << "\"}" << std::endl;
+        } else {
+            std::cout << "{\"bin_id\":" << bin_id << ","
+                      << "\"sequence\":\"" << seq << "\"}" << std::endl;
+        }
     };
 
     std::function<void(const std::string&,
