@@ -82,7 +82,7 @@ int main_bin(int argc, char** argv) {
                        const std::string&)> write_seq_json
         = [&](const uint64_t& bin_id, const std::string& seq) {
         if (args::get(write_seqs_not)) {
-            std::cout << "{\"bin_id\":" << bin_id << "\"}" << std::endl;
+            std::cout << "{\"bin_id\":" << bin_id << "}" << std::endl;
         } else {
             std::cout << "{\"bin_id\":" << bin_id << ","
                       << "\"sequence\":\"" << seq << "\"}" << std::endl;
