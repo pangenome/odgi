@@ -115,7 +115,7 @@ int main_subset(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand odgi_subset("subset", "merge unbranching linear components into single nodes",
+static Subcommand odgi_subset("subset", "extract subsets of the graph as defined by query criteria",
                               PIPELINE, 3, main_subset);
 
 
