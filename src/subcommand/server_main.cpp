@@ -48,6 +48,28 @@ namespace odgi {
         path_index.load(in);
         in.close();
 
+        /*
+        const char* pattern = R"(/(\d+)/(\w+))";
+        std::regex regexi = std::regex(pattern);
+        std::cmatch cm;    // same as std::match_results<const char*> cm;
+        std::regex_match ("/3/test",cm,regexi);
+        std::cout << "the matches were: " << std::endl;
+        for (unsigned i=0; i<cm.size(); ++i) {
+            std::cout << "[" << cm[i] << "] " << std::endl;
+        }
+        std::cout << std::endl;
+
+        const char* pattern1 = R"(/(\w+)/(\d+))";
+        std::regex regexi1 = std::regex(pattern1);
+        std::cmatch cm1;    // same as std::match_results<const char*> cm;
+        std::regex_match ("/test/3",cm1,regexi1);
+        std::cout << "the matches were: " << std::endl;
+        for (unsigned i=0; i<cm1.size(); ++i) {
+            std::cout << "[" << cm1[i] << "] " << std::endl;
+        }
+         */
+
+
         Server svr;
 
         svr.Get("/hi", [](const Request& req, Response& res) {
