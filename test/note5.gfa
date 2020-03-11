@@ -1,0 +1,13 @@
+H	VN:Z:1.0
+S	1	AGGA
+S	2	A
+S	3	TC
+S	4	TCTCAGG
+P	5	1+,3+,4+	8M,1M,1M
+P	5-	1+,3-,4+	8M,1M,1M
+L	1	+	2	+	0M
+L	1	+	3	+	0M
+L	1	+	3	-	0M
+L	3	-	4	+	0M
+L	2	+	4	+	0M
+L	3	+	4	+	0M

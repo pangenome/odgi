@@ -2,32 +2,17 @@
 
 #include <iostream>
 #include <fstream>
-#include <map>
-#include <queue>
-#include <omp.h>
-#include <unordered_map>
-#include <unordered_set>
 #include <string>
-#include <functional>
-#include <utility>
-#include <tuple>
-#include <sys/types.h>
 #include <dirent.h>
 
 #include <sdsl/bit_vectors.hpp>
 #include <sdsl/enc_vector.hpp>
-#include <sdsl/dac_vector.hpp>
-#include <sdsl/vlc_vector.hpp>
-#include <sdsl/wavelet_trees.hpp>
 #include <sdsl/csa_wt.hpp>
 #include <sdsl/suffix_arrays.hpp>
 
-#include <handlegraph/types.hpp>
-#include <handlegraph/iteratee.hpp>
 #include <handlegraph/util.hpp>
 #include <handlegraph/handle_graph.hpp>
 #include <handlegraph/path_position_handle_graph.hpp>
-#include <handlegraph/serializable_handle_graph.hpp>
 
 namespace xp {
 
@@ -39,6 +24,11 @@ namespace xp {
  * Thrown when attempting to interpret invalid data as an XP index.
  */
     class XPFormatError : public std::runtime_error {
+        // Use the runtime_error constructor
+        using std::runtime_error::runtime_error;
+    };
+
+    class XPQueryError : public std::runtime_error {
         // Use the runtime_error constructor
         using std::runtime_error::runtime_error;
     };
@@ -74,12 +64,6 @@ namespace xp {
         /// Build the path index from a simple graph.
         void from_handle_graph(const handlegraph::PathHandleGraph &graph);
 
-        /// Look up the handle for the node with the given ID in the given orientation
-        // TODO If not implemented, the linker crashes because of virtual declaration.
-        // virtual handlegraph::handle_t get_handle(const nid_t& node_id, bool is_reverse = false) const;
-
-        size_t id_to_rank(const nid_t &id) const;
-
         /// Load this XP index from a stream. Throw an XPFormatError if the stream
         /// does not produce a valid XP file.
         void load(std::istream &in);
@@ -93,6 +77,11 @@ namespace xp {
 
         /// Alias for serialize_and_measure().
         void serialize_members(std::ostream &out) const;
+
+        /// Is this path in the index?
+        bool has_path(const std::string& path_name) const;
+
+        bool has_position(const std::string& path_name, size_t nuc_pos) const;
 
         /// Look up the path handle for the given path name
         handlegraph::path_handle_t get_path_handle(const std::string &path_name) const;
@@ -113,11 +102,22 @@ namespace xp {
         /// Look up the name of a path from a handle to it
         std::string get_path_name(const handlegraph::path_handle_t &path_handle) const;
 
+        /// Look up the pangenome position by given path name and nucleotide position
+        /// Returns 0 if the given path name is not in the index.
+        /// Returns 0 if the given position is not in the given path.
+        size_t get_pangenome_pos(const std::string &path_name, const size_t &nuc_pos) const;
+
         /// Look up the bin id by given path name, nucleotide position and bin size
         size_t get_bin_id(const std::string &path_name, const size_t &nuc_pos, const size_t &bin_size) const;
 
         /// Get the path of the given path name
-        XPPath& get_path(const std::string& name) const;
+        const XPPath& get_path(const std::string& name) const;
+
+        std::vector<XPPath *> get_paths() const;
+
+        const sdsl::enc_vector<>& get_pos_map_iv() const;
+
+        const sdsl::int_vector<>& get_pn_iv() const;
 
         size_t path_count = 0;
 
@@ -190,30 +190,30 @@ namespace xp {
 
     };
 
-}
-
-/**
+    /**
  * Temporary files. Create with create() and remove with remove(). All
  * temporary files will be deleted when the program exits normally or with
  * std::exit(). The files will be created in a directory determined from
  * environment variables, though this can be overridden with set_dir().
  * The interface is thread-safe.
  */
-namespace temp_file {
+    namespace temp_file {
 
 /// Create a temporary file starting with the given base name
-    std::string create(const std::string &base);
+        std::string create(const std::string &base);
 
 /// Create a temporary file
-    std::string create();
+        std::string create();
 
 /// Remove a temporary file
-    void remove(const std::string &filename);
+        void remove(const std::string &filename);
 
 /// Set a temp dir, overriding system defaults and environment variables.
-    void set_dir(const std::string &new_temp_dir);
+        void set_dir(const std::string &new_temp_dir);
 
 /// Get the current temp dir
-    std::string get_dir();
+        std::string get_dir();
 
-} // namespace temp_file
+    } // namespace temp_file
+
+}

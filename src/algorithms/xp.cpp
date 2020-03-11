@@ -37,7 +37,14 @@ namespace xp {
             len += hl;
         });
         position_map[position_map.size() - 1] = len;
-        std::cout << "[XP CONSTRUCTION]: The current graph to index has nucleotide length: " << len << std::endl;
+#ifdef debug_from_handle_graph
+        std::err << "[XP CONSTRUCTION]: The current graph to index has nucleotide length: " << len << std::endl;
+        std::err << "[XP CONSTRUCTION]: position_map: ";
+        for (size_t i = 0; i < position_map.size() - 1; i++) {
+            std::cerr << position_map[i] << ",";
+        }
+        std::err << position_map[position_map.size() - 1] << std::endl;
+#endif
 
         graph.for_each_path_handle([&](const path_handle_t &path) {
             std::vector<handle_t> p;
@@ -47,18 +54,19 @@ namespace xp {
                 uint64_t hl = graph.get_length(h);
             });
             std::string path_name = graph.get_path_name(path);
-            std::cout << "[XP CONSTRUCTION]: Indexing: " << path_name << std::endl;
+            // std::cout << "[XP CONSTRUCTION]: Indexing path: " << path_name << std::endl;
             XPPath *path_index = new XPPath(path_name, p, false, graph);
             // Add path_index to paths.
             paths.push_back(path_index);
-            // TODO Take care of path names somehow.
             path_names += start_marker + path_name + end_marker;
         });
         // assign the position map iv
         sdsl::util::assign(pos_map_iv, sdsl::enc_vector<>(position_map));
         // set the path counts
         path_count = paths.size();
-
+#ifdef from_handle_graph
+        std::cout << "[XP CONSTRUCTION]: path_count: " << path_count << std::endl;
+#endif
         // handle path names
         sdsl::util::assign(pn_iv, sdsl::int_vector<>(path_names.size()));
         sdsl::util::assign(pn_bv, sdsl::bit_vector(path_names.size()));
@@ -77,7 +85,10 @@ namespace xp {
         sdsl::store_to_file((const char *) path_names.c_str(), path_name_file);
         // read file and construct compressed suffix array
         sdsl::construct(pn_csa, path_name_file, 1);
-        std::cout << "[XP CONSTRUCTION]: pn_csa size: " << pn_csa.size() << std::endl;
+    }
+
+    std::vector<XPPath *> XP::get_paths() const {
+        return this->paths;
     }
 
     std::string XP::get_path_name(const handlegraph::path_handle_t &path_handle) const {
@@ -147,7 +158,6 @@ namespace xp {
         }
 
         // We need to look for the magic value
-        // TODO @ekg is this necessary?!
         char buffer;
         in.get(buffer);
         if (buffer == 'X') {
@@ -197,6 +207,26 @@ namespace xp {
         }
     }
 
+    bool XP::has_path(const std::string& path_name) const {
+        // find the name in the csa
+        std::string query = start_marker + path_name + end_marker;
+        auto occs = locate(pn_csa, query);
+        if (occs.size() > 1) {
+            std::cerr << "error [xp]: multiple hits for " << query << std::endl;
+            exit(1);
+        }
+        return !(occs.size() == 0);
+    }
+
+    bool XP::has_position(const std::string& path_name, size_t nuc_pos) const {
+        if (has_path(path_name)) {
+            const XPPath& xppath = get_path(path_name);
+            return xppath.offsets.size() > nuc_pos;
+        } else {
+            return false;
+        }
+    }
+
     path_handle_t XP::get_path_handle(const std::string& path_name) const {
         // find the name in the csa
         std::string query = start_marker + path_name + end_marker;
@@ -219,7 +249,6 @@ namespace xp {
 
     /// Get the step at a given position
     step_handle_t XP::get_step_at_position(const path_handle_t& path, const size_t& position) const {
-
         if (position >= get_path_length(path)) {
             throw std::runtime_error("Cannot get position " + std::to_string(position) + " along path " +
                                 get_path_name(path) + " of length " + std::to_string(get_path_length(path)));
@@ -241,34 +270,92 @@ namespace xp {
         return xppath.handle(as_integers(step_handle)[1]);
     }
 
-    XPPath& XP::get_path(const std::string &name) const {
-        // TODO @ekg How do I do this?!
+    const XPPath& XP::get_path(const std::string &name) const {
         handlegraph::path_handle_t p_h = get_path_handle(name);
-        return *paths[0];
+        return *paths[as_integer(p_h) - 1];
     }
 
-    size_t XP::get_bin_id(const std::string &path_name, const size_t &nuc_pos, const size_t &bin_size) const {
+    const sdsl::enc_vector<>& XP::get_pos_map_iv() const {
+        return pos_map_iv;
+    }
+
+    const sdsl::int_vector<>& XP::get_pn_iv() const {
+        return pn_iv;
+    }
+
+    size_t XP::get_pangenome_pos(const std::string &path_name, const size_t &nuc_pos) const {
+#ifdef debug_get_pangenome_pos
+        std::cerr << "[GET_PANGENOME_POS]: path_name: " << path_name << std::endl;
+#endif
         // get the path handle of the given path name
         handlegraph::path_handle_t p_h = get_path_handle(path_name);
+#ifdef debug_get_pangenome_pos
+        std::cerr << "[GET_PANGENOME_POS]: p_h: " << as_integer(p_h) << std::endl;
+#endif
         // Is the given path name even in the index?!
         if (p_h == as_path_handle(0)) {
             std::cerr << "The given path name " << path_name << " is not in the index." << std::endl;
             exit(1);
         }
-        // TODO @ekg I guess the nucleotide position is wrong here?!
-        step_handle_t step_pos = get_step_at_position(p_h, nuc_pos);
-        handle_t p = get_handle_of_step(step_pos);
-        // Position offset in pangenome
-        uint64_t pangenome_offset = pos_map_iv[number_bool_packing::unpack_number(p)];
-        // TODO Remove this.
-        std::cout << "[GET BIN ID]: Pangenome offeset: " << pangenome_offset << std::endl;
-        // TODO @ekg I am missing rank(5) -> 2
-        XPPath& xppath = get_path(path_name);
-        // size_t step_rank = step_rank_at_position(nuc_pos); FIXME This does not work.
+        const XPPath& xppath = get_path(path_name);
+        // Is the nucleotide position there?!
+        if (xppath.offsets.size() <= nuc_pos) {
+            std::cerr << "The given path " << path_name << " with nucleotide position " << nuc_pos << " is not in the index." << std::endl;
+            exit(1);
+        }
 
-        size_t pos_in_pangenome = pangenome_offset; // FIXME + step_rank;
+        step_handle_t step_handle = get_step_at_position(p_h, nuc_pos);
+#ifdef debug_get_pangenome_pos
+        std::cerr << "[GET_PANGENOME_POS]: step_handle: path_handle_t: " << as_integers(step_handle)[0] << " step_rank_at_position: " << as_integers(step_handle)[1] << std::endl;
+#endif
+        // via step_rank_at_position of step_handle[1] we get the handle of that step_handle
+        handle_t p = get_handle_of_step(step_handle);
+#ifdef debug_get_pangenome_pos
+        std::cerr << "[GET_PANGENOME_POS]: handle_t of step_handle: " << as_integer(p) << std::endl;
+#endif
+        // p = as_handle(as_integer(p) + 1);
 
-        return 0;
+        // handle position
+        uint64_t handle_pos = pos_map_iv[number_bool_packing::unpack_number(p)];
+#ifdef debug_get_pangenome_pos
+        std::cerr << "[GET_PANGENOME_POS]: handle_pos: " << handle_pos << std::endl;
+#endif
+        // length of the handle
+        uint64_t next_handle_pos = pos_map_iv[number_bool_packing::unpack_number(p) + 1];
+#ifdef debug_get_pangenome_pos
+        std::cerr << "[GET_PANGENOME_POS]: next_handle_pos: " << next_handle_pos << std::endl;
+#endif
+        uint64_t node_length = next_handle_pos - handle_pos;
+#ifdef debug_get_pangenome_pos
+        std::cerr << "[GET_PANGENOME_POS]: node_length: " << node_length << std::endl;
+#endif
+        bool is_rev = number_bool_packing::unpack_bit(p);
+        // Adjust this for both strands!!!
+        size_t step_rank = xppath.step_rank_at_position(nuc_pos);
+#ifdef debug_get_pangenome_pos
+        std::cerr << "[GET_PANGENOME_POS]: offset_in_handle: " << xppath.offsets_select(step_rank+1) << std::endl;
+#endif
+        uint64_t offset_in_handle = nuc_pos - xppath.offsets_select(step_rank+1);
+#ifdef debug_get_pangenome_pos
+        std::cerr << "[GET_PANGENOME_POS]: offset_in_handle: " << offset_in_handle << std::endl;
+#endif
+        if (is_rev) {
+#ifdef debug_get_pangenome_pos
+            std::cerr << "WE LANDED IN REVERSE." << std::endl;
+            std::cerr << "[GET_PANGENOME_POS]: IS_REV offset_in_handle 1: " << offset_in_handle << std::endl;
+            std::cerr << "[GET_PANGENOME_POS]: IS_REV node_length: " << node_length << std::endl;
+#endif
+            offset_in_handle = node_length - offset_in_handle - 1;
+#ifdef debug_get_pangenome_pos
+            std::cerr << "[GET_PANGENOME_POS]: IS_REV offset_in_handle 2: " << offset_in_handle << std::endl;
+#endif
+        }
+#ifdef debug_get_pangenome_pos
+        std::cerr << "[GET_PANGENOME_POS]: IS_REV handle_pos: " << handle_pos << std::endl;
+#endif
+        size_t pos_in_pangenome = handle_pos + offset_in_handle;
+
+        return pos_in_pangenome;
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -299,7 +386,7 @@ namespace xp {
                    bool is_circular,
                    const handlegraph::PathHandleGraph &graph) {
 
-#ifdef debug_path_index
+#ifdef debug_xppath
         std::cerr << "Constructing xppath for path with handles:" << std::endl;
     for (handle_t visiting : path) {
         std::cerr << "\t" << as_integer(visiting) << std::endl;
@@ -331,30 +418,27 @@ namespace xp {
         }
         min_handle = as_handle(min_handle_int);
 
-#ifdef debug_path_index
+#ifdef debug_xppath
         std::cerr << "Basing on minimum handle value " << as_integer(min_handle) << " (aka " << min_handle_int << ")" << std::endl;
 #endif
-
         // determine total length and record handles
         for (size_t i = 0; i < path.size(); ++i) {
             const handle_t &handle = path[i];
             path_length += graph.get_length(handle);
             handles_iv[i] = as_integer(local_handle(handle));
 
-#ifdef debug_path_index
+#ifdef debug_xppath
             std::cerr << "Recorded handle as " << handles_iv[i] << std::endl;
 #endif
-
             // we will explode if the node isn't in the graph
         }
         sdsl::util::assign(handles, sdsl::enc_vector<>(handles_iv));
 
-#ifdef debug_path_index
+#ifdef debug_xppath
         for (size_t i = 0; i < path.size(); i++) {
         std::cerr << "Encoded handle as " << handles[i] << std::endl;
     }
 #endif
-
         // make the bitvector for path offsets
         sdsl::bit_vector offsets_bv;
         sdsl::util::assign(offsets_bv, sdsl::bit_vector(path_length));
@@ -373,6 +457,32 @@ namespace xp {
         // and set up rank/select dictionary on them
         sdsl::util::assign(offsets_rank, sdsl::rrr_vector<>::rank_1_type(&offsets));
         sdsl::util::assign(offsets_select, sdsl::rrr_vector<>::select_1_type(&offsets));
+
+#ifdef debug_xppath
+        std::cerr << "[XPPATH CONSTRUCTION]: offsets_bv: ";
+        for (size_t i = 0; i < offsets_bv.size(); i++) {
+            std::cerr << offsets_bv[i];
+        }
+        std::cerr << std::endl;
+
+        std::cerr << "[XPPATH CONSTRUCTION]: offsets: ";
+        for (size_t i = 0; i < offsets.size(); i++) {
+            std::cerr << offsets[i];
+        }
+        std::cerr << std::endl;
+
+        std::cerr << "[XPPATH CONSTRUCTION]: offsets_rank: ";
+        for (size_t i = 0; i < offsets_rank.size(); i++) {
+            std::cerr << offsets_rank(i+1) - 1;
+        }
+        std::cerr << std::endl;
+
+        std::cerr << "[XPPATH CONSTRUCTION]: offsets_select: ";
+        for (size_t i = 1; i <= path.size(); ++i) {
+            std::cerr << offsets_select(i) << ",";
+        }
+        std::cerr << std::endl;
+#endif
     }
 
     void XPPath::load(std::istream &in) {
@@ -382,6 +492,26 @@ namespace xp {
         offsets_rank.load(in, &offsets);
         offsets_select.load(in, &offsets);
         sdsl::read_member(is_circular, in);
+
+#ifdef debug_load_xppath
+        std::cout << "[XPPATH LOAD]: offsets: ";
+        for (size_t i = 0; i < offsets.size(); i++) {
+            std::cout << offsets[i];
+        }
+        std::cout << std::endl;
+
+        std::cout << "[XPPATH LOAD]: offsets_rank: ";
+        for (size_t i = 0; i < offsets_rank.size(); i++) {
+            std::cout << offsets_rank(i+1) - 1;
+        }
+        std::cout << std::endl;
+
+        std::cout << "[XPPATH LOAD]: offsets_select: ";
+        for (size_t i = 1; i <= offsets_select.size(); ++i) {
+            std::cout << offsets_select(i) << ",";
+        }
+        std::cout << std::endl;
+#endif
     }
 
     handle_t XPPath::local_handle(const handle_t &handle) const {
@@ -401,110 +531,110 @@ namespace xp {
     handle_t XPPath::external_handle(const handle_t& handle) const {
         return as_handle(as_integer(handle)+as_integer(min_handle));
     }
-}
 
-namespace temp_file {
+    namespace temp_file {
 
 // We use this to make the API thread-safe
-    std::recursive_mutex monitor;
+        std::recursive_mutex monitor;
 
-    std::string temp_dir;
+        std::string temp_dir;
 
 /// Because the names are in a static object, we can delete them when
 /// std::exit() is called.
-    struct Handler {
-        std::set<std::string> filenames;
-        std::string parent_directory;
+        struct Handler {
+            std::set<std::string> filenames;
+            std::string parent_directory;
 
-        ~Handler() {
-            // No need to lock in static destructor
-            for (auto &filename : filenames) {
-                std::remove(filename.c_str());
-            }
-            if (!parent_directory.empty()) {
-                // There may be extraneous files in the directory still (like .fai files)
-                auto directory = opendir(parent_directory.c_str());
-
-                dirent *dp;
-                while ((dp = readdir(directory)) != nullptr) {
-                    // For every item still in it, delete it.
-                    // TODO: Maybe eventually recursively delete?
-                    std::remove((parent_directory + "/" + dp->d_name).c_str());
+            ~Handler() {
+                // No need to lock in static destructor
+                for (auto &filename : filenames) {
+                    std::remove(filename.c_str());
                 }
-                closedir(directory);
+                if (!parent_directory.empty()) {
+                    // There may be extraneous files in the directory still (like .fai files)
+                    auto directory = opendir(parent_directory.c_str());
 
-                // Delete the directory itself
-                std::remove(parent_directory.c_str());
+                    dirent *dp;
+                    while ((dp = readdir(directory)) != nullptr) {
+                        // For every item still in it, delete it.
+                        // TODO: Maybe eventually recursively delete?
+                        std::remove((parent_directory + "/" + dp->d_name).c_str());
+                    }
+                    closedir(directory);
+
+                    // Delete the directory itself
+                    std::remove(parent_directory.c_str());
+                }
             }
-        }
-    } handler;
+        } handler;
 
-    std::string create(const std::string &base) {
-        std::lock_guard<std::recursive_mutex> lock(monitor);
+        std::string create(const std::string &base) {
+            std::lock_guard<std::recursive_mutex> lock(monitor);
 
-        if (handler.parent_directory.empty()) {
-            // Make a parent directory for our temp files
-            std::string tmpdirname_cpp = get_dir() + "/xp-XXXXXX";
-            char *tmpdirname = new char[tmpdirname_cpp.length() + 1];
-            std::strcpy(tmpdirname, tmpdirname_cpp.c_str());
-            auto got = mkdtemp(tmpdirname);
-            if (got != nullptr) {
-                // Save the directory we got
-                handler.parent_directory = got;
+            if (handler.parent_directory.empty()) {
+                // Make a parent directory for our temp files
+                std::string tmpdirname_cpp = get_dir() + "/xp-XXXXXX";
+                char *tmpdirname = new char[tmpdirname_cpp.length() + 1];
+                std::strcpy(tmpdirname, tmpdirname_cpp.c_str());
+                auto got = mkdtemp(tmpdirname);
+                if (got != nullptr) {
+                    // Save the directory we got
+                    handler.parent_directory = got;
+                } else {
+                    std::cerr << "[xp]: couldn't create temp directory: " << tmpdirname << std::endl;
+                    exit(1);
+                }
+                delete[] tmpdirname;
+            }
+
+            std::string tmpname = handler.parent_directory + "/" + base + "XXXXXX";
+            // hack to use mkstemp to get us a safe temporary file name
+            int fd = mkstemp(&tmpname[0]);
+            if (fd != -1) {
+                // we don't leave it open; we are assumed to open it again externally
+                close(fd);
             } else {
-                std::cerr << "[xp]: couldn't create temp directory: " << tmpdirname << std::endl;
+                std::cerr << "[xp]: couldn't create temp file on base "
+                          << base << " : " << tmpname << std::endl;
                 exit(1);
             }
-            delete[] tmpdirname;
+            handler.filenames.insert(tmpname);
+            return tmpname;
         }
 
-        std::string tmpname = handler.parent_directory + "/" + base + "XXXXXX";
-        // hack to use mkstemp to get us a safe temporary file name
-        int fd = mkstemp(&tmpname[0]);
-        if (fd != -1) {
-            // we don't leave it open; we are assumed to open it again externally
-            close(fd);
-        } else {
-            std::cerr << "[xp]: couldn't create temp file on base "
-                      << base << " : " << tmpname << std::endl;
-            exit(1);
+        std::string create() {
+            // No need to lock as we call this thing that locks
+            return create("xp-");
         }
-        handler.filenames.insert(tmpname);
-        return tmpname;
-    }
 
-    std::string create() {
-        // No need to lock as we call this thing that locks
-        return create("xp-");
-    }
+        void remove(const std::string &filename) {
+            std::lock_guard<std::recursive_mutex> lock(monitor);
 
-    void remove(const std::string &filename) {
-        std::lock_guard<std::recursive_mutex> lock(monitor);
+            std::remove(filename.c_str());
+            handler.filenames.erase(filename);
+        }
 
-        std::remove(filename.c_str());
-        handler.filenames.erase(filename);
-    }
+        void set_dir(const std::string &new_temp_dir) {
+            std::lock_guard<std::recursive_mutex> lock(monitor);
 
-    void set_dir(const std::string &new_temp_dir) {
-        std::lock_guard<std::recursive_mutex> lock(monitor);
+            temp_dir = new_temp_dir;
+        }
 
-        temp_dir = new_temp_dir;
-    }
+        std::string get_dir() {
+            std::lock_guard<std::recursive_mutex> lock(monitor);
 
-    std::string get_dir() {
-        std::lock_guard<std::recursive_mutex> lock(monitor);
-
-        // Get the default temp dir from environment variables.
-        if (temp_dir.empty()) {
-            const char *system_temp_dir = nullptr;
-            for (const char *var_name : {"TMPDIR", "TMP", "TEMP", "TEMPDIR", "USERPROFILE"}) {
-                if (system_temp_dir == nullptr) {
-                    system_temp_dir = getenv(var_name);
+            // Get the default temp dir from environment variables.
+            if (temp_dir.empty()) {
+                const char *system_temp_dir = nullptr;
+                for (const char *var_name : {"TMPDIR", "TMP", "TEMP", "TEMPDIR", "USERPROFILE"}) {
+                    if (system_temp_dir == nullptr) {
+                        system_temp_dir = getenv(var_name);
+                    }
                 }
+                temp_dir = (system_temp_dir == nullptr ? "/tmp" : system_temp_dir);
             }
-            temp_dir = (system_temp_dir == nullptr ? "/tmp" : system_temp_dir);
-        }
 
-        return temp_dir;
+            return temp_dir;
+        }
     }
 }

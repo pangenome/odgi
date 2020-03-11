@@ -8,12 +8,12 @@ namespace odgi {
     using namespace odgi::subcommand;
     using namespace xp;
 
-    int main_path_index(int argc, char** argv) {
+    int main_pathindex(int argc, char** argv) {
 
         for (uint64_t i = 1; i < argc-1; ++i) {
             argv[i] = argv[i+1];
         }
-        const std::string prog_name = "odgi path index";
+        const std::string prog_name = "odgi pathindex";
         argv[0] = (char*)prog_name.c_str();
         --argc;
 
@@ -40,7 +40,7 @@ namespace odgi {
         // read in the graph
         graph_t graph;
         assert(argc > 0);
-        std::string infile = args::get(dg_in_file);
+        const std::string infile = args::get(dg_in_file);
         if (infile.size()) {
             if (infile == "-") {
                 graph.deserialize(std::cin);
@@ -50,38 +50,40 @@ namespace odgi {
                 f.close();
             }
         }
-        std::cout << "The current graph has " << graph.get_node_count() << " number of nodes." << std::endl;
 
         XP path_index;
         path_index.from_handle_graph(graph);
-        std::cout << "Indexed " << path_index.path_count << " paths." << std::endl;
+        size_t path_count = path_index.path_count;
+        if (path_count == 1) {
+            std::cout << "Indexed 1 path." << std::endl;
+        } else {
+            std::cout << "Indexed " << path_index.path_count << " paths." << std::endl;
+        }
+
+#ifdef debug_pathindex
+        size_t pangenome_pos = path_index.get_pangenome_pos("5", 1);
+        std::cerr << "Pangenome position for input \"5\":1 in constructed index is: " << pangenome_pos << std::endl;
+        pangenome_pos = path_index.get_pangenome_pos("5", 2);
+        std::cerr << "Pangenome position for input \"5\":2 in constructed index is: " << pangenome_pos << std::endl;
+        pangenome_pos = path_index.get_pangenome_pos("5", 13);
+        std::cerr << "Pangenome position for input \"5\":13 in constructed index is: " << pangenome_pos << std::endl;
+        pangenome_pos = path_index.get_pangenome_pos("5", 5);
+        std::cerr << "Pangenome position for input \"5\":5 in constructed index is: " << pangenome_pos << std::endl;
+        pangenome_pos = path_index.get_pangenome_pos("5", 12);
+        std::cerr << "Pangenome position for input \"5\":12 in constructed index is: " << pangenome_pos << std::endl;
+#endif
 
         // writ out the index
         std::ofstream out;
         out.open(args::get(idx_out_file));
-        std::cout << "Writing index to disk..." << std::endl;
+        std::cout << "Writing index to " << args::get(idx_out_file) << std::endl;
         path_index.serialize_members(out);
         out.close();
-
-        std::cout << "Reading index from disk " << args::get(idx_out_file) << std::endl;
-        XP path_index_1;
-        std::ifstream in;
-        in.open(args::get(idx_out_file));
-        path_index_1.load(in);
-        in.close();
-        std::cout << "Loaded index has " << path_index_1.path_count << " paths." << std::endl;
-
-        size_t bin_id = path_index.get_bin_id("2196", 2, 2);
-        std::cout << "Bin id for input \"2196\":2:2 and constructed index is: " << bin_id << std::endl;
-
-        size_t bin_id_1 = path_index_1.get_bin_id("2196", 2, 2);
-        std::cout << "Bin id for input \"2196\":2:2 and loaded index is: " << bin_id_1 << std::endl;
 
         return 0;
     }
 
-    static Subcommand odgi_path_index("path_index", "create a path index for a given graph",
-                               PIPELINE, 3, main_path_index);
-
+    static Subcommand odgi_pathindex("pathindex", "create a path index for a given graph",
+                               PIPELINE, 3, main_pathindex);
 
 }
