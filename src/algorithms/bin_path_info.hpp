@@ -14,28 +14,27 @@
 #include <handlegraph/path_handle_graph.hpp>
 
 namespace odgi {
-namespace algorithms {
+    namespace algorithms {
 
-using namespace std;
-using namespace handlegraph;
+        using namespace std;
+        using namespace handlegraph;
 
-struct path_info_t {
-    double mean_cov;
-    double mean_inv;
-    double mean_pos;
-    long int first_nucleotide;
-    long int last_nucleotide;
-};
+        struct path_info_t {
+            double mean_cov;
+            double mean_inv;
+            double mean_pos;
+            long int first_nucleotide;
+            long int last_nucleotide;
+        };
 
-void bin_path_info(const PathHandleGraph& graph,
-                   const std::string& prefix_delimiter,
-                   const std::function<void(const std::string&,
-                                            const std::vector<std::pair<uint64_t, uint64_t>>&,
-                                            const std::map<uint64_t, algorithms::path_info_t>&)>& handle_path,
-                   const std::function<void(const uint64_t&, const std::string&)>& handle_sequence,
-                   uint64_t num_bins = 0,
-                   uint64_t bin_width = 0);
-
-
-}
+        void bin_path_info(const PathHandleGraph &graph,
+                           const std::string &prefix_delimiter,
+                           const std::function<void(const uint64_t &, const uint64_t &)> &handle_header,
+                           const std::function<void(const std::string &,
+                                                    const std::vector<std::pair<uint64_t, uint64_t>> &,
+                                                    const std::map<uint64_t, algorithms::path_info_t> &)> &handle_path,
+                           const std::function<void(const uint64_t &, const std::string &)> &handle_sequence,
+                           uint64_t num_bins = 0,
+                           uint64_t bin_width = 0);
+    }
 }
