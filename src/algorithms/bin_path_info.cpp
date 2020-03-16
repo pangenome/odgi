@@ -5,6 +5,7 @@ namespace algorithms {
 
 void bin_path_info(const PathHandleGraph& graph,
                    const std::string& prefix_delimiter,
+                   const std::function<void(const uint64_t&, const uint64_t&)>& handle_header,
                    const std::function<void(const std::string&,
                                             const std::vector<std::pair<uint64_t, uint64_t>>&,
                                             const std::map<uint64_t, algorithms::path_info_t>&)>& handle_path,
@@ -28,6 +29,8 @@ void bin_path_info(const PathHandleGraph& graph,
         num_bins = len / bin_width + (len % bin_width ? 1 : 0);
     }
     position_map[position_map.size()-1] = len;
+    // write header
+    handle_header(len, bin_width);
     // collect bin sequences
     for (uint64_t i = 0; i < num_bins; ++i) {
         handle_sequence(i+1, graph_seq.substr(i*bin_width, bin_width));

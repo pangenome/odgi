@@ -25,6 +25,7 @@ int main_bin(int argc, char** argv) {
     args::Flag aggregate_delim(parser, "aggregate-delim", "aggregate on path prefix delimiter", {'a', "aggregate-delim"});
     args::ValueFlag<uint64_t> num_bins(parser, "N", "number of bins", {'n', "num-bins"});
     args::ValueFlag<uint64_t> bin_width(parser, "bp", "width of each bin in basepairs along the graph vector", {'w', "bin-width"});
+    args::Flag write_seqs_not(parser, "write-seqs-not", "don't write out the sequences for each bin", {'s', "no-seqs"});
     try {
         parser.ParseCLI(argc, argv);
     } catch (args::Help) {
@@ -77,11 +78,31 @@ int main_bin(int argc, char** argv) {
         return 1;
     }
 
+    // ODGI JSON VERSION
+    const uint64_t ODGI_JSON_VERSION = 10;
+
+    std::function<void(const uint64_t&, const uint64_t&)> write_header_tsv
+    = [&] (const uint64_t pangenome_length, const uint64_t bin_width) {
+        // no header necessary for tsv so far
+    };
+
+    std::function<void(const uint64_t&,
+            const uint64_t&)> write_header_json
+    = [&] (const uint64_t pangenome_length, const uint64_t bin_width) {
+        std::cout << "{\"odgi_version\": " << ODGI_JSON_VERSION << ",";
+        std::cout << "\"bin_width\": " << bin_width << ",";
+        std::cout << "\"pangenome_length\": " << pangenome_length << "}" << std::endl;
+    };
+
     std::function<void(const uint64_t&,
                        const std::string&)> write_seq_json
         = [&](const uint64_t& bin_id, const std::string& seq) {
-        std::cout << "{\"bin_id\":" << bin_id << ","
-                  << "\"sequence\":\"" << seq << "\"}" << std::endl;
+        if (args::get(write_seqs_not)) {
+            std::cout << "{\"bin_id\":" << bin_id << "}" << std::endl;
+        } else {
+            std::cout << "{\"bin_id\":" << bin_id << ","
+                      << "\"sequence\":\"" << seq << "\"}" << std::endl;
+        }
     };
 
     std::function<void(const std::string&,
@@ -155,15 +176,14 @@ int main_bin(int argc, char** argv) {
 
     if (args::get(output_json)) {
         algorithms::bin_path_info(graph, (args::get(aggregate_delim) ? args::get(path_delim) : ""),
-                                  write_json, write_seq_json,
+                                  write_header_json,write_json, write_seq_json,
                                   args::get(num_bins), args::get(bin_width));
     } else {
         std::cout << "path.name" << "\t" << "path.prefix" << "\t" << "path.suffix" << "\t" << "bin" << "\t" << "mean.cov" << "\t" << "mean.inv" << "\t" << "mean.pos" << std::endl;
         algorithms::bin_path_info(graph, (args::get(aggregate_delim) ? args::get(path_delim) : ""),
-                                  write_tsv, write_seq_noop,
+                                  write_header_tsv,write_tsv, write_seq_noop,
                                   args::get(num_bins), args::get(bin_width));
     }
-
     return 0;
 }
 
