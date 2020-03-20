@@ -21,7 +21,8 @@ namespace odgi {
         args::ArgumentParser parser("start a HTTP server on localhost://3000 with a given index file to query a pangenome position");
         args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
         args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the index from this file", {'i', "idx"});
-        args::ValueFlag<std::string> port(parser, "FILE", "run the server under this port", {'p', "port"});
+        args::ValueFlag<std::string> port(parser, "INT", "run the server under this port", {'p', "port"});
+        args::ValueFlag<std::string> ip_address(parser, "IP", "run the server under this IP address", {'a', "ip"});
 
         try {
             parser.ParseCLI(argc, argv);
@@ -109,9 +110,15 @@ namespace odgi {
         });
 
         const int p = std::stoi(args::get(port));
+        std::string ip;
+        if (!ip_address) {
+            ip = "localhost";
+        } else {
+            ip = args::get(ip_address);
+        }
 
-        std::cout << "http server listening on http://localhost:" << args::get(port) << std::endl;
-        svr.listen("localhost", p);
+        std::cout << "http server listening on http://" << ip << ":" << args::get(port) << std::endl;
+        svr.listen(ip.c_str(), p);
 
         /*
         // we have a 0-based positioning
