@@ -81,7 +81,11 @@ namespace odgi {
         Server svr;
 
         svr.Get("/hi", [](const Request& req, Response& res) {
+            res.set_header("Access-Control-Allow-Origin", "*");
+            res.set_header("Access-Control-Expose-Headers", "text/plain");
+            res.set_header("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT");
             res.set_content("Hello World!", "text/plain");
+            std::cout << "GOT REQUEST : HELLO WORLD!" << std::endl;
         });
 
         svr.Get(R"(/(\w*)/(\d+))", [&](const Request& req, Response& res) {
@@ -103,6 +107,7 @@ namespace odgi {
             std::cout << "SEND RESPONSE: pangenome position: " << pan_pos << std::endl;
             res.set_header("Access-Control-Allow-Origin", "*");
             res.set_header("Access-Control-Expose-Headers", "text/plain");
+            res.set_header("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT");
             res.set_content(std::to_string(pan_pos), "text/plain");
         });
 
