@@ -101,7 +101,7 @@ namespace odgi {
                 }
             }
             std::cout << "SEND RESPONSE: pangenome position: " << pan_pos << std::endl;
-            res.set_header("Access-Control-Allow-Origin:", "*");
+            res.set_header("Access-Control-Allow-Origin", "*");
             res.set_content(std::to_string(pan_pos), "text/plain");
         });
 
