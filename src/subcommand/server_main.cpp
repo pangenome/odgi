@@ -21,6 +21,8 @@ namespace odgi {
         args::ArgumentParser parser("start a HTTP server on localhost://3000 with a given index file to query a pangenome position");
         args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
         args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the index from this file", {'i', "idx"});
+        args::ValueFlag<std::string> port(parser, "INT", "run the server under this port", {'p', "port"});
+        args::ValueFlag<std::string> ip_address(parser, "IP", "run the server under this IP address", {'a', "ip"});
 
         try {
             parser.ParseCLI(argc, argv);
@@ -42,6 +44,11 @@ namespace odgi {
             exit(1);
         }
 
+        if (!port) {
+            std::cerr << "Please enter a port for the server." << std::endl;
+            exit(1);
+        }
+
         XP path_index;
         std::ifstream in;
         in.open(args::get(dg_in_file));
@@ -59,24 +66,29 @@ namespace odgi {
         }
         std::cout << std::endl;
 
-        const char* pattern1 = R"(/(\w+)/(\d+))";
+        // const char* pattern1 = R"(/(\w+)/(\d+))";
+        // const char* pattern1 = R"(/([a-zA-Z]*[0-9]*)/(\d+))";
+        const char* pattern1 = R"(/(\w*)/(\d+))";
         std::regex regexi1 = std::regex(pattern1);
         std::cmatch cm1;    // same as std::match_results<const char*> cm;
-        std::regex_match ("/test/3",cm1,regexi1);
+        std::regex_match ("/5-/3",cm1,regexi1);
         std::cout << "the matches were: " << std::endl;
         for (unsigned i=0; i<cm1.size(); ++i) {
             std::cout << "[" << cm1[i] << "] " << std::endl;
         }
-         */
-
+        */
 
         Server svr;
 
         svr.Get("/hi", [](const Request& req, Response& res) {
+            res.set_header("Access-Control-Allow-Origin", "*");
+            res.set_header("Access-Control-Expose-Headers", "text/plain");
+            res.set_header("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT");
             res.set_content("Hello World!", "text/plain");
+            std::cout << "GOT REQUEST : HELLO WORLD!" << std::endl;
         });
 
-        svr.Get(R"(/(\w+)/(\d+))", [&](const Request& req, Response& res) {
+        svr.Get(R"(/(\w*)/(\d+))", [&](const Request& req, Response& res) {
             /*
             for (size_t i = 0; i < req.matches.size(); i++) {
                 std::cout << req.matches[i] << std::endl;
@@ -93,6 +105,9 @@ namespace odgi {
                 }
             }
             std::cout << "SEND RESPONSE: pangenome position: " << pan_pos << std::endl;
+            res.set_header("Access-Control-Allow-Origin", "*");
+            res.set_header("Access-Control-Expose-Headers", "text/plain");
+            res.set_header("Access-Control-Allow-Methods", "GET, POST, DELETE, PUT");
             res.set_content(std::to_string(pan_pos), "text/plain");
         });
 
@@ -100,8 +115,16 @@ namespace odgi {
             svr.stop();
         });
 
-        std::cout << "http server listening on http://localhost:3000" << std::endl;
-        svr.listen("localhost", 3000);
+        const int p = std::stoi(args::get(port));
+        std::string ip;
+        if (!ip_address) {
+            ip = "localhost";
+        } else {
+            ip = args::get(ip_address);
+        }
+
+        std::cout << "http server listening on http://" << ip << ":" << args::get(port) << std::endl;
+        svr.listen(ip.c_str(), p);
 
         /*
         // we have a 0-based positioning
@@ -126,7 +149,7 @@ namespace odgi {
     }
 
     static Subcommand odgi_server("server",
-                                  "start a HTTP server on localhost://3000 with a given index file to query a pangenome position",
+                                  "start a HTTP server with a given index file to query a pangenome position",
                                   PIPELINE, 3, main_server);
 
 }
