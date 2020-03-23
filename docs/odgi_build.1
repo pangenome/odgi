@@ -1,0 +1,158 @@
+'\" t
+.\"     Title: odgi build
+.\"    Author: Erik Garrison
+.\" Generator: Asciidoctor 2.0.10
+.\"      Date: 2020-03-23
+.\"    Manual: odgi build https://github.com/vgteam/odgi
+.\"    Source: odgi 0.3
+.\"  Language: English
+.\"
+.TH "ODGI_BUILD" "1" "2020-03-23" "odgi 0.3" "odgi build https://github.com/vgteam/odgi"
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.ss \n[.ss] 0
+.nh
+.ad l
+.de URL
+\fI\\$2\fP <\\$1>\\$3
+..
+.als MTO URL
+.if \n[.g] \{\
+.  mso www.tmac
+.  am URL
+.    ad l
+.  .
+.  am MTO
+.    ad l
+.  .
+.  LINKSTYLE blue R < >
+.\}
+.SH "NAME"
+odgi_build \- construct a dynamic succinct variation graph
+.SH "SYNOPSIS"
+.sp
+\fBodgi build\fP [\fB\-g, \-\-gfa\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
+.SH "DESCRIPTION"
+.sp
+The odgi build(1) command constructs a succinct variation graph from a GFA. Currently, only GFA1 is supported. For details of the format please see \c
+.URL "https://github.com/GFA\-spec/GFA\-spec/blob/master/GFA1.md" "" ""
+.SH "OPTIONS"
+.SS "Graph Files IO"
+.sp
+\fB\-g, \-\-gfa\fP=\fIFILE\fP
+.RS 4
+GFA1 file containing the nodes, edges and paths to build a dynamic succinct variation graph from.
+.RE
+.sp
+\fB\-o, \-\-out\fP=\fIFILE\fP
+.RS 4
+Write the dynamic succinct variation graph to this file. A file ending with \fI.og\fP is recommended.
+.RE
+.SS "Graph Sorting"
+.sp
+\fB\-s, \-\-sort\fP
+.RS 4
+Apply a general topological sort to the graph and order the node ids accordingly.
+.RE
+.SS "Processing Information"
+.sp
+\fB\-p, \-\-progress\fP
+.RS 4
+Print progress updates to stdout.
+.RE
+.sp
+\fB\-d, \-\-debug\fP
+.RS 4
+Verbosely print graph information to stderr. This includes the maximum node_id, the minimum node_id, the handle to node_id mapping, the deleted nodes and the path meta data.
+.RE
+.sp
+\fB\-\-trace\fP
+.RS 4
+Include backtrace information when reporting errors.
+.RE
+.sp
+\fB\-v, \-\-verbose\fP
+.RS 4
+Verbosely print processing information to stderr, including debug\-level log messages.
+.RE
+.sp
+\fB\-w, \-\-warnings\fP
+.RS 4
+Turn on script warnings (applies to executed code).
+.RE
+.sp
+\fB\-t, \-\-timings\fP
+.RS 4
+Print timings report to stderr (time to read, parse, and convert).
+.RE
+.SS "Program Information"
+.sp
+\fB\-h, \-\-help\fP [\fITOPIC\fP]
+.RS 4
+Print a help message.
+Show the command usage if \fITOPIC\fP is not specified or recognized.
+Dump the Asciidoctor man page (in troff/groff format) if \fITOPIC\fP is \fImanpage\fP.
+.RE
+.sp
+\fB\-V, \-\-version\fP
+.RS 4
+Print program version number.
+.sp
+\fB\-v\fP can also be used if no source files are specified.
+.RE
+.SH "EXIT STATUS"
+.sp
+\fB0\fP
+.RS 4
+Success.
+.RE
+.sp
+\fB1\fP
+.RS 4
+Failure (syntax or usage error; parameter error; file processing failure; unexpected error).
+.RE
+.SH "BUGS"
+.sp
+Refer to the \fBodgi\fP issue tracker at \c
+.URL "https://github.com/vgteam/odgi/issues" "" "."
+.SH "AUTHORS"
+.sp
+\fBodgi build\fP was written by Erik Garrison.
+.SH "RESOURCES"
+.sp
+\fBProject web site:\fP \c
+.URL "https://github.com/vgteam/odgi" "" ""
+.sp
+\fBGit source repository on GitHub:\fP \c
+.URL "https://github.com/vgteam/odgi" "" ""
+.sp
+\fBGitHub organization:\fP \c
+.URL "https://github.com/vgteam" "" ""
+.sp
+\fBDiscussion list / forum:\fP \c
+.URL "https://github.com/vgteam/odgi/issues" "" ""
+.SH "COPYING"
+.sp
+The MIT License (MIT)
+.sp
+Copyright (c) 2019 Erik Garrison
+.sp
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+.sp
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+.sp
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+.SH "AUTHOR"
+.sp
+Erik Garrison
