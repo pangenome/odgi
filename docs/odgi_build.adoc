@@ -55,15 +55,8 @@ The odgi build(1) command constructs a succinct variation graph from a GFA. Curr
 
 === Program Information
 
-*-h, --help* [_TOPIC_]::
-  Print a help message.
-  Show the command usage if _TOPIC_ is not specified or recognized.
-  Dump the Asciidoctor man page (in troff/groff format) if _TOPIC_ is _manpage_.
-
-*-V, --version*::
-  Print program version number.
-+
-*-v* can also be used if no source files are specified.
+*-h, --help*::
+  Print a help message for *odgi build*.
 
 == EXIT STATUS
 

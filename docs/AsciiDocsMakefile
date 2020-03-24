@@ -1,0 +1,2 @@
+asciidoctor -b manpage odgi_build.adoc
+asciidoctor -b manpage odgi_stats.adoc
