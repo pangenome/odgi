@@ -1,0 +1,10 @@
+= Reference Documentation for ODGI
+Simon Heumos, Erik Garrison
+
+include::odgi.adoc[]
+
+include::odgi_build.adoc[]
+
+include::odgi_stats.adoc[]
+
+include::odgi_sort.adoc[]

@@ -2,13 +2,13 @@
 Erik Garrison
 :doctype: manpage
 :release-version: 0.3
-:man manual: odgi stats https://github.com/vgteam/odgi
-:man source: odgi {release-version}
+:man manual: odgi build
+:man source: odgi 0.3
 :page-layout: base
 
 == NAME
 
-odgi_stats -  metrics describing variation graphs
+odgi_stats - metrics describing variation graphs
 
 == SYNOPSIS
 

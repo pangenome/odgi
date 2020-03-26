@@ -1,0 +1,527 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?asciidoc-toc?>
+<?asciidoc-numbered?>
+<article xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" version="5.0" xml:lang="en">
+<info>
+<title>Reference Documentation for ODGI</title>
+<date>2020-03-26</date>
+<author>
+<personname>
+<firstname>Simon Heumos, Erik Garrison</firstname>
+</personname>
+</author>
+<authorinitials>S</authorinitials>
+</info>
+<section xml:id="_odgi_1">
+<title>odgi (1)</title>
+<simpara>Erik Garrison<?asciidoc-br?>
+:doctype: manpage<?asciidoc-br?>
+:release-version: 0.3<?asciidoc-br?>
+:man manual: odgi build<?asciidoc-br?>
+:man source: odgi 0.3<?asciidoc-br?>
+:page-layout: base<?asciidoc-br?></simpara>
+<section xml:id="_name">
+<title>NAME</title>
+<simpara>odgi - dynamic succinct variation graph tool</simpara>
+</section>
+<section xml:id="_synopsis">
+<title>SYNOPSIS</title>
+<simpara><emphasis role="strong">odgi build</emphasis> -g graph.gfa -o graph.og<?asciidoc-br?>
+<emphasis role="strong">odgi stats</emphasis> -i graph.og -S<?asciidoc-br?></simpara>
+</section>
+<section xml:id="_description">
+<title>DESCRIPTION</title>
+<simpara>Odgi is a set of of tools that manipulate variation graphs. TODO Explain data structure. TODO Link to vg paper. TODO Link to handle graph paper. TODO Explain purpose. TODO Give summary of the capabilities of the set of tools.</simpara>
+</section>
+<section xml:id="_commands">
+<title>COMMANDS</title>
+<simpara>Each command has its own man page which can be viewed using e.g. <emphasis role="strong">man odgi_build.1</emphasis>. Below we have a brief summary of syntax and sub-command description.</simpara>
+<simpara><emphasis role="strong">odgi build</emphasis> [<emphasis role="strong">-g, --gfa</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;<?asciidoc-br?>
+The odgi build(1) command constructs a succinct variation graph from a GFA. Currently, only GFA1 is supported. For details of the format please see <link xl:href="https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md">https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md</link>.<?asciidoc-br?>
+<emphasis role="strong">odgi stats</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;<?asciidoc-br?>
+The odgi stats(1) command produces statistics of a variation graph. Among other metrics, it can calculate the #nodes, #edges, #paths and the total nucleotide length of the graph. Various histogram summary options complement the tool. If [<emphasis role="strong">-B, --bed-multicov</emphasis>=<emphasis>BED</emphasis>] is set, the metrics will be produced for the intervals specified in the BED.<?asciidoc-br?></simpara>
+</section>
+<section xml:id="_limitations">
+<title>LIMITATIONS</title>
+
+</section>
+<section xml:id="_bugs">
+<title>BUGS</title>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+</section>
+<section xml:id="_authors">
+<title>AUTHORS</title>
+<simpara>Erik Garrison from the University of California Santa Cruz wrote the whole odgi tool. Despite small code contributions, Simon Heumos from the Quantitative Biology Center Tübingen wrote odgi pathindex, odgi panpos, odgi server, and the documentation.</simpara>
+</section>
+<section xml:id="_resources">
+<title>RESOURCES</title>
+<simpara><emphasis role="strong">Project web site:</emphasis> <link xl:href="https://github.com/vgteam/odgi">https://github.com/vgteam/odgi</link></simpara>
+<simpara><emphasis role="strong">Git source repository on GitHub:</emphasis> <link xl:href="https://github.com/vgteam/odgi">https://github.com/vgteam/odgi</link></simpara>
+<simpara><emphasis role="strong">GitHub organization:</emphasis> <link xl:href="https://github.com/vgteam">https://github.com/vgteam</link></simpara>
+<simpara><emphasis role="strong">Discussion list / forum:</emphasis> <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link></simpara>
+</section>
+<section xml:id="_copying">
+<title>COPYING</title>
+<simpara>The MIT License (MIT)</simpara>
+<simpara>Copyright (c) 2019 Erik Garrison</simpara>
+<simpara>Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:</simpara>
+<simpara>The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.</simpara>
+<simpara>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</simpara>
+</section>
+</section>
+<section xml:id="_odgi_build1">
+<title>odgi build(1)</title>
+<simpara>Erik Garrison<?asciidoc-br?>
+:doctype: manpage<?asciidoc-br?>
+:release-version: 0.3<?asciidoc-br?>
+:man manual: odgi build<?asciidoc-br?>
+:man source: odgi 0.3<?asciidoc-br?>
+:page-layout: base<?asciidoc-br?></simpara>
+<section xml:id="_name_2">
+<title>NAME</title>
+<simpara>odgi_build - construct a dynamic succinct variation graph</simpara>
+</section>
+<section xml:id="_synopsis_2">
+<title>SYNOPSIS</title>
+<simpara><emphasis role="strong">odgi build</emphasis> [<emphasis role="strong">-g, --gfa</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
+</section>
+<section xml:id="_description_2">
+<title>DESCRIPTION</title>
+<simpara>The odgi build(1) command constructs a succinct variation graph from a GFA. Currently, only GFA1 is supported. For details of the format please see <link xl:href="https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md">https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md</link>.</simpara>
+</section>
+<section xml:id="_options">
+<title>OPTIONS</title>
+<section xml:id="_graph_files_io">
+<title>Graph Files IO</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-g, --gfa</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>GFA1 file containing the nodes, edges and paths to build a dynamic succinct variation graph from.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>Write the dynamic succinct variation graph to this file. A file ending with <emphasis>.og</emphasis> is recommended.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_graph_sorting">
+<title>Graph Sorting</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-s, --sort</emphasis></term>
+<listitem>
+<simpara>Apply a general topological sort to the graph and order the node ids accordingly. A bidirected adaptation of Kahn&#8217;s topological sort (1962) is used, which can handle components with no heads or tails. Here, both heads and tails are taken into account.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_processing_information">
+<title>Processing Information</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-p, --progress</emphasis></term>
+<listitem>
+<simpara>Print progress updates to stdout.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-d, --debug</emphasis></term>
+<listitem>
+<simpara>Verbosely print graph information to stderr. This includes the maximum node_id, the minimum node_id, the handle to node_id mapping, the deleted nodes and the path metadata.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">--trace</emphasis></term>
+<listitem>
+<simpara>Include backtrace information when reporting errors.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-v, --verbose</emphasis></term>
+<listitem>
+<simpara>Verbosely print processing information to stderr, including debug-level log messages.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-w, --warnings</emphasis></term>
+<listitem>
+<simpara>Turn on script warnings (applies to executed code).</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-t, --timings</emphasis></term>
+<listitem>
+<simpara>Print timings report to stderr (time to read, parse, and convert).</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_program_information">
+<title>Program Information</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-h, --help</emphasis></term>
+<listitem>
+<simpara>Print a help message for <emphasis role="strong">odgi build</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+</section>
+<section xml:id="_exit_status">
+<title>EXIT STATUS</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">0</emphasis></term>
+<listitem>
+<simpara>Success.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">1</emphasis></term>
+<listitem>
+<simpara>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_bugs_2">
+<title>BUGS</title>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+</section>
+<section xml:id="_authors_2">
+<title>AUTHORS</title>
+<simpara><emphasis role="strong">odgi build</emphasis> was written by Erik Garrison.</simpara>
+</section>
+<section xml:id="_resources_2">
+<title>RESOURCES</title>
+<simpara><emphasis role="strong">Project web site:</emphasis> <link xl:href="https://github.com/vgteam/odgi">https://github.com/vgteam/odgi</link></simpara>
+<simpara><emphasis role="strong">Git source repository on GitHub:</emphasis> <link xl:href="https://github.com/vgteam/odgi">https://github.com/vgteam/odgi</link></simpara>
+<simpara><emphasis role="strong">GitHub organization:</emphasis> <link xl:href="https://github.com/vgteam">https://github.com/vgteam</link></simpara>
+<simpara><emphasis role="strong">Discussion list / forum:</emphasis> <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link></simpara>
+</section>
+<section xml:id="_copying_2">
+<title>COPYING</title>
+<simpara>The MIT License (MIT)</simpara>
+<simpara>Copyright (c) 2019 Erik Garrison</simpara>
+<simpara>Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:</simpara>
+<simpara>The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.</simpara>
+<simpara>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</simpara>
+</section>
+</section>
+<section xml:id="_odgi_stats1">
+<title>odgi stats(1)</title>
+<simpara>Erik Garrison<?asciidoc-br?>
+:doctype: manpage<?asciidoc-br?>
+:release-version: 0.3<?asciidoc-br?>
+:man manual: odgi build<?asciidoc-br?>
+:man source: odgi 0.3<?asciidoc-br?>
+:page-layout: base<?asciidoc-br?></simpara>
+<section xml:id="_name_3">
+<title>NAME</title>
+<simpara>odgi_stats - metrics describing variation graphs</simpara>
+</section>
+<section xml:id="_synopsis_3">
+<title>SYNOPSIS</title>
+<simpara><emphasis role="strong">odgi stats</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
+</section>
+<section xml:id="_description_3">
+<title>DESCRIPTION</title>
+<simpara>The odgi stats(1) command produces statistics of a variation graph. Among other metrics, it can calculate the #nodes, #edges, #paths and the total nucleotide length of the graph. Various histogram summary options complement the tool. If [<emphasis role="strong">-B, --bed-multicov</emphasis>=<emphasis>BED</emphasis>] is set, the metrics will be produced for the intervals specified in the BED.</simpara>
+</section>
+<section xml:id="_options_2">
+<title>OPTIONS</title>
+<section xml:id="_graph_files_io_2">
+<title>Graph Files IO</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>File containing the succinct variation graph to create statistics from. The file name usually ends with <emphasis>.og</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_summary_options">
+<title>Summary Options</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-S, --summarize</emphasis></term>
+<listitem>
+<simpara>Summarize the graph properties and dimensions. Print to stdout the #nucleotides, #nodes, #edges and #paths of the graph.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-b, --base-content</emphasis></term>
+<listitem>
+<simpara>Describe the base content of the graph. Print to stdout the #A, #C, #G and #T of the graph.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-C, --coverage</emphasis></term>
+<listitem>
+<simpara>Provide a histogram of path coverage over bases in the graph. Print three tab-delimited columns to stdout: <emphasis role="strong">type</emphasis>, <emphasis role="strong">cov</emphasis>, <emphasis role="strong">N</emphasis>. <emphasis role="strong">type</emphasis> is one of <emphasis>full</emphasis> or <emphasis>uniq</emphasis> and determines if the histogram corresponds to the full graph or only to a unique paths graph. <emphasis role="strong">cov</emphasis> implies the #paths. <emphasis role="strong">N</emphasis> implies the #nucleotides.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-V, --set-coverage</emphasis></term>
+<listitem>
+<simpara>Provide a histogram of coverage ofer unique set of paths. Print two tab-delimited columns to stdout: <emphasis role="strong">cov</emphasis>, <emphasis role="strong">sets</emphasis>. <emphasis role="strong">cov</emphasis> implies #nucleotides. <emphasis role="strong">sets</emphasis> lists the unique set of paths in a comma separated list. Sets with a <emphasis role="strong">cov</emphasis> of one and no paths in <emphasis role="strong">sets</emphasis> are listed, too.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-M, --multi-coverage</emphasis></term>
+<listitem>
+<simpara>Provide a histogram of coverage over unique multisets of paths. Print two tab-delimited columns to stdout: <emphasis role="strong">cov</emphasis>, <emphasis role="strong">sets</emphasis>. <emphasis role="strong">cov</emphasis> implies #nucleotides. <emphasis role="strong">sets</emphasis> lists the unique multisets of paths in a comma separated list. Multisets with a <emphasis role="strong">cov</emphasis> of one and no paths in <emphasis role="strong">sets</emphasis> are listed, too.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_bed_interval">
+<title>BED Interval</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-B, --bed-multicov</emphasis>=<emphasis>BED</emphasis></term>
+<listitem>
+<simpara>For each BED entry, provide a table of path coverage over unique multisets of paths in the graph. Each unique multiset of paths overlapping a given BED interval is described in terms of its length relative to the total interval, the number of path traversals and unique paths involved in these traversals.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_threading">
+<title>Threading</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-t, --threads</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Number of threads to use.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_program_information_2">
+<title>Program Information</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-h, --help</emphasis></term>
+<listitem>
+<simpara>Print a help message for <emphasis role="strong">odgi stats</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+</section>
+<section xml:id="_exit_status_2">
+<title>EXIT STATUS</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">0</emphasis></term>
+<listitem>
+<simpara>Success.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">1</emphasis></term>
+<listitem>
+<simpara>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_bugs_3">
+<title>BUGS</title>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+</section>
+<section xml:id="_authors_3">
+<title>AUTHORS</title>
+<simpara><emphasis role="strong">odgi stats</emphasis> was written by Erik Garrison.</simpara>
+</section>
+<section xml:id="_resources_3">
+<title>RESOURCES</title>
+<simpara><emphasis role="strong">Project web site:</emphasis> <link xl:href="https://github.com/vgteam/odgi">https://github.com/vgteam/odgi</link></simpara>
+<simpara><emphasis role="strong">Git source repository on GitHub:</emphasis> <link xl:href="https://github.com/vgteam/odgi">https://github.com/vgteam/odgi</link></simpara>
+<simpara><emphasis role="strong">GitHub organization:</emphasis> <link xl:href="https://github.com/vgteam">https://github.com/vgteam</link></simpara>
+<simpara><emphasis role="strong">Discussion list / forum:</emphasis> <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link></simpara>
+</section>
+<section xml:id="_copying_3">
+<title>COPYING</title>
+<simpara>The MIT License (MIT)</simpara>
+<simpara>Copyright (c) 2019 Erik Garrison</simpara>
+<simpara>Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:</simpara>
+<simpara>The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.</simpara>
+<simpara>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</simpara>
+</section>
+</section>
+<section xml:id="_odgi_sort1">
+<title>odgi sort(1)</title>
+<simpara>Erik Garrison<?asciidoc-br?>
+:doctype: manpage<?asciidoc-br?>
+:release-version: 0.3<?asciidoc-br?>
+:man manual: odgi build<?asciidoc-br?>
+:man source: odgi 0.3<?asciidoc-br?>
+:page-layout: base<?asciidoc-br?></simpara>
+<section xml:id="_name_4">
+<title>NAME</title>
+<simpara>odgi_sort - sort a variation graph</simpara>
+</section>
+<section xml:id="_synopsis_4">
+<title>SYNOPSIS</title>
+<simpara><emphasis role="strong">odgi sort</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
+</section>
+<section xml:id="_description_4">
+<title>DESCRIPTION</title>
+<simpara>The odgi sort(1) command produces sorts a succinct a variation graph.</simpara>
+</section>
+<section xml:id="_options_3">
+<title>OPTIONS</title>
+<section xml:id="_graph_files_io_3">
+<title>Graph Files IO</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>File containing the succinct variation graph to sort. The file name usually ends with <emphasis>.og</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>Write the sorted dynamic succinct variation graph to this file. A file ending with <emphasis>.og</emphasis> is recommended.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-s, --sort-order</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>File containing the sort order. Each line contains one node identifier.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_topological_sorts">
+<title>Topological Sorts</title>
+
+</section>
+<section xml:id="_threading_2">
+<title>Threading</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-t, --threads</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Number of threads to use for parallel sorting in SGD. Only specify this argument in combination with <emphasis role="strong">-S, --linear-sgd</emphasis>. No multi-threading support for any other sorting algorithm.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_processing_information_2">
+<title>Processing Information</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-P, --progress</emphasis></term>
+<listitem>
+<simpara>Print sort progress to stdout.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_program_information_3">
+<title>Program Information</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-h, --help</emphasis></term>
+<listitem>
+<simpara>Print a help message for <emphasis role="strong">odgi sort</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+</section>
+<section xml:id="_exit_status_3">
+<title>EXIT STATUS</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">0</emphasis></term>
+<listitem>
+<simpara>Success.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">1</emphasis></term>
+<listitem>
+<simpara>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_bugs_4">
+<title>BUGS</title>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+</section>
+<section xml:id="_authors_4">
+<title>AUTHORS</title>
+<simpara><emphasis role="strong">odgi sort</emphasis> was written by Erik Garrison.</simpara>
+</section>
+<section xml:id="_resources_4">
+<title>RESOURCES</title>
+<simpara><emphasis role="strong">Project web site:</emphasis> <link xl:href="https://github.com/vgteam/odgi">https://github.com/vgteam/odgi</link></simpara>
+<simpara><emphasis role="strong">Git source repository on GitHub:</emphasis> <link xl:href="https://github.com/vgteam/odgi">https://github.com/vgteam/odgi</link></simpara>
+<simpara><emphasis role="strong">GitHub organization:</emphasis> <link xl:href="https://github.com/vgteam">https://github.com/vgteam</link></simpara>
+<simpara><emphasis role="strong">Discussion list / forum:</emphasis> <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link></simpara>
+</section>
+<section xml:id="_copying_4">
+<title>COPYING</title>
+<simpara>The MIT License (MIT)</simpara>
+<simpara>Copyright (c) 2019 Erik Garrison</simpara>
+<simpara>Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:</simpara>
+<simpara>The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.</simpara>
+<simpara>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</simpara>
+</section>
+</section>
+</article>

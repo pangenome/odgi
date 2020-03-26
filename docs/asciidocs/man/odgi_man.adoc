@@ -1,0 +1,72 @@
+= odgi (1)
+Erik Garrison
+:doctype: manpage
+:release-version: 0.3
+:man manual: odgi build
+:man source: odgi 0.3
+:page-layout: base
+
+== NAME
+
+odgi - dynamic succinct variation graph tool
+
+== SYNOPSIS
+
+*odgi build* -g graph.gfa -o graph.og
+*odgi stats* -i graph.og -S
+
+== DESCRIPTION
+
+Odgi is a set of of tools that manipulate variation graphs. TODO Explain data structure. TODO Link to vg paper. TODO Link to handle graph paper. TODO Explain purpose. TODO Give summary of the capabilities of the set of tools.
+
+== COMMANDS
+
+Each command has its own man page which can be viewed using e.g. *man odgi_build.1*. Below we have a brief summary of syntax and sub-command description. 
+
+*odgi build* [*-g, --gfa*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]...
+The odgi build(1) command constructs a succinct variation graph from a GFA. Currently, only GFA1 is supported. For details of the format please see https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md.
+*odgi stats* [*-i, --idx*=_FILE_] [_OPTION_]...
+The odgi stats(1) command produces statistics of a variation graph. Among other metrics, it can calculate the #nodes, #edges, #paths and the total nucleotide length of the graph. Various histogram summary options complement the tool. If [*-B, --bed-multicov*=_BED_] is set, the metrics will be produced for the intervals specified in the BED.
+
+== LIMITATIONS
+
+== BUGS
+
+Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
+
+== AUTHORS
+
+Erik Garrison from the University of California Santa Cruz wrote the whole odgi tool. Despite small code contributions, Simon Heumos from the Quantitative Biology Center Tübingen wrote odgi pathindex, odgi panpos, odgi server, and the documentation.
+
+== RESOURCES
+
+*Project web site:* https://github.com/vgteam/odgi
+
+*Git source repository on GitHub:* https://github.com/vgteam/odgi
+
+*GitHub organization:* https://github.com/vgteam
+
+*Discussion list / forum:* https://github.com/vgteam/odgi/issues
+
+== COPYING
+
+The MIT License (MIT)
+
+Copyright (c) 2019 Erik Garrison
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

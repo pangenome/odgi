@@ -26,7 +26,7 @@ int main_sort(int argc, char** argv) {
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
-    args::ArgumentParser parser("variation graph sorts");
+    args::ArgumentParser parser("sort a variation graph");
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store the graph in this file", {'o', "out"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
@@ -250,7 +250,7 @@ int main_sort(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand odgi_build("sort", "topologically order the graph",
+static Subcommand odgi_build("sort", "sort a variation graph",
                               PIPELINE, 3, main_sort);
 
 
