@@ -14,9 +14,9 @@ odgi - dynamic succinct variation graph tool
 
 == SYNOPSIS
 
-*odgi build* -g graph.gfa -o graph.og
+*odgi* <<odgi_build.adoc#_odgi_build1, build>> -g graph.gfa -o graph.og
 
-*odgi stats* -i graph.og -S
+*odgi* <<odgi_build.adoc#_odgi_stats1, stats>> -i graph.og -S
 
 == DESCRIPTION
 

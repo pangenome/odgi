@@ -463,7 +463,14 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_name_2">2.1. NAME</a></li>
 <li><a href="#_synopsis_2">2.2. SYNOPSIS</a></li>
 <li><a href="#_description_2">2.3. DESCRIPTION</a></li>
-<li><a href="#_options">2.4. OPTIONS</a></li>
+<li><a href="#_options">2.4. OPTIONS</a>
+<ul class="sectlevel3">
+<li><a href="#_graph_files_io">2.4.1. Graph Files IO</a></li>
+<li><a href="#_graph_sorting">2.4.2. Graph Sorting</a></li>
+<li><a href="#_processing_information">2.4.3. Processing Information</a></li>
+<li><a href="#_program_information">2.4.4. Program Information</a></li>
+</ul>
+</li>
 <li><a href="#_exit_status">2.5. EXIT STATUS</a></li>
 <li><a href="#_bugs_2">2.6. BUGS</a></li>
 <li><a href="#_authors_2">2.7. AUTHORS</a></li>
@@ -476,7 +483,15 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_name_3">3.1. NAME</a></li>
 <li><a href="#_synopsis_3">3.2. SYNOPSIS</a></li>
 <li><a href="#_description_3">3.3. DESCRIPTION</a></li>
-<li><a href="#_options_2">3.4. OPTIONS</a></li>
+<li><a href="#_options_2">3.4. OPTIONS</a>
+<ul class="sectlevel3">
+<li><a href="#_graph_files_io_2">3.4.1. Graph Files IO</a></li>
+<li><a href="#_summary_options">3.4.2. Summary Options</a></li>
+<li><a href="#_bed_interval">3.4.3. BED Interval</a></li>
+<li><a href="#_threading">3.4.4. Threading</a></li>
+<li><a href="#_program_information_2">3.4.5. Program Information</a></li>
+</ul>
+</li>
 <li><a href="#_exit_status_2">3.5. EXIT STATUS</a></li>
 <li><a href="#_bugs_3">3.6. BUGS</a></li>
 <li><a href="#_authors_3">3.7. AUTHORS</a></li>
@@ -489,7 +504,15 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_name_4">4.1. NAME</a></li>
 <li><a href="#_synopsis_4">4.2. SYNOPSIS</a></li>
 <li><a href="#_description_4">4.3. DESCRIPTION</a></li>
-<li><a href="#_options_3">4.4. OPTIONS</a></li>
+<li><a href="#_options_3">4.4. OPTIONS</a>
+<ul class="sectlevel3">
+<li><a href="#_graph_files_io_3">4.4.1. Graph Files IO</a></li>
+<li><a href="#_topological_sorts">4.4.2. Topological Sorts</a></li>
+<li><a href="#_threading_2">4.4.3. Threading</a></li>
+<li><a href="#_processing_information_2">4.4.4. Processing Information</a></li>
+<li><a href="#_program_information_3">4.4.5. Program Information</a></li>
+</ul>
+</li>
 <li><a href="#_exit_status_3">4.5. EXIT STATUS</a></li>
 <li><a href="#_bugs_4">4.6. BUGS</a></li>
 <li><a href="#_authors_4">4.7. AUTHORS</a></li>
@@ -513,10 +536,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="sect2">
 <h3 id="_synopsis">1.2. SYNOPSIS</h3>
 <div class="paragraph">
-<p><strong>odgi build</strong> -g graph.gfa -o graph.og</p>
+<p><strong>odgi</strong> <a href="#_odgi_build1">build</a> -g graph.gfa -o graph.og</p>
 </div>
 <div class="paragraph">
-<p><strong>odgi stats</strong> -i graph.og -S</p>
+<p><strong>odgi</strong> <a href="#_odgi_stats1">stats</a> -i graph.og -S</p>
 </div>
 </div>
 <div class="sect2">
@@ -1086,7 +1109,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-03-27 14:02:11 +0100
+Last updated 2020-03-27 14:19:38 +0100
 </div>
 </div>
 </body>

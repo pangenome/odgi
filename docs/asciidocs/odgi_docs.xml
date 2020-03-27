@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?asciidoc-toc?>
+<?asciidoc-toc maxdepth="4"?>
 <?asciidoc-numbered?>
 <article xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" version="5.0" xml:lang="en">
 <info>
@@ -20,8 +20,8 @@
 </section>
 <section xml:id="_synopsis">
 <title>SYNOPSIS</title>
-<simpara><emphasis role="strong">odgi build</emphasis> -g graph.gfa -o graph.og</simpara>
-<simpara><emphasis role="strong">odgi stats</emphasis> -i graph.og -S</simpara>
+<simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_build1">build</link> -g graph.gfa -o graph.og</simpara>
+<simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_stats1">stats</link> -i graph.og -S</simpara>
 </section>
 <section xml:id="_description">
 <title>DESCRIPTION</title>
