@@ -1,26 +1,26 @@
-== odgi sort(1)
-Erik Garrison +
-:doctype: manpage +
-:release-version: 0.3 +
-:man manual: odgi build +
-:man source: odgi 0.3 +
-:page-layout: base +
+= odgi sort(1)
+Erik Garrison
+:doctype: manpage
+:release-version: 0.3
+:man manual: odgi build
+:man source: odgi 0.3
+:page-layout: base
 
-=== NAME
+== NAME
 
 odgi_sort - sort a variation graph
 
-=== SYNOPSIS
+== SYNOPSIS
 
 *odgi sort* [*-i, --idx*=_FILE_] [_OPTION_]...
 
-=== DESCRIPTION
+== DESCRIPTION
 
-The odgi sort(1) command sorts a succinct a variation graph. 
+The odgi sort(1) command produces sorts a succinct a variation graph. 
 
-=== OPTIONS
+== OPTIONS
 
-==== Graph Files IO
+=== Graph Files IO
 
 *-i, --idx*=_FILE_::
   File containing the succinct variation graph to sort. The file name usually ends with _.og_.
@@ -31,24 +31,24 @@ The odgi sort(1) command sorts a succinct a variation graph.
 *-s, --sort-order*=_FILE_::
   File containing the sort order. Each line contains one node identifier.
 
-==== Topological Sorts
+=== Topological Sorts
 
-==== Threading
+=== Threading
 
 *-t, --threads*=_N_::
   Number of threads to use for parallel sorting in SGD. Only specify this argument in combination with *-S, --linear-sgd*. No multi-threading support for any other sorting algorithm.
 
-==== Processing Information
+=== Processing Information
 
 *-P, --progress*::
   Print sort progress to stdout.
 
-==== Program Information
+=== Program Information
 
 *-h, --help*::
   Print a help message for *odgi sort*.
 
-=== EXIT STATUS
+== EXIT STATUS
 
 *0*::
   Success.
@@ -56,15 +56,15 @@ The odgi sort(1) command sorts a succinct a variation graph.
 *1*::
   Failure (syntax or usage error; parameter error; file processing failure; unexpected error).
 
-=== BUGS
+== BUGS
 
 Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
 
-=== AUTHORS
+== AUTHORS
 
 *odgi sort* was written by Erik Garrison.
 
-=== RESOURCES
+== RESOURCES
 
 *Project web site:* https://github.com/vgteam/odgi
 
@@ -74,7 +74,7 @@ Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
 
 *Discussion list / forum:* https://github.com/vgteam/odgi/issues
 
-=== COPYING
+== COPYING
 
 The MIT License (MIT)
 

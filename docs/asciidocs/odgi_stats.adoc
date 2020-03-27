@@ -1,31 +1,31 @@
-== odgi stats(1)
-Erik Garrison +
-:doctype: manpage +
-:release-version: 0.3 +
-:man manual: odgi build +
-:man source: odgi 0.3 +
-:page-layout: base +
+= odgi stats(1)
+Erik Garrison
+:doctype: manpage
+:release-version: 0.3
+:man manual: odgi build
+:man source: odgi 0.3
+:page-layout: base
 
-=== NAME
+== NAME
 
 odgi_stats - metrics describing variation graphs
 
-=== SYNOPSIS
+== SYNOPSIS
 
 *odgi stats* [*-i, --idx*=_FILE_] [_OPTION_]...
 
-=== DESCRIPTION
+== DESCRIPTION
 
 The odgi stats(1) command produces statistics of a variation graph. Among other metrics, it can calculate the #nodes, #edges, #paths and the total nucleotide length of the graph. Various histogram summary options complement the tool. If [*-B, --bed-multicov*=_BED_] is set, the metrics will be produced for the intervals specified in the BED.
 
-=== OPTIONS
+== OPTIONS
 
-==== Graph Files IO
+=== Graph Files IO
 
 *-i, --idx*=_FILE_::
   File containing the succinct variation graph to create statistics from. The file name usually ends with _.og_.
 
-==== Summary Options
+=== Summary Options
 
 *-S, --summarize*::
   Summarize the graph properties and dimensions. Print to stdout the #nucleotides, #nodes, #edges and #paths of the graph.
@@ -42,22 +42,22 @@ The odgi stats(1) command produces statistics of a variation graph. Among other 
 *-M, --multi-coverage*::
   Provide a histogram of coverage over unique multisets of paths. Print two tab-delimited columns to stdout: *cov*, *sets*. *cov* implies #nucleotides. *sets* lists the unique multisets of paths in a comma separated list. Multisets with a *cov* of one and no paths in *sets* are listed, too. 
 
-==== BED Interval
+=== BED Interval
 
 *-B, --bed-multicov*=_BED_::
   For each BED entry, provide a table of path coverage over unique multisets of paths in the graph. Each unique multiset of paths overlapping a given BED interval is described in terms of its length relative to the total interval, the number of path traversals and unique paths involved in these traversals.
 
-==== Threading
+=== Threading
 
 *-t, --threads*=_N_::
   Number of threads to use.
 
-==== Program Information
+=== Program Information
 
 *-h, --help*::
   Print a help message for *odgi stats*.
 
-=== EXIT STATUS
+== EXIT STATUS
 
 *0*::
   Success.
@@ -65,15 +65,15 @@ The odgi stats(1) command produces statistics of a variation graph. Among other 
 *1*::
   Failure (syntax or usage error; parameter error; file processing failure; unexpected error).
 
-=== BUGS
+== BUGS
 
 Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
 
-=== AUTHORS
+== AUTHORS
 
 *odgi stats* was written by Erik Garrison.
 
-=== RESOURCES
+== RESOURCES
 
 *Project web site:* https://github.com/vgteam/odgi
 
@@ -83,7 +83,7 @@ Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
 
 *Discussion list / forum:* https://github.com/vgteam/odgi/issues
 
-=== COPYING
+== COPYING
 
 The MIT License (MIT)
 

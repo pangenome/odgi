@@ -1,5 +1,4 @@
-= Reference Documentation for ODGI
-Simon Heumos, Erik Garrison
+
 
 include::odgi.adoc[]
 
