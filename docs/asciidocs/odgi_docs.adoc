@@ -1,9 +1,13 @@
+:toc: left
+:sectnums:
 
+= Reference Documentation for ODGI
+Simon Heumos, Erik Garrison
 
-include::odgi.adoc[]
+include::odgi.adoc[leveloffset=+1]
 
-include::odgi_build.adoc[]
+include::odgi_build.adoc[leveloffset=+1]
 
-include::odgi_stats.adoc[]
+include::odgi_stats.adoc[leveloffset=+1]
 
-include::odgi_sort.adoc[]
+include::odgi_sort.adoc[leveloffset=+1]

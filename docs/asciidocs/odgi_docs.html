@@ -5,8 +5,8 @@
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.10">
-<meta name="author" content="Erik Garrison">
-<title>odgi (1)</title>
+<meta name="author" content="Simon Heumos, Erik Garrison">
+<title>Reference Documentation for ODGI</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -437,18 +437,81 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 @media amzn-kf8{#header,#content,#footnotes,#footer{padding:0}}
 </style>
 </head>
-<body class="manpage">
+<body class="article toc2 toc-left">
 <div id="header">
-<h1>odgi (1) Manual Page</h1>
-<h2 id="_name">NAME</h2>
-<div class="sectionbody">
-<p>odgi - dynamic succinct variation graph tool</p>
+<h1>Reference Documentation for ODGI</h1>
+<div class="details">
+<span id="author" class="author">Simon Heumos, Erik Garrison</span><br>
+</div>
+<div id="toc" class="toc2">
+<div id="toctitle">Table of Contents</div>
+<ul class="sectlevel1">
+<li><a href="#_odgi_1">1. odgi (1)</a>
+<ul class="sectlevel2">
+<li><a href="#_name">1.1. NAME</a></li>
+<li><a href="#_synopsis">1.2. SYNOPSIS</a></li>
+<li><a href="#_description">1.3. DESCRIPTION</a></li>
+<li><a href="#_commands">1.4. COMMANDS</a></li>
+<li><a href="#_bugs">1.5. BUGS</a></li>
+<li><a href="#_authors">1.6. AUTHORS</a></li>
+<li><a href="#_resources">1.7. RESOURCES</a></li>
+<li><a href="#_copying">1.8. COPYING</a></li>
+</ul>
+</li>
+<li><a href="#_odgi_build1">2. odgi build(1)</a>
+<ul class="sectlevel2">
+<li><a href="#_name_2">2.1. NAME</a></li>
+<li><a href="#_synopsis_2">2.2. SYNOPSIS</a></li>
+<li><a href="#_description_2">2.3. DESCRIPTION</a></li>
+<li><a href="#_options">2.4. OPTIONS</a></li>
+<li><a href="#_exit_status">2.5. EXIT STATUS</a></li>
+<li><a href="#_bugs_2">2.6. BUGS</a></li>
+<li><a href="#_authors_2">2.7. AUTHORS</a></li>
+<li><a href="#_resources_2">2.8. RESOURCES</a></li>
+<li><a href="#_copying_2">2.9. COPYING</a></li>
+</ul>
+</li>
+<li><a href="#_odgi_stats1">3. odgi stats(1)</a>
+<ul class="sectlevel2">
+<li><a href="#_name_3">3.1. NAME</a></li>
+<li><a href="#_synopsis_3">3.2. SYNOPSIS</a></li>
+<li><a href="#_description_3">3.3. DESCRIPTION</a></li>
+<li><a href="#_options_2">3.4. OPTIONS</a></li>
+<li><a href="#_exit_status_2">3.5. EXIT STATUS</a></li>
+<li><a href="#_bugs_3">3.6. BUGS</a></li>
+<li><a href="#_authors_3">3.7. AUTHORS</a></li>
+<li><a href="#_resources_3">3.8. RESOURCES</a></li>
+<li><a href="#_copying_3">3.9. COPYING</a></li>
+</ul>
+</li>
+<li><a href="#_odgi_sort1">4. odgi sort(1)</a>
+<ul class="sectlevel2">
+<li><a href="#_name_4">4.1. NAME</a></li>
+<li><a href="#_synopsis_4">4.2. SYNOPSIS</a></li>
+<li><a href="#_description_4">4.3. DESCRIPTION</a></li>
+<li><a href="#_options_3">4.4. OPTIONS</a></li>
+<li><a href="#_exit_status_3">4.5. EXIT STATUS</a></li>
+<li><a href="#_bugs_4">4.6. BUGS</a></li>
+<li><a href="#_authors_4">4.7. AUTHORS</a></li>
+<li><a href="#_resources_4">4.8. RESOURCES</a></li>
+<li><a href="#_copying_4">4.9. COPYING</a></li>
+</ul>
+</li>
+</ul>
 </div>
 </div>
 <div id="content">
 <div class="sect1">
-<h2 id="_synopsis">SYNOPSIS</h2>
+<h2 id="_odgi_1">1. odgi (1)</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="_name">1.1. NAME</h3>
+<div class="paragraph">
+<p>odgi - dynamic succinct variation graph tool</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_synopsis">1.2. SYNOPSIS</h3>
 <div class="paragraph">
 <p><strong>odgi build</strong> -g graph.gfa -o graph.og</p>
 </div>
@@ -456,18 +519,14 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p><strong>odgi stats</strong> -i graph.og -S</p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_description">DESCRIPTION</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_description">1.3. DESCRIPTION</h3>
 <div class="paragraph">
 <p>Odgi is a set of of tools that manipulate variation graphs. TODO Explain data structure. TODO Link to vg paper. TODO Link to handle graph paper. TODO Explain purpose. TODO Give summary of the capabilities of the set of tools.</p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_commands">COMMANDS</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_commands">1.4. COMMANDS</h3>
 <div class="paragraph">
 <p>Each command has its own man page which can be viewed using e.g. <strong>man odgi_build.1</strong>. Below we have a brief summary of syntax and sub-command description.</p>
 </div>
@@ -480,26 +539,20 @@ The odgi build(1) command constructs a succinct variation graph from a GFA. Curr
 The odgi stats(1) command produces statistics of a variation graph. Among other metrics, it can calculate the #nodes, #edges, #paths and the total nucleotide length of the graph. Various histogram summary options complement the tool. If [<strong>-B, --bed-multicov</strong>=<em>BED</em>] is set, the metrics will be produced for the intervals specified in the BED.</p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_bugs">BUGS</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_bugs">1.5. BUGS</h3>
 <div class="paragraph">
 <p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_authors">AUTHORS</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_authors">1.6. AUTHORS</h3>
 <div class="paragraph">
 <p>Erik Garrison from the University of California Santa Cruz wrote the whole odgi tool. Despite small code contributions, Simon Heumos from the Quantitative Biology Center Tübingen wrote odgi pathindex, odgi panpos, odgi server, and the documentation.</p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_resources">RESOURCES</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_resources">1.7. RESOURCES</h3>
 <div class="paragraph">
 <p><strong>Project web site:</strong> <a href="https://github.com/vgteam/odgi" class="bare">https://github.com/vgteam/odgi</a></p>
 </div>
@@ -513,10 +566,8 @@ The odgi stats(1) command produces statistics of a variation graph. Among other 
 <p><strong>Discussion list / forum:</strong> <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a></p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_copying">COPYING</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_copying">1.8. COPYING</h3>
 <div class="paragraph">
 <p>The MIT License (MIT)</p>
 </div>
@@ -545,39 +596,32 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </div>
 </div>
 </div>
-<h1 id="_odgi_build1" class="sect0">odgi build(1)</h1>
-<div class="paragraph">
-<p>Erik Garrison</p>
 </div>
 <div class="sect1">
-<h2 id="_name_2">NAME</h2>
+<h2 id="_odgi_build1">2. odgi build(1)</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="_name_2">2.1. NAME</h3>
 <div class="paragraph">
 <p>odgi_build - construct a dynamic succinct variation graph</p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_synopsis_2">SYNOPSIS</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_synopsis_2">2.2. SYNOPSIS</h3>
 <div class="paragraph">
 <p><strong>odgi build</strong> [<strong>-g, --gfa</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_description_2">DESCRIPTION</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_description_2">2.3. DESCRIPTION</h3>
 <div class="paragraph">
 <p>The odgi build(1) command constructs a succinct variation graph from a GFA. Currently, only GFA1 is supported. For details of the format please see <a href="https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md" class="bare">https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md</a>.</p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_options">OPTIONS</h2>
-<div class="sectionbody">
 <div class="sect2">
-<h3 id="_graph_files_io">Graph Files IO</h3>
+<h3 id="_options">2.4. OPTIONS</h3>
+<div class="sect3">
+<h4 id="_graph_files_io">2.4.1. Graph Files IO</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-g, --gfa</strong>=<em>FILE</em></dt>
@@ -591,8 +635,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </dl>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_graph_sorting">Graph Sorting</h3>
+<div class="sect3">
+<h4 id="_graph_sorting">2.4.2. Graph Sorting</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-s, --sort</strong></dt>
@@ -602,8 +646,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </dl>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_processing_information">Processing Information</h3>
+<div class="sect3">
+<h4 id="_processing_information">2.4.3. Processing Information</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-p, --progress</strong></dt>
@@ -633,8 +677,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </dl>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_program_information">Program Information</h3>
+<div class="sect3">
+<h4 id="_program_information">2.4.4. Program Information</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-h, --help</strong></dt>
@@ -645,10 +689,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </div>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_exit_status">EXIT STATUS</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_exit_status">2.5. EXIT STATUS</h3>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>0</strong></dt>
@@ -662,26 +704,20 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </dl>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_bugs_2">BUGS</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_bugs_2">2.6. BUGS</h3>
 <div class="paragraph">
 <p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_authors_2">AUTHORS</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_authors_2">2.7. AUTHORS</h3>
 <div class="paragraph">
 <p><strong>odgi build</strong> was written by Erik Garrison.</p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_resources_2">RESOURCES</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_resources_2">2.8. RESOURCES</h3>
 <div class="paragraph">
 <p><strong>Project web site:</strong> <a href="https://github.com/vgteam/odgi" class="bare">https://github.com/vgteam/odgi</a></p>
 </div>
@@ -695,10 +731,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 <p><strong>Discussion list / forum:</strong> <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a></p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_copying_2">COPYING</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_copying_2">2.9. COPYING</h3>
 <div class="paragraph">
 <p>The MIT License (MIT)</p>
 </div>
@@ -727,44 +761,32 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </div>
 </div>
 </div>
-<h1 id="_odgi_stats1" class="sect0">odgi stats(1)</h1>
-<div class="paragraph">
-<p>Erik Garrison
-:doctype: manpage
-:release-version: 0.3
-:man manual: odgi build
-:man source: odgi 0.3
-:page-layout: base</p>
 </div>
 <div class="sect1">
-<h2 id="_name_3">NAME</h2>
+<h2 id="_odgi_stats1">3. odgi stats(1)</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="_name_3">3.1. NAME</h3>
 <div class="paragraph">
 <p>odgi_stats - metrics describing variation graphs</p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_synopsis_3">SYNOPSIS</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_synopsis_3">3.2. SYNOPSIS</h3>
 <div class="paragraph">
 <p><strong>odgi stats</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_description_3">DESCRIPTION</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_description_3">3.3. DESCRIPTION</h3>
 <div class="paragraph">
 <p>The odgi stats(1) command produces statistics of a variation graph. Among other metrics, it can calculate the #nodes, #edges, #paths and the total nucleotide length of the graph. Various histogram summary options complement the tool. If [<strong>-B, --bed-multicov</strong>=<em>BED</em>] is set, the metrics will be produced for the intervals specified in the BED.</p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_options_2">OPTIONS</h2>
-<div class="sectionbody">
 <div class="sect2">
-<h3 id="_graph_files_io_2">Graph Files IO</h3>
+<h3 id="_options_2">3.4. OPTIONS</h3>
+<div class="sect3">
+<h4 id="_graph_files_io_2">3.4.1. Graph Files IO</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
@@ -774,8 +796,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </dl>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_summary_options">Summary Options</h3>
+<div class="sect3">
+<h4 id="_summary_options">3.4.2. Summary Options</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-S, --summarize</strong></dt>
@@ -801,8 +823,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </dl>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_bed_interval">BED Interval</h3>
+<div class="sect3">
+<h4 id="_bed_interval">3.4.3. BED Interval</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-B, --bed-multicov</strong>=<em>BED</em></dt>
@@ -812,8 +834,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </dl>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_threading">Threading</h3>
+<div class="sect3">
+<h4 id="_threading">3.4.4. Threading</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-t, --threads</strong>=<em>N</em></dt>
@@ -823,8 +845,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </dl>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_program_information_2">Program Information</h3>
+<div class="sect3">
+<h4 id="_program_information_2">3.4.5. Program Information</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-h, --help</strong></dt>
@@ -835,10 +857,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </div>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_exit_status_2">EXIT STATUS</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_exit_status_2">3.5. EXIT STATUS</h3>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>0</strong></dt>
@@ -852,26 +872,20 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </dl>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_bugs_3">BUGS</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_bugs_3">3.6. BUGS</h3>
 <div class="paragraph">
 <p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_authors_3">AUTHORS</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_authors_3">3.7. AUTHORS</h3>
 <div class="paragraph">
 <p><strong>odgi stats</strong> was written by Erik Garrison.</p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_resources_3">RESOURCES</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_resources_3">3.8. RESOURCES</h3>
 <div class="paragraph">
 <p><strong>Project web site:</strong> <a href="https://github.com/vgteam/odgi" class="bare">https://github.com/vgteam/odgi</a></p>
 </div>
@@ -885,10 +899,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 <p><strong>Discussion list / forum:</strong> <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a></p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_copying_3">COPYING</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_copying_3">3.9. COPYING</h3>
 <div class="paragraph">
 <p>The MIT License (MIT)</p>
 </div>
@@ -917,44 +929,32 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </div>
 </div>
 </div>
-<h1 id="_odgi_sort1" class="sect0">odgi sort(1)</h1>
-<div class="paragraph">
-<p>Erik Garrison
-:doctype: manpage
-:release-version: 0.3
-:man manual: odgi build
-:man source: odgi 0.3
-:page-layout: base</p>
 </div>
 <div class="sect1">
-<h2 id="_name_4">NAME</h2>
+<h2 id="_odgi_sort1">4. odgi sort(1)</h2>
 <div class="sectionbody">
+<div class="sect2">
+<h3 id="_name_4">4.1. NAME</h3>
 <div class="paragraph">
 <p>odgi_sort - sort a variation graph</p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_synopsis_4">SYNOPSIS</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_synopsis_4">4.2. SYNOPSIS</h3>
 <div class="paragraph">
 <p><strong>odgi sort</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_description_4">DESCRIPTION</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_description_4">4.3. DESCRIPTION</h3>
 <div class="paragraph">
 <p>The odgi sort(1) command produces sorts a succinct a variation graph.</p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_options_3">OPTIONS</h2>
-<div class="sectionbody">
 <div class="sect2">
-<h3 id="_graph_files_io_3">Graph Files IO</h3>
+<h3 id="_options_3">4.4. OPTIONS</h3>
+<div class="sect3">
+<h4 id="_graph_files_io_3">4.4.1. Graph Files IO</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
@@ -972,12 +972,12 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </dl>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_topological_sorts">Topological Sorts</h3>
+<div class="sect3">
+<h4 id="_topological_sorts">4.4.2. Topological Sorts</h4>
 
 </div>
-<div class="sect2">
-<h3 id="_threading_2">Threading</h3>
+<div class="sect3">
+<h4 id="_threading_2">4.4.3. Threading</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-t, --threads</strong>=<em>N</em></dt>
@@ -987,8 +987,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </dl>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_processing_information_2">Processing Information</h3>
+<div class="sect3">
+<h4 id="_processing_information_2">4.4.4. Processing Information</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-P, --progress</strong></dt>
@@ -998,8 +998,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </dl>
 </div>
 </div>
-<div class="sect2">
-<h3 id="_program_information_3">Program Information</h3>
+<div class="sect3">
+<h4 id="_program_information_3">4.4.5. Program Information</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-h, --help</strong></dt>
@@ -1010,10 +1010,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </div>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_exit_status_3">EXIT STATUS</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_exit_status_3">4.5. EXIT STATUS</h3>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>0</strong></dt>
@@ -1027,26 +1025,20 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </dl>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_bugs_4">BUGS</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_bugs_4">4.6. BUGS</h3>
 <div class="paragraph">
 <p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_authors_4">AUTHORS</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_authors_4">4.7. AUTHORS</h3>
 <div class="paragraph">
 <p><strong>odgi sort</strong> was written by Erik Garrison.</p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_resources_4">RESOURCES</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_resources_4">4.8. RESOURCES</h3>
 <div class="paragraph">
 <p><strong>Project web site:</strong> <a href="https://github.com/vgteam/odgi" class="bare">https://github.com/vgteam/odgi</a></p>
 </div>
@@ -1060,10 +1052,8 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 <p><strong>Discussion list / forum:</strong> <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a></p>
 </div>
 </div>
-</div>
-<div class="sect1">
-<h2 id="_copying_4">COPYING</h2>
-<div class="sectionbody">
+<div class="sect2">
+<h3 id="_copying_4">4.9. COPYING</h3>
 <div class="paragraph">
 <p>The MIT License (MIT)</p>
 </div>
@@ -1093,9 +1083,10 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </div>
 </div>
 </div>
+</div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-03-27 10:15:08 +0100
+Last updated 2020-03-27 14:02:11 +0100
 </div>
 </div>
 </body>
