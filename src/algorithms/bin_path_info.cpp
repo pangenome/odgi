@@ -10,6 +10,7 @@ void bin_path_info(const PathHandleGraph& graph,
                                             const std::vector<std::pair<uint64_t, uint64_t>>&,
                                             const std::map<uint64_t, algorithms::path_info_t>&)>& handle_path,
                    const std::function<void(const uint64_t&, const std::string&)>& handle_sequence,
+                   const std::function<void(const string&)>& handle_fasta,
                    uint64_t num_bins,
                    uint64_t bin_width) {
     // the graph must be compacted for this to work
@@ -35,6 +36,8 @@ void bin_path_info(const PathHandleGraph& graph,
     for (uint64_t i = 0; i < num_bins; ++i) {
         handle_sequence(i+1, graph_seq.substr(i*bin_width, bin_width));
     }
+    // write out pangenome sequence if wished so
+    handle_fasta(graph_seq);
     graph_seq.clear(); // clean up
     std::unordered_map<path_handle_t, uint64_t> path_length;
     graph.for_each_path_handle([&](const path_handle_t& path) {
