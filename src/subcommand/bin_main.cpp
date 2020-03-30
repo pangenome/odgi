@@ -179,7 +179,15 @@ int main_bin(int argc, char** argv) {
                                   write_header_json,write_json, write_seq_json,
                                   args::get(num_bins), args::get(bin_width));
     } else {
-        std::cout << "path.name" << "\t" << "path.prefix" << "\t" << "path.suffix" << "\t" << "bin" << "\t" << "mean.cov" << "\t" << "mean.inv" << "\t" << "mean.pos" << std::endl;
+        std::cout << "path.name" << "\t"
+                  << "path.prefix" << "\t"
+                  << "path.suffix" << "\t"
+                  << "bin" << "\t"
+                  << "mean.cov" << "\t"
+                  << "mean.inv" << "\t"
+                  << "mean.pos" << "\t"
+                  << "first.nucl" << "\t"
+                  << "last.nucl" << std::endl;
         algorithms::bin_path_info(graph, (args::get(aggregate_delim) ? args::get(path_delim) : ""),
                                   write_header_tsv,write_tsv, write_seq_noop,
                                   args::get(num_bins), args::get(bin_width));
