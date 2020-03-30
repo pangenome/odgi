@@ -68,10 +68,10 @@ namespace odgi {
 
         // const char* pattern1 = R"(/(\w+)/(\d+))";
         // const char* pattern1 = R"(/([a-zA-Z]*[0-9]*)/(\d+))";
-        const char* pattern1 = R"(/(\w*)/(\d+))";
+        const char* pattern1 = R"(/(\w*.*)/(\d+))";
         std::regex regexi1 = std::regex(pattern1);
         std::cmatch cm1;    // same as std::match_results<const char*> cm;
-        std::regex_match ("/5-/3",cm1,regexi1);
+        std::regex_match ("/5-/3",cm1,regexi1); // /1741.hr2/3
         std::cout << "the matches were: " << std::endl;
         for (unsigned i=0; i<cm1.size(); ++i) {
             std::cout << "[" << cm1[i] << "] " << std::endl;
@@ -88,7 +88,7 @@ namespace odgi {
             std::cout << "GOT REQUEST : HELLO WORLD!" << std::endl;
         });
 
-        svr.Get(R"(/(\w*)/(\d+))", [&](const Request& req, Response& res) {
+        svr.Get(R"(/(\w*.*)/(\d+))", [&](const Request& req, Response& res) {
             /*
             for (size_t i = 0; i < req.matches.size(); i++) {
                 std::cout << req.matches[i] << std::endl;
