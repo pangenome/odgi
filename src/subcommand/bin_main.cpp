@@ -100,7 +100,7 @@ int main_bin(int argc, char** argv) {
     std::function<void(const uint64_t&,
                        const std::string&)> write_seq_json
         = [&](const uint64_t& bin_id, const std::string& seq) {
-        if (args::get(write_seqs_not)) {
+        if (args::get(write_seqs_not) || fa_out_file) {
             std::cout << "{\"bin_id\":" << bin_id << "}" << std::endl;
         } else {
             std::cout << "{\"bin_id\":" << bin_id << ","
