@@ -3,6 +3,8 @@
 #include "args.hxx"
 #include "algorithms/bin_path_info.hpp"
 
+#include <regex>
+
 namespace odgi {
 
 using namespace odgi::subcommand;
@@ -20,6 +22,7 @@ int main_bin(int argc, char** argv) {
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store the graph in this file", {'o', "out"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
+    args::ValueFlag<std::string> fa_out_file(parser, "FILE", "store the pangenome sequence in FASTA format in this file", {'f', "fasta"});
     args::ValueFlag<std::string> path_delim(parser, "path-delim", "annotate rows by prefix and suffix of this delimiter", {'D', "path-delim"});
     args::Flag output_json(parser, "write-json", "write JSON format output including additional path positional information", {'j', "json"});
     args::Flag aggregate_delim(parser, "aggregate-delim", "aggregate on path prefix delimiter", {'a', "aggregate-delim"});
@@ -97,13 +100,34 @@ int main_bin(int argc, char** argv) {
     std::function<void(const uint64_t&,
                        const std::string&)> write_seq_json
         = [&](const uint64_t& bin_id, const std::string& seq) {
-        if (args::get(write_seqs_not)) {
+        if (args::get(write_seqs_not) || fa_out_file) {
             std::cout << "{\"bin_id\":" << bin_id << "}" << std::endl;
         } else {
             std::cout << "{\"bin_id\":" << bin_id << ","
                       << "\"sequence\":\"" << seq << "\"}" << std::endl;
         }
     };
+
+    std::function<void(const std::string&)> write_fasta
+            = [&](const std::string& nuc_seq) {
+                if (fa_out_file) {
+                    std::ofstream out(args::get(fa_out_file));
+                    std::string fa_out_name = args::get(fa_out_file).c_str();
+                    std::regex regex("/");
+                    std::vector<std::string> splitted(
+                            std::sregex_token_iterator(fa_out_name.begin(), fa_out_name.end(), regex, -1),
+                            std::sregex_token_iterator()
+                            );
+                    fa_out_name = splitted[splitted.size() - 1];
+                    // Write header
+                    out << ">" << fa_out_name << std::endl;
+                    // Write the actual sequences, 80 nucleotides per line
+                    for (unsigned i = 0; i < nuc_seq.length(); i += 80) {
+                        std:: string sub_nuc_seq = nuc_seq.substr(i, 80);
+                        out << sub_nuc_seq << std::endl;
+                    }
+                }
+            };
 
     std::function<void(const std::string&,
                        const std::vector<std::pair<uint64_t, uint64_t>>&,
@@ -176,7 +200,7 @@ int main_bin(int argc, char** argv) {
 
     if (args::get(output_json)) {
         algorithms::bin_path_info(graph, (args::get(aggregate_delim) ? args::get(path_delim) : ""),
-                                  write_header_json,write_json, write_seq_json,
+                                  write_header_json,write_json, write_seq_json, write_fasta,
                                   args::get(num_bins), args::get(bin_width));
     } else {
         std::cout << "path.name" << "\t"
@@ -189,7 +213,7 @@ int main_bin(int argc, char** argv) {
                   << "first.nucl" << "\t"
                   << "last.nucl" << std::endl;
         algorithms::bin_path_info(graph, (args::get(aggregate_delim) ? args::get(path_delim) : ""),
-                                  write_header_tsv,write_tsv, write_seq_noop,
+                                  write_header_tsv,write_tsv, write_seq_noop, write_fasta,
                                   args::get(num_bins), args::get(bin_width));
     }
     return 0;
