@@ -23,8 +23,9 @@ namespace odgi {
             double mean_cov;
             double mean_inv;
             double mean_pos;
-            long int first_nucleotide;
-            long int last_nucleotide;
+            vector<std::pair<uint64_t,uint64_t>> ranges;
+            // long int first_nucleotide;
+            // long int last_nucleotide;
         };
 
         void bin_path_info(const PathHandleGraph &graph,
