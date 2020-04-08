@@ -17,7 +17,7 @@ int main_bin(int argc, char** argv) {
     std::string prog_name = "odgi bin";
     argv[0] = (char*)prog_name.c_str();
     --argc;
-    
+
     args::ArgumentParser parser("binning of path information in the graph");
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store the graph in this file", {'o', "out"});
@@ -29,6 +29,7 @@ int main_bin(int argc, char** argv) {
     args::ValueFlag<uint64_t> num_bins(parser, "N", "number of bins", {'n', "num-bins"});
     args::ValueFlag<uint64_t> bin_width(parser, "bp", "width of each bin in basepairs along the graph vector", {'w', "bin-width"});
     args::Flag write_seqs_not(parser, "write-seqs-not", "don't write out the sequences for each bin", {'s', "no-seqs"});
+    args::Flag drop_gap_links(parser, "drop-gap-links", "don't include gap links in the output", {'g', "no-gap-links"});
     try {
         parser.ParseCLI(argc, argv);
     } catch (args::Help) {
@@ -215,7 +216,7 @@ int main_bin(int argc, char** argv) {
     if (args::get(output_json)) {
         algorithms::bin_path_info(graph, (args::get(aggregate_delim) ? args::get(path_delim) : ""),
                                   write_header_json,write_json, write_seq_json, write_fasta,
-                                  args::get(num_bins), args::get(bin_width));
+                                  args::get(num_bins), args::get(bin_width), args::get(drop_gap_links));
     } else {
         std::cout << "path.name" << "\t"
                   << "path.prefix" << "\t"
@@ -228,7 +229,7 @@ int main_bin(int argc, char** argv) {
                   << "last.nucl" << std::endl;
         algorithms::bin_path_info(graph, (args::get(aggregate_delim) ? args::get(path_delim) : ""),
                                   write_header_tsv,write_tsv, write_seq_noop, write_fasta,
-                                  args::get(num_bins), args::get(bin_width));
+                                  args::get(num_bins), args::get(bin_width), args::get(drop_gap_links));
     }
     return 0;
 }

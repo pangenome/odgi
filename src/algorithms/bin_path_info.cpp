@@ -12,7 +12,8 @@ void bin_path_info(const PathHandleGraph& graph,
                    const std::function<void(const uint64_t&, const std::string&)>& handle_sequence,
                    const std::function<void(const string&)>& handle_fasta,
                    uint64_t num_bins,
-                   uint64_t bin_width) {
+                   uint64_t bin_width,
+                   bool drop_gap_links) {
     // the graph must be compacted for this to work
     std::vector<uint64_t> position_map(graph.get_node_count()+1);
     uint64_t len = 0;
@@ -40,6 +41,7 @@ void bin_path_info(const PathHandleGraph& graph,
     handle_fasta(graph_seq);
     graph_seq.clear(); // clean up
     std::unordered_map<path_handle_t, uint64_t> path_length;
+    uint64_t gap_links_removed = 0;
     graph.for_each_path_handle([&](const path_handle_t& path) {
             std::vector<std::pair<uint64_t, uint64_t>> links;
             std::map<uint64_t, path_info_t> bins;
@@ -76,7 +78,6 @@ void bin_path_info(const PathHandleGraph& graph,
 						} else {
                             bins[curr_bin].ranges[bins[curr_bin].ranges.size() - 1].second = nucleotide_count;
 						}
-						// bins[curr_bin].last_nucleotide = nucleotide_count;
                         last_bin = curr_bin;
                         last_is_rev = is_rev;
                         last_pos_in_bin = curr_pos_in_bin;
@@ -84,15 +85,51 @@ void bin_path_info(const PathHandleGraph& graph,
                 });
             links.push_back(std::make_pair(last_bin,0));
             uint64_t path_length = path_pos;
-	    uint64_t end_nucleotide = nucleotide_count;
+            uint64_t end_nucleotide = nucleotide_count;
             for (auto& entry : bins) {
                 auto& v = entry.second;
                 v.mean_inv /= (v.mean_cov ? v.mean_cov : 1);
                 v.mean_cov /= bin_width;
                 v.mean_pos /= bin_width * path_length * v.mean_cov;
             }
+
+            if (drop_gap_links) {
+                std::vector<uint64_t> bin_ids;
+                for (const auto &entry: bins) {
+                    bin_ids.push_back(entry.first);
+                }
+                std::sort(bin_ids.begin(), bin_ids.end());
+
+                uint64_t fill_pos = 0;
+
+                for (uint64_t i = 0; i < links.size(); ++i) {
+                    auto link = links[i];
+
+                    if (link.first == 0 || link.second == 0)
+                        continue;
+
+                    if (link.first > link.second) {
+                        links[fill_pos++] = link;
+                        continue;
+                    }
+
+                    auto left_it = std::lower_bound(bin_ids.begin(), bin_ids.end(), link.first + 1);
+                    auto right_it = std::lower_bound(bin_ids.begin(), bin_ids.end(), link.second);
+                    if (right_it > left_it) {
+                        links[fill_pos++] = link;
+                    }
+                }
+
+                gap_links_removed += links.size() - fill_pos;
+                links.resize(fill_pos);
+            }
+
             handle_path(graph.get_path_name(path), links, bins);
         });
+
+    if (drop_gap_links) {
+        std::cerr << "Gap links removed: " << gap_links_removed << std::endl;
+    }
 }
 
 }
