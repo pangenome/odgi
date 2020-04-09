@@ -4,8 +4,8 @@ cmake_minimum_required(VERSION 3.1)
 
 # Project's name
 project(odgi)
-# We build using c++14
-set(CMAKE_CXX_STANDARD 14)
+# We build using c++17
+set(CMAKE_CXX_STANDARD 17)
 
 # Use all standard-compliant optimizations
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -O3 -mcx16 -g")
@@ -53,7 +53,7 @@ include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 # the external projects into their prefixes and working with the installed
 # files. Instead we're building but not installing them and trying to work with
 # the non-installed build trees.
-# 
+#
 # Hence the blanked out INSTALL_COMMANDs to suppress the install step.
 #
 # We need to NOT blank out UPDATE_COMMAND or we can never change the Git revision we point to.
@@ -231,7 +231,7 @@ set(httplib_INCLUDE "${SOURCE_DIR}")
 
 # pybind11
 #ExternalProject_Add(pybind11
-#    GIT_REPOSITORY https://github.com/pybind/pybind11.git 
+#    GIT_REPOSITORY https://github.com/pybind/pybind11.git
 #    GIT_TAG v2.2.4
 #    CONFIGURE_COMMAND ""
 #    BUILD_COMMAND ""
@@ -312,7 +312,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/xp.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/cut_tips.cpp)
 
-set(odgi_DEPS 
+set(odgi_DEPS
     sdsl-lite
     dynamic
     hopscotch_map
@@ -355,6 +355,9 @@ set(odgi_INCLUDES
   "${libbf_INCLUDE}"
   "${httplib_INCLUDE}")
 
+find_library(arrow_LIB NAMES arrow libarrow)
+find_library(parquet_LIB NAMES parquet libparquet)
+
 set(odgi_LIBS
   "${sdsl-lite_LIB}/libsdsl.a"
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort.a"
@@ -363,6 +366,8 @@ set(odgi_LIBS
   "${lodepng_LIB}/liblodepng.a"
   "${mondriaan_LIB}/libmondriaan.a"
   "${libbf_LIB}/libbf.a"
+  "${arrow_LIB}"
+  "${parquet_LIB}"
   "-ldl")
 
 set(odgi_HEADERS
@@ -429,6 +434,7 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/algorithms/cut_tips.hpp)
 
 target_include_directories(odgi_objs PUBLIC ${odgi_INCLUDES})
+target_include_directories(odgi_objs PUBLIC "$ENV{CONDA_PREFIX}/include")
 set_target_properties(odgi_objs PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 
 add_library(libodgi_static STATIC $<TARGET_OBJECTS:odgi_objs>)
@@ -444,6 +450,7 @@ set_target_properties(libodgi_shared PROPERTIES PUBLIC_HEADER "${odgi_HEADERS}")
 add_executable(odgi
   $<TARGET_OBJECTS:odgi_objs>
   ${CMAKE_SOURCE_DIR}/src/main.cpp)
+target_link_directories(odgi PUBLIC "$ENV{CONDA_PREFIX}/lib")
 target_link_libraries(odgi ${odgi_LIBS})
 set_target_properties(odgi PROPERTIES OUTPUT_NAME "odgi")
 
