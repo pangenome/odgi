@@ -9,6 +9,106 @@ namespace odgi {
 
 using namespace odgi::subcommand;
 
+struct TsvSerializer : public algorithms::BinSerializer {
+    TsvSerializer(const std::string& path_delim, bool aggregate_delim) :
+        algorithms::BinSerializer(path_delim, aggregate_delim)
+    {}
+
+    void write_header(const uint64_t pangenome_length, const uint64_t bin_width) override {
+        std::cout << "path.name" << "\t"
+                  << "path.prefix" << "\t"
+                  << "path.suffix" << "\t"
+                  << "bin" << "\t"
+                  << "mean.cov" << "\t"
+                  << "mean.inv" << "\t"
+                  << "mean.pos" << "\t"
+                  << "first.nucl" << "\t"
+                  << "last.nucl" << std::endl;
+    }
+
+    void write_seq(const uint64_t& bin_id, const std::string& seq) override {}
+
+    void write_path(const std::string& path_name, const link_vec_t& links, const bin_map_t &bins) override {
+        std::string name_prefix = this->get_path_prefix(path_name);
+        std::string name_suffix = this->get_path_suffix(path_name);
+        for (auto& entry : bins) {
+            auto& bin_id = entry.first;
+            auto& info = entry.second;
+            if (info.mean_cov) {
+                std::cout << path_name << "\t"
+                          << name_prefix << "\t"
+                          << name_suffix << "\t"
+                          << bin_id << "\t"
+                          << info.mean_cov << "\t"
+                          << info.mean_inv << "\t"
+                          << info.mean_pos << "\t"
+                          << info.first_nucleotide << "\t"
+                          << info.last_nucleotide << std::endl;
+            }
+        }
+    }
+};
+
+struct JsonSerializer : public algorithms::BinSerializer {
+    static const uint64_t ODGI_JSON_VERSION = 10;
+
+    bool write_seqs;
+
+    JsonSerializer(const std::string& path_delim, bool aggregate_delim, bool write_seqs) :
+        algorithms::BinSerializer(path_delim, aggregate_delim),
+        write_seqs(write_seqs)
+    {}
+
+    void write_header(const uint64_t pangenome_length, const uint64_t bin_width) override {
+        std::cout << "{\"odgi_version\": " << ODGI_JSON_VERSION << ",";
+        std::cout << "\"bin_width\": " << bin_width << ",";
+        std::cout << "\"pangenome_length\": " << pangenome_length << "}" << std::endl;
+    };
+
+    void write_seq(const uint64_t& bin_id, const std::string& seq) override {
+        if (!this->write_seqs) {
+            std::cout << "{\"bin_id\":" << bin_id << "}" << std::endl;
+        } else {
+            std::cout << "{\"bin_id\":" << bin_id << ","
+                      << "\"sequence\":\"" << seq << "\"}" << std::endl;
+        }
+    }
+
+    void write_path(const std::string& path_name, const link_vec_t& links, const bin_map_t& bins) override {
+        std::string name_prefix = this->get_path_prefix(path_name);
+        std::string name_suffix = this->get_path_suffix(path_name);
+        std::cout << "{\"path_name\":\"" << path_name << "\",";
+        if (!this->path_delim.empty()) {
+            std::cout << "\"path_name_prefix\":\"" << name_prefix << "\","
+                      << "\"path_name_suffix\":\"" << name_suffix << "\",";
+        }
+        std::cout << "\"bins\":[";
+        auto entry_it = bins.begin();
+        for (uint64_t i = 0; i < bins.size(); ++i) {
+            auto& bin_id = entry_it->first;
+            auto& info = entry_it->second;
+            std::cout << "[" << bin_id << ","
+                      << info.mean_cov << ","
+                      << info.mean_inv << ","
+                      << info.mean_pos << ","
+                      << info.first_nucleotide << ","
+                      << info.last_nucleotide << "]";
+            if (i+1 != bins.size()) {
+                std::cout << ",";
+            }
+            ++entry_it;
+        }
+        std::cout << "],";
+        std::cout << "\"links\":[";
+        for (uint64_t i = 0; i < links.size(); ++i) {
+            auto& link = links[i];
+            std::cout << "[" << link.first << "," << link.second << "]";
+            if (i+1 < links.size()) std::cout << ",";
+        }
+        std::cout << "]}" << std::endl;
+    }
+};
+
 int main_bin(int argc, char** argv) {
 
     for (uint64_t i = 1; i < argc-1; ++i) {
@@ -58,165 +158,43 @@ int main_bin(int argc, char** argv) {
         }
     }
 
-    std::string delim = args::get(path_delim);
-    bool agg_delim = args::get(aggregate_delim);
-    auto get_path_prefix = [&](const std::string& path_name) -> std::string {
-        if (agg_delim || delim.empty()) {
-            return "NA";
-        } else {
-            return path_name.substr(0, path_name.find(delim));
-        }
-    };
-    auto get_path_suffix = [&](const std::string& path_name) -> std::string {
-        if (agg_delim || delim.empty()) {
-            return "NA";
-        } else {
-            return path_name.substr(path_name.find(delim)+1);
-        }
-    };
-
-    // our aggregation matrix
-    std::vector<std::pair<std::string, std::vector<algorithms::path_info_t>>> table;
     if (args::get(num_bins) + args::get(bin_width) == 0) {
         std::cerr << "[odgi bin] error: a bin width or a bin count is required" << std::endl;
         return 1;
     }
 
-    // ODGI JSON VERSION
-    const uint64_t ODGI_JSON_VERSION = 10;
-
-    std::function<void(const uint64_t&, const uint64_t&)> write_header_tsv
-    = [&] (const uint64_t pangenome_length, const uint64_t bin_width) {
-        // no header necessary for tsv so far
-    };
-
-    std::function<void(const uint64_t&,
-            const uint64_t&)> write_header_json
-    = [&] (const uint64_t pangenome_length, const uint64_t bin_width) {
-        std::cout << "{\"odgi_version\": " << ODGI_JSON_VERSION << ",";
-        std::cout << "\"bin_width\": " << bin_width << ",";
-        std::cout << "\"pangenome_length\": " << pangenome_length << "}" << std::endl;
-    };
-
-    std::function<void(const uint64_t&,
-                       const std::string&)> write_seq_json
-        = [&](const uint64_t& bin_id, const std::string& seq) {
-        if (args::get(write_seqs_not) || fa_out_file) {
-            std::cout << "{\"bin_id\":" << bin_id << "}" << std::endl;
-        } else {
-            std::cout << "{\"bin_id\":" << bin_id << ","
-                      << "\"sequence\":\"" << seq << "\"}" << std::endl;
-        }
-    };
-
-    std::function<void(const std::string&)> write_fasta
-            = [&](const std::string& nuc_seq) {
-                if (fa_out_file) {
-                    std::ofstream out(args::get(fa_out_file));
-                    std::string fa_out_name = args::get(fa_out_file).c_str();
-                    std::regex regex("/");
-                    std::vector<std::string> splitted(
-                            std::sregex_token_iterator(fa_out_name.begin(), fa_out_name.end(), regex, -1),
-                            std::sregex_token_iterator()
-                            );
-                    fa_out_name = splitted[splitted.size() - 1];
-                    // Write header
-                    out << ">" << fa_out_name << std::endl;
-                    // Write the actual sequences, 80 nucleotides per line
-                    for (unsigned i = 0; i < nuc_seq.length(); i += 80) {
-                        std:: string sub_nuc_seq = nuc_seq.substr(i, 80);
-                        out << sub_nuc_seq << std::endl;
-                    }
-                }
-            };
-
-    std::function<void(const std::string&,
-                       const std::vector<std::pair<uint64_t, uint64_t>>&,
-                       const std::map<uint64_t, algorithms::path_info_t>&)> write_json
-        = [&](const std::string& path_name,
-              const std::vector<std::pair<uint64_t, uint64_t>>& links,
-              const std::map<uint64_t, algorithms::path_info_t>& bins) {
-        std::string name_prefix = get_path_prefix(path_name);
-        std::string name_suffix = get_path_suffix(path_name);
-        std::cout << "{\"path_name\":\"" << path_name << "\",";
-        if (!delim.empty()) {
-            std::cout << "\"path_name_prefix\":\"" << name_prefix << "\","
-                      << "\"path_name_suffix\":\"" << name_suffix << "\",";
-        }
-        std::cout << "\"bins\":[";
-        auto entry_it = bins.begin();
-        for (uint64_t i = 0; i < bins.size(); ++i) {
-            auto& bin_id = entry_it->first;
-            auto& info = entry_it->second;
-            std::cout << "[" << bin_id << ","
-                      << info.mean_cov << ","
-                      << info.mean_inv << ","
-                      << info.mean_pos << ","
-                      << info.first_nucleotide << ","
-                      << info.last_nucleotide << "]";
-            if (i+1 != bins.size()) {
-                std::cout << ",";
-            }
-            ++entry_it;
-        }
-        std::cout << "],";
-        std::cout << "\"links\":[";
-        for (uint64_t i = 0; i < links.size(); ++i) {
-            auto& link = links[i];
-            std::cout << "[" << link.first << "," << link.second << "]";
-            if (i+1 < links.size()) std::cout << ",";
-        }
-        std::cout << "]}" << std::endl;
-    };
-
-    std::function<void(const uint64_t&,
-                       const std::string&)> write_seq_noop
-        = [&](const uint64_t& bin_id, const std::string& seq) {
-    };
-
-    std::function<void(const std::string&,
-                       const std::vector<std::pair<uint64_t, uint64_t>>&,
-                       const std::map<uint64_t, algorithms::path_info_t>&)> write_tsv
-        = [&](const std::string& path_name,
-              const std::vector<std::pair<uint64_t, uint64_t>>& links,
-              const std::map<uint64_t, algorithms::path_info_t>& bins) {
-        std::string name_prefix = get_path_prefix(path_name);
-        std::string name_suffix = get_path_suffix(path_name);
-        for (auto& entry : bins) {
-            auto& bin_id = entry.first;
-            auto& info = entry.second;
-            if (info.mean_cov) {
-                std::cout << path_name << "\t"
-                          << name_prefix << "\t"
-                          << name_suffix << "\t"
-                          << bin_id << "\t"
-                          << info.mean_cov << "\t"
-                          << info.mean_inv << "\t"
-                          << info.mean_pos << "\t"
-                          << info.first_nucleotide << "\t"
-                          << info.last_nucleotide << std::endl;
+    auto write_fasta = [&](const std::string& nuc_seq) {
+        if (fa_out_file) {
+            std::ofstream out(args::get(fa_out_file));
+            std::string fa_out_name = args::get(fa_out_file).c_str();
+            std::regex regex("/");
+            auto token_it = std::sregex_token_iterator(fa_out_name.begin(), fa_out_name.end(), regex, -1);
+            std::vector<std::string> splitted(token_it, std::sregex_token_iterator());
+            fa_out_name = splitted[splitted.size() - 1];
+            // Write header
+            out << ">" << fa_out_name << std::endl;
+            // Write the actual sequences, 80 nucleotides per line
+            for (unsigned i = 0; i < nuc_seq.length(); i += 80) {
+                std:: string sub_nuc_seq = nuc_seq.substr(i, 80);
+                out << sub_nuc_seq << std::endl;
             }
         }
     };
 
+    std::string delim = args::get(path_delim);
+    bool agg_delim = args::get(aggregate_delim);
+
+    std::shared_ptr<algorithms::BinSerializer> serializer;
+    bool skip_seqs = args::get(write_seqs_not) || fa_out_file;
     if (args::get(output_json)) {
-        algorithms::bin_path_info(graph, (args::get(aggregate_delim) ? args::get(path_delim) : ""),
-                                  write_header_json,write_json, write_seq_json, write_fasta,
-                                  args::get(num_bins), args::get(bin_width), args::get(drop_gap_links));
+        serializer = std::make_shared<JsonSerializer>(delim, agg_delim, !skip_seqs);
     } else {
-        std::cout << "path.name" << "\t"
-                  << "path.prefix" << "\t"
-                  << "path.suffix" << "\t"
-                  << "bin" << "\t"
-                  << "mean.cov" << "\t"
-                  << "mean.inv" << "\t"
-                  << "mean.pos" << "\t"
-                  << "first.nucl" << "\t"
-                  << "last.nucl" << std::endl;
-        algorithms::bin_path_info(graph, (args::get(aggregate_delim) ? args::get(path_delim) : ""),
-                                  write_header_tsv,write_tsv, write_seq_noop, write_fasta,
-                                  args::get(num_bins), args::get(bin_width), args::get(drop_gap_links));
+        serializer = std::make_shared<TsvSerializer>(delim, agg_delim);
     }
+
+    algorithms::bin_path_info(graph, (args::get(aggregate_delim) ? args::get(path_delim) : ""),
+                              serializer, write_fasta,
+                              args::get(num_bins), args::get(bin_width), args::get(drop_gap_links));
     return 0;
 }
 

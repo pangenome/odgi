@@ -3,13 +3,33 @@
 namespace odgi {
 namespace algorithms {
 
+std::string BinSerializer::get_path_prefix(const std::string& path_name) {
+    if (aggregate_delim || path_delim.empty()) {
+        return "NA";
+    } else {
+        return path_name.substr(0, path_name.find(path_delim));
+    }
+}
+
+std::string BinSerializer::get_path_suffix(const std::string& path_name) {
+    if (aggregate_delim || path_delim.empty()) {
+        return "NA";
+    } else {
+        return path_name.substr(path_name.find(path_delim)+1);
+    }
+}
+
+BinSerializer::BinSerializer(const std::string& path_delim, bool aggregate_delim) :
+    path_delim(path_delim), aggregate_delim(aggregate_delim)
+{
+}
+
+BinSerializer::~BinSerializer() {}
+
+
 void bin_path_info(const PathHandleGraph& graph,
                    const std::string& prefix_delimiter,
-                   const std::function<void(const uint64_t&, const uint64_t&)>& handle_header,
-                   const std::function<void(const std::string&,
-                                            const std::vector<std::pair<uint64_t, uint64_t>>&,
-                                            const std::map<uint64_t, algorithms::path_info_t>&)>& handle_path,
-                   const std::function<void(const uint64_t&, const std::string&)>& handle_sequence,
+                   std::shared_ptr<BinSerializer>& serializer,
                    const std::function<void(const string&)>& handle_fasta,
                    uint64_t num_bins,
                    uint64_t bin_width,
@@ -32,10 +52,10 @@ void bin_path_info(const PathHandleGraph& graph,
     }
     position_map[position_map.size()-1] = len;
     // write header
-    handle_header(len, bin_width);
+    serializer->write_header(len, bin_width);
     // collect bin sequences
     for (uint64_t i = 0; i < num_bins; ++i) {
-        handle_sequence(i+1, graph_seq.substr(i*bin_width, bin_width));
+        serializer->write_seq(i+1, graph_seq.substr(i*bin_width, bin_width));
     }
     // write out pangenome sequence if wished so
     handle_fasta(graph_seq);
@@ -121,7 +141,7 @@ void bin_path_info(const PathHandleGraph& graph,
                 links.resize(fill_pos);
             }
 
-            handle_path(graph.get_path_name(path), links, bins);
+            serializer->write_path(graph.get_path_name(path), links, bins);
         });
 
     if (drop_gap_links) {
