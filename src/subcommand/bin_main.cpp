@@ -7,7 +7,7 @@
 #include <parquet/exception.h>
 #include <parquet/stream_writer.h>
 
-#include <filesystem>
+#include <experimental/filesystem>
 #include <regex>
 
 namespace odgi {
@@ -213,6 +213,8 @@ parquet::StreamWriter& operator<<(parquet::StreamWriter& os, const PathBinRange&
     return os;
 }
 
+namespace fs = std::experimental::filesystem;
+
 class ParquetSerializer : public algorithms::BinSerializer {
     parquet::StreamWriter paths_;
     parquet::StreamWriter path_bins_;
@@ -220,7 +222,7 @@ class ParquetSerializer : public algorithms::BinSerializer {
     parquet::StreamWriter links_;
 
     uint64_t path_id;
-    std::filesystem::path output_dir_;
+    fs::path output_dir_;
 
     static parquet::StreamWriter create_writer(const std::string& filename,
                                                const std::shared_ptr<parquet::schema::GroupNode>& schema) {
@@ -235,11 +237,11 @@ class ParquetSerializer : public algorithms::BinSerializer {
     static const int ODGI_PARQUET_VERSION = 1;
 
 public:
-    ParquetSerializer(const std::string& path_delim, bool aggregate_delim, const std::filesystem::path& output_dir) :
+    ParquetSerializer(const std::string& path_delim, bool aggregate_delim, const fs::path& output_dir) :
         algorithms::BinSerializer(path_delim, aggregate_delim),
         path_id(0), output_dir_(output_dir)
     {
-        std::filesystem::create_directories(output_dir);
+        fs::create_directories(output_dir);
 
         paths_ = create_writer(output_dir / "paths.parquet", Path::GetSchema());
         path_bins_ = create_writer(output_dir / "path_bins.parquet", PathBin::GetSchema());

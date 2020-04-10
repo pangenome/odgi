@@ -368,7 +368,8 @@ set(odgi_LIBS
   "${libbf_LIB}/libbf.a"
   "${arrow_LIB}"
   "${parquet_LIB}"
-  "-ldl")
+  "-ldl"
+  "-lstdc++fs")
 
 set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/phf.hpp
