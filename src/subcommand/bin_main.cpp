@@ -83,7 +83,7 @@ int main_bin(int argc, char** argv) {
     }
 
     // ODGI JSON VERSION
-    const uint64_t ODGI_JSON_VERSION = 10;
+    const uint64_t ODGI_JSON_VERSION = 12; // this brings the exact nucleotide positions for each bin for each path referred to as ranges
 
     std::function<void(const uint64_t&, const uint64_t&)> write_header_tsv
     = [&] (const uint64_t pangenome_length, const uint64_t bin_width) {
@@ -130,6 +130,20 @@ int main_bin(int argc, char** argv) {
                 }
             };
 
+    std::function<void(const vector<std::pair<uint64_t , uint64_t >>&)> write_ranges_json
+        = [&](const vector<std::pair<uint64_t , uint64_t >>& ranges) {
+        std::cout << "[";
+        for (int i = 0; i < ranges.size(); i++) {
+            std::pair<uint64_t, uint64_t > range = ranges[i];
+            if (i == 0) {
+                std::cout << "[" << range.first << "," << range.second << "]";
+            } else {
+                std::cout << "," << "[" << range.first << "," << range.second << "]";
+            }
+        }
+        std::cout << "]";
+    };
+
     std::function<void(const std::string&,
                        const std::vector<std::pair<uint64_t, uint64_t>>&,
                        const std::map<uint64_t, algorithms::path_info_t>&)> write_json
@@ -151,9 +165,9 @@ int main_bin(int argc, char** argv) {
             std::cout << "[" << bin_id << ","
                       << info.mean_cov << ","
                       << info.mean_inv << ","
-                      << info.mean_pos << ","
-                      << info.first_nucleotide << ","
-                      << info.last_nucleotide << "]";
+                      << info.mean_pos << ",";
+            write_ranges_json(info.ranges);
+			std::cout  << "]";
             if (i+1 != bins.size()) {
                 std::cout << ",";
             }
@@ -193,8 +207,8 @@ int main_bin(int argc, char** argv) {
                           << info.mean_cov << "\t"
                           << info.mean_inv << "\t"
                           << info.mean_pos << "\t"
-                          << info.first_nucleotide << "\t"
-                          << info.last_nucleotide << std::endl;
+						  << info.ranges[0].first << "\t"
+						  << info.ranges[info.ranges.size() - 1].second << std::endl;
             }
         }
     };
