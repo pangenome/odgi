@@ -213,22 +213,6 @@ parquet::StreamWriter& operator<<(parquet::StreamWriter& os, const PathBinRange&
     return os;
 }
 
-struct Metadata {
-    std::string key, value;
-
-    static std::shared_ptr<parquet::schema::GroupNode> GetSchema() {
-        using namespace parquet;
-        schema::NodeVector fields{String("key"), String("value")};
-        auto group_node = schema::GroupNode::Make("schema", Repetition::REQUIRED, fields);
-        return std::static_pointer_cast<schema::GroupNode>(group_node);
-    }
-};
-
-parquet::StreamWriter& operator<<(parquet::StreamWriter& os, const Metadata& metadata) {
-    os << metadata.key << metadata.value << parquet::EndRow;
-    return os;
-}
-
 class ParquetSerializer : public algorithms::BinSerializer {
     parquet::StreamWriter paths_;
     parquet::StreamWriter path_bins_;
@@ -264,10 +248,11 @@ public:
     }
 
     void write_header(const uint64_t pangenome_length, const uint64_t bin_width) override {
-        auto w = create_writer(output_dir_ / "metadata.parquet", Metadata::GetSchema());
-        w << Metadata{"ODGI_PARQUET_VERSION", std::to_string(ODGI_PARQUET_VERSION)};
-        w << Metadata{"pangenome_length", std::to_string(pangenome_length)};
-        w << Metadata{"bin_width", std::to_string(bin_width)};
+        std::ofstream out(output_dir_ / "metadata.json");
+
+        out << "{\"odgi_parquet_version\": " << ODGI_PARQUET_VERSION << ",";
+        out << "\"bin_width\": " << bin_width << ",";
+        out << "\"pangenome_length\": " << pangenome_length << "}" << std::endl;
     }
 
     void write_seq(const uint64_t& bin_id, const std::string& seq) override {}
