@@ -83,7 +83,7 @@ int main_bin(int argc, char** argv) {
     }
 
     // ODGI JSON VERSION
-    const uint64_t ODGI_JSON_VERSION = 10;
+    const uint64_t ODGI_JSON_VERSION = 12; // this brings the exact nucleotide positions for each bin for each path referred to as ranges
 
     std::function<void(const uint64_t&, const uint64_t&)> write_header_tsv
     = [&] (const uint64_t pangenome_length, const uint64_t bin_width) {
