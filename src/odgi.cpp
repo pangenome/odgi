@@ -49,7 +49,7 @@ size_t graph_t::get_length(const handle_t& handle) const {
 
 /// Get the sequence of a node, presented in the handle's local forward orientation.
 std::string graph_t::get_sequence(const handle_t& handle) const {
-    auto& seq = node_v.at(number_bool_packing::unpack_number(handle)).get_sequence();
+    auto& seq = node_v.at(number_bool_packing::unpack_number(handle)).sequence();
     return (get_is_reverse(handle) ? reverse_complement(seq) : seq);
 }
 
@@ -60,7 +60,7 @@ bool graph_t::follow_edges_impl(const handle_t& handle, bool go_left, const std:
     const node_t& node = node_v.at(number_bool_packing::unpack_number(handle));
     bool is_rev = get_is_reverse(handle);
     nid_t node_id = get_id(handle);
-    auto& node_edges = node.get_edges();
+    const std::vector<uint64_t> node_edges = node.edges();
     if (node_edges.size() == 0) return true;
     for (uint64_t i = 0; i < node_edges.size(); i+=2) {
         // unpack the edge
@@ -603,7 +603,7 @@ void graph_t::destroy_edge(const handle_t& left_h, const handle_t& right_h) {
     nid_t right_node_id = get_id(right_h);
     nid_t left_node_id = get_id(left_h);
 
-    auto& left_node_edges = left_node.get_edges();
+    std::vector<uint64_t> left_node_edges = left_node.edges();
     bool found_edge = false;
     for (uint64_t i = 0; i < left_node_edges.size(); ) {
         uint64_t other_id = edge_delta_to_id(left_node_id, left_node_edges.at(i++));
@@ -622,7 +622,7 @@ void graph_t::destroy_edge(const handle_t& left_h, const handle_t& right_h) {
         }
     }
 
-    auto& right_node_edges = right_node.get_edges();
+    std::vector<uint64_t> right_node_edges = right_node.edges();
     for (uint64_t i = 0; i < right_node_edges.size(); ) {
         uint64_t other_id = edge_delta_to_id(right_node_id, right_node_edges.at(i++));
         uint8_t packed_edge = right_node_edges.at(i++);
@@ -1332,8 +1332,8 @@ void graph_t::display(void) const {
     for (uint64_t i = 0; i < node_v.size(); ++i) {
         auto& node = node_v.at(i);
         nid_t node_id = i+1;
-        std::cerr << node_id << ":" << node.get_sequence() << " ";
-        auto& node_edges = node.get_edges();
+        std::cerr << node_id << ":" << node.sequence() << " ";
+        const std::vector<uint64_t> node_edges = node.edges();
         for (uint64_t j = 0; j < node_edges.size(); ++j) {
             std::cerr << node_edges.at(j) << ",";
         }
@@ -1381,7 +1381,7 @@ void graph_t::to_gfa(std::ostream& out) const {
                 const node_t& node = node_v.at(number_bool_packing::unpack_number(h));
                 bool is_rev = get_is_reverse(h);
                 nid_t node_id = get_id(h);
-                auto& node_edges = node.get_edges();
+                const std::vector<uint64_t> node_edges = node.edges();
                 for (uint64_t i = 0; i < node_edges.size(); i+=2) {
                     // unpack the edge
                     uint64_t other_id = edge_delta_to_id(node_id, node_edges.at(i));

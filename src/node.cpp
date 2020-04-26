@@ -5,33 +5,55 @@
 namespace odgi {
 
 uint64_t node_t::sequence_size(void) const {
-    return sequence.size();
+    return seq_bytes();
 }
 
-const std::string node_t::get_sequence(void) const {
-    return sequence;
+const std::string node_t::sequence(void) const {
+    const std::string res((char*)bytes.data()+seq_start(), seq_bytes());
+    return res;
 }
 
 void node_t::set_sequence(const std::string& seq) {
-    sequence = seq;
+    if (seq.size() > seq_bytes()) {
+        bytes.reserve(bytes.size()+seq.size()-seq_bytes());
+        bytes.insert(bytes.begin()+seq_start(), seq.size() - seq_bytes(), 0);
+        set_seq_bytes(seq.size());
+    } else if (seq.size() < seq_bytes()) {
+        bytes.erase(bytes.begin()+seq_start(), bytes.begin()+seq_start()+(seq_bytes()-seq.size()));;
+        set_seq_bytes(seq.size());
+    }
+    memcpy(bytes.data()+seq_start(), seq.c_str(), seq.size());
 }
 
-const dyn::hacked_vector& node_t::get_edges(void) const {
-    return edges;
+std::vector<uint64_t> node_t::edges(void) const {
+    std::vector<uint64_t> res;
+    if (edge_count()) {
+        res.resize(edge_count()*EDGE_RECORD_LENGTH);
+        sqvarint::decode(res.data(),
+                       (uint8_t*)bytes.data()+edge_start(),
+                       edge_count()*EDGE_RECORD_LENGTH);
+    }
+    return res;
 }
 
 void node_t::add_edge(const uint64_t& relative_id, const uint64_t& edge_type) {
     //std::cerr << "add edge " << "relative_id " << relative_id << " edge_type " << edge_type << std::endl;
-    edges.push_back(relative_id);
-    edges.push_back(edge_type);
+    uint64_t add_edge_bytes = sqvarint::length({relative_id, edge_type});
+    bytes.reserve(bytes.size()+add_edge_bytes);
+    bytes.insert(bytes.begin()+edge_start(), add_edge_bytes, 0);
+    sqvarint::encode({relative_id, edge_type}, bytes.data()+edge_start());
+    set_edge_bytes(edge_bytes() + add_edge_bytes);
+    set_edge_count(edge_count() + 1);
 }
 
 void node_t::remove_edge(const uint64_t& rank) {
     assert(rank < edge_count());
-    uint64_t offset = EDGE_RECORD_LENGTH*rank;
-    for (uint8_t i = 0; i < EDGE_RECORD_LENGTH; ++i) {
-        edges.remove(offset);
-    }
+    uint64_t edge_offset = edge_start() + sqvarint::bytes(bytes.data()+edge_start(), EDGE_RECORD_LENGTH*rank);
+    // a bit redundant
+    uint64_t j = sqvarint::bytes(bytes.data()+edge_offset, EDGE_RECORD_LENGTH);
+    bytes.erase(bytes.begin()+edge_offset, bytes.begin()+edge_offset+j);
+    set_edge_count(edge_count()-1);
+    set_edge_bytes(edge_bytes()-j);
 }
 
 void node_t::add_path_step(const uint64_t& path_id, const bool& is_rev,
@@ -117,14 +139,11 @@ void node_t::remove_path_step(const uint64_t& rank) {
 }
 
 void node_t::clear(void) {
-    sequence.clear();
-    clear_edges();
+    set_seq_bytes(0);
+    set_edge_bytes(0);
+    set_edge_count(0);
+    bytes.clear();
     clear_path_steps();
-}
-
-void node_t::clear_edges(void) {
-    dyn::hacked_vector null_iv;
-    edges = null_iv;
 }
 
 void node_t::clear_path_steps(void) {
@@ -134,37 +153,42 @@ void node_t::clear_path_steps(void) {
 
 uint64_t node_t::serialize(std::ostream& out) const {
     uint64_t written = 0;
-    size_t seq_size = sequence.size();
-    out.write((char*)&seq_size, sizeof(size_t));
-    written += sizeof(size_t);
-    out << sequence;
-    written += sequence.size();
-    written += edges.serialize(out);
+    out.write((char*)&_seq_bytes, sizeof(uint32_t));
+    out.write((char*)&_edge_bytes, sizeof(uint32_t));
+    out.write((char*)&_edge_count, sizeof(uint32_t));
+    written += sizeof(uint32_t)*4 + sizeof(uint8_t);
+    uint64_t node_size = bytes.size();
+    out.write((char*)&node_size, sizeof(node_size));
+    written += sizeof(uint64_t);
+    out.write((char*)bytes.data(), node_size*sizeof(uint8_t));
+    written += sizeof(uint8_t)*node_size;
     written += path_steps.serialize(out);
     return written;
 }
 
 void node_t::load(std::istream& in) {
-    size_t seq_size;
-    in.read((char*)&seq_size, sizeof(size_t));
-    sequence.resize(seq_size);
-    in.read((char*)sequence.c_str(), seq_size);
-    edges.load(in);
+    in.read((char*)&_seq_bytes, sizeof(uint32_t));
+    in.read((char*)&_edge_bytes, sizeof(uint32_t));
+    in.read((char*)&_edge_count, sizeof(uint32_t));
+    uint64_t node_size = 0;
+    in.read((char*)&node_size, sizeof(node_size));
+    bytes.resize(node_size);
+    in.read((char*)bytes.data(), node_size*sizeof(uint8_t));
     path_steps.load(in);
 }
 
 void node_t::display(void) const {
-    std::cerr << "seq " << sequence << " "
+    std::cerr << "self_bytes " << bytes.size() << " "
+              << "seq_bytes " << seq_bytes() << " "
+              << "seq " << sequence() << " "
+              << "edge_start " << edge_start() << " "
               << "edge_count " << edge_count() << " "
+              << "edge_bytes " << edge_bytes() << " "
               << "path_count " << path_count() << " | ";
-    if (edge_count()) {
-        for (uint64_t i = 0; i < edge_count(); ++i) {
-            std::cerr
-                << edges.at(i) << ":"
-                << edges.at(i+1) << " ";
-        }
+    for (auto i : bytes) {
+        std::cerr << (int) i << " ";
     }
-    std::cerr << "| ";
+    std::cerr << " | ";
     if (path_count()) {
         for (uint64_t i = 0; i < path_count(); ++i) {
             std::cerr

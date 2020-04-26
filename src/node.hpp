@@ -20,14 +20,21 @@ const uint8_t PATH_RECORD_LENGTH = 5;
 
 /// A node object with the sequence, its edge lists, and paths
 class node_t {
-    std::string sequence;
-    dyn::hacked_vector edges;
+    std::vector<uint8_t> bytes;
     dyn::hacked_vector path_steps;
+    uint32_t _seq_bytes = 0;
+    uint32_t _edge_bytes = 0;
+    uint32_t _edge_count = 0;
 public:
     inline const uint64_t seq_start(void) const { return 0; }
-    inline const uint64_t seq_bytes(void) const { return sequence.size(); }
-    inline const uint64_t edge_count(void) const { return edges.size()/EDGE_RECORD_LENGTH; }
+    inline const uint64_t seq_bytes(void) const { return _seq_bytes; }
+    inline const uint64_t edge_start(void) const { return _seq_bytes; }
+    inline const uint64_t edge_count(void) const { return _edge_count; }
+    inline const uint64_t edge_bytes(void) const { return _edge_bytes; }
     inline const uint64_t path_count(void) const { return path_steps.size()/PATH_RECORD_LENGTH; }
+    inline void set_seq_bytes(const uint64_t& i) { _seq_bytes = i; }
+    inline void set_edge_count(const uint64_t& i) { _edge_count = i; }
+    inline void set_edge_bytes(const uint64_t& i) { _edge_bytes = i; }
     struct step_t {
         uint64_t data[5] = { 0, 0, 0, 0, 0 }; // PATH_RECORD_LENGTH
         step_t(void) { }
@@ -58,9 +65,9 @@ public:
         inline void set_next_rank(const uint64_t& i) { data[4] = i; }
     };
     uint64_t sequence_size(void) const;
-    const std::string get_sequence(void) const;
+    const std::string sequence(void) const;
     void set_sequence(const std::string& seq);
-    const dyn::hacked_vector& get_edges(void) const;
+    std::vector<uint64_t> edges(void) const;
     void add_edge(const uint64_t& relative_id, const uint64_t& edge_type);
     void remove_edge(const uint64_t& rank);
     void add_path_step(const uint64_t& path_id, const bool& is_rev,
@@ -79,7 +86,6 @@ public:
     void remove_path_step(const uint64_t& rank);
     void update_path_last_bytes(void);
     void clear(void);
-    void clear_edges(void);
     void clear_path_steps(void);
     uint64_t serialize(std::ostream& out) const;
     void load(std::istream& in);
