@@ -14,14 +14,40 @@ namespace py = pybind11;
 PYBIND11_MODULE(odgi, m)
 {
 
-    py::class_<handlegraph::handle_t>(m, "handle", "the handle, which refers to oriented nodes");
-    py::class_<handlegraph::path_handle_t>(m, "path_handle", "the path handle type, which refers to paths");
+    py::class_<handlegraph::handle_t>(m, "handle", "the handle, which refers to oriented nodes")
+        .def("__eq__", [](handlegraph::handle_t &handle_s, handlegraph::handle_t &handle_o){
+            return handle_s == handle_o;
+        })
+        .def("__lt__", [](handlegraph::handle_t &handle_s, handlegraph::handle_t &handle_o){
+            return handle_s < handle_o;
+        })
+        .def("__gt__", [](handlegraph::handle_t &handle_s, handlegraph::handle_t &handle_o){
+            return ! (handle_s < handle_o);
+        })
+        .def("__hash__", [](handlegraph::handle_t &handle){
+            return std::hash<int64_t>()(reinterpret_cast<const uint64_t&>(handle));
+        });
+    py::class_<handlegraph::path_handle_t>(m, "path_handle", "the path handle type, which refers to paths")
+        .def("__eq__", [](handlegraph::path_handle_t &path_handle_s, handlegraph::path_handle_t &path_handle_o){
+            return path_handle_s == path_handle_o;
+        })
+        .def("__hash__", [](handlegraph::path_handle_t &path_handle){
+            return std::hash<int64_t>()(reinterpret_cast<const uint64_t&>(path_handle));
+        });
     py::class_<handlegraph::step_handle_t>(m, "step_handle", "the step handle type, which refers to path paths")
         .def("first", [](handlegraph::step_handle_t &step_handle) {
                 return (reinterpret_cast<const int64_t*>(&step_handle)[0]);
         })
         .def("second", [](handlegraph::step_handle_t &step_handle) {
                 return (reinterpret_cast<const int64_t*>(&step_handle)[1]);
+        }).def("__eq__", [](handlegraph::step_handle_t &step_handle_s, handlegraph::step_handle_t &step_handle_o){
+            return step_handle_s == step_handle_o;
+        })
+        .def("__hash__", [](handlegraph::step_handle_t &step_handle){
+            size_t hsh1 = std::hash<int64_t>()(reinterpret_cast<const int64_t*>(&step_handle)[0]);
+            size_t hsh2 = std::hash<int64_t>()(reinterpret_cast<const int64_t*>(&step_handle)[1]);
+            // Boost combine for hash values
+            return hsh1 ^ (hsh2 + 0x9e3779b9 + (hsh1<<6) + (hsh1>>2));
         });
     py::class_<handlegraph::edge_t>(m, "edge", "edges link two handles together")
         .def("first", [](const handlegraph::edge_t &edge_handle) {
