@@ -22,10 +22,11 @@ RUN DEBIAN_FRONTEND=noninteractive \
     && cmake --build build -- -j $(nproc) \
     && rm -rf deps \
     && rm -rf build \
-    #&& rm -rf lib/*.a \
+    && rm -rf lib/*.a \
     && ls -s bin/odgi /usr/bin \
     && apt-get remove -y --autoremove  build-essential cmake \
-    && apt-get clean
+    && apt-get clean \
+    && apt-get purge && rm -rf /var/lib/apt/lists/* /tmp/*
 ENV PATH="/var/lib/odgi/bin/:${PATH}"
 ENTRYPOINT ["odgi"]
 #CMD ["bash"]
