@@ -13,14 +13,16 @@ RUN DEBIAN_FRONTEND=noninteractive \
       python3-dev \
       python3-setuptools \
       zlib1g-dev \
+      libgomp1 \
     && rm -fr /var/lib/apt/lists/* \
     && update-ca-certificates \
     && git clone --shallow-submodules --recursive https://github.com/vgteam/odgi.git \
     && cd odgi \
     && git checkout "${ODGI_COMMIT}" \
-    && cmake -DBUILD_STATIC=1 -H. -Bbuild \
+    && cmake -DBUILD_STATIC=0 -H. -Bbuild \
     && cmake --build build -- -j $(nproc) \
     && rm -rf deps \
+    && rm -rf .git \
     && rm -rf build \
     && rm -rf lib/*.a \
     && ls -s bin/odgi /usr/bin \
