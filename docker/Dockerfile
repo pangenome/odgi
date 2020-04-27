@@ -2,7 +2,7 @@ FROM debian:buster
 ENV DEBIAN_VERSION=buster-20200327
 ENV ODGI_COMMIT=dc76da391943a6bd6a7784e42f946dc478b865a5
 
-WORKDIR "/var/lib/"
+WORKDIR "/opt/"
 RUN DEBIAN_FRONTEND=noninteractive \
     && apt-get update -y \
     && apt-get install -y --no-install-recommends \
@@ -11,7 +11,7 @@ RUN DEBIAN_FRONTEND=noninteractive \
       cmake \
       git \
       python3-dev \
-      python3-setuptools \
+    #  python3-setuptools \
       zlib1g-dev \
       libgomp1 \
     && rm -fr /var/lib/apt/lists/* \
@@ -26,9 +26,10 @@ RUN DEBIAN_FRONTEND=noninteractive \
     && rm -rf build \
     && rm -rf lib/*.a \
     && ls -s bin/odgi /usr/bin \
-    && apt-get remove -y --autoremove  build-essential cmake \
+    && apt-get remove -y --autoremove  build-essential cmake git \
     && apt-get clean \
-    && apt-get purge && rm -rf /var/lib/apt/lists/* /tmp/*
-ENV PATH="/var/lib/odgi/bin/:${PATH}"
+    && apt-get purge \
+    && rm -rf /var/lib/apt/lists/* /tmp/*
+ENV PATH="/opt/odgi/bin/:${PATH}"
 ENTRYPOINT ["odgi"]
 #CMD ["bash"]
