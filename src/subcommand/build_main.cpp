@@ -61,7 +61,9 @@ int main_build(int argc, char** argv) {
     }
     std::string gfa_filename = args::get(gfa_file);
     if (gfa_filename.size()) {
+        graph.start_bulk_load();
         gfa_to_handle(gfa_filename, &graph, args::get(progress));
+        graph.end_bulk_load();
     }
     if (args::get(progress)) {
         std::cerr << std::endl;

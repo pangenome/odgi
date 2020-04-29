@@ -6,6 +6,7 @@
 #include <handlegraph/util.hpp>
 #include <vector>
 #include <map>
+#include <set>
 #include <utility>
 #include <cstring>
 #include "dynamic.hpp"
@@ -70,6 +71,7 @@ public:
     std::vector<uint64_t> edges(void) const;
     void add_edge(const uint64_t& relative_id, const uint64_t& edge_type);
     void remove_edge(const uint64_t& rank);
+    void remove_duplicate_edges(void);
     void add_path_step(const uint64_t& path_id, const bool& is_rev,
                        const uint64_t& prev_id, const uint64_t& prev_rank,
                        const uint64_t& next_id, const uint64_t& next_rank);

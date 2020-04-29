@@ -1522,4 +1522,24 @@ void graph_t::deserialize_members(std::istream& in) {
     }
 }
 
+/// Setup and finalize bulk load
+void graph_t::start_bulk_load(void) {
+    _bulk_load = true;
+}
+
+/// Finalize bulk load (remove duplicate edges)
+void graph_t::end_bulk_load(void) {
+    _bulk_load = false;
+    remove_duplicate_edges();
+}
+
+/// Make sure we don't have any duplicate edges
+void graph_t::remove_duplicate_edges(void) {
+    for_each_handle(
+        [&](const handle_t& handle) {
+            node_t& node = node_v.at(number_bool_packing::unpack_number(handle));
+            node.remove_duplicate_edges();
+        });
+}
+
 }

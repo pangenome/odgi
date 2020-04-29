@@ -30,10 +30,25 @@ std::vector<uint64_t> node_t::edges(void) const {
     if (edge_count()) {
         res.resize(edge_count()*EDGE_RECORD_LENGTH);
         sqvarint::decode(res.data(),
-                       (uint8_t*)bytes.data()+edge_start(),
-                       edge_count()*EDGE_RECORD_LENGTH);
+                         (uint8_t*)bytes.data()+edge_start(),
+                         edge_count()*EDGE_RECORD_LENGTH);
     }
     return res;
+}
+
+void node_t::remove_duplicate_edges(void) {
+    std::vector<uint64_t> edge_v = edges();
+    bytes.erase(bytes.begin()+edge_start(), bytes.end());
+    set_edge_count(0);
+    set_edge_bytes(0);
+    std::set<std::pair<uint64_t, uint64_t>> unique_edges;
+    for (uint64_t i = 0; i < edge_v.size(); i += 2) {
+        auto e = std::make_pair(edge_v[i], edge_v[i+1]);
+        unique_edges.insert(e);
+    }
+    for (auto& e : unique_edges) {
+        add_edge(e.first, e.second);
+    }
 }
 
 void node_t::add_edge(const uint64_t& relative_id, const uint64_t& edge_type) {

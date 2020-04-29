@@ -378,6 +378,12 @@ public:
     /// Load
     void deserialize_members(std::istream& in);
 
+    /// Setup and finalize bulk load
+    void start_bulk_load(void);
+
+    /// Finalize bulk load (remove duplicate edges)
+    void end_bulk_load(void);
+
 /// These are the backing data structures that we use to fulfill the above functions
 
 private:
@@ -395,6 +401,8 @@ private:
     nid_t _id_increment = 0;
     /// records nodes that are hidden, but used to compactly store path sequence that has been removed from the node space
     hash_set<uint64_t> graph_id_hidden_set;
+    /// set when we're doing a bulk load, this skips the check for edge duplication
+    bool _bulk_load = false;
 
     /// edge type conversion
     /// 1 = fwd->fwd, 2 = fwd->rev, 3 = rev->fwd, 4 = rev->rev
@@ -479,6 +487,9 @@ private:
 
     /// get the backing node rank for a given node id
     uint64_t get_node_rank(const nid_t& node_id) const;
+
+    /// remove duplicate edges
+    void remove_duplicate_edges(void);
 
 };
 
