@@ -19,7 +19,7 @@ namespace odgi {
         args::ArgumentParser parser("get the pangenome position of a given path and nucleotide position");
         args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
         args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the index from this file", {'i', "idx"});
-        args::ValueFlag<std::string> path_name(parser, "PATH_NAME", "get the pangenome positon of this path", {'p', "path"});
+        args::ValueFlag<std::string> path_name(parser, "PATH_NAME", "get the pangenome position of this path", {'p', "path"});
         args::ValueFlag<uint64_t> nuc_pos(parser, "NUC_POS", "get the pangenome position of this nucleotide position", {'n', "nuc_pos"});
 
         try {
