@@ -271,6 +271,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/paths_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/prune_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/unchop_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/normalize_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/subset_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/bin_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/matrix_main.cpp

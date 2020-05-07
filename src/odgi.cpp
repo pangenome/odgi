@@ -1405,7 +1405,9 @@ void graph_t::to_gfa(std::ostream& out) const {
                     if (has_next_step(step)) out << ",";
                 });
             out << "\t";
-            uint64_t steps_for_asterisk = get_step_count(p)-1;
+            // some programs like gfaviz assume that these are alignments and not overlaps
+            // so we always need to put something in this field
+            uint64_t steps_for_asterisk = std::max((size_t)1, get_step_count(p)-1);
             for (uint64_t i = 0; i < steps_for_asterisk; ++i) {
                 out << "*";
                 if (i < steps_for_asterisk-1) out << ",";
