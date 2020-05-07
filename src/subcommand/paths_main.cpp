@@ -28,6 +28,7 @@ int main_paths(int argc, char** argv) {
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the index from this file", {'i', "idx"});
     args::ValueFlag<std::string> overlaps_file(parser, "FILE", "Each line in (tab-delimited) FILE lists a grouping and a path. For each group we will provide pairwise overlap statistics for each pairing.", {'O', "overlaps"});
     args::Flag haplo_matrix(parser, "blocks", "write the paths in an approximate binary haplotype matrix based on the graph sort order", {'H', "haplotypes"});
+    args::Flag write_fasta(parser, "fasta", "write the paths in FASTA format", {'f', "fasta"});
     args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
     try {
@@ -70,6 +71,19 @@ int main_paths(int argc, char** argv) {
                 std::cout << graph.get_path_name(p) << std::endl;
             });
     }
+
+    if (args::get(write_fasta)) {
+        graph.for_each_path_handle(
+            [&](const path_handle_t& p) {
+                std::cout << ">" << graph.get_path_name(p) << std::endl;
+                graph.for_each_step_in_path(
+                    p, [&](const step_handle_t& s) {
+                           std::cout << graph.get_sequence(graph.get_handle_of_step(s));
+                       });
+                std::cout << std::endl;
+            });
+    }
+
 
     if (args::get(haplo_matrix)) {
         std::cout << "node.id";
