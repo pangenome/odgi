@@ -535,7 +535,7 @@ void graph_t::create_edge(const handle_t& left_h, const handle_t& right_h) {
               << " -> "
               << get_id(right_h) << ":" << get_is_reverse(right_h) << std::endl;
     */
-    //if (has_edge(left_h, right_h)) return; // do nothing if edge exists
+    if (has_edge(left_h, right_h)) return; // do nothing if edge exists
 
     uint64_t left_rank = number_bool_packing::unpack_number(left_h);
     uint64_t right_rank = number_bool_packing::unpack_number(right_h);
