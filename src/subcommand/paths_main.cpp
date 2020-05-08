@@ -98,12 +98,11 @@ int main_paths(int argc, char** argv) {
             }
             header << "path.name" << "\t"
                    << "path.length" << "\t"
-                   << "node.count" << "\t";
+                   << "node.count";
             graph.for_each_handle(
                 [&](const handle_t& handle) {
-                    header << "node." << graph.get_id(handle) << "\t";
+                    header << "\t" << "node." << graph.get_id(handle);
                 });
-            header.unget(); // chomp last tab
             std::cout << header.str() << std::endl;
         }
         graph.for_each_path_handle(
@@ -127,9 +126,9 @@ int main_paths(int argc, char** argv) {
                 }
                 std::cout << path_name << "\t"
                           << path_length << "\t"
-                          << path_step_count << "\t";
+                          << path_step_count;
                 for (uint64_t i = 0; i < row.size(); ++i) {
-                    std::cout << row[i] << (i+1 < row.size() ? "\t" : "");
+                    std::cout << "\t" << row[i];
                 }
                 std::cout << std::endl;
             });
