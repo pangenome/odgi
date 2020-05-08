@@ -8,8 +8,7 @@ using namespace handlegraph;
 
 // the set of components that could be merged into single nodes without
 // changing the path space of the graph
-// does not respect stored paths
-std::vector<std::vector<handle_t>> simple_components(const HandleGraph& graph, uint64_t min_size) {
+std::vector<std::vector<handle_t>> simple_components(const PathHandleGraph& graph, uint64_t min_size) {
     std::unordered_set<handle_t> seen;
     std::set<std::vector<uint64_t>> components;
     graph.for_each_handle([&](const handle_t& handle) {
@@ -33,7 +32,8 @@ std::vector<std::vector<handle_t>> simple_components(const HandleGraph& graph, u
                             uint64_t left_edge_count = 0;
                             graph.follow_edges(next, true, [&](const handle_t& h) { ++left_edge_count; });
                             if (graph.get_is_reverse(handle) == graph.get_is_reverse(next)
-                                && left_edge_count == 1) {
+                                && left_edge_count == 1
+                                && nodes_are_perfect_path_neighbors(graph, curr, next)) {
                                 todo.insert(next);
                             } else {
                                 stop = true;
@@ -54,7 +54,8 @@ std::vector<std::vector<handle_t>> simple_components(const HandleGraph& graph, u
                             uint64_t right_edge_count = 0;
                             graph.follow_edges(prev, false, [&](const handle_t& h) { ++right_edge_count; });
                             if (graph.get_is_reverse(handle) == graph.get_is_reverse(prev)
-                                && right_edge_count == 1) {
+                                && right_edge_count == 1
+                                && nodes_are_perfect_path_neighbors(graph, prev, curr)) {
                                 todo.insert(prev);
                             } else {
                                 stop = true;

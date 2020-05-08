@@ -28,6 +28,8 @@ int main_paths(int argc, char** argv) {
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the index from this file", {'i', "idx"});
     args::ValueFlag<std::string> overlaps_file(parser, "FILE", "Each line in (tab-delimited) FILE lists a grouping and a path. For each group we will provide pairwise overlap statistics for each pairing.", {'O', "overlaps"});
     args::Flag haplo_matrix(parser, "blocks", "write the paths in an approximate binary haplotype matrix based on the graph sort order", {'H', "haplotypes"});
+    args::ValueFlag<std::string> path_delim(parser, "CHAR", "The part of each path name before this delimiter is a group identifier", {'D', "delim"});
+    args::Flag write_fasta(parser, "fasta", "write the paths in FASTA format", {'f', "fasta"});
     args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
     try {
@@ -71,20 +73,63 @@ int main_paths(int argc, char** argv) {
             });
     }
 
-    if (args::get(haplo_matrix)) {
-        std::cout << "node.id";
-        graph.for_each_path_handle([&](const path_handle_t& p) {
-                std::cout << "\t" << graph.get_path_name(p);
+    if (args::get(write_fasta)) {
+        graph.for_each_path_handle(
+            [&](const path_handle_t& p) {
+                std::cout << ">" << graph.get_path_name(p) << std::endl;
+                graph.for_each_step_in_path(
+                    p, [&](const step_handle_t& s) {
+                           std::cout << graph.get_sequence(graph.get_handle_of_step(s));
+                       });
+                std::cout << std::endl;
             });
-        std::cout << std::endl;
-        graph.for_each_handle([&](const handle_t& handle) {
-                std::vector<uint64_t> row(graph.get_path_count());
-                graph.for_each_step_on_handle(handle, [&](const step_handle_t& step) {
-                        row[as_integer(graph.get_path(step))] = 1;
+    }
+
+
+    if (args::get(haplo_matrix)) {
+        char delim = '\0';
+        if (!args::get(path_delim).empty()) {
+            delim = args::get(path_delim).at(0);
+        }
+        { // write the header
+            stringstream header;
+            if (delim) {
+                header << "group.name" << "\t";
+            }
+            header << "path.name" << "\t"
+                   << "path.length" << "\t"
+                   << "node.count" << "\t";
+            graph.for_each_handle(
+                [&](const handle_t& handle) {
+                    header << "node." << graph.get_id(handle) << "\t";
+                });
+            header.unget(); // chomp last tab
+            std::cout << header.str() << std::endl;
+        }
+        graph.for_each_path_handle(
+            [&](const path_handle_t& p) {
+                std::string full_path_name = graph.get_path_name(p);
+                std::string group_name = (delim ? split(full_path_name, delim)[0] : "");
+                std::string path_name = (delim ? full_path_name.substr(full_path_name.find(delim)) : full_path_name);
+                uint64_t path_length = 0;
+                uint64_t path_step_count = 0;
+                std::vector<bool> row(graph.get_node_count());
+                graph.for_each_step_in_path(
+                    p,
+                    [&](const step_handle_t& s) {
+                        const handle_t& h = graph.get_handle_of_step(s);
+                        path_length += graph.get_length(h);
+                        ++path_step_count;
+                        row[graph.get_id(h)-1] = 1;
                     });
-                std::cout << graph.get_id(handle);
-                for (auto& v : row) {
-                    std::cout << "\t" << v;
+                if (delim) {
+                    std::cout << group_name << "\t";
+                }
+                std::cout << path_name << "\t"
+                          << path_length << "\t"
+                          << path_step_count << "\t";
+                for (uint64_t i = 0; i < row.size(); ++i) {
+                    std::cout << row[i] << (i+1 < row.size() ? "\t" : "");
                 }
                 std::cout << std::endl;
             });

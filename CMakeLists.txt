@@ -270,7 +270,8 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/viz_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/paths_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/prune_main.cpp
-  ${CMAKE_SOURCE_DIR}/src/subcommand/simplify_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/unchop_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/normalize_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/subset_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/bin_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/matrix_main.cpp
@@ -310,9 +311,14 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/linear_sgd.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/break_cycles.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/xp.cpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/cut_tips.cpp)
+  ${CMAKE_SOURCE_DIR}/src/algorithms/cut_tips.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/merge.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/normalize.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/simplify_siblings.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/unchop.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/perfect_neighbors.cpp)
 
-set(odgi_DEPS 
+set(odgi_DEPS
     sdsl-lite
     dynamic
     hopscotch_map

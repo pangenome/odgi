@@ -55,6 +55,10 @@ int main_build(int argc, char** argv) {
     
     //make_graph();
     assert(argc > 0);
+    if (!dg_out_file) {
+        std::cerr << "Please specify an output file to store the graph via -o[FILE], --out=[FILE]." << std::endl;
+        return 1;
+    }
     std::string gfa_filename = args::get(gfa_file);
     if (gfa_filename.size()) {
         gfa_to_handle(gfa_filename, &graph, args::get(progress));

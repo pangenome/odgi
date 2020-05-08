@@ -1257,31 +1257,26 @@ step_handle_t graph_t::set_step(const step_handle_t& step_handle, const handle_t
     return rewrite_segment(step_handle, step_handle, { assign_to }).first;
 }
 
-/// Replace the path range with the new segment
+/// Replace the path range with the new segment (range is _inclusive_)
 std::pair<step_handle_t, step_handle_t> graph_t::rewrite_segment(const step_handle_t& segment_begin,
                                                                  const step_handle_t& segment_end,
                                                                  const std::vector<handle_t>& new_segment) {
     // collect the steps to replace
     std::vector<step_handle_t> steps;
     std::string old_seq, new_seq;
-    //std::vector<handle_t> 
-    for (step_handle_t step = segment_begin; ; get_next_step(step)) {
+    for (step_handle_t step = segment_begin; ; step = get_next_step(step)) {
         steps.push_back(step);
         old_seq.append(get_sequence(get_handle_of_step(step)));
         if (step == segment_end) break;
-        if (!has_next_step(step)) {
-            std::cerr << "error [odgi::graph_t]: no next step found as expected in rewrite_segment" << std::endl;
-            assert(false);
-        }
     }
     for (auto& handle : new_segment) new_seq.append(get_sequence(handle));
-    // verify that we're making a valid rewrite    
+    // verify that we're making a valid rewrite
     assert(old_seq == new_seq);
     // find the before and after steps, which we'll link into
     bool is_begin = !has_previous_step(segment_begin);
-    bool is_end = !has_next_step(segment_begin);
+    bool is_end = !has_next_step(segment_end);
     step_handle_t before = get_previous_step(segment_begin);
-    step_handle_t after = get_next_step(segment_begin);
+    step_handle_t after = get_next_step(segment_end);
     // get the path metadata
     path_handle_t path = get_path(segment_begin);
     auto& path_meta = path_metadata_v[as_integer(path)];
@@ -1289,9 +1284,11 @@ std::pair<step_handle_t, step_handle_t> graph_t::rewrite_segment(const step_hand
     std::sort(steps.begin(), steps.end(), [](const step_handle_t& a, const step_handle_t& b) {
             return as_integers(a)[0] == as_integers(b)[0] && as_integers(a)[1] > as_integers(b)[1]
                 || as_integers(a)[0] < as_integers(b)[0]; });
+    /* // must be handled in the calling context
     for (auto& step : steps) {
         destroy_step(step);
     }
+    */
     // create the new steps
     std::vector<step_handle_t> new_steps;
     for (auto& handle : new_segment) {
@@ -1408,7 +1405,9 @@ void graph_t::to_gfa(std::ostream& out) const {
                     if (has_next_step(step)) out << ",";
                 });
             out << "\t";
-            uint64_t steps_for_asterisk = get_step_count(p)-1;
+            // some programs like gfaviz assume that these are alignments and not overlaps
+            // so we always need to put something in this field
+            uint64_t steps_for_asterisk = std::max((size_t)1, get_step_count(p)-1);
             for (uint64_t i = 0; i < steps_for_asterisk; ++i) {
                 out << "*";
                 if (i < steps_for_asterisk-1) out << ",";

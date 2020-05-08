@@ -59,7 +59,7 @@ int main_sort(int argc, char** argv) {
     args::Flag paths_by_max_node_id(parser, "paths-max", "sort paths by their highest contained node id", {'M', "paths-max"});
     args::Flag paths_by_avg_node_id(parser, "paths-avg", "sort paths by their average contained node id", {'A', "paths-avg"});
     args::Flag paths_by_avg_node_id_rev(parser, "paths-avg-rev", "sort paths in reverse by their average contained node id", {'R', "paths-avg-rev"});
-    args::ValueFlag<std::string> path_delim(parser, "path-delim", "sort paths in bins by their prefix up to this delemiter", {'D', "path-delim"});
+    args::ValueFlag<std::string> path_delim(parser, "path-delim", "sort paths in bins by their prefix up to this delimiter", {'D', "path-delim"});
     args::Flag progress(parser, "progress", "display progress of the sort", {'P', "progress"});
     args::Flag optimize(parser, "optimize", "use the MutableHandleGraph::optimize method", {'O', "optimize"});
     args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel sorters (currently only SGD is supported)", {'t', "threads"});
