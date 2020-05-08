@@ -110,7 +110,7 @@ int main_paths(int argc, char** argv) {
             [&](const path_handle_t& p) {
                 std::string full_path_name = graph.get_path_name(p);
                 std::string group_name = (delim ? split(full_path_name, delim)[0] : "");
-                std::string path_name = (delim ? full_path_name.substr(full_path_name.find(delim)) : full_path_name);
+                std::string path_name = (delim ? full_path_name.substr(full_path_name.find(delim)+1) : full_path_name);
                 uint64_t path_length = 0;
                 uint64_t path_step_count = 0;
                 std::vector<bool> row(graph.get_node_count());
