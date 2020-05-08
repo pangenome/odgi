@@ -75,7 +75,7 @@ Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
 == AUTHORS
 
 *odgi build* was written by Erik Garrison.
-
+ifdef::backend-manpage[]
 == RESOURCES
 
 *Project web site:* https://github.com/vgteam/odgi
@@ -108,3 +108,4 @@ FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
 COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
 IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+endif::[]

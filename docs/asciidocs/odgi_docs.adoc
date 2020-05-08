@@ -1,5 +1,5 @@
 :toc: left
-:toclevels: 4
+:toclevels: 1
 :sectnums:
 
 = Reference Documentation for ODGI

@@ -1,10 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?asciidoc-toc maxdepth="4"?>
+<?asciidoc-toc maxdepth="1"?>
 <?asciidoc-numbered?>
 <article xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" version="5.0" xml:lang="en">
 <info>
 <title>Reference Documentation for ODGI</title>
-<date>2020-03-27</date>
+<date>2020-05-08</date>
 <author>
 <personname>
 <firstname>Simon Heumos, Erik Garrison</firstname>
@@ -41,7 +41,7 @@ The odgi stats(1) command produces statistics of a variation graph. Among other 
 </section>
 <section xml:id="_authors">
 <title>AUTHORS</title>
-<simpara>Erik Garrison from the University of California Santa Cruz wrote the whole odgi tool. Despite small code contributions, Simon Heumos from the Quantitative Biology Center Tübingen wrote odgi pathindex, odgi panpos, odgi server, and the documentation.</simpara>
+<simpara>Erik Garrison from the University of California Santa Cruz wrote the whole <emphasis role="strong">odgi</emphasis> tool. Despite small code contributions, Simon Heumos from the Quantitative Biology Center Tübingen wrote <emphasis role="strong">odgi pathindex</emphasis>, <emphasis role="strong">odgi panpos</emphasis>, <emphasis role="strong">odgi server</emphasis>, and the documentation.</simpara>
 </section>
 <section xml:id="_resources">
 <title>RESOURCES</title>
@@ -192,32 +192,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</simp
 <title>AUTHORS</title>
 <simpara><emphasis role="strong">odgi build</emphasis> was written by Erik Garrison.</simpara>
 </section>
-<section xml:id="_resources_2">
-<title>RESOURCES</title>
-<simpara><emphasis role="strong">Project web site:</emphasis> <link xl:href="https://github.com/vgteam/odgi">https://github.com/vgteam/odgi</link></simpara>
-<simpara><emphasis role="strong">Git source repository on GitHub:</emphasis> <link xl:href="https://github.com/vgteam/odgi">https://github.com/vgteam/odgi</link></simpara>
-<simpara><emphasis role="strong">GitHub organization:</emphasis> <link xl:href="https://github.com/vgteam">https://github.com/vgteam</link></simpara>
-<simpara><emphasis role="strong">Discussion list / forum:</emphasis> <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link></simpara>
-</section>
-<section xml:id="_copying_2">
-<title>COPYING</title>
-<simpara>The MIT License (MIT)</simpara>
-<simpara>Copyright (c) 2019 Erik Garrison</simpara>
-<simpara>Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:</simpara>
-<simpara>The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.</simpara>
-<simpara>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</simpara>
-</section>
 </section>
 <section xml:id="_odgi_stats1">
 <title>odgi stats(1)</title>
@@ -340,32 +314,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</simp
 <title>AUTHORS</title>
 <simpara><emphasis role="strong">odgi stats</emphasis> was written by Erik Garrison.</simpara>
 </section>
-<section xml:id="_resources_3">
-<title>RESOURCES</title>
-<simpara><emphasis role="strong">Project web site:</emphasis> <link xl:href="https://github.com/vgteam/odgi">https://github.com/vgteam/odgi</link></simpara>
-<simpara><emphasis role="strong">Git source repository on GitHub:</emphasis> <link xl:href="https://github.com/vgteam/odgi">https://github.com/vgteam/odgi</link></simpara>
-<simpara><emphasis role="strong">GitHub organization:</emphasis> <link xl:href="https://github.com/vgteam">https://github.com/vgteam</link></simpara>
-<simpara><emphasis role="strong">Discussion list / forum:</emphasis> <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link></simpara>
-</section>
-<section xml:id="_copying_3">
-<title>COPYING</title>
-<simpara>The MIT License (MIT)</simpara>
-<simpara>Copyright (c) 2019 Erik Garrison</simpara>
-<simpara>Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:</simpara>
-<simpara>The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.</simpara>
-<simpara>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</simpara>
-</section>
 </section>
 <section xml:id="_odgi_sort1">
 <title>odgi sort(1)</title>
@@ -468,32 +416,6 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</simp
 <section xml:id="_authors_4">
 <title>AUTHORS</title>
 <simpara><emphasis role="strong">odgi sort</emphasis> was written by Erik Garrison.</simpara>
-</section>
-<section xml:id="_resources_4">
-<title>RESOURCES</title>
-<simpara><emphasis role="strong">Project web site:</emphasis> <link xl:href="https://github.com/vgteam/odgi">https://github.com/vgteam/odgi</link></simpara>
-<simpara><emphasis role="strong">Git source repository on GitHub:</emphasis> <link xl:href="https://github.com/vgteam/odgi">https://github.com/vgteam/odgi</link></simpara>
-<simpara><emphasis role="strong">GitHub organization:</emphasis> <link xl:href="https://github.com/vgteam">https://github.com/vgteam</link></simpara>
-<simpara><emphasis role="strong">Discussion list / forum:</emphasis> <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link></simpara>
-</section>
-<section xml:id="_copying_4">
-<title>COPYING</title>
-<simpara>The MIT License (MIT)</simpara>
-<simpara>Copyright (c) 2019 Erik Garrison</simpara>
-<simpara>Permission is hereby granted, free of charge, to any person obtaining a copy of
-this software and associated documentation files (the "Software"), to deal in
-the Software without restriction, including without limitation the rights to
-use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
-the Software, and to permit persons to whom the Software is furnished to do so,
-subject to the following conditions:</simpara>
-<simpara>The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.</simpara>
-<simpara>THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
-IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
-FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
-COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
-IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
-CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</simpara>
 </section>
 </section>
 </article>

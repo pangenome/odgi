@@ -38,7 +38,7 @@ Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
 
 == AUTHORS
 
-Erik Garrison from the University of California Santa Cruz wrote the whole odgi tool. Despite small code contributions, Simon Heumos from the Quantitative Biology Center Tübingen wrote odgi pathindex, odgi panpos, odgi server, and the documentation.
+Erik Garrison from the University of California Santa Cruz wrote the whole *odgi* tool. Despite small code contributions, Simon Heumos from the Quantitative Biology Center Tübingen wrote *odgi pathindex*, *odgi panpos*, *odgi server*, and the documentation.
 
 == RESOURCES
 
