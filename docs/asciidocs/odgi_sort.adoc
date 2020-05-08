@@ -18,7 +18,9 @@ odgi_sort - sort a variation graph
 
 == DESCRIPTION
 
-The odgi sort(1) command produces sorts a succinct a variation graph. 
+The odgi sort(1) command produces sorts a succinct a variation graph. Topological sorts... TODO. A chunk size specifies how much
+of the graph to grab at once in each topological sorting phase. The sorting algorithm will continue the sort from the
+next node in the prior graph order that has not been sorted, yet.
 
 == OPTIONS
 
@@ -34,6 +36,37 @@ The odgi sort(1) command produces sorts a succinct a variation graph.
   File containing the sort order. Each line contains one node identifier.
 
 === Topological Sorts
+
+*-b, --breadth-first*::
+  Use a (chunked) breadth first topological sort.
+
+*-B, --breadth-first-chunk*=_N_::
+  Chunk size for breadth first topological sort. Specify how many nucleotides to grap at once in each BFS phase.
+
+*-z, --depth-first*::
+  Use a (chunked) depth first topological sort.
+
+*-Z, --depth-first-chunk*::
+  Chunk size for the depth first topological sort. Specify how many nucleotides to grap at once in each DFS phace.
+
+=== Random Sort
+
+=== Moondrian Sort
+
+=== 1D SGD Sort
+
+=== Path Options
+
+=== Additional Parameters
+
+*-d, --dagify-sort*::
+  Sort on the basis of a DAGified graph.
+
+*-c, --cycle-breaking*::
+  Use a cycle breaking sort.
+
+*-e, --eades*::
+  Use eades algorithm.
 
 === Threading
 

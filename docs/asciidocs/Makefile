@@ -6,3 +6,5 @@ asciidoctor -b manpage odgi.adoc
 asciidoctor -b manpage odgi_build.adoc
 asciidoctor -b manpage odgi_stats.adoc
 asciidoctor -b manpage odgi_sort.adoc
+
+mv *.1 man/

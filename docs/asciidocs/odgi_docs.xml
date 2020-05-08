@@ -356,6 +356,33 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</simp
 </section>
 <section xml:id="_topological_sorts">
 <title>Topological Sorts</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-b, --breadth-first</emphasis></term>
+<listitem>
+<simpara>Use a breadth first topological sort.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_random_sort">
+<title>Random Sort</title>
+
+</section>
+<section xml:id="_moondrian_sort">
+<title>Moondrian Sort</title>
+
+</section>
+<section xml:id="_1d_sgd_sort">
+<title>1D SGD Sort</title>
+
+</section>
+<section xml:id="_path_options">
+<title>Path Options</title>
+
+</section>
+<section xml:id="_additional_parameters">
+<title>Additional Parameters</title>
 
 </section>
 <section xml:id="_threading_2">
