@@ -21,7 +21,7 @@ int main_stats(int argc, char** argv) {
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
-    args::ArgumentParser parser("metrics describing variation graphs");
+    args::ArgumentParser parser("metrics describing variation graphs and their path relationships");
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the index from this file", {'i', "idx"});
     args::Flag summarize(parser, "summarize", "summarize the graph properties and dimensions", {'S', "summarize"});
