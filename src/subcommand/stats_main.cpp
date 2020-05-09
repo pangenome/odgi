@@ -163,19 +163,27 @@ int main_stats(int argc, char** argv) {
            });
 
     if (args::get(path_setcov)) {
+        uint64_t total_length = 0;
         std::map<std::set<uint64_t>, uint64_t> setcov;
-        graph.for_each_handle([&](const handle_t& h) {
+        graph.for_each_handle(
+            [&](const handle_t& h) {
                 std::set<uint64_t> paths_here;
                 graph.for_each_step_on_handle(
                     h,
                     [&](const step_handle_t& occ) {
                         paths_here.insert(get_path_id(graph.get_path(occ)));
                     });
-                setcov[paths_here] += graph.get_length(h);
-            });
-        std::cout << "length\tpath.set" << std::endl;
+                size_t l = graph.get_length(h);
+#pragma omp critical (setcov)
+                {
+                    setcov[paths_here] += l;
+                    total_length += l;
+                }
+            }, true);
+        std::cout << "length\tgraph.frac\tpath.set" << std::endl;
         for (auto& p : setcov) {
-            std::cout << p.second << "\t";
+            std::cout << p.second << "\t"
+                      << (double)p.second/(double)total_length << "\t";
             for (auto& i : p.first) {
                 std::cout << get_path_name(i) << ",";
             }
@@ -184,25 +192,36 @@ int main_stats(int argc, char** argv) {
     }
 
     if (args::get(path_setcov_count)) {
+        uint64_t total_length = 0;
         std::map<uint64_t, uint64_t> setcov_count;
-        graph.for_each_handle([&](const handle_t& h) {
+        graph.for_each_handle(
+            [&](const handle_t& h) {
                 std::set<uint64_t> paths_here;
                 graph.for_each_step_on_handle(
                     h,
                     [&](const step_handle_t& occ) {
                         paths_here.insert(get_path_id(graph.get_path(occ)));
                     });
-                setcov_count[paths_here.size()] += graph.get_length(h);
-            });
-        std::cout << "length\tunique.path.count" << std::endl;
+                size_t l = graph.get_length(h);
+#pragma omp critical (setcov)
+                {
+                    setcov_count[paths_here.size()] += l;
+                    total_length += l;
+                }
+            }, true);
+        std::cout << "length\tgraph.frac\tunique.path.count" << std::endl;
         for (auto& p : setcov_count) {
-            std::cout << p.second << "\t" << p.first << std::endl;
+            std::cout << p.second << "\t"
+                      << (double)p.second/(double)total_length
+                      << "\t" << p.first << std::endl;
         }
     }
 
     if (args::get(path_multicov)) {
+        uint64_t total_length = 0;
         std::map<std::vector<uint64_t>, uint64_t> multisetcov;
-        graph.for_each_handle([&](const handle_t& h) {
+        graph.for_each_handle(
+            [&](const handle_t& h) {
                 std::vector<uint64_t> paths_here;
                 graph.for_each_step_on_handle(
                     h,
@@ -210,11 +229,17 @@ int main_stats(int argc, char** argv) {
                         paths_here.push_back(get_path_id(graph.get_path(occ)));
                     });
                 std::sort(paths_here.begin(), paths_here.end());
-                multisetcov[paths_here] += graph.get_length(h);
-            });
-        std::cout << "length\tpath.multiset" << std::endl;
+                size_t l = graph.get_length(h);
+#pragma omp critical (multisetcov)
+                {
+                    multisetcov[paths_here] += l;
+                    total_length += l;
+                }
+            }, true);
+        std::cout << "length\tgraph.frac\tpath.multiset" << std::endl;
         for (auto& p : multisetcov) {
-            std::cout << p.second << "\t";
+            std::cout << p.second << "\t"
+                      << (double)p.second/(double)total_length << "\t";
             bool first = true;
             for (auto& i : p.first) {
                 std::cout << (first ? (first=false, "") :",") << get_path_name(i);
@@ -224,19 +249,28 @@ int main_stats(int argc, char** argv) {
     }
 
     if (args::get(path_multicov_count)) {
+        uint64_t total_length = 0;
         std::map<uint64_t, uint64_t> multisetcov_count;
-        graph.for_each_handle([&](const handle_t& h) {
+        graph.for_each_handle(
+            [&](const handle_t& h) {
                 uint64_t paths_here = 0;
                 graph.for_each_step_on_handle(
                     h,
                     [&](const step_handle_t& occ) {
                         ++paths_here;
                     });
-                multisetcov_count[paths_here] += graph.get_length(h);
-            });
-        std::cout << "length\tpath.step.count" << std::endl;
+                size_t l = graph.get_length(h);
+#pragma omp critical (multisetcov)
+                {
+                    multisetcov_count[paths_here] += l;
+                    total_length += l;
+                }
+            }, true);
+        std::cout << "length\tgraph.frac\tpath.step.count" << std::endl;
         for (auto& p : multisetcov_count) {
-            std::cout << p.second << "\t" << p.first << std::endl;
+            std::cout << p.second << "\t"
+                      << (double)p.second/(double)total_length << "\t"
+                      << p.first << std::endl;
         }
     }
 
