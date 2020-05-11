@@ -2,7 +2,7 @@
 :toclevels: 1
 :sectnums:
 
-= Reference Documentation for ODGI 0.3.0
+= Reference Documentation for ODGI 0.4.1
 Simon Heumos, Erik Garrison
 
 include::odgi.adoc[leveloffset=+1]
