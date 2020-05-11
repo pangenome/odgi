@@ -180,10 +180,11 @@ int main_stats(int argc, char** argv) {
                     total_length += l;
                 }
             }, true);
-        std::cout << "length\tgraph.frac\tpath.set" << std::endl;
+        std::cout << "length\tgraph.frac\tn.paths\tpath.set" << std::endl;
         for (auto& p : setcov) {
             std::cout << p.second << "\t"
-                      << (double)p.second/(double)total_length << "\t";
+                      << (double)p.second/(double)total_length << "\t"
+                      << p.first.size() << "\t";
             for (auto& i : p.first) {
                 std::cout << get_path_name(i) << ",";
             }
@@ -236,10 +237,11 @@ int main_stats(int argc, char** argv) {
                     total_length += l;
                 }
             }, true);
-        std::cout << "length\tgraph.frac\tpath.multiset" << std::endl;
+        std::cout << "length\tgraph.frac\nn.paths\tpath.multiset" << std::endl;
         for (auto& p : multisetcov) {
             std::cout << p.second << "\t"
-                      << (double)p.second/(double)total_length << "\t";
+                      << (double)p.second/(double)total_length << "\t"
+                      << p.first.size() << "\t";
             bool first = true;
             for (auto& i : p.first) {
                 std::cout << (first ? (first=false, "") :",") << get_path_name(i);
