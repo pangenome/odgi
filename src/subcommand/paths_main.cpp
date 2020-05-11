@@ -231,7 +231,7 @@ int main_paths(int argc, char** argv) {
                       << "path.b" << "\t";
         }
         std::cout << "jaccard" << "\t"
-                  << "euclidean" << "\t"
+                  << "euclidean"
                   << std::endl;
         for (auto& p : path_intersection_length) {
             auto& id_a = p.first.first;
