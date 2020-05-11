@@ -228,7 +228,10 @@ int main_paths(int argc, char** argv) {
             std::cout << "path.a" << "\t"
                       << "path.b" << "\t";
         }
-        std::cout << "jaccard" << "\t"
+        std::cout << "path.a.length" << "\t"
+                  << "path.b.length" << "\t"
+                  << "intersection" << "\t"
+                  << "jaccard" << "\t"
                   << "euclidean"
                   << std::endl;
         for (auto& p : path_intersection_length) {
@@ -237,6 +240,9 @@ int main_paths(int argc, char** argv) {
             auto& intersection = p.second;
             std::cout << get_path_name(id_a) << "\t"
                       << get_path_name(id_b) << "\t"
+                      << bp_count[id_a] << "\t"
+                      << bp_count[id_b] << "\t"
+                      << intersection << "\t"
                       << (double)intersection / (double)(bp_count[id_a] + bp_count[id_b] - intersection) << "\t"
                       << std::sqrt((double)((bp_count[id_a] + bp_count[id_b] - intersection) - intersection)) << std::endl;
         }
