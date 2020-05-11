@@ -2,12 +2,12 @@
 .\"     Title: odgi sort
 .\"    Author: Erik Garrison
 .\" Generator: Asciidoctor 2.0.10
-.\"      Date: 2020-05-08
+.\"      Date: 2020-05-11
 .\"    Manual: odgi build
-.\"    Source: odgi 0.3
+.\"    Source: odgi 0.3.0
 .\"  Language: English
 .\"
-.TH "ODGI_SORT" "1" "2020-05-08" "odgi 0.3" "odgi build"
+.TH "ODGI_SORT" "1" "2020-05-11" "odgi 0.3.0" "odgi build"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -31,10 +31,84 @@
 odgi_sort \- sort a variation graph
 .SH "SYNOPSIS"
 .sp
-\fBodgi sort\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fIOPTION\fP]...
+\fBodgi sort\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
 .SH "DESCRIPTION"
 .sp
-The odgi sort(1) command produces sorts a succinct a variation graph.
+The odgi sort(1) command sorts a succinct variation graph. Odgi sort offers a diverse palette of sorting algorithms to
+determine the node order:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+A topological sort: A graph can be sorted via \c
+.URL "https://en.wikipedia.org/wiki/Breadth\-first_search" "breadth\-first search (BFS)" " "
+or
+.URL "https://en.wikipedia.org/wiki/Depth\-first_search" "depth\-first search (DFS)" "."
+Optionally,
+a chunk size specifies how much of the graph to grab at once in each topological sorting phase. The sorting algorithm will continue the sort from the
+next node in the prior graph order that has not been sorted, yet. The cycle breaking algorithm applies a DFS sort until
+a cycle is found. We break and start a new DFS sort phase from where we stopped.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+A random sort: The graph is randomly sorted. The node order is randomly shuffled from \c
+.URL "http://www.cplusplus.com/reference/random/mt19937/" "Mersenne Twister pseudo\-random" " "
+generated numbers.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+A sparse matrix mondriaan sort: We can partition a hypergraph with integer weights and uniform hyperedge costs using the \c
+.URL "http://www.staff.science.uu.nl/~bisse101/Mondriaan/" "Mondriaan" " "
+partitioner.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+A 1D linear SGD sort: Odgi implements a 1D linear, variation graph adjusted, multi\-threaded version of the \c
+.URL "https://arxiv.org/abs/1710.04626" "Graph Drawing
+by Stochastic Gradient Descent"  algorithm. The force\-directed graph drawing algorithm minimizes the graph\(cqs energy function
+or stress level. It applies stochastic gradient descent (SGD) to move a single pair of nodes at a time.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+An eades algorithmic sort: Use \c
+.URL "http://www.it.usyd.edu.au/~pead6616/old_spring_paper.pdf" "Peter Eades\(aq heuristic for graph drawing" "."
+.RE
+.sp
+Sorting the paths in a graph my refine the sorting process. For the users\(aq convenience, it is possible to specify a whole
+pipeline of sorts within one parameter.
 .SH "OPTIONS"
 .SS "Graph Files IO"
 .sp
@@ -56,18 +130,151 @@ File containing the sort order. Each line contains one node identifier.
 .sp
 \fB\-b, \-\-breadth\-first\fP
 .RS 4
-Use a breadth first topological sort.
+Use a (chunked) breadth first topological sort.
+.RE
+.sp
+\fB\-B, \-\-breadth\-first\-chunk\fP=\fIN\fP
+.RS 4
+Chunk size for breadth first topological sort. Specify how many nucleotides to grap at once in each BFS phase.
+.RE
+.sp
+\fB\-z, \-\-depth\-first\fP
+.RS 4
+Use a (chunked) depth first topological sort.
+.RE
+.sp
+\fB\-Z, \-\-depth\-first\-chunk\fP=\fIN\fP
+.RS 4
+Chunk size for the depth first topological sort. Specify how many nucleotides to grap at once in each DFS phace.
+.RE
+.sp
+\fB\-w, \-\-two\-way\fP
+.RS 4
+Use a two\-way topological algorithm for sorting. It is a maximum of head\-first and tail\-first topological sort.
+.RE
+.sp
+\fB\-n, \-\-no\-seeds\fP
+.RS 4
+Don\(cqt use heads or tails to seed topological sort.
+.RE
+.sp
+\fB\-c, \-\-cycle\-breaking\fP
+.RS 4
+Use a cycle breaking sort.
 .RE
 .SS "Random Sort"
-
-.SS "Moondrian Sort"
-
-.SS "1D SGD Sort"
-
-.SS "Path Options"
-
+.sp
+\fB\-r, \-\-random\fP
+.RS 4
+Randomly sort the graph.
+.RE
+.SS "Mondriaan Sort"
+.sp
+\fB\-m, \-\-mondriaan\fP
+.RS 4
+Use the sparse matrix diagonalization to sort the graph.
+.RE
+.sp
+\fB\-N, \-\-mondriaan\-n\-parts\fP=\fIN\fP
+.RS 4
+Number of partitions for the mondriaan sort.
+.RE
+.sp
+\fB\-E, \-\-mondriaan\-epsilon\fP=\fIN\fP
+.RS 4
+Set the epsilon parameter for the mondriaan sort.
+.RE
+.sp
+\fB\-W, \-\-mondriaan\-path\-weight\fP
+.RS 4
+Weight the mondriaan input matrix by the path coverage of edges.
+.RE
+.SS "1D Linear SGD Sort"
+.sp
+\fB\-S, \-\-linear\-sgd\fP
+.RS 4
+Apply 1D linear SGD algorithm to sort the graph.
+.RE
+.sp
+\fB\-O, \-\-sgd\-bandwidth\fP=\fIsgd\-bandwidth\fP
+.RS 4
+Bandwidth of linear SGD model. The default value is \fI1000\fP.
+.RE
+.sp
+\fB\-Q, \-\-sgd\-sampling\-rate\fP=\fIsgd\-sampling\-rate\fP
+.RS 4
+Sample pairs of nodes with probability distance between them divided by the sampling rate. The default value is \fI20\fP.
+.RE
+.sp
+\fB\-K, \-\-sgd\-use\-paths\fP
+.RS 4
+Use the paths to structure the distances between nodes in SGD.
+.RE
+.sp
+\fB\-T, \-\-sgd\-iter\-max\fP=\fIsgd_iter\-max\fP
+.RS 4
+The maximum number of iterations for the linear SGD model. The default value is \fI30\fP.
+.RE
+.sp
+\fB\-V, \-\-sgd\-eps\fP=\fIsgd\-eps\fP
+.RS 4
+The final learning rate for the linear SGD model. The default value is \fI0.01\fP.
+.RE
+.sp
+\fB\-C, \-\-sgd\-delta\fP=\fIsgd\-delta\fP
+.RS 4
+The threshold of the maximum node displacement, approximately in base pairs, at which to stop SGD.
+.RE
+.SS "Eades Sort"
+.sp
+\fB\-e, \-\-eades\fP
+.RS 4
+Use eades algorithm.
+.RE
+.SS "Path Sorting Options"
+.sp
+\fB\-L, \-\-paths\-min\fP
+.RS 4
+Sort paths by their lowest contained node identifier.
+.RE
+.sp
+\fB\-M, \-\-paths\-max\fP
+.RS 4
+Sort paths by their highest contained node identifier.
+.RE
+.sp
+\fB\-A, \-\-paths\-avg\fP
+.RS 4
+Sort paths by their average contained node identifier.
+.RE
+.sp
+\fB\-R, \-\-paths\-avg\-rev\fP
+.RS 4
+Sort paths in reverse by their average contained node identifier.
+.RE
+.sp
+\fB\-D, \-\-path\-delim\fP=\fIpath\-delim\fP
+.RS 4
+Sort paths in bins by their prefix up to this delimiter.
+.RE
+.SS "Pipeline Sorting"
+.sp
+\fB\-p, \-\-pipeline\fP=\fISTRING\fP
+.RS 4
+Apply a series of sorts, based on single character command line arguments given to this command. The default sort is
+\fIs\fP. The reverse sort would be specified via \fIf\fP.
+.RE
 .SS "Additional Parameters"
-
+.sp
+\fB\-d, \-\-dagify\-sort\fP
+.RS 4
+Sort on the basis of a DAGified graph.
+.RE
+.sp
+\fB\-O, \-\-Optimize\fP
+.RS 4
+Use the MutableHandleGraph::optimize method to compact the node identifier space.
+.RE
 .SS "Threading"
 .sp
 \fB\-t, \-\-threads\fP=\fIN\fP

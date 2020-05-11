@@ -3,8 +3,8 @@
 <?asciidoc-numbered?>
 <article xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" version="5.0" xml:lang="en">
 <info>
-<title>Reference Documentation for ODGI</title>
-<date>2020-05-08</date>
+<title>Reference Documentation for ODGI 0.3.0</title>
+<date>2020-05-11</date>
 <author>
 <personname>
 <firstname>Simon Heumos, Erik Garrison</firstname>
@@ -22,6 +22,7 @@
 <title>SYNOPSIS</title>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_build1">build</link> -g graph.gfa -o graph.og</simpara>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_stats1">stats</link> -i graph.og -S</simpara>
+<simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_sort1">sort</link> -i graph.og - graph.sorted.og -p bSnSnS</simpara>
 </section>
 <section xml:id="_description">
 <title>DESCRIPTION</title>
@@ -30,10 +31,37 @@
 <section xml:id="_commands">
 <title>COMMANDS</title>
 <simpara>Each command has its own man page which can be viewed using e.g. <emphasis role="strong">man odgi_build.1</emphasis>. Below we have a brief summary of syntax and sub-command description.</simpara>
-<simpara><emphasis role="strong">odgi build</emphasis> [<emphasis role="strong">-g, --gfa</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;
+<simpara><emphasis role="strong">odgi build</emphasis> [<emphasis role="strong">-g, --gfa</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;<?asciidoc-br?>
 The odgi build(1) command constructs a succinct variation graph from a GFA. Currently, only GFA1 is supported. For details of the format please see <link xl:href="https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md">https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md</link>.</simpara>
-<simpara><emphasis role="strong">odgi stats</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;
+<simpara><emphasis role="strong">odgi stats</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;<?asciidoc-br?>
 The odgi stats(1) command produces statistics of a variation graph. Among other metrics, it can calculate the #nodes, #edges, #paths and the total nucleotide length of the graph. Various histogram summary options complement the tool. If [<emphasis role="strong">-B, --bed-multicov</emphasis>=<emphasis>BED</emphasis>] is set, the metrics will be produced for the intervals specified in the BED.</simpara>
+<simpara><emphasis role="strong">odgi sort</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;<?asciidoc-br?>
+The odgi sort(1) command sorts a succinct variation graph. Odgi sort offers a diverse palette of sorting algorithms to
+determine the node order:</simpara>
+<itemizedlist>
+<listitem>
+<simpara>A topological sort: A graph can be sorted via <link xl:href="https://en.wikipedia.org/wiki/Breadth-first_search">breadth-first search (BFS)</link> or <link xl:href="https://en.wikipedia.org/wiki/Depth-first_search">depth-first search (DFS)</link>. Optionally,
+a chunk size specifies how much of the graph to grab at once in each topological sorting phase. The sorting algorithm will continue the sort from the
+next node in the prior graph order that has not been sorted, yet. The cycle breaking algorithm applies a DFS sort until
+a cycle is found. We break and start a new DFS sort phase from where we stopped.</simpara>
+</listitem>
+<listitem>
+<simpara>A random sort: The graph is randomly sorted. The node order is randomly shuffled from <link xl:href="http://www.cplusplus.com/reference/random/mt19937/">Mersenne Twister pseudo-random</link> generated numbers.</simpara>
+</listitem>
+<listitem>
+<simpara>A sparse matrix mondriaan sort: We can partition a hypergraph with integer weights and uniform hyperedge costs using the <link xl:href="http://www.staff.science.uu.nl/~bisse101/Mondriaan/">Mondriaan</link> partitioner.</simpara>
+</listitem>
+<listitem>
+<simpara>A 1D linear SGD sort: Odgi implements a 1D linear, variation graph adjusted, multi-threaded version of the <link xl:href="https://arxiv.org/abs/1710.04626">Graph Drawing
+by Stochastic Gradient Descent</link> algorithm. The force-directed graph drawing algorithm minimizes the graph&#8217;s energy function
+or stress level. It applies stochastic gradient descent (SGD) to move a single pair of nodes at a time.</simpara>
+</listitem>
+<listitem>
+<simpara>An eades algorithmic sort: Use <link xl:href="http://www.it.usyd.edu.au/~pead6616/old_spring_paper.pdf">Peter Eades' heuristic for graph drawing</link>.</simpara>
+</listitem>
+</itemizedlist>
+<simpara>Sorting the paths in a graph my refine the sorting process. For the users' convenience, it is possible to specify a whole
+pipeline of sorts within one parameter.</simpara>
 </section>
 <section xml:id="_bugs">
 <title>BUGS</title>
@@ -244,13 +272,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</simp
 <varlistentry>
 <term><emphasis role="strong">-V, --set-coverage</emphasis></term>
 <listitem>
-<simpara>Provide a histogram of coverage ofer unique set of paths. Print two tab-delimited columns to stdout: <emphasis role="strong">cov</emphasis>, <emphasis role="strong">sets</emphasis>. <emphasis role="strong">cov</emphasis> implies #nucleotides. <emphasis role="strong">sets</emphasis> lists the unique set of paths in a comma separated list. Sets with a <emphasis role="strong">cov</emphasis> of one and no paths in <emphasis role="strong">sets</emphasis> are listed, too.</simpara>
+<simpara>Provide a histogram of coverage over unique set of paths. Print two tab-delimited columns to stdout: <emphasis role="strong">cov</emphasis>, <emphasis role="strong">sets</emphasis>. <emphasis role="strong">cov</emphasis> implies #nucleotides. <emphasis role="strong">sets</emphasis> lists the unique set of paths in a comma separated list. Sets with a <emphasis role="strong">cov</emphasis> of one and no paths in <emphasis role="strong">sets</emphasis> are listed, too.</simpara>
 </listitem>
 </varlistentry>
 <varlistentry>
 <term><emphasis role="strong">-M, --multi-coverage</emphasis></term>
 <listitem>
-<simpara>Provide a histogram of coverage over unique multisets of paths. Print two tab-delimited columns to stdout: <emphasis role="strong">cov</emphasis>, <emphasis role="strong">sets</emphasis>. <emphasis role="strong">cov</emphasis> implies #nucleotides. <emphasis role="strong">sets</emphasis> lists the unique multisets of paths in a comma separated list. Multisets with a <emphasis role="strong">cov</emphasis> of one and no paths in <emphasis role="strong">sets</emphasis> are listed, too.</simpara>
+<simpara>Provide a histogram of coverage over unique multiset, the combination with possible repetition of paths. Print two tab-delimited columns to stdout: <emphasis role="strong">cov</emphasis>, <emphasis role="strong">sets</emphasis>. <emphasis role="strong">cov</emphasis> implies #nucleotides. <emphasis role="strong">sets</emphasis> lists the unique multisets of paths in a comma separated list. Multisets with a <emphasis role="strong">cov</emphasis> of one and no paths in <emphasis role="strong">sets</emphasis> are listed, too.</simpara>
 </listitem>
 </varlistentry>
 </variablelist>
@@ -323,11 +351,36 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</simp
 </section>
 <section xml:id="_synopsis_4">
 <title>SYNOPSIS</title>
-<simpara><emphasis role="strong">odgi sort</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
+<simpara><emphasis role="strong">odgi sort</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
 </section>
 <section xml:id="_description_4">
 <title>DESCRIPTION</title>
-<simpara>The odgi sort(1) command produces sorts a succinct a variation graph.</simpara>
+<simpara>The odgi sort(1) command sorts a succinct variation graph. Odgi sort offers a diverse palette of sorting algorithms to
+determine the node order:</simpara>
+<itemizedlist>
+<listitem>
+<simpara>A topological sort: A graph can be sorted via <link xl:href="https://en.wikipedia.org/wiki/Breadth-first_search">breadth-first search (BFS)</link> or <link xl:href="https://en.wikipedia.org/wiki/Depth-first_search">depth-first search (DFS)</link>. Optionally,
+a chunk size specifies how much of the graph to grab at once in each topological sorting phase. The sorting algorithm will continue the sort from the
+next node in the prior graph order that has not been sorted, yet. The cycle breaking algorithm applies a DFS sort until
+a cycle is found. We break and start a new DFS sort phase from where we stopped.</simpara>
+</listitem>
+<listitem>
+<simpara>A random sort: The graph is randomly sorted. The node order is randomly shuffled from <link xl:href="http://www.cplusplus.com/reference/random/mt19937/">Mersenne Twister pseudo-random</link> generated numbers.</simpara>
+</listitem>
+<listitem>
+<simpara>A sparse matrix mondriaan sort: We can partition a hypergraph with integer weights and uniform hyperedge costs using the <link xl:href="http://www.staff.science.uu.nl/~bisse101/Mondriaan/">Mondriaan</link> partitioner.</simpara>
+</listitem>
+<listitem>
+<simpara>A 1D linear SGD sort: Odgi implements a 1D linear, variation graph adjusted, multi-threaded version of the <link xl:href="https://arxiv.org/abs/1710.04626">Graph Drawing
+by Stochastic Gradient Descent</link> algorithm. The force-directed graph drawing algorithm minimizes the graph&#8217;s energy function
+or stress level. It applies stochastic gradient descent (SGD) to move a single pair of nodes at a time.</simpara>
+</listitem>
+<listitem>
+<simpara>An eades algorithmic sort: Use <link xl:href="http://www.it.usyd.edu.au/~pead6616/old_spring_paper.pdf">Peter Eades' heuristic for graph drawing</link>.</simpara>
+</listitem>
+</itemizedlist>
+<simpara>Sorting the paths in a graph my refine the sorting process. For the users' convenience, it is possible to specify a whole
+pipeline of sorts within one parameter.</simpara>
 </section>
 <section xml:id="_options_3">
 <title>OPTIONS</title>
@@ -360,30 +413,208 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</simp
 <varlistentry>
 <term><emphasis role="strong">-b, --breadth-first</emphasis></term>
 <listitem>
-<simpara>Use a breadth first topological sort.</simpara>
+<simpara>Use a (chunked) breadth first topological sort.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-B, --breadth-first-chunk</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Chunk size for breadth first topological sort. Specify how many nucleotides to grap at once in each BFS phase.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-z, --depth-first</emphasis></term>
+<listitem>
+<simpara>Use a (chunked) depth first topological sort.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-Z, --depth-first-chunk</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Chunk size for the depth first topological sort. Specify how many nucleotides to grap at once in each DFS phace.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-w, --two-way</emphasis></term>
+<listitem>
+<simpara>Use a two-way topological algorithm for sorting. It is a maximum of head-first and tail-first topological sort.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-n, --no-seeds</emphasis></term>
+<listitem>
+<simpara>Don&#8217;t use heads or tails to seed topological sort.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-c, --cycle-breaking</emphasis></term>
+<listitem>
+<simpara>Use a cycle breaking sort.</simpara>
 </listitem>
 </varlistentry>
 </variablelist>
 </section>
 <section xml:id="_random_sort">
 <title>Random Sort</title>
-
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-r, --random</emphasis></term>
+<listitem>
+<simpara>Randomly sort the graph.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
 </section>
-<section xml:id="_moondrian_sort">
-<title>Moondrian Sort</title>
-
+<section xml:id="_mondriaan_sort">
+<title>Mondriaan Sort</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-m, --mondriaan</emphasis></term>
+<listitem>
+<simpara>Use the sparse matrix diagonalization to sort the graph.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-N, --mondriaan-n-parts</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Number of partitions for the mondriaan sort.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-E, --mondriaan-epsilon</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Set the epsilon parameter for the mondriaan sort.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-W, --mondriaan-path-weight</emphasis></term>
+<listitem>
+<simpara>Weight the mondriaan input matrix by the path coverage of edges.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
 </section>
-<section xml:id="_1d_sgd_sort">
-<title>1D SGD Sort</title>
-
+<section xml:id="_1d_linear_sgd_sort">
+<title>1D Linear SGD Sort</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-S, --linear-sgd</emphasis></term>
+<listitem>
+<simpara>Apply 1D linear SGD algorithm to sort the graph.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-O, --sgd-bandwidth</emphasis>=<emphasis>sgd-bandwidth</emphasis></term>
+<listitem>
+<simpara>Bandwidth of linear SGD model. The default value is <emphasis>1000</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-Q, --sgd-sampling-rate</emphasis>=<emphasis>sgd-sampling-rate</emphasis></term>
+<listitem>
+<simpara>Sample pairs of nodes with probability distance between them divided by the sampling rate. The default value is <emphasis>20</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-K, --sgd-use-paths</emphasis></term>
+<listitem>
+<simpara>Use the paths to structure the distances between nodes in SGD.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-T, --sgd-iter-max</emphasis>=<emphasis>sgd_iter-max</emphasis></term>
+<listitem>
+<simpara>The maximum number of iterations for the linear SGD model. The default value is <emphasis>30</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-V, --sgd-eps</emphasis>=<emphasis>sgd-eps</emphasis></term>
+<listitem>
+<simpara>The final learning rate for the linear SGD model. The default value is <emphasis>0.01</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-C, --sgd-delta</emphasis>=<emphasis>sgd-delta</emphasis></term>
+<listitem>
+<simpara>The threshold of the maximum node displacement, approximately in base pairs, at which to stop SGD.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
 </section>
-<section xml:id="_path_options">
-<title>Path Options</title>
-
+<section xml:id="_eades_sort">
+<title>Eades Sort</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-e, --eades</emphasis></term>
+<listitem>
+<simpara>Use eades algorithm.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_path_sorting_options">
+<title>Path Sorting Options</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-L, --paths-min</emphasis></term>
+<listitem>
+<simpara>Sort paths by their lowest contained node identifier.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-M, --paths-max</emphasis></term>
+<listitem>
+<simpara>Sort paths by their highest contained node identifier.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-A, --paths-avg</emphasis></term>
+<listitem>
+<simpara>Sort paths by their average contained node identifier.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-R, --paths-avg-rev</emphasis></term>
+<listitem>
+<simpara>Sort paths in reverse by their average contained node identifier.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-D, --path-delim</emphasis>=<emphasis>path-delim</emphasis></term>
+<listitem>
+<simpara>Sort paths in bins by their prefix up to this delimiter.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_pipeline_sorting">
+<title>Pipeline Sorting</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-p, --pipeline</emphasis>=<emphasis>STRING</emphasis></term>
+<listitem>
+<simpara>Apply a series of sorts, based on single character command line arguments given to this command. The default sort is
+<emphasis>s</emphasis>. The reverse sort would be specified via <emphasis>f</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
 </section>
 <section xml:id="_additional_parameters">
 <title>Additional Parameters</title>
-
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-d, --dagify-sort</emphasis></term>
+<listitem>
+<simpara>Sort on the basis of a DAGified graph.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-O, --Optimize</emphasis></term>
+<listitem>
+<simpara>Use the MutableHandleGraph::optimize method to compact the node identifier space.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
 </section>
 <section xml:id="_threading_2">
 <title>Threading</title>

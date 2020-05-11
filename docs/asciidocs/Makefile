@@ -1,3 +1,8 @@
+value=$(<VERSION)
+echo "$value"
+
+
+
 asciidoctor -b html odgi_docs.adoc
 asciidoctor -b docbook odgi_docs.adoc
 asciidoctor -r asciidoctor-pdf -b pdf odgi_docs.adoc

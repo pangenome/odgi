@@ -2,12 +2,12 @@
 .\"     Title: odgi
 .\"    Author: Erik Garrison
 .\" Generator: Asciidoctor 2.0.10
-.\"      Date: 2020-05-08
+.\"      Date: 2020-05-11
 .\"    Manual: odgi build
-.\"    Source: odgi 0.3
+.\"    Source: odgi 0.3.0
 .\"  Language: English
 .\"
-.TH "ODGI" "1" "2020-05-08" "odgi 0.3" "odgi build"
+.TH "ODGI" "1" "2020-05-11" "odgi 0.3.0" "odgi build"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -34,6 +34,8 @@ odgi \- dynamic succinct variation graph tool
 \fBodgi\fP build \-g graph.gfa \-o graph.og
 .sp
 \fBodgi\fP stats \-i graph.og \-S
+.sp
+\fBodgi\fP sort \-i graph.og \- graph.sorted.og \-p bSnSnS
 .SH "DESCRIPTION"
 .sp
 Odgi is a set of of tools that manipulate variation graphs. TODO Explain data structure. TODO Link to vg paper. TODO Link to handle graph paper. TODO Explain purpose. TODO Give summary of the capabilities of the set of tools.
@@ -42,11 +44,91 @@ Odgi is a set of of tools that manipulate variation graphs. TODO Explain data st
 Each command has its own man page which can be viewed using e.g. \fBman odgi_build.1\fP. Below we have a brief summary of syntax and sub\-command description.
 .sp
 \fBodgi build\fP [\fB\-g, \-\-gfa\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
+.br
 The odgi build(1) command constructs a succinct variation graph from a GFA. Currently, only GFA1 is supported. For details of the format please see \c
 .URL "https://github.com/GFA\-spec/GFA\-spec/blob/master/GFA1.md" "" "."
 .sp
 \fBodgi stats\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fIOPTION\fP]...
+.br
 The odgi stats(1) command produces statistics of a variation graph. Among other metrics, it can calculate the #nodes, #edges, #paths and the total nucleotide length of the graph. Various histogram summary options complement the tool. If [\fB\-B, \-\-bed\-multicov\fP=\fIBED\fP] is set, the metrics will be produced for the intervals specified in the BED.
+.sp
+\fBodgi sort\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
+.br
+The odgi sort(1) command sorts a succinct variation graph. Odgi sort offers a diverse palette of sorting algorithms to
+determine the node order:
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+A topological sort: A graph can be sorted via \c
+.URL "https://en.wikipedia.org/wiki/Breadth\-first_search" "breadth\-first search (BFS)" " "
+or
+.URL "https://en.wikipedia.org/wiki/Depth\-first_search" "depth\-first search (DFS)" "."
+Optionally,
+a chunk size specifies how much of the graph to grab at once in each topological sorting phase. The sorting algorithm will continue the sort from the
+next node in the prior graph order that has not been sorted, yet. The cycle breaking algorithm applies a DFS sort until
+a cycle is found. We break and start a new DFS sort phase from where we stopped.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+A random sort: The graph is randomly sorted. The node order is randomly shuffled from \c
+.URL "http://www.cplusplus.com/reference/random/mt19937/" "Mersenne Twister pseudo\-random" " "
+generated numbers.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+A sparse matrix mondriaan sort: We can partition a hypergraph with integer weights and uniform hyperedge costs using the \c
+.URL "http://www.staff.science.uu.nl/~bisse101/Mondriaan/" "Mondriaan" " "
+partitioner.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+A 1D linear SGD sort: Odgi implements a 1D linear, variation graph adjusted, multi\-threaded version of the \c
+.URL "https://arxiv.org/abs/1710.04626" "Graph Drawing
+by Stochastic Gradient Descent"  algorithm. The force\-directed graph drawing algorithm minimizes the graph\(cqs energy function
+or stress level. It applies stochastic gradient descent (SGD) to move a single pair of nodes at a time.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04'\(bu\h'+03'\c
+.\}
+.el \{\
+.  sp -1
+.  IP \(bu 2.3
+.\}
+An eades algorithmic sort: Use \c
+.URL "http://www.it.usyd.edu.au/~pead6616/old_spring_paper.pdf" "Peter Eades\(aq heuristic for graph drawing" "."
+.RE
+.sp
+Sorting the paths in a graph my refine the sorting process. For the users\(aq convenience, it is possible to specify a whole
+pipeline of sorts within one parameter.
 .SH "BUGS"
 .sp
 Refer to the \fBodgi\fP issue tracker at \c

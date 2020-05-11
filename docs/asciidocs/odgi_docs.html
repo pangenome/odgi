@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.10">
 <meta name="author" content="Simon Heumos, Erik Garrison">
-<title>Reference Documentation for ODGI</title>
+<title>Reference Documentation for ODGI 0.3.0</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -439,7 +439,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="article toc2 toc-left">
 <div id="header">
-<h1>Reference Documentation for ODGI</h1>
+<h1>Reference Documentation for ODGI 0.3.0</h1>
 <div class="details">
 <span id="author" class="author">Simon Heumos, Erik Garrison</span><br>
 </div>
@@ -471,6 +471,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <div class="paragraph">
 <p><strong>odgi</strong> <a href="#_odgi_stats1">stats</a> -i graph.og -S</p>
 </div>
+<div class="paragraph">
+<p><strong>odgi</strong> <a href="#_odgi_sort1">sort</a> -i graph.og - graph.sorted.og -p bSnSnS</p>
+</div>
 </div>
 <div class="sect2">
 <h3 id="_description">1.3. DESCRIPTION</h3>
@@ -484,12 +487,45 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p>Each command has its own man page which can be viewed using e.g. <strong>man odgi_build.1</strong>. Below we have a brief summary of syntax and sub-command description.</p>
 </div>
 <div class="paragraph">
-<p><strong>odgi build</strong> [<strong>-g, --gfa</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;
+<p><strong>odgi build</strong> [<strong>-g, --gfa</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;<br>
 The odgi build(1) command constructs a succinct variation graph from a GFA. Currently, only GFA1 is supported. For details of the format please see <a href="https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md" class="bare">https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md</a>.</p>
 </div>
 <div class="paragraph">
-<p><strong>odgi stats</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;
+<p><strong>odgi stats</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;<br>
 The odgi stats(1) command produces statistics of a variation graph. Among other metrics, it can calculate the #nodes, #edges, #paths and the total nucleotide length of the graph. Various histogram summary options complement the tool. If [<strong>-B, --bed-multicov</strong>=<em>BED</em>] is set, the metrics will be produced for the intervals specified in the BED.</p>
+</div>
+<div class="paragraph">
+<p><strong>odgi sort</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;<br>
+The odgi sort(1) command sorts a succinct variation graph. Odgi sort offers a diverse palette of sorting algorithms to
+determine the node order:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>A topological sort: A graph can be sorted via <a href="https://en.wikipedia.org/wiki/Breadth-first_search">breadth-first search (BFS)</a> or <a href="https://en.wikipedia.org/wiki/Depth-first_search">depth-first search (DFS)</a>. Optionally,
+a chunk size specifies how much of the graph to grab at once in each topological sorting phase. The sorting algorithm will continue the sort from the
+next node in the prior graph order that has not been sorted, yet. The cycle breaking algorithm applies a DFS sort until
+a cycle is found. We break and start a new DFS sort phase from where we stopped.</p>
+</li>
+<li>
+<p>A random sort: The graph is randomly sorted. The node order is randomly shuffled from <a href="http://www.cplusplus.com/reference/random/mt19937/">Mersenne Twister pseudo-random</a> generated numbers.</p>
+</li>
+<li>
+<p>A sparse matrix mondriaan sort: We can partition a hypergraph with integer weights and uniform hyperedge costs using the <a href="http://www.staff.science.uu.nl/~bisse101/Mondriaan/">Mondriaan</a> partitioner.</p>
+</li>
+<li>
+<p>A 1D linear SGD sort: Odgi implements a 1D linear, variation graph adjusted, multi-threaded version of the <a href="https://arxiv.org/abs/1710.04626">Graph Drawing
+by Stochastic Gradient Descent</a> algorithm. The force-directed graph drawing algorithm minimizes the graph&#8217;s energy function
+or stress level. It applies stochastic gradient descent (SGD) to move a single pair of nodes at a time.</p>
+</li>
+<li>
+<p>An eades algorithmic sort: Use <a href="http://www.it.usyd.edu.au/~pead6616/old_spring_paper.pdf">Peter Eades' heuristic for graph drawing</a>.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Sorting the paths in a graph my refine the sorting process. For the users' convenience, it is possible to specify a whole
+pipeline of sorts within one parameter.</p>
 </div>
 </div>
 <div class="sect2">
@@ -723,11 +759,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </dd>
 <dt class="hdlist1"><strong>-V, --set-coverage</strong></dt>
 <dd>
-<p>Provide a histogram of coverage ofer unique set of paths. Print two tab-delimited columns to stdout: <strong>cov</strong>, <strong>sets</strong>. <strong>cov</strong> implies #nucleotides. <strong>sets</strong> lists the unique set of paths in a comma separated list. Sets with a <strong>cov</strong> of one and no paths in <strong>sets</strong> are listed, too.</p>
+<p>Provide a histogram of coverage over unique set of paths. Print two tab-delimited columns to stdout: <strong>cov</strong>, <strong>sets</strong>. <strong>cov</strong> implies #nucleotides. <strong>sets</strong> lists the unique set of paths in a comma separated list. Sets with a <strong>cov</strong> of one and no paths in <strong>sets</strong> are listed, too.</p>
 </dd>
 <dt class="hdlist1"><strong>-M, --multi-coverage</strong></dt>
 <dd>
-<p>Provide a histogram of coverage over unique multisets of paths. Print two tab-delimited columns to stdout: <strong>cov</strong>, <strong>sets</strong>. <strong>cov</strong> implies #nucleotides. <strong>sets</strong> lists the unique multisets of paths in a comma separated list. Multisets with a <strong>cov</strong> of one and no paths in <strong>sets</strong> are listed, too.</p>
+<p>Provide a histogram of coverage over unique multiset, the combination with possible repetition of paths. Print two tab-delimited columns to stdout: <strong>cov</strong>, <strong>sets</strong>. <strong>cov</strong> implies #nucleotides. <strong>sets</strong> lists the unique multisets of paths in a comma separated list. Multisets with a <strong>cov</strong> of one and no paths in <strong>sets</strong> are listed, too.</p>
 </dd>
 </dl>
 </div>
@@ -807,13 +843,42 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 <div class="sect2">
 <h3 id="_synopsis_4">4.2. SYNOPSIS</h3>
 <div class="paragraph">
-<p><strong>odgi sort</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
+<p><strong>odgi sort</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_description_4">4.3. DESCRIPTION</h3>
 <div class="paragraph">
-<p>The odgi sort(1) command produces sorts a succinct a variation graph.</p>
+<p>The odgi sort(1) command sorts a succinct variation graph. Odgi sort offers a diverse palette of sorting algorithms to
+determine the node order:</p>
+</div>
+<div class="ulist">
+<ul>
+<li>
+<p>A topological sort: A graph can be sorted via <a href="https://en.wikipedia.org/wiki/Breadth-first_search">breadth-first search (BFS)</a> or <a href="https://en.wikipedia.org/wiki/Depth-first_search">depth-first search (DFS)</a>. Optionally,
+a chunk size specifies how much of the graph to grab at once in each topological sorting phase. The sorting algorithm will continue the sort from the
+next node in the prior graph order that has not been sorted, yet. The cycle breaking algorithm applies a DFS sort until
+a cycle is found. We break and start a new DFS sort phase from where we stopped.</p>
+</li>
+<li>
+<p>A random sort: The graph is randomly sorted. The node order is randomly shuffled from <a href="http://www.cplusplus.com/reference/random/mt19937/">Mersenne Twister pseudo-random</a> generated numbers.</p>
+</li>
+<li>
+<p>A sparse matrix mondriaan sort: We can partition a hypergraph with integer weights and uniform hyperedge costs using the <a href="http://www.staff.science.uu.nl/~bisse101/Mondriaan/">Mondriaan</a> partitioner.</p>
+</li>
+<li>
+<p>A 1D linear SGD sort: Odgi implements a 1D linear, variation graph adjusted, multi-threaded version of the <a href="https://arxiv.org/abs/1710.04626">Graph Drawing
+by Stochastic Gradient Descent</a> algorithm. The force-directed graph drawing algorithm minimizes the graph&#8217;s energy function
+or stress level. It applies stochastic gradient descent (SGD) to move a single pair of nodes at a time.</p>
+</li>
+<li>
+<p>An eades algorithmic sort: Use <a href="http://www.it.usyd.edu.au/~pead6616/old_spring_paper.pdf">Peter Eades' heuristic for graph drawing</a>.</p>
+</li>
+</ul>
+</div>
+<div class="paragraph">
+<p>Sorting the paths in a graph my refine the sorting process. For the users' convenience, it is possible to specify a whole
+pipeline of sorts within one parameter.</p>
 </div>
 </div>
 <div class="sect2">
@@ -843,33 +908,171 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 <dl>
 <dt class="hdlist1"><strong>-b, --breadth-first</strong></dt>
 <dd>
-<p>Use a breadth first topological sort.</p>
+<p>Use a (chunked) breadth first topological sort.</p>
+</dd>
+<dt class="hdlist1"><strong>-B, --breadth-first-chunk</strong>=<em>N</em></dt>
+<dd>
+<p>Chunk size for breadth first topological sort. Specify how many nucleotides to grap at once in each BFS phase.</p>
+</dd>
+<dt class="hdlist1"><strong>-z, --depth-first</strong></dt>
+<dd>
+<p>Use a (chunked) depth first topological sort.</p>
+</dd>
+<dt class="hdlist1"><strong>-Z, --depth-first-chunk</strong>=<em>N</em></dt>
+<dd>
+<p>Chunk size for the depth first topological sort. Specify how many nucleotides to grap at once in each DFS phace.</p>
+</dd>
+<dt class="hdlist1"><strong>-w, --two-way</strong></dt>
+<dd>
+<p>Use a two-way topological algorithm for sorting. It is a maximum of head-first and tail-first topological sort.</p>
+</dd>
+<dt class="hdlist1"><strong>-n, --no-seeds</strong></dt>
+<dd>
+<p>Don&#8217;t use heads or tails to seed topological sort.</p>
+</dd>
+<dt class="hdlist1"><strong>-c, --cycle-breaking</strong></dt>
+<dd>
+<p>Use a cycle breaking sort.</p>
 </dd>
 </dl>
 </div>
 </div>
 <div class="sect3">
 <h4 id="_random_sort">4.4.3. Random Sort</h4>
-
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-r, --random</strong></dt>
+<dd>
+<p>Randomly sort the graph.</p>
+</dd>
+</dl>
+</div>
 </div>
 <div class="sect3">
-<h4 id="_moondrian_sort">4.4.4. Moondrian Sort</h4>
-
+<h4 id="_mondriaan_sort">4.4.4. Mondriaan Sort</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-m, --mondriaan</strong></dt>
+<dd>
+<p>Use the sparse matrix diagonalization to sort the graph.</p>
+</dd>
+<dt class="hdlist1"><strong>-N, --mondriaan-n-parts</strong>=<em>N</em></dt>
+<dd>
+<p>Number of partitions for the mondriaan sort.</p>
+</dd>
+<dt class="hdlist1"><strong>-E, --mondriaan-epsilon</strong>=<em>N</em></dt>
+<dd>
+<p>Set the epsilon parameter for the mondriaan sort.</p>
+</dd>
+<dt class="hdlist1"><strong>-W, --mondriaan-path-weight</strong></dt>
+<dd>
+<p>Weight the mondriaan input matrix by the path coverage of edges.</p>
+</dd>
+</dl>
+</div>
 </div>
 <div class="sect3">
-<h4 id="_1d_sgd_sort">4.4.5. 1D SGD Sort</h4>
-
+<h4 id="_1d_linear_sgd_sort">4.4.5. 1D Linear SGD Sort</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-S, --linear-sgd</strong></dt>
+<dd>
+<p>Apply 1D linear SGD algorithm to sort the graph.</p>
+</dd>
+<dt class="hdlist1"><strong>-O, --sgd-bandwidth</strong>=<em>sgd-bandwidth</em></dt>
+<dd>
+<p>Bandwidth of linear SGD model. The default value is <em>1000</em>.</p>
+</dd>
+<dt class="hdlist1"><strong>-Q, --sgd-sampling-rate</strong>=<em>sgd-sampling-rate</em></dt>
+<dd>
+<p>Sample pairs of nodes with probability distance between them divided by the sampling rate. The default value is <em>20</em>.</p>
+</dd>
+<dt class="hdlist1"><strong>-K, --sgd-use-paths</strong></dt>
+<dd>
+<p>Use the paths to structure the distances between nodes in SGD.</p>
+</dd>
+<dt class="hdlist1"><strong>-T, --sgd-iter-max</strong>=<em>sgd_iter-max</em></dt>
+<dd>
+<p>The maximum number of iterations for the linear SGD model. The default value is <em>30</em>.</p>
+</dd>
+<dt class="hdlist1"><strong>-V, --sgd-eps</strong>=<em>sgd-eps</em></dt>
+<dd>
+<p>The final learning rate for the linear SGD model. The default value is <em>0.01</em>.</p>
+</dd>
+<dt class="hdlist1"><strong>-C, --sgd-delta</strong>=<em>sgd-delta</em></dt>
+<dd>
+<p>The threshold of the maximum node displacement, approximately in base pairs, at which to stop SGD.</p>
+</dd>
+</dl>
+</div>
 </div>
 <div class="sect3">
-<h4 id="_path_options">4.4.6. Path Options</h4>
-
+<h4 id="_eades_sort">4.4.6. Eades Sort</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-e, --eades</strong></dt>
+<dd>
+<p>Use eades algorithm.</p>
+</dd>
+</dl>
+</div>
 </div>
 <div class="sect3">
-<h4 id="_additional_parameters">4.4.7. Additional Parameters</h4>
-
+<h4 id="_path_sorting_options">4.4.7. Path Sorting Options</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-L, --paths-min</strong></dt>
+<dd>
+<p>Sort paths by their lowest contained node identifier.</p>
+</dd>
+<dt class="hdlist1"><strong>-M, --paths-max</strong></dt>
+<dd>
+<p>Sort paths by their highest contained node identifier.</p>
+</dd>
+<dt class="hdlist1"><strong>-A, --paths-avg</strong></dt>
+<dd>
+<p>Sort paths by their average contained node identifier.</p>
+</dd>
+<dt class="hdlist1"><strong>-R, --paths-avg-rev</strong></dt>
+<dd>
+<p>Sort paths in reverse by their average contained node identifier.</p>
+</dd>
+<dt class="hdlist1"><strong>-D, --path-delim</strong>=<em>path-delim</em></dt>
+<dd>
+<p>Sort paths in bins by their prefix up to this delimiter.</p>
+</dd>
+</dl>
+</div>
 </div>
 <div class="sect3">
-<h4 id="_threading_2">4.4.8. Threading</h4>
+<h4 id="_pipeline_sorting">4.4.8. Pipeline Sorting</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-p, --pipeline</strong>=<em>STRING</em></dt>
+<dd>
+<p>Apply a series of sorts, based on single character command line arguments given to this command. The default sort is
+<em>s</em>. The reverse sort would be specified via <em>f</em>.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_additional_parameters">4.4.9. Additional Parameters</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-d, --dagify-sort</strong></dt>
+<dd>
+<p>Sort on the basis of a DAGified graph.</p>
+</dd>
+<dt class="hdlist1"><strong>-O, --Optimize</strong></dt>
+<dd>
+<p>Use the MutableHandleGraph::optimize method to compact the node identifier space.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_threading_2">4.4.10. Threading</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-t, --threads</strong>=<em>N</em></dt>
@@ -880,7 +1083,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_processing_information_2">4.4.9. Processing Information</h4>
+<h4 id="_processing_information_2">4.4.11. Processing Information</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-P, --progress</strong></dt>
@@ -891,7 +1094,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_program_information_3">4.4.10. Program Information</h4>
+<h4 id="_program_information_3">4.4.12. Program Information</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-h, --help</strong></dt>
@@ -934,7 +1137,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-05-08 14:45:15 +0200
+Last updated 2020-05-11 14:40:35 +0200
 </div>
 </div>
 </body>

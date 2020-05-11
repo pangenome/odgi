@@ -2,9 +2,9 @@
 ifdef::backend-manpage[]
 Erik Garrison
 :doctype: manpage
-:release-version: 0.3
+:release-version: 0.3.0
 :man manual: odgi build
-:man source: odgi 0.3
+:man source: odgi 0.3.0
 :page-layout: base
 endif::[]
 
@@ -16,7 +16,9 @@ odgi - dynamic succinct variation graph tool
 
 *odgi* <<odgi_build.adoc#_odgi_build1, build>> -g graph.gfa -o graph.og
 
-*odgi* <<odgi_build.adoc#_odgi_stats1, stats>> -i graph.og -S
+*odgi* <<odgi_stats.adoc#_odgi_stats1, stats>> -i graph.og -S
+
+*odgi* <<odgi_sort.adoc#_odgi_sort1, sort>> -i graph.og - graph.sorted.og -p bSnSnS
 
 == DESCRIPTION
 
@@ -26,11 +28,29 @@ Odgi is a set of of tools that manipulate variation graphs. TODO Explain data st
 
 Each command has its own man page which can be viewed using e.g. *man odgi_build.1*. Below we have a brief summary of syntax and sub-command description. 
 
-*odgi build* [*-g, --gfa*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]...
+*odgi build* [*-g, --gfa*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]... +
 The odgi build(1) command constructs a succinct variation graph from a GFA. Currently, only GFA1 is supported. For details of the format please see https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md.
 
-*odgi stats* [*-i, --idx*=_FILE_] [_OPTION_]...
+*odgi stats* [*-i, --idx*=_FILE_] [_OPTION_]... +
 The odgi stats(1) command produces statistics of a variation graph. Among other metrics, it can calculate the #nodes, #edges, #paths and the total nucleotide length of the graph. Various histogram summary options complement the tool. If [*-B, --bed-multicov*=_BED_] is set, the metrics will be produced for the intervals specified in the BED.
+
+*odgi sort* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]... +
+The odgi sort(1) command sorts a succinct variation graph. Odgi sort offers a diverse palette of sorting algorithms to
+determine the node order:
+
+ - A topological sort: A graph can be sorted via https://en.wikipedia.org/wiki/Breadth-first_search[breadth-first search (BFS)] or https://en.wikipedia.org/wiki/Depth-first_search[depth-first search (DFS)]. Optionally,
+   a chunk size specifies how much of the graph to grab at once in each topological sorting phase. The sorting algorithm will continue the sort from the
+   next node in the prior graph order that has not been sorted, yet. The cycle breaking algorithm applies a DFS sort until
+   a cycle is found. We break and start a new DFS sort phase from where we stopped.
+ - A random sort: The graph is randomly sorted. The node order is randomly shuffled from http://www.cplusplus.com/reference/random/mt19937/[Mersenne Twister pseudo-random] generated numbers.
+ - A sparse matrix mondriaan sort: We can partition a hypergraph with integer weights and uniform hyperedge costs using the http://www.staff.science.uu.nl/~bisse101/Mondriaan/[Mondriaan] partitioner.
+ - A 1D linear SGD sort: Odgi implements a 1D linear, variation graph adjusted, multi-threaded version of the https://arxiv.org/abs/1710.04626[Graph Drawing
+   by Stochastic Gradient Descent] algorithm. The force-directed graph drawing algorithm minimizes the graph's energy function
+   or stress level. It applies stochastic gradient descent (SGD) to move a single pair of nodes at a time.
+ - An eades algorithmic sort: Use http://www.it.usyd.edu.au/~pead6616/old_spring_paper.pdf[Peter Eades' heuristic for graph drawing].
+
+Sorting the paths in a graph my refine the sorting process. For the users' convenience, it is possible to specify a whole
+pipeline of sorts within one parameter.
 
 == BUGS
 

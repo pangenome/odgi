@@ -2,12 +2,12 @@
 .\"     Title: odgi stats
 .\"    Author: Erik Garrison
 .\" Generator: Asciidoctor 2.0.10
-.\"      Date: 2020-05-08
+.\"      Date: 2020-05-11
 .\"    Manual: odgi build
-.\"    Source: odgi 0.3
+.\"    Source: odgi 0.3.0
 .\"  Language: English
 .\"
-.TH "ODGI_STATS" "1" "2020-05-08" "odgi 0.3" "odgi build"
+.TH "ODGI_STATS" "1" "2020-05-11" "odgi 0.3.0" "odgi build"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -61,12 +61,12 @@ Provide a histogram of path coverage over bases in the graph. Print three tab\-d
 .sp
 \fB\-V, \-\-set\-coverage\fP
 .RS 4
-Provide a histogram of coverage ofer unique set of paths. Print two tab\-delimited columns to stdout: \fBcov\fP, \fBsets\fP. \fBcov\fP implies #nucleotides. \fBsets\fP lists the unique set of paths in a comma separated list. Sets with a \fBcov\fP of one and no paths in \fBsets\fP are listed, too.
+Provide a histogram of coverage over unique set of paths. Print two tab\-delimited columns to stdout: \fBcov\fP, \fBsets\fP. \fBcov\fP implies #nucleotides. \fBsets\fP lists the unique set of paths in a comma separated list. Sets with a \fBcov\fP of one and no paths in \fBsets\fP are listed, too.
 .RE
 .sp
 \fB\-M, \-\-multi\-coverage\fP
 .RS 4
-Provide a histogram of coverage over unique multisets of paths. Print two tab\-delimited columns to stdout: \fBcov\fP, \fBsets\fP. \fBcov\fP implies #nucleotides. \fBsets\fP lists the unique multisets of paths in a comma separated list. Multisets with a \fBcov\fP of one and no paths in \fBsets\fP are listed, too.
+Provide a histogram of coverage over unique multiset, the combination with possible repetition of paths. Print two tab\-delimited columns to stdout: \fBcov\fP, \fBsets\fP. \fBcov\fP implies #nucleotides. \fBsets\fP lists the unique multisets of paths in a comma separated list. Multisets with a \fBcov\fP of one and no paths in \fBsets\fP are listed, too.
 .RE
 .SS "BED Interval"
 .sp
