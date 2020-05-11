@@ -216,7 +216,9 @@ int main_paths(int argc, char** argv) {
 #pragma omp critical (path_intersection_length)
                 for (auto& p : local_path_lengths) {
                     for (auto& q : local_path_lengths) {
-                        path_intersection_length[std::make_pair(p.first, q.first)] += std::min(p.second, q.second);
+                        if (p.first <= q.first) {
+                            path_intersection_length[std::make_pair(p.first, q.first)] += std::min(p.second, q.second);
+                        }
                     }
                 }
             }, true);
