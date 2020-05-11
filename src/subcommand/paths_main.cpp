@@ -27,8 +27,9 @@ int main_paths(int argc, char** argv) {
     args::Flag list_names(parser, "list-names", "list the paths in the graph", {'L', "list-paths"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the index from this file", {'i', "idx"});
     args::ValueFlag<std::string> overlaps_file(parser, "FILE", "Each line in (tab-delimited) FILE lists a grouping and a path. For each group we will provide pairwise overlap statistics for each pairing.", {'O', "overlaps"});
-    args::Flag haplo_matrix(parser, "blocks", "write the paths in an approximate binary haplotype matrix based on the graph sort order", {'H', "haplotypes"});
     args::ValueFlag<std::string> path_delim(parser, "CHAR", "The part of each path name before this delimiter is a group identifier", {'D', "delim"});
+    args::Flag haplo_matrix(parser, "haplo", "write the paths (or path groups if --delim is provided) in an approximate binary haplotype matrix based on the graph sort order", {'H', "haplotypes"});
+    args::Flag distance_matrix(parser, "distance", "provide a sparse distance matrix for paths (or path groups if --delim is provided)", {'d', "distance"});
     args::Flag write_fasta(parser, "fasta", "write the paths in FASTA format", {'f', "fasta"});
     args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
@@ -132,6 +133,113 @@ int main_paths(int argc, char** argv) {
                 }
                 std::cout << std::endl;
             });
+    }
+
+    if (args::get(distance_matrix)) {
+        bool using_delim = !args::get(path_delim).empty();
+        char delim = '\0';
+        ska::flat_hash_map<std::string, uint64_t> path_group_ids;
+        ska::flat_hash_map<path_handle_t, uint64_t> path_handle_group_ids;
+        std::vector<std::string> path_groups;
+        if (using_delim) {
+            delim = args::get(path_delim).at(0);
+            uint64_t i = 0;
+            graph.for_each_path_handle(
+                [&](const path_handle_t& p) {
+                    std::string group_name = split(graph.get_path_name(p), delim)[0];
+                    auto f = path_group_ids.find(group_name);
+                    if (f == path_group_ids.end()) {
+                        path_group_ids[group_name] = i++;
+                        path_groups.push_back(group_name);
+                    }
+                    path_handle_group_ids[p] = path_group_ids[group_name];
+                });
+        }
+
+        auto get_path_name
+            = (using_delim ?
+               (std::function<std::string(const uint64_t&)>)
+               [&](const uint64_t& id) { return path_groups[id]; }
+               :
+               (std::function<std::string(const uint64_t&)>)
+               [&](const uint64_t& id) { return graph.get_path_name(as_path_handle(id)); });
+
+        auto get_path_id
+            = (using_delim ?
+               (std::function<uint64_t(const path_handle_t&)>)
+               [&](const path_handle_t& p) {
+                   return path_handle_group_ids[p];
+               }
+               :
+               (std::function<uint64_t(const path_handle_t&)>)
+               [&](const path_handle_t& p) {
+                   return as_integer(p);
+               });
+
+        std::vector<uint64_t> bp_count;
+        if (using_delim) {
+            bp_count.resize(path_groups.size());
+        } else {
+            bp_count.resize(graph.get_path_count());
+        }
+
+        uint64_t path_max = 0;
+        graph.for_each_path_handle(
+            [&](const path_handle_t& p) {
+                path_max = std::max(path_max, as_integer(p));
+            });
+
+#pragma omp parallel for
+        for (uint64_t i = 0; i < path_max; ++i) {
+            path_handle_t p = as_path_handle(i);
+            uint64_t path_length = 0;
+            graph.for_each_step_in_path(
+                p,
+                [&](const step_handle_t& s) {
+                    path_length += graph.get_length(graph.get_handle_of_step(s));
+                });
+#pragma omp critical (bp_count)
+            bp_count[get_path_id(p)] += path_length;
+        }
+
+        ska::flat_hash_map<std::pair<uint64_t, uint64_t>, uint64_t> path_intersection_length;
+        graph.for_each_handle(
+            [&](const handle_t& h) {
+                uint64_t paths_here = 0;
+                ska::flat_hash_map<uint64_t, uint64_t> local_path_lengths;
+                size_t l = graph.get_length(h);
+                graph.for_each_step_on_handle(
+                    h,
+                    [&](const step_handle_t& s) {
+                        local_path_lengths[get_path_id(graph.get_path_handle_of_step(s))] += l;
+                    });
+#pragma omp critical (path_intersection_length)
+                for (auto& p : local_path_lengths) {
+                    for (auto& q : local_path_lengths) {
+                        path_intersection_length[std::make_pair(p.first, q.first)] += std::min(p.second, q.second);
+                    }
+                }
+            }, true);
+
+        if (using_delim) {
+            std::cout << "group.a" << "\t"
+                      << "group.b" << "\t";
+        } else {
+            std::cout << "path.a" << "\t"
+                      << "path.b" << "\t";
+        }
+        std::cout << "jaccard" << "\t"
+                  << "euclidean" << "\t"
+                  << std::endl;
+        for (auto& p : path_intersection_length) {
+            auto& id_a = p.first.first;
+            auto& id_b = p.first.second;
+            auto& intersection = p.second;
+            std::cout << get_path_name(id_a) << "\t"
+                      << get_path_name(id_b) << "\t"
+                      << (double)intersection / (double)(bp_count[id_a] + bp_count[id_b] - intersection) << "\t"
+                      << std::sqrt((double)((bp_count[id_a] + bp_count[id_b] - intersection) - intersection)) << std::endl;
+        }
     }
 
     if (!args::get(overlaps_file).empty()) {
