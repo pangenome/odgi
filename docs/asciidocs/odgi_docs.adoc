@@ -12,3 +12,11 @@ include::odgi_build.adoc[leveloffset=+1]
 include::odgi_stats.adoc[leveloffset=+1]
 
 include::odgi_sort.adoc[leveloffset=+1]
+
+include::odgi_view.adoc[leveloffset=+1]
+
+include::odgi_kmers.adoc[leveloffset=+1]
+
+include::odgi_unitig.adoc[leveloffset=+1]
+
+include::odgi_viz.adoc[leveloffset=+1]

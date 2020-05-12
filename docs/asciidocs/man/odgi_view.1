@@ -1,13 +1,13 @@
 '\" t
-.\"     Title: odgi build
+.\"     Title: odgi view
 .\"    Author: Erik Garrison
 .\" Generator: Asciidoctor 2.0.10
 .\"      Date: 2020-05-12
-.\"    Manual: odgi build
+.\"    Manual: odgi view
 .\"    Source: odgi 0.4.1
 .\"  Language: English
 .\"
-.TH "ODGI_BUILD" "1" "2020-05-12" "odgi 0.4.1" "odgi build"
+.TH "ODGI_VIEW" "1" "2020-05-12" "odgi 0.4.1" "odgi view"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -28,68 +28,37 @@
 .  LINKSTYLE blue R < >
 .\}
 .SH "NAME"
-odgi_build \- construct a dynamic succinct variation graph
+odgi_view \- projection of graphs into other formats
 .SH "SYNOPSIS"
 .sp
-\fBodgi build\fP [\fB\-g, \-\-gfa\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
+\fBodgi view\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fIOPTION\fP]...
 .SH "DESCRIPTION"
 .sp
-The odgi build(1) command constructs a succinct variation graph from a GFA. Currently, only GFA1 is supported. For details of the format please see \c
-.URL "https://github.com/GFA\-spec/GFA\-spec/blob/master/GFA1.md" "" "."
+The odgi view(1) command can convert a graph in odgi format to GFAv1. It can reveal a graph\(cqs internal structures for e.g. debugging processes.
 .SH "OPTIONS"
 .SS "Graph Files IO"
 .sp
-\fB\-g, \-\-gfa\fP=\fIFILE\fP
+\fB\-i, \-\-idx\fP=\fIFILE\fP
 .RS 4
-GFA1 file containing the nodes, edges and paths to build a dynamic succinct variation graph from.
+File containing the succinct variation graph to convert from. The file name usually ends with \fI.og\fP.
 .RE
 .sp
-\fB\-o, \-\-out\fP=\fIFILE\fP
+\fB\-g, \-\-to\-gfa\fP
 .RS 4
-Write the dynamic succinct variation graph to this file. A file ending with \fI.og\fP is recommended.
+Write the graph in GFAv1 format to standard output.
 .RE
-.SS "Graph Sorting"
+.SS "Summary Options"
 .sp
-\fB\-s, \-\-sort\fP
+\fB\-d, \-\-display\fP
 .RS 4
-Apply a general topological sort to the graph and order the node ids accordingly. A bidirected adaptation of Kahn\(cqs topological sort (1962) is used, which can handle components with no heads or tails. Here, both heads and tails are taken into account.
-.RE
-.SS "Processing Information"
-.sp
-\fB\-p, \-\-progress\fP
-.RS 4
-Print progress updates to stdout.
-.RE
-.sp
-\fB\-d, \-\-debug\fP
-.RS 4
-Verbosely print graph information to stderr. This includes the maximum node_id, the minimum node_id, the handle to node_id mapping, the deleted nodes and the path metadata.
-.RE
-.sp
-\fB\-\-trace\fP
-.RS 4
-Include backtrace information when reporting errors.
-.RE
-.sp
-\fB\-v, \-\-verbose\fP
-.RS 4
-Verbosely print processing information to stderr, including debug\-level log messages.
-.RE
-.sp
-\fB\-w, \-\-warnings\fP
-.RS 4
-Turn on script warnings (applies to executed code).
-.RE
-.sp
-\fB\-t, \-\-timings\fP
-.RS 4
-Print timings report to stderr (time to read, parse, and convert).
+Show the internal structures of a graph. Print to stdout the maximum node identifier, the minimum node identifier,
+the nodes vector, the delete nodes bit vector and the path metadata, each in a separate line.
 .RE
 .SS "Program Information"
 .sp
 \fB\-h, \-\-help\fP
 .RS 4
-Print a help message for \fBodgi build\fP.
+Print a help message for \fBodgi view\fP.
 .RE
 .SH "EXIT STATUS"
 .sp
@@ -108,7 +77,7 @@ Refer to the \fBodgi\fP issue tracker at \c
 .URL "https://github.com/vgteam/odgi/issues" "" "."
 .SH "AUTHORS"
 .sp
-\fBodgi build\fP was written by Erik Garrison.
+\fBodgi view\fP was written by Erik Garrison.
 == RESOURCES
 .sp
 \fBProject web site:\fP \c

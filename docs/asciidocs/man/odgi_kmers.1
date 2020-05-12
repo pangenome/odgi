@@ -1,13 +1,13 @@
 '\" t
-.\"     Title: odgi build
+.\"     Title: odgi kmers
 .\"    Author: Erik Garrison
 .\" Generator: Asciidoctor 2.0.10
 .\"      Date: 2020-05-12
-.\"    Manual: odgi build
+.\"    Manual: odgi kmers
 .\"    Source: odgi 0.4.1
 .\"  Language: English
 .\"
-.TH "ODGI_BUILD" "1" "2020-05-12" "odgi 0.4.1" "odgi build"
+.TH "ODGI_KMERS" "1" "2020-05-12" "odgi 0.4.1" "odgi kmers"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -28,68 +28,53 @@
 .  LINKSTYLE blue R < >
 .\}
 .SH "NAME"
-odgi_build \- construct a dynamic succinct variation graph
+odgi_kmers \- show and characterize the kmer space of the graph
 .SH "SYNOPSIS"
 .sp
-\fBodgi build\fP [\fB\-g, \-\-gfa\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
+\fBodgi kmers\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-c, \-\-stdout\fP] [\fIOPTION\fP]...
 .SH "DESCRIPTION"
 .sp
-The odgi build(1) command constructs a succinct variation graph from a GFA. Currently, only GFA1 is supported. For details of the format please see \c
-.URL "https://github.com/GFA\-spec/GFA\-spec/blob/master/GFA1.md" "" "."
+Given a kmer length, the odgi kmers(1) command can emit all kmers. The output can be refined by setting the maximum number
+of furcations at edges or by not considering nodes above a given node degree limit.
 .SH "OPTIONS"
 .SS "Graph Files IO"
 .sp
-\fB\-g, \-\-gfa\fP=\fIFILE\fP
+\fB\-i, \-\-idx\fP=\fIFILE\fP
 .RS 4
-GFA1 file containing the nodes, edges and paths to build a dynamic succinct variation graph from.
+File containing the succinct variation graph to convert from. The file name usually ends with \fI.og\fP.
 .RE
 .sp
-\fB\-o, \-\-out\fP=\fIFILE\fP
+\fB\-c, \-\-stdout\fP=
 .RS 4
-Write the dynamic succinct variation graph to this file. A file ending with \fI.og\fP is recommended.
+Write the kmers to standard output. Kmers are line\-separated.
 .RE
-.SS "Graph Sorting"
+.SS "Kmer Options"
 .sp
-\fB\-s, \-\-sort\fP
+\fB\-k, \-\-kmer\-length\fP=\fIN\fP
 .RS 4
-Apply a general topological sort to the graph and order the node ids accordingly. A bidirected adaptation of Kahn\(cqs topological sort (1962) is used, which can handle components with no heads or tails. Here, both heads and tails are taken into account.
-.RE
-.SS "Processing Information"
-.sp
-\fB\-p, \-\-progress\fP
-.RS 4
-Print progress updates to stdout.
+The kmer length to generate kmers from.
 .RE
 .sp
-\fB\-d, \-\-debug\fP
+\fB\-e, \-\-max\-furcations\fP=\fIN\fP
 .RS 4
-Verbosely print graph information to stderr. This includes the maximum node_id, the minimum node_id, the handle to node_id mapping, the deleted nodes and the path metadata.
+Break at edges that would induce this many furcations when generating a kmer.
 .RE
 .sp
-\fB\-\-trace\fP
+\fB\-D, \-\-max\-degree\fP=\fIN\fP
 .RS 4
-Include backtrace information when reporting errors.
+Don\(cqt take nodes into account that have a degree greater than \fIN\fP.
 .RE
+.SS "Threading"
 .sp
-\fB\-v, \-\-verbose\fP
+\fB\-t, \-\-threads\fP=\fIN\fP
 .RS 4
-Verbosely print processing information to stderr, including debug\-level log messages.
-.RE
-.sp
-\fB\-w, \-\-warnings\fP
-.RS 4
-Turn on script warnings (applies to executed code).
-.RE
-.sp
-\fB\-t, \-\-timings\fP
-.RS 4
-Print timings report to stderr (time to read, parse, and convert).
+Number of threads to use.
 .RE
 .SS "Program Information"
 .sp
 \fB\-h, \-\-help\fP
 .RS 4
-Print a help message for \fBodgi build\fP.
+Print a help message for \fBodgi kmers\fP.
 .RE
 .SH "EXIT STATUS"
 .sp
@@ -108,7 +93,7 @@ Refer to the \fBodgi\fP issue tracker at \c
 .URL "https://github.com/vgteam/odgi/issues" "" "."
 .SH "AUTHORS"
 .sp
-\fBodgi build\fP was written by Erik Garrison.
+\fBodgi kmers\fP was written by Erik Garrison.
 == RESOURCES
 .sp
 \fBProject web site:\fP \c

@@ -14,5 +14,9 @@ asciidoctor -b manpage odgi.adoc
 asciidoctor -b manpage odgi_build.adoc
 asciidoctor -b manpage odgi_stats.adoc
 asciidoctor -b manpage odgi_sort.adoc
+asciidoctor -b manpage odgi_view.adoc
+asciidoctor -b manpage odgi_kmers.adoc
+asciidoctor -b manpage odgi_unitig.adoc
+asciidoctor -b manpage odgi_viz.adoc
 
 mv *.1 man/

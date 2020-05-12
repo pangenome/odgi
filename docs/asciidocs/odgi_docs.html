@@ -450,6 +450,10 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_odgi_build1">2. odgi build(1)</a></li>
 <li><a href="#_odgi_stats1">3. odgi stats(1)</a></li>
 <li><a href="#_odgi_sort1">4. odgi sort(1)</a></li>
+<li><a href="#_odgi_view1">5. odgi view(1)</a></li>
+<li><a href="#_odgi_kmers1">6. odgi kmers(1)</a></li>
+<li><a href="#_odgi_unitig1">7. odgi unitig(1)</a></li>
+<li><a href="#_odgi_viz1">8. odgi viz(1)</a></li>
 </ul>
 </div>
 </div>
@@ -472,7 +476,19 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p><strong>odgi</strong> <a href="#_odgi_stats1">stats</a> -i graph.og -S</p>
 </div>
 <div class="paragraph">
-<p><strong>odgi</strong> <a href="#_odgi_sort1">sort</a> -i graph.og - graph.sorted.og -p bSnSnS</p>
+<p><strong>odgi</strong> <a href="#_odgi_sort1">sort</a> -i graph.og -o graph.sorted.og -p bSnSnS</p>
+</div>
+<div class="paragraph">
+<p><strong>odgi</strong> <a href="#_odgi_view1">view</a> -i graph.og -g</p>
+</div>
+<div class="paragraph">
+<p><strong>odgi</strong> <a href="#_odgi_kmers1">kmers</a> -i graph.og -c -k 23 -e 34 -D 50</p>
+</div>
+<div class="paragraph">
+<p><strong>odgi</strong> <a href="#_odgi_unitig1">unitig</a> -i graph.og -f -t 1324 -l 120</p>
+</div>
+<div class="paragraph">
+<p><strong>odgi</strong> <a href="#_odgi_viz1">viz</a> -i graph.og -o graph.og.png -x 1920 -y 1080 -R -t 28</p>
 </div>
 </div>
 <div class="sect2">
@@ -526,6 +542,28 @@ or stress level. It applies stochastic gradient descent (SGD) to move a single p
 <div class="paragraph">
 <p>Sorting the paths in a graph my refine the sorting process. For the users' convenience, it is possible to specify a whole
 pipeline of sorts within one parameter.</p>
+</div>
+<div class="paragraph">
+<p><strong>odgi view</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;<br>
+The odgi view(1) command can convert a graph in odgi format to GFAv1. It can reveal a graph&#8217;s internal structures for e.g. debugging processes.</p>
+</div>
+<div class="paragraph">
+<p><strong>odgi kmers</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-c, --stdout</strong>] [<em>OPTION</em>]&#8230;&#8203;<br>
+Given a kmer length, the odgi kmers(1) command can emit all kmers. The output can be refined by setting the maximum number
+of furcations at edges or by not considering nodes above a given node degree limit.</p>
+</div>
+<div class="paragraph">
+<p><strong>odgi unitig</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;<br>
+The odgi unitig(1) command can print all unitigs of a given odgi graph to standard output in FASTA format. Unitigs can also be emitted
+in a fixed sequence quality FASTQ format. Various parameters can refine the unitigs to print.</p>
+</div>
+<div class="paragraph">
+<p><strong>odgi viz</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;<br>
+The odgi viz(1) command can produce a linear, static visualization of an odgi variation graph. It aggregates the pangenome into bins
+and directly renders a raster image. The binning level depends on the target width of the PNG to emit. Can be used to produce visualizations for gigabase scale pangenomes. For more information
+about the binning process, please refer to <a href="odgi_bin.html#_odgi_bin1">odgi bin</a>. If reverse coloring was selected, only
+the bins with a reverse rate of at least 0.5 are colored. Currently, there is no parameter to color according to the
+sequence coverage in bins available.</p>
 </div>
 </div>
 <div class="sect2">
@@ -1134,10 +1172,451 @@ pipeline of sorts within one parameter.</p>
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_odgi_view1">5. odgi view(1)</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_name_5">5.1. NAME</h3>
+<div class="paragraph">
+<p>odgi_view - projection of graphs into other formats</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_synopsis_5">5.2. SYNOPSIS</h3>
+<div class="paragraph">
+<p><strong>odgi view</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_description_5">5.3. DESCRIPTION</h3>
+<div class="paragraph">
+<p>The odgi view(1) command can convert a graph in odgi format to GFAv1. It can reveal a graph&#8217;s internal structures for e.g. debugging processes.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_options_4">5.4. OPTIONS</h3>
+<div class="sect3">
+<h4 id="_graph_files_io_4">5.4.1. Graph Files IO</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
+<dd>
+<p>File containing the succinct variation graph to convert from. The file name usually ends with <em>.og</em>.</p>
+</dd>
+<dt class="hdlist1"><strong>-g, --to-gfa</strong></dt>
+<dd>
+<p>Write the graph in GFAv1 format to standard output.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_summary_options_2">5.4.2. Summary Options</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-d, --display</strong></dt>
+<dd>
+<p>Show the internal structures of a graph. Print to stdout the maximum node identifier, the minimum node identifier,
+the nodes vector, the delete nodes bit vector and the path metadata, each in a separate line.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_program_information_4">5.4.3. Program Information</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-h, --help</strong></dt>
+<dd>
+<p>Print a help message for <strong>odgi view</strong>.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_exit_status_4">5.5. EXIT STATUS</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>0</strong></dt>
+<dd>
+<p>Success.</p>
+</dd>
+<dt class="hdlist1"><strong>1</strong></dt>
+<dd>
+<p>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_bugs_5">5.6. BUGS</h3>
+<div class="paragraph">
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_authors_5">5.7. AUTHORS</h3>
+<div class="paragraph">
+<p><strong>odgi view</strong> was written by Erik Garrison.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_odgi_kmers1">6. odgi kmers(1)</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_name_6">6.1. NAME</h3>
+<div class="paragraph">
+<p>odgi_kmers - show and characterize the kmer space of the graph</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_synopsis_6">6.2. SYNOPSIS</h3>
+<div class="paragraph">
+<p><strong>odgi kmers</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-c, --stdout</strong>] [<em>OPTION</em>]&#8230;&#8203;</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_description_6">6.3. DESCRIPTION</h3>
+<div class="paragraph">
+<p>Given a kmer length, the odgi kmers(1) command can emit all kmers. The output can be refined by setting the maximum number
+of furcations at edges or by not considering nodes above a given node degree limit.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_options_5">6.4. OPTIONS</h3>
+<div class="sect3">
+<h4 id="_graph_files_io_5">6.4.1. Graph Files IO</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
+<dd>
+<p>File containing the succinct variation graph to convert from. The file name usually ends with <em>.og</em>.</p>
+</dd>
+<dt class="hdlist1"><strong>-c, --stdout</strong>=</dt>
+<dd>
+<p>Write the kmers to standard output. Kmers are line-separated.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_kmer_options">6.4.2. Kmer Options</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-k, --kmer-length</strong>=<em>N</em></dt>
+<dd>
+<p>The kmer length to generate kmers from.</p>
+</dd>
+<dt class="hdlist1"><strong>-e, --max-furcations</strong>=<em>N</em></dt>
+<dd>
+<p>Break at edges that would induce this many furcations when generating a kmer.</p>
+</dd>
+<dt class="hdlist1"><strong>-D, --max-degree</strong>=<em>N</em></dt>
+<dd>
+<p>Don&#8217;t take nodes into account that have a degree greater than <em>N</em>.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_threading_3">6.4.3. Threading</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-t, --threads</strong>=<em>N</em></dt>
+<dd>
+<p>Number of threads to use.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_program_information_5">6.4.4. Program Information</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-h, --help</strong></dt>
+<dd>
+<p>Print a help message for <strong>odgi kmers</strong>.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_exit_status_5">6.5. EXIT STATUS</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>0</strong></dt>
+<dd>
+<p>Success.</p>
+</dd>
+<dt class="hdlist1"><strong>1</strong></dt>
+<dd>
+<p>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_bugs_6">6.6. BUGS</h3>
+<div class="paragraph">
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_authors_6">6.7. AUTHORS</h3>
+<div class="paragraph">
+<p><strong>odgi kmers</strong> was written by Erik Garrison.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_odgi_unitig1">7. odgi unitig(1)</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_name_7">7.1. NAME</h3>
+<div class="paragraph">
+<p>odgi_unitig - output unitigs of the graph</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_synopsis_7">7.2. SYNOPSIS</h3>
+<div class="paragraph">
+<p><strong>odgi unitig</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_description_7">7.3. DESCRIPTION</h3>
+<div class="paragraph">
+<p>The odgi unitig(1) command can print all <a href="https://github.com/mcveanlab/mccortex/wiki/unitig">unitigs</a> of a given odgi graph to standard output in FASTA format. Unitigs can also be emitted
+in a fixed sequence quality FASTQ format. Various parameters can refine the unitigs to print.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_options_6">7.4. OPTIONS</h3>
+<div class="sect3">
+<h4 id="_graph_files_io_6">7.4.1. Graph Files IO</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
+<dd>
+<p>File containing the succinct variation graph to convert from. The file name usually ends with <em>.og</em>.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_fastq_options">7.4.2. FASTQ Options</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-f, --fake-fastq</strong></dt>
+<dd>
+<p>Write the unitigs in FASTQ format to stdout with a fixed quality value of <em>I</em>.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_unitig_options">7.4.3. Unitig Options</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-t, --sample-to</strong>=<em>N</em></dt>
+<dd>
+<p>Continue unitigs with a random walk in the graph so that they have at least the given <em>N</em> length.</p>
+</dd>
+<dt class="hdlist1"><strong>-p, --sample-plus</strong>=<em>N</em></dt>
+<dd>
+<p>Continue unitigs with a random walk in the graph by <em>N</em> past their natural end.</p>
+</dd>
+<dt class="hdlist1"><strong>-l, --min-begin-node-length</strong>=<em>N</em></dt>
+<dd>
+<p>Only begin unitigs collection from nodes which have at least length <em>N</em>.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_program_information_6">7.4.4. Program Information</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-h, --help</strong></dt>
+<dd>
+<p>Print a help message for <strong>odgi unitig</strong>.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_exit_status_6">7.5. EXIT STATUS</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>0</strong></dt>
+<dd>
+<p>Success.</p>
+</dd>
+<dt class="hdlist1"><strong>1</strong></dt>
+<dd>
+<p>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_bugs_7">7.6. BUGS</h3>
+<div class="paragraph">
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_authors_7">7.7. AUTHORS</h3>
+<div class="paragraph">
+<p><strong>odgi unitig</strong> was written by Erik Garrison.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_odgi_viz1">8. odgi viz(1)</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_name_8">8.1. NAME</h3>
+<div class="paragraph">
+<p>odgi_viz - variation graph visualizations</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_synopsis_8">8.2. SYNOPSIS</h3>
+<div class="paragraph">
+<p><strong>odgi viz</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_description_8">8.3. DESCRIPTION</h3>
+<div class="paragraph">
+<p>The odgi viz(1) command can produce a linear, static visualization of an odgi variation graph. It aggregates the pangenome into bins
+and directly renders a raster image. The binning level depends on the target width of the PNG to emit. Can be used to produce visualizations for gigabase scale pangenomes. For more information
+about the binning process, please refer to <a href="odgi_bin.html#_odgi_bin1">odgi bin</a>. If reverse coloring was selected, only
+the bins with a reverse rate of at least 0.5 are colored. Currently, there is no parameter to color according to the
+sequence coverage in bins available.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_options_7">8.4. OPTIONS</h3>
+<div class="sect3">
+<h4 id="_graph_files_io_7">8.4.1. Graph Files IO</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
+<dd>
+<p>File containing the succinct variation graph to convert from. The file name usually ends with <em>.og</em>.</p>
+</dd>
+<dt class="hdlist1"><strong>-o, --out</strong>=<em>FILE</em></dt>
+<dd>
+<p>Write the visualization in PNG format to this file.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_visualization_options">8.4.2. Visualization Options</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-x, --width</strong>=<em>N</em></dt>
+<dd>
+<p>Set the width in pixels of the output image.</p>
+</dd>
+<dt class="hdlist1"><strong>-y, --height</strong>=<em>N</em></dt>
+<dd>
+<p>Set the height in pixels of the output image.</p>
+</dd>
+<dt class="hdlist1"><strong>-P, --path-height</strong>=<em>N</em></dt>
+<dd>
+<p>The height in pixels for a path.</p>
+</dd>
+<dt class="hdlist1"><strong>-X, --path-x-padding</strong>=<em>N</em></dt>
+<dd>
+<p>The padding in pixels on the x-axis for a path.</p>
+</dd>
+<dt class="hdlist1"><strong>-R, --path-per-row</strong></dt>
+<dd>
+<p>Display a single path per row rather than packing them.</p>
+</dd>
+<dt class="hdlist1"><strong>-L, --link-path-pieces</strong>=<em>FLOAT</em></dt>
+<dd>
+<p>Show thin links of this relative width to connect path pieces.</p>
+</dd>
+<dt class="hdlist1"><strong>-A, --alignment-prefix</strong>=<em>STRING</em></dt>
+<dd>
+<p>Apply alignment related visual motifs to paths which have this name prefix.</p>
+</dd>
+<dt class="hdlist1"><strong>-S, --show-strand</strong></dt>
+<dd>
+<p>Use red and blue coloring to display forward and reverse alignments. This parameter should only be set in combination with
+[<strong>-A, --alignment-prefix</strong>=<em>STRING</em>].</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_threading_4">8.4.3. Threading</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-t, --threads</strong>=<em>N</em></dt>
+<dd>
+<p>Number of threads to use.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_program_information_7">8.4.4. Program Information</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-h, --help</strong></dt>
+<dd>
+<p>Print a help message for <strong>odgi viz</strong>.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_exit_status_7">8.5. EXIT STATUS</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>0</strong></dt>
+<dd>
+<p>Success.</p>
+</dd>
+<dt class="hdlist1"><strong>1</strong></dt>
+<dd>
+<p>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_bugs_8">8.6. BUGS</h3>
+<div class="paragraph">
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_authors_8">8.7. AUTHORS</h3>
+<div class="paragraph">
+<p><strong>odgi viz</strong> was written by Erik Garrison.</p>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-05-11 14:54:43 +0200
+Last updated 2020-05-12 14:48:55 +0200
 </div>
 </div>
 </body>

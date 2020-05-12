@@ -3,7 +3,7 @@ ifdef::backend-manpage[]
 Erik Garrison
 :doctype: manpage
 :release-version: 0.4.1
-:man manual: odgi build
+:man manual: odgi
 :man source: odgi 0.4.1
 :page-layout: base
 endif::[]
@@ -18,7 +18,15 @@ odgi - dynamic succinct variation graph tool
 
 *odgi* <<odgi_stats.adoc#_odgi_stats1, stats>> -i graph.og -S
 
-*odgi* <<odgi_sort.adoc#_odgi_sort1, sort>> -i graph.og - graph.sorted.og -p bSnSnS
+*odgi* <<odgi_sort.adoc#_odgi_sort1, sort>> -i graph.og -o graph.sorted.og -p bSnSnS
+
+*odgi* <<odgi_view.adoc#_odgi_view1, view>> -i graph.og -g
+
+*odgi* <<odgi_kmers.adoc#_odgi_kmers1, kmers>> -i graph.og -c -k 23 -e 34 -D 50
+
+*odgi* <<odgi_unitig.adoc#_odgi_unitig1, unitig>> -i graph.og -f -t 1324 -l 120
+
+*odgi* <<odgi_viz.adoc#_odgi_viz1, viz>> -i graph.og -o graph.og.png -x 1920 -y 1080 -R -t 28
 
 == DESCRIPTION
 
@@ -51,6 +59,24 @@ determine the node order:
 
 Sorting the paths in a graph my refine the sorting process. For the users' convenience, it is possible to specify a whole
 pipeline of sorts within one parameter.
+
+*odgi view* [*-i, --idx*=_FILE_] [_OPTION_]... +
+The odgi view(1) command can convert a graph in odgi format to GFAv1. It can reveal a graph's internal structures for e.g. debugging processes.
+
+*odgi kmers* [*-i, --idx*=_FILE_] [*-c, --stdout*] [_OPTION_]... +
+Given a kmer length, the odgi kmers(1) command can emit all kmers. The output can be refined by setting the maximum number
+of furcations at edges or by not considering nodes above a given node degree limit.
+
+*odgi unitig* [*-i, --idx*=_FILE_] [_OPTION_]... +
+The odgi unitig(1) command can print all unitigs of a given odgi graph to standard output in FASTA format. Unitigs can also be emitted
+in a fixed sequence quality FASTQ format. Various parameters can refine the unitigs to print.
+
+*odgi viz* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]... +
+The odgi viz(1) command can produce a linear, static visualization of an odgi variation graph. It aggregates the pangenome into bins
+and directly renders a raster image. The binning level depends on the target width of the PNG to emit. Can be used to produce visualizations for gigabase scale pangenomes. For more information
+about the binning process, please refer to <<odgi_bin.adoc#_odgi_bin1, odgi bin>>. If reverse coloring was selected, only
+the bins with a reverse rate of at least 0.5 are colored. Currently, there is no parameter to color according to the
+sequence coverage in bins available.
 
 == BUGS
 

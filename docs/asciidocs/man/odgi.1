@@ -2,12 +2,12 @@
 .\"     Title: odgi
 .\"    Author: Erik Garrison
 .\" Generator: Asciidoctor 2.0.10
-.\"      Date: 2020-05-11
-.\"    Manual: odgi build
+.\"      Date: 2020-05-12
+.\"    Manual: odgi
 .\"    Source: odgi 0.4.1
 .\"  Language: English
 .\"
-.TH "ODGI" "1" "2020-05-11" "odgi 0.4.1" "odgi build"
+.TH "ODGI" "1" "2020-05-12" "odgi 0.4.1" "odgi"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -35,7 +35,15 @@ odgi \- dynamic succinct variation graph tool
 .sp
 \fBodgi\fP stats \-i graph.og \-S
 .sp
-\fBodgi\fP sort \-i graph.og \- graph.sorted.og \-p bSnSnS
+\fBodgi\fP sort \-i graph.og \-o graph.sorted.og \-p bSnSnS
+.sp
+\fBodgi\fP view \-i graph.og \-g
+.sp
+\fBodgi\fP kmers \-i graph.og \-c \-k 23 \-e 34 \-D 50
+.sp
+\fBodgi\fP unitig \-i graph.og \-f \-t 1324 \-l 120
+.sp
+\fBodgi\fP viz \-i graph.og \-o graph.og.png \-x 1920 \-y 1080 \-R \-t 28
 .SH "DESCRIPTION"
 .sp
 Odgi is a set of of tools that manipulate variation graphs. TODO Explain data structure. TODO Link to vg paper. TODO Link to handle graph paper. TODO Explain purpose. TODO Give summary of the capabilities of the set of tools.
@@ -129,6 +137,28 @@ An eades algorithmic sort: Use \c
 .sp
 Sorting the paths in a graph my refine the sorting process. For the users\(aq convenience, it is possible to specify a whole
 pipeline of sorts within one parameter.
+.sp
+\fBodgi view\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fIOPTION\fP]...
+.br
+The odgi view(1) command can convert a graph in odgi format to GFAv1. It can reveal a graph\(cqs internal structures for e.g. debugging processes.
+.sp
+\fBodgi kmers\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-c, \-\-stdout\fP] [\fIOPTION\fP]...
+.br
+Given a kmer length, the odgi kmers(1) command can emit all kmers. The output can be refined by setting the maximum number
+of furcations at edges or by not considering nodes above a given node degree limit.
+.sp
+\fBodgi unitig\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fIOPTION\fP]...
+.br
+The odgi unitig(1) command can print all unitigs of a given odgi graph to standard output in FASTA format. Unitigs can also be emitted
+in a fixed sequence quality FASTQ format. Various parameters can refine the unitigs to print.
+.sp
+\fBodgi viz\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
+.br
+The odgi viz(1) command can produce a linear, static visualization of an odgi variation graph. It aggregates the pangenome into bins
+and directly renders a raster image. The binning level depends on the target width of the PNG to emit. Can be used to produce visualizations for gigabase scale pangenomes. For more information
+about the binning process, please refer to odgi bin. If reverse coloring was selected, only
+the bins with a reverse rate of at least 0.5 are colored. Currently, there is no parameter to color according to the
+sequence coverage in bins available.
 .SH "BUGS"
 .sp
 Refer to the \fBodgi\fP issue tracker at \c

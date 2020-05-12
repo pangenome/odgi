@@ -4,7 +4,7 @@
 <article xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" version="5.0" xml:lang="en">
 <info>
 <title>Reference Documentation for ODGI 0.4.1</title>
-<date>2020-05-11</date>
+<date>2020-05-12</date>
 <author>
 <personname>
 <firstname>Simon Heumos, Erik Garrison</firstname>
@@ -22,7 +22,11 @@
 <title>SYNOPSIS</title>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_build1">build</link> -g graph.gfa -o graph.og</simpara>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_stats1">stats</link> -i graph.og -S</simpara>
-<simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_sort1">sort</link> -i graph.og - graph.sorted.og -p bSnSnS</simpara>
+<simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_sort1">sort</link> -i graph.og -o graph.sorted.og -p bSnSnS</simpara>
+<simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_view1">view</link> -i graph.og -g</simpara>
+<simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_kmers1">kmers</link> -i graph.og -c -k 23 -e 34 -D 50</simpara>
+<simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_unitig1">unitig</link> -i graph.og -f -t 1324 -l 120</simpara>
+<simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_viz1">viz</link> -i graph.og -o graph.og.png -x 1920 -y 1080 -R -t 28</simpara>
 </section>
 <section xml:id="_description">
 <title>DESCRIPTION</title>
@@ -62,6 +66,20 @@ or stress level. It applies stochastic gradient descent (SGD) to move a single p
 </itemizedlist>
 <simpara>Sorting the paths in a graph my refine the sorting process. For the users' convenience, it is possible to specify a whole
 pipeline of sorts within one parameter.</simpara>
+<simpara><emphasis role="strong">odgi view</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;<?asciidoc-br?>
+The odgi view(1) command can convert a graph in odgi format to GFAv1. It can reveal a graph&#8217;s internal structures for e.g. debugging processes.</simpara>
+<simpara><emphasis role="strong">odgi kmers</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-c, --stdout</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;<?asciidoc-br?>
+Given a kmer length, the odgi kmers(1) command can emit all kmers. The output can be refined by setting the maximum number
+of furcations at edges or by not considering nodes above a given node degree limit.</simpara>
+<simpara><emphasis role="strong">odgi unitig</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;<?asciidoc-br?>
+The odgi unitig(1) command can print all unitigs of a given odgi graph to standard output in FASTA format. Unitigs can also be emitted
+in a fixed sequence quality FASTQ format. Various parameters can refine the unitigs to print.</simpara>
+<simpara><emphasis role="strong">odgi viz</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;<?asciidoc-br?>
+The odgi viz(1) command can produce a linear, static visualization of an odgi variation graph. It aggregates the pangenome into bins
+and directly renders a raster image. The binning level depends on the target width of the PNG to emit. Can be used to produce visualizations for gigabase scale pangenomes. For more information
+about the binning process, please refer to <link xl:href="odgi_bin.xml#_odgi_bin1">odgi bin</link>. If reverse coloring was selected, only
+the bins with a reverse rate of at least 0.5 are colored. Currently, there is no parameter to color according to the
+sequence coverage in bins available.</simpara>
 </section>
 <section xml:id="_bugs">
 <title>BUGS</title>
@@ -674,6 +692,435 @@ pipeline of sorts within one parameter.</simpara>
 <section xml:id="_authors_4">
 <title>AUTHORS</title>
 <simpara><emphasis role="strong">odgi sort</emphasis> was written by Erik Garrison.</simpara>
+</section>
+</section>
+<section xml:id="_odgi_view1">
+<title>odgi view(1)</title>
+<section xml:id="_name_5">
+<title>NAME</title>
+<simpara>odgi_view - projection of graphs into other formats</simpara>
+</section>
+<section xml:id="_synopsis_5">
+<title>SYNOPSIS</title>
+<simpara><emphasis role="strong">odgi view</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
+</section>
+<section xml:id="_description_5">
+<title>DESCRIPTION</title>
+<simpara>The odgi view(1) command can convert a graph in odgi format to GFAv1. It can reveal a graph&#8217;s internal structures for e.g. debugging processes.</simpara>
+</section>
+<section xml:id="_options_4">
+<title>OPTIONS</title>
+<section xml:id="_graph_files_io_4">
+<title>Graph Files IO</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>File containing the succinct variation graph to convert from. The file name usually ends with <emphasis>.og</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-g, --to-gfa</emphasis></term>
+<listitem>
+<simpara>Write the graph in GFAv1 format to standard output.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_summary_options_2">
+<title>Summary Options</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-d, --display</emphasis></term>
+<listitem>
+<simpara>Show the internal structures of a graph. Print to stdout the maximum node identifier, the minimum node identifier,
+the nodes vector, the delete nodes bit vector and the path metadata, each in a separate line.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_program_information_4">
+<title>Program Information</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-h, --help</emphasis></term>
+<listitem>
+<simpara>Print a help message for <emphasis role="strong">odgi view</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+</section>
+<section xml:id="_exit_status_4">
+<title>EXIT STATUS</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">0</emphasis></term>
+<listitem>
+<simpara>Success.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">1</emphasis></term>
+<listitem>
+<simpara>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_bugs_5">
+<title>BUGS</title>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+</section>
+<section xml:id="_authors_5">
+<title>AUTHORS</title>
+<simpara><emphasis role="strong">odgi view</emphasis> was written by Erik Garrison.</simpara>
+</section>
+</section>
+<section xml:id="_odgi_kmers1">
+<title>odgi kmers(1)</title>
+<section xml:id="_name_6">
+<title>NAME</title>
+<simpara>odgi_kmers - show and characterize the kmer space of the graph</simpara>
+</section>
+<section xml:id="_synopsis_6">
+<title>SYNOPSIS</title>
+<simpara><emphasis role="strong">odgi kmers</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-c, --stdout</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
+</section>
+<section xml:id="_description_6">
+<title>DESCRIPTION</title>
+<simpara>Given a kmer length, the odgi kmers(1) command can emit all kmers. The output can be refined by setting the maximum number
+of furcations at edges or by not considering nodes above a given node degree limit.</simpara>
+</section>
+<section xml:id="_options_5">
+<title>OPTIONS</title>
+<section xml:id="_graph_files_io_5">
+<title>Graph Files IO</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>File containing the succinct variation graph to convert from. The file name usually ends with <emphasis>.og</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-c, --stdout</emphasis>=</term>
+<listitem>
+<simpara>Write the kmers to standard output. Kmers are line-separated.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_kmer_options">
+<title>Kmer Options</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-k, --kmer-length</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>The kmer length to generate kmers from.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-e, --max-furcations</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Break at edges that would induce this many furcations when generating a kmer.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-D, --max-degree</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Don&#8217;t take nodes into account that have a degree greater than <emphasis>N</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_threading_3">
+<title>Threading</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-t, --threads</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Number of threads to use.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_program_information_5">
+<title>Program Information</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-h, --help</emphasis></term>
+<listitem>
+<simpara>Print a help message for <emphasis role="strong">odgi kmers</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+</section>
+<section xml:id="_exit_status_5">
+<title>EXIT STATUS</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">0</emphasis></term>
+<listitem>
+<simpara>Success.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">1</emphasis></term>
+<listitem>
+<simpara>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_bugs_6">
+<title>BUGS</title>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+</section>
+<section xml:id="_authors_6">
+<title>AUTHORS</title>
+<simpara><emphasis role="strong">odgi kmers</emphasis> was written by Erik Garrison.</simpara>
+</section>
+</section>
+<section xml:id="_odgi_unitig1">
+<title>odgi unitig(1)</title>
+<section xml:id="_name_7">
+<title>NAME</title>
+<simpara>odgi_unitig - output unitigs of the graph</simpara>
+</section>
+<section xml:id="_synopsis_7">
+<title>SYNOPSIS</title>
+<simpara><emphasis role="strong">odgi unitig</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
+</section>
+<section xml:id="_description_7">
+<title>DESCRIPTION</title>
+<simpara>The odgi unitig(1) command can print all <link xl:href="https://github.com/mcveanlab/mccortex/wiki/unitig">unitigs</link> of a given odgi graph to standard output in FASTA format. Unitigs can also be emitted
+in a fixed sequence quality FASTQ format. Various parameters can refine the unitigs to print.</simpara>
+</section>
+<section xml:id="_options_6">
+<title>OPTIONS</title>
+<section xml:id="_graph_files_io_6">
+<title>Graph Files IO</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>File containing the succinct variation graph to convert from. The file name usually ends with <emphasis>.og</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_fastq_options">
+<title>FASTQ Options</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-f, --fake-fastq</emphasis></term>
+<listitem>
+<simpara>Write the unitigs in FASTQ format to stdout with a fixed quality value of <emphasis>I</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_unitig_options">
+<title>Unitig Options</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-t, --sample-to</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Continue unitigs with a random walk in the graph so that they have at least the given <emphasis>N</emphasis> length.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-p, --sample-plus</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Continue unitigs with a random walk in the graph by <emphasis>N</emphasis> past their natural end.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-l, --min-begin-node-length</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Only begin unitigs collection from nodes which have at least length <emphasis>N</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_program_information_6">
+<title>Program Information</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-h, --help</emphasis></term>
+<listitem>
+<simpara>Print a help message for <emphasis role="strong">odgi unitig</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+</section>
+<section xml:id="_exit_status_6">
+<title>EXIT STATUS</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">0</emphasis></term>
+<listitem>
+<simpara>Success.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">1</emphasis></term>
+<listitem>
+<simpara>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_bugs_7">
+<title>BUGS</title>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+</section>
+<section xml:id="_authors_7">
+<title>AUTHORS</title>
+<simpara><emphasis role="strong">odgi unitig</emphasis> was written by Erik Garrison.</simpara>
+</section>
+</section>
+<section xml:id="_odgi_viz1">
+<title>odgi viz(1)</title>
+<section xml:id="_name_8">
+<title>NAME</title>
+<simpara>odgi_viz - variation graph visualizations</simpara>
+</section>
+<section xml:id="_synopsis_8">
+<title>SYNOPSIS</title>
+<simpara><emphasis role="strong">odgi viz</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
+</section>
+<section xml:id="_description_8">
+<title>DESCRIPTION</title>
+<simpara>The odgi viz(1) command can produce a linear, static visualization of an odgi variation graph. It aggregates the pangenome into bins
+and directly renders a raster image. The binning level depends on the target width of the PNG to emit. Can be used to produce visualizations for gigabase scale pangenomes. For more information
+about the binning process, please refer to <link xl:href="odgi_bin.xml#_odgi_bin1">odgi bin</link>. If reverse coloring was selected, only
+the bins with a reverse rate of at least 0.5 are colored. Currently, there is no parameter to color according to the
+sequence coverage in bins available.</simpara>
+</section>
+<section xml:id="_options_7">
+<title>OPTIONS</title>
+<section xml:id="_graph_files_io_7">
+<title>Graph Files IO</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>File containing the succinct variation graph to convert from. The file name usually ends with <emphasis>.og</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>Write the visualization in PNG format to this file.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_visualization_options">
+<title>Visualization Options</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-x, --width</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Set the width in pixels of the output image.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-y, --height</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Set the height in pixels of the output image.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-P, --path-height</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>The height in pixels for a path.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-X, --path-x-padding</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>The padding in pixels on the x-axis for a path.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-R, --path-per-row</emphasis></term>
+<listitem>
+<simpara>Display a single path per row rather than packing them.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-L, --link-path-pieces</emphasis>=<emphasis>FLOAT</emphasis></term>
+<listitem>
+<simpara>Show thin links of this relative width to connect path pieces.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-A, --alignment-prefix</emphasis>=<emphasis>STRING</emphasis></term>
+<listitem>
+<simpara>Apply alignment related visual motifs to paths which have this name prefix.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-S, --show-strand</emphasis></term>
+<listitem>
+<simpara>Use red and blue coloring to display forward and reverse alignments. This parameter should only be set in combination with
+[<emphasis role="strong">-A, --alignment-prefix</emphasis>=<emphasis>STRING</emphasis>].</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_threading_4">
+<title>Threading</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-t, --threads</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Number of threads to use.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_program_information_7">
+<title>Program Information</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-h, --help</emphasis></term>
+<listitem>
+<simpara>Print a help message for <emphasis role="strong">odgi viz</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+</section>
+<section xml:id="_exit_status_7">
+<title>EXIT STATUS</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">0</emphasis></term>
+<listitem>
+<simpara>Success.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">1</emphasis></term>
+<listitem>
+<simpara>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_bugs_8">
+<title>BUGS</title>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+</section>
+<section xml:id="_authors_8">
+<title>AUTHORS</title>
+<simpara><emphasis role="strong">odgi viz</emphasis> was written by Erik Garrison.</simpara>
 </section>
 </section>
 </article>

@@ -1,13 +1,13 @@
 '\" t
-.\"     Title: odgi build
+.\"     Title: odgi viz
 .\"    Author: Erik Garrison
 .\" Generator: Asciidoctor 2.0.10
 .\"      Date: 2020-05-12
-.\"    Manual: odgi build
+.\"    Manual: odgi viz
 .\"    Source: odgi 0.4.1
 .\"  Language: English
 .\"
-.TH "ODGI_BUILD" "1" "2020-05-12" "odgi 0.4.1" "odgi build"
+.TH "ODGI_VIZ" "1" "2020-05-12" "odgi 0.4.1" "odgi viz"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -28,68 +28,82 @@
 .  LINKSTYLE blue R < >
 .\}
 .SH "NAME"
-odgi_build \- construct a dynamic succinct variation graph
+odgi_viz \- variation graph visualizations
 .SH "SYNOPSIS"
 .sp
-\fBodgi build\fP [\fB\-g, \-\-gfa\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
+\fBodgi viz\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
 .SH "DESCRIPTION"
 .sp
-The odgi build(1) command constructs a succinct variation graph from a GFA. Currently, only GFA1 is supported. For details of the format please see \c
-.URL "https://github.com/GFA\-spec/GFA\-spec/blob/master/GFA1.md" "" "."
+The odgi viz(1) command can produce a linear, static visualization of an odgi variation graph. It aggregates the pangenome into bins
+and directly renders a raster image. The binning level depends on the target width of the PNG to emit. Can be used to produce visualizations for gigabase scale pangenomes. For more information
+about the binning process, please refer to odgi bin. If reverse coloring was selected, only
+the bins with a reverse rate of at least 0.5 are colored. Currently, there is no parameter to color according to the
+sequence coverage in bins available.
 .SH "OPTIONS"
 .SS "Graph Files IO"
 .sp
-\fB\-g, \-\-gfa\fP=\fIFILE\fP
+\fB\-i, \-\-idx\fP=\fIFILE\fP
 .RS 4
-GFA1 file containing the nodes, edges and paths to build a dynamic succinct variation graph from.
+File containing the succinct variation graph to convert from. The file name usually ends with \fI.og\fP.
 .RE
 .sp
 \fB\-o, \-\-out\fP=\fIFILE\fP
 .RS 4
-Write the dynamic succinct variation graph to this file. A file ending with \fI.og\fP is recommended.
+Write the visualization in PNG format to this file.
 .RE
-.SS "Graph Sorting"
+.SS "Visualization Options"
 .sp
-\fB\-s, \-\-sort\fP
+\fB\-x, \-\-width\fP=\fIN\fP
 .RS 4
-Apply a general topological sort to the graph and order the node ids accordingly. A bidirected adaptation of Kahn\(cqs topological sort (1962) is used, which can handle components with no heads or tails. Here, both heads and tails are taken into account.
-.RE
-.SS "Processing Information"
-.sp
-\fB\-p, \-\-progress\fP
-.RS 4
-Print progress updates to stdout.
+Set the width in pixels of the output image.
 .RE
 .sp
-\fB\-d, \-\-debug\fP
+\fB\-y, \-\-height\fP=\fIN\fP
 .RS 4
-Verbosely print graph information to stderr. This includes the maximum node_id, the minimum node_id, the handle to node_id mapping, the deleted nodes and the path metadata.
+Set the height in pixels of the output image.
 .RE
 .sp
-\fB\-\-trace\fP
+\fB\-P, \-\-path\-height\fP=\fIN\fP
 .RS 4
-Include backtrace information when reporting errors.
+The height in pixels for a path.
 .RE
 .sp
-\fB\-v, \-\-verbose\fP
+\fB\-X, \-\-path\-x\-padding\fP=\fIN\fP
 .RS 4
-Verbosely print processing information to stderr, including debug\-level log messages.
+The padding in pixels on the x\-axis for a path.
 .RE
 .sp
-\fB\-w, \-\-warnings\fP
+\fB\-R, \-\-path\-per\-row\fP
 .RS 4
-Turn on script warnings (applies to executed code).
+Display a single path per row rather than packing them.
 .RE
 .sp
-\fB\-t, \-\-timings\fP
+\fB\-L, \-\-link\-path\-pieces\fP=\fIFLOAT\fP
 .RS 4
-Print timings report to stderr (time to read, parse, and convert).
+Show thin links of this relative width to connect path pieces.
+.RE
+.sp
+\fB\-A, \-\-alignment\-prefix\fP=\fISTRING\fP
+.RS 4
+Apply alignment related visual motifs to paths which have this name prefix.
+.RE
+.sp
+\fB\-S, \-\-show\-strand\fP
+.RS 4
+Use red and blue coloring to display forward and reverse alignments. This parameter should only be set in combination with
+[\fB\-A, \-\-alignment\-prefix\fP=\fISTRING\fP].
+.RE
+.SS "Threading"
+.sp
+\fB\-t, \-\-threads\fP=\fIN\fP
+.RS 4
+Number of threads to use.
 .RE
 .SS "Program Information"
 .sp
 \fB\-h, \-\-help\fP
 .RS 4
-Print a help message for \fBodgi build\fP.
+Print a help message for \fBodgi viz\fP.
 .RE
 .SH "EXIT STATUS"
 .sp
@@ -108,7 +122,7 @@ Refer to the \fBodgi\fP issue tracker at \c
 .URL "https://github.com/vgteam/odgi/issues" "" "."
 .SH "AUTHORS"
 .sp
-\fBodgi build\fP was written by Erik Garrison.
+\fBodgi viz\fP was written by Erik Garrison.
 == RESOURCES
 .sp
 \fBProject web site:\fP \c
