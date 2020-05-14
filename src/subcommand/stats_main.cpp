@@ -21,15 +21,18 @@ int main_stats(int argc, char** argv) {
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
-    args::ArgumentParser parser("metrics describing variation graphs");
+    args::ArgumentParser parser("metrics describing variation graphs and their path relationships");
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the variation graph from this file", {'i', "idx"});
     args::Flag summarize(parser, "summarize", "summarize the graph properties and dimensions", {'S', "summarize"});
     args::Flag base_content(parser, "base-content", "describe the base content of the graph", {'b', "base-content"});
     args::Flag path_coverage(parser, "coverage", "provide a histogram of path coverage over bases in the graph", {'C', "coverage"});
     args::Flag path_setcov(parser, "setcov", "provide a histogram of coverage over unique sets of paths", {'V', "set-coverage"});
+    args::Flag path_setcov_count(parser, "setcountcov", "provide a histogram of coverage over counts of unique paths", {'Q', "set-count-coverage"});
     args::Flag path_multicov(parser, "multicov", "provide a histogram of coverage over unique multisets of paths", {'M', "multi-coverage"});
+    args::Flag path_multicov_count(parser, "multicountcov", "provide a histogram of coverage over counts of paths", {'L', "multi-count-coverage"});
     args::ValueFlag<std::string> path_bedmulticov(parser, "BED", "for each BED entry, provide a table of path coverage over unique multisets of paths in the graph. Each unique multiset of paths overlapping a given BED interval is described in terms of its length relative to the total interval, the number of path traversals, and unique paths involved in these traversals.", {'B', "bed-multicov"});
+    args::ValueFlag<std::string> path_delim(parser, "CHAR", "the part of each path name before this delimiter is a group identifier, which when specified will cause stats to be collected in a group-wise rather than path-wise fashion", {'D', "delim"});
     args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
     try {
@@ -119,42 +122,157 @@ int main_stats(int argc, char** argv) {
             std::cout << "uniq\t" << p.first << "\t" << p.second << std::endl;
         }
     }
-    if (args::get(path_setcov)) {
-        std::map<std::set<uint64_t>, uint64_t> setcov;
-        graph.for_each_handle([&](const handle_t& h) {
-                std::set<uint64_t> paths_here;
-                graph.for_each_step_on_handle(h, [&](const step_handle_t& occ) {
-                        paths_here.insert(as_integer(graph.get_path(occ)));
-                    });
-                setcov[paths_here] += graph.get_length(h);
+
+    bool using_delim = !args::get(path_delim).empty();
+    char delim = '\0';
+    ska::flat_hash_map<std::string, uint64_t> path_group_ids;
+    std::vector<std::string> path_groups;
+    if (using_delim) {
+        delim = args::get(path_delim).at(0);
+        uint64_t i = 0;
+        graph.for_each_path_handle(
+            [&](const path_handle_t& p) {
+                std::string group_name = split(graph.get_path_name(p), delim)[0];
+                auto f = path_group_ids.find(group_name);
+                if (f == path_group_ids.end()) {
+                    path_group_ids[group_name] = i++;
+                    path_groups.push_back(group_name);
+                }
             });
-        std::cout << "cov\tsets" << std::endl;
+    }
+
+    auto get_path_name
+        = (using_delim ?
+           (std::function<std::string(const uint64_t&)>)
+           [&](const uint64_t& id) { return path_groups[id]; }
+           :
+           (std::function<std::string(const uint64_t&)>)
+           [&](const uint64_t& id) { return graph.get_path_name(as_path_handle(id)); });
+
+    auto get_path_id
+        = (using_delim ?
+           (std::function<uint64_t(const path_handle_t&)>)
+           [&](const path_handle_t& p) {
+               std::string group_name = split(graph.get_path_name(p), delim)[0];
+               return path_group_ids[group_name];
+           }
+           :
+           (std::function<uint64_t(const path_handle_t&)>)
+           [&](const path_handle_t& p) {
+               return as_integer(p);
+           });
+
+    if (args::get(path_setcov)) {
+        uint64_t total_length = 0;
+        std::map<std::set<uint64_t>, uint64_t> setcov;
+        graph.for_each_handle(
+            [&](const handle_t& h) {
+                std::set<uint64_t> paths_here;
+                graph.for_each_step_on_handle(
+                    h,
+                    [&](const step_handle_t& occ) {
+                        paths_here.insert(get_path_id(graph.get_path(occ)));
+                    });
+                size_t l = graph.get_length(h);
+#pragma omp critical (setcov)
+                {
+                    setcov[paths_here] += l;
+                    total_length += l;
+                }
+            }, true);
+        std::cout << "length\tgraph.frac\tn.paths\tpath.set" << std::endl;
         for (auto& p : setcov) {
-            std::cout << p.second << "\t";
+            std::cout << p.second << "\t"
+                      << (double)p.second/(double)total_length << "\t"
+                      << p.first.size() << "\t";
             for (auto& i : p.first) {
-                std::cout << graph.get_path_name(as_path_handle(i)) << ",";
+                std::cout << get_path_name(i) << ",";
             }
             std::cout << std::endl;
         }
     }
+
+    if (args::get(path_setcov_count)) {
+        uint64_t total_length = 0;
+        std::map<uint64_t, uint64_t> setcov_count;
+        graph.for_each_handle(
+            [&](const handle_t& h) {
+                std::set<uint64_t> paths_here;
+                graph.for_each_step_on_handle(
+                    h,
+                    [&](const step_handle_t& occ) {
+                        paths_here.insert(get_path_id(graph.get_path(occ)));
+                    });
+                size_t l = graph.get_length(h);
+#pragma omp critical (setcov)
+                {
+                    setcov_count[paths_here.size()] += l;
+                    total_length += l;
+                }
+            }, true);
+        std::cout << "length\tgraph.frac\tunique.path.count" << std::endl;
+        for (auto& p : setcov_count) {
+            std::cout << p.second << "\t"
+                      << (double)p.second/(double)total_length
+                      << "\t" << p.first << std::endl;
+        }
+    }
+
     if (args::get(path_multicov)) {
-        std::map<std::vector<uint64_t>, uint64_t> setcov;
-        graph.for_each_handle([&](const handle_t& h) {
+        uint64_t total_length = 0;
+        std::map<std::vector<uint64_t>, uint64_t> multisetcov;
+        graph.for_each_handle(
+            [&](const handle_t& h) {
                 std::vector<uint64_t> paths_here;
-                graph.for_each_step_on_handle(h, [&](const step_handle_t& occ) {
-                        paths_here.push_back(as_integer(graph.get_path(occ)));
+                graph.for_each_step_on_handle(
+                    h,
+                    [&](const step_handle_t& occ) {
+                        paths_here.push_back(get_path_id(graph.get_path(occ)));
                     });
                 std::sort(paths_here.begin(), paths_here.end());
-                setcov[paths_here] += graph.get_length(h);
-            });
-        std::cout << "cov\tsets" << std::endl;
-        for (auto& p : setcov) {
-            std::cout << p.second << "\t";
+                size_t l = graph.get_length(h);
+#pragma omp critical (multisetcov)
+                {
+                    multisetcov[paths_here] += l;
+                    total_length += l;
+                }
+            }, true);
+        std::cout << "length\tgraph.frac\nn.paths\tpath.multiset" << std::endl;
+        for (auto& p : multisetcov) {
+            std::cout << p.second << "\t"
+                      << (double)p.second/(double)total_length << "\t"
+                      << p.first.size() << "\t";
             bool first = true;
             for (auto& i : p.first) {
-                std::cout << (first ? (first=false, "") :",") << graph.get_path_name(as_path_handle(i));
+                std::cout << (first ? (first=false, "") :",") << get_path_name(i);
             }
             std::cout << std::endl;
+        }
+    }
+
+    if (args::get(path_multicov_count)) {
+        uint64_t total_length = 0;
+        std::map<uint64_t, uint64_t> multisetcov_count;
+        graph.for_each_handle(
+            [&](const handle_t& h) {
+                uint64_t paths_here = 0;
+                graph.for_each_step_on_handle(
+                    h,
+                    [&](const step_handle_t& occ) {
+                        ++paths_here;
+                    });
+                size_t l = graph.get_length(h);
+#pragma omp critical (multisetcov)
+                {
+                    multisetcov_count[paths_here] += l;
+                    total_length += l;
+                }
+            }, true);
+        std::cout << "length\tgraph.frac\tpath.step.count" << std::endl;
+        for (auto& p : multisetcov_count) {
+            std::cout << p.second << "\t"
+                      << (double)p.second/(double)total_length << "\t"
+                      << p.first << std::endl;
         }
     }
 
@@ -208,8 +326,10 @@ int main_stats(int argc, char** argv) {
             graph.for_each_step_in_path(graph.get_path_handle(x), [&](const step_handle_t& occ) {
                     std::vector<uint64_t> paths_here;
                     handle_t h = graph.get_handle_of_step(occ);
-                    graph.for_each_step_on_handle(h, [&](const step_handle_t& occ) {
-                            paths_here.push_back(as_integer(graph.get_path(occ)));
+                    graph.for_each_step_on_handle(
+                        h,
+                        [&](const step_handle_t& occ) {
+                            paths_here.push_back(get_path_id(graph.get_path(occ)));
                         });
                     uint64_t len = graph.get_length(h);
                     // check each position in the node
@@ -239,7 +359,7 @@ int main_stats(int argc, char** argv) {
                                       << u.size() << "\t";
                             bool first = true;
                             for (auto& i : p.first) {
-                                std::cout << (first ? (first=false, "") :",") << graph.get_path_name(as_path_handle(i));;
+                                std::cout << (first ? (first=false, "") :",") << get_path_name(i);
                             }
                             std::cout << std::endl;
                         }
@@ -254,7 +374,7 @@ int main_stats(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand odgi_stats("stats", "extract statistics and properties of the graph",
+static Subcommand odgi_stats("stats", "describe the graph and its path relationships",
                               PIPELINE, 3, main_stats);
 
 
