@@ -2,12 +2,12 @@
 .\"     Title: odgi
 .\"    Author: Erik Garrison
 .\" Generator: Asciidoctor 2.0.10
-.\"      Date: 2020-05-12
+.\"      Date: 2020-05-14
 .\"    Manual: odgi
 .\"    Source: odgi 0.4.1
 .\"  Language: English
 .\"
-.TH "ODGI" "1" "2020-05-12" "odgi 0.4.1" "odgi"
+.TH "ODGI" "1" "2020-05-14" "odgi 0.4.1" "odgi"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -44,12 +44,29 @@ odgi \- dynamic succinct variation graph tool
 \fBodgi\fP unitig \-i graph.og \-f \-t 1324 \-l 120
 .sp
 \fBodgi\fP viz \-i graph.og \-o graph.og.png \-x 1920 \-y 1080 \-R \-t 28
+.sp
+\fBodgi\fP paths \-i graph.og \-f
+.sp
+\fBodgi\fP prune \-i graph.og \-o graph.pruned.og \-c 3 \-C 345 \-T
+.sp
+\fBodgi\fP unchop \-i graph.og \-o graph.unchopped.og
+.sp
+\fBodgi\fP normalize \-i graph.og \-o graph.normalized.og \-I 100 \-d
+.sp
+\fBodgi\fP subset \-i graph.og \-o graph.subsetted.og \-n 1 \-t 28
 .SH "DESCRIPTION"
 .sp
-Odgi is a set of of tools that manipulate variation graphs. TODO Explain data structure. TODO Link to vg paper. TODO Link to handle graph paper. TODO Explain purpose. TODO Give summary of the capabilities of the set of tools.
+\fBodgi\fP, the \fBOptimized Dynamic (genome) Graph Interface\fP, links
+a thrifty dynamic in\-memory variation graph data model to a set of algorithms designed for scalable sorting, pruning,
+transformation, and visualization of very large genome graphs. \fBodgi\fP includes \c
+.URL "https://pangenome.github.io/odgi/odgipy.html" "python bindings"
+that can be used to
+\c
+.URL "https://odgi.readthedocs.io/en/latest/rst/tutorial.html" "directly
+interface with its data model" . This \fBodgi\fP manual provides detailed information about its features and subcommands, including examples.
 .SH "COMMANDS"
 .sp
-Each command has its own man page which can be viewed using e.g. \fBman odgi_build.1\fP. Below we have a brief summary of syntax and sub\-command description.
+Each command has its own man page which can be viewed using e.g. \fBman odgi_build.1\fP. Below we have a brief summary of syntax and subcommand description.
 .sp
 \fBodgi build\fP [\fB\-g, \-\-gfa\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
 .br
@@ -159,6 +176,30 @@ and directly renders a raster image. The binning level depends on the target wid
 about the binning process, please refer to odgi bin. If reverse coloring was selected, only
 the bins with a reverse rate of at least 0.5 are colored. Currently, there is no parameter to color according to the
 sequence coverage in bins available.
+.sp
+\fBodgi paths\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fIOPTION\fP]...
+.br
+The odgi paths(1) command allows the investigation of paths of a given variation graph. It can calculate overlap statistics
+of groupings of paths.
+.sp
+\fBodgi prune\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
+.br
+The odgi prune(1) command can remove complex parts of a graph. One can drop paths, nodes by a certain kind of edge coverage,
+edges and graph tips. Specifying a kmer length and a maximum number of furcations, the graph can be broken at edges not
+fitting into these conditions.
+.sp
+\fBodgi unchop\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
+.br
+The odgi unchop(1) command merges each unitig into a single node.
+.sp
+\fBodgi normalize\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
+.br
+The odgi normalize(1) command unchops a given variation graph and simplifies redundant furcations.
+.sp
+\fBodgi subset\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
+.br
+Extracting a node subset of a variation graph is the task of the odgi subset(1) command. Users can specify a node, a list of nodes
+or a the context of which to generate a subset from.
 .SH "BUGS"
 .sp
 Refer to the \fBodgi\fP issue tracker at \c

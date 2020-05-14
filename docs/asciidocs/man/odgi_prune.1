@@ -1,13 +1,13 @@
 '\" t
-.\"     Title: odgi view
+.\"     Title: odgi prune
 .\"    Author: Erik Garrison
 .\" Generator: Asciidoctor 2.0.10
 .\"      Date: 2020-05-14
-.\"    Manual: odgi view
+.\"    Manual: odgi prune
 .\"    Source: odgi 0.4.1
 .\"  Language: English
 .\"
-.TH "ODGI_VIEW" "1" "2020-05-14" "odgi 0.4.1" "odgi view"
+.TH "ODGI_PRUNE" "1" "2020-05-14" "odgi 0.4.1" "odgi prune"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -28,37 +28,88 @@
 .  LINKSTYLE blue R < >
 .\}
 .SH "NAME"
-odgi_view \- projection of graphs into other formats
+odgi_prune \- remove complex parts of the graph
 .SH "SYNOPSIS"
 .sp
-\fBodgi view\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fIOPTION\fP]...
+\fBodgi prune\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
 .SH "DESCRIPTION"
 .sp
-The odgi view(1) command can convert a graph in odgi format to GFAv1. It can reveal a graph\(cqs internal structures for e.g. debugging processes.
+The odgi prune(1) command can remove complex parts of a graph. One can drop paths, nodes by a certain kind of edge coverage,
+edges and graph tips. Specifying a kmer length and a maximum number of furcations, the graph can be broken at edges not
+fitting into these conditions.
 .SH "OPTIONS"
 .SS "Graph Files IO"
 .sp
 \fB\-i, \-\-idx\fP=\fIFILE\fP
 .RS 4
-File containing the succinct variation graph to convert from. The file name usually ends with \fI.og\fP.
+File containing the succinct variation graph to load in. The file name usually ends with \fI.og\fP.
 .RE
 .sp
-\fB\-g, \-\-to\-gfa\fP
+\fB\-o, \-\-out\fP=\fIFILE\fP
 .RS 4
-Write the graph in GFAv1 format to standard output.
+Write the pruned graph to \fIFILE\fP. The file name should end with \fI.og\fP.
 .RE
-.SS "Summary Options"
+.SS "Kmer Options"
 .sp
-\fB\-d, \-\-display\fP
+\fB\-k, \-\-kmer\-length\fP=\fIN\fP
 .RS 4
-Show the internal structures of a graph. Print to stdout the maximum node identifier, the minimum node identifier,
-the nodes vector, the delete nodes bit vector and the path metadata, each in a separate line.
+The length of the kmers to consider.
+.RE
+.sp
+\fB\-e, \-\-max\-furcations\fP=\fIN\fP
+.RS 4
+Break at edges that would induce \fIN\fP many furcations in a kmer.
+.RE
+.SS "Node Options"
+.sp
+\fB\-d, \-\-max\-degree\fP=\fIN\fP
+.RS 4
+Remove nodes that have a higher node degree than \fIN\fP.
+.RE
+.sp
+\fB\-c, \-\-min\-coverage\fP=\fIN\fP
+.RS 4
+Remove nodese covered by fewer than \fIN\fP number of path steps.
+.RE
+.sp
+\fB\-C, \-\-max\-coverage\fP=\fIN\fP
+.RS 4
+Remove nodes covered by more than \fIN\fP number of path steps.
+.RE
+.sp
+\fB\-T, \-\-cut\-tips\fP=\fIN\fP
+.RS 4
+Remove nodes which are graph tips.
+.RE
+.SS "Edge Options"
+.sp
+\fB\-E, \-\-edge\-coverage\fP
+.RS 4
+Remove edges outside of the minimum and maximum coverage rather than nodes. Only set this argument in combination with
+[\fB\-c, \-\-min\-coverage\fP=\fIN\fP] and [\fB\-C, \-\-max\-coverage\fP=\fIN\fP].
+.RE
+.sp
+\fB\-b, \-\-best\-edges\fP=\fIN\fP
+.RS 4
+Only keep the \fIN\fP most covered inbound and output edges of each node.
+.RE
+.SS "Path Options"
+.sp
+\fB\-D, \-\-drop\-paths\fP
+.RS 4
+Remove the paths from the graph.
+.RE
+.SS "Threading"
+.sp
+\fB\-t, \-\-threads\fP=\fIN\fP
+.RS 4
+Number of threads to use.
 .RE
 .SS "Program Information"
 .sp
 \fB\-h, \-\-help\fP
 .RS 4
-Print a help message for \fBodgi view\fP.
+Print a help message for \fBodgi prune\fP.
 .RE
 .SH "EXIT STATUS"
 .sp
@@ -77,7 +128,7 @@ Refer to the \fBodgi\fP issue tracker at \c
 .URL "https://github.com/vgteam/odgi/issues" "" "."
 .SH "AUTHORS"
 .sp
-\fBodgi view\fP was written by Erik Garrison.
+\fBodgi prune\fP was written by Erik Garrison.
 == RESOURCES
 .sp
 \fBProject web site:\fP \c

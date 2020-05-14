@@ -53,6 +53,18 @@ int main_prune(int argc, char** argv) {
 
     assert(argc > 0);
 
+    if (!dg_in_file) {
+        std::cerr << "[odgi prune] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
+        return 1;
+    }
+
+    if (!dg_out_file) {
+        std::cerr
+                << "[odgi prune] error: Please specify an output file to where to store the pruned graph via -o=[FILE], --out=[FILE]."
+                << std::endl;
+        return 1;
+    }
+
     graph_t graph;
     std::string infile = args::get(dg_in_file);
     if (infile.size()) {

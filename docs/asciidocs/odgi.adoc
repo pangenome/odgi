@@ -28,13 +28,28 @@ odgi - dynamic succinct variation graph tool
 
 *odgi* <<odgi_viz.adoc#_odgi_viz1, viz>> -i graph.og -o graph.og.png -x 1920 -y 1080 -R -t 28
 
+*odgi* <<odgi_paths.adoc#_odgi_paths1, paths>> -i graph.og -f
+
+*odgi* <<odgi_prune.adoc#_odgi_prune1, prune>> -i graph.og -o graph.pruned.og -c 3 -C 345 -T
+
+*odgi* <<odgi_unchop.adoc#_odgi_unchop1, unchop>> -i graph.og -o graph.unchopped.og
+
+*odgi* <<odgi_normalize.adoc#_odgi_normalize1, normalize>> -i graph.og -o graph.normalized.og -I 100 -d
+
+*odgi* <<odgi_subset.adoc#_odgi_subset1, subset>> -i graph.og -o graph.subsetted.og -n 1 -t 28
+
 == DESCRIPTION
 
-Odgi is a set of of tools that manipulate variation graphs. TODO Explain data structure. TODO Link to vg paper. TODO Link to handle graph paper. TODO Explain purpose. TODO Give summary of the capabilities of the set of tools.
+*odgi*, the *Optimized Dynamic (genome) Graph Interface*, links
+a thrifty dynamic in-memory variation graph data model to a set of algorithms designed for scalable sorting, pruning,
+transformation, and visualization of very large genome graphs. *odgi* includes https://pangenome.github.io/odgi/odgipy.html[python bindings]
+that can be used to
+https://odgi.readthedocs.io/en/latest/rst/tutorial.html[directly
+interface with its data model]. This *odgi* manual provides detailed information about its features and subcommands, including examples.
 
 == COMMANDS
 
-Each command has its own man page which can be viewed using e.g. *man odgi_build.1*. Below we have a brief summary of syntax and sub-command description. 
+Each command has its own man page which can be viewed using e.g. *man odgi_build.1*. Below we have a brief summary of syntax and subcommand description.
 
 *odgi build* [*-g, --gfa*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]... +
 The odgi build(1) command constructs a succinct variation graph from a GFA. Currently, only GFA1 is supported. For details of the format please see https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md.
@@ -77,6 +92,25 @@ and directly renders a raster image. The binning level depends on the target wid
 about the binning process, please refer to <<odgi_bin.adoc#_odgi_bin1, odgi bin>>. If reverse coloring was selected, only
 the bins with a reverse rate of at least 0.5 are colored. Currently, there is no parameter to color according to the
 sequence coverage in bins available.
+
+*odgi paths* [*-i, --idx*=_FILE_] [_OPTION_]... +
+The odgi paths(1) command allows the investigation of paths of a given variation graph. It can calculate overlap statistics
+of groupings of paths.
+
+*odgi prune* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]... +
+The odgi prune(1) command can remove complex parts of a graph. One can drop paths, nodes by a certain kind of edge coverage,
+edges and graph tips. Specifying a kmer length and a maximum number of furcations, the graph can be broken at edges not
+fitting into these conditions.
+
+*odgi unchop* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]... +
+The odgi unchop(1) command merges each unitig into a single node.
+
+*odgi normalize* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]... +
+The odgi normalize(1) command <<odgi_unchop.adoc#_odgi_unchop1, unchops>> a given variation graph and simplifies redundant furcations.
+
+*odgi subset* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]... +
+Extracting a node subset of a variation graph is the task of the odgi subset(1) command. Users can specify a node, a list of nodes
+or a the context of which to generate a subset from.
 
 == BUGS
 

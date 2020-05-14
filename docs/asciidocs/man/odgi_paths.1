@@ -1,13 +1,13 @@
 '\" t
-.\"     Title: odgi view
+.\"     Title: odgi paths
 .\"    Author: Erik Garrison
 .\" Generator: Asciidoctor 2.0.10
 .\"      Date: 2020-05-14
-.\"    Manual: odgi view
+.\"    Manual: odgi paths
 .\"    Source: odgi 0.4.1
 .\"  Language: English
 .\"
-.TH "ODGI_VIEW" "1" "2020-05-14" "odgi 0.4.1" "odgi view"
+.TH "ODGI_PATHS" "1" "2020-05-14" "odgi 0.4.1" "odgi paths"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -28,37 +28,62 @@
 .  LINKSTYLE blue R < >
 .\}
 .SH "NAME"
-odgi_view \- projection of graphs into other formats
+odgi_paths \- embedded path interrogation
 .SH "SYNOPSIS"
 .sp
-\fBodgi view\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fIOPTION\fP]...
+\fBodgi paths\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fIOPTION\fP]...
 .SH "DESCRIPTION"
 .sp
-The odgi view(1) command can convert a graph in odgi format to GFAv1. It can reveal a graph\(cqs internal structures for e.g. debugging processes.
+The odgi paths(1) command allows the investigation of paths of a given variation graph. It can calculate overlap statistics
+of groupings of paths.
 .SH "OPTIONS"
 .SS "Graph Files IO"
 .sp
 \fB\-i, \-\-idx\fP=\fIFILE\fP
 .RS 4
-File containing the succinct variation graph to convert from. The file name usually ends with \fI.og\fP.
+File containing the succinct variation graph to investigate the paths from. The file name usually ends with \fI.og\fP.
 .RE
 .sp
-\fB\-g, \-\-to\-gfa\fP
+\fB\-O, \-\-overlaps\fP=\fIFILE\fP
 .RS 4
-Write the graph in GFAv1 format to standard output.
+Read in the path grouping file to generate the overlap statistics from. The file must be tab\-delimited. The first column
+lists a grouping and the second the path itself. Each line has one path entry. For each group the pairwise overlap statistics
+for each pairing will be calculated and printed to stdout.
 .RE
-.SS "Summary Options"
+.SS "Investigation Options"
 .sp
-\fB\-d, \-\-display\fP
+\fB\-L, \-\-list\-paths\fP
 .RS 4
-Show the internal structures of a graph. Print to stdout the maximum node identifier, the minimum node identifier,
-the nodes vector, the delete nodes bit vector and the path metadata, each in a separate line.
+Print the paths in the graph to stdout. Each path is printed in its own line.
+.RE
+.sp
+\fB\-H, \-\-haplotypes\fP
+.RS 4
+Print to stdout the paths in an approximate binary haplotype matrix based on the graph\(cqs sort order. The output is tab\-delimited:
+\fBpath.name\fP, \fBpath.length\fP, \fBnode.count\fP, \fBnode.1\fP, \fBnode.2\fP, \fBnode.n\fP. Each path entry is printed in its own line.
+.RE
+.sp
+\fB\-D, \-\-delim\fP=\fICHAR\fP
+.RS 4
+The part of each path name before this delimiter is a group identifier. This parameter should only be set in combination
+with [\fB\-H, \-\-haplotypes\fP]. Prints an additional, first column \fBgroup.name\fP to stdout.
+.RE
+.sp
+\fB\-f, \-\-fasta\fP
+.RS 4
+Print paths in FASTA format to stdout.
+.RE
+.SS "Threading"
+.sp
+\fB\-t, \-\-threads\fP=\fIN\fP
+.RS 4
+Number of threads to use.
 .RE
 .SS "Program Information"
 .sp
 \fB\-h, \-\-help\fP
 .RS 4
-Print a help message for \fBodgi view\fP.
+Print a help message for \fBodgi paths\fP.
 .RE
 .SH "EXIT STATUS"
 .sp
@@ -77,7 +102,7 @@ Refer to the \fBodgi\fP issue tracker at \c
 .URL "https://github.com/vgteam/odgi/issues" "" "."
 .SH "AUTHORS"
 .sp
-\fBodgi view\fP was written by Erik Garrison.
+\fBodgi paths\fP was written by Erik Garrison.
 == RESOURCES
 .sp
 \fBProject web site:\fP \c
