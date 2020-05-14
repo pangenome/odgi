@@ -1207,6 +1207,12 @@ with [<emphasis role="strong">-H, --haplotypes</emphasis>]. Prints an additional
 </listitem>
 </varlistentry>
 <varlistentry>
+<term><emphasis role="strong">-d, --distance</emphasis></term>
+<listitem>
+<simpara>Provides a sparse distance matrix for paths. If [<emphasis role="strong">-D, --delim</emphasis>] is set, it will be path groups distances.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
 <term><emphasis role="strong">-f, --fasta</emphasis></term>
 <listitem>
 <simpara>Print paths in FASTA format to stdout.</simpara>

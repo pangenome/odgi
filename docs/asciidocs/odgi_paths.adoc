@@ -46,6 +46,9 @@ of groupings of paths.
   The part of each path name before this delimiter is a group identifier. This parameter should only be set in combination
   with [*-H, --haplotypes*]. Prints an additional, first column *group.name* to stdout.
 
+*-d, --distance*::
+  Provides a sparse distance matrix for paths. If [*-D, --delim*] is set, it will be path groups distances.
+
 *-f, --fasta*::
   Print paths in FASTA format to stdout.
 
