@@ -23,5 +23,7 @@ asciidoctor -b manpage odgi_prune.adoc
 asciidoctor -b manpage odgi_unchop.adoc
 asciidoctor -b manpage odgi_normalize.adoc
 asciidoctor -b manpage odgi_subset.adoc
+asciidoctor -b manpage odgi_bin.adoc
+asciidoctor -b manpage odgi_matrix.adoc
 
 mv *.1 man/

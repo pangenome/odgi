@@ -54,6 +54,10 @@ odgi \- dynamic succinct variation graph tool
 \fBodgi\fP normalize \-i graph.og \-o graph.normalized.og \-I 100 \-d
 .sp
 \fBodgi\fP subset \-i graph.og \-o graph.subsetted.og \-n 1 \-t 28
+.sp
+\fBodgi\fP bin \-i graph.og \-j \-w 100 \-s \-g
+.sp
+\fBodgi\fP matrix \-i graph.og \-e \-d
 .SH "DESCRIPTION"
 .sp
 \fBodgi\fP, the \fBOptimized Dynamic (genome) Graph Interface\fP, links
@@ -200,6 +204,28 @@ The odgi normalize(1) command unchops a given variation graph and simplifies red
 .br
 Extracting a node subset of a variation graph is the task of the odgi subset(1) command. Users can specify a node, a list of nodes
 or a the context of which to generate a subset from.
+.sp
+\fBodgi matrix\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fIOPTION\fP]...
+.br
+The odgi matrix(1) command generates a sparse matrix format out of the graph topology of a given variation graph.
+.SH "SYNOPSIS"
+.sp
+\fBodgi bin\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fIOPTION\fP]...
+.br
+The odgi bin(1) command bins a given variation graph. The pangenome sequence, the one\-time traversal of all nodes from smallest to
+largest node identifier, can be summed up into bins of a specified size. For each bin, the path metainformation is summarized.
+This enables a summarized view of gigabase scale graphs. Each step of a path is a bin and connected to its next bin via a link.
+A link has a start bin identifier and an end bin identifier.
+.br
+The concept of odgi bin is also applied in odgi viz.
+A demonstration of how the odgi bin JSON output can be used for an interactive visualization is realized in the \c
+.URL "https://graph\-genome.github.io/" "Pantograph"
+project. Per default, odgi bin writes the bins to stdout in a tab\-delimited format: \fBpath.name\fP, \fBpath.prefix\fP, \fBpath.suffix\fP,
+\fBbin\fP (bin identifier), \fBmean.cov\fP (mean coverage of the path in this bin), \fBmean.inv\fP (mean inversion rate of this path in this bin),
+\fBmean.pos\fP (mean nucleotide position of this path in this bin), \fBfirst.nucl\fP (first nucleotide position of this path in this bin),
+\fBlast.nucl\fP (last nucleotide position of this path in this bin). These nucleotide ranges might span positions that are not present in the bin. Example:
+A range of 1\-100 means that the first nucleotide has position 1 and the last has position 100, but nucleotide 45 could be located in
+another bin. For an exact positional output, please specify [\fB\-j, \-\-json\fP].
 .SH "BUGS"
 .sp
 Refer to the \fBodgi\fP issue tracker at \c

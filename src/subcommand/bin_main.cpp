@@ -20,7 +20,6 @@ int main_bin(int argc, char** argv) {
 
     args::ArgumentParser parser("binning of path information in the graph");
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-    args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store the graph in this file", {'o', "out"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> fa_out_file(parser, "FILE", "store the pangenome sequence in FASTA format in this file", {'f', "fasta"});
     args::ValueFlag<std::string> path_delim(parser, "path-delim", "annotate rows by prefix and suffix of this delimiter", {'D', "path-delim"});
@@ -42,6 +41,11 @@ int main_bin(int argc, char** argv) {
     }
     if (argc==1) {
         std::cout << parser;
+        return 1;
+    }
+
+    if (!dg_in_file) {
+        std::cerr << "[odgi bin] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
         return 1;
     }
 

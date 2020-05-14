@@ -32,6 +32,8 @@
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_unchop1">unchop</link> -i graph.og -o graph.unchopped.og</simpara>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_normalize1">normalize</link> -i graph.og -o graph.normalized.og -I 100 -d</simpara>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_subset1">subset</link> -i graph.og -o graph.subsetted.og -n 1 -t 28</simpara>
+<simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_bin1">bin</link> -i graph.og -j -w 100 -s -g</simpara>
+<simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_matrix1">matrix</link> -i graph.og -e -d</simpara>
 </section>
 <section xml:id="_description">
 <title>DESCRIPTION</title>
@@ -87,7 +89,7 @@ in a fixed sequence quality FASTQ format. Various parameters can refine the unit
 <simpara><emphasis role="strong">odgi viz</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;<?asciidoc-br?>
 The odgi viz(1) command can produce a linear, static visualization of an odgi variation graph. It aggregates the pangenome into bins
 and directly renders a raster image. The binning level depends on the target width of the PNG to emit. Can be used to produce visualizations for gigabase scale pangenomes. For more information
-about the binning process, please refer to <link xl:href="odgi_bin.xml#_odgi_bin1">odgi bin</link>. If reverse coloring was selected, only
+about the binning process, please refer to <link linkend="_odgi_bin1">odgi bin</link>. If reverse coloring was selected, only
 the bins with a reverse rate of at least 0.5 are colored. Currently, there is no parameter to color according to the
 sequence coverage in bins available.</simpara>
 <simpara><emphasis role="strong">odgi paths</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;<?asciidoc-br?>
@@ -104,6 +106,24 @@ The odgi normalize(1) command <link linkend="_odgi_unchop1">unchops</link> a giv
 <simpara><emphasis role="strong">odgi subset</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;<?asciidoc-br?>
 Extracting a node subset of a variation graph is the task of the odgi subset(1) command. Users can specify a node, a list of nodes
 or a the context of which to generate a subset from.</simpara>
+<simpara><emphasis role="strong">odgi matrix</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;<?asciidoc-br?>
+The odgi matrix(1) command generates a sparse matrix format out of the graph topology of a given variation graph.</simpara>
+</section>
+<section xml:id="_synopsis_2">
+<title>SYNOPSIS</title>
+<simpara><emphasis role="strong">odgi bin</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;<?asciidoc-br?>
+The odgi bin(1) command bins a given variation graph. The pangenome sequence, the one-time traversal of all nodes from smallest to
+largest node identifier, can be summed up into bins of a specified size. For each bin, the path metainformation is summarized.
+This enables a summarized view of gigabase scale graphs. Each step of a path is a bin and connected to its next bin via a link.
+A link has a start bin identifier and an end bin identifier.<?asciidoc-br?>
+The concept of odgi bin is also applied in odgi <link linkend="_odgi_viz1">viz</link>.
+A demonstration of how the odgi bin JSON output can be used for an interactive visualization is realized in the <link xl:href="https://graph-genome.github.io/">Pantograph</link>
+project. Per default, odgi bin writes the bins to stdout in a tab-delimited format: <emphasis role="strong">path.name</emphasis>, <emphasis role="strong">path.prefix</emphasis>, <emphasis role="strong">path.suffix</emphasis>,
+<emphasis role="strong">bin</emphasis> (bin identifier), <emphasis role="strong">mean.cov</emphasis> (mean coverage of the path in this bin), <emphasis role="strong">mean.inv</emphasis> (mean inversion rate of this path in this bin),
+<emphasis role="strong">mean.pos</emphasis> (mean nucleotide position of this path in this bin), <emphasis role="strong">first.nucl</emphasis> (first nucleotide position of this path in this bin),
+<emphasis role="strong">last.nucl</emphasis> (last nucleotide position of this path in this bin). These nucleotide ranges might span positions that are not present in the bin. Example:
+A range of 1-100 means that the first nucleotide has position 1 and the last has position 100, but nucleotide 45 could be located in
+another bin. For an exact positional output, please specify [<emphasis role="strong">-j, --json</emphasis>].</simpara>
 </section>
 <section xml:id="_bugs">
 <title>BUGS</title>
@@ -146,7 +166,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</simp
 <title>NAME</title>
 <simpara>odgi_build - construct a dynamic succinct variation graph</simpara>
 </section>
-<section xml:id="_synopsis_2">
+<section xml:id="_synopsis_3">
 <title>SYNOPSIS</title>
 <simpara><emphasis role="strong">odgi build</emphasis> [<emphasis role="strong">-g, --gfa</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
 </section>
@@ -269,7 +289,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</simp
 <title>NAME</title>
 <simpara>odgi_stats - metrics describing variation graphs</simpara>
 </section>
-<section xml:id="_synopsis_3">
+<section xml:id="_synopsis_4">
 <title>SYNOPSIS</title>
 <simpara><emphasis role="strong">odgi stats</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
 </section>
@@ -391,7 +411,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</simp
 <title>NAME</title>
 <simpara>odgi_sort - sort a variation graph</simpara>
 </section>
-<section xml:id="_synopsis_4">
+<section xml:id="_synopsis_5">
 <title>SYNOPSIS</title>
 <simpara><emphasis role="strong">odgi sort</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
 </section>
@@ -724,7 +744,7 @@ pipeline of sorts within one parameter.</simpara>
 <title>NAME</title>
 <simpara>odgi_view - projection of graphs into other formats</simpara>
 </section>
-<section xml:id="_synopsis_5">
+<section xml:id="_synopsis_6">
 <title>SYNOPSIS</title>
 <simpara><emphasis role="strong">odgi view</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
 </section>
@@ -807,7 +827,7 @@ the nodes vector, the delete nodes bit vector and the path metadata, each in a s
 <title>NAME</title>
 <simpara>odgi_kmers - show and characterize the kmer space of the graph</simpara>
 </section>
-<section xml:id="_synopsis_6">
+<section xml:id="_synopsis_7">
 <title>SYNOPSIS</title>
 <simpara><emphasis role="strong">odgi kmers</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-c, --stdout</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
 </section>
@@ -913,7 +933,7 @@ of furcations at edges or by not considering nodes above a given node degree lim
 <title>NAME</title>
 <simpara>odgi_unitig - output unitigs of the graph</simpara>
 </section>
-<section xml:id="_synopsis_7">
+<section xml:id="_synopsis_8">
 <title>SYNOPSIS</title>
 <simpara><emphasis role="strong">odgi unitig</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
 </section>
@@ -1013,7 +1033,7 @@ in a fixed sequence quality FASTQ format. Various parameters can refine the unit
 <title>NAME</title>
 <simpara>odgi_viz - variation graph visualizations</simpara>
 </section>
-<section xml:id="_synopsis_8">
+<section xml:id="_synopsis_9">
 <title>SYNOPSIS</title>
 <simpara><emphasis role="strong">odgi viz</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
 </section>
@@ -1021,7 +1041,7 @@ in a fixed sequence quality FASTQ format. Various parameters can refine the unit
 <title>DESCRIPTION</title>
 <simpara>The odgi viz(1) command can produce a linear, static visualization of an odgi variation graph. It aggregates the pangenome into bins
 and directly renders a raster image. The binning level depends on the target width of the PNG to emit. Can be used to produce visualizations for gigabase scale pangenomes. For more information
-about the binning process, please refer to <link xl:href="odgi_bin.xml#_odgi_bin1">odgi bin</link>. If reverse coloring was selected, only
+about the binning process, please refer to <link linkend="_odgi_bin1">odgi bin</link>. If reverse coloring was selected, only
 the bins with a reverse rate of at least 0.5 are colored. Currently, there is no parameter to color according to the
 sequence coverage in bins available.</simpara>
 </section>
@@ -1153,7 +1173,7 @@ sequence coverage in bins available.</simpara>
 <title>NAME</title>
 <simpara>odgi_paths - embedded path interrogation</simpara>
 </section>
-<section xml:id="_synopsis_9">
+<section xml:id="_synopsis_10">
 <title>SYNOPSIS</title>
 <simpara><emphasis role="strong">odgi paths</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
 </section>
@@ -1275,7 +1295,7 @@ with [<emphasis role="strong">-H, --haplotypes</emphasis>]. Prints an additional
 <title>NAME</title>
 <simpara>odgi_prune - remove complex parts of the graph</simpara>
 </section>
-<section xml:id="_synopsis_10">
+<section xml:id="_synopsis_11">
 <title>SYNOPSIS</title>
 <simpara><emphasis role="strong">odgi prune</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
 </section>
@@ -1434,7 +1454,7 @@ fitting into these conditions.</simpara>
 <title>NAME</title>
 <simpara>odgi_unchop - merge unitigs into single nodes</simpara>
 </section>
-<section xml:id="_synopsis_11">
+<section xml:id="_synopsis_12">
 <title>SYNOPSIS</title>
 <simpara><emphasis role="strong">odgi unchop</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
 </section>
@@ -1505,7 +1525,7 @@ fitting into these conditions.</simpara>
 <title>NAME</title>
 <simpara>odgi_normalize - compact unitigs and simplify redundant furcations</simpara>
 </section>
-<section xml:id="_synopsis_12">
+<section xml:id="_synopsis_13">
 <title>SYNOPSIS</title>
 <simpara><emphasis role="strong">odgi normalize</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
 </section>
@@ -1593,7 +1613,7 @@ fitting into these conditions.</simpara>
 <title>NAME</title>
 <simpara>odgi_subset - extract subsets of the graph as defined by query criteria</simpara>
 </section>
-<section xml:id="_synopsis_13">
+<section xml:id="_synopsis_14">
 <title>SYNOPSIS</title>
 <simpara><emphasis role="strong">odgi subset</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
 </section>
@@ -1691,6 +1711,228 @@ or a context of which to generate a subset from.</simpara>
 <section xml:id="_authors_13">
 <title>AUTHORS</title>
 <simpara><emphasis role="strong">odgi subset</emphasis> was written by Erik Garrison.</simpara>
+</section>
+</section>
+<section xml:id="_odgi_bin1">
+<title>odgi bin(1)</title>
+<section xml:id="_name_14">
+<title>NAME</title>
+<simpara>odgi_bin - binning of pangenome sequence and path information in the graph</simpara>
+</section>
+<section xml:id="_synopsis_15">
+<title>SYNOPSIS</title>
+<simpara><emphasis role="strong">odgi bin</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
+</section>
+<section xml:id="_description_14">
+<title>DESCRIPTION</title>
+<simpara>The odgi bin(1) command bins a given variation graph. The pangenome sequence, the one-time traversal of all nodes from smallest to
+largest node identifier, can be summed up into bins of a specified size. For each bin, the path metainformation is summarized.
+This enables a summarized view of gigabase scale graphs. Each step of a path is a bin and connected to its next bin via a link.
+A link has a start bin identifier and an end bin identifier.<?asciidoc-br?>
+The concept of odgi bin is also applied in odgi <link linkend="_odgi_viz1">viz</link>.
+A demonstration of how the odgi bin JSON output can be used for an interactive visualization is realized in the <link xl:href="https://graph-genome.github.io/">Pantograph</link>
+project. Per default, odgi bin writes the bins to stdout in a tab-delimited format: <emphasis role="strong">path.name</emphasis>, <emphasis role="strong">path.prefix</emphasis>, <emphasis role="strong">path.suffix</emphasis>,
+<emphasis role="strong">bin</emphasis> (bin identifier), <emphasis role="strong">mean.cov</emphasis> (mean coverage of the path in this bin), <emphasis role="strong">mean.inv</emphasis> (mean inversion rate of this path in this bin),
+<emphasis role="strong">mean.pos</emphasis> (mean nucleotide position of this path in this bin), <emphasis role="strong">first.nucl</emphasis> (first nucleotide position of this path in this bin),
+<emphasis role="strong">last.nucl</emphasis> (last nucleotide position of this path in this bin). These nucleotide ranges might span positions that are not present in the bin. Example:
+A range of 1-100 means that the first nucleotide has position 1 and the last has position 100, but nucleotide 45 could be located in
+another bin. For an exact positional output, please specify [<emphasis role="strong">-j, --json</emphasis>].</simpara>
+</section>
+<section xml:id="_options_13">
+<title>OPTIONS</title>
+<section xml:id="_graph_files_io_13">
+<title>Graph Files IO</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>File containing the succinct variation graph to investigate the bin from. The file name usually ends with <emphasis>.og</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_fasta_options">
+<title>FASTA Options</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-f, --fasta</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>Write the pangenome sequence to <emphasis>FILE</emphasis> in FASTA format.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_bin_options">
+<title>Bin Options</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-n, --number-bins</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>The number of bins the pangenome sequence should be chopped up to.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-w, --bin-width</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>The bin width specifies the size of each bin.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-D, --path-delim</emphasis>=<emphasis>STRING</emphasis></term>
+<listitem>
+<simpara>Annotate rows by prefix and suffix of this delimiter.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-a, --aggregate-delim</emphasis></term>
+<listitem>
+<simpara>Aggregate on path prefix delimiter. Argument depends on [<emphasis role="strong">-D, --path-delim</emphasis>=<emphasis>STRING</emphasis>].</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-j, --json</emphasis></term>
+<listitem>
+<simpara>Print bins and links to stdout in pseudo JSON format. Each line is a valid JSON object, but the whole file is not a valid JSON!
+First, each bin including its pangenome sequence is printed to stdout per line. Second, for each path in the graph, its
+traversed bins including metainformation: <emphasis role="strong">bin</emphasis> (bin identifier), <emphasis role="strong">mean.cov</emphasis> (mean coverage of the path in this bin), <emphasis role="strong">mean.inv</emphasis> (mean inversion rate of this path in this bin),
+<emphasis role="strong">mean.pos</emphasis> (mean nucleotide position of this path in this bin), and an array of ranges determining the nucleotide position
+of the path in this bin. Switching first and last nucleotide in a range represents a complement reverse
+orientation of that particular sequence.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-s, --no-seqs</emphasis></term>
+<listitem>
+<simpara>If [<emphasis role="strong">-j, --json</emphasis>] is set, no nucleotide sequences will be printed to stdout in order to save disk space.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-g, --no-gap-links</emphasis></term>
+<listitem>
+<simpara>Links connecting a path from left to right may not be relevant to understand a path&#8217;s traversal through the bins. They
+can be left out saving disk space.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_program_information_13">
+<title>Program Information</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-h, --help</emphasis></term>
+<listitem>
+<simpara>Print a help message for <emphasis role="strong">odgi bin</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+</section>
+<section xml:id="_exit_status_13">
+<title>EXIT STATUS</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">0</emphasis></term>
+<listitem>
+<simpara>Success.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">1</emphasis></term>
+<listitem>
+<simpara>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_bugs_14">
+<title>BUGS</title>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+</section>
+<section xml:id="_authors_14">
+<title>AUTHORS</title>
+<simpara><emphasis role="strong">odgi bin</emphasis> was written by Erik Garrison.</simpara>
+</section>
+</section>
+<section xml:id="_odgi_matrix1">
+<title>odgi matrix(1)</title>
+<section xml:id="_name_15">
+<title>NAME</title>
+<simpara>odgi_matrix - write the graph topology in sparse matrix formats</simpara>
+</section>
+<section xml:id="_synopsis_16">
+<title>SYNOPSIS</title>
+<simpara><emphasis role="strong">odgi matrix</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
+</section>
+<section xml:id="_description_15">
+<title>DESCRIPTION</title>
+<simpara>The odgi matrix(1) command generates a sparse matrix format out of the graph topology of a given variation graph.</simpara>
+</section>
+<section xml:id="_options_14">
+<title>OPTIONS</title>
+<section xml:id="_graph_files_io_14">
+<title>Graph Files IO</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>File containing the succinct variation graph to create the sparse matrix from. The file name usually ends with <emphasis>.og</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_matrix_options">
+<title>Matrix Options</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-e, --edge-depth-weight</emphasis></term>
+<listitem>
+<simpara>Weigh edges by their path depth.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-d, --delta-weight</emphasis></term>
+<listitem>
+<simpara>Weigh edges by their inverse id delta.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_program_information_14">
+<title>Program Information</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-h, --help</emphasis></term>
+<listitem>
+<simpara>Print a help message for <emphasis role="strong">odgi matrix</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+</section>
+<section xml:id="_exit_status_14">
+<title>EXIT STATUS</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">0</emphasis></term>
+<listitem>
+<simpara>Success.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">1</emphasis></term>
+<listitem>
+<simpara>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_bugs_15">
+<title>BUGS</title>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+</section>
+<section xml:id="_authors_15">
+<title>AUTHORS</title>
+<simpara><emphasis role="strong">odgi matrix</emphasis> was written by Erik Garrison.</simpara>
 </section>
 </section>
 </article>

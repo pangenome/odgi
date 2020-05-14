@@ -459,6 +459,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_odgi_unchop1">11. odgi unchop(1)</a></li>
 <li><a href="#_odgi_normalize1">12. odgi normalize(1)</a></li>
 <li><a href="#_odgi_subset1">13. odgi subset(1)</a></li>
+<li><a href="#_odgi_bin1">14. odgi bin(1)</a></li>
+<li><a href="#_odgi_matrix1">15. odgi matrix(1)</a></li>
 </ul>
 </div>
 </div>
@@ -509,6 +511,12 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="paragraph">
 <p><strong>odgi</strong> <a href="#_odgi_subset1">subset</a> -i graph.og -o graph.subsetted.og -n 1 -t 28</p>
+</div>
+<div class="paragraph">
+<p><strong>odgi</strong> <a href="#_odgi_bin1">bin</a> -i graph.og -j -w 100 -s -g</p>
+</div>
+<div class="paragraph">
+<p><strong>odgi</strong> <a href="#_odgi_matrix1">matrix</a> -i graph.og -e -d</p>
 </div>
 </div>
 <div class="sect2">
@@ -586,7 +594,7 @@ in a fixed sequence quality FASTQ format. Various parameters can refine the unit
 <p><strong>odgi viz</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;<br>
 The odgi viz(1) command can produce a linear, static visualization of an odgi variation graph. It aggregates the pangenome into bins
 and directly renders a raster image. The binning level depends on the target width of the PNG to emit. Can be used to produce visualizations for gigabase scale pangenomes. For more information
-about the binning process, please refer to <a href="odgi_bin.html#_odgi_bin1">odgi bin</a>. If reverse coloring was selected, only
+about the binning process, please refer to <a href="#_odgi_bin1">odgi bin</a>. If reverse coloring was selected, only
 the bins with a reverse rate of at least 0.5 are colored. Currently, there is no parameter to color according to the
 sequence coverage in bins available.</p>
 </div>
@@ -614,21 +622,43 @@ The odgi normalize(1) command <a href="#_odgi_unchop1">unchops</a> a given varia
 Extracting a node subset of a variation graph is the task of the odgi subset(1) command. Users can specify a node, a list of nodes
 or a the context of which to generate a subset from.</p>
 </div>
+<div class="paragraph">
+<p><strong>odgi matrix</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;<br>
+The odgi matrix(1) command generates a sparse matrix format out of the graph topology of a given variation graph.</p>
+</div>
 </div>
 <div class="sect2">
-<h3 id="_bugs">1.5. BUGS</h3>
+<h3 id="_synopsis_2">1.5. SYNOPSIS</h3>
+<div class="paragraph">
+<p><strong>odgi bin</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;<br>
+The odgi bin(1) command bins a given variation graph. The pangenome sequence, the one-time traversal of all nodes from smallest to
+largest node identifier, can be summed up into bins of a specified size. For each bin, the path metainformation is summarized.
+This enables a summarized view of gigabase scale graphs. Each step of a path is a bin and connected to its next bin via a link.
+A link has a start bin identifier and an end bin identifier.<br>
+The concept of odgi bin is also applied in odgi <a href="#_odgi_viz1">viz</a>.
+A demonstration of how the odgi bin JSON output can be used for an interactive visualization is realized in the <a href="https://graph-genome.github.io/">Pantograph</a>
+project. Per default, odgi bin writes the bins to stdout in a tab-delimited format: <strong>path.name</strong>, <strong>path.prefix</strong>, <strong>path.suffix</strong>,
+<strong>bin</strong> (bin identifier), <strong>mean.cov</strong> (mean coverage of the path in this bin), <strong>mean.inv</strong> (mean inversion rate of this path in this bin),
+<strong>mean.pos</strong> (mean nucleotide position of this path in this bin), <strong>first.nucl</strong> (first nucleotide position of this path in this bin),
+<strong>last.nucl</strong> (last nucleotide position of this path in this bin). These nucleotide ranges might span positions that are not present in the bin. Example:
+A range of 1-100 means that the first nucleotide has position 1 and the last has position 100, but nucleotide 45 could be located in
+another bin. For an exact positional output, please specify [<strong>-j, --json</strong>].</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_bugs">1.6. BUGS</h3>
 <div class="paragraph">
 <p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_authors">1.6. AUTHORS</h3>
+<h3 id="_authors">1.7. AUTHORS</h3>
 <div class="paragraph">
 <p>Erik Garrison from the University of California Santa Cruz wrote the whole <strong>odgi</strong> tool. Despite small code contributions, Simon Heumos from the Quantitative Biology Center Tübingen wrote <strong>odgi pathindex</strong>, <strong>odgi panpos</strong>, <strong>odgi server</strong>, and the documentation.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_resources">1.7. RESOURCES</h3>
+<h3 id="_resources">1.8. RESOURCES</h3>
 <div class="paragraph">
 <p><strong>Project web site:</strong> <a href="https://github.com/vgteam/odgi" class="bare">https://github.com/vgteam/odgi</a></p>
 </div>
@@ -643,7 +673,7 @@ or a the context of which to generate a subset from.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_copying">1.8. COPYING</h3>
+<h3 id="_copying">1.9. COPYING</h3>
 <div class="paragraph">
 <p>The MIT License (MIT)</p>
 </div>
@@ -683,7 +713,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_synopsis_2">2.2. SYNOPSIS</h3>
+<h3 id="_synopsis_3">2.2. SYNOPSIS</h3>
 <div class="paragraph">
 <p><strong>odgi build</strong> [<strong>-g, --gfa</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
@@ -804,7 +834,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_synopsis_3">3.2. SYNOPSIS</h3>
+<h3 id="_synopsis_4">3.2. SYNOPSIS</h3>
 <div class="paragraph">
 <p><strong>odgi stats</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
@@ -928,7 +958,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_synopsis_4">4.2. SYNOPSIS</h3>
+<h3 id="_synopsis_5">4.2. SYNOPSIS</h3>
 <div class="paragraph">
 <p><strong>odgi sort</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
@@ -1231,7 +1261,7 @@ pipeline of sorts within one parameter.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_synopsis_5">5.2. SYNOPSIS</h3>
+<h3 id="_synopsis_6">5.2. SYNOPSIS</h3>
 <div class="paragraph">
 <p><strong>odgi view</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
@@ -1322,7 +1352,7 @@ the nodes vector, the delete nodes bit vector and the path metadata, each in a s
 </div>
 </div>
 <div class="sect2">
-<h3 id="_synopsis_6">6.2. SYNOPSIS</h3>
+<h3 id="_synopsis_7">6.2. SYNOPSIS</h3>
 <div class="paragraph">
 <p><strong>odgi kmers</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-c, --stdout</strong>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
@@ -1432,7 +1462,7 @@ of furcations at edges or by not considering nodes above a given node degree lim
 </div>
 </div>
 <div class="sect2">
-<h3 id="_synopsis_7">7.2. SYNOPSIS</h3>
+<h3 id="_synopsis_8">7.2. SYNOPSIS</h3>
 <div class="paragraph">
 <p><strong>odgi unitig</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
@@ -1538,7 +1568,7 @@ in a fixed sequence quality FASTQ format. Various parameters can refine the unit
 </div>
 </div>
 <div class="sect2">
-<h3 id="_synopsis_8">8.2. SYNOPSIS</h3>
+<h3 id="_synopsis_9">8.2. SYNOPSIS</h3>
 <div class="paragraph">
 <p><strong>odgi viz</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
@@ -1548,7 +1578,7 @@ in a fixed sequence quality FASTQ format. Various parameters can refine the unit
 <div class="paragraph">
 <p>The odgi viz(1) command can produce a linear, static visualization of an odgi variation graph. It aggregates the pangenome into bins
 and directly renders a raster image. The binning level depends on the target width of the PNG to emit. Can be used to produce visualizations for gigabase scale pangenomes. For more information
-about the binning process, please refer to <a href="odgi_bin.html#_odgi_bin1">odgi bin</a>. If reverse coloring was selected, only
+about the binning process, please refer to <a href="#_odgi_bin1">odgi bin</a>. If reverse coloring was selected, only
 the bins with a reverse rate of at least 0.5 are colored. Currently, there is no parameter to color according to the
 sequence coverage in bins available.</p>
 </div>
@@ -1672,7 +1702,7 @@ sequence coverage in bins available.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_synopsis_9">9.2. SYNOPSIS</h3>
+<h3 id="_synopsis_10">9.2. SYNOPSIS</h3>
 <div class="paragraph">
 <p><strong>odgi paths</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
@@ -1794,7 +1824,7 @@ with [<strong>-H, --haplotypes</strong>]. Prints an additional, first column <st
 </div>
 </div>
 <div class="sect2">
-<h3 id="_synopsis_10">10.2. SYNOPSIS</h3>
+<h3 id="_synopsis_11">10.2. SYNOPSIS</h3>
 <div class="paragraph">
 <p><strong>odgi prune</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
@@ -1951,7 +1981,7 @@ fitting into these conditions.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_synopsis_11">11.2. SYNOPSIS</h3>
+<h3 id="_synopsis_12">11.2. SYNOPSIS</h3>
 <div class="paragraph">
 <p><strong>odgi unchop</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
@@ -2030,7 +2060,7 @@ fitting into these conditions.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_synopsis_12">12.2. SYNOPSIS</h3>
+<h3 id="_synopsis_13">12.2. SYNOPSIS</h3>
 <div class="paragraph">
 <p><strong>odgi normalize</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
@@ -2124,7 +2154,7 @@ fitting into these conditions.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_synopsis_13">13.2. SYNOPSIS</h3>
+<h3 id="_synopsis_14">13.2. SYNOPSIS</h3>
 <div class="paragraph">
 <p><strong>odgi subset</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
@@ -2224,10 +2254,238 @@ or a context of which to generate a subset from.</p>
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_odgi_bin1">14. odgi bin(1)</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_name_14">14.1. NAME</h3>
+<div class="paragraph">
+<p>odgi_bin - binning of pangenome sequence and path information in the graph</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_synopsis_15">14.2. SYNOPSIS</h3>
+<div class="paragraph">
+<p><strong>odgi bin</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_description_14">14.3. DESCRIPTION</h3>
+<div class="paragraph">
+<p>The odgi bin(1) command bins a given variation graph. The pangenome sequence, the one-time traversal of all nodes from smallest to
+largest node identifier, can be summed up into bins of a specified size. For each bin, the path metainformation is summarized.
+This enables a summarized view of gigabase scale graphs. Each step of a path is a bin and connected to its next bin via a link.
+A link has a start bin identifier and an end bin identifier.<br>
+The concept of odgi bin is also applied in odgi <a href="#_odgi_viz1">viz</a>.
+A demonstration of how the odgi bin JSON output can be used for an interactive visualization is realized in the <a href="https://graph-genome.github.io/">Pantograph</a>
+project. Per default, odgi bin writes the bins to stdout in a tab-delimited format: <strong>path.name</strong>, <strong>path.prefix</strong>, <strong>path.suffix</strong>,
+<strong>bin</strong> (bin identifier), <strong>mean.cov</strong> (mean coverage of the path in this bin), <strong>mean.inv</strong> (mean inversion rate of this path in this bin),
+<strong>mean.pos</strong> (mean nucleotide position of this path in this bin), <strong>first.nucl</strong> (first nucleotide position of this path in this bin),
+<strong>last.nucl</strong> (last nucleotide position of this path in this bin). These nucleotide ranges might span positions that are not present in the bin. Example:
+A range of 1-100 means that the first nucleotide has position 1 and the last has position 100, but nucleotide 45 could be located in
+another bin. For an exact positional output, please specify [<strong>-j, --json</strong>].</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_options_13">14.4. OPTIONS</h3>
+<div class="sect3">
+<h4 id="_graph_files_io_13">14.4.1. Graph Files IO</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
+<dd>
+<p>File containing the succinct variation graph to investigate the bin from. The file name usually ends with <em>.og</em>.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_fasta_options">14.4.2. FASTA Options</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-f, --fasta</strong>=<em>FILE</em></dt>
+<dd>
+<p>Write the pangenome sequence to <em>FILE</em> in FASTA format.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_bin_options">14.4.3. Bin Options</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-n, --number-bins</strong>=<em>N</em></dt>
+<dd>
+<p>The number of bins the pangenome sequence should be chopped up to.</p>
+</dd>
+<dt class="hdlist1"><strong>-w, --bin-width</strong>=<em>N</em></dt>
+<dd>
+<p>The bin width specifies the size of each bin.</p>
+</dd>
+<dt class="hdlist1"><strong>-D, --path-delim</strong>=<em>STRING</em></dt>
+<dd>
+<p>Annotate rows by prefix and suffix of this delimiter.</p>
+</dd>
+<dt class="hdlist1"><strong>-a, --aggregate-delim</strong></dt>
+<dd>
+<p>Aggregate on path prefix delimiter. Argument depends on [<strong>-D, --path-delim</strong>=<em>STRING</em>].</p>
+</dd>
+<dt class="hdlist1"><strong>-j, --json</strong></dt>
+<dd>
+<p>Print bins and links to stdout in pseudo JSON format. Each line is a valid JSON object, but the whole file is not a valid JSON!
+First, each bin including its pangenome sequence is printed to stdout per line. Second, for each path in the graph, its
+traversed bins including metainformation: <strong>bin</strong> (bin identifier), <strong>mean.cov</strong> (mean coverage of the path in this bin), <strong>mean.inv</strong> (mean inversion rate of this path in this bin),
+<strong>mean.pos</strong> (mean nucleotide position of this path in this bin), and an array of ranges determining the nucleotide position
+of the path in this bin. Switching first and last nucleotide in a range represents a complement reverse
+orientation of that particular sequence.</p>
+</dd>
+<dt class="hdlist1"><strong>-s, --no-seqs</strong></dt>
+<dd>
+<p>If [<strong>-j, --json</strong>] is set, no nucleotide sequences will be printed to stdout in order to save disk space.</p>
+</dd>
+<dt class="hdlist1"><strong>-g, --no-gap-links</strong></dt>
+<dd>
+<p>Links connecting a path from left to right may not be relevant to understand a path&#8217;s traversal through the bins. They
+can be left out saving disk space.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_program_information_13">14.4.4. Program Information</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-h, --help</strong></dt>
+<dd>
+<p>Print a help message for <strong>odgi bin</strong>.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_exit_status_13">14.5. EXIT STATUS</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>0</strong></dt>
+<dd>
+<p>Success.</p>
+</dd>
+<dt class="hdlist1"><strong>1</strong></dt>
+<dd>
+<p>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_bugs_14">14.6. BUGS</h3>
+<div class="paragraph">
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_authors_14">14.7. AUTHORS</h3>
+<div class="paragraph">
+<p><strong>odgi bin</strong> was written by Erik Garrison.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_odgi_matrix1">15. odgi matrix(1)</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_name_15">15.1. NAME</h3>
+<div class="paragraph">
+<p>odgi_matrix - write the graph topology in sparse matrix formats</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_synopsis_16">15.2. SYNOPSIS</h3>
+<div class="paragraph">
+<p><strong>odgi matrix</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_description_15">15.3. DESCRIPTION</h3>
+<div class="paragraph">
+<p>The odgi matrix(1) command generates a sparse matrix format out of the graph topology of a given variation graph.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_options_14">15.4. OPTIONS</h3>
+<div class="sect3">
+<h4 id="_graph_files_io_14">15.4.1. Graph Files IO</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
+<dd>
+<p>File containing the succinct variation graph to create the sparse matrix from. The file name usually ends with <em>.og</em>.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_matrix_options">15.4.2. Matrix Options</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-e, --edge-depth-weight</strong></dt>
+<dd>
+<p>Weigh edges by their path depth.</p>
+</dd>
+<dt class="hdlist1"><strong>-d, --delta-weight</strong></dt>
+<dd>
+<p>Weigh edges by their inverse id delta.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_program_information_14">15.4.3. Program Information</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-h, --help</strong></dt>
+<dd>
+<p>Print a help message for <strong>odgi matrix</strong>.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_exit_status_14">15.5. EXIT STATUS</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>0</strong></dt>
+<dd>
+<p>Success.</p>
+</dd>
+<dt class="hdlist1"><strong>1</strong></dt>
+<dd>
+<p>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_bugs_15">15.6. BUGS</h3>
+<div class="paragraph">
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_authors_15">15.7. AUTHORS</h3>
+<div class="paragraph">
+<p><strong>odgi matrix</strong> was written by Erik Garrison.</p>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-05-14 14:22:26 +0200
+Last updated 2020-05-14 21:53:53 +0200
 </div>
 </div>
 </body>

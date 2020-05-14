@@ -1,0 +1,167 @@
+'\" t
+.\"     Title: odgi bin
+.\"    Author: Erik Garrison
+.\" Generator: Asciidoctor 2.0.10
+.\"      Date: 2020-05-14
+.\"    Manual: odgi bin
+.\"    Source: odgi 0.4.1
+.\"  Language: English
+.\"
+.TH "ODGI_BIN" "1" "2020-05-14" "odgi 0.4.1" "odgi bin"
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.ss \n[.ss] 0
+.nh
+.ad l
+.de URL
+\fI\\$2\fP <\\$1>\\$3
+..
+.als MTO URL
+.if \n[.g] \{\
+.  mso www.tmac
+.  am URL
+.    ad l
+.  .
+.  am MTO
+.    ad l
+.  .
+.  LINKSTYLE blue R < >
+.\}
+.SH "NAME"
+odgi_bin \- binning of pangenome sequence and path information in the graph
+.SH "SYNOPSIS"
+.sp
+\fBodgi bin\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fIOPTION\fP]...
+.SH "DESCRIPTION"
+.sp
+The odgi bin(1) command bins a given variation graph. The pangenome sequence, the one\-time traversal of all nodes from smallest to
+largest node identifier, can be summed up into bins of a specified size. For each bin, the path metainformation is summarized.
+This enables a summarized view of gigabase scale graphs. Each step of a path is a bin and connected to its next bin via a link.
+A link has a start bin identifier and an end bin identifier.
+.br
+The concept of odgi bin is also applied in odgi viz.
+A demonstration of how the odgi bin JSON output can be used for an interactive visualization is realized in the \c
+.URL "https://graph\-genome.github.io/" "Pantograph"
+project. Per default, odgi bin writes the bins to stdout in a tab\-delimited format: \fBpath.name\fP, \fBpath.prefix\fP, \fBpath.suffix\fP,
+\fBbin\fP (bin identifier), \fBmean.cov\fP (mean coverage of the path in this bin), \fBmean.inv\fP (mean inversion rate of this path in this bin),
+\fBmean.pos\fP (mean nucleotide position of this path in this bin), \fBfirst.nucl\fP (first nucleotide position of this path in this bin),
+\fBlast.nucl\fP (last nucleotide position of this path in this bin). These nucleotide ranges might span positions that are not present in the bin. Example:
+A range of 1\-100 means that the first nucleotide has position 1 and the last has position 100, but nucleotide 45 could be located in
+another bin. For an exact positional output, please specify [\fB\-j, \-\-json\fP].
+.SH "OPTIONS"
+.SS "Graph Files IO"
+.sp
+\fB\-i, \-\-idx\fP=\fIFILE\fP
+.RS 4
+File containing the succinct variation graph to investigate the bin from. The file name usually ends with \fI.og\fP.
+.RE
+.SS "FASTA Options"
+.sp
+\fB\-f, \-\-fasta\fP=\fIFILE\fP
+.RS 4
+Write the pangenome sequence to \fIFILE\fP in FASTA format.
+.RE
+.SS "Bin Options"
+.sp
+\fB\-n, \-\-number\-bins\fP=\fIN\fP
+.RS 4
+The number of bins the pangenome sequence should be chopped up to.
+.RE
+.sp
+\fB\-w, \-\-bin\-width\fP=\fIN\fP
+.RS 4
+The bin width specifies the size of each bin.
+.RE
+.sp
+\fB\-D, \-\-path\-delim\fP=\fISTRING\fP
+.RS 4
+Annotate rows by prefix and suffix of this delimiter.
+.RE
+.sp
+\fB\-a, \-\-aggregate\-delim\fP
+.RS 4
+Aggregate on path prefix delimiter. Argument depends on [\fB\-D, \-\-path\-delim\fP=\fISTRING\fP].
+.RE
+.sp
+\fB\-j, \-\-json\fP
+.RS 4
+Print bins and links to stdout in pseudo JSON format. Each line is a valid JSON object, but the whole file is not a valid JSON!
+First, each bin including its pangenome sequence is printed to stdout per line. Second, for each path in the graph, its
+traversed bins including metainformation: \fBbin\fP (bin identifier), \fBmean.cov\fP (mean coverage of the path in this bin), \fBmean.inv\fP (mean inversion rate of this path in this bin),
+\fBmean.pos\fP (mean nucleotide position of this path in this bin), and an array of ranges determining the nucleotide position
+of the path in this bin. Switching first and last nucleotide in a range represents a complement reverse
+orientation of that particular sequence.
+.RE
+.sp
+\fB\-s, \-\-no\-seqs\fP
+.RS 4
+If [\fB\-j, \-\-json\fP] is set, no nucleotide sequences will be printed to stdout in order to save disk space.
+.RE
+.sp
+\fB\-g, \-\-no\-gap\-links\fP
+.RS 4
+Links connecting a path from left to right may not be relevant to understand a path\(cqs traversal through the bins. They
+can be left out saving disk space.
+.RE
+.SS "Program Information"
+.sp
+\fB\-h, \-\-help\fP
+.RS 4
+Print a help message for \fBodgi bin\fP.
+.RE
+.SH "EXIT STATUS"
+.sp
+\fB0\fP
+.RS 4
+Success.
+.RE
+.sp
+\fB1\fP
+.RS 4
+Failure (syntax or usage error; parameter error; file processing failure; unexpected error).
+.RE
+.SH "BUGS"
+.sp
+Refer to the \fBodgi\fP issue tracker at \c
+.URL "https://github.com/vgteam/odgi/issues" "" "."
+.SH "AUTHORS"
+.sp
+\fBodgi bin\fP was written by Erik Garrison.
+== RESOURCES
+.sp
+\fBProject web site:\fP \c
+.URL "https://github.com/vgteam/odgi" "" ""
+.sp
+\fBGit source repository on GitHub:\fP \c
+.URL "https://github.com/vgteam/odgi" "" ""
+.sp
+\fBGitHub organization:\fP \c
+.URL "https://github.com/vgteam" "" ""
+.sp
+\fBDiscussion list / forum:\fP \c
+.URL "https://github.com/vgteam/odgi/issues" "" ""
+.SH "COPYING"
+.sp
+The MIT License (MIT)
+.sp
+Copyright (c) 2019 Erik Garrison
+.sp
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+.sp
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+.sp
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+.SH "AUTHOR"
+.sp
+Erik Garrison

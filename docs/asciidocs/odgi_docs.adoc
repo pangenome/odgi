@@ -30,3 +30,7 @@ include::odgi_unchop.adoc[leveloffset=+1]
 include::odgi_normalize.adoc[leveloffset=+1]
 
 include::odgi_subset.adoc[leveloffset=+1]
+
+include::odgi_bin.adoc[leveloffset=+1]
+
+include::odgi_matrix.adoc[leveloffset=+1]
