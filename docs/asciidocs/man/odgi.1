@@ -68,6 +68,10 @@ odgi \- dynamic succinct variation graph tool
 \fBodgi\fP pathindex \-i graph.og \-o graph.xp
 .sp
 \fBodgi\fP panpos \-i graph.og \-p Chr1 \-n 4
+.sp
+\fBodgi\fP server \-i graph.og \-p 4000 \-ip 192.168.8.9
+.sp
+\fBodgi\fP test
 .SH "DESCRIPTION"
 .sp
 \fBodgi\fP, the \fBOptimized Dynamic (genome) Graph Interface\fP, links
@@ -280,6 +284,26 @@ navigating large graphs in an interactive manner like in the \c
 .URL "https://graph\-genome.github.io/" "Pantograph" " "
 project. All
 input and output positions are 1\-based.
+.sp
+\fBodgi server\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-p, \-\-port\fP=\fIN\fP] [\fIOPTION\fP]...
+.br
+The odgi server(1) command starts an HTTP server with a given path index as input. The idea is that we can go from
+\fBpath:position\fP \(-> \fBpangenome:position\fP via GET requests to the HTTP server. The server headers do not block cross origin requests.
+Example GET request: \fI\c
+.URL "http://localost:3000/path_name/nucleotide_position" "" "\fP."
+.br
+The required path index can be created with odgi pathindex. Going from \fBpath:position\fP \(-> \fBpangenome:position\fP is important when
+navigating large graphs in an interactive manner like in the \c
+.URL "https://graph\-genome.github.io/" "Pantograph" " "
+project. All
+input and output positions are 1\-based. If no IP address is specified, the server will run on localhost.
+.sp
+\fBodgi test\fP [<TEST NAME|PATTERN|TAGS> ...] [\fIOPTION\fP]...
+.br
+The odgi test(1) command starts all unit tests that are implemented in odgi. For targeted testing, a subset of tests can
+be selected. odgi test(1) depends on \c
+.URL "https://github.com/catchorg/Catch2" "Catch2" "."
+In the default setting, all results are printed to stdout.
 .SH "BUGS"
 .sp
 Refer to the \fBodgi\fP issue tracker at \c

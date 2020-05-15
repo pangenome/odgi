@@ -39,6 +39,8 @@
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_break1">break</link> -i graph.og -o graph.broken.og -s 100 -d</simpara>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_pathindex1">pathindex</link> -i graph.og -o graph.xp</simpara>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_panpos1">panpos</link> -i graph.og -p Chr1 -n 4</simpara>
+<simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_server1">server</link> -i graph.og -p 4000 -ip 192.168.8.9</simpara>
+<simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_test1">test</link></simpara>
 </section>
 <section xml:id="_description">
 <title>DESCRIPTION</title>
@@ -148,6 +150,16 @@ The odgi panpos(1) command give a pangenome position for a given path and nucleo
 which can be created with odgi <link linkend="_odgi_pathindex1">pathindex</link>. Going from <emphasis role="strong">path:position</emphasis> &#8594; <emphasis role="strong">pangenome:position</emphasis> is important when
 navigating large graphs in an interactive manner like in the <link xl:href="https://graph-genome.github.io/">Pantograph</link> project. All
 input and output positions are 1-based.</simpara>
+<simpara><emphasis role="strong">odgi server</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-p, --port</emphasis>=<emphasis>N</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;<?asciidoc-br?>
+The odgi server(1) command starts an HTTP server with a given path index as input. The idea is that we can go from
+<emphasis role="strong">path:position</emphasis> &#8594; <emphasis role="strong">pangenome:position</emphasis> via GET requests to the HTTP server. The server headers do not block cross origin requests.
+Example GET request: <emphasis><link xl:href="http://localost:3000/path_name/nucleotide_position">http://localost:3000/path_name/nucleotide_position</link></emphasis>.<?asciidoc-br?>
+The required path index can be created with odgi <link linkend="_odgi_pathindex1">pathindex</link>. Going from <emphasis role="strong">path:position</emphasis> &#8594; <emphasis role="strong">pangenome:position</emphasis> is important when
+navigating large graphs in an interactive manner like in the <link xl:href="https://graph-genome.github.io/">Pantograph</link> project. All
+input and output positions are 1-based. If no IP address is specified, the server will run on localhost.</simpara>
+<simpara><emphasis role="strong">odgi test</emphasis> [&lt;TEST NAME|PATTERN|TAGS&gt; &#8230;&#8203;] [<emphasis>OPTION</emphasis>]&#8230;&#8203;<?asciidoc-br?>
+The odgi test(1) command starts all unit tests that are implemented in odgi. For targeted testing, a subset of tests can
+be selected. odgi test(1) depends on <link xl:href="https://github.com/catchorg/Catch2">Catch2</link>. In the default setting, all results are printed to stdout.</simpara>
 </section>
 <section xml:id="_bugs">
 <title>BUGS</title>
@@ -2523,6 +2535,303 @@ input and output positions are 1-based.</simpara>
 <section xml:id="_authors_21">
 <title>AUTHORS</title>
 <simpara><emphasis role="strong">odgi panpos</emphasis> was written by Simon Heumos.</simpara>
+</section>
+</section>
+<section xml:id="_odgi_server1">
+<title>odgi server(1)</title>
+<section xml:id="_name_22">
+<title>NAME</title>
+<simpara>odgi_server - start a HTTP server with a given index file to query a pangenome position</simpara>
+</section>
+<section xml:id="_synopsis_22">
+<title>SYNOPSIS</title>
+<simpara><emphasis role="strong">odgi server</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-p, --port</emphasis>=<emphasis>N</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
+</section>
+<section xml:id="_description_22">
+<title>DESCRIPTION</title>
+<simpara>The odgi server(1) command starts an HTTP server with a given path index as input. The idea is that we can go from
+<emphasis role="strong">path:position</emphasis> &#8594; <emphasis role="strong">pangenome:position</emphasis> via GET requests to the HTTP server. The server headers do not block cross origin requests.
+Example GET request: <emphasis role="strong"><link xl:href="http://localost:3000/path_name/nucleotide_position">http://localost:3000/path_name/nucleotide_position</link></emphasis>.<?asciidoc-br?>
+The required path index can be created with odgi <link linkend="_odgi_pathindex1">pathindex</link>. Going from <emphasis role="strong">path:position</emphasis> &#8594; <emphasis role="strong">pangenome:position</emphasis> is important when
+navigating large graphs in an interactive manner like in the <link xl:href="https://graph-genome.github.io/">Pantograph</link> project. All
+input and output positions are 1-based. If no IP address is specified, the server will run on localhost.</simpara>
+</section>
+<section xml:id="_options_21">
+<title>OPTIONS</title>
+<section xml:id="_graph_files_io_21">
+<title>Graph Files IO</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>File containing the succinct variation graph index to host in a HTTP server. The file name usually ends with <emphasis>.xp</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_http_options">
+<title>HTTP Options</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-p, --port</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Run the server under this port.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-a, --ip</emphasis>=<emphasis>IP</emphasis></term>
+<listitem>
+<simpara>Run the server under this IP address. If not specified, <emphasis>IP</emphasis> will be <emphasis>localhost</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_program_information_21">
+<title>Program Information</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-h, --help</emphasis></term>
+<listitem>
+<simpara>Print a help message for <emphasis role="strong">odgi server</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+</section>
+<section xml:id="_exit_status_21">
+<title>EXIT STATUS</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">0</emphasis></term>
+<listitem>
+<simpara>Success.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">1</emphasis></term>
+<listitem>
+<simpara>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_bugs_22">
+<title>BUGS</title>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+</section>
+<section xml:id="_authors_22">
+<title>AUTHORS</title>
+<simpara><emphasis role="strong">odgi server</emphasis> was written by Simon Heumos.</simpara>
+</section>
+</section>
+<section xml:id="_odgi_test1">
+<title>odgi test(1)</title>
+<section xml:id="_name_23">
+<title>NAME</title>
+<simpara>odgi_test - run odgi unit tests</simpara>
+</section>
+<section xml:id="_synopsis_23">
+<title>SYNOPSIS</title>
+<simpara><emphasis role="strong">odgi test</emphasis> [&lt;TEST NAME|PATTERN|TAGS&gt; &#8230;&#8203;] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
+</section>
+<section xml:id="_description_23">
+<title>DESCRIPTION</title>
+<simpara>The odgi test(1) command starts all unit tests that are implemented in odgi. For targeted testing, a subset of tests can
+be selected. odgi test(1) depends on <link xl:href="https://github.com/catchorg/Catch2">Catch2</link>. In the default setting, all results are printed to stdout.</simpara>
+</section>
+<section xml:id="_options_22">
+<title>OPTIONS</title>
+<section xml:id="_testing_options">
+<title>Testing Options</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-l, --list-tests</emphasis></term>
+<listitem>
+<simpara>List all test cases. If a pattern was specified, all matching test cases are listed.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-t, --list-tags</emphasis></term>
+<listitem>
+<simpara>List all tags. If a pattern was specified, all matching tags are listed.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-s, --success</emphasis></term>
+<listitem>
+<simpara>Include successful tests in output.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-b, --break</emphasis></term>
+<listitem>
+<simpara>Break into debugger mode upon failed test.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-e, --nothrow</emphasis></term>
+<listitem>
+<simpara>Skip exception tests.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-i, --invisibles</emphasis></term>
+<listitem>
+<simpara>Show invisibles like tabs or newlines.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>Write all output to <emphasis>FILE</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-r, --reporter</emphasis>=<emphasis>STRING</emphasis></term>
+<listitem>
+<simpara>Reporter to use. Default is console.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-n, --name</emphasis>=<emphasis>STRING</emphasis></term>
+<listitem>
+<simpara>Suite name.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-a, --abort</emphasis></term>
+<listitem>
+<simpara>Abort at first failure.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-x, --abortx</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Abort after <emphasis>N</emphasis> failures.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-w, --warn</emphasis>=<emphasis>STRING</emphasis></term>
+<listitem>
+<simpara>Enable warnings.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-d, --durations</emphasis>=<emphasis>yes|no</emphasis></term>
+<listitem>
+<simpara>Show test durations. Default is <emphasis>no</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-f, --input-file</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>Load test names from a file.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-#, --filenames-as-tags</emphasis></term>
+<listitem>
+<simpara>Adds a tag for the file name.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-c, --section</emphasis>=<emphasis>STRING</emphasis></term>
+<listitem>
+<simpara>Specify the section to run the tests on.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-v, --verosity</emphasis>=<emphasis>quiet|normal|high</emphasis></term>
+<listitem>
+<simpara>Set output verbosity. Default is <emphasis>normal</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">--list-test-names-only</emphasis></term>
+<listitem>
+<simpara>List all test cases names only. If a pattern was specified, all matching test cases are listed.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">--list-reporters</emphasis></term>
+<listitem>
+<simpara>List all reporters.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">--order</emphasis>=<emphasis>decl|lex|rand</emphasis></term>
+<listitem>
+<simpara>Test case order. Default ist <emphasis>decl</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">--rng-seed</emphasis>=<emphasis>time|number</emphasis></term>
+<listitem>
+<simpara>Set a specific seed for random numbers.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">--use-color</emphasis>=<emphasis>yes|no</emphasis></term>
+<listitem>
+<simpara>Should the output be colorized? Default is <emphasis>yes</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">--libidentify</emphasis></term>
+<listitem>
+<simpara>Report name and version according to libidentify.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">--wait-for-keypress</emphasis>=<emphasis>start|exit|both</emphasis></term>
+<listitem>
+<simpara>Waits for a keypress before <emphasis>start|exit|both</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">--benchmark-resolution-multiple</emphasis></term>
+<listitem>
+<simpara>Multiple of clock resolution to run benchmarks.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_program_information_22">
+<title>Program Information</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-?, -h, --help</emphasis></term>
+<listitem>
+<simpara>Print a help message for <emphasis role="strong">odgi test</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+</section>
+<section xml:id="_exit_status_22">
+<title>EXIT STATUS</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">0</emphasis></term>
+<listitem>
+<simpara>Success.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">1</emphasis></term>
+<listitem>
+<simpara>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_bugs_23">
+<title>BUGS</title>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+</section>
+<section xml:id="_authors_23">
+<title>AUTHORS</title>
+<simpara><emphasis role="strong">odgi test</emphasis> was written by Erik Garrison and Simon Heumos.</simpara>
 </section>
 </section>
 </article>

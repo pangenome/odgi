@@ -1,0 +1,97 @@
+= odgi server(1)
+ifdef::backend-manpage[]
+Simon Heumos
+:doctype: manpage
+:release-version: 0.4.1
+:man manual: odgi server
+:man source: odgi 0.4.1
+:page-server: base
+endif::[]
+
+== NAME
+
+odgi_server - start a HTTP server with a given index file to query a pangenome position
+
+== SYNOPSIS
+
+*odgi server* [*-i, --idx*=_FILE_] [*-p, --port*=_N_] [_OPTION_]...
+
+== DESCRIPTION
+
+The odgi server(1) command starts an HTTP server with a given path index as input. The idea is that we can go from
+*path:position* -> *pangenome:position* via GET requests to the HTTP server. The server headers do not block cross origin requests.
+Example GET request: *http://localost:3000/path_name/nucleotide_position*. +
+The required path index can be created with odgi <<odgi_pathindex.adoc#_odgi_pathindex1, pathindex>>. Going from *path:position* -> *pangenome:position* is important when
+navigating large graphs in an interactive manner like in the https://graph-genome.github.io/[Pantograph] project. All
+input and output positions are 1-based. If no IP address is specified, the server will run on localhost.
+
+== OPTIONS
+
+=== Graph Files IO
+
+*-i, --idx*=_FILE_::
+  File containing the succinct variation graph index to host in a HTTP server. The file name usually ends with _.xp_.
+
+=== HTTP Options
+
+*-p, --port*=_N_::
+  Run the server under this port.
+
+*-a, --ip*=_IP_::
+  Run the server under this IP address. If not specified, _IP_ will be _localhost_.
+
+=== Program Information
+
+*-h, --help*::
+  Print a help message for *odgi server*.
+
+== EXIT STATUS
+
+*0*::
+  Success.
+
+*1*::
+  Failure (syntax or usage error; parameter error; file processing failure; unexpected error).
+
+== BUGS
+
+Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
+
+== AUTHORS
+
+*odgi server* was written by Simon Heumos.
+
+ifdef::backend-manpage[]
+== RESOURCES
+
+*Project web site:* https://github.com/vgteam/odgi
+
+*Git source repository on GitHub:* https://github.com/vgteam/odgi
+
+*GitHub organization:* https://github.com/vgteam
+
+*Discussion list / forum:* https://github.com/vgteam/odgi/issues
+
+== COPYING
+
+The MIT License (MIT)
+
+Copyright (c) 2019 Erik Garrison
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+endif::[]

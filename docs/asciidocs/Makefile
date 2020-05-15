@@ -31,5 +31,7 @@ asciidoctor -b manpage odgi_flatten.adoc
 asciidoctor -b manpage odgi_break.adoc
 asciidoctor -b manpage odgi_pathindex.adoc
 asciidoctor -b manpage odgi_panpos.adoc
+asciidoctor -b manpage odgi_server.adoc
+asciidoctor -b manpage odgi_test.adoc
 
 mv *.1 man/

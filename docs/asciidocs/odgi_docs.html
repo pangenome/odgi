@@ -467,6 +467,8 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_odgi_break1">19. odgi break(1)</a></li>
 <li><a href="#_odgi_pathindex1">20. odgi pathindex(1)</a></li>
 <li><a href="#_odgi_panpos1">21. odgi panpos(1)</a></li>
+<li><a href="#_odgi_server1">22. odgi server(1)</a></li>
+<li><a href="#_odgi_test1">23. odgi test(1)</a></li>
 </ul>
 </div>
 </div>
@@ -538,6 +540,12 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="paragraph">
 <p><strong>odgi</strong> <a href="#_odgi_panpos1">panpos</a> -i graph.og -p Chr1 -n 4</p>
+</div>
+<div class="paragraph">
+<p><strong>odgi</strong> <a href="#_odgi_server1">server</a> -i graph.og -p 4000 -ip 192.168.8.9</p>
+</div>
+<div class="paragraph">
+<p><strong>odgi</strong> <a href="#_odgi_test1">test</a></p>
 </div>
 </div>
 <div class="sect2">
@@ -695,6 +703,20 @@ The odgi panpos(1) command give a pangenome position for a given path and nucleo
 which can be created with odgi <a href="#_odgi_pathindex1">pathindex</a>. Going from <strong>path:position</strong> &#8594; <strong>pangenome:position</strong> is important when
 navigating large graphs in an interactive manner like in the <a href="https://graph-genome.github.io/">Pantograph</a> project. All
 input and output positions are 1-based.</p>
+</div>
+<div class="paragraph">
+<p><strong>odgi server</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-p, --port</strong>=<em>N</em>] [<em>OPTION</em>]&#8230;&#8203;<br>
+The odgi server(1) command starts an HTTP server with a given path index as input. The idea is that we can go from
+<strong>path:position</strong> &#8594; <strong>pangenome:position</strong> via GET requests to the HTTP server. The server headers do not block cross origin requests.
+Example GET request: <em><a href="http://localost:3000/path_name/nucleotide_position" class="bare">http://localost:3000/path_name/nucleotide_position</a></em>.<br>
+The required path index can be created with odgi <a href="#_odgi_pathindex1">pathindex</a>. Going from <strong>path:position</strong> &#8594; <strong>pangenome:position</strong> is important when
+navigating large graphs in an interactive manner like in the <a href="https://graph-genome.github.io/">Pantograph</a> project. All
+input and output positions are 1-based. If no IP address is specified, the server will run on localhost.</p>
+</div>
+<div class="paragraph">
+<p><strong>odgi test</strong> [&lt;TEST NAME|PATTERN|TAGS&gt; &#8230;&#8203;] [<em>OPTION</em>]&#8230;&#8203;<br>
+The odgi test(1) command starts all unit tests that are implemented in odgi. For targeted testing, a subset of tests can
+be selected. odgi test(1) depends on <a href="https://github.com/catchorg/Catch2">Catch2</a>. In the default setting, all results are printed to stdout.</p>
 </div>
 </div>
 <div class="sect2">
@@ -3134,10 +3156,277 @@ input and output positions are 1-based.</p>
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_odgi_server1">22. odgi server(1)</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_name_22">22.1. NAME</h3>
+<div class="paragraph">
+<p>odgi_server - start a HTTP server with a given index file to query a pangenome position</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_synopsis_22">22.2. SYNOPSIS</h3>
+<div class="paragraph">
+<p><strong>odgi server</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-p, --port</strong>=<em>N</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_description_22">22.3. DESCRIPTION</h3>
+<div class="paragraph">
+<p>The odgi server(1) command starts an HTTP server with a given path index as input. The idea is that we can go from
+<strong>path:position</strong> &#8594; <strong>pangenome:position</strong> via GET requests to the HTTP server. The server headers do not block cross origin requests.
+Example GET request: <strong><a href="http://localost:3000/path_name/nucleotide_position" class="bare">http://localost:3000/path_name/nucleotide_position</a></strong>.<br>
+The required path index can be created with odgi <a href="#_odgi_pathindex1">pathindex</a>. Going from <strong>path:position</strong> &#8594; <strong>pangenome:position</strong> is important when
+navigating large graphs in an interactive manner like in the <a href="https://graph-genome.github.io/">Pantograph</a> project. All
+input and output positions are 1-based. If no IP address is specified, the server will run on localhost.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_options_21">22.4. OPTIONS</h3>
+<div class="sect3">
+<h4 id="_graph_files_io_21">22.4.1. Graph Files IO</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
+<dd>
+<p>File containing the succinct variation graph index to host in a HTTP server. The file name usually ends with <em>.xp</em>.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_http_options">22.4.2. HTTP Options</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-p, --port</strong>=<em>N</em></dt>
+<dd>
+<p>Run the server under this port.</p>
+</dd>
+<dt class="hdlist1"><strong>-a, --ip</strong>=<em>IP</em></dt>
+<dd>
+<p>Run the server under this IP address. If not specified, <em>IP</em> will be <em>localhost</em>.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_program_information_21">22.4.3. Program Information</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-h, --help</strong></dt>
+<dd>
+<p>Print a help message for <strong>odgi server</strong>.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_exit_status_21">22.5. EXIT STATUS</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>0</strong></dt>
+<dd>
+<p>Success.</p>
+</dd>
+<dt class="hdlist1"><strong>1</strong></dt>
+<dd>
+<p>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_bugs_22">22.6. BUGS</h3>
+<div class="paragraph">
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_authors_22">22.7. AUTHORS</h3>
+<div class="paragraph">
+<p><strong>odgi server</strong> was written by Simon Heumos.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_odgi_test1">23. odgi test(1)</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_name_23">23.1. NAME</h3>
+<div class="paragraph">
+<p>odgi_test - run odgi unit tests</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_synopsis_23">23.2. SYNOPSIS</h3>
+<div class="paragraph">
+<p><strong>odgi test</strong> [&lt;TEST NAME|PATTERN|TAGS&gt; &#8230;&#8203;] [<em>OPTION</em>]&#8230;&#8203;</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_description_23">23.3. DESCRIPTION</h3>
+<div class="paragraph">
+<p>The odgi test(1) command starts all unit tests that are implemented in odgi. For targeted testing, a subset of tests can
+be selected. odgi test(1) depends on <a href="https://github.com/catchorg/Catch2">Catch2</a>. In the default setting, all results are printed to stdout.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_options_22">23.4. OPTIONS</h3>
+<div class="sect3">
+<h4 id="_testing_options">23.4.1. Testing Options</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-l, --list-tests</strong></dt>
+<dd>
+<p>List all test cases. If a pattern was specified, all matching test cases are listed.</p>
+</dd>
+<dt class="hdlist1"><strong>-t, --list-tags</strong></dt>
+<dd>
+<p>List all tags. If a pattern was specified, all matching tags are listed.</p>
+</dd>
+<dt class="hdlist1"><strong>-s, --success</strong></dt>
+<dd>
+<p>Include successful tests in output.</p>
+</dd>
+<dt class="hdlist1"><strong>-b, --break</strong></dt>
+<dd>
+<p>Break into debugger mode upon failed test.</p>
+</dd>
+<dt class="hdlist1"><strong>-e, --nothrow</strong></dt>
+<dd>
+<p>Skip exception tests.</p>
+</dd>
+<dt class="hdlist1"><strong>-i, --invisibles</strong></dt>
+<dd>
+<p>Show invisibles like tabs or newlines.</p>
+</dd>
+<dt class="hdlist1"><strong>-o, --out</strong>=<em>FILE</em></dt>
+<dd>
+<p>Write all output to <em>FILE</em>.</p>
+</dd>
+<dt class="hdlist1"><strong>-r, --reporter</strong>=<em>STRING</em></dt>
+<dd>
+<p>Reporter to use. Default is console.</p>
+</dd>
+<dt class="hdlist1"><strong>-n, --name</strong>=<em>STRING</em></dt>
+<dd>
+<p>Suite name.</p>
+</dd>
+<dt class="hdlist1"><strong>-a, --abort</strong></dt>
+<dd>
+<p>Abort at first failure.</p>
+</dd>
+<dt class="hdlist1"><strong>-x, --abortx</strong>=<em>N</em></dt>
+<dd>
+<p>Abort after <em>N</em> failures.</p>
+</dd>
+<dt class="hdlist1"><strong>-w, --warn</strong>=<em>STRING</em></dt>
+<dd>
+<p>Enable warnings.</p>
+</dd>
+<dt class="hdlist1"><strong>-d, --durations</strong>=<em>yes|no</em></dt>
+<dd>
+<p>Show test durations. Default is <em>no</em>.</p>
+</dd>
+<dt class="hdlist1"><strong>-f, --input-file</strong>=<em>FILE</em></dt>
+<dd>
+<p>Load test names from a file.</p>
+</dd>
+<dt class="hdlist1"><strong>-#, --filenames-as-tags</strong></dt>
+<dd>
+<p>Adds a tag for the file name.</p>
+</dd>
+<dt class="hdlist1"><strong>-c, --section</strong>=<em>STRING</em></dt>
+<dd>
+<p>Specify the section to run the tests on.</p>
+</dd>
+<dt class="hdlist1"><strong>-v, --verosity</strong>=<em>quiet|normal|high</em></dt>
+<dd>
+<p>Set output verbosity. Default is <em>normal</em>.</p>
+</dd>
+<dt class="hdlist1"><strong>--list-test-names-only</strong></dt>
+<dd>
+<p>List all test cases names only. If a pattern was specified, all matching test cases are listed.</p>
+</dd>
+<dt class="hdlist1"><strong>--list-reporters</strong></dt>
+<dd>
+<p>List all reporters.</p>
+</dd>
+<dt class="hdlist1"><strong>--order</strong>=<em>decl|lex|rand</em></dt>
+<dd>
+<p>Test case order. Default ist <em>decl</em>.</p>
+</dd>
+<dt class="hdlist1"><strong>--rng-seed</strong>=<em>time|number</em></dt>
+<dd>
+<p>Set a specific seed for random numbers.</p>
+</dd>
+<dt class="hdlist1"><strong>--use-color</strong>=<em>yes|no</em></dt>
+<dd>
+<p>Should the output be colorized? Default is <em>yes</em>.</p>
+</dd>
+<dt class="hdlist1"><strong>--libidentify</strong></dt>
+<dd>
+<p>Report name and version according to libidentify.</p>
+</dd>
+<dt class="hdlist1"><strong>--wait-for-keypress</strong>=<em>start|exit|both</em></dt>
+<dd>
+<p>Waits for a keypress before <em>start|exit|both</em>.</p>
+</dd>
+<dt class="hdlist1"><strong>--benchmark-resolution-multiple</strong></dt>
+<dd>
+<p>Multiple of clock resolution to run benchmarks.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_program_information_22">23.4.2. Program Information</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-?, -h, --help</strong></dt>
+<dd>
+<p>Print a help message for <strong>odgi test</strong>.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_exit_status_22">23.5. EXIT STATUS</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>0</strong></dt>
+<dd>
+<p>Success.</p>
+</dd>
+<dt class="hdlist1"><strong>1</strong></dt>
+<dd>
+<p>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_bugs_23">23.6. BUGS</h3>
+<div class="paragraph">
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_authors_23">23.7. AUTHORS</h3>
+<div class="paragraph">
+<p><strong>odgi test</strong> was written by Erik Garrison and Simon Heumos.</p>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-05-15 15:20:56 +0200
+Last updated 2020-05-15 20:50:26 +0200
 </div>
 </div>
 </body>

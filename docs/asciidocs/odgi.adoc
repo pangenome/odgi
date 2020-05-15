@@ -52,6 +52,10 @@ odgi - dynamic succinct variation graph tool
 
 *odgi* <<odgi_panpos.adoc#_odgi_panpos1, panpos>> -i graph.og -p Chr1 -n 4
 
+*odgi* <<odgi_server.adoc#_odgi_server1, server>> -i graph.og -p 4000 -ip 192.168.8.9
+
+*odgi* <<odgi_test.adoc#_odgi_test1, test>>
+
 == DESCRIPTION
 
 *odgi*, the *Optimized Dynamic (genome) Graph Interface*, links
@@ -170,6 +174,19 @@ The odgi panpos(1) command give a pangenome position for a given path and nucleo
 which can be created with odgi <<odgi_pathindex.adoc#_odgi_pathindex1, pathindex>>. Going from *path:position* -> *pangenome:position* is important when
 navigating large graphs in an interactive manner like in the https://graph-genome.github.io/[Pantograph] project. All
 input and output positions are 1-based.
+
+*odgi server* [*-i, --idx*=_FILE_] [*-p, --port*=_N_] [_OPTION_]... +
+The odgi server(1) command starts an HTTP server with a given path index as input. The idea is that we can go from
+*path:position* -> *pangenome:position* via GET requests to the HTTP server. The server headers do not block cross origin requests.
+Example GET request: _http://localost:3000/path_name/nucleotide_position_. +
+The required path index can be created with odgi <<odgi_pathindex.adoc#_odgi_pathindex1, pathindex>>. Going from *path:position* -> *pangenome:position* is important when
+navigating large graphs in an interactive manner like in the https://graph-genome.github.io/[Pantograph] project. All
+input and output positions are 1-based. If no IP address is specified, the server will run on localhost.
+
+*odgi test* [<TEST NAME|PATTERN|TAGS> ...] [_OPTION_]... +
+The odgi test(1) command starts all unit tests that are implemented in odgi. For targeted testing, a subset of tests can
+be selected. odgi test(1) depends on https://github.com/catchorg/Catch2[Catch2]. In the default setting, all results are printed to stdout.
+
 
 == BUGS
 

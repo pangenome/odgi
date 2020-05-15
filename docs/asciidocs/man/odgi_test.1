@@ -1,0 +1,229 @@
+'\" t
+.\"     Title: odgi test
+.\"    Author: Erik Garrison, Simon Heumos
+.\" Generator: Asciidoctor 2.0.10
+.\"      Date: 2020-05-15
+.\"    Manual: odgi test
+.\"    Source: odgi 0.4.1
+.\"  Language: English
+.\"
+.TH "ODGI_TEST" "1" "2020-05-15" "odgi 0.4.1" "odgi test"
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.ss \n[.ss] 0
+.nh
+.ad l
+.de URL
+\fI\\$2\fP <\\$1>\\$3
+..
+.als MTO URL
+.if \n[.g] \{\
+.  mso www.tmac
+.  am URL
+.    ad l
+.  .
+.  am MTO
+.    ad l
+.  .
+.  LINKSTYLE blue R < >
+.\}
+.SH "NAME"
+odgi_test \- run odgi unit tests
+.SH "SYNOPSIS"
+.sp
+\fBodgi test\fP [<TEST NAME|PATTERN|TAGS> ...] [\fIOPTION\fP]...
+.SH "DESCRIPTION"
+.sp
+The odgi test(1) command starts all unit tests that are implemented in odgi. For targeted testing, a subset of tests can
+be selected. odgi test(1) depends on \c
+.URL "https://github.com/catchorg/Catch2" "Catch2" "."
+In the default setting, all results are printed to stdout.
+.SH "OPTIONS"
+.SS "Testing Options"
+.sp
+\fB\-l, \-\-list\-tests\fP
+.RS 4
+List all test cases. If a pattern was specified, all matching test cases are listed.
+.RE
+.sp
+\fB\-t, \-\-list\-tags\fP
+.RS 4
+List all tags. If a pattern was specified, all matching tags are listed.
+.RE
+.sp
+\fB\-s, \-\-success\fP
+.RS 4
+Include successful tests in output.
+.RE
+.sp
+\fB\-b, \-\-break\fP
+.RS 4
+Break into debugger mode upon failed test.
+.RE
+.sp
+\fB\-e, \-\-nothrow\fP
+.RS 4
+Skip exception tests.
+.RE
+.sp
+\fB\-i, \-\-invisibles\fP
+.RS 4
+Show invisibles like tabs or newlines.
+.RE
+.sp
+\fB\-o, \-\-out\fP=\fIFILE\fP
+.RS 4
+Write all output to \fIFILE\fP.
+.RE
+.sp
+\fB\-r, \-\-reporter\fP=\fISTRING\fP
+.RS 4
+Reporter to use. Default is console.
+.RE
+.sp
+\fB\-n, \-\-name\fP=\fISTRING\fP
+.RS 4
+Suite name.
+.RE
+.sp
+\fB\-a, \-\-abort\fP
+.RS 4
+Abort at first failure.
+.RE
+.sp
+\fB\-x, \-\-abortx\fP=\fIN\fP
+.RS 4
+Abort after \fIN\fP failures.
+.RE
+.sp
+\fB\-w, \-\-warn\fP=\fISTRING\fP
+.RS 4
+Enable warnings.
+.RE
+.sp
+\fB\-d, \-\-durations\fP=\fIyes|no\fP
+.RS 4
+Show test durations. Default is \fIno\fP.
+.RE
+.sp
+\fB\-f, \-\-input\-file\fP=\fIFILE\fP
+.RS 4
+Load test names from a file.
+.RE
+.sp
+\fB\-#, \-\-filenames\-as\-tags\fP
+.RS 4
+Adds a tag for the file name.
+.RE
+.sp
+\fB\-c, \-\-section\fP=\fISTRING\fP
+.RS 4
+Specify the section to run the tests on.
+.RE
+.sp
+\fB\-v, \-\-verosity\fP=\fIquiet|normal|high\fP
+.RS 4
+Set output verbosity. Default is \fInormal\fP.
+.RE
+.sp
+\fB\-\-list\-test\-names\-only\fP
+.RS 4
+List all test cases names only. If a pattern was specified, all matching test cases are listed.
+.RE
+.sp
+\fB\-\-list\-reporters\fP
+.RS 4
+List all reporters.
+.RE
+.sp
+\fB\-\-order\fP=\fIdecl|lex|rand\fP
+.RS 4
+Test case order. Default ist \fIdecl\fP.
+.RE
+.sp
+\fB\-\-rng\-seed\fP=\fItime|number\fP
+.RS 4
+Set a specific seed for random numbers.
+.RE
+.sp
+\fB\-\-use\-color\fP=\fIyes|no\fP
+.RS 4
+Should the output be colorized? Default is \fIyes\fP.
+.RE
+.sp
+\fB\-\-libidentify\fP
+.RS 4
+Report name and version according to libidentify.
+.RE
+.sp
+\fB\-\-wait\-for\-keypress\fP=\fIstart|exit|both\fP
+.RS 4
+Waits for a keypress before \fIstart|exit|both\fP.
+.RE
+.sp
+\fB\-\-benchmark\-resolution\-multiple\fP
+.RS 4
+Multiple of clock resolution to run benchmarks.
+.RE
+.SS "Program Information"
+.sp
+\fB\-?, \-h, \-\-help\fP
+.RS 4
+Print a help message for \fBodgi test\fP.
+.RE
+.SH "EXIT STATUS"
+.sp
+\fB0\fP
+.RS 4
+Success.
+.RE
+.sp
+\fB1\fP
+.RS 4
+Failure (syntax or usage error; parameter error; file processing failure; unexpected error).
+.RE
+.SH "BUGS"
+.sp
+Refer to the \fBodgi\fP issue tracker at \c
+.URL "https://github.com/vgteam/odgi/issues" "" "."
+.SH "AUTHORS"
+.sp
+\fBodgi test\fP was written by Erik Garrison and Simon Heumos.
+.SH "RESOURCES"
+.sp
+\fBProject web site:\fP \c
+.URL "https://github.com/vgteam/odgi" "" ""
+.sp
+\fBGit source repository on GitHub:\fP \c
+.URL "https://github.com/vgteam/odgi" "" ""
+.sp
+\fBGitHub organization:\fP \c
+.URL "https://github.com/vgteam" "" ""
+.sp
+\fBDiscussion list / forum:\fP \c
+.URL "https://github.com/vgteam/odgi/issues" "" ""
+.SH "COPYING"
+.sp
+The MIT License (MIT)
+.sp
+Copyright (c) 2019 Erik Garrison
+.sp
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+.sp
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+.sp
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+.SH "AUTHOR"
+.sp
+Erik Garrison, Simon Heumos

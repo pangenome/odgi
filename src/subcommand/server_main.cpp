@@ -18,10 +18,10 @@ namespace odgi {
         argv[0] = (char*)prog_name.c_str();
         --argc;
 
-        args::ArgumentParser parser("start a HTTP server on localhost://3000 with a given index file to query a pangenome position");
+        args::ArgumentParser parser("start a HTTP server with a given index file to query a pangenome position");
         args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
         args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the index from this file", {'i', "idx"});
-        args::ValueFlag<std::string> port(parser, "INT", "run the server under this port", {'p', "port"});
+        args::ValueFlag<std::string> port(parser, "N", "run the server under this port", {'p', "port"});
         args::ValueFlag<std::string> ip_address(parser, "IP", "run the server under this IP address", {'a', "ip"});
 
         try {
@@ -40,12 +40,12 @@ namespace odgi {
         }
 
         if (!dg_in_file) {
-            std::cerr << "Please enter a file to read the index from." << std::endl;
+            std::cerr << "[odgi server]: Please enter a file to read the index from via -i=[FILE], --idx=[FILE]." << std::endl;
             exit(1);
         }
 
         if (!port) {
-            std::cerr << "Please enter a port for the server." << std::endl;
+            std::cerr << "[odgi server]: Please enter a port for the server via -p=[N], --port=[N]." << std::endl;
             exit(1);
         }
 

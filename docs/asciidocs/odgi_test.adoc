@@ -1,0 +1,157 @@
+= odgi test(1)
+ifdef::backend-manpage[]
+Erik Garrison, Simon Heumos
+:doctype: manpage
+:release-version: 0.4.1
+:man manual: odgi test
+:man source: odgi 0.4.1
+:page-test: base
+endif::[]
+
+== NAME
+
+odgi_test - run odgi unit tests
+
+== SYNOPSIS
+
+*odgi test* [<TEST NAME|PATTERN|TAGS> ...] [_OPTION_]...
+
+== DESCRIPTION
+
+The odgi test(1) command starts all unit tests that are implemented in odgi. For targeted testing, a subset of tests can
+be selected. odgi test(1) depends on https://github.com/catchorg/Catch2[Catch2]. In the default setting, all results are printed to stdout.
+
+== OPTIONS
+
+=== Testing Options
+
+*-l, --list-tests*::
+  List all test cases. If a pattern was specified, all matching test cases are listed.
+
+*-t, --list-tags*::
+  List all tags. If a pattern was specified, all matching tags are listed.
+
+*-s, --success*::
+  Include successful tests in output.
+
+*-b, --break*::
+  Break into debugger mode upon failed test.
+
+*-e, --nothrow*::
+  Skip exception tests.
+
+*-i, --invisibles*::
+  Show invisibles like tabs or newlines.
+
+*-o, --out*=_FILE_::
+  Write all output to _FILE_.
+
+*-r, --reporter*=_STRING_::
+  Reporter to use. Default is console.
+
+*-n, --name*=_STRING_::
+  Suite name.
+
+*-a, --abort*::
+  Abort at first failure.
+
+*-x, --abortx*=_N_::
+  Abort after _N_ failures.
+
+*-w, --warn*=_STRING_::
+  Enable warnings.
+
+*-d, --durations*=_yes|no_::
+  Show test durations. Default is _no_.
+
+*-f, --input-file*=_FILE_::
+  Load test names from a file.
+
+*-#, --filenames-as-tags*::
+  Adds a tag for the file name.
+
+*-c, --section*=_STRING_::
+  Specify the section to run the tests on.
+
+*-v, --verosity*=_quiet|normal|high_::
+  Set output verbosity. Default is _normal_.
+
+*--list-test-names-only*::
+  List all test cases names only. If a pattern was specified, all matching test cases are listed.
+
+*--list-reporters*::
+  List all reporters.
+
+*--order*=_decl|lex|rand_::
+  Test case order. Default ist _decl_.
+
+*--rng-seed*=_time|number_::
+  Set a specific seed for random numbers.
+
+*--use-color*=_yes|no_::
+  Should the output be colorized? Default is _yes_.
+
+*--libidentify*::
+  Report name and version according to libidentify.
+
+*--wait-for-keypress*=_start|exit|both_::
+  Waits for a keypress before _start|exit|both_.
+
+*--benchmark-resolution-multiple*::
+  Multiple of clock resolution to run benchmarks.
+
+=== Program Information
+
+*-?, -h, --help*::
+  Print a help message for *odgi test*.
+
+== EXIT STATUS
+
+*0*::
+  Success.
+
+*1*::
+  Failure (syntax or usage error; parameter error; file processing failure; unexpected error).
+
+== BUGS
+
+Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
+
+== AUTHORS
+
+*odgi test* was written by Erik Garrison and Simon Heumos.
+
+ifdef::backend-manpage[]
+== RESOURCES
+
+*Project web site:* https://github.com/vgteam/odgi
+
+*Git source repository on GitHub:* https://github.com/vgteam/odgi
+
+*GitHub organization:* https://github.com/vgteam
+
+*Discussion list / forum:* https://github.com/vgteam/odgi/issues
+
+== COPYING
+
+The MIT License (MIT)
+
+Copyright (c) 2019 Erik Garrison
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+endif::[]
