@@ -1,11 +1,11 @@
 #CUR_VER=$(tail -2 VERSIONS | head -1)
-CUR_VER=$(tail -n 1 VERSIONS)
+CUR_VER=$(grep "{\"v" ../../src/version.cpp | tail -2 | head -1 | cut -d "," -f 1 | cut -d "\"" -f 2)
 echo "$CUR_VER"
 
 NEW_VER=$(grep "{\"v" ../../src/version.cpp | tail -n 1 | cut -d "," -f 1 | cut -d "\"" -f 2)
 echo "$NEW_VER"
 
-# sed -i "s/$CUR_VER/$NEW_VER/g" *.adoc
+sed -i "s/$CUR_VER/$NEW_VER/g" *.adoc
 
 asciidoctor -b html odgi_docs.adoc
 asciidoctor -b docbook odgi_docs.adoc
