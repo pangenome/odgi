@@ -2,9 +2,9 @@
 ifdef::backend-manpage[]
 Erik Garrison
 :doctype: manpage
-:release-version: 0.4.1
+:release-version: v0.4.1 
 :man manual: odgi subset
-:man source: odgi 0.4.1
+:man source: odgi v0.4.1 
 :page-layout: base
 endif::[]
 

@@ -1,56 +1,42 @@
-= odgi kmers(1)
+= odgi version(1)
 ifdef::backend-manpage[]
-Erik Garrison
+Simon Heumos
 :doctype: manpage
-:release-version: v0.4.1 
-:man manual: odgi kmers
-:man source: odgi v0.4.1 
+:release-version: v0.4.1
+:man manual: odgi version
+:man source: odgi v0.4.1
 :page-layout: base
 endif::[]
 
 == NAME
 
-odgi_kmers - show and characterize the kmer space of the graph
+odgi_version - display the version of odgi
 
 == SYNOPSIS
 
-*odgi kmers* [*-i, --idx*=_FILE_] [*-c, --stdout*] [_OPTION_]...
+*odgi version* [_OPTION_]...
 
 == DESCRIPTION
 
-Given a kmer length, the odgi kmers(1) command can emit all kmers. The output can be refined by setting the maximum number
-of furcations at edges or by not considering nodes above a given node degree limit.
+The odgi version(1) command prints the current git version with tags and codename to stdout (like _v-44-g89d022b "back to old ABI"_). Optionally, only the release, version or codename can be printed.
 
 == OPTIONS
 
-=== Graph Files IO
+=== Version Options
 
-*-i, --idx*=_FILE_::
-  File containing the succinct variation graph to convert from. The file name usually ends with _.og_.
+*-v, --version*=::
+  Print only the version (like _v-44-g89d022b_).
 
-*-c, --stdout*=::
-  Write the kmers to standard output. Kmers are line-separated.
+*-c, --codename*::
+  Print only the codename (like _back to old ABI_).
 
-=== Kmer Options
-
-*-k, --kmer-length*=_N_::
-  The kmer length to generate kmers from.
-
-*-e, --max-furcations*=_N_::
-  Break at edges that would induce this many furcations when generating a kmer.
-
-*-D, --max-degree*=_N_::
-  Don't take nodes into account that have a degree greater than _N_.
-
-=== Threading
-
-*-t, --threads*=_N_::
-  Number of threads to use.
+*-r, --release*::
+  Print only the release (like _v_).
 
 === Program Information
 
 *-h, --help*::
-  Print a help message for *odgi kmers*.
+  Print a help message for *odgi version*.
 
 == EXIT STATUS
 
@@ -66,7 +52,7 @@ Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
 
 == AUTHORS
 
-*odgi kmers* was written by Erik Garrison.
+*odgi version* was written by Simon Heumos.
 
 ifdef::backend-manpage[]
 == RESOURCES

@@ -253,6 +253,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/split.cpp
   ${CMAKE_SOURCE_DIR}/src/node.cpp
   ${CMAKE_SOURCE_DIR}/src/subgraph.cpp
+  ${CMAKE_SOURCE_DIR}/src/version.cpp
   #${CMAKE_SOURCE_DIR}/src/snarls.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/driver.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/handle.cpp
@@ -282,6 +283,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/pathindex_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/panpos_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/server_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/version_main.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/hash.cpp
@@ -390,6 +392,8 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/io_helper.hpp
   ${CMAKE_SOURCE_DIR}/src/dna.hpp
   ${CMAKE_SOURCE_DIR}/src/bgraph.hpp
+  ${CMAKE_SOURCE_DIR}/src/odgi_git_version.hpp
+  ${CMAKE_SOURCE_DIR}/src/version.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/random_order.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/split_strands.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/strongly_connected_components.hpp
@@ -463,6 +467,9 @@ add_dependencies(odgi_pybind11 ${odgi_DEPS} libodgi_static)
 target_include_directories(odgi_pybind11 PUBLIC ${odgi_INCLUDES})
 target_link_libraries(odgi_pybind11 PRIVATE "${CMAKE_SOURCE_DIR}/lib/libodgi.a" "${odgi_LIBS}")
 set_target_properties(odgi_pybind11 PROPERTIES OUTPUT_NAME "odgi")
+
+file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/include)
+execute_process(COMMAND bash scripts/generate_git_version.sh ${CMAKE_SOURCE_DIR}/include)
 
 install(TARGETS odgi DESTINATION bin)
 install(TARGETS libodgi_static ARCHIVE DESTINATION lib LIBRARY DESTINATION lib PUBLIC_HEADER DESTINATION include/odgi)

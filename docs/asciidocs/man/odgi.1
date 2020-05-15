@@ -4,10 +4,10 @@
 .\" Generator: Asciidoctor 2.0.10
 .\"      Date: 2020-05-15
 .\"    Manual: odgi
-.\"    Source: odgi 0.4.1
+.\"    Source: odgi v0.4.1
 .\"  Language: English
 .\"
-.TH "ODGI" "1" "2020-05-15" "odgi 0.4.1" "odgi"
+.TH "ODGI" "1" "2020-05-15" "odgi v0.4.1" "odgi"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -72,6 +72,8 @@ odgi \- dynamic succinct variation graph tool
 \fBodgi\fP server \-i graph.og \-p 4000 \-ip 192.168.8.9
 .sp
 \fBodgi\fP test
+.sp
+\fBodgi\fP version
 .SH "DESCRIPTION"
 .sp
 \fBodgi\fP, the \fBOptimized Dynamic (genome) Graph Interface\fP, links
@@ -304,6 +306,10 @@ The odgi test(1) command starts all unit tests that are implemented in odgi. For
 be selected. odgi test(1) depends on \c
 .URL "https://github.com/catchorg/Catch2" "Catch2" "."
 In the default setting, all results are printed to stdout.
+.sp
+\fBodgi version\fP [\fIOPTION\fP]...
+.br
+The odgi version(1) command prints the current git version with tags and codename to stdout (like \fIv\-44\-g89d022b "back to old ABI"\fP). Optionally, only the release, version or codename can be printed.
 .SH "BUGS"
 .sp
 Refer to the \fBodgi\fP issue tracker at \c

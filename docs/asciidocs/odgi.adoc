@@ -2,9 +2,9 @@
 ifdef::backend-manpage[]
 Erik Garrison
 :doctype: manpage
-:release-version: 0.4.1
+:release-version: v0.4.1 
 :man manual: odgi
-:man source: odgi 0.4.1
+:man source: odgi v0.4.1 
 :page-layout: base
 endif::[]
 
@@ -55,6 +55,8 @@ odgi - dynamic succinct variation graph tool
 *odgi* <<odgi_server.adoc#_odgi_server1, server>> -i graph.og -p 4000 -ip 192.168.8.9
 
 *odgi* <<odgi_test.adoc#_odgi_test1, test>>
+
+*odgi* <<odgi_version.adoc#_odgi_version1, version>>
 
 == DESCRIPTION
 
@@ -187,6 +189,8 @@ input and output positions are 1-based. If no IP address is specified, the serve
 The odgi test(1) command starts all unit tests that are implemented in odgi. For targeted testing, a subset of tests can
 be selected. odgi test(1) depends on https://github.com/catchorg/Catch2[Catch2]. In the default setting, all results are printed to stdout.
 
+*odgi version* [_OPTION_]... +
+The odgi version(1) command prints the current git version with tags and codename to stdout (like _v-44-g89d022b "back to old ABI"_). Optionally, only the release, version or codename can be printed.
 
 == BUGS
 

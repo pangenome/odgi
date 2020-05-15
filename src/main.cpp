@@ -8,12 +8,13 @@
 
 // New subcommand system provides all the subcommands that used to live here
 #include "subcommand/subcommand.hpp"
+#include "version.hpp"
 
 using namespace std;
 using namespace odgi;
 
 void odgi_help(char** argv) {
-    cerr << "odgi: dynamic succinct variation graph tool" << endl
+    cerr << "odgi: dynamic succinct variation graph tool, version " << Version::get_short() << endl
          << endl
          << "usage: " << argv[0] << " <command> [options]" << endl
          << endl
@@ -32,7 +33,7 @@ void odgi_help(char** argv) {
  }
 
 // We make sure to compile main for the lowest common denominator architecture.
-// This works on GCC and Clang. But we have to decalre main and then define it.
+// This works on GCC and Clang. But we have to declare main and then define it.
 int main(int argc, char *argv[]) __attribute__((__target__("arch=x86-64")));
 
 int main(int argc, char *argv[]) {
@@ -52,7 +53,7 @@ int main(int argc, char *argv[]) {
     } else {
         // No subcommand found
         string command = argv[1];
-        cerr << "error:[dg] command " << command << " not found" << endl;
+        cerr << "error:[odgi] command " << command << " not found" << endl;
         odgi_help(argv);
         return 1;
     }

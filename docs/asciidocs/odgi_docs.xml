@@ -3,7 +3,7 @@
 <?asciidoc-numbered?>
 <article xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" version="5.0" xml:lang="en">
 <info>
-<title>Reference Documentation for ODGI 0.4.1</title>
+<title>Reference Documentation for ODGI</title>
 <date>2020-05-15</date>
 <author>
 <personname>
@@ -41,6 +41,7 @@
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_panpos1">panpos</link> -i graph.og -p Chr1 -n 4</simpara>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_server1">server</link> -i graph.og -p 4000 -ip 192.168.8.9</simpara>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_test1">test</link></simpara>
+<simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_version1">version</link></simpara>
 </section>
 <section xml:id="_description">
 <title>DESCRIPTION</title>
@@ -160,6 +161,8 @@ input and output positions are 1-based. If no IP address is specified, the serve
 <simpara><emphasis role="strong">odgi test</emphasis> [&lt;TEST NAME|PATTERN|TAGS&gt; &#8230;&#8203;] [<emphasis>OPTION</emphasis>]&#8230;&#8203;<?asciidoc-br?>
 The odgi test(1) command starts all unit tests that are implemented in odgi. For targeted testing, a subset of tests can
 be selected. odgi test(1) depends on <link xl:href="https://github.com/catchorg/Catch2">Catch2</link>. In the default setting, all results are printed to stdout.</simpara>
+<simpara><emphasis role="strong">odgi version</emphasis> [<emphasis>OPTION</emphasis>]&#8230;&#8203;<?asciidoc-br?>
+The odgi version(1) command prints the current git version with tags and codename to stdout (like <emphasis>v-44-g89d022b "back to old ABI"</emphasis>). Optionally, only the release, version or codename can be printed.</simpara>
 </section>
 <section xml:id="_bugs">
 <title>BUGS</title>
@@ -2832,6 +2835,83 @@ be selected. odgi test(1) depends on <link xl:href="https://github.com/catchorg/
 <section xml:id="_authors_23">
 <title>AUTHORS</title>
 <simpara><emphasis role="strong">odgi test</emphasis> was written by Erik Garrison and Simon Heumos.</simpara>
+</section>
+</section>
+<section xml:id="_odgi_version1">
+<title>odgi version(1)</title>
+<section xml:id="_name_24">
+<title>NAME</title>
+<simpara>odgi_version - display the version of odgi</simpara>
+</section>
+<section xml:id="_synopsis_24">
+<title>SYNOPSIS</title>
+<simpara><emphasis role="strong">odgi version</emphasis> [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
+</section>
+<section xml:id="_description_24">
+<title>DESCRIPTION</title>
+<simpara>The odgi version(1) command prints the current git version with tags and codename to stdout (like <emphasis>v-44-g89d022b "back to old ABI"</emphasis>). Optionally, only the release, version or codename can be printed.</simpara>
+</section>
+<section xml:id="_options_23">
+<title>OPTIONS</title>
+<section xml:id="_version_options">
+<title>Version Options</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-v, --version</emphasis>=</term>
+<listitem>
+<simpara>Print only the version (like <emphasis>v-44-g89d022b</emphasis>).</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-c, --codename</emphasis></term>
+<listitem>
+<simpara>Print only the codename (like <emphasis>back to old ABI</emphasis>).</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-r, --release</emphasis></term>
+<listitem>
+<simpara>Print only the release (like <emphasis>v</emphasis>).</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_program_information_23">
+<title>Program Information</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-h, --help</emphasis></term>
+<listitem>
+<simpara>Print a help message for <emphasis role="strong">odgi version</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+</section>
+<section xml:id="_exit_status_23">
+<title>EXIT STATUS</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">0</emphasis></term>
+<listitem>
+<simpara>Success.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">1</emphasis></term>
+<listitem>
+<simpara>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_bugs_24">
+<title>BUGS</title>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+</section>
+<section xml:id="_authors_24">
+<title>AUTHORS</title>
+<simpara><emphasis role="strong">odgi version</emphasis> was written by Simon Heumos.</simpara>
 </section>
 </section>
 </article>

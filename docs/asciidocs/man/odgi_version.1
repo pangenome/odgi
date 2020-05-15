@@ -1,13 +1,13 @@
 '\" t
-.\"     Title: odgi pathindex
+.\"     Title: odgi version
 .\"    Author: Simon Heumos
 .\" Generator: Asciidoctor 2.0.10
 .\"      Date: 2020-05-15
-.\"    Manual: odgi pathindex
+.\"    Manual: odgi version
 .\"    Source: odgi v0.4.1
 .\"  Language: English
 .\"
-.TH "ODGI_PATHINDEX" "1" "2020-05-15" "odgi v0.4.1" "odgi pathindex"
+.TH "ODGI_VERSION" "1" "2020-05-15" "odgi v0.4.1" "odgi version"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -28,37 +28,35 @@
 .  LINKSTYLE blue R < >
 .\}
 .SH "NAME"
-odgi_pathindex \- create a path index for a given path
+odgi_version \- display the version of odgi
 .SH "SYNOPSIS"
 .sp
-\fBodgi pathindex\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
+\fBodgi version\fP [\fIOPTION\fP]...
 .SH "DESCRIPTION"
 .sp
-The odgi pathindex(1) command generates a path index of a graph. It uses succinct data structures to encode the index.
-The path index represents a subset of the features of a fully realized \c
-.URL "https://github.com/vgteam/xg" "xg index" "."
-Having a path index, we can use
-odgi panpos to go from \fBpath:position\fP \(-> \fBpangenome:position\fP which is important when
-navigating large graphs in an interactive manner like in the \c
-.URL "https://graph\-genome.github.io/" "Pantograph" " "
-project.
+The odgi version(1) command prints the current git version with tags and codename to stdout (like \fIv\-44\-g89d022b "back to old ABI"\fP). Optionally, only the release, version or codename can be printed.
 .SH "OPTIONS"
-.SS "Graph Files IO"
+.SS "Version Options"
 .sp
-\fB\-i, \-\-idx\fP=\fIFILE\fP
+\fB\-v, \-\-version\fP=
 .RS 4
-File containing the succinct variation graph to generate a path index from. The file name usually ends with \fI.og\fP.
+Print only the version (like \fIv\-44\-g89d022b\fP).
 .RE
 .sp
-\fB\-o, \-\-out\fP=\fIFILE\fP
+\fB\-c, \-\-codename\fP
 .RS 4
-Write the path index to \fIFILE\fP.
+Print only the codename (like \fIback to old ABI\fP).
+.RE
+.sp
+\fB\-r, \-\-release\fP
+.RS 4
+Print only the release (like \fIv\fP).
 .RE
 .SS "Program Information"
 .sp
 \fB\-h, \-\-help\fP
 .RS 4
-Print a help message for \fBodgi pathindex\fP.
+Print a help message for \fBodgi version\fP.
 .RE
 .SH "EXIT STATUS"
 .sp
@@ -77,7 +75,7 @@ Refer to the \fBodgi\fP issue tracker at \c
 .URL "https://github.com/vgteam/odgi/issues" "" "."
 .SH "AUTHORS"
 .sp
-\fBodgi pathindex\fP was written by Simon Heumos.
+\fBodgi version\fP was written by Simon Heumos.
 .SH "RESOURCES"
 .sp
 \fBProject web site:\fP \c

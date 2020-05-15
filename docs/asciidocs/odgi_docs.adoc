@@ -2,7 +2,7 @@
 :toclevels: 1
 :sectnums:
 
-= Reference Documentation for ODGI 0.4.1
+= Reference Documentation for ODGI v0.4.1
 Simon Heumos, Erik Garrison
 
 include::odgi.adoc[leveloffset=+1]
@@ -28,3 +28,4 @@ include::odgi_pathindex.adoc[leveloffset=+1]
 include::odgi_panpos.adoc[leveloffset=+1]
 include::odgi_server.adoc[leveloffset=+1]
 include::odgi_test.adoc[leveloffset=+1]
+include::odgi_version.adoc[leveloffset=+1]

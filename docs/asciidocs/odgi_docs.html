@@ -6,7 +6,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="Asciidoctor 2.0.10">
 <meta name="author" content="Simon Heumos, Erik Garrison">
-<title>Reference Documentation for ODGI 0.4.1</title>
+<title>Reference Documentation for ODGI</title>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Open+Sans:300,300italic,400,400italic,600,600italic%7CNoto+Serif:400,400italic,700,700italic%7CDroid+Sans+Mono:400,700">
 <style>
 /* Asciidoctor default stylesheet | MIT License | https://asciidoctor.org */
@@ -439,7 +439,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </head>
 <body class="article toc2 toc-left">
 <div id="header">
-<h1>Reference Documentation for ODGI 0.4.1</h1>
+<h1>Reference Documentation for ODGI</h1>
 <div class="details">
 <span id="author" class="author">Simon Heumos, Erik Garrison</span><br>
 </div>
@@ -469,6 +469,7 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_odgi_panpos1">21. odgi panpos(1)</a></li>
 <li><a href="#_odgi_server1">22. odgi server(1)</a></li>
 <li><a href="#_odgi_test1">23. odgi test(1)</a></li>
+<li><a href="#_odgi_version1">24. odgi version(1)</a></li>
 </ul>
 </div>
 </div>
@@ -546,6 +547,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="paragraph">
 <p><strong>odgi</strong> <a href="#_odgi_test1">test</a></p>
+</div>
+<div class="paragraph">
+<p><strong>odgi</strong> <a href="#_odgi_version1">version</a></p>
 </div>
 </div>
 <div class="sect2">
@@ -717,6 +721,10 @@ input and output positions are 1-based. If no IP address is specified, the serve
 <p><strong>odgi test</strong> [&lt;TEST NAME|PATTERN|TAGS&gt; &#8230;&#8203;] [<em>OPTION</em>]&#8230;&#8203;<br>
 The odgi test(1) command starts all unit tests that are implemented in odgi. For targeted testing, a subset of tests can
 be selected. odgi test(1) depends on <a href="https://github.com/catchorg/Catch2">Catch2</a>. In the default setting, all results are printed to stdout.</p>
+</div>
+<div class="paragraph">
+<p><strong>odgi version</strong> [<em>OPTION</em>]&#8230;&#8203;<br>
+The odgi version(1) command prints the current git version with tags and codename to stdout (like <em>v-44-g89d022b "back to old ABI"</em>). Optionally, only the release, version or codename can be printed.</p>
 </div>
 </div>
 <div class="sect2">
@@ -3423,10 +3431,93 @@ be selected. odgi test(1) depends on <a href="https://github.com/catchorg/Catch2
 </div>
 </div>
 </div>
+<div class="sect1">
+<h2 id="_odgi_version1">24. odgi version(1)</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_name_24">24.1. NAME</h3>
+<div class="paragraph">
+<p>odgi_version - display the version of odgi</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_synopsis_24">24.2. SYNOPSIS</h3>
+<div class="paragraph">
+<p><strong>odgi version</strong> [<em>OPTION</em>]&#8230;&#8203;</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_description_24">24.3. DESCRIPTION</h3>
+<div class="paragraph">
+<p>The odgi version(1) command prints the current git version with tags and codename to stdout (like <em>v-44-g89d022b "back to old ABI"</em>). Optionally, only the release, version or codename can be printed.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_options_23">24.4. OPTIONS</h3>
+<div class="sect3">
+<h4 id="_version_options">24.4.1. Version Options</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-v, --version</strong>=</dt>
+<dd>
+<p>Print only the version (like <em>v-44-g89d022b</em>).</p>
+</dd>
+<dt class="hdlist1"><strong>-c, --codename</strong></dt>
+<dd>
+<p>Print only the codename (like <em>back to old ABI</em>).</p>
+</dd>
+<dt class="hdlist1"><strong>-r, --release</strong></dt>
+<dd>
+<p>Print only the release (like <em>v</em>).</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_program_information_23">24.4.2. Program Information</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-h, --help</strong></dt>
+<dd>
+<p>Print a help message for <strong>odgi version</strong>.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_exit_status_23">24.5. EXIT STATUS</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>0</strong></dt>
+<dd>
+<p>Success.</p>
+</dd>
+<dt class="hdlist1"><strong>1</strong></dt>
+<dd>
+<p>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_bugs_24">24.6. BUGS</h3>
+<div class="paragraph">
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_authors_24">24.7. AUTHORS</h3>
+<div class="paragraph">
+<p><strong>odgi version</strong> was written by Simon Heumos.</p>
+</div>
+</div>
+</div>
+</div>
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-05-15 20:50:26 +0200
+Last updated 2020-05-15 23:24:09 +0200
 </div>
 </div>
 </body>
