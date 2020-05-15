@@ -1,66 +1,47 @@
-= odgi paths(1)
+= odgi panpos(1)
 ifdef::backend-manpage[]
-Erik Garrison
+Simon Heumos
 :doctype: manpage
 :release-version: 0.4.1
-:man manual: odgi paths
+:man manual: odgi panpos
 :man source: odgi 0.4.1
-:page-layout: base
+:page-panpos: base
 endif::[]
 
 == NAME
 
-odgi_paths - embedded path interrogation
+odgi_panpos - get the pangenome position of a given path and nucleotide position (1-based)
 
 == SYNOPSIS
 
-*odgi paths* [*-i, --idx*=_FILE_] [_OPTION_]...
+*odgi panpos* [*-i, --idx*=_FILE_] [*-p, --path*=_STRING_] [*-n, --nuc-pos*=_N_] [_OPTION_]...
 
 == DESCRIPTION
 
-The odgi paths(1) command allows the investigation of paths of a given variation graph. It can calculate overlap statistics
-of groupings of paths.
+The odgi panpos(1) command give a pangenome position for a given path and nucleotide position. It requires a path index,
+which can be created with odgi <<odgi_pathindex.adoc#_odgi_pathindex1, pathindex>>. Going from *path:position* -> *pangenome:position* is important when
+navigating large graphs in an interactive manner like in the https://graph-genome.github.io/[Pantograph] project. All
+input and output positions are 1-based.
 
 == OPTIONS
 
 === Graph Files IO
 
 *-i, --idx*=_FILE_::
-  File containing the succinct variation graph to investigate the paths from. The file name usually ends with _.og_.
+  File containing the succinct variation graph index to find the pangenome position in. The file name usually ends with _.xp_.
 
-*-O, --overlaps*=_FILE_::
-  Read in the path grouping file to generate the overlap statistics from. The file must be tab-delimited. The first column
-  lists a grouping and the second the path itself. Each line has one path entry. For each group the pairwise overlap statistics
-  for each pairing will be calculated and printed to stdout.
+=== Position Options
 
-=== Investigation Options
+*-p, --path*=_STRING_::
+  The path name of the query.
 
-*-L, --list-paths*::
-  Print the paths in the graph to stdout. Each path is printed in its own line.
-
-*-H, --haplotypes*::
-  Print to stdout the paths in an approximate binary haplotype matrix based on the graph's sort order. The output is tab-delimited:
-  *path.name*, *path.length*, *node.count*, *node.1*, *node.2*, *node.n*. Each path entry is printed in its own line.
-
-*-D, --delim*=_CHAR_::
-  The part of each path name before this delimiter is a group identifier. This parameter should only be set in combination
-  with [*-H, --haplotypes*]. Prints an additional, first column *group.name* to stdout.
-
-*-d, --distance*::
-  Provides a sparse distance matrix for paths. If [*-D, --delim*] is set, it will be path groups distances.
-
-*-f, --fasta*::
-  Print paths in FASTA format to stdout.
-
-=== Threading
-
-*-t, --threads*=_N_::
-  Number of threads to use.
+*-n, --nuc-pos*=_STRING_::
+  The nucleotide sequence of the query.
 
 === Program Information
 
 *-h, --help*::
-  Print a help message for *odgi paths*.
+  Print a help message for *odgi panpos*.
 
 == EXIT STATUS
 
@@ -76,7 +57,7 @@ Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
 
 == AUTHORS
 
-*odgi paths* was written by Erik Garrison.
+*odgi panpos* was written by Simon Heumos.
 
 ifdef::backend-manpage[]
 == RESOURCES

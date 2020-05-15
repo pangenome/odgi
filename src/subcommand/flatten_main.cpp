@@ -40,6 +40,11 @@ int main_flatten(int argc, char** argv) {
         return 1;
     }
 
+    if (!odgi_in_file) {
+        std::cerr << "[odgi flatten] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
+        return 1;
+    }
+
     graph_t graph;
     assert(argc > 0);
     std::string infile = args::get(odgi_in_file);

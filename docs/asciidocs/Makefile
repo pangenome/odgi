@@ -25,5 +25,11 @@ asciidoctor -b manpage odgi_normalize.adoc
 asciidoctor -b manpage odgi_subset.adoc
 asciidoctor -b manpage odgi_bin.adoc
 asciidoctor -b manpage odgi_matrix.adoc
+asciidoctor -b manpage odgi_chop.adoc
+asciidoctor -b manpage odgi_layout.adoc
+asciidoctor -b manpage odgi_flatten.adoc
+asciidoctor -b manpage odgi_break.adoc
+asciidoctor -b manpage odgi_pathindex.adoc
+asciidoctor -b manpage odgi_panpos.adoc
 
 mv *.1 man/

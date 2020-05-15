@@ -1,66 +1,54 @@
-= odgi paths(1)
+= odgi break(1)
 ifdef::backend-manpage[]
 Erik Garrison
 :doctype: manpage
 :release-version: 0.4.1
-:man manual: odgi paths
+:man manual: odgi break
 :man source: odgi 0.4.1
-:page-layout: base
+:page-break: base
 endif::[]
 
 == NAME
 
-odgi_paths - embedded path interrogation
+odgi_break - break cycles in the graph and drop its paths
 
 == SYNOPSIS
 
-*odgi paths* [*-i, --idx*=_FILE_] [_OPTION_]...
+*odgi break* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]...
 
 == DESCRIPTION
 
-The odgi paths(1) command allows the investigation of paths of a given variation graph. It can calculate overlap statistics
-of groupings of paths.
+The odgi break(1) command finds cycles in a graph via https://en.wikipedia.org/wiki/Breadth-first_search[breadth-first search (BFS)] and breaks them, also dropping
+the graph's paths.
 
 == OPTIONS
 
 === Graph Files IO
 
 *-i, --idx*=_FILE_::
-  File containing the succinct variation graph to investigate the paths from. The file name usually ends with _.og_.
+  File containing the succinct variation graph to break. The file name usually ends with _.og_.
 
-*-O, --overlaps*=_FILE_::
-  Read in the path grouping file to generate the overlap statistics from. The file must be tab-delimited. The first column
-  lists a grouping and the second the path itself. Each line has one path entry. For each group the pairwise overlap statistics
-  for each pairing will be calculated and printed to stdout.
+*-o, --out*=_FILE_::
+  Write the broken graph to _FILE_.
 
-=== Investigation Options
+=== Cycle Options
 
-*-L, --list-paths*::
-  Print the paths in the graph to stdout. Each path is printed in its own line.
+*-c, --cycle-max-bp*=_N_::
+  The maximum cycle length at which to break.
 
-*-H, --haplotypes*::
-  Print to stdout the paths in an approximate binary haplotype matrix based on the graph's sort order. The output is tab-delimited:
-  *path.name*, *path.length*, *node.count*, *node.1*, *node.2*, *node.n*. Each path entry is printed in its own line.
+*-s, --max-search-bp*=_N_::
+  The maximum search space of each BFS given in number of base pairs.
 
-*-D, --delim*=_CHAR_::
-  The part of each path name before this delimiter is a group identifier. This parameter should only be set in combination
-  with [*-H, --haplotypes*]. Prints an additional, first column *group.name* to stdout.
+*-u, --repeat-up-to*=_N_::
+  Iterate cycle breaking up to _N_ times or stop if no new edges are removed.
 
-*-d, --distance*::
-  Provides a sparse distance matrix for paths. If [*-D, --delim*] is set, it will be path groups distances.
-
-*-f, --fasta*::
-  Print paths in FASTA format to stdout.
-
-=== Threading
-
-*-t, --threads*=_N_::
-  Number of threads to use.
+*-d, --show*::
+  Print the edges we would remove to stdout.
 
 === Program Information
 
 *-h, --help*::
-  Print a help message for *odgi paths*.
+  Print a help message for *odgi break*.
 
 == EXIT STATUS
 
@@ -76,7 +64,7 @@ Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
 
 == AUTHORS
 
-*odgi paths* was written by Erik Garrison.
+*odgi break* was written by Erik Garrison.
 
 ifdef::backend-manpage[]
 == RESOURCES

@@ -8,13 +8,13 @@ namespace odgi {
     using namespace odgi::subcommand;
     using namespace xp;
 
-    int main_pathindex(int argc, char** argv) {
+    int main_pathindex(int argc, char **argv) {
 
-        for (uint64_t i = 1; i < argc-1; ++i) {
-            argv[i] = argv[i+1];
+        for (uint64_t i = 1; i < argc - 1; ++i) {
+            argv[i] = argv[i + 1];
         }
         const std::string prog_name = "odgi pathindex";
-        argv[0] = (char*)prog_name.c_str();
+        argv[0] = (char *) prog_name.c_str();
         --argc;
 
         args::ArgumentParser parser("create a path index for a given graph");
@@ -32,8 +32,22 @@ namespace odgi {
             std::cerr << parser;
             return 1;
         }
-        if (argc==1) {
+        if (argc == 1) {
             std::cout << parser;
+            return 1;
+        }
+
+        if (!dg_in_file) {
+            std::cerr
+                    << "[odgi pathindex] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
+                    << std::endl;
+            return 1;
+        }
+
+        if (!idx_out_file) {
+            std::cerr
+                    << "[odgi pathindex] error: Please specify an output file to where to store the path index via -o=[FILE], --out=[FILE]."
+                    << std::endl;
             return 1;
         }
 
@@ -84,6 +98,6 @@ namespace odgi {
     }
 
     static Subcommand odgi_pathindex("pathindex", "create a path index for a given graph",
-                               PIPELINE, 3, main_pathindex);
+                                     PIPELINE, 3, main_pathindex);
 
 }

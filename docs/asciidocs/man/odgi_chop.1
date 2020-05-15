@@ -1,13 +1,13 @@
 '\" t
-.\"     Title: odgi unitig
+.\"     Title: odgi chop
 .\"    Author: Erik Garrison
 .\" Generator: Asciidoctor 2.0.10
 .\"      Date: 2020-05-15
-.\"    Manual: odgi unitig
+.\"    Manual: odgi chop
 .\"    Source: odgi 0.4.1
 .\"  Language: English
 .\"
-.TH "ODGI_UNITIG" "1" "2020-05-15" "odgi 0.4.1" "odgi unitig"
+.TH "ODGI_CHOP" "1" "2020-05-15" "odgi 0.4.1" "odgi chop"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -28,50 +28,42 @@
 .  LINKSTYLE blue R < >
 .\}
 .SH "NAME"
-odgi_unitig \- output unitigs of the graph
+odgi_chop \- divide nodes into smaller pieces
 .SH "SYNOPSIS"
 .sp
-\fBodgi unitig\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fIOPTION\fP]...
+\fBodgi chop\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fB\-c, \-\-chop\-to\fP=\fIN\fP] [\fIOPTION\fP]...
 .SH "DESCRIPTION"
 .sp
-The odgi unitig(1) command can print all \c
-.URL "https://github.com/mcveanlab/mccortex/wiki/unitig" "unitigs" " "
-of a given odgi graph to standard output in FASTA format. Unitigs can also be emitted
-in a fixed sequence quality FASTQ format. Various parameters can refine the unitigs to print.
+The odgi chop(1) command chops long nodes into short ones while preserving the graph topology.
 .SH "OPTIONS"
 .SS "Graph Files IO"
 .sp
 \fB\-i, \-\-idx\fP=\fIFILE\fP
 .RS 4
-File containing the succinct variation graph to convert from. The file name usually ends with \fI.og\fP.
-.RE
-.SS "FASTQ Options"
-.sp
-\fB\-f, \-\-fake\-fastq\fP
-.RS 4
-Write the unitigs in FASTQ format to stdout with a fixed quality value of \fII\fP.
-.RE
-.SS "Unitig Options"
-.sp
-\fB\-t, \-\-sample\-to\fP=\fIN\fP
-.RS 4
-Continue unitigs with a random walk in the graph so that they have at least the given \fIN\fP length.
+File containing the succinct variation graph to chop. The file name usually ends with \fI.og\fP.
 .RE
 .sp
-\fB\-p, \-\-sample\-plus\fP=\fIN\fP
+\fB\-o, \-\-out\fP=\fIFILE\fP
 .RS 4
-Continue unitigs with a random walk in the graph by \fIN\fP past their natural end.
+Write the choped succinct variation graph to \fIFILE\fP. The file name usually ends with \fI.og\fP.
 .RE
+.SS "Chop Options"
 .sp
-\fB\-l, \-\-min\-begin\-node\-length\fP=\fIN\fP
+\fB\-c, \-\-chop\-to\fP=\fIN\fP
 .RS 4
-Only begin unitigs collection from nodes which have at least length \fIN\fP.
+Divide nodes that are shorter than \fIN\fP.
+.RE
+.SS "Processing Information"
+.sp
+\fB\-d, \-\-debug\fP
+.RS 4
+Print information about the components to stdout.
 .RE
 .SS "Program Information"
 .sp
 \fB\-h, \-\-help\fP
 .RS 4
-Print a help message for \fBodgi unitig\fP.
+Print a help message for \fBodgi chop\fP.
 .RE
 .SH "EXIT STATUS"
 .sp
@@ -90,7 +82,7 @@ Refer to the \fBodgi\fP issue tracker at \c
 .URL "https://github.com/vgteam/odgi/issues" "" "."
 .SH "AUTHORS"
 .sp
-\fBodgi unitig\fP was written by Erik Garrison.
+\fBodgi chop\fP was written by Erik Garrison.
 .SH "RESOURCES"
 .sp
 \fBProject web site:\fP \c

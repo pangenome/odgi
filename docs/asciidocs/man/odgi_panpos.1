@@ -1,13 +1,13 @@
 '\" t
-.\"     Title: odgi unitig
-.\"    Author: Erik Garrison
+.\"     Title: odgi panpos
+.\"    Author: Simon Heumos
 .\" Generator: Asciidoctor 2.0.10
 .\"      Date: 2020-05-15
-.\"    Manual: odgi unitig
+.\"    Manual: odgi panpos
 .\"    Source: odgi 0.4.1
 .\"  Language: English
 .\"
-.TH "ODGI_UNITIG" "1" "2020-05-15" "odgi 0.4.1" "odgi unitig"
+.TH "ODGI_PANPOS" "1" "2020-05-15" "odgi 0.4.1" "odgi panpos"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -28,50 +28,41 @@
 .  LINKSTYLE blue R < >
 .\}
 .SH "NAME"
-odgi_unitig \- output unitigs of the graph
+odgi_panpos \- get the pangenome position of a given path and nucleotide position (1\-based)
 .SH "SYNOPSIS"
 .sp
-\fBodgi unitig\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fIOPTION\fP]...
+\fBodgi panpos\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-p, \-\-path\fP=\fISTRING\fP] [\fB\-n, \-\-nuc\-pos\fP=\fIN\fP] [\fIOPTION\fP]...
 .SH "DESCRIPTION"
 .sp
-The odgi unitig(1) command can print all \c
-.URL "https://github.com/mcveanlab/mccortex/wiki/unitig" "unitigs" " "
-of a given odgi graph to standard output in FASTA format. Unitigs can also be emitted
-in a fixed sequence quality FASTQ format. Various parameters can refine the unitigs to print.
+The odgi panpos(1) command give a pangenome position for a given path and nucleotide position. It requires a path index,
+which can be created with odgi pathindex. Going from \fBpath:position\fP \(-> \fBpangenome:position\fP is important when
+navigating large graphs in an interactive manner like in the \c
+.URL "https://graph\-genome.github.io/" "Pantograph" " "
+project. All
+input and output positions are 1\-based.
 .SH "OPTIONS"
 .SS "Graph Files IO"
 .sp
 \fB\-i, \-\-idx\fP=\fIFILE\fP
 .RS 4
-File containing the succinct variation graph to convert from. The file name usually ends with \fI.og\fP.
+File containing the succinct variation graph index to find the pangenome position in. The file name usually ends with \fI.xp\fP.
 .RE
-.SS "FASTQ Options"
+.SS "Position Options"
 .sp
-\fB\-f, \-\-fake\-fastq\fP
+\fB\-p, \-\-path\fP=\fISTRING\fP
 .RS 4
-Write the unitigs in FASTQ format to stdout with a fixed quality value of \fII\fP.
-.RE
-.SS "Unitig Options"
-.sp
-\fB\-t, \-\-sample\-to\fP=\fIN\fP
-.RS 4
-Continue unitigs with a random walk in the graph so that they have at least the given \fIN\fP length.
+The path name of the query.
 .RE
 .sp
-\fB\-p, \-\-sample\-plus\fP=\fIN\fP
+\fB\-n, \-\-nuc\-pos\fP=\fISTRING\fP
 .RS 4
-Continue unitigs with a random walk in the graph by \fIN\fP past their natural end.
-.RE
-.sp
-\fB\-l, \-\-min\-begin\-node\-length\fP=\fIN\fP
-.RS 4
-Only begin unitigs collection from nodes which have at least length \fIN\fP.
+The nucleotide sequence of the query.
 .RE
 .SS "Program Information"
 .sp
 \fB\-h, \-\-help\fP
 .RS 4
-Print a help message for \fBodgi unitig\fP.
+Print a help message for \fBodgi panpos\fP.
 .RE
 .SH "EXIT STATUS"
 .sp
@@ -90,7 +81,7 @@ Refer to the \fBodgi\fP issue tracker at \c
 .URL "https://github.com/vgteam/odgi/issues" "" "."
 .SH "AUTHORS"
 .sp
-\fBodgi unitig\fP was written by Erik Garrison.
+\fBodgi panpos\fP was written by Simon Heumos.
 .SH "RESOURCES"
 .sp
 \fBProject web site:\fP \c
@@ -128,4 +119,4 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 .SH "AUTHOR"
 .sp
-Erik Garrison
+Simon Heumos

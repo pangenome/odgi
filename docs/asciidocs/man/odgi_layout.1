@@ -1,13 +1,13 @@
 '\" t
-.\"     Title: odgi unitig
+.\"     Title: odgi layout
 .\"    Author: Erik Garrison
 .\" Generator: Asciidoctor 2.0.10
 .\"      Date: 2020-05-15
-.\"    Manual: odgi unitig
+.\"    Manual: odgi layout
 .\"    Source: odgi 0.4.1
 .\"  Language: English
 .\"
-.TH "ODGI_UNITIG" "1" "2020-05-15" "odgi 0.4.1" "odgi unitig"
+.TH "ODGI_LAYOUT" "1" "2020-05-15" "odgi 0.4.1" "odgi layout"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -28,50 +28,67 @@
 .  LINKSTYLE blue R < >
 .\}
 .SH "NAME"
-odgi_unitig \- output unitigs of the graph
+odgi_layout \- use SGD to make 2D layouts of the graph
 .SH "SYNOPSIS"
 .sp
-\fBodgi unitig\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fIOPTION\fP]...
+\fBodgi layout\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
 .SH "DESCRIPTION"
 .sp
-The odgi unitig(1) command can print all \c
-.URL "https://github.com/mcveanlab/mccortex/wiki/unitig" "unitigs" " "
-of a given odgi graph to standard output in FASTA format. Unitigs can also be emitted
-in a fixed sequence quality FASTQ format. Various parameters can refine the unitigs to print.
+The odgi layout(1) command draws 2D layouts of the graph using stochastic gradient descent (SGD). The input graph must be sorted
+and id\-compacted. The algorithm itself is described in \c
+.URL "https://arxiv.org/abs/1710.04626" "Graph Drawing by Stochastic Gradient Descent" "."
+The force\-directed graph drawing algorithm minimizes the graph\(cqs energy function or stress level.
+It applies SGD to move a single pair of nodes at a time. The rendered graph is written in SVG format.
 .SH "OPTIONS"
 .SS "Graph Files IO"
 .sp
 \fB\-i, \-\-idx\fP=\fIFILE\fP
 .RS 4
-File containing the succinct variation graph to convert from. The file name usually ends with \fI.og\fP.
-.RE
-.SS "FASTQ Options"
-.sp
-\fB\-f, \-\-fake\-fastq\fP
-.RS 4
-Write the unitigs in FASTQ format to stdout with a fixed quality value of \fII\fP.
-.RE
-.SS "Unitig Options"
-.sp
-\fB\-t, \-\-sample\-to\fP=\fIN\fP
-.RS 4
-Continue unitigs with a random walk in the graph so that they have at least the given \fIN\fP length.
+File containing the succinct variation graph to layout. The file name usually ends with \fI.og\fP.
 .RE
 .sp
-\fB\-p, \-\-sample\-plus\fP=\fIN\fP
+\fB\-o, \-\-out\fP=\fIFILE\fP
 .RS 4
-Continue unitigs with a random walk in the graph by \fIN\fP past their natural end.
+Write the rendered layout in SVG format to \fIFILE\fP.
+.RE
+.SS "SGD Options"
+.sp
+\fB\-m, \-\-iter\-max\fP=\fIN\fP
+.RS 4
+The maximum number of iterations to run the layout. Default is \fI30\fP.
 .RE
 .sp
-\fB\-l, \-\-min\-begin\-node\-length\fP=\fIN\fP
+\fB\-p, \-\-n\-pivots\fP=\fIN\fP
 .RS 4
-Only begin unitigs collection from nodes which have at least length \fIN\fP.
+The number of pivots for sparse layout. Default is \fI0\fP leading to a non\-sparse layout.
+.RE
+.sp
+\fB\-e, \-\-eps\fP=\fIN\fP
+.RS 4
+The learning rate for SGD layout. Default is \fI0.01\fP.
+.RE
+.SS "SVG Options"
+.sp
+\fB\-x, \-\-x\-padding\fP=\fIN\fP
+.RS 4
+The padding between the connected component layouts. Default is \fI10.0\fP.
+.RE
+.sp
+\fB\-R, \-\-render\-scale\fP=\fIN\fP
+.RS 4
+SVG scaling Default is \fI5.0\fP.
+.RE
+.SS "Processing Information"
+.sp
+\fB\-d, \-\-debug\fP
+.RS 4
+Print information about the components to stdout.
 .RE
 .SS "Program Information"
 .sp
 \fB\-h, \-\-help\fP
 .RS 4
-Print a help message for \fBodgi unitig\fP.
+Print a help message for \fBodgi layout\fP.
 .RE
 .SH "EXIT STATUS"
 .sp
@@ -90,8 +107,8 @@ Refer to the \fBodgi\fP issue tracker at \c
 .URL "https://github.com/vgteam/odgi/issues" "" "."
 .SH "AUTHORS"
 .sp
-\fBodgi unitig\fP was written by Erik Garrison.
-.SH "RESOURCES"
+\fBodgi layout\fP was written by Erik Garrison.
+== RESOURCES
 .sp
 \fBProject web site:\fP \c
 .URL "https://github.com/vgteam/odgi" "" ""

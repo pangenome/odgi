@@ -86,6 +86,7 @@ Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
 == AUTHORS
 
 *odgi viz* was written by Erik Garrison.
+
 ifdef::backend-manpage[]
 == RESOURCES
 

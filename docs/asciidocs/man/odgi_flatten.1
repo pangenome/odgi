@@ -1,13 +1,13 @@
 '\" t
-.\"     Title: odgi unitig
+.\"     Title: odgi flatten
 .\"    Author: Erik Garrison
 .\" Generator: Asciidoctor 2.0.10
 .\"      Date: 2020-05-15
-.\"    Manual: odgi unitig
+.\"    Manual: odgi flatten
 .\"    Source: odgi 0.4.1
 .\"  Language: English
 .\"
-.TH "ODGI_UNITIG" "1" "2020-05-15" "odgi 0.4.1" "odgi unitig"
+.TH "ODGI_FLATTEN" "1" "2020-05-15" "odgi 0.4.1" "odgi flatten"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -28,50 +28,41 @@
 .  LINKSTYLE blue R < >
 .\}
 .SH "NAME"
-odgi_unitig \- output unitigs of the graph
+odgi_flatten \- generate linearization of the graph
 .SH "SYNOPSIS"
 .sp
-\fBodgi unitig\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fIOPTION\fP]...
+\fBodgi flatten\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fIOPTION\fP]...
 .SH "DESCRIPTION"
 .sp
-The odgi unitig(1) command can print all \c
-.URL "https://github.com/mcveanlab/mccortex/wiki/unitig" "unitigs" " "
-of a given odgi graph to standard output in FASTA format. Unitigs can also be emitted
-in a fixed sequence quality FASTQ format. Various parameters can refine the unitigs to print.
+The odgi flatten(1) command projects the graph sequence and paths into FASTA and BED.
 .SH "OPTIONS"
 .SS "Graph Files IO"
 .sp
 \fB\-i, \-\-idx\fP=\fIFILE\fP
 .RS 4
-File containing the succinct variation graph to convert from. The file name usually ends with \fI.og\fP.
+File containing the succinct variation graph to flatten. The file name usually ends with \fI.og\fP.
 .RE
-.SS "FASTQ Options"
+.SS "Output Options"
 .sp
-\fB\-f, \-\-fake\-fastq\fP
+\fB\-f, \-\-fasta\fP=\fIFILE\fP
 .RS 4
-Write the unitigs in FASTQ format to stdout with a fixed quality value of \fII\fP.
-.RE
-.SS "Unitig Options"
-.sp
-\fB\-t, \-\-sample\-to\fP=\fIN\fP
-.RS 4
-Continue unitigs with a random walk in the graph so that they have at least the given \fIN\fP length.
+Write the concatenated node sequences in FASTA format to \fIFILE\fP.
 .RE
 .sp
-\fB\-p, \-\-sample\-plus\fP=\fIN\fP
+\fB\-n, \-\-name\-seq\fP=\fISTRING\fP
 .RS 4
-Continue unitigs with a random walk in the graph by \fIN\fP past their natural end.
+The name to use for the concatenated graph sequence. Default is the name of the input file which was specified via [\fB\-i, \-\-idx\fP=\fIFILE\fP].
 .RE
 .sp
-\fB\-l, \-\-min\-begin\-node\-length\fP=\fIN\fP
+\fB\-b, \-\-bed\fP=\fIFILE\fP
 .RS 4
-Only begin unitigs collection from nodes which have at least length \fIN\fP.
+Write the mapping between graph paths and the linearized FASTA sequence in BED format to \fIFILE\fP.
 .RE
 .SS "Program Information"
 .sp
 \fB\-h, \-\-help\fP
 .RS 4
-Print a help message for \fBodgi unitig\fP.
+Print a help message for \fBodgi flatten\fP.
 .RE
 .SH "EXIT STATUS"
 .sp
@@ -90,7 +81,7 @@ Refer to the \fBodgi\fP issue tracker at \c
 .URL "https://github.com/vgteam/odgi/issues" "" "."
 .SH "AUTHORS"
 .sp
-\fBodgi unitig\fP was written by Erik Garrison.
+\fBodgi flatten\fP was written by Erik Garrison.
 .SH "RESOURCES"
 .sp
 \fBProject web site:\fP \c
