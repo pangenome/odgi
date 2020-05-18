@@ -51,6 +51,18 @@ They can be run via `odgi test`.
 As such, it is possible to add, delete, and modify nodes, edges, and paths through the graph.
 Wherever possible, destructive operations on the graph maintain path validity.
 
+## Documentation
+There exists detailed documentation for `odgi`. For an HTML version please click [here](./docs/asciidocs/odgi_docs.html). 
+For manpages please click [here](./docs/asciidocs/man).
+
+## Versioning
+Each time `odgi` is build, the current version is inferred via `git describe --always --tags`. Assuming, [version.cpp](./src/version.cpp)
+is up to date, `odgi version` will not only print out the current tagged version, but its release codename, too. 
+
+## Prepare release
+This section is important for developers only. Each time we make a new release, we invoke [prepare_release.sh](./scripts/prepare_release.sh) 
+with a new release version and codename. [version.cpp](./src/version.cpp) is updated and the documentation version is bumped up.
+
 ## name
 
 `odgi` is a play on the [Italian word "oggi" (/ˈɔd.dʒi/)](https://en.wiktionary.org/wiki/oggi), which means "today".
