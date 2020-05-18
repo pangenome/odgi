@@ -6,3 +6,4 @@ bin/
 lib/
 test/
 .gdb_history
+include/

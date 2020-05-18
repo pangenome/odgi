@@ -22,7 +22,7 @@ int main_normalize(int argc, char** argv) {
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> og_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> og_out_file(parser, "FILE", "store the graph self index in this file", {'o', "out"});
-    args::ValueFlag<uint64_t> max_iterations(parser, "FILE", "iterate normalization up to this many times (default: 10)", {'I', "max-iterations"});
+    args::ValueFlag<uint64_t> max_iterations(parser, "N", "iterate normalization up to this many times (default: 10)", {'I', "max-iterations"});
     args::Flag debug(parser, "debug", "print information about the normalization process", {'d', "debug"});
     //args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
@@ -38,6 +38,16 @@ int main_normalize(int argc, char** argv) {
     }
     if (argc==1) {
         std::cout << parser;
+        return 1;
+    }
+
+    if (!og_in_file) {
+        std::cerr << "[odgi normalize] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
+        return 1;
+    }
+
+    if (!og_out_file) {
+        std::cerr << "[odgi normalize] error: Please specify an output file to where to store the unchopped graph via -o=[FILE], --out=[FILE]." << std::endl;
         return 1;
     }
 

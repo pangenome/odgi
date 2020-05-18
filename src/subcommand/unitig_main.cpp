@@ -44,6 +44,11 @@ int main_unitig(int argc, char** argv) {
         return 1;
     }
 
+    if (!dg_in_file) {
+        std::cerr << "Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
+        return 1;
+    }
+
     graph_t graph;
     assert(argc > 0);
     std::string infile = args::get(dg_in_file);

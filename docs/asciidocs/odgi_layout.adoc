@@ -1,0 +1,113 @@
+= odgi layout(1)
+ifdef::backend-manpage[]
+Erik Garrison
+:doctype: manpage
+:release-version: v0.4.1 
+:man manual: odgi layout
+:man source: odgi v0.4.1 
+:page-layout: base
+endif::[]
+
+== NAME
+
+odgi_layout - use SGD to make 2D layouts of the graph
+
+== SYNOPSIS
+
+*odgi layout* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]...
+
+== DESCRIPTION
+
+The odgi layout(1) command draws 2D layouts of the graph using stochastic gradient descent (SGD). The input graph must be sorted
+and id-compacted. The algorithm itself is described in https://arxiv.org/abs/1710.04626[Graph Drawing by Stochastic Gradient Descent].
+The force-directed graph drawing algorithm minimizes the graph's energy function or stress level.
+It applies SGD to move a single pair of nodes at a time. The rendered graph is written in SVG format.
+
+== OPTIONS
+
+=== Graph Files IO
+
+*-i, --idx*=_FILE_::
+  File containing the succinct variation graph to layout. The file name usually ends with _.og_.
+
+*-o, --out*=_FILE_::
+  Write the rendered layout in SVG format to _FILE_.
+
+=== SGD Options
+
+*-m, --iter-max*=_N_::
+  The maximum number of iterations to run the layout. Default is _30_.
+
+*-p, --n-pivots*=_N_::
+  The number of pivots for sparse layout. Default is _0_ leading to a non-sparse layout.
+
+*-e, --eps*=_N_::
+  The learning rate for SGD layout. Default is _0.01_.
+
+=== SVG Options
+
+*-x, --x-padding*=_N_::
+  The padding between the connected component layouts. Default is _10.0_.
+
+*-R, --render-scale*=_N_::
+  SVG scaling Default is _5.0_.
+
+=== Processing Information
+
+*-d, --debug*::
+  Print information about the components to stdout.
+
+=== Program Information
+
+*-h, --help*::
+  Print a help message for *odgi layout*.
+
+== EXIT STATUS
+
+*0*::
+  Success.
+
+*1*::
+  Failure (syntax or usage error; parameter error; file processing failure; unexpected error).
+
+== BUGS
+
+Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
+
+== AUTHORS
+
+*odgi layout* was written by Erik Garrison.
+ifdef::backend-manpage[]
+== RESOURCES
+
+*Project web site:* https://github.com/vgteam/odgi
+
+*Git source repository on GitHub:* https://github.com/vgteam/odgi
+
+*GitHub organization:* https://github.com/vgteam
+
+*Discussion list / forum:* https://github.com/vgteam/odgi/issues
+
+== COPYING
+
+The MIT License (MIT)
+
+Copyright (c) 2019 Erik Garrison
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+endif::[]

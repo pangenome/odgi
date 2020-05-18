@@ -16,11 +16,11 @@ namespace odgi {
         argv[0] = (char*)prog_name.c_str();
         --argc;
 
-        args::ArgumentParser parser("get the pangenome position of a given path and nucleotide position");
+        args::ArgumentParser parser("get the pangenome position of a given path and nucleotide position (1-based)");
         args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
         args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the index from this file", {'i', "idx"});
-        args::ValueFlag<std::string> path_name(parser, "PATH_NAME", "get the pangenome position of this path", {'p', "path"});
-        args::ValueFlag<uint64_t> nuc_pos(parser, "NUC_POS", "get the pangenome position of this nucleotide position", {'n', "nuc_pos"});
+        args::ValueFlag<std::string> path_name(parser, "STRING", "get the pangenome position of this path", {'p', "path"});
+        args::ValueFlag<uint64_t> nuc_pos(parser, "N", "get the pangenome position of this nucleotide position", {'n', "nuc-pos"});
 
         try {
             parser.ParseCLI(argc, argv);
@@ -38,15 +38,15 @@ namespace odgi {
         }
 
         if (!dg_in_file) {
-            std::cerr << "Please enter a file to read the index from." << std::endl;
+            std::cerr << "[odgi panpos] error: Please enter a file to read the index from via -i=[FILE], --idx=[FILE]." << std::endl;
             exit(1);
         }
         if (!path_name) {
-            std::cerr << "Please enter a valid path name to extract the pangenome position from." << std::endl;
+            std::cerr << "[odgi panpos] error: Please enter a valid path name to extract the pangenome position from via -p=[STRING], --path=[STRING]." << std::endl;
             exit(1);
         }
         if (!nuc_pos) {
-            std::cerr << "Please enter a valid nucleotide position to extract the corresponding pangenome position from." << std::endl;
+            std::cerr << "[odgi panpos] error: Please enter a valid nucleotide position to extract the corresponding pangenome position from -n=[N], --nuc-pos=[N]." << std::endl;
             exit(1);
         }
 
@@ -77,7 +77,7 @@ namespace odgi {
     }
 
     static Subcommand odgi_panpos("panpos",
-            "get the pangenome position for a given path and nucleotide position",
+            "get the pangenome position for a given path and nucleotide position (1-based)",
                                      PIPELINE, 3, main_panpos);
 
 }

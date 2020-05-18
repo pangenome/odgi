@@ -54,6 +54,11 @@ int main_paths(int argc, char** argv) {
         omp_set_num_threads(1);
     }
 
+    if (!dg_in_file) {
+        std::cerr << "[odgi paths] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
+        return 1;
+    }
+
     graph_t graph;
     assert(argc > 0);
     std::string infile = args::get(dg_in_file);

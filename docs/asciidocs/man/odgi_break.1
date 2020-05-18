@@ -1,0 +1,135 @@
+'\" t
+.\"     Title: odgi break
+.\"    Author: Erik Garrison
+.\" Generator: Asciidoctor 2.0.10
+.\"      Date: 2020-05-15
+.\"    Manual: odgi break
+.\"    Source: odgi v0.4.1
+.\"  Language: English
+.\"
+.TH "ODGI_BREAK" "1" "2020-05-15" "odgi v0.4.1" "odgi break"
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.ss \n[.ss] 0
+.nh
+.ad l
+.de URL
+\fI\\$2\fP <\\$1>\\$3
+..
+.als MTO URL
+.if \n[.g] \{\
+.  mso www.tmac
+.  am URL
+.    ad l
+.  .
+.  am MTO
+.    ad l
+.  .
+.  LINKSTYLE blue R < >
+.\}
+.SH "NAME"
+odgi_break \- break cycles in the graph and drop its paths
+.SH "SYNOPSIS"
+.sp
+\fBodgi break\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
+.SH "DESCRIPTION"
+.sp
+The odgi break(1) command finds cycles in a graph via \c
+.URL "https://en.wikipedia.org/wiki/Breadth\-first_search" "breadth\-first search (BFS)" " "
+and breaks them, also dropping
+the graph\(cqs paths.
+.SH "OPTIONS"
+.SS "Graph Files IO"
+.sp
+\fB\-i, \-\-idx\fP=\fIFILE\fP
+.RS 4
+File containing the succinct variation graph to break. The file name usually ends with \fI.og\fP.
+.RE
+.sp
+\fB\-o, \-\-out\fP=\fIFILE\fP
+.RS 4
+Write the broken graph to \fIFILE\fP.
+.RE
+.SS "Cycle Options"
+.sp
+\fB\-c, \-\-cycle\-max\-bp\fP=\fIN\fP
+.RS 4
+The maximum cycle length at which to break.
+.RE
+.sp
+\fB\-s, \-\-max\-search\-bp\fP=\fIN\fP
+.RS 4
+The maximum search space of each BFS given in number of base pairs.
+.RE
+.sp
+\fB\-u, \-\-repeat\-up\-to\fP=\fIN\fP
+.RS 4
+Iterate cycle breaking up to \fIN\fP times or stop if no new edges are removed.
+.RE
+.sp
+\fB\-d, \-\-show\fP
+.RS 4
+Print the edges we would remove to stdout.
+.RE
+.SS "Program Information"
+.sp
+\fB\-h, \-\-help\fP
+.RS 4
+Print a help message for \fBodgi break\fP.
+.RE
+.SH "EXIT STATUS"
+.sp
+\fB0\fP
+.RS 4
+Success.
+.RE
+.sp
+\fB1\fP
+.RS 4
+Failure (syntax or usage error; parameter error; file processing failure; unexpected error).
+.RE
+.SH "BUGS"
+.sp
+Refer to the \fBodgi\fP issue tracker at \c
+.URL "https://github.com/vgteam/odgi/issues" "" "."
+.SH "AUTHORS"
+.sp
+\fBodgi break\fP was written by Erik Garrison.
+.SH "RESOURCES"
+.sp
+\fBProject web site:\fP \c
+.URL "https://github.com/vgteam/odgi" "" ""
+.sp
+\fBGit source repository on GitHub:\fP \c
+.URL "https://github.com/vgteam/odgi" "" ""
+.sp
+\fBGitHub organization:\fP \c
+.URL "https://github.com/vgteam" "" ""
+.sp
+\fBDiscussion list / forum:\fP \c
+.URL "https://github.com/vgteam/odgi/issues" "" ""
+.SH "COPYING"
+.sp
+The MIT License (MIT)
+.sp
+Copyright (c) 2019 Erik Garrison
+.sp
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+.sp
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+.sp
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+.SH "AUTHOR"
+.sp
+Erik Garrison

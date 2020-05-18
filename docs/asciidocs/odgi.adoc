@@ -1,0 +1,234 @@
+= odgi (1)
+ifdef::backend-manpage[]
+Erik Garrison
+:doctype: manpage
+:release-version: v0.4.1 
+:man manual: odgi
+:man source: odgi v0.4.1 
+:page-layout: base
+endif::[]
+
+== NAME
+
+odgi - dynamic succinct variation graph tool
+
+== SYNOPSIS
+
+*odgi* <<odgi_build.adoc#_odgi_build1, build>> -g graph.gfa -o graph.og
+
+*odgi* <<odgi_stats.adoc#_odgi_stats1, stats>> -i graph.og -S
+
+*odgi* <<odgi_sort.adoc#_odgi_sort1, sort>> -i graph.og -o graph.sorted.og -p bSnSnS
+
+*odgi* <<odgi_view.adoc#_odgi_view1, view>> -i graph.og -g
+
+*odgi* <<odgi_kmers.adoc#_odgi_kmers1, kmers>> -i graph.og -c -k 23 -e 34 -D 50
+
+*odgi* <<odgi_unitig.adoc#_odgi_unitig1, unitig>> -i graph.og -f -t 1324 -l 120
+
+*odgi* <<odgi_viz.adoc#_odgi_viz1, viz>> -i graph.og -o graph.og.png -x 1920 -y 1080 -R -t 28
+
+*odgi* <<odgi_paths.adoc#_odgi_paths1, paths>> -i graph.og -f
+
+*odgi* <<odgi_prune.adoc#_odgi_prune1, prune>> -i graph.og -o graph.pruned.og -c 3 -C 345 -T
+
+*odgi* <<odgi_unchop.adoc#_odgi_unchop1, unchop>> -i graph.og -o graph.unchopped.og
+
+*odgi* <<odgi_normalize.adoc#_odgi_normalize1, normalize>> -i graph.og -o graph.normalized.og -I 100 -d
+
+*odgi* <<odgi_subset.adoc#_odgi_subset1, subset>> -i graph.og -o graph.subsetted.og -n 1 -t 28
+
+*odgi* <<odgi_bin.adoc#_odgi_bin1, bin>> -i graph.og -j -w 100 -s -g
+
+*odgi* <<odgi_matrix.adoc#_odgi_matrix1, matrix>> -i graph.og -e -d
+
+*odgi* <<odgi_chop.adoc#_odgi_chop1, chop>> -i graph.og -o graph.choped.og -c 1000
+
+*odgi* <<odgi_layout.adoc#_odgi_layout1, layout>> -i graph.og -o graph.svg -R 10 -m 100
+
+*odgi* <<odgi_break.adoc#_odgi_break1, break>> -i graph.og -o graph.broken.og -s 100 -d
+
+*odgi* <<odgi_pathindex.adoc#_odgi_pathindex1, pathindex>> -i graph.og -o graph.xp
+
+*odgi* <<odgi_panpos.adoc#_odgi_panpos1, panpos>> -i graph.og -p Chr1 -n 4
+
+*odgi* <<odgi_server.adoc#_odgi_server1, server>> -i graph.og -p 4000 -ip 192.168.8.9
+
+*odgi* <<odgi_test.adoc#_odgi_test1, test>>
+
+*odgi* <<odgi_version.adoc#_odgi_version1, version>>
+
+== DESCRIPTION
+
+*odgi*, the *Optimized Dynamic (genome) Graph Interface*, links
+a thrifty dynamic in-memory variation graph data model to a set of algorithms designed for scalable sorting, pruning,
+transformation, and visualization of very large https://pangenome.github.io/[genome graphs]. *odgi* includes https://pangenome.github.io/odgi/odgipy.html[python bindings]
+that can be used to
+https://odgi.readthedocs.io/en/latest/rst/tutorial.html[directly
+interface with its data model]. This *odgi* manual provides detailed information about its features and subcommands, including examples.
+
+== COMMANDS
+
+Each command has its own man page which can be viewed using e.g. *man odgi_build.1*. Below we have a brief summary of syntax and subcommand description.
+
+*odgi build* [*-g, --gfa*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]... +
+The odgi build(1) command constructs a succinct variation graph from a GFA. Currently, only GFA1 is supported. For details of the format please see https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md.
+
+*odgi stats* [*-i, --idx*=_FILE_] [_OPTION_]... +
+The odgi stats(1) command produces statistics of a variation graph. Among other metrics, it can calculate the #nodes, #edges, #paths and the total nucleotide length of the graph. Various histogram summary options complement the tool. If [*-B, --bed-multicov*=_BED_] is set, the metrics will be produced for the intervals specified in the BED.
+
+*odgi sort* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]... +
+The odgi sort(1) command sorts a succinct variation graph. Odgi sort offers a diverse palette of sorting algorithms to
+determine the node order:
+
+ - A topological sort: A graph can be sorted via https://en.wikipedia.org/wiki/Breadth-first_search[breadth-first search (BFS)] or https://en.wikipedia.org/wiki/Depth-first_search[depth-first search (DFS)]. Optionally,
+   a chunk size specifies how much of the graph to grab at once in each topological sorting phase. The sorting algorithm will continue the sort from the
+   next node in the prior graph order that has not been sorted, yet. The cycle breaking algorithm applies a DFS sort until
+   a cycle is found. We break and start a new DFS sort phase from where we stopped.
+ - A random sort: The graph is randomly sorted. The node order is randomly shuffled from http://www.cplusplus.com/reference/random/mt19937/[Mersenne Twister pseudo-random] generated numbers.
+ - A sparse matrix mondriaan sort: We can partition a hypergraph with integer weights and uniform hyperedge costs using the http://www.staff.science.uu.nl/~bisse101/Mondriaan/[Mondriaan] partitioner.
+ - A 1D linear SGD sort: Odgi implements a 1D linear, variation graph adjusted, multi-threaded version of the https://arxiv.org/abs/1710.04626[Graph Drawing
+   by Stochastic Gradient Descent] algorithm. The force-directed graph drawing algorithm minimizes the graph's energy function
+   or stress level. It applies stochastic gradient descent (SGD) to move a single pair of nodes at a time.
+ - An eades algorithmic sort: Use http://www.it.usyd.edu.au/~pead6616/old_spring_paper.pdf[Peter Eades' heuristic for graph drawing].
+
+Sorting the paths in a graph my refine the sorting process. For the users' convenience, it is possible to specify a whole
+pipeline of sorts within one parameter.
+
+*odgi view* [*-i, --idx*=_FILE_] [_OPTION_]... +
+The odgi view(1) command can convert a graph in odgi format to GFAv1. It can reveal a graph's internal structures for e.g. debugging processes.
+
+*odgi kmers* [*-i, --idx*=_FILE_] [*-c, --stdout*] [_OPTION_]... +
+Given a kmer length, the odgi kmers(1) command can emit all kmers. The output can be refined by setting the maximum number
+of furcations at edges or by not considering nodes above a given node degree limit.
+
+*odgi unitig* [*-i, --idx*=_FILE_] [_OPTION_]... +
+The odgi unitig(1) command can print all unitigs of a given odgi graph to standard output in FASTA format. Unitigs can also be emitted
+in a fixed sequence quality FASTQ format. Various parameters can refine the unitigs to print.
+
+*odgi viz* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]... +
+The odgi viz(1) command can produce a linear, static visualization of an odgi variation graph. It aggregates the pangenome into bins
+and directly renders a raster image. The binning level depends on the target width of the PNG to emit. Can be used to produce visualizations for gigabase scale pangenomes. For more information
+about the binning process, please refer to <<odgi_bin.adoc#_odgi_bin1, odgi bin>>. If reverse coloring was selected, only
+the bins with a reverse rate of at least 0.5 are colored. Currently, there is no parameter to color according to the
+sequence coverage in bins available.
+
+*odgi paths* [*-i, --idx*=_FILE_] [_OPTION_]... +
+The odgi paths(1) command allows the investigation of paths of a given variation graph. It can calculate overlap statistics
+of groupings of paths.
+
+*odgi prune* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]... +
+The odgi prune(1) command can remove complex parts of a graph. One can drop paths, nodes by a certain kind of edge coverage,
+edges and graph tips. Specifying a kmer length and a maximum number of furcations, the graph can be broken at edges not
+fitting into these conditions.
+
+*odgi unchop* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]... +
+The odgi unchop(1) command merges each unitig into a single node.
+
+*odgi normalize* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]... +
+The odgi normalize(1) command <<odgi_unchop.adoc#_odgi_unchop1, unchops>> a given variation graph and simplifies redundant furcations.
+
+*odgi subset* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]... +
+Extracting a node subset of a variation graph is the task of the odgi subset(1) command. Users can specify a node, a list of nodes
+or a the context of which to generate a subset from.
+
+*odgi matrix* [*-i, --idx*=_FILE_] [_OPTION_]... +
+The odgi matrix(1) command generates a sparse matrix format out of the graph topology of a given variation graph.
+
+*odgi bin* [*-i, --idx*=_FILE_] [_OPTION_]... +
+The odgi bin(1) command bins a given variation graph. The pangenome sequence, the one-time traversal of all nodes from smallest to
+largest node identifier, can be summed up into bins of a specified size. For each bin, the path metainformation is summarized.
+This enables a summarized view of gigabase scale graphs. Each step of a path is a bin and connected to its next bin via a link.
+A link has a start bin identifier and an end bin identifier. +
+The concept of odgi bin is also applied in odgi <<odgi_viz.adoc#_odgi_viz1, viz>>.
+A demonstration of how the odgi bin JSON output can be used for an interactive visualization is realized in the https://graph-genome.github.io/[Pantograph]
+project. Per default, odgi bin writes the bins to stdout in a tab-delimited format: *path.name*, *path.prefix*, *path.suffix*,
+*bin* (bin identifier), *mean.cov* (mean coverage of the path in this bin), *mean.inv* (mean inversion rate of this path in this bin),
+*mean.pos* (mean nucleotide position of this path in this bin), *first.nucl* (first nucleotide position of this path in this bin),
+*last.nucl* (last nucleotide position of this path in this bin). These nucleotide ranges might span positions that are not present in the bin. Example:
+A range of 1-100 means that the first nucleotide has position 1 and the last has position 100, but nucleotide 45 could be located in
+another bin. For an exact positional output, please specify [*-j, --json*].
+
+*odgi chop* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [*-c, --chop-to*=_N_] [_OPTION_]... +
+The odgi chop(1) command chops long nodes into short ones while preserving the graph topology.
+
+*odgi layout* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]... +
+The odgi layout(1) command draws 2D layouts of the graph using stochastic gradient descent (SGD). The input graph must be sorted
+and id-compacted. The algorithm itself is described in https://arxiv.org/abs/1710.04626[Graph Drawing by Stochastic Gradient Descent].
+The force-directed graph drawing algorithm minimizes the graph's energy function or stress level.
+It applies SGD to move a single pair of nodes at a time. The rendered graph is written in SVG format.
+
+*odgi flatten* [*-i, --idx*=_FILE_] [_OPTION_]... +
+The odgi flatten(1) command projects the graph sequence and paths into FASTA and BED.
+
+*odgi break* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]... +
+The odgi break(1) command finds cycles in a graph via https://en.wikipedia.org/wiki/Breadth-first_search[breadth-first search (BFS)] and breaks them, also dropping
+the graph's paths.
+
+*odgi pathindex* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]... +
+The odgi pathindex(1) command generates a path index of a graph. It uses succinct data structures to encode the index.
+The path index represents a subset of the features of a fully realized https://github.com/vgteam/xg[xg index]. Having a path index, we can use
+odgi <<odgi_panpos.adoc#_odgi_panpos1, panpos>> to go from *path:position* -> *pangenome:position* which is important when
+navigating large graphs in an interactive manner like in the https://graph-genome.github.io/[Pantograph] project.
+
+*odgi panpos* [*-i, --idx*=_FILE_] [*-p, --path*=_STRING_] [*-n, --nuc-pos*=_N_] [_OPTION_]... +
+The odgi panpos(1) command give a pangenome position for a given path and nucleotide position. It requires a path index,
+which can be created with odgi <<odgi_pathindex.adoc#_odgi_pathindex1, pathindex>>. Going from *path:position* -> *pangenome:position* is important when
+navigating large graphs in an interactive manner like in the https://graph-genome.github.io/[Pantograph] project. All
+input and output positions are 1-based.
+
+*odgi server* [*-i, --idx*=_FILE_] [*-p, --port*=_N_] [_OPTION_]... +
+The odgi server(1) command starts an HTTP server with a given path index as input. The idea is that we can go from
+*path:position* -> *pangenome:position* via GET requests to the HTTP server. The server headers do not block cross origin requests.
+Example GET request: _http://localost:3000/path_name/nucleotide_position_. +
+The required path index can be created with odgi <<odgi_pathindex.adoc#_odgi_pathindex1, pathindex>>. Going from *path:position* -> *pangenome:position* is important when
+navigating large graphs in an interactive manner like in the https://graph-genome.github.io/[Pantograph] project. All
+input and output positions are 1-based. If no IP address is specified, the server will run on localhost.
+
+*odgi test* [<TEST NAME|PATTERN|TAGS> ...] [_OPTION_]... +
+The odgi test(1) command starts all unit tests that are implemented in odgi. For targeted testing, a subset of tests can
+be selected. odgi test(1) depends on https://github.com/catchorg/Catch2[Catch2]. In the default setting, all results are printed to stdout.
+
+*odgi version* [_OPTION_]... +
+The odgi version(1) command prints the current git version with tags and codename to stdout (like _v-44-g89d022b "back to old ABI"_). Optionally, only the release, version or codename can be printed.
+
+== BUGS
+
+Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
+
+== AUTHORS
+
+Erik Garrison from the University of California Santa Cruz wrote the whole *odgi* tool. Despite small code contributions, Simon Heumos from the Quantitative Biology Center Tübingen wrote *odgi pathindex*, *odgi panpos*, *odgi server*, and the documentation.
+
+== RESOURCES
+
+*Project web site:* https://github.com/vgteam/odgi
+
+*Git source repository on GitHub:* https://github.com/vgteam/odgi
+
+*GitHub organization:* https://github.com/vgteam
+
+*Discussion list / forum:* https://github.com/vgteam/odgi/issues
+
+== COPYING
+
+The MIT License (MIT)
+
+Copyright (c) 2019 Erik Garrison
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.

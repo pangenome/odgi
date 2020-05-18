@@ -89,6 +89,16 @@ int main_layout(int argc, char** argv) {
         return 1;
     }
 
+    if (!dg_in_file) {
+        std::cerr << "[odgi layout] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
+        return 1;
+    }
+
+    if (!svg_out_file) {
+        std::cerr << "[odgi layout] error: Please specify an output file to where to store the layout via -o=[FILE], --out=[FILE]." << std::endl;
+        return 1;
+    }
+
     uint64_t t_max = !args::get(iter_max) ? 30 : args::get(iter_max);
     uint64_t n_pivots = !args::get(num_pivots) ? 0 : args::get(num_pivots);
     double eps = !args::get(eps_rate) ? 0.01 : args::get(eps_rate);

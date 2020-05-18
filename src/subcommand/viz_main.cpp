@@ -108,6 +108,16 @@ int main_viz(int argc, char** argv) {
         omp_set_num_threads(1);
     }
 
+    if (!dg_in_file) {
+        std::cerr << "[odgi viz] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
+        return 1;
+    }
+
+    if (!png_out_file) {
+        std::cerr << "[odgi viz] error: Please specify an output file to where to store the PNG via -o=[FILE], --out=[FILE]." << std::endl;
+        return 1;
+    }
+
     graph_t graph;
     assert(argc > 0);
     std::string infile = args::get(dg_in_file);
@@ -198,7 +208,7 @@ int main_viz(int argc, char** argv) {
             for (uint64_t i = 0; i < hl; i+=1/scale_x) {
                 add_point(p+i, 0, 0, 0, 0);
             }
-        });
+    });
 
     graph.for_each_handle([&](const handle_t& h) {
             // add contacts for the edges

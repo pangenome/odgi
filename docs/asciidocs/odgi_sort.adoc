@@ -1,0 +1,216 @@
+= odgi sort(1)
+ifdef::backend-manpage[]
+Erik Garrison
+:doctype: manpage
+:release-version: v0.4.1 
+:man manual: odgi sort
+:man source: odgi v0.4.1 
+:page-layout: base
+endif::[]
+
+== NAME
+
+odgi_sort - sort a variation graph
+
+== SYNOPSIS
+
+*odgi sort* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]...
+
+== DESCRIPTION
+
+The odgi sort(1) command sorts a succinct variation graph. Odgi sort offers a diverse palette of sorting algorithms to
+determine the node order:
+
+ - A topological sort: A graph can be sorted via https://en.wikipedia.org/wiki/Breadth-first_search[breadth-first search (BFS)] or https://en.wikipedia.org/wiki/Depth-first_search[depth-first search (DFS)]. Optionally,
+   a chunk size specifies how much of the graph to grab at once in each topological sorting phase. The sorting algorithm will continue the sort from the
+   next node in the prior graph order that has not been sorted, yet. The cycle breaking algorithm applies a DFS sort until
+   a cycle is found. We break and start a new DFS sort phase from where we stopped.
+ - A random sort: The graph is randomly sorted. The node order is randomly shuffled from http://www.cplusplus.com/reference/random/mt19937/[Mersenne Twister pseudo-random] generated numbers.
+ - A sparse matrix mondriaan sort: We can partition a hypergraph with integer weights and uniform hyperedge costs using the http://www.staff.science.uu.nl/~bisse101/Mondriaan/[Mondriaan] partitioner.
+ - A 1D linear SGD sort: Odgi implements a 1D linear, variation graph adjusted, multi-threaded version of the https://arxiv.org/abs/1710.04626[Graph Drawing
+   by Stochastic Gradient Descent] algorithm. The force-directed graph drawing algorithm minimizes the graph's energy function
+   or stress level. It applies stochastic gradient descent (SGD) to move a single pair of nodes at a time.
+ - An eades algorithmic sort: Use http://www.it.usyd.edu.au/~pead6616/old_spring_paper.pdf[Peter Eades' heuristic for graph drawing].
+
+Sorting the paths in a graph my refine the sorting process. For the users' convenience, it is possible to specify a whole
+pipeline of sorts within one parameter.
+
+== OPTIONS
+
+=== Graph Files IO
+
+*-i, --idx*=_FILE_::
+  File containing the succinct variation graph to sort. The file name usually ends with _.og_.
+
+*-o, --out*=_FILE_::
+  Write the sorted dynamic succinct variation graph to this file. A file ending with _.og_ is recommended.
+
+*-s, --sort-order*=_FILE_::
+  File containing the sort order. Each line contains one node identifier.
+
+=== Topological Sorts
+
+*-b, --breadth-first*::
+  Use a (chunked) breadth first topological sort.
+
+*-B, --breadth-first-chunk*=_N_::
+  Chunk size for breadth first topological sort. Specify how many nucleotides to grap at once in each BFS phase.
+
+*-z, --depth-first*::
+  Use a (chunked) depth first topological sort.
+
+*-Z, --depth-first-chunk*=_N_::
+  Chunk size for the depth first topological sort. Specify how many nucleotides to grap at once in each DFS phace.
+
+*-w, --two-way*::
+  Use a two-way topological algorithm for sorting. It is a maximum of head-first and tail-first topological sort.
+
+*-n, --no-seeds*::
+  Don't use heads or tails to seed topological sort.
+
+*-c, --cycle-breaking*::
+  Use a cycle breaking sort.
+
+=== Random Sort
+
+*-r, --random*::
+  Randomly sort the graph.
+
+=== Mondriaan Sort
+
+*-m, --mondriaan*::
+  Use the sparse matrix diagonalization to sort the graph.
+
+*-N, --mondriaan-n-parts*=_N_::
+  Number of partitions for the mondriaan sort.
+
+*-E, --mondriaan-epsilon*=_N_::
+  Set the epsilon parameter for the mondriaan sort.
+
+*-W, --mondriaan-path-weight*::
+  Weight the mondriaan input matrix by the path coverage of edges.
+
+=== 1D Linear SGD Sort
+
+*-S, --linear-sgd*::
+  Apply 1D linear SGD algorithm to sort the graph.
+
+*-O, --sgd-bandwidth*=_sgd-bandwidth_::
+  Bandwidth of linear SGD model. The default value is _1000_.
+
+*-Q, --sgd-sampling-rate*=_sgd-sampling-rate_::
+  Sample pairs of nodes with probability distance between them divided by the sampling rate. The default value is _20_.
+
+*-K, --sgd-use-paths*::
+  Use the paths to structure the distances between nodes in SGD.
+
+*-T, --sgd-iter-max*=_sgd_iter-max_::
+  The maximum number of iterations for the linear SGD model. The default value is _30_.
+
+*-V, --sgd-eps*=_sgd-eps_::
+  The final learning rate for the linear SGD model. The default value is _0.01_.
+
+*-C, --sgd-delta*=_sgd-delta_::
+  The threshold of the maximum node displacement, approximately in base pairs, at which to stop SGD.
+
+=== Eades Sort
+
+*-e, --eades*::
+  Use eades algorithm.
+
+=== Path Sorting Options
+
+*-L, --paths-min*::
+  Sort paths by their lowest contained node identifier.
+
+*-M, --paths-max*::
+  Sort paths by their highest contained node identifier.
+
+*-A, --paths-avg*::
+  Sort paths by their average contained node identifier.
+
+*-R, --paths-avg-rev*::
+  Sort paths in reverse by their average contained node identifier.
+
+*-D, --path-delim*=_path-delim_::
+  Sort paths in bins by their prefix up to this delimiter.
+
+=== Pipeline Sorting
+
+*-p, --pipeline*=_STRING_::
+  Apply a series of sorts, based on single character command line arguments given to this command. The default sort is
+  _s_. The reverse sort would be specified via _f_.
+
+=== Additional Parameters
+
+*-d, --dagify-sort*::
+  Sort on the basis of a DAGified graph.
+
+*-O, --Optimize*::
+  Use the MutableHandleGraph::optimize method to compact the node identifier space.
+
+=== Threading
+
+*-t, --threads*=_N_::
+  Number of threads to use for parallel sorting in SGD. Only specify this argument in combination with *-S, --linear-sgd*. No multi-threading support for any other sorting algorithm.
+
+=== Processing Information
+
+*-P, --progress*::
+  Print sort progress to stdout.
+
+=== Program Information
+
+*-h, --help*::
+  Print a help message for *odgi sort*.
+
+== EXIT STATUS
+
+*0*::
+  Success.
+
+*1*::
+  Failure (syntax or usage error; parameter error; file processing failure; unexpected error).
+
+== BUGS
+
+Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
+
+== AUTHORS
+
+*odgi sort* was written by Erik Garrison.
+
+ifdef::backend-manpage[]
+== RESOURCES
+
+*Project web site:* https://github.com/vgteam/odgi
+
+*Git source repository on GitHub:* https://github.com/vgteam/odgi
+
+*GitHub organization:* https://github.com/vgteam
+
+*Discussion list / forum:* https://github.com/vgteam/odgi/issues
+
+== COPYING
+
+The MIT License (MIT)
+
+Copyright (c) 2019 Erik Garrison
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+endif::[]

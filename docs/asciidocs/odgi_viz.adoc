@@ -1,0 +1,123 @@
+= odgi viz(1)
+ifdef::backend-manpage[]
+Erik Garrison
+:doctype: manpage
+:release-version: v0.4.1 
+:man manual: odgi viz
+:man source: odgi v0.4.1 
+:page-layout: base
+endif::[]
+
+== NAME
+
+odgi_viz - variation graph visualizations
+
+== SYNOPSIS
+
+*odgi viz* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]...
+
+== DESCRIPTION
+
+The odgi viz(1) command can produce a linear, static visualization of an odgi variation graph. It aggregates the pangenome into bins
+and directly renders a raster image. The binning level depends on the target width of the PNG to emit. Can be used to produce visualizations for gigabase scale pangenomes. For more information
+about the binning process, please refer to <<odgi_bin.adoc#_odgi_bin1, odgi bin>>. If reverse coloring was selected, only
+the bins with a reverse rate of at least 0.5 are colored. Currently, there is no parameter to color according to the
+sequence coverage in bins available.
+
+== OPTIONS
+
+=== Graph Files IO
+
+*-i, --idx*=_FILE_::
+  File containing the succinct variation graph to convert from. The file name usually ends with _.og_.
+
+*-o, --out*=_FILE_::
+  Write the visualization in PNG format to this file.
+
+=== Visualization Options
+
+*-x, --width*=_N_::
+  Set the width in pixels of the output image.
+
+*-y, --height*=_N_::
+  Set the height in pixels of the output image.
+
+*-P, --path-height*=_N_::
+  The height in pixels for a path.
+
+*-X, --path-x-padding*=_N_::
+  The padding in pixels on the x-axis for a path.
+
+*-R, --path-per-row*::
+  Display a single path per row rather than packing them.
+
+*-L, --link-path-pieces*=_FLOAT_::
+  Show thin links of this relative width to connect path pieces.
+
+*-A, --alignment-prefix*=_STRING_::
+  Apply alignment related visual motifs to paths which have this name prefix.
+
+*-S, --show-strand*::
+  Use red and blue coloring to display forward and reverse alignments. This parameter should only be set in combination with
+  [*-A, --alignment-prefix*=_STRING_].
+
+=== Threading
+
+*-t, --threads*=_N_::
+  Number of threads to use.
+
+=== Program Information
+
+*-h, --help*::
+  Print a help message for *odgi viz*.
+
+== EXIT STATUS
+
+*0*::
+  Success.
+
+*1*::
+  Failure (syntax or usage error; parameter error; file processing failure; unexpected error).
+
+== BUGS
+
+Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
+
+== AUTHORS
+
+*odgi viz* was written by Erik Garrison.
+
+ifdef::backend-manpage[]
+== RESOURCES
+
+*Project web site:* https://github.com/vgteam/odgi
+
+*Git source repository on GitHub:* https://github.com/vgteam/odgi
+
+*GitHub organization:* https://github.com/vgteam
+
+*Discussion list / forum:* https://github.com/vgteam/odgi/issues
+
+== COPYING
+
+The MIT License (MIT)
+
+Copyright (c) 2019 Erik Garrison
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+endif::[]

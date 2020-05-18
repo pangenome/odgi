@@ -19,7 +19,6 @@ int main_matrix(int argc, char** argv) {
     
     args::ArgumentParser parser("write the graph topology in sparse matrix formats");
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-    args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store the graph in this file", {'o', "out"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     args::Flag weight_by_edge_depth(parser, "edge-depth-weight", "weight edges by their path depth", {'e', "edge-depth-weight"});
     args::Flag weight_by_edge_delta(parser, "delta-weight", "weight edges by the inverse id delta", {'d', "delta-weight"});
@@ -35,6 +34,11 @@ int main_matrix(int argc, char** argv) {
     }
     if (argc==1) {
         std::cout << parser;
+        return 1;
+    }
+
+    if (!dg_in_file) {
+        std::cerr << "[odgi matrix] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
         return 1;
     }
 

@@ -1,0 +1,95 @@
+= odgi normalize(1)
+ifdef::backend-manpage[]
+Erik Garrison
+:doctype: manpage
+:release-version: v0.4.1 
+:man manual: odgi normalize
+:man source: odgi v0.4.1 
+:page-layout: base
+endif::[]
+
+== NAME
+
+odgi_normalize - compact unitigs and simplify redundant furcations
+
+== SYNOPSIS
+
+*odgi normalize* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]...
+
+== DESCRIPTION
+
+The odgi normalize(1) command <<odgi_unchop.adoc#_odgi_unchop1, unchops>> a given variation graph and simplifies redundant furcations.
+
+== OPTIONS
+
+=== Graph Files IO
+
+*-i, --idx*=_FILE_::
+  File containing the succinct variation graph to normalize. The file name usually ends with _.og_.
+
+*-o, --out*=_FILE_::
+  Write the normalized dynamic succinct variation graph to this file. A file ending with _.og_ is recommended.
+
+*-I, --max-iterations*=_N_::
+  Iterate the normalization up to _N_ many times. The default is _10_.
+
+=== Program Debugging
+
+*-d, --debug*::
+  Print information about the normalization process to stdout.
+
+=== Program Information
+
+*-h, --help*::
+  Print a help message for *odgi normalize*.
+
+== EXIT STATUS
+
+*0*::
+  Success.
+
+*1*::
+  Failure (syntax or usage error; parameter error; file processing failure; unexpected error).
+
+== BUGS
+
+Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
+
+== AUTHORS
+
+*odgi normalize* was written by Erik Garrison.
+
+ifdef::backend-manpage[]
+== RESOURCES
+
+*Project web site:* https://github.com/vgteam/odgi
+
+*Git source repository on GitHub:* https://github.com/vgteam/odgi
+
+*GitHub organization:* https://github.com/vgteam
+
+*Discussion list / forum:* https://github.com/vgteam/odgi/issues
+
+== COPYING
+
+The MIT License (MIT)
+
+Copyright (c) 2019 Erik Garrison
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+endif::[]
