@@ -60,7 +60,7 @@ Each time `odgi` is build, the current version is inferred via `git describe --a
 is up to date, `odgi version` will not only print out the current tagged version, but its release codename, too. 
 
 ## Prepare release
-This section is important for developers only. Each time we make a new release, we invoke [prepare_release.sh](./scripts/prepare_release.sh) 
+This section is important for developers only. Each time we make a new release, we invoke [prepare_release.sh](./scripts/prepare_release.sh) (`cd` into folder [scripts](./scripts) first!) 
 with a new release version and codename. [version.cpp](./src/version.cpp) is updated and the documentation version is bumped up.
 
 ## name
