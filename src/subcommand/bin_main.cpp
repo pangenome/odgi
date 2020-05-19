@@ -211,8 +211,12 @@ int main_bin(int argc, char** argv) {
                           << info.mean_cov << "\t"
                           << info.mean_inv << "\t"
                           << info.mean_pos << "\t"
-						  << info.ranges[0].first << "\t"
-						  << info.ranges[info.ranges.size() - 1].second << std::endl;
+						  << info.ranges[0].first << "\t";
+                if (info.ranges[info.ranges.size() - 1].second == 0) {
+                    std::cout << info.ranges[info.ranges.size() - 1].first << std::endl;
+                } else {
+                    std::cout << info.ranges[info.ranges.size() - 1].second << std::endl;
+                }
             }
         }
     };
