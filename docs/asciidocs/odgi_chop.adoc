@@ -33,7 +33,7 @@ The odgi chop(1) command chops long nodes into short ones while preserving the g
 === Chop Options
 
 *-c, --chop-to*=_N_::
-  Divide nodes that are shorter than _N_.
+  Divide nodes that longer than _N_ into nodes no longer than _N_ while maintaining graph topology.
 
 === Processing Information
 
