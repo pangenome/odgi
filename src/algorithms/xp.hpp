@@ -107,9 +107,6 @@ namespace xp {
         /// Returns 0 if the given position is not in the given path.
         size_t get_pangenome_pos(const std::string &path_name, const size_t &nuc_pos) const;
 
-        /// Look up the bin id by given path name, nucleotide position and bin size
-        size_t get_bin_id(const std::string &path_name, const size_t &nuc_pos, const size_t &bin_size) const;
-
         /// Get the path of the given path name
         const XPPath& get_path(const std::string& name) const;
 

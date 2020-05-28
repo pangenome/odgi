@@ -10,7 +10,7 @@
 #include <mutex>
 #include <atomic>
 #include <chrono>
-#include <handlegraph/handle_graph.hpp>
+#include "sgd_term.hpp"
 #include <handlegraph/path_handle_graph.hpp>
 #include <handlegraph/util.hpp>
 #include <bf/all.hpp>
@@ -21,12 +21,6 @@ namespace odgi {
 namespace algorithms {
 
 using namespace handlegraph;
-
-struct sgd_term_t {
-    handle_t i, j;
-    double d, w;
-    sgd_term_t(const handle_t& i, const handle_t& j, const double& d, const double& w) : i(i), j(j), d(d), w(w) {}
-};
 
 // use SGD driven by banded pairwise distances to obtain a linear layout of the graph that respects its topology
 std::vector<double> linear_sgd(const PathHandleGraph& graph,

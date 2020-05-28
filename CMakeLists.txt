@@ -318,7 +318,8 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/normalize.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/simplify_siblings.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/unchop.cpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/perfect_neighbors.cpp)
+  ${CMAKE_SOURCE_DIR}/src/algorithms/perfect_neighbors.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/path_sgd.cpp)
 
 set(odgi_DEPS
     sdsl-lite
@@ -436,7 +437,9 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/algorithms/linear_sgd.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/break_cycles.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/xp.hpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/cut_tips.hpp)
+  ${CMAKE_SOURCE_DIR}/src/algorithms/cut_tips.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/path_sgd.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/sgd_term.hpp)
 
 target_include_directories(odgi_objs PUBLIC ${odgi_INCLUDES})
 set_target_properties(odgi_objs PROPERTIES POSITION_INDEPENDENT_CODE TRUE)

@@ -11,6 +11,8 @@
 #include "algorithms/random_order.hpp"
 #include "algorithms/mondriaan_sort.hpp"
 #include "algorithms/linear_sgd.hpp"
+#include "algorithms/xp.hpp"
+#include "algorithms/path_sgd.hpp"
 
 namespace odgi {
 
@@ -30,6 +32,7 @@ int main_sort(int argc, char** argv) {
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store the graph in this file", {'o', "out"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
+    args::ValueFlag<std::string> xp_in_file(parser, "FILE", "load the path index from this file", {'X', "path-index"});
     //args::Flag show_sort(parser, "show", "write the sort order mapping", {'S', "show"});
     args::ValueFlag<std::string> sort_order_in(parser, "FILE", "load the sort order from this file", {'s', "sort-order"});
     args::Flag cycle_breaking(parser, "cycle_breaking", "use a cycle breaking sort", {'c', "cycle-breaking"});
@@ -54,6 +57,13 @@ int main_sort(int argc, char** argv) {
     args::ValueFlag<uint64_t> mondriaan_n_parts(parser, "N", "number of partitions for mondriaan", {'N', "mondriaan-n-parts"});
     args::ValueFlag<double> mondriaan_epsilon(parser, "N", "epsilon parameter to mondriaan", {'E', "mondriaan-epsilon"});
     args::Flag mondriaan_path_weight(parser, "path-weight", "weight mondriaan input matrix by path coverage of edges", {'W', "mondriaan-path-weight"});
+    args::Flag p_sgd(parser, "path-sgd", "apply path guided linear 1D SGD algorithm to organize graph", {'Y', "path-sgd"});
+    args::ValueFlag<std::string> p_sgd_in_file(parser, "FILE", "specify a line separated list of paths to sample from for the on the fly term generation process in the path guided linear 1D SGD (default: sample from all paths)", {'f', "path-sgd-use-paths"});
+    args::ValueFlag<uint64_t> p_sgd_term_updates(parser, "N", "minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts (default: concatenated length of all paths times 10)", {'f', "path-sgd-term-updates"});
+    args::ValueFlag<double> p_sgd_delta(parser, "N", "threshold of maximum displacement approximately in bp at which to stop path guided linear 1D SGD (default: 0)", {'j', "path-sgd-delta"});
+    args::ValueFlag<double> p_sgd_eps(parser, "N", "final learning rate for path guided linear 1D SGD model (default: 0.01)", {'g', "path-sgd-eps"});
+    args::ValueFlag<double> p_sgd_zipf_alpha(parser, "N", "the alpha value for the Zipfian distrubution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: 0.05)", {'g', "path-sgd-eps"});
+    args::ValueFlag<uint64_t> p_sgd_iter_max(parser, "N", "max number of iterations for path guided linear 1D SGD model (default: 30)", {'x', "path-sgd-iter-max"});
     args::ValueFlag<std::string> pipeline(parser, "STRING", "apply a series of sorts, based on single-character command line arguments to this command, with 's' the default sort and 'f' to reverse the sort order", {'p', "pipeline"});
     args::Flag paths_by_min_node_id(parser, "paths-min", "sort paths by their lowest contained node id", {'L', "paths-min"});
     args::Flag paths_by_max_node_id(parser, "paths-max", "sort paths by their highest contained node id", {'M', "paths-max"});
@@ -63,6 +73,7 @@ int main_sort(int argc, char** argv) {
     args::Flag progress(parser, "progress", "display progress of the sort", {'P', "progress"});
     args::Flag optimize(parser, "optimize", "use the MutableHandleGraph::optimize method", {'O', "optimize"});
     args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel sorters (currently only SGD is supported)", {'t', "threads"});
+
     try {
         parser.ParseCLI(argc, argv);
     } catch (args::Help) {
@@ -79,12 +90,12 @@ int main_sort(int argc, char** argv) {
     }
 
     if (!dg_in_file) {
-        std::cerr << "Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
+        std::cerr << "[odgi sort] Error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
         return 1;
     }
 
     if (!dg_out_file) {
-        std::cerr << "Please specify an output file to store the graph via -o=[FILE], --out=[FILE]." << std::endl;
+        std::cerr << "[odgi sort] Error: Please specify an output file to store the graph via -o=[FILE], --out=[FILE]." << std::endl;
         return 1;
     }
 
@@ -119,6 +130,33 @@ int main_sort(int argc, char** argv) {
     double sgd_delta = args::get(lsgd_delta) ? args::get(lsgd_delta) : 0;
     uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
     bool sgd_use_paths = args::get(lsgd_use_paths);
+    /// path guided linear 1D SGD sort
+    // default parameters
+    uint64_t path_sgd_term_updates = args::get(p_sgd_term_updates) ? args::get(p_sgd_term_updates) : 0; // TODO if it is 0, we need to make sure in path_linear_sgd_order to calculate the default vaule
+    uint64_t path_sgd_iter_max = args::get(p_sgd_iter_max) ? args::get(p_sgd_iter_max) : 30;
+    double path_sgd_zipf_alpha = args::get(p_sgd_zipf_alpha) ? args::get(p_sgd_zipf_alpha) : 0.05;
+    double path_sgd_eps = args::get(p_sgd_eps) ? args::get(p_sgd_eps) : 0.01;
+    double path_sgd_delta = args::get(p_sgd_delta) ? args::get(p_sgd_delta) : 0;
+    // check if path index is present
+    if (p_sgd && !xp_in_file) {
+        std::cerr << "[odgi sort] Error: Please specify a path index file to load the index via -X=[FILE], --path-index=[FILE]. A path index can be created with the 'odgi pathindex' command." << std::endl;
+        return 1;
+    }
+    vector<std::string> path_sgd_use_paths;
+    // check if paths file is present, else add all paths to the vector
+    if (p_sgd_in_file) {
+        std::string buf;
+        std::ifstream use_paths(args::get(p_sgd_in_file).c_str());
+        while (std::getline(use_paths, buf)) {
+            path_sgd_use_paths.push_back(buf);
+            // TODO validate later that the given paths are actually in the graph
+        }
+        use_paths.close();
+    } else {
+        graph.for_each_path_handle([&](const path_handle_t& path) {
+            path_sgd_use_paths.push_back(graph.get_path_name(path));
+        });
+    }
 
     // helper, TODO: move into its own file
     // make a dagified copy, get its sort, and apply the order to our graph
@@ -160,6 +198,21 @@ int main_sort(int argc, char** argv) {
                                                               sgd_eps,
                                                               sgd_delta,
                                                               num_threads));
+        } else if (args::get(p_sgd)) {
+            xp::XP path_index;
+            std::ifstream in;
+            in.open(args::get(xp_in_file));
+            path_index.load(in);
+            in.close();
+            graph.apply_ordering(algorithms::path_linear_sgd_order(graph,
+                                                      path_index,
+                                                      path_sgd_use_paths,
+                                                      path_sgd_iter_max,
+                                                      path_sgd_term_updates,
+                                                      path_sgd_delta,
+                                                      path_sgd_eps,
+                                                      path_sgd_zipf_alpha,
+                                                      num_threads));
         } else if (args::get(breadth_first)) {
             graph.apply_ordering(algorithms::breadth_first_topological_order(graph, bf_chunk_size), true);
         } else if (args::get(depth_first)) {
@@ -211,6 +264,23 @@ int main_sort(int argc, char** argv) {
                                                          sgd_delta,
                                                          num_threads);
                     break;
+                case 'Y': {
+                    xp::XP path_index;
+                    std::ifstream in;
+                    in.open(args::get(xp_in_file));
+                    path_index.load(in);
+                    in.close();
+                    order = algorithms::path_linear_sgd_order(graph,
+                                                              path_index,
+                                                              path_sgd_use_paths,
+                                                              path_sgd_iter_max,
+                                                              path_sgd_term_updates,
+                                                              path_sgd_delta,
+                                                              path_sgd_eps,
+                                                              path_sgd_zipf_alpha,
+                                                              num_threads);
+                    break;
+                }
                 case 'f':
                     order.clear();
                     graph.for_each_handle([&order](const handle_t& handle) {
@@ -260,7 +330,7 @@ int main_sort(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand odgi_build("sort", "sort a variation graph",
+static Subcommand odgi_sort("sort", "sort a variation graph",
                               PIPELINE, 3, main_sort);
 
 
