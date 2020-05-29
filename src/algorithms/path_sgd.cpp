@@ -1,11 +1,12 @@
 #include "path_sgd.hpp"
 
+#define debug_path_sgd
 namespace odgi {
     namespace algorithms {
 
         std::vector<double> path_linear_sgd(const PathHandleGraph &graph,
                                             const xp::XP &path_index,
-                                            const std::vector<std::string> path_sgd_use_paths,
+                                            const std::set<std::string> path_sgd_use_paths,
                                             const uint64_t &iter_max,
                                             const uint64_t &term_updates,
                                             const double &delta,
@@ -23,6 +24,46 @@ namespace odgi {
                         X[number_bool_packing::unpack_number(handle)].store(len);
                         len += graph.get_length(handle);
                     });
+            // the longest path length measured in nucleotides
+            size_t longest_path_in_nucleotides = 0;
+            // the total path length in nucleotides
+            size_t total_path_len_in_nucleotides = 0;
+            // here we store all path nucleotides lengths so we know later from which path we sampled our random position from
+            IntervalTree<size_t, path_handle_t> path_nucleotide_tree;
+            std::vector<Interval<size_t, path_handle_t> > path_nucleotide_intervals;
+            // TODO iterate over all relevant path_handles:
+            //  1. build the interval tree
+            //  2. find out the longest path in nucleotides and store this number size_t
+            //  3. add the current path length to the total length
+            graph.for_each_path_handle([&](const path_handle_t& path) {
+                std::string path_name = graph.get_path_name(path);
+#ifdef debug_path_sgd
+                    std::cerr << path_name << std::endl;
+                    std::cerr << as_integer(path) << std::endl;
+#endif
+                // comparison taken from https://stackoverflow.com/questions/1701067/how-to-check-that-an-element-is-in-a-stdset
+                // Is the path we are looking currently relevant?
+                if (path_sgd_use_paths.find(path_name) != path_sgd_use_paths.end()) {
+                    size_t path_len = path_index.get_path_length(as_path_handle(1+ as_integer(path)));
+#ifdef debug_path_sgd
+                    std::cerr << path_name << " has length: " << path_len<< std::endl;
+#endif
+                    path_nucleotide_intervals.push_back(Interval<size_t, path_handle_t>(total_path_len_in_nucleotides + 1, total_path_len_in_nucleotides + path_len, path));
+                    if (path_len > longest_path_in_nucleotides) {
+                        longest_path_in_nucleotides = path_len;
+                    }
+                    total_path_len_in_nucleotides += path_len;
+                }
+            });
+            path_nucleotide_tree = IntervalTree<size_t, path_handle_t>(
+                    static_cast<IntervalTree<unsigned long, path_handle_t>::interval_vector &&>(path_nucleotide_intervals));
+            std::vector<Interval<size_t, path_handle_t> > results;
+            results = path_nucleotide_tree.findContained(1, 13);
+            std::cerr << "found " << results.size() << " overlapping intervals" << std::endl;
+            results = path_nucleotide_tree.findContained(14, 27);
+            std::cerr << "found " << graph.get_path_name(results[0].value) << " overlapping intervals" << std::endl;
+                        results = path_nucleotide_tree.findOverlapping(1, 1);
+            std::cerr << "found " << results.size() << " overlapping intervals" << std::endl;
             /*// run banded BFSs in the graph to build our terms
             std::vector<sgd_term_t> terms;
             if (use_paths) {
@@ -177,7 +218,7 @@ namespace odgi {
 
         std::vector<handle_t> path_linear_sgd_order(const PathHandleGraph &graph,
                                                const xp::XP &path_index,
-                                               const std::vector<std::string> path_sgd_use_paths,
+                                               const std::set<std::string> path_sgd_use_paths,
                                                const uint64_t &iter_max,
                                                const uint64_t &term_updates,
                                                const double &delta,

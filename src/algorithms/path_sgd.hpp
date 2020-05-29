@@ -15,6 +15,7 @@
 #include "hash_map.hpp"
 #include "xp.hpp"
 #include "sgd_term.hpp"
+#include "IntervalTree.h"
 
 namespace odgi {
     namespace algorithms {
@@ -24,7 +25,7 @@ namespace odgi {
         /// use SGD driven, by path guided, and partly zipfian distribution sampled pairwise distances to obtain a 1D linear layout of the graph that respects its topology
         std::vector<double> path_linear_sgd(const PathHandleGraph &graph,
                                             const xp::XP &path_index,
-                                            const std::vector<std::string> path_sgd_use_paths,
+                                            const std::set<std::string> path_sgd_use_paths,
                                             const uint64_t &iter_max,
                                             const uint64_t &term_updates,
                                             const double &delta,
@@ -40,7 +41,7 @@ namespace odgi {
 
         std::vector<handle_t> path_linear_sgd_order(const PathHandleGraph &graph,
                                                     const xp::XP &path_index,
-                                                    const std::vector<std::string> path_sgd_use_paths,
+                                                    const std::set<std::string> path_sgd_use_paths,
                                                     const uint64_t &iter_max,
                                                     const uint64_t &term_updates,
                                                     const double &delta,

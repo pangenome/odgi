@@ -142,19 +142,19 @@ int main_sort(int argc, char** argv) {
         std::cerr << "[odgi sort] Error: Please specify a path index file to load the index via -X=[FILE], --path-index=[FILE]. A path index can be created with the 'odgi pathindex' command." << std::endl;
         return 1;
     }
-    vector<std::string> path_sgd_use_paths;
-    // check if paths file is present, else add all paths to the vector
+    std::set<std::string> path_sgd_use_paths;
+    // check if paths file is present, else add all paths to the set
     if (p_sgd_in_file) {
         std::string buf;
         std::ifstream use_paths(args::get(p_sgd_in_file).c_str());
         while (std::getline(use_paths, buf)) {
-            path_sgd_use_paths.push_back(buf);
+            path_sgd_use_paths.insert(buf);
             // TODO validate later that the given paths are actually in the graph
         }
         use_paths.close();
     } else {
         graph.for_each_path_handle([&](const path_handle_t& path) {
-            path_sgd_use_paths.push_back(graph.get_path_name(path));
+            path_sgd_use_paths.insert(graph.get_path_name(path));
         });
     }
 
