@@ -29,6 +29,24 @@ uint64_t cut_tips(
     return tips.size();
 }
 
+uint64_t cut_tips(
+    MutablePathDeletableHandleGraph& graph) {
+    auto tips = tip_handles(graph);
+    for (auto& tip : tips) {
+        //graph.destroy_handle(tip);
+        std::vector<step_handle_t> to_destroy;
+        graph.for_each_step_on_handle(
+            tip,
+            [&](const step_handle_t& step) {
+                to_destroy.push_back(step);
+            });
+        for (auto& step : to_destroy) {
+            graph.destroy_step(step);
+        }
+    }
+    return tips.size();
+}
+
 }
 
 }
