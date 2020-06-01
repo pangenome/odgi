@@ -7,6 +7,7 @@
 #include "algorithms/remove_high_degree.hpp"
 #include "algorithms/cut_tips.hpp"
 #include "algorithms/remove_isolated.hpp"
+#include "algorithms/expand_context.hpp"
 
 namespace odgi {
 
@@ -33,6 +34,7 @@ int main_prune(int argc, char** argv) {
     args::ValueFlag<uint64_t> max_coverage(parser, "N", "remove nodes covered by more than this number of path steps", {'C', "max-coverage"});
     args::Flag edge_coverage(parser, "bool", "remove edges outside of the min and max coverage (rather than nodes)", {'E', "edge-coverage"});
     args::ValueFlag<uint64_t> best_edges(parser, "N", "keep only the N most-covered inbound and outbound edge of each node", {'b', "best-edges"});
+    args::ValueFlag<uint64_t> expand_context(parser, "N", "include nodes within this many steps of a component passing the prune thresholds", {'n', "expand-context"});
     args::Flag drop_paths(parser, "bool", "remove the paths from the graph", {'D', "drop-paths"});
     args::Flag cut_tips(parser, "bool", "remove nodes which are graph tips", {'T', "cut-tips"});
     args::Flag remove_isolated(parser, "bool", "remove isolated nodes covered by a single path", {'I', "remove-isolated"});
@@ -108,16 +110,29 @@ int main_prune(int argc, char** argv) {
         }
         // remove the paths, because it's likely we have damaged some
         // and at present, we have no mechanism to reconstruct them
-        graph.clear_paths();
-        //std::cerr << "got " << to_drop.size() << " handles to drop" << std::endl;
-        for (auto& edge : edges_to_drop_coverage) {
-            graph.destroy_edge(edge);
-        }
-        for (auto& edge : edges_to_drop_best) {
-            graph.destroy_edge(edge);
-        }
-        for (auto& handle : handles_to_drop) {
-            graph.destroy_handle(handle);
+        auto do_destroy =
+            [&](void) {
+                graph.clear_paths();
+                //std::cerr << "got " << to_drop.size() << " handles to drop" << std::endl;
+                for (auto& edge : edges_to_drop_coverage) {
+                    graph.destroy_edge(edge);
+                }
+                for (auto& edge : edges_to_drop_best) {
+                    graph.destroy_edge(edge);
+                }
+                for (auto& handle : handles_to_drop) {
+                    graph.destroy_handle(handle);
+                }
+            };
+        if (args::get(expand_context)) {
+            // copy the graph
+            graph_t source = graph;
+            do_destroy();
+            // expand context
+            algorithms::expand_context(&source, &graph, args::get(expand_context));
+            // todo... test using paths for guidance
+        } else {
+            do_destroy();
         }
     }
     if (args::get(cut_tips)) {
