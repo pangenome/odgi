@@ -31,8 +31,10 @@ uint64_t cut_tips(
 }
 
 uint64_t cut_tips(
-    MutablePathDeletableHandleGraph& graph) {
+    MutablePathDeletableHandleGraph& graph,
+    uint64_t min_coverage) {
     auto tips = tip_handles(graph);
+    std::vector<handle_t> drop_tips;
     std::sort(tips.begin(), tips.end());
     for (auto& tip : tips) {
         std::vector<step_handle_t> to_destroy;
@@ -41,16 +43,19 @@ uint64_t cut_tips(
             [&](const step_handle_t& step) {
                 to_destroy.push_back(step);
             });
-        // odgi quirk / baddness: we have to destroy step handles from largest to smallest
-        // a generic implementation would iterate through step handles while erasing
-        std::sort(to_destroy.begin(), to_destroy.end(),
-                  [](const step_handle_t& a, const step_handle_t& b) {
-                      return as_integers(a)[1] > as_integers(b)[1]; });
-        for (auto& step : to_destroy) {
-            graph.rewrite_segment(step, step, {});
+        if (!min_coverage || to_destroy.size() < min_coverage) {
+            // odgi quirk / baddness: we have to destroy step handles from largest to smallest
+            // a generic implementation would iterate through step handles while erasing
+            std::sort(to_destroy.begin(), to_destroy.end(),
+                      [](const step_handle_t& a, const step_handle_t& b) {
+                          return as_integers(a)[1] > as_integers(b)[1]; });
+            for (auto& step : to_destroy) {
+                graph.rewrite_segment(step, step, {});
+            }
+            drop_tips.push_back(tip);
         }
     }
-    for (auto& tip : tips) {
+    for (auto& tip : drop_tips) {
         graph.destroy_handle(tip);
     }
     return tips.size();

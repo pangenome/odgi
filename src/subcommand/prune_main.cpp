@@ -39,6 +39,7 @@ int main_prune(int argc, char** argv) {
     args::ValueFlag<uint64_t> expand_path_length(parser, "N", "include nodes within this path length of a component passing the prune thresholds", {'p', "expand-path-length"});
     args::Flag drop_paths(parser, "bool", "remove the paths from the graph", {'D', "drop-paths"});
     args::Flag cut_tips(parser, "bool", "remove nodes which are graph tips", {'T', "cut-tips"});
+    args::ValueFlag<uint64_t> cut_tips_min_coverage(parser, "bool", "remove nodes which are graph tips and have less than this path coverage", {'m', "cut-tips-min-coverage"});
     args::Flag remove_isolated(parser, "bool", "remove isolated nodes covered by a single path", {'I', "remove-isolated"});
     args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
@@ -140,7 +141,7 @@ int main_prune(int argc, char** argv) {
         }
     }
     if (args::get(cut_tips)) {
-        algorithms::cut_tips(graph);
+        algorithms::cut_tips(graph, args::get(cut_tips_min_coverage));
     }
     if (args::get(remove_isolated)) {
         algorithms::remove_isolated_paths(graph);
