@@ -535,7 +535,9 @@ void graph_t::create_edge(const handle_t& left_h, const handle_t& right_h) {
               << " -> "
               << get_id(right_h) << ":" << get_is_reverse(right_h) << std::endl;
     */
-    if (has_edge(left_h, right_h)) return; // do nothing if edge exists
+    if (false && !_bulk_load) {
+        if (has_edge(left_h, right_h)) return; // do nothing if edge exists
+    }
 
     uint64_t left_rank = number_bool_packing::unpack_number(left_h);
     uint64_t right_rank = number_bool_packing::unpack_number(right_h);
@@ -717,6 +719,7 @@ void graph_t::reassign_node_ids(const std::function<nid_t(const nid_t&)>& get_ne
 /// Optionally compact the id space of the graph to match the ordering, from 1->|ordering|.
 void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact_ids) {
     graph_t ordered;
+    ordered.start_bulk_load();
     // if we're given an empty order, just compact the ids based on our ordering
     const std::vector<handle_t>* order;
     std::vector<handle_t> base_order;
@@ -782,6 +785,7 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
                     ordered.append_step(new_path, new_handle);
                 });
         });
+    ordered.end_bulk_load();
     *this = ordered;
 }
 
