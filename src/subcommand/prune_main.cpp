@@ -6,6 +6,7 @@
 #include "algorithms/coverage.hpp"
 #include "algorithms/remove_high_degree.hpp"
 #include "algorithms/cut_tips.hpp"
+#include "algorithms/remove_isolated.hpp"
 
 namespace odgi {
 
@@ -34,6 +35,7 @@ int main_prune(int argc, char** argv) {
     args::ValueFlag<uint64_t> best_edges(parser, "N", "keep only the N most-covered inbound and outbound edge of each node", {'b', "best-edges"});
     args::Flag drop_paths(parser, "bool", "remove the paths from the graph", {'D', "drop-paths"});
     args::Flag cut_tips(parser, "bool", "remove nodes which are graph tips", {'T', "cut-tips"});
+    args::Flag remove_isolated(parser, "bool", "remove isolated nodes covered by a single path", {'I', "remove-isolated"});
     args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
     try {
@@ -120,6 +122,9 @@ int main_prune(int argc, char** argv) {
     }
     if (args::get(cut_tips)) {
         algorithms::cut_tips(graph);
+    }
+    if (args::get(remove_isolated)) {
+        algorithms::remove_isolated_paths(graph);
     }
     if (args::get(drop_paths)) {
         graph.clear_paths();
