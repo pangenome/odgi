@@ -117,27 +117,28 @@ void expand_context_by_length(const HandleGraph* source, MutableHandleGraph* sub
         }
         if ((here.first.second && expand_backward)
             || (!here.first.second && expand_forward)) {
-            // cross an edge (no added distance)
+            // cross an edge --- add the distance of the other node
             source->follow_edges(here.first.first, here.first.second, [&](const handle_t& next) {
-                                                                          dijk_queue.push_or_reprioritize(make_pair(next, !here.first.second), here.second);
-                    
-                                                                          // the edge handle will be in a different order depending on whether we're
-                                                                          // going left or right
-                                                                          if (here.first.second) {
-                                                                              seen_edges.insert(source->edge_handle(next, here.first.first));
-                                                                          }
-                                                                          else {
-                                                                              seen_edges.insert(source->edge_handle(here.first.first, next));
-                                                                          }
-                    
-                                                                          if (!subgraph->has_node(source->get_id(next))) {
-                                                                              subgraph->create_handle(source->get_sequence(source->forward(next)),
-                                                                                                      source->get_id(next));
+                                                                          int64_t dist_across = here.second + source->get_length(next);
+                                                                          if (dist_across <= dist) {
+                                                                              dijk_queue.push_or_reprioritize(make_pair(next, !here.first.second), dist_across);
+                                                                              // the edge handle will be in a different order depending on whether we're
+                                                                              // going left or right
+                                                                              if (here.first.second) {
+                                                                                  seen_edges.insert(source->edge_handle(next, here.first.first));
+                                                                              }
+                                                                              else {
+                                                                                  seen_edges.insert(source->edge_handle(here.first.first, next));
+                                                                              }
+                                                                              if (!subgraph->has_node(source->get_id(next))) {
+                                                                                  subgraph->create_handle(source->get_sequence(source->forward(next)),
+                                                                                                          source->get_id(next));
+                                                                              }
                                                                           }
                                                                       });
         }
     }
-        
+
     // add in the edges we saw
     for (const edge_t& edge : seen_edges) {
         edge_t insertable = subgraph->edge_handle(subgraph->get_handle(source->get_id(edge.first),

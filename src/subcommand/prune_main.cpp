@@ -34,7 +34,9 @@ int main_prune(int argc, char** argv) {
     args::ValueFlag<uint64_t> max_coverage(parser, "N", "remove nodes covered by more than this number of path steps", {'C', "max-coverage"});
     args::Flag edge_coverage(parser, "bool", "remove edges outside of the min and max coverage (rather than nodes)", {'E', "edge-coverage"});
     args::ValueFlag<uint64_t> best_edges(parser, "N", "keep only the N most-covered inbound and outbound edge of each node", {'b', "best-edges"});
-    args::ValueFlag<uint64_t> expand_context(parser, "N", "include nodes within this many steps of a component passing the prune thresholds", {'n', "expand-context"});
+    args::ValueFlag<uint64_t> expand_steps(parser, "N", "include nodes within this many steps of a component passing the prune thresholds", {'s', "expand-steps"});
+    args::ValueFlag<uint64_t> expand_length(parser, "N", "include nodes within this graph distance of a component passing the prune thresholds", {'l', "expand-length"});
+    args::ValueFlag<uint64_t> expand_path_length(parser, "N", "include nodes within this path length of a component passing the prune thresholds", {'p', "expand-path-length"});
     args::Flag drop_paths(parser, "bool", "remove the paths from the graph", {'D', "drop-paths"});
     args::Flag cut_tips(parser, "bool", "remove nodes which are graph tips", {'T', "cut-tips"});
     args::Flag remove_isolated(parser, "bool", "remove isolated nodes covered by a single path", {'I', "remove-isolated"});
@@ -124,13 +126,15 @@ int main_prune(int argc, char** argv) {
                     graph.destroy_handle(handle);
                 }
             };
-        if (args::get(expand_context)) {
-            // copy the graph
-            graph_t source = graph;
-            do_destroy();
-            // expand context
-            algorithms::expand_context(&source, &graph, args::get(expand_context));
-            // todo... test using paths for guidance
+        if (args::get(expand_steps)) {
+            graph_t source = graph; do_destroy();
+            algorithms::expand_context(&source, &graph, args::get(expand_steps), true);
+        } else if (args::get(expand_length)) {
+            graph_t source = graph; do_destroy();
+            algorithms::expand_context(&source, &graph, args::get(expand_length), false);
+        } else if (args::get(expand_path_length)) {
+            graph_t source = graph; do_destroy();
+            algorithms::expand_context_with_paths(&source, &graph, args::get(expand_length), false);
         } else {
             do_destroy();
         }
