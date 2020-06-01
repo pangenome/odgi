@@ -10,22 +10,25 @@ using namespace handlegraph;
 std::vector<std::pair<path_handle_t, handle_t>> isolated_path_handles(
     const MutablePathDeletableHandleGraph& graph) {
     std::vector<std::pair<path_handle_t, handle_t>> isolated;
-    // todo: check edge count of the node
     graph.for_each_handle(
         [&](const handle_t& handle) {
             uint64_t step_count = 0;
             step_handle_t single_step;
-            graph.for_each_step_on_handle(handle,
-                [&](const step_handle_t& step) {
-                    single_step = step;
-                    ++step_count;
-                });
-            if (step_count = 1) {
-                // is the single step the only step in that path?
-                path_handle_t path = graph.get_path_handle_of_step(single_step);
-                if (single_step == graph.path_begin(path)
-                    && single_step == graph.path_back(path)) {
-                    isolated.push_back(std::make_pair(path, handle));
+            size_t degree = graph.get_degree(handle, false) + graph.get_degree(handle, true);
+            if (degree == 0) {
+                graph.for_each_step_on_handle(
+                    handle,
+                    [&](const step_handle_t& step) {
+                        single_step = step;
+                        ++step_count;
+                    });
+                if (step_count == 1) {
+                    // is the single step the only step in that path?
+                    path_handle_t path = graph.get_path_handle_of_step(single_step);
+                    if (single_step == graph.path_begin(path)
+                        && single_step == graph.path_back(path)) {
+                        isolated.push_back(std::make_pair(path, handle));
+                    }
                 }
             }
         });
