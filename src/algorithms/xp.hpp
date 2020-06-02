@@ -103,8 +103,9 @@ namespace xp {
         std::string get_path_name(const handlegraph::path_handle_t &path_handle) const;
 
         /// Look up the pangenome position by given path name and nucleotide position
-        /// Returns 0 if the given path name is not in the index.
-        /// Returns 0 if the given position is not in the given path.
+        /// 0-base positioning!
+        /// Will exit with (1) if the given path name is not in the index.
+        /// Will exit with (1) given position is not in the given path.
         size_t get_pangenome_pos(const std::string &path_name, const size_t &nuc_pos) const;
 
         /// Get the path of the given path name

@@ -16,6 +16,7 @@
 #include "xp.hpp"
 #include "sgd_term.hpp"
 #include "IntervalTree.h"
+#include <zipfian_int_distribution.h>
 
 namespace odgi {
     namespace algorithms {
@@ -27,10 +28,11 @@ namespace odgi {
                                             const xp::XP &path_index,
                                             const std::set<std::string> path_sgd_use_paths,
                                             const uint64_t &iter_max,
-                                            const uint64_t &term_updates,
+                                            const uint64_t &min_term_updates,
                                             const double &delta,
                                             const double &eps,
-                                            const double &alpha,
+                                            const double &theta,
+                                            const uint64_t &space,
                                             const uint64_t &nthreads);
 
         /// our learning schedule
@@ -43,10 +45,11 @@ namespace odgi {
                                                     const xp::XP &path_index,
                                                     const std::set<std::string> path_sgd_use_paths,
                                                     const uint64_t &iter_max,
-                                                    const uint64_t &term_updates,
+                                                    const uint64_t &min_term_updates,
                                                     const double &delta,
                                                     const double &eps,
-                                                    const double &alpha,
+                                                    const double &theta,
+                                                    const uint64_t &space,
                                                     const uint64_t &nthreads);
 
     }

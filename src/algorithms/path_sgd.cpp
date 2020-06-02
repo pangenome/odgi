@@ -8,10 +8,11 @@ namespace odgi {
                                             const xp::XP &path_index,
                                             const std::set<std::string> path_sgd_use_paths,
                                             const uint64_t &iter_max,
-                                            const uint64_t &term_updates,
+                                            const uint64_t &min_term_updates,
                                             const double &delta,
                                             const double &eps,
-                                            const double &alpha,
+                                            const double &theta,
+                                            const uint64_t &space,
                                             const uint64_t &nthreads) {
             using namespace std::chrono_literals; // for timing stuff
             // our positions in 1D
@@ -31,56 +32,56 @@ namespace odgi {
             // here we store all path nucleotides lengths so we know later from which path we sampled our random position from
             IntervalTree<size_t, path_handle_t> path_nucleotide_tree;
             std::vector<Interval<size_t, path_handle_t> > path_nucleotide_intervals;
-            // TODO iterate over all relevant path_handles:
+            // iterate over all relevant path_handles:
             //  1. build the interval tree
             //  2. find out the longest path in nucleotides and store this number size_t
             //  3. add the current path length to the total length
-            graph.for_each_path_handle([&](const path_handle_t& path) {
-                std::string path_name = graph.get_path_name(path);
+            for (auto path_name : path_sgd_use_paths) {
+                path_handle_t path = path_index.get_path_handle(path_name);
 #ifdef debug_path_sgd
-                    std::cerr << path_name << std::endl;
-                    std::cerr << as_integer(path) << std::endl;
+                std::cerr << path_name << std::endl;
+                std::cerr << as_integer(path) << std::endl;
 #endif
-                // comparison taken from https://stackoverflow.com/questions/1701067/how-to-check-that-an-element-is-in-a-stdset
-                // Is the path we are looking currently relevant?
-                if (path_sgd_use_paths.find(path_name) != path_sgd_use_paths.end()) {
-                    size_t path_len = path_index.get_path_length(as_path_handle(1+ as_integer(path)));
+                size_t path_len = path_index.get_path_length(path);
 #ifdef debug_path_sgd
-                    std::cerr << path_name << " has length: " << path_len<< std::endl;
+                std::cerr << path_name << " has length: " << path_len << std::endl;
 #endif
-                    path_nucleotide_intervals.push_back(Interval<size_t, path_handle_t>(total_path_len_in_nucleotides + 1, total_path_len_in_nucleotides + path_len, path));
-                    if (path_len > longest_path_in_nucleotides) {
-                        longest_path_in_nucleotides = path_len;
-                    }
-                    total_path_len_in_nucleotides += path_len;
+                path_nucleotide_intervals.push_back(Interval<size_t, path_handle_t>(total_path_len_in_nucleotides + 1,
+                                                                                    total_path_len_in_nucleotides +
+                                                                                    path_len, path));
+                if (path_len > longest_path_in_nucleotides) {
+                    longest_path_in_nucleotides = path_len;
                 }
-            });
+                total_path_len_in_nucleotides += path_len;
+            }
             path_nucleotide_tree = IntervalTree<size_t, path_handle_t>(
                     static_cast<IntervalTree<unsigned long, path_handle_t>::interval_vector &&>(path_nucleotide_intervals));
+
+#ifdef debug_path_sgd
+
             std::vector<Interval<size_t, path_handle_t> > results;
-            results = path_nucleotide_tree.findContained(1, 13);
+            results = path_nucleotide_tree.findOverlapping(2, 2);
             std::cerr << "found " << results.size() << " overlapping intervals" << std::endl;
-            results = path_nucleotide_tree.findContained(14, 27);
-            std::cerr << "found " << graph.get_path_name(results[0].value) << " overlapping intervals" << std::endl;
-                        results = path_nucleotide_tree.findOverlapping(1, 1);
+            std::cerr << "found " << results[0].start << " start in intervals" << std::endl;
+            std::cerr << "found " << results[0].stop << " stop in intervals" << std::endl;
+            std::cerr << "the real path position " << 2 - results[0].start + 1 << std::endl;
+            std::cerr << "found " << path_index.get_path_name(results[0].value) << " value in intervals" << std::endl;
+            results = path_nucleotide_tree.findOverlapping(20, 20);
             std::cerr << "found " << results.size() << " overlapping intervals" << std::endl;
-            /*// run banded BFSs in the graph to build our terms
-            std::vector<sgd_term_t> terms;
-            if (use_paths) {
-                terms = linear_sgd_path_search(graph, bandwidth, sampling_rate);
-            } else {
-                terms = linear_sgd_search(graph, bandwidth, sampling_rate);
-            }
-            // locks for each term
-            std::vector<std::mutex> term_mutexes(terms.size());
+            std::cerr << "found " << results[0].start << " start in intervals" << std::endl;
+            std::cerr << "found " << results[0].stop << " stop in intervals" << std::endl;
+            std::cerr << "found " << path_index.get_path_name(results[0].value) << " value in intervals" << std::endl;
+            std::cerr << "the real path position is: " << 20 - results[0].start + 1 << std::endl;
+#endif
+
+            double w_min = 1 / (longest_path_in_nucleotides * longest_path_in_nucleotides);
+            double w_max = 1;
             // get our schedule
-            std::vector<double> etas = linear_sgd_schedule(terms, t_max, eps);
-            // iterate through step sizes
-            *//*
-            for (auto &t : terms) {
-                std::cerr << "considering " << graph.get_id(t.i) << " and " << graph.get_id(t.j) << " w = " << t.w << " d = " << t.d << std::endl;
-            }
-            *//*
+            std::vector<double> etas = path_linear_sgd_schedule(w_min, w_max, iter_max, eps);
+            // initialize Zipfian distrubution so we only have to calculate zeta once
+            std::default_random_engine generator;
+            zipfian_int_distribution<int>::param_type p(1, space, theta);
+            zipfian_int_distribution<int> distribution(p);
             // how many term updates we make
             std::atomic<uint64_t> term_updates;
             term_updates.store(0);
@@ -99,20 +100,20 @@ namespace odgi {
             auto checker_lambda =
                     [&](void) {
                         while (work_todo.load()) {
-                            if (term_updates.load() > terms.size()) {
-                                if (++iteration > t_max) {
+                            if (term_updates.load() > min_term_updates) {
+                                if (++iteration > iter_max) {
                                     work_todo.store(false);
                                 } else if (Delta_max.load() <= delta) { // nb: this will also break at 0
                                     work_todo.store(false);
                                 } else {
 //#pragma omp critical (cerr)
-                                    *//*
+                                    /*
                                     std::cerr << iteration
                                               << ", eta: " << eta.load()
                                               << ", Delta: " << Delta_max.load()
                                               << " terms " << terms.size()
                                               << " updates " << term_updates.load() << std::endl;
-                                    *//*
+                                    */
                                     eta.store(etas[iteration]); // update our learning rate
                                     Delta_max.store(delta); // set our delta max to the threshold
                                 }
@@ -121,60 +122,77 @@ namespace odgi {
                             std::this_thread::sleep_for(1ms);
                         }
                     };
-
+// TODO continue here
             auto worker_lambda =
                     [&](uint64_t tid) {
                         // everyone tries to seed with their own random data
                         std::random_device rd;
                         std::mt19937 gen(rd());
-                        std::uniform_int_distribution<uint64_t> dis(0, terms.size() - 1);
+                        std::uniform_int_distribution<uint64_t> dis(1, total_path_len_in_nucleotides);
                         while (work_todo.load()) {
-                            // pick a random term
-                            uint64_t idx = dis(gen);
-                            // try to acquire a mutex lock on it, and try again if we fail
-                            if (term_mutexes[idx].try_lock()) {
-                                auto &t = terms[idx];
-                                double w_ij = t.w;
-                                double mu = eta.load() * w_ij;
-                                if (mu > 1) {
-                                    mu = 1;
-                                }
-                                // actual distance in graph
-                                double d_ij = t.d;
-                                // identities
-                                uint64_t i = number_bool_packing::unpack_number(t.i);
-                                uint64_t j = number_bool_packing::unpack_number(t.j);
+                            // TODO pack this into its own function
+                            // pick a random position from all paths
+                            uint64_t pos = dis(gen);
+                            // use our interval tree to get the path handle and path nucleotide position of the picked position
+                            std::vector<Interval<size_t, path_handle_t> > result;
+                            result = path_nucleotide_tree.findOverlapping(pos, pos);
+                            path_handle_t path = result[0].value;
+                            size_t path_start_pos = result[0].start;
+                            size_t path_end_pos = result[0].stop;
+                            // we have a 0-based positioning in the path index
+                            size_t pos_in_path = pos - path_start_pos;
+                            std::string path_name = path_index.get_path_name(path);
+                            size_t pangenome_pos_uniform = path_index.get_pangenome_pos(path_name, pos_in_path);
+                            int zipf_int = distribution(generator);
+                            if (path_end_pos < zipf_int) {
+                                zipf_int = zipf_int % (zipf_int - pos_in_path);
+                            }
+                            size_t pangenome_pos_zipf = path_index.get_pangenome_pos(path_name, zipf_int);
+                            size_t term_dist = abs(static_cast<long long>(pangenome_pos_uniform - pangenome_pos_zipf));
+                            double term_weight = 1 / term_dist;
+                            handle_t term_i = as_handle(pangenome_pos_uniform);
+                            handle_t term_j = as_handle(pangenome_pos_zipf);
+                            sgd_term_t t = sgd_term_t(term_i, term_j, term_dist, term_weight);
+
+                            double w_ij = t.w;
+                            double mu = eta.load() * w_ij;
+                            if (mu > 1) {
+                                mu = 1;
+                            }
+                            // actual distance in graph
+                            double d_ij = t.d;
+                            // identities
+                            uint64_t i = number_bool_packing::unpack_number(t.i);
+                            uint64_t j = number_bool_packing::unpack_number(t.j);
 //#pragma omp critical (cerr)
 //                  std::cerr << "nodes are " << graph.get_id(t.i) << " and " << graph.get_id(t.j) << std::endl;
-                                // distance == magnitude in our 1D situation
-                                double dx = X[i].load() - X[j].load();
-                                if (dx == 0) {
-                                    dx = 1e-9; // avoid nan
-                                }
+                            // distance == magnitude in our 1D situation
+                            double dx = X[i].load() - X[j].load();
+                            if (dx == 0) {
+                                dx = 1e-9; // avoid nan
+                            }
 //#pragma omp critical (cerr)
 //                    std::cerr << "distance is " << dx << " but should be " << d_ij << std::endl;
-                                //double mag = dx; //sqrt(dx*dx + dy*dy);
-                                double mag = sqrt(dx * dx);
-                                // check distances for early stopping
-                                double Delta = mu * (mag - d_ij) / 2;
-                                // try until we succeed. risky.
-                                double Delta_abs = std::abs(Delta);
+                            //double mag = dx; //sqrt(dx*dx + dy*dy);
+                            double mag = sqrt(dx * dx);
+                            // check distances for early stopping
+                            double Delta = mu * (mag - d_ij) / 2;
+                            // try until we succeed. risky.
+                            double Delta_abs = std::abs(Delta);
 //#pragma omp critical (cerr)
 //                    std::cerr << "Delta_abs " << Delta_abs << std::endl;
-                                while (Delta_abs > Delta_max.load()) {
-                                    Delta_max.store(Delta_abs);
-                                }
-                                // calculate update
-                                double r = Delta / mag;
-                                double r_x = r * dx;
+                            while (Delta_abs > Delta_max.load()) {
+                                Delta_max.store(Delta_abs);
+                            }
+                            // calculate update
+                            double r = Delta / mag;
+                            double r_x = r * dx;
 //#pragma omp critical (cerr)
 //                    std::cerr << "r_x is " << r_x << std::endl;
-                                // update our positions (atomically)
-                                X[i].store(X[i].load() - r_x);
-                                X[j].store(X[j].load() + r_x);
-                                term_updates.store(term_updates.load() + 1);
-                                term_mutexes[idx].unlock();
-                            }
+                            // update our positions (atomically)
+                            X[i].store(X[i].load() - r_x);
+                            X[j].store(X[j].load() + r_x);
+                            term_updates.store(term_updates.load() + 1);
                         }
                     };
 
@@ -190,7 +208,6 @@ namespace odgi {
                 workers[t].join();
             }
             checker.join();
-*/
             // drop out of atomic stuff... maybe not the best way to do this
             std::vector<double> X_final(X.size());
             uint64_t i = 0;
@@ -201,9 +218,9 @@ namespace odgi {
         }
 
         std::vector<double> path_linear_sgd_schedule(const double &w_min,
-                                                const double &w_max,
-                                                const uint64_t &iter_max,
-                                                const double &eps) {
+                                                     const double &w_max,
+                                                     const uint64_t &iter_max,
+                                                     const double &eps) {
             double eta_max = 1.0 / w_min;
             double eta_min = eps / w_max;
             double lambda = log(eta_max / eta_min) / ((double) iter_max - 1);
@@ -217,22 +234,24 @@ namespace odgi {
         }
 
         std::vector<handle_t> path_linear_sgd_order(const PathHandleGraph &graph,
-                                               const xp::XP &path_index,
-                                               const std::set<std::string> path_sgd_use_paths,
-                                               const uint64_t &iter_max,
-                                               const uint64_t &term_updates,
-                                               const double &delta,
-                                               const double &eps,
-                                               const double &alpha,
-                                               const uint64_t &nthreads) {
+                                                    const xp::XP &path_index,
+                                                    const std::set<std::string> path_sgd_use_paths,
+                                                    const uint64_t &iter_max,
+                                                    const uint64_t &min_term_updates,
+                                                    const double &delta,
+                                                    const double &eps,
+                                                    const double &theta,
+                                                    const uint64_t &space,
+                                                    const uint64_t &nthreads) {
             std::vector<double> layout = path_linear_sgd(graph,
                                                          path_index,
                                                          path_sgd_use_paths,
                                                          iter_max,
-                                                         term_updates,
+                                                         min_term_updates,
                                                          delta,
                                                          eps,
-                                                         alpha,
+                                                         theta,
+                                                         space,
                                                          nthreads);
             std::vector<std::pair<double, handle_t>> layout_handles;
             uint64_t i = 0;
