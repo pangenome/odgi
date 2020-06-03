@@ -261,6 +261,12 @@ namespace xp {
         return step;
     }
 
+    size_t XP::get_position_of_step(const step_handle_t& step_handle) const {
+        const auto& xppath = *paths[as_integer(get_path_handle_of_step(step_handle)) - 1];
+        auto& step_rank = as_integers(step_handle)[1];
+        return xppath.offsets_select(step_rank);
+    }
+
     path_handle_t XP::get_path_handle_of_step(const step_handle_t& step_handle) const {
         return as_path_handle(as_integers(step_handle)[0]);
     }

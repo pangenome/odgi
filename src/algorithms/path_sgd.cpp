@@ -79,9 +79,8 @@ namespace odgi {
             // get our schedule
             std::vector<double> etas = path_linear_sgd_schedule(w_min, w_max, iter_max, eps);
             // initialize Zipfian distrubution so we only have to calculate zeta once
-            std::default_random_engine generator;
-            zipfian_int_distribution<int>::param_type p(1, space, theta);
-            zipfian_int_distribution<int> distribution(p);
+            zipfian_int_distribution<uint64_t>::param_type p(1, space, theta);
+            zipfian_int_distribution<uint64_t> zipfian(p);
             // how many term updates we make
             std::atomic<uint64_t> term_updates;
             term_updates.store(0);
@@ -129,6 +128,7 @@ namespace odgi {
                         std::random_device rd;
                         std::mt19937 gen(rd());
                         std::uniform_int_distribution<uint64_t> dis(1, total_path_len_in_nucleotides);
+                        std::uniform_int_distribution<uint64_t> flip(0, 1);
                         while (work_todo.load()) {
                             // TODO pack this into its own function
                             // pick a random position from all paths
@@ -141,33 +141,60 @@ namespace odgi {
                             // size_t path_end_pos = result[0].stop;
                             size_t path_len = path_index.get_path_length(path);
                             // we have a 0-based positioning in the path index
-                            size_t pos_in_path = pos - path_start_pos;
+                            size_t pos_in_path_a = pos - path_start_pos;
                             std::string path_name = path_index.get_path_name(path);
-                            size_t pangenome_pos_uniform = path_index.get_pangenome_pos(path_name, pos_in_path);
-                            int zipf_int = distribution(generator);
+                            //size_t pangenome_pos_a = path_index.get_pangenome_pos(path_name, pos_in_path);
+                            uint64_t zipf_int = zipfian(gen);
 #ifdef debug_path_sgd
                             std::cerr << "random pos: " << pos << std::endl;
                             std::cerr << "path_start_pos: " << path_start_pos << std::endl;
-                            std::cerr << "pos_in_path: " << pos_in_path << std::endl;
+                            std::cerr << "pos_in_path_a: " << pos_in_path_a << std::endl;
                             std::cerr << "path_len: " << path_len << std::endl;
-                            std::cerr << "zipf: " << zipf_int << std::endl;
+                            //std::cerr << "zipf: " << zipf_int << std::endl;
 #endif
+                            size_t pos_in_path_b = pos_in_path_a;
+                            if (flip(gen)) {
+                                if (zipf_int > pos_in_path_a) {
+                                    zipf_int %= pos_in_path_a;
+                                }
+                                pos_in_path_b -= zipf_int;
+                            } else {
+                                if (zipf_int > path_len - pos_in_path_a ) {
+                                    zipf_int %= path_len - pos_in_path_a;
+                                }
+                                pos_in_path_b += zipf_int;
+                            }
+                            
+                            /*
                             if (path_len - 1 < zipf_int) {
                                 zipf_int = pos_in_path + (zipf_int % (path_len - pos_in_path));
                             }
-                            size_t pangenome_pos_zipf = path_index.get_pangenome_pos(path_name, zipf_int);
+                            */
+                            //size_t pangenome_pos_zipf = path_index.get_pangenome_pos(path_name, zipf_int);
 #ifdef debug_path_sgd
                             std::cerr << "zipf: " << zipf_int << std::endl;
-                            std::cerr << "pangenome_pos_zipf: " << pangenome_pos_zipf << std::endl;
-                            std::cerr << "pangenome_pos_uniform: " << pangenome_pos_uniform << std::endl;
+                            std::cerr << "pos_in_path_a: " << pos_in_path_a << std::endl;
+                            std::cerr << "pos_in_path_b: " << pos_in_path_b << std::endl;
 #endif
-                            double term_dist = abs(static_cast<double>(pangenome_pos_uniform - pangenome_pos_zipf));
+                            // get the step handles
+                            step_handle_t step_a = path_index.get_step_at_position(path, pos_in_path_a);
+                            step_handle_t step_b = path_index.get_step_at_position(path, pos_in_path_b);
+                            // and the graph handles, which we need to record the update
+                            handle_t term_i = path_index.get_handle_of_step(step_a);
+                            handle_t term_j = path_index.get_handle_of_step(step_b);
+                            // adjust the positions to the node starts
+                            pos_in_path_a = path_index.get_position_of_step(step_a);
+                            pos_in_path_b = path_index.get_position_of_step(step_b);
+                            // establish the term distance
+                            double term_dist = std::abs(static_cast<double>(pos_in_path_a) - static_cast<double>(pos_in_path_b));
+                            //assert(term_dist == zipf_int);
+#ifdef debug_path_sgd
+                            std::cerr << "term_dist: " << term_dist << std::endl;
+#endif
                             if (term_dist == 0) {
                                 term_dist = 1e-9;
                             }
                             double term_weight = 1.0 / term_dist;
-                            handle_t term_i = as_handle(pangenome_pos_uniform);
-                            handle_t term_j = as_handle(pangenome_pos_zipf);
                             sgd_term_t t = sgd_term_t(term_i, term_j, term_dist, term_weight);
 
                             double w_ij = t.w;
