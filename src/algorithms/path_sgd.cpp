@@ -122,7 +122,7 @@ namespace odgi {
                             std::this_thread::sleep_for(1ms);
                         }
                     };
-// TODO continue here
+
             auto worker_lambda =
                     [&](uint64_t tid) {
                         // everyone tries to seed with their own random data
@@ -138,18 +138,34 @@ namespace odgi {
                             result = path_nucleotide_tree.findOverlapping(pos, pos);
                             path_handle_t path = result[0].value;
                             size_t path_start_pos = result[0].start;
-                            size_t path_end_pos = result[0].stop;
+                            // size_t path_end_pos = result[0].stop;
+                            size_t path_len = path_index.get_path_length(path);
                             // we have a 0-based positioning in the path index
                             size_t pos_in_path = pos - path_start_pos;
                             std::string path_name = path_index.get_path_name(path);
                             size_t pangenome_pos_uniform = path_index.get_pangenome_pos(path_name, pos_in_path);
                             int zipf_int = distribution(generator);
-                            if (path_end_pos < zipf_int) {
-                                zipf_int = zipf_int % (zipf_int - pos_in_path);
+#ifdef debug_path_sgd
+                            std::cerr << "random pos: " << pos << std::endl;
+                            std::cerr << "path_start_pos: " << path_start_pos << std::endl;
+                            std::cerr << "pos_in_path: " << pos_in_path << std::endl;
+                            std::cerr << "path_len: " << path_len << std::endl;
+                            std::cerr << "zipf: " << zipf_int << std::endl;
+#endif
+                            if (path_len - 1 < zipf_int) {
+                                zipf_int = pos_in_path + (zipf_int % (path_len - pos_in_path));
                             }
                             size_t pangenome_pos_zipf = path_index.get_pangenome_pos(path_name, zipf_int);
-                            size_t term_dist = abs(static_cast<long long>(pangenome_pos_uniform - pangenome_pos_zipf));
-                            double term_weight = 1 / term_dist;
+#ifdef debug_path_sgd
+                            std::cerr << "zipf: " << zipf_int << std::endl;
+                            std::cerr << "pangenome_pos_zipf: " << pangenome_pos_zipf << std::endl;
+                            std::cerr << "pangenome_pos_uniform: " << pangenome_pos_uniform << std::endl;
+#endif
+                            double term_dist = abs(static_cast<double>(pangenome_pos_uniform - pangenome_pos_zipf));
+                            if (term_dist == 0) {
+                                term_dist = 1e-9;
+                            }
+                            double term_weight = 1.0 / term_dist;
                             handle_t term_i = as_handle(pangenome_pos_uniform);
                             handle_t term_j = as_handle(pangenome_pos_zipf);
                             sgd_term_t t = sgd_term_t(term_i, term_j, term_dist, term_weight);

@@ -235,6 +235,7 @@ int main_sort(int argc, char** argv) {
                                                       path_sgd_zipf_theta,
                                                       path_sgd_zipf_space,
                                                       num_threads));
+            std::cerr << "after apply ordering" << std::endl;
         } else if (args::get(breadth_first)) {
             graph.apply_ordering(algorithms::breadth_first_topological_order(graph, bf_chunk_size), true);
         } else if (args::get(depth_first)) {

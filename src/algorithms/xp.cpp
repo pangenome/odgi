@@ -294,13 +294,13 @@ namespace xp {
 #endif
         // Is the given path name even in the index?!
         if (p_h == as_path_handle(0)) {
-            std::cerr << "The given path name " << path_name << " is not in the index." << std::endl;
+            std::cerr << "[XP] error: The given path name " << path_name << " is not in the index." << std::endl;
             exit(1);
         }
         const XPPath& xppath = get_path(path_name);
         // Is the nucleotide position there?!
         if (xppath.offsets.size() <= nuc_pos) {
-            std::cerr << "The given path " << path_name << " with nucleotide position " << nuc_pos << " is not in the index." << std::endl;
+            std::cerr << "[XP] error: The given path " << path_name << " with nucleotide position " << nuc_pos << " is not in the index." << std::endl;
             exit(1);
         }
 
