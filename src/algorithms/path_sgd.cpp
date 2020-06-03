@@ -1,6 +1,6 @@
 #include "path_sgd.hpp"
 
-#define debug_path_sgd
+// #define debug_path_sgd
 namespace odgi {
     namespace algorithms {
 
@@ -139,10 +139,10 @@ namespace odgi {
                             path_handle_t path = result[0].value;
                             size_t path_start_pos = result[0].start;
                             // size_t path_end_pos = result[0].stop;
-                            size_t path_len = path_index.get_path_length(path);
+                            size_t path_len = path_index.get_path_length(path) - 1;
                             // we have a 0-based positioning in the path index
                             size_t pos_in_path_a = pos - path_start_pos;
-                            std::string path_name = path_index.get_path_name(path);
+                            // std::string path_name = path_index.get_path_name(path);
                             //size_t pangenome_pos_a = path_index.get_pangenome_pos(path_name, pos_in_path);
                             uint64_t zipf_int = zipfian(gen);
 #ifdef debug_path_sgd
@@ -155,12 +155,20 @@ namespace odgi {
                             size_t pos_in_path_b = pos_in_path_a;
                             if (flip(gen)) {
                                 if (zipf_int > pos_in_path_a) {
-                                    zipf_int %= pos_in_path_a;
+                                    if (pos_in_path_a == 0) {
+                                        zipf_int = pos_in_path_a;
+                                    } else {
+                                        zipf_int %= pos_in_path_a;
+                                    }
                                 }
                                 pos_in_path_b -= zipf_int;
                             } else {
                                 if (zipf_int > path_len - pos_in_path_a ) {
-                                    zipf_int %= path_len - pos_in_path_a;
+                                    if (path_len - pos_in_path_a == 0) {
+                                        zipf_int = 0;
+                                    } else {
+                                        zipf_int %= path_len - pos_in_path_a;
+                                    }
                                 }
                                 pos_in_path_b += zipf_int;
                             }

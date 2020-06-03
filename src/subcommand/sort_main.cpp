@@ -59,12 +59,12 @@ int main_sort(int argc, char** argv) {
     args::Flag mondriaan_path_weight(parser, "path-weight", "weight mondriaan input matrix by path coverage of edges", {'W', "mondriaan-path-weight"});
     args::Flag p_sgd(parser, "path-sgd", "apply path guided linear 1D SGD algorithm to organize graph", {'Y', "path-sgd"});
     args::ValueFlag<std::string> p_sgd_in_file(parser, "FILE", "specify a line separated list of paths to sample from for the on the fly term generation process in the path guided linear 1D SGD (default: sample from all paths)", {'f', "path-sgd-use-paths"});
-    args::ValueFlag<uint64_t> p_sgd_min_term_updates(parser, "N", "minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts (default: concatenated length of all paths times 10)", {'f', "path-sgd-min-term-updates"});
+    args::ValueFlag<uint64_t> p_sgd_min_term_updates(parser, "N", "minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts (default: summed path lengths times 100)", {'f', "path-sgd-min-term-updates"});
     args::ValueFlag<double> p_sgd_delta(parser, "N", "threshold of maximum displacement approximately in bp at which to stop path guided linear 1D SGD (default: 0)", {'j', "path-sgd-delta"});
     args::ValueFlag<double> p_sgd_eps(parser, "N", "final learning rate for path guided linear 1D SGD model (default: 0.01)", {'g', "path-sgd-eps"});
     args::ValueFlag<double> p_sgd_zipf_theta(parser, "N", "the theta value for the Zipfian distrubution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: 0.99)", {'a', "path-sgd-zipf-theta"});
     args::ValueFlag<uint64_t> p_sgd_iter_max(parser, "N", "max number of iterations for path guided linear 1D SGD model (default: 30)", {'x', "path-sgd-iter-max"});
-    args::ValueFlag<uint64_t> p_sgd_zipf_space(parser, "N", "the maximum space size from which of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: 1,000,000)", {'k', "path-sgd-zipf-space"});
+    args::ValueFlag<uint64_t> p_sgd_zipf_space(parser, "N", "the maximum space size from which of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: summed path lengths)", {'k', "path-sgd-zipf-space"});
     args::ValueFlag<std::string> pipeline(parser, "STRING", "apply a series of sorts, based on single-character command line arguments to this command, with 's' the default sort and 'f' to reverse the sort order", {'p', "pipeline"});
     args::Flag paths_by_min_node_id(parser, "paths-min", "sort paths by their lowest contained node id", {'L', "paths-min"});
     args::Flag paths_by_max_node_id(parser, "paths-max", "sort paths by their highest contained node id", {'M', "paths-max"});
@@ -132,51 +132,60 @@ int main_sort(int argc, char** argv) {
     uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
     bool sgd_use_paths = args::get(lsgd_use_paths);
     /// path guided linear 1D SGD sort
+    std::function<uint64_t(const std::set<std::string> &,
+                           const xp::XP &)> get_summed_path_lengths
+            = [&](const std::set<std::string> &path_sgd_use_paths, const xp::XP &path_index) {
+                uint64_t total_path_lengths = 0;
+                for (auto path_name : path_sgd_use_paths) {
+                    path_handle_t path = path_index.get_path_handle(path_name);
+                    total_path_lengths += path_index.get_path_length(path);
+                }
+                return total_path_lengths;
+    };
     // default parameters
-    uint64_t path_sgd_min_term_updates = args::get(p_sgd_min_term_updates) ? args::get(p_sgd_min_term_updates) : 0; // TODO if it is 0, we need to make sure in path_linear_sgd_order to calculate the default value
     uint64_t path_sgd_iter_max = args::get(p_sgd_iter_max) ? args::get(p_sgd_iter_max) : 30;
     double path_sgd_zipf_theta = args::get(p_sgd_zipf_theta) ? args::get(p_sgd_zipf_theta) : 0.99;
-    uint64_t path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? args::get(p_sgd_zipf_space) : 1000000;
     double path_sgd_eps = args::get(p_sgd_eps) ? args::get(p_sgd_eps) : 0.01;
     double path_sgd_delta = args::get(p_sgd_delta) ? args::get(p_sgd_delta) : 0;
-    // check if path index is present
-    if (p_sgd && !xp_in_file) {
-        std::cerr << "[odgi sort] Error: Please specify a path index file to load the index via -X=[FILE], --path-index=[FILE]. "
-                     "A path index can be created with the 'odgi pathindex' command." << std::endl;
-        return 1;
-    }
+    // default parameters that need a path index to be present
+    uint64_t path_sgd_min_term_updates;
+    uint64_t path_sgd_zipf_space;
     std::set<std::string> path_sgd_use_paths;
-    // check if paths file is present, else add all paths to the set
-    if (p_sgd_in_file) {
-        std::string buf;
-        std::ifstream use_paths(args::get(p_sgd_in_file).c_str());
-        while (std::getline(use_paths, buf)) {
-            // check if the path is actually in the graph, else print an error and exit 1
-            if (graph.has_path(buf)) {
-                path_sgd_use_paths.insert(buf);
-            } else {
-                std::cerr << "[odgi sort] Error: Path '" << buf << "' as was given by -f=[FILE], --path-sgd-use-paths=[FILE]"
-                                                                   " is not present in the graph. Please remove this path from the file ans restart 'odgi sort'.";
+    xp::XP path_index;
+    if (p_sgd) {
+        // take care of path index
+        if (xp_in_file) {
+            std::ifstream in;
+            in.open(args::get(xp_in_file));
+            path_index.load(in);
+            in.close();
+        } else {
+            path_index.from_handle_graph(graph);
+        }
+        // do we only want so sample from a subset of paths?
+        if (p_sgd_in_file) {
+            std::string buf;
+            std::ifstream use_paths(args::get(p_sgd_in_file).c_str());
+            while (std::getline(use_paths, buf)) {
+                // check if the path is actually in the graph, else print an error and exit 1
+                if (graph.has_path(buf)) {
+                    path_sgd_use_paths.insert(buf);
+                } else {
+                    std::cerr << "[odgi sort] Error: Path '" << buf
+                              << "' as was given by -f=[FILE], --path-sgd-use-paths=[FILE]"
+                                 " is not present in the graph. Please remove this path from the file ans restart 'odgi sort'.";
+                }
             }
+            use_paths.close();
+        } else {
+            graph.for_each_path_handle([&](const path_handle_t &path) {
+                path_sgd_use_paths.insert(graph.get_path_name(path));
+            });
         }
-        use_paths.close();
-    } else {
-        graph.for_each_path_handle([&](const path_handle_t& path) {
-            path_sgd_use_paths.insert(graph.get_path_name(path));
-        });
+        uint64_t summed_path_lengths = get_summed_path_lengths(path_sgd_use_paths, path_index);
+        path_sgd_min_term_updates = args::get(p_sgd_min_term_updates) ? args::get(p_sgd_min_term_updates) : (summed_path_lengths * 100);
+        path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? args::get(p_sgd_zipf_space) : summed_path_lengths;
     }
-
-    std::function<uint64_t (const std::set<std::string>&,
-                       const xp::XP&)> default_min_term_updates
-        = [&](const std::set<std::string>& path_sgd_use_paths, const xp::XP& path_index) {
-        uint64_t default_min_term_updates = 0;
-        for (auto path_name : path_sgd_use_paths) {
-            path_handle_t path = path_index.get_path_handle(path_name);
-            default_min_term_updates += path_index.get_path_length(path);
-        }
-        default_min_term_updates = default_min_term_updates * 100;
-        return default_min_term_updates;
-    };
 
     // helper, TODO: move into its own file
     // make a dagified copy, get its sort, and apply the order to our graph
@@ -219,12 +228,6 @@ int main_sort(int argc, char** argv) {
                                                               sgd_delta,
                                                               num_threads));
         } else if (args::get(p_sgd)) {
-            xp::XP path_index;
-            std::ifstream in;
-            in.open(args::get(xp_in_file));
-            path_index.load(in);
-            in.close();
-            path_sgd_min_term_updates = default_min_term_updates(path_sgd_use_paths, path_index);
             graph.apply_ordering(algorithms::path_linear_sgd_order(graph,
                                                       path_index,
                                                       path_sgd_use_paths,
@@ -235,7 +238,6 @@ int main_sort(int argc, char** argv) {
                                                       path_sgd_zipf_theta,
                                                       path_sgd_zipf_space,
                                                       num_threads));
-            std::cerr << "after apply ordering" << std::endl;
         } else if (args::get(breadth_first)) {
             graph.apply_ordering(algorithms::breadth_first_topological_order(graph, bf_chunk_size), true);
         } else if (args::get(depth_first)) {
@@ -288,12 +290,6 @@ int main_sort(int argc, char** argv) {
                                                          num_threads);
                     break;
                 case 'Y': {
-                    xp::XP path_index;
-                    std::ifstream in;
-                    in.open(args::get(xp_in_file));
-                    path_index.load(in);
-                    in.close();
-                    path_sgd_min_term_updates = default_min_term_updates(path_sgd_use_paths, path_index);
                     order = algorithms::path_linear_sgd_order(graph,
                                                               path_index,
                                                               path_sgd_use_paths,
