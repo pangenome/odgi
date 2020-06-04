@@ -44,7 +44,7 @@ int main_sort(int argc, char** argv) {
     args::Flag eades(parser, "eades", "use eades algorithm", {'e', "eades"});
     //args::Flag lazy(parser, "lazy", "use lazy topological algorithm (DAG only)", {'l', "lazy"});
     args::Flag lsgd(parser, "linear-sgd", "apply 1D (linear) SGD algorithm to organize graph", {'S', "linear-sgd"});
-    args::ValueFlag<uint64_t> lsgd_bandwidth(parser, "sgd-bandwidth", "bandwidth of linear SGD model (default: 1000)", {'O', "sgd-bandwidth"});
+    args::ValueFlag<uint64_t> lsgd_bandwidth(parser, "sgd-bandwidth", "bandwidth of linear SGD model (default: 1000)", {'H', "sgd-bandwidth"});
     args::ValueFlag<double> lsgd_sampling_rate(parser, "sgd-sampling-rate", "sample pairs of nodes with probability distance between them divided by the sampling rate (default: 20)", {'Q', "sgd-sampling-rate"});
     args::Flag lsgd_use_paths(parser, "sgd-use-paths", "use paths to structure internode distances in SGD", {'K', "sgd-use-paths"});
     args::ValueFlag<uint64_t> lsgd_iter_max(parser, "sgd-iter-max", "max number of iterations for linear SGD model (default: 30)", {'T', "sgd-iter-max"});

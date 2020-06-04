@@ -6,6 +6,8 @@
 #include "algorithms/coverage.hpp"
 #include "algorithms/remove_high_degree.hpp"
 #include "algorithms/cut_tips.hpp"
+#include "algorithms/remove_isolated.hpp"
+#include "algorithms/expand_context.hpp"
 
 namespace odgi {
 
@@ -32,8 +34,13 @@ int main_prune(int argc, char** argv) {
     args::ValueFlag<uint64_t> max_coverage(parser, "N", "remove nodes covered by more than this number of path steps", {'C', "max-coverage"});
     args::Flag edge_coverage(parser, "bool", "remove edges outside of the min and max coverage (rather than nodes)", {'E', "edge-coverage"});
     args::ValueFlag<uint64_t> best_edges(parser, "N", "keep only the N most-covered inbound and outbound edge of each node", {'b', "best-edges"});
+    args::ValueFlag<uint64_t> expand_steps(parser, "N", "include nodes within this many steps of a component passing the prune thresholds", {'s', "expand-steps"});
+    args::ValueFlag<uint64_t> expand_length(parser, "N", "include nodes within this graph distance of a component passing the prune thresholds", {'l', "expand-length"});
+    args::ValueFlag<uint64_t> expand_path_length(parser, "N", "include nodes within this path length of a component passing the prune thresholds", {'p', "expand-path-length"});
     args::Flag drop_paths(parser, "bool", "remove the paths from the graph", {'D', "drop-paths"});
     args::Flag cut_tips(parser, "bool", "remove nodes which are graph tips", {'T', "cut-tips"});
+    args::ValueFlag<uint64_t> cut_tips_min_coverage(parser, "bool", "remove nodes which are graph tips and have less than this path coverage", {'m', "cut-tips-min-coverage"});
+    args::Flag remove_isolated(parser, "bool", "remove isolated nodes covered by a single path", {'I', "remove-isolated"});
     args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
     try {
@@ -106,20 +113,38 @@ int main_prune(int argc, char** argv) {
         }
         // remove the paths, because it's likely we have damaged some
         // and at present, we have no mechanism to reconstruct them
-        graph.clear_paths();
-        //std::cerr << "got " << to_drop.size() << " handles to drop" << std::endl;
-        for (auto& edge : edges_to_drop_coverage) {
-            graph.destroy_edge(edge);
-        }
-        for (auto& edge : edges_to_drop_best) {
-            graph.destroy_edge(edge);
-        }
-        for (auto& handle : handles_to_drop) {
-            graph.destroy_handle(handle);
+        auto do_destroy =
+            [&](void) {
+                graph.clear_paths();
+                //std::cerr << "got " << to_drop.size() << " handles to drop" << std::endl;
+                for (auto& edge : edges_to_drop_coverage) {
+                    graph.destroy_edge(edge);
+                }
+                for (auto& edge : edges_to_drop_best) {
+                    graph.destroy_edge(edge);
+                }
+                for (auto& handle : handles_to_drop) {
+                    graph.destroy_handle(handle);
+                }
+            };
+        if (args::get(expand_steps)) {
+            graph_t source = graph; do_destroy();
+            algorithms::expand_context(&source, &graph, args::get(expand_steps), true);
+        } else if (args::get(expand_length)) {
+            graph_t source = graph; do_destroy();
+            algorithms::expand_context(&source, &graph, args::get(expand_length), false);
+        } else if (args::get(expand_path_length)) {
+            graph_t source = graph; do_destroy();
+            algorithms::expand_context_with_paths(&source, &graph, args::get(expand_length), false);
+        } else {
+            do_destroy();
         }
     }
     if (args::get(cut_tips)) {
-        algorithms::cut_tips(graph);
+        algorithms::cut_tips(graph, args::get(cut_tips_min_coverage));
+    }
+    if (args::get(remove_isolated)) {
+        algorithms::remove_isolated_paths(graph);
     }
     if (args::get(drop_paths)) {
         graph.clear_paths();
