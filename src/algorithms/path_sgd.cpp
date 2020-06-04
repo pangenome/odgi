@@ -1,6 +1,7 @@
 #include "path_sgd.hpp"
 
 // #define debug_path_sgd
+#define eval_path_sgd
 namespace odgi {
     namespace algorithms {
 
@@ -142,7 +143,6 @@ namespace odgi {
                             size_t path_len = path_index.get_path_length(path) - 1;
                             // we have a 0-based positioning in the path index
                             size_t pos_in_path_a = pos - path_start_pos;
-                            // std::string path_name = path_index.get_path_name(path);
                             //size_t pangenome_pos_a = path_index.get_pangenome_pos(path_name, pos_in_path);
                             uint64_t zipf_int = zipfian(gen);
 #ifdef debug_path_sgd
@@ -185,16 +185,26 @@ namespace odgi {
                             std::cerr << "pos_in_path_b: " << pos_in_path_b << std::endl;
 #endif
                             // get the step handles
+                            // TODO we could create a get_pangenome_pos_and_handle function that gives us a tuple of the pangenome position and the handle_t to become more efficient
                             step_handle_t step_a = path_index.get_step_at_position(path, pos_in_path_a);
                             step_handle_t step_b = path_index.get_step_at_position(path, pos_in_path_b);
                             // and the graph handles, which we need to record the update
                             handle_t term_i = path_index.get_handle_of_step(step_a);
                             handle_t term_j = path_index.get_handle_of_step(step_b);
+
+                            /* FIXME not needed because of pangenome pos
                             // adjust the positions to the node starts
                             pos_in_path_a = path_index.get_position_of_step(step_a);
                             pos_in_path_b = path_index.get_position_of_step(step_b);
+                            */
+                            std::string path_name = path_index.get_path_name(path);
+                            pos_in_path_a = path_index.get_pangenome_pos(path_name, pos_in_path_a);
+                            pos_in_path_b = path_index.get_pangenome_pos(path_name, pos_in_path_b);
                             // establish the term distance
                             double term_dist = std::abs(static_cast<double>(pos_in_path_a) - static_cast<double>(pos_in_path_b));
+#ifdef eval_path_sgd
+                            std::cerr << path_name << "\t" << pos_in_path_a << "\t" << pos_in_path_b << "\t" << term_dist << std::endl;
+#endif
                             //assert(term_dist == zipf_int);
 #ifdef debug_path_sgd
                             std::cerr << "term_dist: " << term_dist << std::endl;
