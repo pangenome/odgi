@@ -1,8 +1,8 @@
 #include "path_sgd.hpp"
 
-// #define debug_path_sgd
-// #define eval_path_sgd
-// #define debug_checker_lambda
+//#define debug_path_sgd
+//#define eval_path_sgd
+#define debug_checker_lambda
 namespace odgi {
     namespace algorithms {
 
@@ -283,8 +283,10 @@ namespace odgi {
                     std::cerr << "r_x is " << r_x << std::endl;
 #endif
                             // update our positions (atomically)
+                    //std::cerr << "before X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
                             X[i].store(X[i].load() - r_x);
                             X[j].store(X[j].load() + r_x);
+                            //std::cerr << "after X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
                             term_updates.store(term_updates.load() + 1);
                         }
                     };
