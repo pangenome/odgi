@@ -32,6 +32,7 @@ namespace xp {
         sdsl::util::assign(position_map, sdsl::int_vector<>(graph.get_node_count() + 1));
         uint64_t len = 0;
         graph.for_each_handle([&](const handle_t &h) {
+            // nid_t node_id =
             position_map[number_bool_packing::unpack_number(h)] = len;
             uint64_t hl = graph.get_length(h);
             len += hl;
@@ -264,7 +265,7 @@ namespace xp {
     size_t XP::get_position_of_step(const step_handle_t& step_handle) const {
         const auto& xppath = *paths[as_integer(get_path_handle_of_step(step_handle)) - 1];
         auto& step_rank = as_integers(step_handle)[1];
-        return xppath.offsets_select(step_rank);
+        return xppath.offsets_select(step_rank + 1);
     }
 
     path_handle_t XP::get_path_handle_of_step(const step_handle_t& step_handle) const {
