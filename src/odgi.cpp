@@ -222,7 +222,7 @@ bool graph_t::for_each_step_on_handle_impl(const handle_t& handle, const std::fu
         step_handle_t step_handle;
         as_integers(step_handle)[0] = as_integer(number_bool_packing::pack(handle_n, step.is_rev()));
         as_integers(step_handle)[1] = i++;
-        if (step.path_id) { // skip deleted steps
+        if (step.path_id()) { // skip deleted steps
             flag &= iteratee(step_handle);
         }
     }
