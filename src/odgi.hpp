@@ -423,9 +423,9 @@ private:
     }
     
     struct path_metadata_t {
-        uint64_t length;
-        step_handle_t first;
-        step_handle_t last;
+        uint64_t length = 0;
+        step_handle_t first = {0, 0};
+        step_handle_t last = {0, 0};
         std::string name;
         bool is_circular = false;
     };
@@ -482,7 +482,7 @@ private:
 
 };
 
-const static uint64_t path_begin_marker = 0;
-const static uint64_t path_end_marker = 1;
+const static uint64_t path_begin_marker = 1;
+const static uint64_t path_end_marker = 2;
 
 } // end dankness

@@ -202,10 +202,9 @@ size_t graph_t::get_path_count(void) const {
 /// Execute a function on each path in the graph
 bool graph_t::for_each_path_handle_impl(const std::function<bool(const path_handle_t&)>& iteratee) const {
     bool flag = true;
-    for (uint64_t i = 1; i <= _path_handle_next && flag; ++i) {
-        path_handle_t path = as_path_handle(i);
-        if (get_step_count(path) > 0) {
-            flag &= iteratee(path);
+    for (uint64_t i = 0; i < path_metadata_v.size(); ++i) {
+        if (path_metadata_v[i].length > 0) {
+            flag &= iteratee(as_path_handle(i+1));
         }
     }
     return flag;
@@ -1119,11 +1118,12 @@ void graph_t::destroy_step(const step_handle_t& step_handle) {
     // erase reference to this step
     bool has_prev = has_previous_step(step_handle);
     bool has_next = has_next_step(step_handle);
+    path_handle_t path = get_path_handle_of_step(step_handle);
+    auto& path_meta = path_metadata_v[as_integer(path)-1];
     if (!has_prev && !has_next) {
         // we're about to erase the path, so we need to clean up the path metadata record
-        path_handle_t path = get_path_handle_of_step(step_handle);
         path_name_map.erase(get_path_name(path));
-        path_metadata_v[as_integer(path)-1] = path_metadata_t();
+        path_meta = path_metadata_t();
     } else {
         if (has_prev) {
             auto step = get_previous_step(step_handle);
@@ -1136,8 +1136,7 @@ void graph_t::destroy_step(const step_handle_t& step_handle) {
             step_node.set_path_step(step_rank, node_step);
         } else if (has_next) {
             auto step = get_next_step(step_handle);
-            auto& p = path_metadata_v[as_integer(get_path_handle_of_step(step))-1];
-            p.first = step;
+            path_meta.first = step;
         }
         if (has_next) {
             auto step = get_next_step(step_handle);
@@ -1150,26 +1149,13 @@ void graph_t::destroy_step(const step_handle_t& step_handle) {
             step_node.set_path_step(step_rank, node_step);
         } else if (has_prev) {
             auto step = get_previous_step(step_handle);
-            auto& p = path_metadata_v[as_integer(get_path_handle_of_step(step))-1];
-            p.last = step;
+            path_meta.last = step;
         }
+        --path_meta.length;
     }
-    // update other records on this path on this node
-    /*
-    handle_t handle = get_handle_of_step(step_handle);
-    bool seen_curr = false;
-    for_each_step_on_handle(handle, [&](const step_handle_t& step) {
-            if (seen_curr) {
-                decrement_rank(step);
-            }
-            if (step == step_handle) {
-                seen_curr = true;
-            }
-        });
-    */
     node_t& curr_node = node_v.at(number_bool_packing::unpack_number(get_handle_of_step(step_handle)));
-    //curr_node.remove_path_step(as_integers(step_handle)[1]);
     curr_node.set_path_step(as_integers(step_handle)[1], node_t::step_t());
+    // reduce the step count in the path
 }
 
 step_handle_t graph_t::prepend_step(const path_handle_t& path, const handle_t& to_append) {
@@ -1303,7 +1289,7 @@ std::pair<step_handle_t, step_handle_t> graph_t::rewrite_segment(const step_hand
             path_meta.last = new_steps.back();
         }
         // delete the previous steps
-        path_meta.length += (new_steps.size() - steps.size());
+        path_meta.length += new_steps.size() - 1;
         return make_pair(new_steps.front(), new_steps.back());
     } else {
         return make_pair(path_front_end(path), path_end(path));
@@ -1390,21 +1376,13 @@ void graph_t::to_gfa(std::ostream& out) const {
             }
         });
     for_each_path_handle([&out,this](const path_handle_t& p) {
-            //step_handle_t step = path_begin(p);
             out << "P\t" << get_path_name(p) << "\t";
             for_each_step_in_path(p, [this,&out](const step_handle_t& step) {
                     handle_t h = get_handle_of_step(step);
                     out << get_id(h) << (get_is_reverse(h)?"-":"+");
                     if (has_next_step(step)) out << ",";
                 });
-            out << "\t";
-            // some programs like gfaviz assume that these are alignments and not overlaps
-            // so we always need to put something in this field
-            uint64_t steps_for_asterisk = std::max((size_t)1, get_step_count(p)-1);
-            for (uint64_t i = 0; i < steps_for_asterisk; ++i) {
-                out << "*";
-                if (i < steps_for_asterisk-1) out << ",";
-            }
+            out << "\t" << "*"; // always put at least a "*" in the overlaps field
             if (get_is_circular(p)) {
                 out << "\t" << "TP:Z:circular";
             }
