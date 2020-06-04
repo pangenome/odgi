@@ -1045,17 +1045,24 @@ handle_t graph_t::combine_handles(const std::vector<handle_t>& handles) {
  * Destroy the given path. Invalidates handles to the path and its node steps.
  */
 void graph_t::destroy_path(const path_handle_t& path) {
-    if (get_step_count(path) == 0) return; // nothing to do
     // select everything with that handle in the path_handle_wt
     std::vector<step_handle_t> path_v;
     for_each_step_in_path(path, [this,&path_v](const step_handle_t& step) {
             path_v.push_back(step);
         });
     // this zeros out the steps
-    // final removal depends on a call to graph_t::optimize
+    // final removal of these steps depends on a call to graph_t::optimize
     for (auto& step : path_v) {
         destroy_step(step);
     }
+    // erase it from the name index
+    auto f = path_name_map.find(get_path_name(path));
+    if (f != path_name_map.end()) {
+        path_name_map.erase(f);
+    }
+    auto& p = path_metadata_v[as_integer(path)-1];
+    // our length should be 0
+    assert(p.length == 0);
     --_path_count;
 }
 
@@ -1120,39 +1127,50 @@ void graph_t::destroy_step(const step_handle_t& step_handle) {
     bool has_next = has_next_step(step_handle);
     path_handle_t path = get_path_handle_of_step(step_handle);
     auto& path_meta = path_metadata_v[as_integer(path)-1];
+    /*
+    if (!has_prev && !has_next) {
+        std::cerr << "should destroy path " << get_path_name(path) << std::endl;
+        std::cerr << "path length is " << path_meta.length << std::endl;
+    }
+    */
+    /*
     if (!has_prev && !has_next) {
         // we're about to erase the path, so we need to clean up the path metadata record
-        path_name_map.erase(get_path_name(path));
-        path_meta = path_metadata_t();
+        //path_name_map.erase(get_path_name(path));
+        //path_meta = path_metadata_t();
     } else {
-        if (has_prev) {
-            auto step = get_previous_step(step_handle);
-            node_t& step_node = node_v.at(number_bool_packing::unpack_number(get_handle_of_step(step)));
-            uint64_t step_rank = as_integers(step)[1];
-            node_t::step_t node_step = step_node.get_path_step(step_rank);
-            //std::cerr << "destroy prev links " << step_node.id() << std::endl;
-            node_step.set_next_id(path_end_marker);
-            node_step.set_next_rank(0);
-            step_node.set_path_step(step_rank, node_step);
-        } else if (has_next) {
-            auto step = get_next_step(step_handle);
-            path_meta.first = step;
-        }
-        if (has_next) {
-            auto step = get_next_step(step_handle);
-            node_t& step_node = node_v.at(number_bool_packing::unpack_number(get_handle_of_step(step)));
-            uint64_t step_rank = as_integers(step)[1];
-            node_t::step_t node_step = step_node.get_path_step(step_rank);
-            //std::cerr << "destroy next links " << step_node.id() << std::endl;
-            node_step.set_prev_id(path_begin_marker);
-            node_step.set_prev_rank(0);
-            step_node.set_path_step(step_rank, node_step);
-        } else if (has_prev) {
-            auto step = get_previous_step(step_handle);
-            path_meta.last = step;
-        }
-        --path_meta.length;
+    */
+    if (has_prev) {
+        /*
+        auto step = get_previous_step(step_handle);
+        node_t& step_node = node_v.at(number_bool_packing::unpack_number(get_handle_of_step(step)));
+        uint64_t step_rank = as_integers(step)[1];
+        node_t::step_t node_step = step_node.get_path_step(step_rank);
+        //std::cerr << "destroy prev links " << step_node.id() << std::endl;
+        node_step.set_next_id(path_end_marker);
+        node_step.set_next_rank(0);
+        step_node.set_path_step(step_rank, node_step);
+        */
+    } else if (has_next) {
+        auto step = get_next_step(step_handle);
+        path_meta.first = step;
     }
+    if (has_next) {
+        /*
+        auto step = get_next_step(step_handle);
+        node_t& step_node = node_v.at(number_bool_packing::unpack_number(get_handle_of_step(step)));
+        uint64_t step_rank = as_integers(step)[1];
+        node_t::step_t node_step = step_node.get_path_step(step_rank);
+        //std::cerr << "destroy next links " << step_node.id() << std::endl;
+        node_step.set_prev_id(path_begin_marker);
+        node_step.set_prev_rank(0);
+        step_node.set_path_step(step_rank, node_step);
+        */
+    } else if (has_prev) {
+        auto step = get_previous_step(step_handle);
+        path_meta.last = step;
+    }
+    --path_meta.length;
     node_t& curr_node = node_v.at(number_bool_packing::unpack_number(get_handle_of_step(step_handle)));
     curr_node.set_path_step(as_integers(step_handle)[1], node_t::step_t());
     // reduce the step count in the path
@@ -1265,14 +1283,20 @@ std::pair<step_handle_t, step_handle_t> graph_t::rewrite_segment(const step_hand
     auto& path_meta = path_metadata_v[as_integer(path)-1];
     // step destruction simply zeros out our step data
     // a final removal of the deleted steps requires a call to graph_t::optimize
+    
     for (auto& step : steps) {
         destroy_step(step);
+    }
+    if (path_meta.length == 0 && new_segment.size() == 0) {
+        //std::cerr << "destroyed path" << std::endl;
     }
     // create the new steps
     std::vector<step_handle_t> new_steps;
     for (auto& handle : new_segment) {
         new_steps.push_back(create_step(path, handle));
     }
+    // delete the previous steps
+    path_meta.length += new_steps.size();
     if (new_steps.size()) {
         // link new steps together
         for (uint64_t i = 0; i < new_steps.size()-1; ++i) {
@@ -1288,8 +1312,6 @@ std::pair<step_handle_t, step_handle_t> graph_t::rewrite_segment(const step_hand
         } else {
             path_meta.last = new_steps.back();
         }
-        // delete the previous steps
-        path_meta.length += new_steps.size() - 1;
         return make_pair(new_steps.front(), new_steps.back());
     } else {
         return make_pair(path_front_end(path), path_end(path));
@@ -1377,15 +1399,20 @@ void graph_t::to_gfa(std::ostream& out) const {
         });
     for_each_path_handle([&out,this](const path_handle_t& p) {
             out << "P\t" << get_path_name(p) << "\t";
-            for_each_step_in_path(p, [this,&out](const step_handle_t& step) {
+            auto& path_meta = path_metadata_v[as_integer(p)-1];
+            uint64_t i = 0;
+            for_each_step_in_path(p, [this,&i,&out](const step_handle_t& step) {
                     handle_t h = get_handle_of_step(step);
                     out << get_id(h) << (get_is_reverse(h)?"-":"+");
                     if (has_next_step(step)) out << ",";
+                    ++i;
                 });
             out << "\t" << "*"; // always put at least a "*" in the overlaps field
             if (get_is_circular(p)) {
                 out << "\t" << "TP:Z:circular";
             }
+            assert(i == path_meta.length);
+            //out << "\t" << "steps:i:" << path_meta.length;
             out << std::endl;
         });
 }
