@@ -318,7 +318,9 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/normalize.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/simplify_siblings.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/unchop.cpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/perfect_neighbors.cpp)
+  ${CMAKE_SOURCE_DIR}/src/algorithms/perfect_neighbors.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/remove_isolated.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/expand_context.cpp)
 
 set(odgi_DEPS
     sdsl-lite

@@ -2,6 +2,7 @@
 
 #include <handlegraph/handle_graph.hpp>
 #include <handlegraph/deletable_handle_graph.hpp>
+#include <handlegraph/mutable_path_deletable_handle_graph.hpp>
 #include <handlegraph/util.hpp>
 #include <vector>
 #include "odgi.hpp"
@@ -18,6 +19,10 @@ std::vector<handle_t> tip_handles(
 
 uint64_t cut_tips(
     DeletableHandleGraph& graph);
+
+uint64_t cut_tips(
+    MutablePathDeletableHandleGraph& graph,
+    uint64_t min_coverage = 0);
 
 }
 

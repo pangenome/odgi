@@ -1263,15 +1263,15 @@ std::pair<step_handle_t, step_handle_t> graph_t::rewrite_segment(const step_hand
                                                                  const std::vector<handle_t>& new_segment) {
     // collect the steps to replace
     std::vector<step_handle_t> steps;
-    std::string old_seq, new_seq;
+    //std::string old_seq, new_seq;
     for (step_handle_t step = segment_begin; ; step = get_next_step(step)) {
         steps.push_back(step);
-        old_seq.append(get_sequence(get_handle_of_step(step)));
+        //old_seq.append(get_sequence(get_handle_of_step(step)));
         if (step == segment_end) break;
     }
-    for (auto& handle : new_segment) new_seq.append(get_sequence(handle));
+    //for (auto& handle : new_segment) new_seq.append(get_sequence(handle));
     // verify that we're making a valid rewrite
-    assert(old_seq == new_seq);
+    //assert(old_seq == new_seq); // not required, we could be modifying the path
     // find the before and after steps, which we'll link into
     bool is_begin = !has_previous_step(segment_begin);
     bool is_end = !has_next_step(segment_end);
@@ -1284,33 +1284,31 @@ std::pair<step_handle_t, step_handle_t> graph_t::rewrite_segment(const step_hand
     std::sort(steps.begin(), steps.end(), [](const step_handle_t& a, const step_handle_t& b) {
             return as_integers(a)[0] == as_integers(b)[0] && as_integers(a)[1] > as_integers(b)[1]
                 || as_integers(a)[0] < as_integers(b)[0]; });
-    /* // must be handled in the calling context
     for (auto& step : steps) {
         destroy_step(step);
     }
-    */
     // create the new steps
     std::vector<step_handle_t> new_steps;
     for (auto& handle : new_segment) {
         new_steps.push_back(create_step(path, handle));
     }
-    // link new steps together
-    for (uint64_t i = 0; i < new_steps.size()-1; ++i) {
-        link_steps(new_steps[i], new_steps[i+1]);
-    }
-    if (!is_begin) {
-        link_steps(before, new_steps.front());
-    } else {
-        path_meta.first = new_steps.front();
-    }
-    if (!is_end) {
-        link_steps(new_steps.back(), after);
-    } else {
-        path_meta.last = new_steps.back();
-    }
-    // delete the previous steps
-    path_meta.length += (new_steps.size() - steps.size());
     if (new_steps.size()) {
+        // link new steps together
+        for (uint64_t i = 0; i < new_steps.size()-1; ++i) {
+            link_steps(new_steps[i], new_steps[i+1]);
+        }
+        if (!is_begin) {
+            link_steps(before, new_steps.front());
+        } else {
+            path_meta.first = new_steps.front();
+        }
+        if (!is_end) {
+            link_steps(new_steps.back(), after);
+        } else {
+            path_meta.last = new_steps.back();
+        }
+        // delete the previous steps
+        path_meta.length += (new_steps.size() - steps.size());
         return make_pair(new_steps.front(), new_steps.back());
     } else {
         return make_pair(path_front_end(path), path_end(path));
