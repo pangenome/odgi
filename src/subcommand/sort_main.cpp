@@ -133,14 +133,14 @@ int main_sort(int argc, char** argv) {
     bool sgd_use_paths = args::get(lsgd_use_paths);
     /// path guided linear 1D SGD sort
     std::function<uint64_t(const std::set<std::string> &,
-                           const xp::XP &)> get_summed_path_lengths
+                           const xp::XP &)> get_max_path_lengths
             = [&](const std::set<std::string> &path_sgd_use_paths, const xp::XP &path_index) {
-                uint64_t total_path_lengths = 0;
+                uint64_t max_path_length = 0;
                 for (auto path_name : path_sgd_use_paths) {
                     path_handle_t path = path_index.get_path_handle(path_name);
-                    total_path_lengths += path_index.get_path_length(path);
+                    max_path_length = std::max(max_path_length, path_index.get_path_length(path));
                 }
-                return total_path_lengths;
+                return max_path_length;
     };
     // default parameters
     uint64_t path_sgd_iter_max = args::get(p_sgd_iter_max) ? args::get(p_sgd_iter_max) : 30;
@@ -182,9 +182,9 @@ int main_sort(int argc, char** argv) {
                 path_sgd_use_paths.insert(graph.get_path_name(path));
             });
         }
-        uint64_t summed_path_lengths = get_summed_path_lengths(path_sgd_use_paths, path_index);
-        path_sgd_min_term_updates = args::get(p_sgd_min_term_updates) ? args::get(p_sgd_min_term_updates) : (summed_path_lengths * 100);
-        path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? args::get(p_sgd_zipf_space) : summed_path_lengths;
+        uint64_t max_path_length = get_max_path_lengths(path_sgd_use_paths, path_index);
+        path_sgd_min_term_updates = args::get(p_sgd_min_term_updates) ? (args::get(p_sgd_min_term_updates) * max_path_length) : (max_path_length * 100);
+        path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? args::get(p_sgd_zipf_space) : max_path_length;
     }
 
     // helper, TODO: move into its own file

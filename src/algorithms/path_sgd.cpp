@@ -1,6 +1,6 @@
 #include "path_sgd.hpp"
 
-// #define debug_path_sgd
+#define debug_path_sgd
 #define eval_path_sgd
 namespace odgi {
     namespace algorithms {
@@ -75,8 +75,10 @@ namespace odgi {
             std::cerr << "the real path position is: " << 20 - results[0].start + 1 << std::endl;
 #endif
 
-            double w_min = 1 / (longest_path_in_nucleotides * longest_path_in_nucleotides);
-            double w_max = 1;
+            std::cerr << "longest path " << longest_path_in_nucleotides << std::endl;
+            double w_min = (double)1.0 / (double)(longest_path_in_nucleotides * longest_path_in_nucleotides);
+            std::cerr << w_min << std::endl;
+            double w_max = 1.0;
             // get our schedule
             std::vector<double> etas = path_linear_sgd_schedule(w_min, w_max, iter_max, eps);
             // initialize Zipfian distrubution so we only have to calculate zeta once
@@ -106,14 +108,12 @@ namespace odgi {
                                 } else if (Delta_max.load() <= delta) { // nb: this will also break at 0
                                     work_todo.store(false);
                                 } else {
-//#pragma omp critical (cerr)
-                                    /*
+#pragma omp critical (cerr)
                                     std::cerr << iteration
                                               << ", eta: " << eta.load()
                                               << ", Delta: " << Delta_max.load()
-                                              << " terms " << terms.size()
+                                        //<< " terms " << terms.size()
                                               << " updates " << term_updates.load() << std::endl;
-                                    */
                                     eta.store(etas[iteration]); // update our learning rate
                                     Delta_max.store(delta); // set our delta max to the threshold
                                 }
@@ -195,6 +195,9 @@ namespace odgi {
                             // adjust the positions to the node starts
                             pos_in_path_a = path_index.get_position_of_step(step_a);
                             pos_in_path_b = path_index.get_position_of_step(step_b);
+                            std::cerr << "1. pos in path " << pos_in_path_a << " " << pos_in_path_b << std::endl;
+                            assert(pos_in_path_a < path_index.get_path_length(path));
+                            assert(pos_in_path_b < path_index.get_path_length(path));
 
                             // and adjust to account for our relative orientation
                             if (graph.get_is_reverse(term_i)) {
@@ -203,6 +206,7 @@ namespace odgi {
                             if (graph.get_is_reverse(term_j)) {
                                 pos_in_path_b += graph.get_length(term_j);
                             }
+                            std::cerr << "2. pos in path " << pos_in_path_a << " " << pos_in_path_b << std::endl;
 
                             // establish the term distance
                             double term_dist = std::abs(static_cast<double>(pos_in_path_a) - static_cast<double>(pos_in_path_b));
@@ -222,6 +226,7 @@ namespace odgi {
                             sgd_term_t t = sgd_term_t(term_i, term_j, term_dist, term_weight);
 
                             double w_ij = t.w;
+                            std::cerr << "w_ij = " << w_ij << std::endl;
                             double mu = eta.load() * w_ij;
                             if (mu > 1) {
                                 mu = 1;
@@ -231,31 +236,32 @@ namespace odgi {
                             // identities
                             uint64_t i = number_bool_packing::unpack_number(t.i);
                             uint64_t j = number_bool_packing::unpack_number(t.j);
-//#pragma omp critical (cerr)
-//                  std::cerr << "nodes are " << graph.get_id(t.i) << " and " << graph.get_id(t.j) << std::endl;
+#pragma omp critical (cerr)
+                  std::cerr << "nodes are " << graph.get_id(t.i) << " and " << graph.get_id(t.j) << std::endl;
                             // distance == magnitude in our 1D situation
                             double dx = X[i].load() - X[j].load();
                             if (dx == 0) {
                                 dx = 1e-9; // avoid nan
                             }
-//#pragma omp critical (cerr)
-//                    std::cerr << "distance is " << dx << " but should be " << d_ij << std::endl;
+#pragma omp critical (cerr)
+                    std::cerr << "distance is " << dx << " but should be " << d_ij << std::endl;
                             //double mag = dx; //sqrt(dx*dx + dy*dy);
                             double mag = sqrt(dx * dx);
+                            std::cerr << "mu " << mu << " mag " << mag << " d_ij " << d_ij << std::endl;
                             // check distances for early stopping
                             double Delta = mu * (mag - d_ij) / 2;
                             // try until we succeed. risky.
                             double Delta_abs = std::abs(Delta);
-//#pragma omp critical (cerr)
-//                    std::cerr << "Delta_abs " << Delta_abs << std::endl;
+#pragma omp critical (cerr)
+                    std::cerr << "Delta_abs " << Delta_abs << std::endl;
                             while (Delta_abs > Delta_max.load()) {
                                 Delta_max.store(Delta_abs);
                             }
                             // calculate update
                             double r = Delta / mag;
                             double r_x = r * dx;
-//#pragma omp critical (cerr)
-//                    std::cerr << "r_x is " << r_x << std::endl;
+#pragma omp critical (cerr)
+                    std::cerr << "r_x is " << r_x << std::endl;
                             // update our positions (atomically)
                             X[i].store(X[i].load() - r_x);
                             X[j].store(X[j].load() + r_x);
@@ -294,9 +300,13 @@ namespace odgi {
             // initialize step sizes
             std::vector<double> etas;
             etas.reserve(iter_max);
+            std::cerr << eta_max << " " << eta_min << " " << lambda << std::endl;
+            std::cerr << "etas ";
             for (uint64_t t = 0; t < iter_max; t++) {
                 etas.push_back(eta_max * exp(-lambda * t));
+                std::cerr << etas.back() << " ";
             }
+            std::cerr << std::endl;
             return etas;
         }
 
