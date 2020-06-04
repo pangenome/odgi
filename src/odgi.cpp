@@ -186,12 +186,12 @@ path_handle_t graph_t::get_path_handle(const std::string& path_name) const {
 
 /// Look up the name of a path from a handle to it
 std::string graph_t::get_path_name(const path_handle_t& path_handle) const {
-    return path_metadata_v.at(as_integer(path_handle)).name;
+    return path_metadata_v.at(as_integer(path_handle)-1).name;
 }
     
 /// Returns the number of node steps in the path
 size_t graph_t::get_step_count(const path_handle_t& path_handle) const {
-    return path_metadata_v.at(as_integer(path_handle)).length;
+    return path_metadata_v.at(as_integer(path_handle)-1).length;
 }
 
 /// Returns the number of paths stored in the graph
@@ -202,7 +202,7 @@ size_t graph_t::get_path_count(void) const {
 /// Execute a function on each path in the graph
 bool graph_t::for_each_path_handle_impl(const std::function<bool(const path_handle_t&)>& iteratee) const {
     bool flag = true;
-    for (uint64_t i = 0; i < _path_handle_next && flag; ++i) {
+    for (uint64_t i = 1; i <= _path_handle_next && flag; ++i) {
         path_handle_t path = as_path_handle(i);
         if (get_step_count(path) > 0) {
             flag &= iteratee(path);
@@ -222,7 +222,9 @@ bool graph_t::for_each_step_on_handle_impl(const handle_t& handle, const std::fu
         step_handle_t step_handle;
         as_integers(step_handle)[0] = as_integer(number_bool_packing::pack(handle_n, step.is_rev()));
         as_integers(step_handle)[1] = i++;
-        flag &= iteratee(step_handle);
+        if (step.path_id) { // skip deleted steps
+            flag &= iteratee(step_handle);
+        }
     }
     return flag;
 }
@@ -260,13 +262,13 @@ path_handle_t graph_t::get_path(const step_handle_t& step_handle) const {
 /// Get a handle to the first step in a path.
 /// The path MUST be nonempty.
 step_handle_t graph_t::path_begin(const path_handle_t& path_handle) const {
-    return path_metadata_v.at(as_integer(path_handle)).first;
+    return path_metadata_v.at(as_integer(path_handle)-1).first;
 }
     
 /// Get a handle to the last step in a path
 /// The path MUST be nonempty.
 step_handle_t graph_t::path_back(const path_handle_t& path_handle) const {
-    return path_metadata_v.at(as_integer(path_handle)).last;
+    return path_metadata_v.at(as_integer(path_handle)-1).last;
 }
 
 /// Get the reverse end iterator
@@ -287,12 +289,12 @@ step_handle_t graph_t::path_end(const path_handle_t& path_handle) const {
 
 /// is the path circular
 bool graph_t::get_is_circular(const path_handle_t& path_handle) const {
-    return path_metadata_v.at(as_integer(path_handle)).is_circular;
+    return path_metadata_v.at(as_integer(path_handle)-1).is_circular;
 }
 
 /// set the circular flag for the path
 void graph_t::set_circularity(const path_handle_t& path_handle, bool circular) {
-    path_metadata_v.at(as_integer(path_handle)).is_circular = circular;
+    path_metadata_v.at(as_integer(path_handle)-1).is_circular = circular;
 }
     
 /// Returns true if the step is not the last step on the path, else false
@@ -398,7 +400,7 @@ bool graph_t::is_empty(const path_handle_t& path_handle) const {
 
 /// Loop over all the steps along a path, from first through last
 void graph_t::for_each_step_in_path(const path_handle_t& path, const std::function<void(const step_handle_t&)>& iteratee) const {
-    auto& p = path_metadata_v[as_integer(path)];
+    auto& p = path_metadata_v[as_integer(path)-1];
     if (is_empty(path)) return;
     step_handle_t step = path_begin(path);
     step_handle_t end_step = path_back(path);
@@ -863,7 +865,7 @@ handle_t graph_t::apply_orientation(const handle_t& handle) {
               std::map<uint64_t, std::pair<uint64_t, bool>>> // path backs
         path_rewrites = node.flip_paths(path_begin_marker, path_end_marker);
     for (auto& r : path_rewrites.first) {
-        auto& p = path_metadata_v[r.first];
+        auto& p = path_metadata_v[r.first-1];
         step_handle_t step;
         as_integers(step)[0]
             = as_integer(number_bool_packing::pack(number_bool_packing::unpack_number(handle),
@@ -872,7 +874,7 @@ handle_t graph_t::apply_orientation(const handle_t& handle) {
         p.first = step;
     }
     for (auto& r : path_rewrites.second) {
-        auto& p = path_metadata_v[r.first];
+        auto& p = path_metadata_v[r.first-1];
         step_handle_t step;
         as_integers(step)[0]
             = as_integer(number_bool_packing::pack(number_bool_packing::unpack_number(handle),
@@ -948,11 +950,6 @@ std::vector<handle_t> graph_t::divide_handle(const handle_t& handle, const std::
         });
     // reverse the order to allow for safe rewriting
     std::reverse(steps.begin(), steps.end());
-    /*
-    std::sort(steps.begin(), steps.end(), [](const step_handle_t& a, const step_handle_t& b) {
-            return as_integers(a)[0] == as_integers(b)[0] && as_integers(a)[1] > as_integers(b)[1]
-                || as_integers(a)[0] < as_integers(b)[0]; });
-    */
     // replace path steps with the new handles
     for (auto& step : steps) {
         handle_t h = get_handle_of_step(step);
@@ -1055,11 +1052,8 @@ void graph_t::destroy_path(const path_handle_t& path) {
     for_each_step_in_path(path, [this,&path_v](const step_handle_t& step) {
             path_v.push_back(step);
         });
-    // this is order dependent...
-    // we need to destroy steps in their reverse ranks
-    std::sort(path_v.begin(), path_v.end(), [](const step_handle_t& a, const step_handle_t& b) {
-            return as_integers(a)[0] == as_integers(b)[0] && as_integers(a)[1] > as_integers(b)[1]
-                || as_integers(a)[0] < as_integers(b)[0]; });
+    // this zeros out the steps
+    // final removal depends on a call to graph_t::optimize
     for (auto& step : path_v) {
         destroy_step(step);
     }
@@ -1073,7 +1067,7 @@ void graph_t::destroy_path(const path_handle_t& path) {
  * remain valid.
  */
 path_handle_t graph_t::create_path_handle(const std::string& name, bool is_circular) {
-    path_handle_t path = as_path_handle(_path_handle_next++);
+    path_handle_t path = as_path_handle(++_path_handle_next);
     path_name_map[name] = as_integer(path);
     path_metadata_v.emplace_back();
     auto& p = path_metadata_v.back();
@@ -1129,7 +1123,7 @@ void graph_t::destroy_step(const step_handle_t& step_handle) {
         // we're about to erase the path, so we need to clean up the path metadata record
         path_handle_t path = get_path_handle_of_step(step_handle);
         path_name_map.erase(get_path_name(path));
-        path_metadata_v[as_integer(path)] = path_metadata_t();
+        path_metadata_v[as_integer(path)-1] = path_metadata_t();
     } else {
         if (has_prev) {
             auto step = get_previous_step(step_handle);
@@ -1142,7 +1136,7 @@ void graph_t::destroy_step(const step_handle_t& step_handle) {
             step_node.set_path_step(step_rank, node_step);
         } else if (has_next) {
             auto step = get_next_step(step_handle);
-            auto& p = path_metadata_v[as_integer(get_path_handle_of_step(step))];
+            auto& p = path_metadata_v[as_integer(get_path_handle_of_step(step))-1];
             p.first = step;
         }
         if (has_next) {
@@ -1156,11 +1150,12 @@ void graph_t::destroy_step(const step_handle_t& step_handle) {
             step_node.set_path_step(step_rank, node_step);
         } else if (has_prev) {
             auto step = get_previous_step(step_handle);
-            auto& p = path_metadata_v[as_integer(get_path_handle_of_step(step))];
+            auto& p = path_metadata_v[as_integer(get_path_handle_of_step(step))-1];
             p.last = step;
         }
     }
     // update other records on this path on this node
+    /*
     handle_t handle = get_handle_of_step(step_handle);
     bool seen_curr = false;
     for_each_step_on_handle(handle, [&](const step_handle_t& step) {
@@ -1171,13 +1166,15 @@ void graph_t::destroy_step(const step_handle_t& step_handle) {
                 seen_curr = true;
             }
         });
+    */
     node_t& curr_node = node_v.at(number_bool_packing::unpack_number(get_handle_of_step(step_handle)));
-    curr_node.remove_path_step(as_integers(step_handle)[1]);
+    //curr_node.remove_path_step(as_integers(step_handle)[1]);
+    curr_node.set_path_step(as_integers(step_handle)[1], node_t::step_t());
 }
 
 step_handle_t graph_t::prepend_step(const path_handle_t& path, const handle_t& to_append) {
     // get the last step
-    auto& p = path_metadata_v[as_integer(path)];
+    auto& p = path_metadata_v[as_integer(path)-1];
     // create the new step
     step_handle_t new_step = create_step(path, to_append);
     if (!p.length) {
@@ -1196,7 +1193,7 @@ step_handle_t graph_t::prepend_step(const path_handle_t& path, const handle_t& t
 
 step_handle_t graph_t::append_step(const path_handle_t& path, const handle_t& to_append) {
     // get the last step
-    auto& p = path_metadata_v[as_integer(path)];
+    auto& p = path_metadata_v[as_integer(path)-1];
     // create the new step
     step_handle_t new_step = create_step(path, to_append);
     if (!p.length) {
@@ -1229,7 +1226,7 @@ void graph_t::decrement_rank(const step_handle_t& step_handle) {
         step_node.set_path_step(step_rank, node_step);
     } else {
         // update path metadata
-        auto& p = path_metadata_v[as_integer(get_path(step_handle))];
+        auto& p = path_metadata_v[as_integer(get_path(step_handle))-1];
         --as_integers(p.first)[1];
     }
     if (has_next_step(step_handle)) {
@@ -1241,7 +1238,7 @@ void graph_t::decrement_rank(const step_handle_t& step_handle) {
         step_node.set_path_step(step_rank, node_step);
     } else {
         // update path metadata
-        auto& p = path_metadata_v[as_integer(get_path(step_handle))];
+        auto& p = path_metadata_v[as_integer(get_path(step_handle))-1];
         --as_integers(p.last)[1];
     }
 }
@@ -1279,11 +1276,9 @@ std::pair<step_handle_t, step_handle_t> graph_t::rewrite_segment(const step_hand
     step_handle_t after = get_next_step(segment_end);
     // get the path metadata
     path_handle_t path = get_path(segment_begin);
-    auto& path_meta = path_metadata_v[as_integer(path)];
-    // sort the steps so that we destroy from higher to lower ranks
-    std::sort(steps.begin(), steps.end(), [](const step_handle_t& a, const step_handle_t& b) {
-            return as_integers(a)[0] == as_integers(b)[0] && as_integers(a)[1] > as_integers(b)[1]
-                || as_integers(a)[0] < as_integers(b)[0]; });
+    auto& path_meta = path_metadata_v[as_integer(path)-1];
+    // step destruction simply zeros out our step data
+    // a final removal of the deleted steps requires a call to graph_t::optimize
     for (auto& step : steps) {
         destroy_step(step);
     }

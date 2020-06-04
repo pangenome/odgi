@@ -74,19 +74,9 @@ namespace odgi {
                 REQUIRE(path_index.has_path("5-m"));
                 REQUIRE(!path_index.has_path("5+"));
 
-                path_handle_t p_h_i = path_index.get_path_handle("5");
-                step_handle_t s_h_i = path_index.get_step_at_position(p_h_i, 12);
-                path_handle_t p_h_g = graph.get_path_handle("5");
-                step_handle_t s_h_g;
-                as_integers(s_h_g)[0] = as_integer(p_h_g);
-                as_integers(s_h_g)[1] = 1;
-                REQUIRE(as_integer(path_index.get_path_handle_of_step(s_h_i)) == as_integer(graph.get_path_handle_of_step(s_h_g)));
-
-                // We have to add +1 in the graph space, because of the different handle implementation in XP
-                // Explanation by Erik: https://github.com/vgteam/odgi/pull/82#discussion_r387129361.
-                REQUIRE(as_integer(path_index.get_path_handle("5")) == as_integer(graph.get_path_handle("5"))+ 1);
-                REQUIRE(as_integer(path_index.get_path_handle("5-")) == as_integer(graph.get_path_handle("5-"))+ 1);
-                REQUIRE(as_integer(path_index.get_path_handle("5-m")) == as_integer(graph.get_path_handle("5-m"))+ 1);
+                REQUIRE(as_integer(path_index.get_path_handle("5")) == as_integer(graph.get_path_handle("5")));
+                REQUIRE(as_integer(path_index.get_path_handle("5-")) == as_integer(graph.get_path_handle("5-")));
+                REQUIRE(as_integer(path_index.get_path_handle("5-m")) == as_integer(graph.get_path_handle("5-m")));
             }
 
             SECTION("The index has path and position") {
@@ -155,19 +145,9 @@ namespace odgi {
                 REQUIRE(loaded_path_index.has_path("5-m"));
                 REQUIRE(!loaded_path_index.has_path("5+"));
 
-                path_handle_t p_h_i = loaded_path_index.get_path_handle("5");
-                step_handle_t s_h_i = loaded_path_index.get_step_at_position(p_h_i, 12);
-                path_handle_t p_h_g = graph.get_path_handle("5");
-                step_handle_t s_h_g;
-                as_integers(s_h_g)[0] = as_integer(p_h_g);
-                as_integers(s_h_g)[1] = 1;
-                REQUIRE(as_integer(loaded_path_index.get_path_handle_of_step(s_h_i)) == as_integer(graph.get_path_handle_of_step(s_h_g)));
-
-                // We have to add +1 in the graph space, because of the different handle implementation in XP
-                // Explanation by Erik: https://github.com/vgteam/odgi/pull/82#discussion_r387129361.
-                REQUIRE(as_integer(loaded_path_index.get_path_handle("5")) == as_integer(graph.get_path_handle("5"))+ 1);
-                REQUIRE(as_integer(loaded_path_index.get_path_handle("5-")) == as_integer(graph.get_path_handle("5-"))+ 1);
-                REQUIRE(as_integer(loaded_path_index.get_path_handle("5-m")) == as_integer(graph.get_path_handle("5-m"))+ 1);
+                REQUIRE(as_integer(loaded_path_index.get_path_handle("5")) == as_integer(graph.get_path_handle("5")));
+                REQUIRE(as_integer(loaded_path_index.get_path_handle("5-")) == as_integer(graph.get_path_handle("5-")));
+                REQUIRE(as_integer(loaded_path_index.get_path_handle("5-m")) == as_integer(graph.get_path_handle("5-m")));
             }
 
             SECTION("The loaded index mirrors the actual index") {
