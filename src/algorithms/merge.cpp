@@ -130,7 +130,7 @@ void merge(handlegraph::MutablePathDeletableHandleGraph& graph, const std::vecto
         // Rewrite the path to go through merged forward if we went through the
         // handle we're merging in forward, and merged reverse otherwise.
         // Make sure to advance the end of the range because rewrite is end-exclusive (to allow insert). 
-        graph.rewrite_segment(step, step, {flip ? graph.flip(merged) : merged});
+        graph.rewrite_segment(step, graph.get_next_step(step), {flip ? graph.flip(merged) : merged});
     }
     
     for (auto& other : middles) {

@@ -162,7 +162,7 @@ handle_t concat_nodes(handlegraph::MutablePathDeletableHandleGraph& graph, const
         for (auto& range : ranges_to_rewrite) {
             // Rewrite each range to visit the new node in the appropriate orientation instead of whatever it did before
             // Make sure to advance the end of the range because rewrite is end-exclusive (to allow insert).
-            graph.rewrite_segment(std::get<0>(range), std::get<1>(range), {std::get<2>(range) ? graph.flip(new_node) : new_node});
+            graph.rewrite_segment(std::get<0>(range), graph.get_next_step(std::get<1>(range)), {std::get<2>(range) ? graph.flip(new_node) : new_node});
         }
     }
 

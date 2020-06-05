@@ -45,7 +45,7 @@ uint64_t cut_tips(
             });
         if (!min_coverage || to_destroy.size() < min_coverage) {
             for (auto& step : to_destroy) {
-                graph.rewrite_segment(step, step, {});
+                graph.rewrite_segment(step, graph.get_next_step(step), {});
             }
             drop_tips.push_back(tip);
         }
