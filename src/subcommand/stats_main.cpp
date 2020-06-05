@@ -106,7 +106,7 @@ int main_stats(int argc, char** argv) {
         graph.for_each_handle([&](const handle_t& h) {
                 std::vector<uint64_t> paths_here;
                 graph.for_each_step_on_handle(h, [&](const step_handle_t& occ) {
-                        paths_here.push_back(as_integer(graph.get_path(occ)));
+                        paths_here.push_back(as_integer(graph.get_path_handle_of_step(occ)));
                     });
                 std::sort(paths_here.begin(), paths_here.end());
                 std::vector<uint64_t> unique_paths = paths_here;
@@ -171,7 +171,7 @@ int main_stats(int argc, char** argv) {
                 graph.for_each_step_on_handle(
                     h,
                     [&](const step_handle_t& occ) {
-                        paths_here.insert(get_path_id(graph.get_path(occ)));
+                        paths_here.insert(get_path_id(graph.get_path_handle_of_step(occ)));
                     });
                 size_t l = graph.get_length(h);
 #pragma omp critical (setcov)
@@ -201,7 +201,7 @@ int main_stats(int argc, char** argv) {
                 graph.for_each_step_on_handle(
                     h,
                     [&](const step_handle_t& occ) {
-                        paths_here.insert(get_path_id(graph.get_path(occ)));
+                        paths_here.insert(get_path_id(graph.get_path_handle_of_step(occ)));
                     });
                 size_t l = graph.get_length(h);
 #pragma omp critical (setcov)
@@ -227,7 +227,7 @@ int main_stats(int argc, char** argv) {
                 graph.for_each_step_on_handle(
                     h,
                     [&](const step_handle_t& occ) {
-                        paths_here.push_back(get_path_id(graph.get_path(occ)));
+                        paths_here.push_back(get_path_id(graph.get_path_handle_of_step(occ)));
                     });
                 std::sort(paths_here.begin(), paths_here.end());
                 size_t l = graph.get_length(h);
@@ -329,7 +329,7 @@ int main_stats(int argc, char** argv) {
                     graph.for_each_step_on_handle(
                         h,
                         [&](const step_handle_t& occ) {
-                            paths_here.push_back(get_path_id(graph.get_path(occ)));
+                            paths_here.push_back(get_path_id(graph.get_path_handle_of_step(occ)));
                         });
                     uint64_t len = graph.get_length(h);
                     // check each position in the node
