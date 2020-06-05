@@ -83,6 +83,9 @@ PYBIND11_MODULE(odgi, m)
         .def("edge_handle",
              &odgi::graph_t::edge_handle,
              "Return the edge handle for the given pair of handles.")
+        .def("traverse_edge_handle",
+             &odgi::graph_t::traverse_edge_handle,
+             "View the given edge handle from either inward end handle and produce the outward handle you would arrive at.")
         .def("has_path",
              &odgi::graph_t::has_path,
              "Return if a path with the givenv name exists in the graph.")
@@ -125,7 +128,10 @@ PYBIND11_MODULE(odgi, m)
              &odgi::graph_t::get_handle_of_step,
              "Return the handle that a given step occurs on.")
         .def("get_path",
-             &odgi::graph_t::get_path,
+             &odgi::graph_t::get_path_handle_of_step,
+             "Return the path of a given step handle.")
+        .def("get_path_handle_of_step",
+             &odgi::graph_t::get_path_handle_of_step,
              "Return the path of a given step handle.")
         .def("path_begin",
              &odgi::graph_t::path_begin,
