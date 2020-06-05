@@ -142,9 +142,11 @@ int main_prune(int argc, char** argv) {
     }
     if (args::get(cut_tips)) {
         algorithms::cut_tips(graph, args::get(cut_tips_min_coverage));
+        graph.optimize();
     }
     if (args::get(remove_isolated)) {
         algorithms::remove_isolated_paths(graph);
+        graph.optimize();
     }
     if (args::get(drop_paths)) {
         graph.clear_paths();
