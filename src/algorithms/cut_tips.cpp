@@ -44,11 +44,6 @@ uint64_t cut_tips(
                 to_destroy.push_back(step);
             });
         if (!min_coverage || to_destroy.size() < min_coverage) {
-            // odgi quirk / baddness: we have to destroy step handles from largest to smallest
-            // a generic implementation would iterate through step handles while erasing
-            std::sort(to_destroy.begin(), to_destroy.end(),
-                      [](const step_handle_t& a, const step_handle_t& b) {
-                          return as_integers(a)[1] > as_integers(b)[1]; });
             for (auto& step : to_destroy) {
                 graph.rewrite_segment(step, step, {});
             }
