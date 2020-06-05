@@ -1,7 +1,7 @@
 //
 //  odgi
 //
-//  graph.hpp
+//  odgi.hpp
 //
 //  main dynamic compact graph definition
 //
@@ -37,16 +37,16 @@ using namespace handlegraph;
 // Resolve ambiguous nid_t typedef by putting it in our namespace.
 using nid_t = handlegraph::nid_t;
 
-class graph_t : public MutablePathDeletableHandleGraph, public SerializableHandleGraph {
+class ODGI : public MutablePathDeletableHandleGraph, public SerializableHandleGraph {
 
 public:
 
-    graph_t(void) {
+    ODGI(void) {
         // set up initial delimiters
         deleted_node_bv.push_back(1);
     }
 
-    ~graph_t(void) { clear(); }
+    ~ODGI(void) { clear(); }
 
     /// Method to check if a node exists by ID
     bool has_node(nid_t node_id) const;
@@ -481,6 +481,8 @@ private:
     uint64_t get_node_rank(const nid_t& node_id) const;
 
 };
+
+using graph_t = ODGI;
 
 const static uint64_t path_begin_marker = 1;
 const static uint64_t path_end_marker = 2;
