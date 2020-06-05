@@ -1604,7 +1604,7 @@ void ODGI::display(void) const {
                       << step.is_rev() << ":"
                       << (step.prev_id() == path_begin_marker ? "#" : std::to_string(edge_delta_to_id(node_id, step.prev_id() - (path_end_marker + 1)))) << ":"
                       << step.prev_rank() << ":"
-                      << (step.next_id() == path_end_marker ? "$" : std::to_string(edge_delta_to_id(node_id, step.next_id()- (path_end_marker + 1)))) << ":"
+                      << (step.next_id() == path_end_marker ? "$" : std::to_string(edge_delta_to_id(node_id, step.next_id() - (path_end_marker + 1)))) << ":"
                       << step.next_rank() << " ";
         }
         std::cerr << " | ";
@@ -1820,4 +1820,3 @@ void ODGI::load(std::istream& in) {
 }
 
 }
-
