@@ -277,6 +277,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/bin_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/matrix_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/chop_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/groom_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/layout_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/flatten_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/break_main.cpp
@@ -320,7 +321,8 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/unchop.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/perfect_neighbors.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/remove_isolated.cpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/expand_context.cpp)
+  ${CMAKE_SOURCE_DIR}/src/algorithms/expand_context.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/groom.cpp)
 
 set(odgi_DEPS
     sdsl-lite
