@@ -18,7 +18,8 @@ using nid_t = handlegraph::nid_t;
 const uint8_t EDGE_RECORD_LENGTH = 2;
 const uint8_t PATH_RECORD_LENGTH = 5;
 
-/// A node object with the sequence, its edge lists, and paths
+/// A node object with the sequence, its edge lists, and paths.
+/// Part of ODGI.
 class node_t {
     std::vector<uint8_t> bytes;
     dyn::hacked_vector path_steps;

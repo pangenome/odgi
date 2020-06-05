@@ -271,13 +271,17 @@ PYBIND11_MODULE(odgi, m)
         */
         .def("to_gfa",
              [](const odgi::graph_t& g) {
-                 py::scoped_ostream_redirect stream(
-                     std::cout,
-                     py::module::import("sys").attr("stdout")
-                     );
-                 g.to_gfa(std::cout);
+                 return g.to_gfa();
              },
-             "Display as GFA")
+             "Return as GFA")
+        .def("to_gfa",
+             [](const odgi::graph_t& g, const std::string& file) {
+                 g.to_gfa(file);
+             },
+             "Save as GFA")
+        .def("display",
+             &odgi::graph_t::display,
+             "Dump graph")
         .def("serialize",
              [](odgi::graph_t& g, const std::string& file) {
                  std::ofstream out(file.c_str());
@@ -285,6 +289,12 @@ PYBIND11_MODULE(odgi, m)
              },
              "Save the graph to the given file, returning the number of bytes written.")
         .def("load",
+             [](odgi::graph_t& g, const std::string& file) {
+                 std::ifstream in(file.c_str());
+                 g.deserialize(in);
+             },
+             "Load the graph from the given file.")
+        .def("deserialize",
              [](odgi::graph_t& g, const std::string& file) {
                  std::ifstream in(file.c_str());
                  g.deserialize(in);

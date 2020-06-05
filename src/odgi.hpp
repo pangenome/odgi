@@ -546,7 +546,7 @@ private:
 
 using graph_t = ODGI;
 
-const static uint64_t path_begin_marker = 1;
-const static uint64_t path_end_marker = 2;
+const static uint64_t path_begin_marker = 0;
+const static uint64_t path_end_marker = 1;
 
 } // end dankness
