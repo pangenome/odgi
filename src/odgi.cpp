@@ -518,7 +518,7 @@ step_handle_t ODGI::get_next_step(const step_handle_t& step_handle) const {
             return path_end(get_path_handle_of_step(step_handle));
         }
     }
-    nid_t next_id = edge_delta_to_id(curr_id, step.next_id()-2);
+    nid_t next_id = edge_delta_to_id(curr_id, step.next_id() - (path_end_marker + 1));
     handle_t next_handle = get_handle(next_id);
     bool next_rev = node_v.at(number_bool_packing::unpack_number(next_handle)).get_path_step(step.next_rank()).is_rev();
     step_handle_t next_step;
@@ -551,7 +551,7 @@ step_handle_t ODGI::get_previous_step(const step_handle_t& step_handle) const {
             return path_front_end(get_path_handle_of_step(step_handle));
         }
     }
-    nid_t prev_id = edge_delta_to_id(curr_id, step.prev_id()-2);
+    nid_t prev_id = edge_delta_to_id(curr_id, step.prev_id() - (path_end_marker + 1));
     handle_t prev_handle = get_handle(prev_id);
     bool prev_rev = node_v.at(number_bool_packing::unpack_number(prev_handle)).get_path_step(step.prev_rank()).is_rev();
     step_handle_t prev_step;
@@ -1310,12 +1310,12 @@ void ODGI::link_steps(const step_handle_t& from, const step_handle_t& to) {
     const uint64_t& to_rank = as_integers(to)[1];
     node_t& from_node = node_v.at(number_bool_packing::unpack_number(from_handle));
     node_t::step_t from_step = from_node.get_path_step(from_rank);
-    from_step.set_next_id(edge_to_delta(from_handle, to_handle)+2);
+    from_step.set_next_id(edge_to_delta(from_handle, to_handle) + (path_end_marker + 1));
     from_step.set_next_rank(to_rank);
     from_node.set_path_step(from_rank, from_step);
     node_t& to_node = node_v.at(number_bool_packing::unpack_number(to_handle));
     node_t::step_t to_step = to_node.get_path_step(to_rank);
-    to_step.set_prev_id(edge_to_delta(to_handle, from_handle)+2);
+    to_step.set_prev_id(edge_to_delta(to_handle, from_handle) + (path_end_marker + 1));
     to_step.set_prev_rank(from_rank);
     to_node.set_path_step(to_rank, to_step);
 }
@@ -1602,9 +1602,9 @@ void ODGI::display(void) const {
         for (auto& step : steps) {
             std::cerr << step.path_id() << ":"
                       << step.is_rev() << ":"
-                      << (step.prev_id() == 0 ? "#" : std::to_string(edge_delta_to_id(node_id, step.prev_id()-2))) << ":"
+                      << (step.prev_id() == path_begin_marker ? "#" : std::to_string(edge_delta_to_id(node_id, step.prev_id() - (path_end_marker + 1)))) << ":"
                       << step.prev_rank() << ":"
-                      << (step.next_id() == 1 ? "$" : std::to_string(edge_delta_to_id(node_id, step.next_id()-2))) << ":"
+                      << (step.next_id() == path_end_marker ? "$" : std::to_string(edge_delta_to_id(node_id, step.next_id()- (path_end_marker + 1)))) << ":"
                       << step.next_rank() << " ";
         }
         std::cerr << " | ";
