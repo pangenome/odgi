@@ -279,7 +279,7 @@ int main_viz(int argc, char** argv) {
                 path_layout_buf[width * path_y + i] = 1;
             }
             //std::cerr << "path_y " << graph.get_path_name(path) << " " << path_count - path_y - 1 << std::endl;
-            path_layout_y[as_integer(path)] = path_count - path_y - 1;
+            path_layout_y[as_integer(path)-1] = path_count - path_y - 1;
         }
     }
 
@@ -340,7 +340,7 @@ int main_viz(int argc, char** argv) {
             //std::cerr << "path " << as_integer(path) << " " << graph.get_path_name(path) << " " << path_r_f << " " << path_g_f << " " << path_b_f
             //          << " " << (int)path_r << " " << (int)path_g << " " << (int)path_b << std::endl;
             /// Loop over all the steps along a path, from first through last and draw them
-            uint64_t path_rank = as_integer(path);
+            uint64_t path_rank = as_integer(path)-1;
             uint64_t step = 0;
             graph.for_each_step_in_path(path, [&](const step_handle_t& occ) {
                     handle_t h = graph.get_handle_of_step(occ);
