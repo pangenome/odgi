@@ -173,7 +173,7 @@ int main_sort(int argc, char** argv) {
                 } else {
                     std::cerr << "[odgi sort] Error: Path '" << buf
                               << "' as was given by -f=[FILE], --path-sgd-use-paths=[FILE]"
-                                 " is not present in the graph. Please remove this path from the file ans restart 'odgi sort'.";
+                                 " is not present in the graph. Please remove this path from the file and restart 'odgi sort'.";
                 }
             }
             use_paths.close();

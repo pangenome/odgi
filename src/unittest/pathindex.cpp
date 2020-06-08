@@ -65,6 +65,7 @@ namespace odgi {
             }
 
             XP path_index;
+            // graph.destroy_handle(n2); // this leads to a 'exit(1)' as we don't create an index of an optimized graph anymore
             path_index.from_handle_graph(graph);
 
             SECTION("The index mirrors the actual graph") {
