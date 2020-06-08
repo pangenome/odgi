@@ -2,7 +2,6 @@
 
 //#define debug_path_sgd
 //#define eval_path_sgd
-#define debug_checker_lambda
 namespace odgi {
     namespace algorithms {
 
@@ -15,7 +14,8 @@ namespace odgi {
                                             const double &eps,
                                             const double &theta,
                                             const uint64_t &space,
-                                            const uint64_t &nthreads) {
+                                            const uint64_t &nthreads,
+                                            const bool &progress) {
             using namespace std::chrono_literals; // for timing stuff
             // our positions in 1D
             std::vector<std::atomic<double>> X(graph.get_node_count());
@@ -111,14 +111,14 @@ namespace odgi {
                                 } else if (Delta_max.load() <= delta) { // nb: this will also break at 0
                                     work_todo.store(false);
                                 } else {
-#ifdef debug_checker_lambda
-#pragma omp critical (cerr)
-                                    std::cerr << iteration
-                                              << ", eta: " << eta.load()
-                                              << ", Delta: " << Delta_max.load()
-                                        //<< " terms " << terms.size()
-                                              << " updates " << term_updates.load() << std::endl;
-#endif
+                                    if (progress) {
+                                        double percent_progress = ((double)iteration / (double)iter_max) * 100.0;
+                                        std::cerr << std::fixed << std::setprecision(2) << "[path sgd sort]: " << percent_progress << "% progress: "
+                                        "iteration: " << iteration <<
+                                        ", eta: " << eta.load() <<
+                                        ", delta: " << Delta_max.load() <<
+                                        ", number of updates: " << term_updates.load() << std::endl;
+                                    }
                                     eta.store(etas[iteration]); // update our learning rate
                                     Delta_max.store(delta); // set our delta max to the threshold
                                 }
@@ -178,12 +178,6 @@ namespace odgi {
                                 }
                                 pos_in_path_b += zipf_int;
                             }
-                            
-                            /*
-                            if (path_len - 1 < zipf_int) {
-                                zipf_int = pos_in_path + (zipf_int % (path_len - pos_in_path));
-                            }
-                            */
 #ifdef debug_path_sgd
                             std::cerr << "zipf: " << zipf_int << std::endl;
                             std::cerr << "pos_in_path_a: " << pos_in_path_a << std::endl;
@@ -283,10 +277,14 @@ namespace odgi {
                     std::cerr << "r_x is " << r_x << std::endl;
 #endif
                             // update our positions (atomically)
-                    //std::cerr << "before X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
+#ifdef debug_path_sgd
+                            std::cerr << "before X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
+#endif
                             X[i].store(X[i].load() - r_x);
                             X[j].store(X[j].load() + r_x);
-                            //std::cerr << "after X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
+#ifdef debug_path_sgd
+                            std::cerr << "after X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
+#endif
                             term_updates.store(term_updates.load() + 1);
                         }
                     };
@@ -337,7 +335,8 @@ namespace odgi {
                                                     const double &eps,
                                                     const double &theta,
                                                     const uint64_t &space,
-                                                    const uint64_t &nthreads) {
+                                                    const uint64_t &nthreads,
+                                                    const bool &progress) {
             std::vector<double> layout = path_linear_sgd(graph,
                                                          path_index,
                                                          path_sgd_use_paths,
@@ -347,7 +346,8 @@ namespace odgi {
                                                          eps,
                                                          theta,
                                                          space,
-                                                         nthreads);
+                                                         nthreads,
+                                                         progress);
             std::vector<std::pair<double, handle_t>> layout_handles;
             uint64_t i = 0;
             graph.for_each_handle([&i, &layout, &layout_handles](const handle_t &handle) {

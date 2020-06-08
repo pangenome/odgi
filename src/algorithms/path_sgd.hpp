@@ -17,6 +17,7 @@
 #include "sgd_term.hpp"
 #include "IntervalTree.h"
 #include <zipfian_int_distribution.h>
+#include <iomanip>
 
 namespace odgi {
     namespace algorithms {
@@ -33,7 +34,8 @@ namespace odgi {
                                             const double &eps,
                                             const double &theta,
                                             const uint64_t &space,
-                                            const uint64_t &nthreads);
+                                            const uint64_t &nthreads,
+                                            const bool &progress);
 
         /// our learning schedule
         std::vector<double> path_linear_sgd_schedule(const double &w_min,
@@ -50,7 +52,8 @@ namespace odgi {
                                                     const double &eps,
                                                     const double &theta,
                                                     const uint64_t &space,
-                                                    const uint64_t &nthreads);
+                                                    const uint64_t &nthreads,
+                                                    const bool &progress);
 
     }
 }

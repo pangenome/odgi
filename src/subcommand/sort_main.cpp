@@ -239,7 +239,8 @@ int main_sort(int argc, char** argv) {
                                                   path_sgd_eps,
                                                   path_sgd_zipf_theta,
                                                   path_sgd_zipf_space,
-                                                  num_threads), true);
+                                                  num_threads,
+                                                  progress), true);
         } else if (args::get(breadth_first)) {
             graph.apply_ordering(algorithms::breadth_first_topological_order(graph, bf_chunk_size), true);
         } else if (args::get(depth_first)) {
@@ -301,7 +302,8 @@ int main_sort(int argc, char** argv) {
                                                               path_sgd_eps,
                                                               path_sgd_zipf_theta,
                                                               path_sgd_zipf_space,
-                                                              num_threads);
+                                                              num_threads,
+                                                              progress);
                     break;
                 }
                 case 'f':
