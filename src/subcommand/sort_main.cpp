@@ -326,10 +326,12 @@ int main_sort(int argc, char** argv) {
                                                        args::get(mondriaan_epsilon),
                                                        args::get(mondriaan_path_weight), false);
                     break;
+               /*
                 case 'g':
                     graph_t groomed;
                     algorithms::groom(graph, groomed);
                     break;
+                */
                 default:
                     break;
                 }
