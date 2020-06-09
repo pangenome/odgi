@@ -2,7 +2,6 @@
 
 #include <arpa/inet.h>
 #include <mutex>
-
 namespace xp {
 
     using namespace handlegraph;
@@ -17,6 +16,7 @@ namespace xp {
             delete paths.back();
             paths.pop_back();
         }
+        path_count = 0;
     }
 
     /// build the graph from a graph handle
@@ -45,12 +45,12 @@ namespace xp {
         });
         position_map[position_map.size() - 1] = len;
 #ifdef debug_from_handle_graph
-        std::err << "[XP CONSTRUCTION]: The current graph to index has nucleotide length: " << len << std::endl;
-        std::err << "[XP CONSTRUCTION]: position_map: ";
+        std::cerr << "[XP CONSTRUCTION]: The current graph to index has nucleotide length: " << len << std::endl;
+        std::cerr << "[XP CONSTRUCTION]: position_map: ";
         for (size_t i = 0; i < position_map.size() - 1; i++) {
             std::cerr << position_map[i] << ",";
         }
-        std::err << position_map[position_map.size() - 1] << std::endl;
+        std::cerr << position_map[position_map.size() - 1] << std::endl;
 #endif
 
         graph.for_each_path_handle([&](const path_handle_t &path) {
@@ -71,7 +71,7 @@ namespace xp {
         sdsl::util::assign(pos_map_iv, sdsl::enc_vector<>(position_map));
         // set the path counts
         path_count = paths.size();
-#ifdef from_handle_graph
+#ifdef debug_from_handle_graph
         std::cout << "[XP CONSTRUCTION]: path_count: " << path_count << std::endl;
 #endif
         // handle path names
@@ -212,6 +212,15 @@ namespace xp {
                       << " XP format?" << std::endl;
             throw e;
         }
+    }
+
+    void XP::clean() {
+        // Clean up any created XPPaths
+        while (!paths.empty()) {
+            delete paths.back();
+            paths.pop_back();
+        }
+        path_count = 0;
     }
 
     bool XP::has_path(const std::string& path_name) const {

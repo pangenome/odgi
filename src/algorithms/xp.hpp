@@ -78,6 +78,9 @@ namespace xp {
         /// Alias for serialize_and_measure().
         void serialize_members(std::ostream &out) const;
 
+        /// Clean the paths of the index so a new one can be generated.
+        void clean();
+
         /// Is this path in the index?
         bool has_path(const std::string& path_name) const;
 

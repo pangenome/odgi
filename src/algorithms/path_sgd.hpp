@@ -7,12 +7,8 @@
 #include <random>
 #include <set>
 #include <thread>
-#include <mutex>
 #include <atomic>
-#include <chrono>
 #include <handlegraph/path_handle_graph.hpp>
-#include <handlegraph/util.hpp>
-#include "hash_map.hpp"
 #include "xp.hpp"
 #include "sgd_term.hpp"
 #include "IntervalTree.h"
