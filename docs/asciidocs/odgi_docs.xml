@@ -4,7 +4,7 @@
 <article xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" version="5.0" xml:lang="en">
 <info>
 <title>Reference Documentation for ODGI v0.4.1</title>
-<date>2020-05-15</date>
+<date>2020-06-10</date>
 <author>
 <personname>
 <firstname>Simon Heumos, Erik Garrison</firstname>
@@ -35,6 +35,7 @@
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_bin1">bin</link> -i graph.og -j -w 100 -s -g</simpara>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_matrix1">matrix</link> -i graph.og -e -d</simpara>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_chop1">chop</link> -i graph.og -o graph.choped.og -c 1000</simpara>
+<simpara><emphasis role="strong">odgi</emphasis> <link xl:href="odgi_groom.xml#_odgi_groom1">groom</link> -i graph.og -o graph.groomed.og</simpara>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_layout1">layout</link> -i graph.og -o graph.svg -R 10 -m 100</simpara>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_break1">break</link> -i graph.og -o graph.broken.og -s 100 -d</simpara>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_pathindex1">pathindex</link> -i graph.og -o graph.xp</simpara>
@@ -170,7 +171,7 @@ The odgi version(1) command prints the current git version with tags and codenam
 </section>
 <section xml:id="_authors">
 <title>AUTHORS</title>
-<simpara>Erik Garrison from the University of California Santa Cruz wrote the whole <emphasis role="strong">odgi</emphasis> tool. Despite small code contributions, Simon Heumos from the Quantitative Biology Center Tübingen wrote <emphasis role="strong">odgi pathindex</emphasis>, <emphasis role="strong">odgi panpos</emphasis>, <emphasis role="strong">odgi server</emphasis>, and the documentation.</simpara>
+<simpara>Erik Garrison from the University of California Santa Cruz wrote the whole <emphasis role="strong">odgi</emphasis> tool. Simon Heumos from the Quantitative Biology Center Tübingen wrote <emphasis role="strong">odgi pathindex</emphasis>, <emphasis role="strong">odgi panpos</emphasis>, <emphasis role="strong">odgi server</emphasis>, and this documentation.</simpara>
 </section>
 <section xml:id="_resources">
 <title>RESOURCES</title>
@@ -2013,7 +2014,7 @@ can be left out saving disk space.</simpara>
 <varlistentry>
 <term><emphasis role="strong">-c, --chop-to</emphasis>=<emphasis>N</emphasis></term>
 <listitem>
-<simpara>Divide nodes that are shorter than <emphasis>N</emphasis>.</simpara>
+<simpara>Divide nodes that longer than <emphasis>N</emphasis> into nodes no longer than <emphasis>N</emphasis> while maintaining graph topology.</simpara>
 </listitem>
 </varlistentry>
 </variablelist>
