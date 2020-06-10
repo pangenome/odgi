@@ -140,14 +140,30 @@ int main_viz(int argc, char** argv) {
     const char* filename = args::get(png_out_file).c_str();
 
     // TODO this breaks for graphs that aren't compacted
+    // If there is a STEP ID > graph.get_node_count()+1, this loop hangs.
+    // Proposals: stop the command, warning the user
+    // Alternatives:
+    // - check before if the graph is compacted: if not, perform a topological sort warning the user
+    // - check before if the graph is compacted: if not, compact it, changing only the ID, but not the node order
     std::vector<uint64_t> position_map(graph.get_node_count()+1);
     std::vector<std::pair<uint64_t, uint64_t>> contacts;
     uint64_t len = 0;
     graph.for_each_handle([&](const handle_t& h) {
-            position_map[number_bool_packing::unpack_number(h)] = len;
+            uint64_t index_in_position_map = number_bool_packing::unpack_number(h);
+            if (index_in_position_map >= position_map.size()){
+                len = 0;
+                return;
+            }
+
+            position_map[index_in_position_map] = len;
             uint64_t hl = graph.get_length(h);
             len += hl;
-        });
+    });
+    if (len == 0){
+        std::cerr << "[odgi viz] error: the graph has to be sorted or compacted" << std::endl;
+        return 1;
+    }
+
     position_map[position_map.size()-1] = len;
 
     uint64_t path_count = graph.get_path_count();
@@ -184,6 +200,7 @@ int main_viz(int argc, char** argv) {
     auto add_edge = [&](const handle_t& h, const handle_t& o) {
         uint64_t _a = position_map[number_bool_packing::unpack_number(h) + !number_bool_packing::unpack_bit(h)];
         uint64_t _b = position_map[number_bool_packing::unpack_number(o) + number_bool_packing::unpack_bit(o)];
+
         uint64_t a = std::min(_a, _b);
         uint64_t b = std::max(_a, _b);
         uint64_t dist = b - a;
