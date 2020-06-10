@@ -66,6 +66,7 @@ int main_sort(int argc, char** argv) {
     args::ValueFlag<double> p_sgd_zipf_theta(parser, "N", "the theta value for the Zipfian distrubution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: 0.99)", {'a', "path-sgd-zipf-theta"});
     args::ValueFlag<uint64_t> p_sgd_iter_max(parser, "N", "max number of iterations for path guided linear 1D SGD model (default: 30)", {'x', "path-sgd-iter-max"});
     args::ValueFlag<uint64_t> p_sgd_zipf_space(parser, "N", "the maximum space size from which of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: max path lengths)", {'k', "path-sgd-zipf-space"});
+    args::ValueFlag<std::string> p_sgd_seed(parser, "STRING", "set the seed for the deterministic 1-threaded path guided linear 1D SGD model (default: HELL YEAH!", {'q', "path-sgd-seed"});
     args::ValueFlag<std::string> pipeline(parser, "STRING", "apply a series of sorts, based on single-character command line arguments to this command, with 's' the default sort and 'f' to reverse the sort order", {'p', "pipeline"});
     args::Flag paths_by_min_node_id(parser, "paths-min", "sort paths by their lowest contained node id", {'L', "paths-min"});
     args::Flag paths_by_max_node_id(parser, "paths-max", "sort paths by their highest contained node id", {'M', "paths-max"});
@@ -144,6 +145,16 @@ int main_sort(int argc, char** argv) {
                 return max_path_length;
     };
     // default parameters
+    std::string path_sgd_seed;
+    if (p_sgd_seed) {
+        if (num_threads > 1) {
+        std::cerr << "[odgi sort] Error: Please only specify a seed for the path guided 1D linear SGD when using 1 thread." << std::endl;
+        return 1;
+        }
+        path_sgd_seed = args::get(p_sgd_seed);
+    } else {
+        path_sgd_seed = "HELL YEAH!";
+    }
     uint64_t path_sgd_iter_max = args::get(p_sgd_iter_max) ? args::get(p_sgd_iter_max) : 30;
     double path_sgd_zipf_theta = args::get(p_sgd_zipf_theta) ? args::get(p_sgd_zipf_theta) : 0.99;
     double path_sgd_eps = args::get(p_sgd_eps) ? args::get(p_sgd_eps) : 0.01;
@@ -244,7 +255,8 @@ int main_sort(int argc, char** argv) {
                                                   path_sgd_zipf_theta,
                                                   path_sgd_zipf_space,
                                                   num_threads,
-                                                  progress), true);
+                                                  progress,
+                                                  path_sgd_seed), true);
         } else if (args::get(breadth_first)) {
             graph.apply_ordering(algorithms::breadth_first_topological_order(graph, bf_chunk_size), true);
         } else if (args::get(depth_first)) {
@@ -313,7 +325,8 @@ int main_sort(int argc, char** argv) {
                                                               path_sgd_zipf_theta,
                                                               path_sgd_zipf_space,
                                                               num_threads,
-                                                              progress);
+                                                              progress,
+                                                              path_sgd_seed);
                     break;
                 }
                 case 'f':

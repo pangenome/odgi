@@ -40,6 +40,19 @@ namespace odgi {
                                                 const uint64_t &iter_max,
                                                 const double &eps);
 
+        /// single threaded and deterministic path guided 1D linear SGD
+        std::vector<double> deterministic_path_linear_sgd(const PathHandleGraph &graph,
+                                                          const xp::XP &path_index,
+                                                          const std::set<std::string> path_sgd_use_paths,
+                                                          const uint64_t &iter_max,
+                                                          const uint64_t &min_term_updates,
+                                                          const double &delta,
+                                                          const double &eps,
+                                                          const double &theta,
+                                                          const uint64_t &space,
+                                                          const std::string &seeding_string,
+                                                          const bool &progress);
+
         std::vector<handle_t> path_linear_sgd_order(const PathHandleGraph &graph,
                                                     const xp::XP &path_index,
                                                     const std::set<std::string> path_sgd_use_paths,
@@ -50,7 +63,8 @@ namespace odgi {
                                                     const double &theta,
                                                     const uint64_t &space,
                                                     const uint64_t &nthreads,
-                                                    const bool &progress);
+                                                    const bool &progress,
+                                                    const std::string &seed);
 
     }
 }
