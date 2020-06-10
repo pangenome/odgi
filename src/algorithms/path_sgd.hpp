@@ -14,6 +14,7 @@
 #include "IntervalTree.h"
 #include <zipfian_int_distribution.h>
 #include <iomanip>
+#include <string>
 
 namespace odgi {
     namespace algorithms {

@@ -131,14 +131,19 @@ namespace odgi {
             auto worker_lambda =
                     [&](uint64_t tid) {
                         // everyone tries to seed with their own random data
+                        std::array<int, 624> seed_data;
                         std::random_device rd;
-                        std::mt19937 gen(rd());
+                        std::generate_n(seed_data.data(), seed_data.size(), std::ref(rd));
+                        std::seed_seq seq(std::begin(seed_data), std::end(seed_data));
+                        // std::string seeding_string = "HELL YEAH!";
+                        // std::seed_seq seed(seeding_string.begin(), seeding_string.end());
+                        std::mt19937 gen(seq);
                         std::uniform_int_distribution<uint64_t> dis(1, total_path_len_in_nucleotides);
                         std::uniform_int_distribution<uint64_t> flip(0, 1);
                         while (work_todo.load()) {
-                            // TODO pack this into its own function
                             // pick a random position from all paths
                             uint64_t pos = dis(gen);
+                            // FIXME std::cerr << "uniform_position: " << pos << std::endl;
                             // use our interval tree to get the path handle and path nucleotide position of the picked position
                             std::vector<Interval<size_t, path_handle_t> > result;
                             result = path_nucleotide_tree.findOverlapping(pos, pos);
@@ -161,7 +166,6 @@ namespace odgi {
                                 if (zipf_int > pos_in_path_a) {
                                     if (pos_in_path_a == 0) {
                                         continue;
-                                        //zipf_int = pos_in_path_a;
                                     } else {
                                         zipf_int %= pos_in_path_a;
                                     }
@@ -171,7 +175,6 @@ namespace odgi {
                                 if (zipf_int > path_len - pos_in_path_a ) {
                                     if (path_len - pos_in_path_a == 0) {
                                         continue;
-                                        //zipf_int = 0;
                                     } else {
                                         zipf_int %= path_len - pos_in_path_a;
                                     }
@@ -212,6 +215,7 @@ namespace odgi {
 #endif
                             // establish the term distance
                             double term_dist = std::abs(static_cast<double>(pos_in_path_a) - static_cast<double>(pos_in_path_b));
+
                             if (term_dist == 0) {
                                 continue;
                                 // term_dist = 1e-9;
@@ -225,9 +229,8 @@ namespace odgi {
                             std::cerr << "term_dist: " << term_dist << std::endl;
 #endif
                             double term_weight = 1.0 / term_dist;
-                            sgd_term_t t = sgd_term_t(term_i, term_j, term_dist, term_weight);
 
-                            double w_ij = t.w;
+                            double w_ij = term_weight;
 #ifdef debug_path_sgd
                             std::cerr << "w_ij = " << w_ij << std::endl;
 #endif
@@ -236,10 +239,10 @@ namespace odgi {
                                 mu = 1;
                             }
                             // actual distance in graph
-                            double d_ij = t.d;
+                            double d_ij = term_dist;
                             // identities
-                            uint64_t i = number_bool_packing::unpack_number(t.i);
-                            uint64_t j = number_bool_packing::unpack_number(t.j);
+                            uint64_t i = number_bool_packing::unpack_number(term_i);
+                            uint64_t j = number_bool_packing::unpack_number(term_j);
 #ifdef debug_path_sgd
 #pragma omp critical (cerr)
                   std::cerr << "nodes are " << graph.get_id(t.i) << " and " << graph.get_id(t.j) << std::endl;

@@ -13,6 +13,7 @@
 #include "algorithms/linear_sgd.hpp"
 #include "algorithms/xp.hpp"
 #include "algorithms/path_sgd.hpp"
+#include "algorithms/groom.hpp"
 
 namespace odgi {
 
@@ -191,6 +192,8 @@ int main_sort(int argc, char** argv) {
     // helper, TODO: move into its own file
     // make a dagified copy, get its sort, and apply the order to our graph
 
+    // did we groom the graph?
+    bool was_groomed = false;
     std::string outfile = args::get(dg_out_file);
     if (outfile.size()) {
         if (args::get(eades)) {
@@ -326,21 +329,27 @@ int main_sort(int argc, char** argv) {
                                                        args::get(mondriaan_epsilon),
                                                        args::get(mondriaan_path_weight), false);
                     break;
-               /*
-                case 'g':
+                case 'g': {
                     graph_t groomed;
                     algorithms::groom(graph, groomed);
+                    graph = groomed;
+                    was_groomed = true;
                     break;
-                */
+                }
                 default:
                     break;
                 }
-                if (order.size() != graph.get_node_count()) {
-                    std::cerr << "[odgi sort] Error: expected " << graph.get_node_count() << " handles in the order "
-                              << "but got " << order.size() << std::endl;
-                    assert(false);
+                if (!was_groomed) {
+                    if (order.size() != graph.get_node_count()) {
+                        std::cerr << "[odgi sort] Error: expected " << graph.get_node_count()
+                                  << " handles in the order "
+                                  << "but got " << order.size() << std::endl;
+                        assert(false);
+                    }
+                    graph.apply_ordering(order, true);
+                } else {
+                    was_groomed = false;
                 }
-                graph.apply_ordering(order, true);
             }
         } else {
             graph.apply_ordering(algorithms::topological_order(&graph, true, false, args::get(progress)), true);
