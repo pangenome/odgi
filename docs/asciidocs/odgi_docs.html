@@ -531,6 +531,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <p><strong>odgi</strong> <a href="#_odgi_chop1">chop</a> -i graph.og -o graph.choped.og -c 1000</p>
 </div>
 <div class="paragraph">
+<p><strong>odgi</strong> <a href="odgi_groom.html#_odgi_groom1">groom</a> -i graph.og -o graph.groomed.og</p>
+</div>
+<div class="paragraph">
 <p><strong>odgi</strong> <a href="#_odgi_layout1">layout</a> -i graph.og -o graph.svg -R 10 -m 100</p>
 </div>
 <div class="paragraph">
@@ -736,7 +739,7 @@ The odgi version(1) command prints the current git version with tags and codenam
 <div class="sect2">
 <h3 id="_authors">1.6. AUTHORS</h3>
 <div class="paragraph">
-<p>Erik Garrison from the University of California Santa Cruz wrote the whole <strong>odgi</strong> tool. Despite small code contributions, Simon Heumos from the Quantitative Biology Center Tübingen wrote <strong>odgi pathindex</strong>, <strong>odgi panpos</strong>, <strong>odgi server</strong>, and the documentation.</p>
+<p>Erik Garrison from the University of California Santa Cruz wrote the whole <strong>odgi</strong> tool. Simon Heumos from the Quantitative Biology Center Tübingen wrote <strong>odgi pathindex</strong>, <strong>odgi panpos</strong>, <strong>odgi server</strong>, and this documentation.</p>
 </div>
 </div>
 <div class="sect2">
@@ -2608,7 +2611,7 @@ can be left out saving disk space.</p>
 <dl>
 <dt class="hdlist1"><strong>-c, --chop-to</strong>=<em>N</em></dt>
 <dd>
-<p>Divide nodes that are shorter than <em>N</em>.</p>
+<p>Divide nodes that longer than <em>N</em> into nodes no longer than <em>N</em> while maintaining graph topology.</p>
 </dd>
 </dl>
 </div>
@@ -3517,7 +3520,7 @@ be selected. odgi test(1) depends on <a href="https://github.com/catchorg/Catch2
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-05-15 23:34:41 +0200
+Last updated 2020-06-10 17:28:59 +0200
 </div>
 </div>
 </body>

@@ -52,3 +52,6 @@
 [submodule "deps/cpp-httplib"]
 	path = deps/cpp-httplib
 	url = https://github.com/yhirose/cpp-httplib.git
+[submodule "deps/cpp_random_distributions"]
+	path = deps/cpp_random_distributions
+	url = https://github.com/llersch/cpp_random_distributions.git

@@ -2,7 +2,6 @@
 
 #include <arpa/inet.h>
 #include <mutex>
-
 namespace xp {
 
     using namespace handlegraph;
@@ -17,6 +16,7 @@ namespace xp {
             delete paths.back();
             paths.pop_back();
         }
+        path_count = 0;
     }
 
     /// build the graph from a graph handle
@@ -31,19 +31,26 @@ namespace xp {
         sdsl::int_vector<> position_map;
         sdsl::util::assign(position_map, sdsl::int_vector<>(graph.get_node_count() + 1));
         uint64_t len = 0;
+        nid_t last_node_id = graph.min_node_id();
         graph.for_each_handle([&](const handle_t &h) {
+            nid_t node_id = graph.get_id(h);
+            if (node_id - last_node_id > 1) {
+                std::cerr << "error [xp]: Graph to index is not optimized. Please run 'odgi sort' using -O, --optimize" << std::endl;
+                exit(1);
+            }
             position_map[number_bool_packing::unpack_number(h)] = len;
             uint64_t hl = graph.get_length(h);
             len += hl;
+            last_node_id = node_id;
         });
         position_map[position_map.size() - 1] = len;
 #ifdef debug_from_handle_graph
-        std::err << "[XP CONSTRUCTION]: The current graph to index has nucleotide length: " << len << std::endl;
-        std::err << "[XP CONSTRUCTION]: position_map: ";
+        std::cerr << "[XP CONSTRUCTION]: The current graph to index has nucleotide length: " << len << std::endl;
+        std::cerr << "[XP CONSTRUCTION]: position_map: ";
         for (size_t i = 0; i < position_map.size() - 1; i++) {
             std::cerr << position_map[i] << ",";
         }
-        std::err << position_map[position_map.size() - 1] << std::endl;
+        std::cerr << position_map[position_map.size() - 1] << std::endl;
 #endif
 
         graph.for_each_path_handle([&](const path_handle_t &path) {
@@ -64,7 +71,7 @@ namespace xp {
         sdsl::util::assign(pos_map_iv, sdsl::enc_vector<>(position_map));
         // set the path counts
         path_count = paths.size();
-#ifdef from_handle_graph
+#ifdef debug_from_handle_graph
         std::cout << "[XP CONSTRUCTION]: path_count: " << path_count << std::endl;
 #endif
         // handle path names
@@ -207,6 +214,15 @@ namespace xp {
         }
     }
 
+    void XP::clean() {
+        // Clean up any created XPPaths
+        while (!paths.empty()) {
+            delete paths.back();
+            paths.pop_back();
+        }
+        path_count = 0;
+    }
+
     bool XP::has_path(const std::string& path_name) const {
         // find the name in the csa
         std::string query = start_marker + path_name + end_marker;
@@ -261,6 +277,12 @@ namespace xp {
         return step;
     }
 
+    size_t XP::get_position_of_step(const step_handle_t& step_handle) const {
+        const auto& xppath = *paths[as_integer(get_path_handle_of_step(step_handle)) - 1];
+        auto& step_rank = as_integers(step_handle)[1];
+        return xppath.offsets_select(step_rank + 1);
+    }
+
     path_handle_t XP::get_path_handle_of_step(const step_handle_t& step_handle) const {
         return as_path_handle(as_integers(step_handle)[0]);
     }
@@ -294,13 +316,13 @@ namespace xp {
 #endif
         // Is the given path name even in the index?!
         if (p_h == as_path_handle(0)) {
-            std::cerr << "The given path name " << path_name << " is not in the index." << std::endl;
+            std::cerr << "[XP] error: The given path name " << path_name << " is not in the index." << std::endl;
             exit(1);
         }
         const XPPath& xppath = get_path(path_name);
         // Is the nucleotide position there?!
         if (xppath.offsets.size() <= nuc_pos) {
-            std::cerr << "The given path " << path_name << " with nucleotide position " << nuc_pos << " is not in the index." << std::endl;
+            std::cerr << "[XP] error: The given path " << path_name << " with nucleotide position " << nuc_pos << " is not in the index." << std::endl;
             exit(1);
         }
 
