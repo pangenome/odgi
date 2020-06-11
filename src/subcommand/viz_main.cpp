@@ -9,6 +9,8 @@
 #include "picosha2.h"
 #include <iostream>
 
+//#define debug_odgi_viz
+
 namespace odgi {
 
 namespace png {
@@ -154,6 +156,9 @@ int main_viz(int argc, char** argv) {
                 len = 0;
                 return;
             }
+            #ifdef debug_odgi_viz
+                std::cerr << "step id: " << graph.get_id(h) << " - " << as_integer(h) << " - index_in_position_map (" << index_in_position_map << ") = " << len << std::endl;
+            #endif
 
             position_map[index_in_position_map] = len;
             uint64_t hl = graph.get_length(h);
@@ -201,6 +206,21 @@ int main_viz(int argc, char** argv) {
         uint64_t _a = position_map[number_bool_packing::unpack_number(h) + !number_bool_packing::unpack_bit(h)];
         uint64_t _b = position_map[number_bool_packing::unpack_number(o) + number_bool_packing::unpack_bit(o)];
 
+        if (_a == _b){
+            #ifdef debug_odgi_viz
+                std::cerr << graph.get_id(h) << " <--> " << graph.get_id(o) << " No draw" << std::endl << std::endl;
+            #endif
+
+            return; // To avoid any operation
+        }
+
+        #ifdef debug_odgi_viz
+            std::cerr << graph.get_id(h) << " <--> " << graph.get_id(o) << std::endl;
+            std::cerr << number_bool_packing::unpack_number(h) << " + " << !number_bool_packing::unpack_bit(h) << " = " << number_bool_packing::unpack_number(h) + !number_bool_packing::unpack_bit(h) << std::endl;
+            std::cerr << number_bool_packing::unpack_number(o) << " + " << number_bool_packing::unpack_bit(o) << " = " << number_bool_packing::unpack_number(o) + number_bool_packing::unpack_bit(o) << std::endl;
+            std::cerr << _a << " <--> " << _b << std::endl << std::endl;
+        #endif
+
         uint64_t a = std::min(_a, _b);
         uint64_t b = std::max(_a, _b);
         uint64_t dist = b - a;
@@ -220,13 +240,14 @@ int main_viz(int argc, char** argv) {
     graph.for_each_handle([&](const handle_t& h) {
             uint64_t p = position_map[number_bool_packing::unpack_number(h)];
             uint64_t hl = graph.get_length(h);
-            // make contects for the bases in the node
+            // make contents for the bases in the node
             //for (uint64_t i = 0; i < hl; ++i) {
             for (uint64_t i = 0; i < hl; i+=1/scale_x) {
                 add_point(p+i, 0, 0, 0, 0);
             }
     });
 
+    //TODO: avoid to re-draw the same edge more than one time
     graph.for_each_handle([&](const handle_t& h) {
             // add contacts for the edges
             graph.follow_edges(h, false, [&](const handle_t& o) {
@@ -349,6 +370,7 @@ int main_viz(int argc, char** argv) {
                     }
                 }
             }
+
             // brighten the color
             float f = std::min(1.5, 1.0/std::max(std::max(path_r_f, path_g_f), path_b_f));
             path_r = (uint8_t)std::round(255*std::min(path_r_f*f, (float)1.0));
@@ -363,7 +385,7 @@ int main_viz(int argc, char** argv) {
                     handle_t h = graph.get_handle_of_step(occ);
                     uint64_t p = position_map[number_bool_packing::unpack_number(h)];
                     uint64_t hl = graph.get_length(h);
-                    // make contects for the bases in the node
+                    // make contents for the bases in the node
                     uint64_t path_y = path_layout_y[path_rank];
                     for (uint64_t i = 0; i < hl; i+=1/scale_x) {
                         add_path_step(p+i, path_y, path_r, path_g, path_b);
