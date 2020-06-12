@@ -87,6 +87,7 @@ int main_viz(int argc, char** argv) {
     args::ValueFlag<float> link_path_pieces(parser, "FLOAT", "show thin links of this relative width to connect path pieces", {'L', "link-path-pieces"});
     args::ValueFlag<std::string> alignment_prefix(parser, "STRING", "apply alignment-related visual motifs to paths with this name prefix", {'A', "alignment-prefix"});
     args::Flag show_strands(parser, "bool", "use reds and blues to show forward and reverse alignments (depends on -A)", {'S', "show-strand"});
+    args::Flag hide_gap_links(parser, "hide-gap-links", "don't display gap links", {'g', "hide-gap-links"});
     args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
     try {
@@ -142,11 +143,11 @@ int main_viz(int argc, char** argv) {
     const char* filename = args::get(png_out_file).c_str();
 
     // TODO this breaks for graphs that aren't compacted
-    // If there is a STEP ID > graph.get_node_count()+1, this loop hangs.
-    // Proposals: stop the command, warning the user
+    // If there is a STEP ID greater than graph.get_node_count()+1, this loop hangs.
+    // Simple proposal: stop the command, warning the user.
     // Alternatives:
-    // - check before if the graph is compacted: if not, perform a topological sort warning the user
-    // - check before if the graph is compacted: if not, compact it, changing only the ID, but not the node order
+    // - first check if the graph is compacted: if not, compact it, changing the STEP IDs, but not their order
+    // - first check if the graph is compacted: if not, perform a topological sort, warning the user
     std::vector<uint64_t> position_map(graph.get_node_count()+1);
     std::vector<std::pair<uint64_t, uint64_t>> contacts;
     uint64_t len = 0;
@@ -165,10 +166,9 @@ int main_viz(int argc, char** argv) {
             len += hl;
     });
     if (len == 0){
-        std::cerr << "[odgi viz] error: the graph has to be sorted or compacted" << std::endl;
+        std::cerr << "[odgi viz] error: the graph has to be compacted or sorted" << std::endl;
         return 1;
     }
-
     position_map[position_map.size()-1] = len;
 
     uint64_t path_count = graph.get_path_count();
@@ -206,39 +206,38 @@ int main_viz(int argc, char** argv) {
         // The position map is encoding 2x the number of nodes: it includes the start and end of the node in successive
         // entries. Edges leave from the end (or start) of one node (depending on whether they are on the forward or
         // reverse strand) and go to the start (or end) of the other side of the link.
-        uint64_t _index_in_position_map_h = number_bool_packing::unpack_number(h) + !number_bool_packing::unpack_bit(h);
-        uint64_t _index_in_position_map_o = number_bool_packing::unpack_number(o) + number_bool_packing::unpack_bit(o);
+        uint64_t _info_h = number_bool_packing::unpack_number(h) + !number_bool_packing::unpack_bit(h);
+        uint64_t _info_o = number_bool_packing::unpack_number(o) + number_bool_packing::unpack_bit(o);
 
         if (
             // To avoid any operation if x-start == x-end
-            (_index_in_position_map_h == _index_in_position_map_o) ||
+            (_info_h == _info_o) ||
 
             // To not visualize links that connects consecutive nodes
-            (std::abs((int64_t)(_index_in_position_map_h - _index_in_position_map_o)) == 1)
+            (args::get(hide_gap_links) && (std::abs((int64_t)(_info_h - _info_o)) == 1))
         ){
 #ifdef debug_odgi_viz
-            std::cerr << graph.get_id(h) << " <--> " << graph.get_id(o) << " No draw" << std::endl << std::endl;
+            std::cerr << graph.get_id(h) << " <--> " << graph.get_id(o) << ": no drawing" << std::endl << std::endl;
 #endif
             return;
         }
 
-        uint64_t _position_h = position_map[_index_in_position_map_h];
-        uint64_t _position_o = position_map[_index_in_position_map_o];
+        _info_h = position_map[_info_h];
+        _info_o = position_map[_info_o];
 
 #ifdef debug_odgi_viz
         std::cerr << graph.get_id(h) << " <--> " << graph.get_id(o) << std::endl;
-        std::cerr << number_bool_packing::unpack_number(h) << " + " << !number_bool_packing::unpack_bit(h) << " = " << _index_in_position_map_h << std::endl;
-        std::cerr << number_bool_packing::unpack_number(o) << " + " << number_bool_packing::unpack_bit(o) << " = " << _index_in_position_map_o << std::endl;
-        std::cerr << _position_h << " <--> " << _position_o << std::endl << std::endl;
+        std::cerr << number_bool_packing::unpack_number(h) << " + " << !number_bool_packing::unpack_bit(h) << " = " << number_bool_packing::unpack_number(h) + !number_bool_packing::unpack_bit(h) << std::endl;
+        std::cerr << number_bool_packing::unpack_number(o) << " + " << number_bool_packing::unpack_bit(o) << " = " << number_bool_packing::unpack_number(o) + number_bool_packing::unpack_bit(o) << std::endl;
+        std::cerr << _info_h << " <--> " << _info_o << std::endl << std::endl;
 #endif
 
-        uint64_t a = std::min(_position_h, _position_o);
-        uint64_t b = std::max(_position_h, _position_o);
+        uint64_t a = std::min(_info_h, _info_o);
+        uint64_t b = std::max(_info_h, _info_o);
         uint64_t dist = b - a;
         uint64_t i = 0;
 
         for ( ; i < dist; i+=1/scale_y) {
-            //std::cerr << i << std::endl;
             add_point(a, i, 0, 0, 0);
         }
         while (a <= b) {
@@ -261,7 +260,7 @@ int main_viz(int argc, char** argv) {
     });
 
     graph.for_each_handle([&](const handle_t& h) {
-        // add contacts for the edges
+        // add contents for the edges
         graph.follow_edges(h, false, [&](const handle_t& o) {
             add_edge(h, o);
         });
@@ -395,7 +394,6 @@ int main_viz(int argc, char** argv) {
             //          << " " << (int)path_r << " " << (int)path_g << " " << (int)path_b << std::endl;
             /// Loop over all the steps along a path, from first through last and draw them
             uint64_t path_rank = as_integer(path)-1;
-            uint64_t step = 0;
             graph.for_each_step_in_path(path, [&](const step_handle_t& occ) {
                     handle_t h = graph.get_handle_of_step(occ);
                     uint64_t p = position_map[number_bool_packing::unpack_number(h)];
