@@ -209,19 +209,19 @@ int main_viz(int argc, char** argv) {
         uint64_t _index_in_position_map_h = number_bool_packing::unpack_number(h) + !number_bool_packing::unpack_bit(h);
         uint64_t _index_in_position_map_o = number_bool_packing::unpack_number(o) + number_bool_packing::unpack_bit(o);
 
-        if (_index_in_position_map_h == _index_in_position_map_o){
-#ifdef debug_odgi_viz
-                std::cerr << graph.get_id(h) << " <--> " << graph.get_id(o) << " No draw" << std::endl << std::endl;
-#endif
-            return; // To avoid any operation
-        }
+        if (
+            // To avoid any operation if x-start == x-end
+            (_index_in_position_map_h == _index_in_position_map_o) ||
 
-        if (std::abs((int64_t)(_index_in_position_map_h - _index_in_position_map_o)) == 1){
+            // To not visualize links that connects consecutive nodes
+            (std::abs((int64_t)(_index_in_position_map_h - _index_in_position_map_o)) == 1)
+        ){
 #ifdef debug_odgi_viz
-            std::cerr << graph.get_id(h) << " <--> " << graph.get_id(o) << " No draw gap-link" << std::endl << std::endl;
+            std::cerr << graph.get_id(h) << " <--> " << graph.get_id(o) << " No draw" << std::endl << std::endl;
 #endif
             return;
         }
+
         uint64_t _position_h = position_map[_index_in_position_map_h];
         uint64_t _position_o = position_map[_index_in_position_map_o];
 
@@ -236,7 +236,9 @@ int main_viz(int argc, char** argv) {
         uint64_t b = std::max(_position_h, _position_o);
         uint64_t dist = b - a;
         uint64_t i = 0;
+
         for ( ; i < dist; i+=1/scale_y) {
+            //std::cerr << i << std::endl;
             add_point(a, i, 0, 0, 0);
         }
         while (a <= b) {
@@ -249,25 +251,24 @@ int main_viz(int argc, char** argv) {
     };
 
     graph.for_each_handle([&](const handle_t& h) {
-            uint64_t p = position_map[number_bool_packing::unpack_number(h)];
-            uint64_t hl = graph.get_length(h);
-            // make contents for the bases in the node
-            //for (uint64_t i = 0; i < hl; ++i) {
-            for (uint64_t i = 0; i < hl; i+=1/scale_x) {
-                add_point(p+i, 0, 0, 0, 0);
-            }
+        uint64_t p = position_map[number_bool_packing::unpack_number(h)];
+        uint64_t hl = graph.get_length(h);
+        // make contents for the bases in the node
+        //for (uint64_t i = 0; i < hl; ++i) {
+        for (uint64_t i = 0; i < hl; i+=1/scale_x) {
+            add_point(p+i, 0, 0, 0, 0);
+        }
     });
 
-    //TODO: avoid to re-draw the same edge more than one time
-    /*graph.for_each_handle([&](const handle_t& h) {
-            // add contacts for the edges
-            graph.follow_edges(h, false, [&](const handle_t& o) {
-                    add_edge(h, o);
-                });
-            graph.follow_edges(h, true, [&](const handle_t& o) {
-                    add_edge(o, h);
-                });
-        });*/
+    graph.for_each_handle([&](const handle_t& h) {
+        // add contacts for the edges
+        graph.follow_edges(h, false, [&](const handle_t& o) {
+            add_edge(h, o);
+        });
+        graph.follow_edges(h, true, [&](const handle_t& o) {
+            add_edge(o, h);
+        });
+    });
 
     auto add_path_step = [&](const uint64_t& _x, const uint64_t& _y,
                              const uint8_t& _r, const uint8_t& _g, const uint8_t& _b) {
@@ -403,17 +404,6 @@ int main_viz(int argc, char** argv) {
                     uint64_t path_y = path_layout_y[path_rank];
                     for (uint64_t i = 0; i < hl; i+=1/scale_x) {
                         add_path_step(p+i, path_y, path_r, path_g, path_b);
-                    }
-
-                    step_handle_t occ_next = graph.get_next_step(occ);
-                    if(graph.has_next_step(occ)){
-                        handle_t h_next = graph.get_handle_of_step(occ_next);
-#ifdef debug_odgi_viz
-                        std::cerr << "step id: " << graph.get_id(h) << " ----- " << hl << std::endl;
-                        std::cerr << "next step id: " << graph.get_id(h_next) << " ----- " << graph.get_length(h_next) << std::endl;
-#endif
-                        // add contents for the edge
-                        add_edge(h, h_next);
                     }
                  });
             // add in a visual motif that shows the links between path pieces
