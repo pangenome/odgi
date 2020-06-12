@@ -156,9 +156,9 @@ int main_viz(int argc, char** argv) {
                 len = 0;
                 return;
             }
-            #ifdef debug_odgi_viz
+#ifdef debug_odgi_viz
                 std::cerr << "step id: " << graph.get_id(h) << " - " << as_integer(h) << " - index_in_position_map (" << index_in_position_map << ") = " << len << std::endl;
-            #endif
+#endif
 
             position_map[index_in_position_map] = len;
             uint64_t hl = graph.get_length(h);
@@ -203,26 +203,37 @@ int main_viz(int argc, char** argv) {
     };
 
     auto add_edge = [&](const handle_t& h, const handle_t& o) {
-        uint64_t _a = position_map[number_bool_packing::unpack_number(h) + !number_bool_packing::unpack_bit(h)];
-        uint64_t _b = position_map[number_bool_packing::unpack_number(o) + number_bool_packing::unpack_bit(o)];
+        // The position map is encoding 2x the number of nodes: it includes the start and end of the node in successive
+        // entries. Edges leave from the end (or start) of one node (depending on whether they are on the forward or
+        // reverse strand) and go to the start (or end) of the other side of the link.
+        uint64_t _index_in_position_map_h = number_bool_packing::unpack_number(h) + !number_bool_packing::unpack_bit(h);
+        uint64_t _index_in_position_map_o = number_bool_packing::unpack_number(o) + number_bool_packing::unpack_bit(o);
 
-        if (_a == _b){
-            #ifdef debug_odgi_viz
+        if (_index_in_position_map_h == _index_in_position_map_o){
+#ifdef debug_odgi_viz
                 std::cerr << graph.get_id(h) << " <--> " << graph.get_id(o) << " No draw" << std::endl << std::endl;
-            #endif
-
+#endif
             return; // To avoid any operation
         }
 
-        #ifdef debug_odgi_viz
-            std::cerr << graph.get_id(h) << " <--> " << graph.get_id(o) << std::endl;
-            std::cerr << number_bool_packing::unpack_number(h) << " + " << !number_bool_packing::unpack_bit(h) << " = " << number_bool_packing::unpack_number(h) + !number_bool_packing::unpack_bit(h) << std::endl;
-            std::cerr << number_bool_packing::unpack_number(o) << " + " << number_bool_packing::unpack_bit(o) << " = " << number_bool_packing::unpack_number(o) + number_bool_packing::unpack_bit(o) << std::endl;
-            std::cerr << _a << " <--> " << _b << std::endl << std::endl;
-        #endif
+        if (std::abs((int64_t)(_index_in_position_map_h - _index_in_position_map_o)) == 1){
+#ifdef debug_odgi_viz
+            std::cerr << graph.get_id(h) << " <--> " << graph.get_id(o) << " No draw gap-link" << std::endl << std::endl;
+#endif
+            return;
+        }
+        uint64_t _position_h = position_map[_index_in_position_map_h];
+        uint64_t _position_o = position_map[_index_in_position_map_o];
 
-        uint64_t a = std::min(_a, _b);
-        uint64_t b = std::max(_a, _b);
+#ifdef debug_odgi_viz
+        std::cerr << graph.get_id(h) << " <--> " << graph.get_id(o) << std::endl;
+        std::cerr << number_bool_packing::unpack_number(h) << " + " << !number_bool_packing::unpack_bit(h) << " = " << _index_in_position_map_h << std::endl;
+        std::cerr << number_bool_packing::unpack_number(o) << " + " << number_bool_packing::unpack_bit(o) << " = " << _index_in_position_map_o << std::endl;
+        std::cerr << _position_h << " <--> " << _position_o << std::endl << std::endl;
+#endif
+
+        uint64_t a = std::min(_position_h, _position_o);
+        uint64_t b = std::max(_position_h, _position_o);
         uint64_t dist = b - a;
         uint64_t i = 0;
         for ( ; i < dist; i+=1/scale_y) {
@@ -248,7 +259,7 @@ int main_viz(int argc, char** argv) {
     });
 
     //TODO: avoid to re-draw the same edge more than one time
-    graph.for_each_handle([&](const handle_t& h) {
+    /*graph.for_each_handle([&](const handle_t& h) {
             // add contacts for the edges
             graph.follow_edges(h, false, [&](const handle_t& o) {
                     add_edge(h, o);
@@ -256,7 +267,7 @@ int main_viz(int argc, char** argv) {
             graph.follow_edges(h, true, [&](const handle_t& o) {
                     add_edge(o, h);
                 });
-        });
+        });*/
 
     auto add_path_step = [&](const uint64_t& _x, const uint64_t& _y,
                              const uint8_t& _r, const uint8_t& _g, const uint8_t& _b) {
@@ -324,6 +335,9 @@ int main_viz(int argc, char** argv) {
     graph.for_each_path_handle([&](const path_handle_t& path) {
             // use a sha256 to get a few bytes that we'll use for a color
             std::string path_name = graph.get_path_name(path);
+#ifdef debug_odgi_viz
+        std::cerr << "path_name: " << path_name << std::endl;
+#endif
             bool is_aln = false;
             if (aln_mode) {
                 std::string::size_type n = path_name.find(aln_prefix);
@@ -389,6 +403,17 @@ int main_viz(int argc, char** argv) {
                     uint64_t path_y = path_layout_y[path_rank];
                     for (uint64_t i = 0; i < hl; i+=1/scale_x) {
                         add_path_step(p+i, path_y, path_r, path_g, path_b);
+                    }
+
+                    step_handle_t occ_next = graph.get_next_step(occ);
+                    if(graph.has_next_step(occ)){
+                        handle_t h_next = graph.get_handle_of_step(occ_next);
+#ifdef debug_odgi_viz
+                        std::cerr << "step id: " << graph.get_id(h) << " ----- " << hl << std::endl;
+                        std::cerr << "next step id: " << graph.get_id(h_next) << " ----- " << graph.get_length(h_next) << std::endl;
+#endif
+                        // add contents for the edge
+                        add_edge(h, h_next);
                     }
                  });
             // add in a visual motif that shows the links between path pieces
