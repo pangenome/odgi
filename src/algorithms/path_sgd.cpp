@@ -633,17 +633,17 @@ namespace odgi {
                                                        seed,
                                                        progress);
             } else {
-                std::vector<double> layout = path_linear_sgd(graph,
-                                                             path_index,
-                                                             path_sgd_use_paths,
-                                                             iter_max,
-                                                             min_term_updates,
-                                                             delta,
-                                                             eps,
-                                                             theta,
-                                                             space,
-                                                             nthreads,
-                                                             progress);
+                layout = path_linear_sgd(graph,
+                                         path_index,
+                                         path_sgd_use_paths,
+                                         iter_max,
+                                         min_term_updates,
+                                         delta,
+                                         eps,
+                                         theta,
+                                         space,
+                                         nthreads,
+                                         progress);
             }
             std::vector<std::pair<double, handle_t>> layout_handles;
             uint64_t i = 0;
