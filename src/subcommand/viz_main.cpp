@@ -213,11 +213,15 @@ int main_viz(int argc, char** argv) {
             // To avoid any operation if x-start == x-end
             (_info_h == _info_o) ||
 
-            // To not visualize links that connects consecutive nodes
-            (args::get(hide_gap_links) && (std::abs((int64_t)(_info_h - _info_o)) == 1))
+            // To not visualize links that connects consecutive nodes from left to right
+            (args::get(hide_gap_links) && ((_info_o - _info_h) == 1))
         ){
 #ifdef debug_odgi_viz
-            std::cerr << graph.get_id(h) << " <--> " << graph.get_id(o) << ": no drawing" << std::endl << std::endl;
+            if (((_info_o - _info_h) == 1)){
+                std::cerr << graph.get_id(h) << " (" << _info_h << ") <--> " << graph.get_id(o) << " (" << _info_o << "): hide gap link" << std::endl << std::endl;
+            }else{
+                std::cerr << graph.get_id(h) << " (" << _info_h << ") <--> " << graph.get_id(o) << " (" << _info_o << "): no drawing" << std::endl << std::endl;
+            }
 #endif
             return;
         }
