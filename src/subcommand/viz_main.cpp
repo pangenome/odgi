@@ -325,7 +325,7 @@ namespace odgi {
             }
         }
 
-        std::set<pair<uint64_t, uint64_t>> edges_drawn;
+        std::unordered_set<pair<uint64_t, uint64_t>> edges_drawn;
         graph.for_each_path_handle([&](const path_handle_t &path) {
             // use a sha256 to get a few bytes that we'll use for a color
             std::string path_name = graph.get_path_name(path);
@@ -388,16 +388,19 @@ namespace odgi {
             //          << " " << (int)path_r << " " << (int)path_g << " " << (int)path_b << std::endl;
             uint64_t path_rank = as_integer(path) - 1;
             /// Loop over all the steps along a path, from first through last and draw them
-            std::set<uint64_t> position_map_set;
+            std::set<uint64_t> as_integer_set; // ordered set to retain the positions order
             graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
                 handle_t h = graph.get_handle_of_step(occ);
-                uint64_t p = position_map[number_bool_packing::unpack_number(h)];
+                uint64_t h_int = as_integer(h);
 
-                // the execution time is lower when the following if is commented
-                //if (position_map_set.find(p) == position_map_set.end()) {
-                    position_map_set.insert(p);
+                // the execution time is lower when the following if is commented.
+                // It could be useful in graphs with a lot of repeats.
+                //if (as_integer_set.find(h_int) == as_integer_set.end()) {
+                    as_integer_set.insert(h_int);
 
+                    uint64_t p = position_map[number_bool_packing::unpack_number(h)];
                     uint64_t hl = graph.get_length(h);
+
                     // make contents for the bases in the node
                     uint64_t path_y = path_layout_y[path_rank];
                     for (uint64_t i = 0; i < hl; i += 1 / scale_x) {
@@ -407,8 +410,8 @@ namespace odgi {
             });
 
 #ifdef debug_odgi_viz
-            for (uint64_t const& node_id : position_map_set) {
-                std::cerr << node_id << ' ';
+            for (uint64_t const& as_int : position_map_set) {
+                std::cerr << as_int << ' ';
             }
             std::cerr << std::endl;
 #endif
@@ -420,19 +423,17 @@ namespace odgi {
 
 #ifdef debug_odgi_viz
                     std::cerr << "id (" << graph.get_id(h)  << ") --> next id (" << graph.get_id(h_next) << ")" << std::endl;
+                    std::cerr << "sign (" << number_bool_packing::unpack_bit(h)  << ") --> next sign (" << number_bool_packing::unpack_bit(h_next) << ")" << std::endl;
 #endif
 
-                    uint64_t p = position_map[number_bool_packing::unpack_number(h)];
-                    uint64_t p_next = position_map[number_bool_packing::unpack_number(h_next)];
-
-                    auto pair = make_pair(p, p_next);
+                    auto pair = make_pair(as_integer(h), as_integer(h_next));
                     // Check if the edge is already displayed
                     if (edges_drawn.find(pair) == edges_drawn.end()) {
                         edges_drawn.insert(pair);
 
                         if (hide_gap_links_) {
-                            // If the edge links two consecutive nodes in the path, it is not displayed
-                            if (next(position_map_set.find(p)) != position_map_set.find(p_next)) {
+                            // If the edge links two nodes which have the same '+' orientation and are consecutive in the path, it is not displayed
+                            if (number_bool_packing::unpack_bit(h) || number_bool_packing::unpack_bit(h_next) || next(as_integer_set.find(pair.first)) != as_integer_set.find(pair.second)) {
                                 // add contents for the edge
                                 add_edge(h, h_next);
                             }
