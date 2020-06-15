@@ -114,36 +114,42 @@ namespace odgi {
             auto checker_lambda =
                     [&](void) {
                         while (work_todo.load()) {
-                            if (++iteration <= iter_max) { //(term_updates.load() > min_term_updates) {
-                                if (progress) {
-                                    double percent_progress = ((double) iteration / (double) iter_max) * 100.0;
-                                    std::cerr << std::fixed << std::setprecision(2) << "[path sgd sort]: "
-                                              << percent_progress << "% progress: "
-                                                                     "iteration: " << iteration <<
-                                              ", eta: " << eta.load() <<
-                                              ", delta: " << Delta_max.load() <<
-                                              ", number of updates: " << term_updates.load() << std::endl;
-                                }
-                                if (term_updates.load() > min_term_updates) { //(++iteration > iter_max) {
+                            if (term_updates.load() > min_term_updates) {
+                                if (++iteration > iter_max) {
+                                    work_todo.store(false);
+                                } else if (Delta_max.load() <= delta) { // nb: this will also break at 0
+                                    if (progress) {
+                                        std::cerr << "[path sgd sort]: delta_max: " << Delta_max.load() << " <= delta: "
+                                                  << delta << ". Threshold reached, therefore ending iterations."
+                                                  << std::endl;
+                                    }
                                     work_todo.store(false);
                                 } else {
-                                    if (Delta_max.load() <= delta && iteration > 1 && term_updates.load() == 0) { // nb: this will also break at 0
-                                        work_todo.store(false);
+                                    if (progress) {
+                                        double percent_progress = ((double) iteration / (double) iter_max) * 100.0;
+                                        std::cerr << std::fixed << std::setprecision(2) << "[path sgd sort]: "
+                                                  << percent_progress << "% progress: "
+                                                                         "iteration: " << iteration <<
+                                                  ", eta: " << eta.load() <<
+                                                  ", delta_max: " << Delta_max.load() <<
+                                                  ", number of updates: " << term_updates.load() << std::endl;
                                     }
+                                    eta.store(etas[iteration]); // update our learning rate
+                                    Delta_max.store(delta); // set our delta max to the threshold
                                 }
-                                eta.store(etas[iteration]); // update our learning rate
-                                Delta_max.store(delta); // set our delta max to the threshold
                                 term_updates.store(0);
-                            } else {
-                                if (term_updates.load() > min_term_updates) { //(++iteration > iter_max) {
-                                    work_todo.store(false);
-                                } else {
-                                    if (Delta_max.load() <= delta) { // nb: this will also break at 0
-                                        work_todo.store(false);
-                                    }
-                                }
                             }
                             std::this_thread::sleep_for(1ms);
+                            // if we still did not update any terms after sleeping for 1ms we can boil out
+                            if (Delta_max.load() <= delta && iteration == 0 &&
+                                term_updates == 0) { // nb: this will also break at 0
+                                if (progress) {
+                                    std::cerr << "[path sgd sort]: delta_max: " << Delta_max.load() << " <= delta: "
+                                              << delta << ". Threshold reached, therefore ending iterations."
+                                              << std::endl;
+                                }
+                                work_todo.store(false);
+                            }
                         }
                     };
 
@@ -626,7 +632,7 @@ namespace odgi {
                     break;
                 } else {
                     if (progress) {
-                        double percent_progress = ((double) iteration / (double) iter_max) * 100.0;
+                        double percent_progress = ((double) (iteration + 1) / (double) iter_max) * 100.0;
                         std::cerr << std::fixed << std::setprecision(2) << "[path sgd sort]: " << percent_progress
                                   << "% progress: "
                                      "iteration: " << (iteration + 1) <<
