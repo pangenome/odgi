@@ -1,7 +1,8 @@
 #include "path_sgd.hpp"
 
-//#define debug_path_sgd
-//#define eval_path_sgd
+// #define debug_path_sgd
+// #define eval_path_sgd
+// #define debug_schedule
 namespace odgi {
     namespace algorithms {
 
@@ -16,6 +17,14 @@ namespace odgi {
                                             const uint64_t &space,
                                             const uint64_t &nthreads,
                                             const bool &progress) {
+#ifdef debug_path_sgd
+            std::cerr << "iter_max: " << iter_max << std::endl;
+            std::cerr << "min_term_updates: " << min_term_updates << std::endl;
+            std::cerr << "delta: " << delta << std::endl;
+            std::cerr << "eps: " << eps << std::endl;
+            std::cerr << "theta: " << theta << std::endl;
+            std::cerr << "space: " << space << std::endl;
+#endif
             using namespace std::chrono_literals; // for timing stuff
             // our positions in 1D
             std::vector<std::atomic<double>> X(graph.get_node_count());
@@ -105,25 +114,34 @@ namespace odgi {
             auto checker_lambda =
                     [&](void) {
                         while (work_todo.load()) {
-                            if (term_updates.load() > min_term_updates) {
-                                if (++iteration > iter_max) {
-                                    work_todo.store(false);
-                                } else if (Delta_max.load() <= delta) { // nb: this will also break at 0
+                            if (++iteration <= iter_max) { //(term_updates.load() > min_term_updates) {
+                                if (progress) {
+                                    double percent_progress = ((double) iteration / (double) iter_max) * 100.0;
+                                    std::cerr << std::fixed << std::setprecision(2) << "[path sgd sort]: "
+                                              << percent_progress << "% progress: "
+                                                                     "iteration: " << iteration <<
+                                              ", eta: " << eta.load() <<
+                                              ", delta: " << Delta_max.load() <<
+                                              ", number of updates: " << term_updates.load() << std::endl;
+                                }
+                                if (term_updates.load() > min_term_updates) { //(++iteration > iter_max) {
                                     work_todo.store(false);
                                 } else {
-                                    if (progress) {
-                                        double percent_progress = ((double) iteration / (double) iter_max) * 100.0;
-                                        std::cerr << std::fixed << std::setprecision(2) << "[path sgd sort]: "
-                                                  << percent_progress << "% progress: "
-                                                                         "iteration: " << iteration <<
-                                                  ", eta: " << eta.load() <<
-                                                  ", delta: " << Delta_max.load() <<
-                                                  ", number of updates: " << term_updates.load() << std::endl;
+                                    if (Delta_max.load() <= delta && iteration > 1 && term_updates.load() == 0) { // nb: this will also break at 0
+                                        work_todo.store(false);
                                     }
-                                    eta.store(etas[iteration]); // update our learning rate
-                                    Delta_max.store(delta); // set our delta max to the threshold
                                 }
+                                eta.store(etas[iteration]); // update our learning rate
+                                Delta_max.store(delta); // set our delta max to the threshold
                                 term_updates.store(0);
+                            } else {
+                                if (term_updates.load() > min_term_updates) { //(++iteration > iter_max) {
+                                    work_todo.store(false);
+                                } else {
+                                    if (Delta_max.load() <= delta) { // nb: this will also break at 0
+                                        work_todo.store(false);
+                                    }
+                                }
                             }
                             std::this_thread::sleep_for(1ms);
                         }
@@ -244,7 +262,7 @@ namespace odgi {
                             uint64_t j = number_bool_packing::unpack_number(term_j);
 #ifdef debug_path_sgd
 #pragma omp critical (cerr)
-                            std::cerr << "nodes are " << graph.get_id(t.i) << " and " << graph.get_id(t.j) << std::endl;
+                            std::cerr << "nodes are " << graph.get_id(term_i) << " and " << graph.get_id(term_j) << std::endl;
 #endif
                             // distance == magnitude in our 1D situation
                             double dx = X[i].load() - X[j].load();
@@ -267,6 +285,7 @@ namespace odgi {
 #ifdef debug_path_sgd
 #pragma omp critical (cerr)
                             std::cerr << "Delta_abs " << Delta_abs << std::endl;
+                            std::cerr <
 #endif
                             while (Delta_abs > Delta_max.load()) {
                                 Delta_max.store(Delta_abs);
@@ -316,15 +335,35 @@ namespace odgi {
                                                      const double &w_max,
                                                      const uint64_t &iter_max,
                                                      const double &eps) {
+#ifdef debug_schedule
+            std::cerr << "w_min: " << w_min << std::endl;
+            std::cerr << "w_max: " << w_max << std::endl;
+            std::cerr << "iter_max: " << iter_max << std::endl;
+            std::cerr << "eps: " << eps << std::endl;
+#endif
             double eta_max = 1.0 / w_min;
             double eta_min = eps / w_max;
             double lambda = log(eta_max / eta_min) / ((double) iter_max - 1);
+#ifdef debug_schedule
+            std::cerr << "eta_max: " << eta_max << std::endl;
+            std::cerr << "eta_min: " << eta_min << std::endl;
+            std::cerr << "lambda: " << lambda << std::endl;
+#endif
             // initialize step sizes
             std::vector<double> etas;
             etas.reserve(iter_max);
+#ifdef debug_schedule
+            std::cerr << "etas: ";
+#endif
             for (uint64_t t = 0; t < iter_max; t++) {
                 etas.push_back(eta_max * exp(-lambda * t));
+#ifdef debug_schedule
+                std::cerr << etas.back() << ", ";
+#endif
             }
+#ifdef debug_schedule
+            std::cerr << std::endl;
+#endif
             return etas;
         }
 
@@ -535,7 +574,7 @@ namespace odgi {
                     uint64_t j = number_bool_packing::unpack_number(term_j);
 #ifdef debug_path_sgd
 #pragma omp critical (cerr)
-                    std::cerr << "nodes are " << graph.get_id(t.i) << " and " << graph.get_id(t.j) << std::endl;
+                    std::cerr << "nodes are " << graph.get_id(term_i) << " and " << graph.get_id(term_j) << std::endl;
 #endif
                     // distance == magnitude in our 1D situation
                     double dx = X[i].load() - X[j].load();
@@ -581,6 +620,9 @@ namespace odgi {
                     term_updates.store(term_updates.load() + 1);
                 }
                 if (Delta_max.load() <= delta) {
+                    if (progress) {
+                        std::cerr << "[path sgd sort]: delta_max: " << Delta_max.load() << " <= delta: " << delta << ". Threshold reached, therefore ending iterations." << std::endl;
+                    }
                     break;
                 } else {
                     if (progress) {
