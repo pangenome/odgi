@@ -141,11 +141,11 @@ namespace odgi {
                             }
                             std::this_thread::sleep_for(1ms);
                             // if we still did not update any terms after sleeping for 1ms we can boil out
-                            if (Delta_max.load() <= delta && iteration == 0 &&
-                                term_updates == 0) { // nb: this will also break at 0
+                            if (term_updates == 0) { // nb: this will also break at 0
                                 if (progress) {
-                                    std::cerr << "[path sgd sort]: delta_max: " << Delta_max.load() << " <= delta: "
-                                              << delta << ". Threshold reached, therefore ending iterations."
+                                    std::cerr << "[path sgd sort]: No terms could be updated. This can happen if the graph"
+                                                 "is already perfectly sorted or the number of nodes in the graph won't allow"
+                                                 "a reasonable update of terms."
                                               << std::endl;
                                 }
                                 work_todo.store(false);
