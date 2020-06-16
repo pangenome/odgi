@@ -140,16 +140,6 @@ namespace odgi {
                                 term_updates.store(0);
                             }
                             std::this_thread::sleep_for(1ms);
-                            // if we still did not update any terms after sleeping for 1ms we can boil out
-                            if (term_updates == 0) { // nb: this will also break at 0
-                                if (progress) {
-                                    std::cerr << "[path sgd sort]: No terms could be updated. This can happen if the graph"
-                                                 "is already perfectly sorted or the number of nodes in the graph won't allow"
-                                                 "a reasonable update of terms."
-                                              << std::endl;
-                                }
-                                work_todo.store(false);
-                            }
                         }
                     };
 
