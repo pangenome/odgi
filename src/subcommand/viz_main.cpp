@@ -87,6 +87,7 @@ namespace odgi {
         args::ValueFlag<float> link_path_pieces(parser, "FLOAT","show thin links of this relative width to connect path pieces",{'L', "link-path-pieces"});
         args::ValueFlag<std::string> alignment_prefix(parser, "STRING","apply alignment-related visual motifs to paths with this name prefix",{'A', "alignment-prefix"});
         args::Flag show_strands(parser, "bool","use reds and blues to show forward and reverse alignments (depends on -A)",{'S', "show-strand"});
+        args::Flag binning_mode(parser, "binning-mode", "bin the variation graph before its visualization", {'b', "binned-mode"});
         args::ValueFlag<uint64_t> bin_width(parser, "bp", "width of each bin in basepairs along the graph vector",{'w', "bin-width"});
         args::Flag drop_gap_links(parser, "drop-gap-links", "don't include gap links in the output", {'g', "no-gap-links"});
         args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
@@ -122,6 +123,13 @@ namespace odgi {
         if (!png_out_file) {
             std::cerr
                     << "[odgi viz] error: Please specify an output file to where to store the PNG via -o=[FILE], --out=[FILE]."
+                    << std::endl;
+            return 1;
+        }
+
+        if (!args::get(binning_mode) && ((args::get(bin_width) > 0) || (args::get(drop_gap_links)))){
+            std::cerr
+                    << "[odgi viz] error: Please specify the -b/--binned-mode option to use the -w/--bin_width and -g/--no-gap-links options."
                     << std::endl;
             return 1;
         }
@@ -189,10 +197,9 @@ namespace odgi {
         float scale_x = (float) width / (float) len;
         float scale_y = (float) height / (float) len;
 
-        // If --bin-width or --no-gap-links is specified, the image is created after the binning step.
         float _bin_width = args::get(bin_width);
-        if (_bin_width > 0 || args::get(drop_gap_links)){
-            if(_bin_width == 0){
+        if (args::get(binning_mode)){
+            if (_bin_width == 0){
                 _bin_width = 1 / scale_x; // It can be a float value.
             }else{
                 float num_bins = (float) len / _bin_width;// + (len % bin_width ? 1 : 0);
@@ -202,9 +209,15 @@ namespace odgi {
             // Each pixel corresponds to a bin
             scale_x = 1; //scale_x*bin_width;
 
-            std::cerr << "Binned visualization mode" << std::endl;
-            std::cerr << "bin_width: " << _bin_width << std::endl;
-            std::cerr << "x-width: " << width << std::endl;
+            std::cerr << "Binned mode" << std::endl;
+            std::cerr << "bin width: " << _bin_width << std::endl;
+            std::cerr << "image width: " << width << std::endl;
+        }
+
+        if (width > 50000){
+            std::cerr
+                    << "[odgi viz] warning: you are going to create a big image."
+                    << std::endl;
         }
 
         std::vector<uint8_t> image;
@@ -229,6 +242,7 @@ namespace odgi {
         auto add_edge_from_positions = [&](uint64_t a, const uint64_t b) {
 #ifdef debug_odgi_viz
             std::cerr << "Edge displayed" << std::endl;
+            std::cerr << a << " --> " << b << std::endl;
 #endif
             uint64_t dist = b - a;
             uint64_t i = 0;
@@ -254,8 +268,7 @@ namespace odgi {
             add_edge_from_positions(a, b);
         };
 
-        // If --bin-width or --no-gap-links is specified, the image is created after the binning step.
-        if (_bin_width > 0 || args::get(drop_gap_links)){
+        if (args::get(binning_mode)){
             graph.for_each_handle([&](const handle_t &h) {
                 uint64_t p = position_map[number_bool_packing::unpack_number(h)];
                 uint64_t hl = graph.get_length(h);
@@ -264,7 +277,7 @@ namespace odgi {
                 // make contents for the bases in the node
                 for (uint64_t k = 0; k < hl; ++k) {
                     int64_t curr_bin = (p + k) / _bin_width + 1;
-                    if (curr_bin != last_bin ) {
+                    if (curr_bin != last_bin) {
 #ifdef debug_odgi_viz
                         std::cerr << "position in map (" << p  << ") - curr_bin: " << curr_bin << std::endl;
 #endif
@@ -275,7 +288,7 @@ namespace odgi {
                 }
             });
 
-            // The links are created after the binning step.
+            // The links are created later after the binning step.
         }else{
             graph.for_each_handle([&](const handle_t &h) {
                 uint64_t p = position_map[number_bool_packing::unpack_number(h)];
@@ -431,8 +444,7 @@ namespace odgi {
             //          << " " << (int)path_r << " " << (int)path_g << " " << (int)path_b << std::endl;
             uint64_t path_rank = as_integer(path) - 1;
 
-            // If --bin-width or --no-gap-links is specified, the image is created after the binning step.
-            if (_bin_width > 0 || args::get(drop_gap_links)) {
+            if (args::get(binning_mode)) {
                 std::vector<std::pair<uint64_t, uint64_t>> links;
                 std::vector<uint64_t> bin_ids;
                 int64_t last_bin = 0; // flag meaning "null bin"
@@ -495,17 +507,19 @@ namespace odgi {
 #ifdef debug_odgi_viz
                     std::cerr << link.first << " --> " << link.second << std::endl;
 #endif
-                    uint64_t a = std::min(link.first, link.second) - 1;
-                    uint64_t b = std::max(link.first, link.second) - 1;
+                    if( (link.first != 0) && (link.second != 0) && std::abs((int64_t)link.first - (int64_t)link.second) > 1){
+                        uint64_t a = std::min(link.first, link.second) - 1;
+                        uint64_t b = std::max(link.first, link.second) - 1;
 
-                    auto pair = make_pair(a, b);
+                        auto pair = make_pair(a, b);
 
-                    // Check if the edge is already displayed
-                    if (edges_drawn.find(pair) == edges_drawn.end()) {
-                        edges_drawn.insert(pair);
+                        // Check if the edge is already displayed
+                        if (edges_drawn.find(pair) == edges_drawn.end()) {
+                            edges_drawn.insert(pair);
 
-                        // add contents for the edge
-                        add_edge_from_positions(a, b);
+                            // add contents for the edge
+                            add_edge_from_positions(a, b);
+                        }
                     }
                 }
             }else{

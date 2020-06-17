@@ -61,12 +61,15 @@ sequence coverage in bins available.
   Use red and blue coloring to display forward and reverse alignments. This parameter should only be set in combination with
   [*-A, --alignment-prefix*=_STRING_].
 
+*-b, --binned-mode*=_N_::
+  The variation graph is binned before its visualization.
+
 *-w, --bin-width*=_N_::
-  The bin width specifies the size of each bin.
+  The bin width specifies the size of each bin in the binned mode.
 
 *-g, --no-gap-links*::
   Links connecting a path from left to right may not be relevant to understand a path's traversal through the bins. They
-  can be left out from the image.
+  can be left out from the image in the binned mode.
 
 === Threading
 
