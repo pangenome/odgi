@@ -83,18 +83,12 @@ namespace odgi {
         args::ValueFlag<uint64_t> image_height(parser, "N", "height in pixels of output image", {'y', "height"});
         args::ValueFlag<uint64_t> path_height(parser, "N", "path display height", {'P', "path-height"});
         args::ValueFlag<uint64_t> path_x_pad(parser, "N", "path x padding", {'X', "path-x-padding"});
-        args::Flag path_per_row(parser, "bool", "display a single path per row rather than packing them",
-                                {'R', "path-per-row"});
-        args::ValueFlag<float> link_path_pieces(parser, "FLOAT",
-                                                "show thin links of this relative width to connect path pieces",
-                                                {'L', "link-path-pieces"});
-        args::ValueFlag<std::string> alignment_prefix(parser, "STRING",
-                                                      "apply alignment-related visual motifs to paths with this name prefix",
-                                                      {'A', "alignment-prefix"});
-        args::Flag show_strands(parser, "bool",
-                                "use reds and blues to show forward and reverse alignments (depends on -A)",
-                                {'S', "show-strand"});
-        args::Flag hide_gap_links(parser, "hide-gap-links", "don't display gap links", {'g', "hide-gap-links"});
+        args::Flag path_per_row(parser, "bool", "display a single path per row rather than packing them",{'R', "path-per-row"});
+        args::ValueFlag<float> link_path_pieces(parser, "FLOAT","show thin links of this relative width to connect path pieces",{'L', "link-path-pieces"});
+        args::ValueFlag<std::string> alignment_prefix(parser, "STRING","apply alignment-related visual motifs to paths with this name prefix",{'A', "alignment-prefix"});
+        args::Flag show_strands(parser, "bool","use reds and blues to show forward and reverse alignments (depends on -A)",{'S', "show-strand"});
+        args::ValueFlag<uint64_t> bin_width(parser, "bp", "width of each bin in basepairs along the graph vector",{'w', "bin-width"});
+        args::Flag drop_gap_links(parser, "drop-gap-links", "don't include gap links in the output", {'g', "no-gap-links"});
         args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
         try {
@@ -154,11 +148,10 @@ namespace odgi {
         const char *filename = args::get(png_out_file).c_str();
 
         // TODO this breaks for graphs that aren't compacted
-        // If there is a STEP ID greater than graph.get_node_count()+1, this loop hangs.
-        // Simple proposal: stop the command, warning the user.
+        // Simple proposal: if there is a segment_id greater than graph.get_node_count()+1, stop the command and warn the user.
         // Alternatives:
-        // - first check if the graph is compacted: if not, compact it, changing the STEP IDs, but not their order
-        // - first check if the graph is compacted: if not, perform a topological sort, warning the user
+        // - first check if the graph is compacted: if not, compact it, changing the segment_ids, but not their order, and warn the user.
+        // - first check if the graph is compacted: if not, perform a topological sort, and warn the user.
         std::vector<uint64_t> position_map(graph.get_node_count() + 1);
         std::vector<std::pair<uint64_t, uint64_t>> contacts;
         uint64_t len = 0;
@@ -185,8 +178,7 @@ namespace odgi {
 
         uint64_t path_count = graph.get_path_count();
         uint64_t pix_per_path = (args::get(path_height) ? args::get(path_height) : 10);
-        uint64_t pix_per_link = std::max((uint64_t) 1,
-                                         (uint64_t) std::round(args::get(link_path_pieces) * pix_per_path));
+        uint64_t pix_per_link = std::max((uint64_t) 1, (uint64_t) std::round(args::get(link_path_pieces) * pix_per_path));
         uint64_t link_pix_y = pix_per_path / 2 - pix_per_link / 2;
         uint64_t path_space = path_count * pix_per_path;
         uint64_t path_padding = args::get(path_x_pad);
@@ -194,10 +186,29 @@ namespace odgi {
         // the math here only works if the image size is greater than or equal to the graph length
         uint64_t width = std::min(len, (args::get(image_width) ? args::get(image_width) : 1000));
         uint64_t height = std::min(len, (args::get(image_height) ? args::get(image_height) : 1000) + bottom_padding);
-        std::vector<uint8_t> image;
-        image.resize(width * (height + path_space) * 4, 255);
         float scale_x = (float) width / (float) len;
         float scale_y = (float) height / (float) len;
+
+        // If --bin-width or --no-gap-links is specified, the image is created after the binning step.
+        float _bin_width = args::get(bin_width);
+        if (_bin_width > 0 || args::get(drop_gap_links)){
+            if(_bin_width == 0){
+                _bin_width = 1 / scale_x; // It can be a float value.
+            }else{
+                float num_bins = (float) len / _bin_width;// + (len % bin_width ? 1 : 0);
+                width = num_bins;
+            }
+
+            // Each pixel corresponds to a bin
+            scale_x = 1; //scale_x*bin_width;
+
+            std::cerr << "Binned visualization mode" << std::endl;
+            std::cerr << "bin_width: " << _bin_width << std::endl;
+            std::cerr << "x-width: " << width << std::endl;
+        }
+
+        std::vector<uint8_t> image;
+        image.resize(width * (height + path_space) * 4, 255);
 
         bool aln_mode = !args::get(alignment_prefix).empty();
         std::string aln_prefix;
@@ -215,49 +226,78 @@ namespace odgi {
             image[4 * width * y + 4 * x + 3] = 255;
         };
 
-        auto add_edge = [&](const handle_t& h, const handle_t& o) {
-            // The position map is encoding 2x the number of nodes: it includes the start and end of the node in successive
-            // entries. Edges leave from the end (or start) of one node (depending on whether they are on the forward or
-            // reverse strand) and go to the start (or end) of the other side of the link.
-            uint64_t _info_h = number_bool_packing::unpack_number(h) + !number_bool_packing::unpack_bit(h);
-            uint64_t _info_o = number_bool_packing::unpack_number(o) + number_bool_packing::unpack_bit(o);
-
-            // To avoid any operation if x-start == x-end
-            if (_info_h != _info_o) {
-                _info_h = position_map[_info_h];
-                _info_o = position_map[_info_o];
-
+        auto add_edge_from_positions = [&](uint64_t a, const uint64_t b) {
 #ifdef debug_odgi_viz
-                std::cerr << "Edge displayed" << std::endl;
+            std::cerr << "Edge displayed" << std::endl;
 #endif
+            uint64_t dist = b - a;
+            uint64_t i = 0;
 
-                uint64_t a = std::min(_info_h, _info_o);
-                uint64_t b = std::max(_info_h, _info_o);
-                uint64_t dist = b - a;
-                uint64_t i = 0;
-
-                for (; i < dist; i += 1 / scale_y) {
-                    add_point(a, i, 0, 0, 0);
-                }
-                while (a <= b) {
-                    add_point(a, i, 0, 0, 0);
-                    a += 1 / scale_x;
-                }
-                for (uint64_t j = 0; j < dist; j += 1 / scale_y) {
-                    add_point(b, j, 0, 0, 0);
-                }
+            for (; i < dist; i += 1 / scale_y) {
+                add_point(a, i, 0, 0, 0);
+            }
+            while (a <= b) {
+                add_point(a, i, 0, 0, 0);
+                a += 1 / scale_x;
+            }
+            for (uint64_t j = 0; j < dist; j += 1 / scale_y) {
+                add_point(b, j, 0, 0, 0);
             }
         };
 
-        graph.for_each_handle([&](const handle_t &h) {
-            uint64_t p = position_map[number_bool_packing::unpack_number(h)];
-            uint64_t hl = graph.get_length(h);
-            // make contents for the bases in the node
-            //for (uint64_t i = 0; i < hl; ++i) {
-            for (uint64_t i = 0; i < hl; i += 1 / scale_x) {
-                add_point(p + i, 0, 0, 0, 0);
-            }
-        });
+        auto add_edge_from_handles = [&](const handle_t& h, const handle_t& o) {
+            uint64_t _a = position_map[number_bool_packing::unpack_number(h) + !number_bool_packing::unpack_bit(h)];
+            uint64_t _b = position_map[number_bool_packing::unpack_number(o) + number_bool_packing::unpack_bit(o)];
+            uint64_t a = std::min(_a, _b);
+            uint64_t b = std::max(_a, _b);
+
+            add_edge_from_positions(a, b);
+        };
+
+        // If --bin-width or --no-gap-links is specified, the image is created after the binning step.
+        if (_bin_width > 0 || args::get(drop_gap_links)){
+            graph.for_each_handle([&](const handle_t &h) {
+                uint64_t p = position_map[number_bool_packing::unpack_number(h)];
+                uint64_t hl = graph.get_length(h);
+
+                int64_t last_bin = 0; // flag meaning "null bin"
+                // make contents for the bases in the node
+                for (uint64_t k = 0; k < hl; ++k) {
+                    int64_t curr_bin = (p + k) / _bin_width + 1;
+                    if (curr_bin != last_bin ) {
+#ifdef debug_odgi_viz
+                        std::cerr << "position in map (" << p  << ") - curr_bin: " << curr_bin << std::endl;
+#endif
+                        add_point(curr_bin - 1, 0, 0, 0, 0);
+                    }
+
+                    last_bin = curr_bin;
+                }
+            });
+
+            // The links are created after the binning step.
+        }else{
+            graph.for_each_handle([&](const handle_t &h) {
+                uint64_t p = position_map[number_bool_packing::unpack_number(h)];
+                uint64_t hl = graph.get_length(h);
+                // make contents for the bases in the node
+                //for (uint64_t i = 0; i < hl; ++i) {
+                for (uint64_t i = 0; i < hl; i += 1 / scale_x) {
+                    add_point(p + i, 0, 0, 0, 0);
+                }
+            });
+
+            graph.for_each_handle([&](const handle_t& h) {
+                // add contacts for the edges
+                graph.follow_edges(h, false, [&](const handle_t& o) {
+                    add_edge_from_handles(h, o);
+                });
+                graph.follow_edges(h, true, [&](const handle_t& o) {
+                    add_edge_from_handles(o, h);
+                });
+            });
+        }
+
 
         auto add_path_step = [&](const uint64_t &_x, const uint64_t &_y,
                                  const uint8_t &_r, const uint8_t &_g, const uint8_t &_b) {
@@ -326,12 +366,15 @@ namespace odgi {
         }
 
         std::unordered_set<pair<uint64_t, uint64_t>> edges_drawn;
+        uint64_t gap_links_removed = 0;
         graph.for_each_path_handle([&](const path_handle_t &path) {
             // use a sha256 to get a few bytes that we'll use for a color
             std::string path_name = graph.get_path_name(path);
+
 #ifdef debug_odgi_viz
             std::cerr << "path_name: " << path_name << std::endl;
 #endif
+
             bool is_aln = false;
             if (aln_mode) {
                 std::string::size_type n = path_name.find(aln_prefix);
@@ -387,64 +430,97 @@ namespace odgi {
             //std::cerr << "path " << as_integer(path) << " " << graph.get_path_name(path) << " " << path_r_f << " " << path_g_f << " " << path_b_f
             //          << " " << (int)path_r << " " << (int)path_g << " " << (int)path_b << std::endl;
             uint64_t path_rank = as_integer(path) - 1;
-            /// Loop over all the steps along a path, from first through last and draw them
-            std::set<uint64_t> as_integer_set; // ordered set to retain the positions order
-            graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
-                handle_t h = graph.get_handle_of_step(occ);
-                uint64_t h_int = as_integer(h);
 
-                // the execution time is lower when the following if is commented.
-                // It could be useful in graphs with a lot of repeats.
-                //if (as_integer_set.find(h_int) == as_integer_set.end()) {
-                    as_integer_set.insert(h_int);
-
+            // If --bin-width or --no-gap-links is specified, the image is created after the binning step.
+            if (_bin_width > 0 || args::get(drop_gap_links)) {
+                std::vector<std::pair<uint64_t, uint64_t>> links;
+                std::vector<uint64_t> bin_ids;
+                int64_t last_bin = 0; // flag meaning "null bin"
+                graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
+                    handle_t h = graph.get_handle_of_step(occ);
                     uint64_t p = position_map[number_bool_packing::unpack_number(h)];
                     uint64_t hl = graph.get_length(h);
 
                     // make contents for the bases in the node
+
                     uint64_t path_y = path_layout_y[path_rank];
-                    for (uint64_t i = 0; i < hl; i += 1 / scale_x) {
-                        add_path_step(p + i, path_y, path_r, path_g, path_b);
+                    for (uint64_t k = 0; k < hl; ++k) {
+                        int64_t curr_bin = (p + k) / _bin_width + 1;
+                        if (curr_bin != last_bin) {
+#ifdef debug_odgi_viz
+                            std::cerr << "curr_bin: " << curr_bin << std::endl;
+#endif
+                            add_path_step(curr_bin - 1, path_y, path_r, path_g, path_b);
+
+                            if (std::abs(curr_bin - last_bin) > 1 || last_bin == 0) {
+                                // bin cross!
+                                links.push_back(std::make_pair(last_bin, curr_bin));
+                            }
+                        }
+                        bin_ids.push_back(curr_bin);
+
+                        last_bin = curr_bin;
                     }
-                //}
-            });
+                });
+                links.push_back(std::make_pair(last_bin, 0));
 
+                if (args::get(drop_gap_links)) {
+                    std::sort(bin_ids.begin(), bin_ids.end());
+
+                    uint64_t fill_pos = 0;
+
+                    for (uint64_t i = 0; i < links.size(); ++i) {
+                        auto link = links[i];
+
+                        if (link.first == 0 || link.second == 0)
+                            continue;
+
+                        if (link.first > link.second) {
+                            links[fill_pos++] = link;
+                            continue;
+                        }
+
+                        auto left_it = std::lower_bound(bin_ids.begin(), bin_ids.end(), link.first + 1);
+                        auto right_it = std::lower_bound(bin_ids.begin(), bin_ids.end(), link.second);
+                        if (right_it > left_it) {
+                            links[fill_pos++] = link;
+                        }
+                    }
+
+                    gap_links_removed += links.size() - fill_pos;
+                    links.resize(fill_pos);
+                }
+
+                for (auto const link : links) {
 #ifdef debug_odgi_viz
-            for (uint64_t const& as_int : position_map_set) {
-                std::cerr << as_int << ' ';
-            }
-            std::cerr << std::endl;
+                    std::cerr << link.first << " --> " << link.second << std::endl;
 #endif
-            bool hide_gap_links_ = args::get(hide_gap_links);
-            graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
-                if (graph.has_next_step(occ)) {
-                    handle_t h = graph.get_handle_of_step(occ);
-                    handle_t h_next = graph.get_handle_of_step(graph.get_next_step(occ));
+                    uint64_t a = std::min(link.first, link.second) - 1;
+                    uint64_t b = std::max(link.first, link.second) - 1;
 
-#ifdef debug_odgi_viz
-                    std::cerr << "id (" << graph.get_id(h)  << ") --> next id (" << graph.get_id(h_next) << ")" << std::endl;
-                    std::cerr << "sign (" << number_bool_packing::unpack_bit(h)  << ") --> next sign (" << number_bool_packing::unpack_bit(h_next) << ")" << std::endl;
-#endif
+                    auto pair = make_pair(a, b);
 
-                    auto pair = make_pair(as_integer(h), as_integer(h_next));
                     // Check if the edge is already displayed
                     if (edges_drawn.find(pair) == edges_drawn.end()) {
                         edges_drawn.insert(pair);
 
-                        if (hide_gap_links_) {
-                            // If the edge links two nodes which have the same '+' orientation and are consecutive in the path, it is not displayed
-                            if (number_bool_packing::unpack_bit(h) || number_bool_packing::unpack_bit(h_next) || next(as_integer_set.find(pair.first)) != as_integer_set.find(pair.second)) {
-                                // add contents for the edge
-                                add_edge(h, h_next);
-                            }
-                        } else {
-                            // add contents for the edge
-                            add_edge(h, h_next);
-                        }
+                        // add contents for the edge
+                        add_edge_from_positions(a, b);
                     }
                 }
-
-            });
+            }else{
+                /// Loop over all the steps along a path, from first through last and draw them
+                graph.for_each_step_in_path(path, [&](const step_handle_t& occ) {
+                    handle_t h = graph.get_handle_of_step(occ);
+                    uint64_t p = position_map[number_bool_packing::unpack_number(h)];
+                    uint64_t hl = graph.get_length(h);
+                    // make contects for the bases in the node
+                    uint64_t path_y = path_layout_y[path_rank];
+                    for (uint64_t i = 0; i < hl; i+=1/scale_x) {
+                        add_path_step(p+i, path_y, path_r, path_g, path_b);
+                    }
+                });
+            }
 
             // add in a visual motif that shows the links between path pieces
             // this is most meaningful in a linear layout
@@ -464,6 +540,10 @@ namespace odgi {
                 }
             }
         });
+
+        if (args::get(drop_gap_links)) {
+            std::cerr << "Gap links removed: " << gap_links_removed << std::endl;
+        }
 
         // trim vertical space to fit
         uint64_t min_y = std::numeric_limits<uint64_t>::max();
@@ -500,8 +580,6 @@ namespace odgi {
         return 0;
     }
 
-    static Subcommand odgi_viz("viz", "visualize the graph",
-                               PIPELINE, 3, main_viz);
-
+    static Subcommand odgi_viz("viz", "visualize the graph",PIPELINE, 3, main_viz);
 
 }

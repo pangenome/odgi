@@ -61,9 +61,12 @@ sequence coverage in bins available.
   Use red and blue coloring to display forward and reverse alignments. This parameter should only be set in combination with
   [*-A, --alignment-prefix*=_STRING_].
 
-*-g, --hide-gap-links*::
-  Links connecting consecutive nodes from left to right may not be relevant to understand a path's traversal through the nodes. They
-  can be hidden in the image.
+*-w, --bin-width*=_N_::
+  The bin width specifies the size of each bin.
+
+*-g, --no-gap-links*::
+  Links connecting a path from left to right may not be relevant to understand a path's traversal through the bins. They
+  can be left out from the image.
 
 === Threading
 
