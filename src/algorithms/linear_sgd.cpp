@@ -73,6 +73,10 @@ std::vector<double> linear_sgd(const PathHandleGraph& graph,
                     term_updates.store(0);
                 }
                 std::this_thread::sleep_for(1ms);
+                // if we still did not update any terms after sleeping for 1ms we can boil out
+                if (term_updates == 0) { // nb: this will also break at 0
+                    work_todo.store(false);
+                }
             }
         };
 
