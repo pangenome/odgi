@@ -76,14 +76,20 @@ void bin_path_info(const PathHandleGraph& graph,
                                 (((nucleotide_count -  bins[curr_bin].ranges.back().first) > 1) && (bins[curr_bin].ranges.back().second == 0)) ||
                                 (is_rev != last_is_rev)){
 						    if (is_rev) {
-						        bins[curr_bin].ranges.push_back(std::make_pair(0, nucleotide_count));
-						    } else {
 						        bins[curr_bin].ranges.push_back(std::make_pair(nucleotide_count, 0));
+						    } else {
+						        bins[curr_bin].ranges.push_back(std::make_pair(0, nucleotide_count));
 						    }
 						} else {
 						    if (is_rev) {
+						        if (bins[curr_bin].ranges.back().second == 0) {
+						            bins[curr_bin].ranges.back().second = bins[curr_bin].ranges.back().first;
+						        }
 						        bins[curr_bin].ranges.back().first = nucleotide_count;
 						    } else {
+						        if (bins[curr_bin].ranges.back().first == 0) {
+						            bins[curr_bin].ranges.back().first = bins[curr_bin].ranges.back().second;
+						        }
 						        bins[curr_bin].ranges.back().second = nucleotide_count;
 						    }
 
