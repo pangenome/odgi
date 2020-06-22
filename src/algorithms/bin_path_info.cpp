@@ -107,8 +107,12 @@ namespace odgi {
 #endif
                         } else {
                             std::pair<uint64_t, uint64_t> &p = bins[curr_bin].ranges.back();
-                            if (is_rev) updatePair<0, 1>(p, nucleotide_count);
-                            else updatePair<1, 0>(p, nucleotide_count);
+                            if (is_rev) {
+                                updatePair<0, 1>(p, nucleotide_count);
+                            }
+                            else {
+                                updatePair<1, 0>(p, nucleotide_count);
+                            }
                         }
                         last_bin = curr_bin;
                         last_is_rev = is_rev;
