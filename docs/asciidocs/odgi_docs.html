@@ -736,7 +736,7 @@ The odgi version(1) command prints the current git version with tags and codenam
 <div class="sect2">
 <h3 id="_authors">1.6. AUTHORS</h3>
 <div class="paragraph">
-<p>Erik Garrison from the University of California Santa Cruz wrote the whole <strong>odgi</strong> tool. Despite small code contributions, Simon Heumos from the Quantitative Biology Center Tübingen wrote <strong>odgi pathindex</strong>, <strong>odgi panpos</strong>, <strong>odgi server</strong>, and the documentation.</p>
+<p>Erik Garrison from the University of California Santa Cruz wrote the whole <strong>odgi</strong> tool. Simon Heumos from the Quantitative Biology Center Tübingen wrote <strong>odgi pathindex</strong>, <strong>odgi panpos</strong>, <strong>odgi server</strong>, and this documentation.</p>
 </div>
 </div>
 <div class="sect2">
@@ -1658,9 +1658,10 @@ in a fixed sequence quality FASTQ format. Various parameters can refine the unit
 <div class="sect2">
 <h3 id="_description_8">8.3. DESCRIPTION</h3>
 <div class="paragraph">
-<p>The odgi viz(1) command can produce a linear, static visualization of an odgi variation graph. It aggregates the pangenome into bins
-and directly renders a raster image. The binning level depends on the target width of the PNG to emit. Can be used to produce visualizations for gigabase scale pangenomes. For more information
-about the binning process, please refer to <a href="#_odgi_bin1">odgi bin</a>. If reverse coloring was selected, only
+<p>The odgi viz(1) command can produce a linear, static visualization of an odgi variation graph. It can aggregate the pangenome into bins
+and directly renders a raster image. The binning level can be specified in input or it is calculated from the target width of the PNG to emit.
+Can be used to produce visualizations for gigabase scale pangenomes. For more information  about the binning process,
+please refer to <a href="#_odgi_bin1">odgi bin</a>. If reverse coloring was selected, only
 the bins with a reverse rate of at least 0.5 are colored. Currently, there is no parameter to color according to the
 sequence coverage in bins available.</p>
 </div>
@@ -1723,7 +1724,29 @@ sequence coverage in bins available.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_threading_4">8.4.3. Threading</h4>
+<h4 id="_binned_mode_options">8.4.3. Binned Mode Options</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-b, --binned-mode</strong>=<em>N</em></dt>
+<dd>
+<p>The variation graph is binned before its visualization. Each pixel in the output image will correspond to a bin.
+For more information about the binning process, please refer to <a href="#_odgi_bin1">odgi bin</a>.</p>
+</dd>
+<dt class="hdlist1"><strong>-w, --bin-width</strong>=<em>N</em></dt>
+<dd>
+<p>The bin width specifies the size of each bin in the binned mode. If it is not specified, the bin width is calculated
+from the width in pixels of the output image.</p>
+</dd>
+<dt class="hdlist1"><strong>-g, --no-gap-links</strong></dt>
+<dd>
+<p>Links connecting a path from left to right may not be relevant to understand a path&#8217;s traversal through the bins. They
+can be left out from the image in the binned mode.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_threading_4">8.4.4. Threading</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-t, --threads</strong>=<em>N</em></dt>
@@ -1734,7 +1757,7 @@ sequence coverage in bins available.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_program_information_7">8.4.4. Program Information</h4>
+<h4 id="_program_information_7">8.4.5. Program Information</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-h, --help</strong></dt>
@@ -2608,7 +2631,7 @@ can be left out saving disk space.</p>
 <dl>
 <dt class="hdlist1"><strong>-c, --chop-to</strong>=<em>N</em></dt>
 <dd>
-<p>Divide nodes that are shorter than <em>N</em>.</p>
+<p>Divide nodes that longer than <em>N</em> into nodes no longer than <em>N</em> while maintaining graph topology.</p>
 </dd>
 </dl>
 </div>
@@ -3517,7 +3540,7 @@ be selected. odgi test(1) depends on <a href="https://github.com/catchorg/Catch2
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-05-15 23:34:41 +0200
+Last updated 2020-06-22 14:30:41 +0200
 </div>
 </div>
 </body>

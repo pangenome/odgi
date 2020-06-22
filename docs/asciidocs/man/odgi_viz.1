@@ -2,12 +2,12 @@
 .\"     Title: odgi viz
 .\"    Author: Erik Garrison
 .\" Generator: Asciidoctor 2.0.10
-.\"      Date: 2020-05-15
+.\"      Date: 2020-06-22
 .\"    Manual: odgi viz
 .\"    Source: odgi v0.4.1
 .\"  Language: English
 .\"
-.TH "ODGI_VIZ" "1" "2020-05-15" "odgi v0.4.1" "odgi viz"
+.TH "ODGI_VIZ" "1" "2020-06-22" "odgi v0.4.1" "odgi viz"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -34,9 +34,10 @@ odgi_viz \- variation graph visualizations
 \fBodgi viz\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
 .SH "DESCRIPTION"
 .sp
-The odgi viz(1) command can produce a linear, static visualization of an odgi variation graph. It aggregates the pangenome into bins
-and directly renders a raster image. The binning level depends on the target width of the PNG to emit. Can be used to produce visualizations for gigabase scale pangenomes. For more information
-about the binning process, please refer to odgi bin. If reverse coloring was selected, only
+The odgi viz(1) command can produce a linear, static visualization of an odgi variation graph. It can aggregate the pangenome into bins
+and directly renders a raster image. The binning level can be specified in input or it is calculated from the target width of the PNG to emit.
+Can be used to produce visualizations for gigabase scale pangenomes. For more information  about the binning process,
+please refer to odgi bin. If reverse coloring was selected, only
 the bins with a reverse rate of at least 0.5 are colored. Currently, there is no parameter to color according to the
 sequence coverage in bins available.
 .SH "OPTIONS"
@@ -92,6 +93,25 @@ Apply alignment related visual motifs to paths which have this name prefix.
 .RS 4
 Use red and blue coloring to display forward and reverse alignments. This parameter should only be set in combination with
 [\fB\-A, \-\-alignment\-prefix\fP=\fISTRING\fP].
+.RE
+.SS "Binned Mode Options"
+.sp
+\fB\-b, \-\-binned\-mode\fP=\fIN\fP
+.RS 4
+The variation graph is binned before its visualization. Each pixel in the output image will correspond to a bin.
+For more information about the binning process, please refer to odgi bin.
+.RE
+.sp
+\fB\-w, \-\-bin\-width\fP=\fIN\fP
+.RS 4
+The bin width specifies the size of each bin in the binned mode. If it is not specified, the bin width is calculated
+from the width in pixels of the output image.
+.RE
+.sp
+\fB\-g, \-\-no\-gap\-links\fP
+.RS 4
+Links connecting a path from left to right may not be relevant to understand a path\(cqs traversal through the bins. They
+can be left out from the image in the binned mode.
 .RE
 .SS "Threading"
 .sp

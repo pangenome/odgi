@@ -87,7 +87,7 @@ namespace odgi {
         args::ValueFlag<float> link_path_pieces(parser, "FLOAT","show thin links of this relative width to connect path pieces",{'L', "link-path-pieces"});
         args::ValueFlag<std::string> alignment_prefix(parser, "STRING","apply alignment-related visual motifs to paths with this name prefix",{'A', "alignment-prefix"});
         args::Flag show_strands(parser, "bool","use reds and blues to show forward and reverse alignments (depends on -A)",{'S', "show-strand"});
-        args::Flag binning_mode(parser, "binning-mode", "bin the variation graph before its visualization", {'b', "binned-mode"});
+        args::Flag binned_mode(parser, "binned-mode", "bin the variation graph before its visualization", {'b', "binned-mode"});
         args::ValueFlag<uint64_t> bin_width(parser, "bp", "width of each bin in basepairs along the graph vector",{'w', "bin-width"});
         args::Flag drop_gap_links(parser, "drop-gap-links", "don't include gap links in the output", {'g', "no-gap-links"});
         args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
@@ -127,7 +127,7 @@ namespace odgi {
             return 1;
         }
 
-        if (!args::get(binning_mode) && ((args::get(bin_width) > 0) || (args::get(drop_gap_links)))){
+        if (!args::get(binned_mode) && ((args::get(bin_width) > 0) || (args::get(drop_gap_links)))){
             std::cerr
                     << "[odgi viz] error: Please specify the -b/--binned-mode option to use the -w/--bin_width and -g/--no-gap-links options."
                     << std::endl;
@@ -155,33 +155,25 @@ namespace odgi {
         }
         const char *filename = args::get(png_out_file).c_str();
 
-        // TODO this breaks for graphs that aren't compacted
-        // Simple proposal: if there is a segment_id greater than graph.get_node_count()+1, stop the command and warn the user.
-        // Alternatives:
-        // - first check if the graph is compacted: if not, compact it, changing the segment_ids, but not their order, and warn the user.
-        // - first check if the graph is compacted: if not, perform a topological sort, and warn the user.
         std::vector<uint64_t> position_map(graph.get_node_count() + 1);
-        std::vector<std::pair<uint64_t, uint64_t>> contacts;
         uint64_t len = 0;
+        nid_t last_node_id = graph.min_node_id();
         graph.for_each_handle([&](const handle_t &h) {
-            uint64_t index_in_position_map = number_bool_packing::unpack_number(h);
-            if (index_in_position_map >= position_map.size()) {
-                len = 0;
-                return false;
+            nid_t node_id = graph.get_id(h);
+            if (node_id - last_node_id > 1) {
+                std::cerr << "[odgi viz] error: The graph is not optimized. Please run 'odgi sort' using -O, --optimize" << std::endl;
+                exit(1);
             }
-#ifdef debug_odgi_viz
-            std::cerr << "step id: " << graph.get_id(h) << " - " << as_integer(h) << " - index_in_position_map (" << index_in_position_map << ") = " << len << std::endl;
-#endif
-            position_map[index_in_position_map] = len;
+            last_node_id = node_id;
+
+            position_map[number_bool_packing::unpack_number(h)] = len;
             uint64_t hl = graph.get_length(h);
             len += hl;
 
-            return true;
+#ifdef debug_odgi_viz
+            std::cerr << "SEGMENT ID: " << graph.get_id(h) << " - " << as_integer(h) << " - index_in_position_map (" << number_bool_packing::unpack_number(h) << ") = " << len << std::endl;
+#endif
         });
-        if (len == 0) {
-            std::cerr << "[odgi viz] error: the graph has to be compacted or sorted" << std::endl;
-            return 1;
-        }
         position_map[position_map.size() - 1] = len;
 
         uint64_t path_count = graph.get_path_count();
@@ -198,7 +190,7 @@ namespace odgi {
         float scale_y = (float) height / (float) len;
 
         float _bin_width = args::get(bin_width);
-        if (args::get(binning_mode)){
+        if (args::get(binned_mode)){
             if (_bin_width == 0){
                 _bin_width = 1 / scale_x; // It can be a float value.
             }else{
@@ -216,7 +208,7 @@ namespace odgi {
 
         if (width > 50000){
             std::cerr
-                    << "[odgi viz] warning: you are going to create a big image."
+                    << "[odgi viz] warning: you are going to create a big image (width > 50000 pixels)."
                     << std::endl;
         }
 
@@ -268,7 +260,7 @@ namespace odgi {
             add_edge_from_positions(a, b);
         };
 
-        if (args::get(binning_mode)){
+        if (args::get(binned_mode)){
             graph.for_each_handle([&](const handle_t &h) {
                 uint64_t p = position_map[number_bool_packing::unpack_number(h)];
                 uint64_t hl = graph.get_length(h);
@@ -444,7 +436,7 @@ namespace odgi {
             //          << " " << (int)path_r << " " << (int)path_g << " " << (int)path_b << std::endl;
             uint64_t path_rank = as_integer(path) - 1;
 
-            if (args::get(binning_mode)) {
+            if (args::get(binned_mode)) {
                 std::vector<std::pair<uint64_t, uint64_t>> links;
                 std::vector<uint64_t> bin_ids;
                 int64_t last_bin = 0; // flag meaning "null bin"
@@ -541,12 +533,18 @@ namespace odgi {
             if (args::get(link_path_pieces)) {
                 uint64_t min_x = std::numeric_limits<uint64_t>::max();
                 uint64_t max_x = std::numeric_limits<uint64_t>::min(); // 0
+
+                // In binned mode, the min/max_x values changes based on the bin width
+                if (!args::get(binned_mode)) {
+                    _bin_width = 1;
+                }
                 graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
                     handle_t h = graph.get_handle_of_step(occ);
                     uint64_t p = position_map[number_bool_packing::unpack_number(h)];
-                    min_x = std::min(min_x, p);
-                    max_x = std::max(max_x, p + graph.get_length(h));
+                    min_x = std::min(min_x, (uint64_t)(p / _bin_width));
+                    max_x = std::max(max_x, (uint64_t)((p + graph.get_length(h)) / _bin_width));
                 });
+
                 // now touch up the range
                 uint64_t path_y = path_layout_y[path_rank];
                 for (uint64_t i = min_x; i < max_x; i += 1 / scale_x) {
