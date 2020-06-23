@@ -73,8 +73,11 @@ sequence coverage in bins available.
   from the width in pixels of the output image.
 
 *-g, --no-gap-links*::
-  Links connecting a path from left to right may not be relevant to understand a path's traversal through the bins. They
-  can be left out from the image in the binned mode.
+  We divide links into 2 classes:
+1. Class: The links which help to follow complex variations. They need to be drawn, else one could not follow
+  the sequence of a path.
+2. Class: The links helping to follow simple variations. Such links solely connecting a path from left to right may not
+  be relevant to understand a path's traversal through the bins. Therefore, they are not drawn in the binned mode.
 
 === Threading
 

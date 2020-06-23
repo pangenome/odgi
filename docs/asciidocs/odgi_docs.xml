@@ -4,7 +4,7 @@
 <article xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" version="5.0" xml:lang="en">
 <info>
 <title>Reference Documentation for ODGI v0.4.1</title>
-<date>2020-06-22</date>
+<date>2020-06-23</date>
 <author>
 <personname>
 <firstname>Simon Heumos, Erik Garrison</firstname>
@@ -1178,8 +1178,17 @@ from the width in pixels of the output image.</simpara>
 <varlistentry>
 <term><emphasis role="strong">-g, --no-gap-links</emphasis></term>
 <listitem>
-<simpara>Links connecting a path from left to right may not be relevant to understand a path&#8217;s traversal through the bins. They
-can be left out from the image in the binned mode.</simpara>
+<simpara>We divide links into 2 classes:</simpara>
+<orderedlist numeration="arabic">
+<listitem>
+<simpara>Class: The links which help to follow complex variations. They need to be drawn, else one could not follow
+the sequence of a path.</simpara>
+</listitem>
+<listitem>
+<simpara>Class: The links helping to follow simple variations. Such links solely connecting a path from left to right may not
+be relevant to understand a path&#8217;s traversal through the bins. Therefore, they are not drawn in the binned mode.</simpara>
+</listitem>
+</orderedlist>
 </listitem>
 </varlistentry>
 </variablelist>

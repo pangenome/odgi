@@ -2,12 +2,12 @@
 .\"     Title: odgi viz
 .\"    Author: Erik Garrison
 .\" Generator: Asciidoctor 2.0.10
-.\"      Date: 2020-06-22
+.\"      Date: 2020-06-23
 .\"    Manual: odgi viz
 .\"    Source: odgi v0.4.1
 .\"  Language: English
 .\"
-.TH "ODGI_VIZ" "1" "2020-06-22" "odgi v0.4.1" "odgi viz"
+.TH "ODGI_VIZ" "1" "2020-06-23" "odgi v0.4.1" "odgi viz"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -110,8 +110,31 @@ from the width in pixels of the output image.
 .sp
 \fB\-g, \-\-no\-gap\-links\fP
 .RS 4
-Links connecting a path from left to right may not be relevant to understand a path\(cqs traversal through the bins. They
-can be left out from the image in the binned mode.
+We divide links into 2 classes:
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.  sp -1
+.  IP " 1." 4.2
+.\}
+Class: The links which help to follow complex variations. They need to be drawn, else one could not follow
+the sequence of a path.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.  sp -1
+.  IP " 2." 4.2
+.\}
+Class: The links helping to follow simple variations. Such links solely connecting a path from left to right may not
+be relevant to understand a path\(cqs traversal through the bins. Therefore, they are not drawn in the binned mode.
+.RE
 .RE
 .SS "Threading"
 .sp

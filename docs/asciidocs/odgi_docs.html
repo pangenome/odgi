@@ -1739,8 +1739,19 @@ from the width in pixels of the output image.</p>
 </dd>
 <dt class="hdlist1"><strong>-g, --no-gap-links</strong></dt>
 <dd>
-<p>Links connecting a path from left to right may not be relevant to understand a path&#8217;s traversal through the bins. They
-can be left out from the image in the binned mode.</p>
+<p>We divide links into 2 classes:</p>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Class: The links which help to follow complex variations. They need to be drawn, else one could not follow
+the sequence of a path.</p>
+</li>
+<li>
+<p>Class: The links helping to follow simple variations. Such links solely connecting a path from left to right may not
+be relevant to understand a path&#8217;s traversal through the bins. Therefore, they are not drawn in the binned mode.</p>
+</li>
+</ol>
+</div>
 </dd>
 </dl>
 </div>
@@ -3540,7 +3551,7 @@ be selected. odgi test(1) depends on <a href="https://github.com/catchorg/Catch2
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-06-22 14:30:41 +0200
+Last updated 2020-06-23 14:55:57 +0200
 </div>
 </div>
 </body>
