@@ -7,4 +7,3 @@ lib/
 test/
 .gdb_history
 include/
-include/odgi_git_version.hpp
