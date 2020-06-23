@@ -238,7 +238,7 @@ namespace odgi {
             std::cerr << "Edge displayed" << std::endl;
             std::cerr << a << " --> " << b << std::endl;
 #endif
-            // In binned mode, the Links have to be tall to be visible; in standard mode, _bin_width is 1, so nothing change here
+            // In binned mode, the Links have to be tall to be visible; in standard mode, _bin_width is 1, so nothing changes here
             uint64_t dist = (b - a)*_bin_width;
 
             uint64_t i = 0;
@@ -380,6 +380,7 @@ namespace odgi {
 
         std::unordered_set<pair<uint64_t, uint64_t>> edges_drawn;
         uint64_t gap_links_removed = 0;
+        uint64_t total_links = 0;
         graph.for_each_path_handle([&](const path_handle_t &path) {
             // use a sha256 to get a few bytes that we'll use for a color
             std::string path_name = graph.get_path_name(path);
@@ -478,6 +479,7 @@ namespace odgi {
 
                 if (args::get(drop_gap_links)) {
                     std::sort(bin_ids.begin(), bin_ids.end());
+                    total_links += links.size();
 
                     uint64_t fill_pos = 0;
 
@@ -542,7 +544,7 @@ namespace odgi {
                 uint64_t min_x = std::numeric_limits<uint64_t>::max();
                 uint64_t max_x = std::numeric_limits<uint64_t>::min(); // 0
 
-                // In binned mode, the min/max_x values changes based on the bin width; in standard mode, _bin_width is 1, so nothing change here
+                // In binned mode, the min/max_x values changes based on the bin width; in standard mode, _bin_width is 1, so nothing changes here
                 graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
                     handle_t h = graph.get_handle_of_step(occ);
                     uint64_t p = position_map[number_bool_packing::unpack_number(h)];
@@ -559,7 +561,7 @@ namespace odgi {
         });
 
         if (args::get(drop_gap_links)) {
-            std::cerr << "Gap links removed: " << gap_links_removed << std::endl;
+            std::cerr << "Gap links removed: " << gap_links_removed << " of " << total_links << " total links" << std::endl;
         }
 
         // trim vertical space to fit
