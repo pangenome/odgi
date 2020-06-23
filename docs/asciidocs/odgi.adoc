@@ -44,6 +44,8 @@ odgi - dynamic succinct variation graph tool
 
 *odgi* <<odgi_chop.adoc#_odgi_chop1, chop>> -i graph.og -o graph.choped.og -c 1000
 
+*odgi* <<odgi_groom.adoc#_odgi_groom1, groom>> -i graph.og -o graph.groomed.og
+
 *odgi* <<odgi_layout.adoc#_odgi_layout1, layout>> -i graph.og -o graph.svg -R 10 -m 100
 
 *odgi* <<odgi_break.adoc#_odgi_break1, break>> -i graph.og -o graph.broken.og -s 100 -d

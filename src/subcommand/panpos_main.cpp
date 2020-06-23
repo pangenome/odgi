@@ -66,7 +66,7 @@ namespace odgi {
         }
 
         if (!path_index.has_position(p_name, nucleotide_pos)) {
-            std::cerr << "The given path " << p_name << " with nucleotide position " << nuc_pos << " is not in the index." << std::endl;
+            std::cerr << "The given path " << p_name << " with nucleotide position " << args::get(nuc_pos) << " is not in the index." << std::endl;
             exit(1);
         }
 

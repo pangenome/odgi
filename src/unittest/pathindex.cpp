@@ -65,6 +65,8 @@ namespace odgi {
             }
 
             XP path_index;
+            /// The program will exit(1) here.
+            // graph.destroy_handle(n2); // this leads to a 'exit(1)' as we don't create an index of an optimized graph anymore
             path_index.from_handle_graph(graph);
 
             SECTION("The index mirrors the actual graph") {
@@ -97,6 +99,22 @@ namespace odgi {
                 REQUIRE(path_index.has_position("5-m", 0));
                 REQUIRE(path_index.has_position("5-m", 12));
                 REQUIRE(!path_index.has_position("5-m", 44));
+            }
+
+            step_handle_t step_five_0 = path_index.get_step_at_position(path_index.get_path_handle("5"), 0);
+            step_handle_t step_five_1 = path_index.get_step_at_position(path_index.get_path_handle("5"), 1);
+            step_handle_t step_five_5 = path_index.get_step_at_position(path_index.get_path_handle("5"), 5);
+            step_handle_t step_five_12 = path_index.get_step_at_position(path_index.get_path_handle("5"), 12);
+            /// The program will exit(1) here.
+            // step_handle_t step_five_14 = path_index.get_step_at_position(path_index.get_path_handle("5"), 14);
+
+            SECTION("Retrieving positions from steps from constructed index") {
+                REQUIRE(path_index.get_position_of_step(step_five_0) == 0);
+                REQUIRE(path_index.get_position_of_step(step_five_1) == 0);
+                REQUIRE(path_index.get_position_of_step(step_five_5) == 4);
+                REQUIRE(path_index.get_position_of_step(step_five_12) == 6);
+                /// The program will exit(1) here.
+                // REQUIRE(path_index.get_position_of_step(step_five_14) == 14);
             }
 
             SECTION("Retrieving pangenome position from constructed index") {

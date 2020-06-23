@@ -78,6 +78,9 @@ namespace xp {
         /// Alias for serialize_and_measure().
         void serialize_members(std::ostream &out) const;
 
+        /// Clean the paths of the index so a new one can be generated.
+        void clean();
+
         /// Is this path in the index?
         bool has_path(const std::string& path_name) const;
 
@@ -99,16 +102,17 @@ namespace xp {
         handlegraph::step_handle_t
         get_step_at_position(const handlegraph::path_handle_t &path, const size_t &position) const;
 
+        /// Get the path start position of the given step
+        size_t get_position_of_step(const handlegraph::step_handle_t& step_handle) const;
+
         /// Look up the name of a path from a handle to it
         std::string get_path_name(const handlegraph::path_handle_t &path_handle) const;
 
         /// Look up the pangenome position by given path name and nucleotide position
-        /// Returns 0 if the given path name is not in the index.
-        /// Returns 0 if the given position is not in the given path.
+        /// 0-base positioning!
+        /// Will exit with (1) if the given path name is not in the index.
+        /// Will exit with (1) given position is not in the given path.
         size_t get_pangenome_pos(const std::string &path_name, const size_t &nuc_pos) const;
-
-        /// Look up the bin id by given path name, nucleotide position and bin size
-        size_t get_bin_id(const std::string &path_name, const size_t &nuc_pos, const size_t &bin_size) const;
 
         /// Get the path of the given path name
         const XPPath& get_path(const std::string& name) const;

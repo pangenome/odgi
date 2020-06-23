@@ -229,6 +229,16 @@ ExternalProject_Add(httplib
 ExternalProject_Get_property(httplib SOURCE_DIR)
 set(httplib_INCLUDE "${SOURCE_DIR}")
 
+# cpp_random_distributions for Zipfian distribution
+ExternalProject_Add(random_distributions
+        SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/cpp_random_distributions"
+        UPDATE_COMMAND ""
+        INSTALL_COMMAND ""
+        BUILD_COMMAND ""
+        CONFIGURE_COMMAND "")
+ExternalProject_Get_property(random_distributions SOURCE_DIR)
+set(random_distributions_INCLUDE "${SOURCE_DIR}")
+
 # pybind11
 #ExternalProject_Add(pybind11
 #    GIT_REPOSITORY https://github.com/pybind/pybind11.git 
@@ -320,6 +330,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/simplify_siblings.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/unchop.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/perfect_neighbors.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/path_sgd.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/remove_isolated.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/expand_context.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/groom.cpp)
@@ -341,7 +352,8 @@ set(odgi_DEPS
     sgd2
     mondriaan
     libbf
-    httplib)
+    httplib
+    random_distributions)
 add_dependencies(odgi_objs ${odgi_DEPS})
 
 set(odgi_INCLUDES
@@ -365,7 +377,8 @@ set(odgi_INCLUDES
   "${sgd2_INCLUDE}"
   "${mondriaan_INCLUDE}"
   "${libbf_INCLUDE}"
-  "${httplib_INCLUDE}")
+  "${httplib_INCLUDE}"
+  "${random_distributions_INCLUDE}")
 
 set(odgi_LIBS
   "${sdsl-lite_LIB}/libsdsl.a"
@@ -440,7 +453,9 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/algorithms/linear_sgd.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/break_cycles.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/xp.hpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/cut_tips.hpp)
+  ${CMAKE_SOURCE_DIR}/src/algorithms/cut_tips.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/path_sgd.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/sgd_term.hpp)
 
 target_include_directories(odgi_objs PUBLIC ${odgi_INCLUDES})
 set_target_properties(odgi_objs PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
