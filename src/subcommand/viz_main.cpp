@@ -204,6 +204,8 @@ namespace odgi {
             std::cerr << "Binned mode" << std::endl;
             std::cerr << "bin width: " << _bin_width << std::endl;
             std::cerr << "image width: " << width << std::endl;
+        }else{
+            _bin_width = 1;
         }
 
         if (width > 50000){
@@ -236,7 +238,9 @@ namespace odgi {
             std::cerr << "Edge displayed" << std::endl;
             std::cerr << a << " --> " << b << std::endl;
 #endif
-            uint64_t dist = b - a;
+            // In binned mode, the Links have to be tall to be visible; in standard mode, _bin_width is 1, so nothing change here
+            uint64_t dist = (b - a)*_bin_width;
+
             uint64_t i = 0;
 
             for (; i < dist; i += 1 / scale_y) {
@@ -256,6 +260,10 @@ namespace odgi {
             uint64_t _b = position_map[number_bool_packing::unpack_number(o) + number_bool_packing::unpack_bit(o)];
             uint64_t a = std::min(_a, _b);
             uint64_t b = std::max(_a, _b);
+
+#ifdef debug_odgi_viz
+            std::cerr << graph.get_id(h) << " (" << number_bool_packing::unpack_bit(h) << ") --> " << b << " (" << number_bool_packing::unpack_bit(h) << ") " << std::endl;
+#endif
 
             add_edge_from_positions(a, b);
         };
@@ -534,10 +542,7 @@ namespace odgi {
                 uint64_t min_x = std::numeric_limits<uint64_t>::max();
                 uint64_t max_x = std::numeric_limits<uint64_t>::min(); // 0
 
-                // In binned mode, the min/max_x values changes based on the bin width
-                if (!args::get(binned_mode)) {
-                    _bin_width = 1;
-                }
+                // In binned mode, the min/max_x values changes based on the bin width; in standard mode, _bin_width is 1, so nothing change here
                 graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
                     handle_t h = graph.get_handle_of_step(occ);
                     uint64_t p = position_map[number_bool_packing::unpack_number(h)];
