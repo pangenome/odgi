@@ -1,0 +1,144 @@
+'\" t
+.\"     Title: odgi stats
+.\"    Author: Erik Garrison
+.\" Generator: Asciidoctor 2.0.10
+.\"      Date: 2020-06-23
+.\"    Manual: odgi stats
+.\"    Source: odgi v0.4.1
+.\"  Language: English
+.\"
+.TH "ODGI_STATS" "1" "2020-06-23" "odgi v0.4.1" "odgi stats"
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.ss \n[.ss] 0
+.nh
+.ad l
+.de URL
+\fI\\$2\fP <\\$1>\\$3
+..
+.als MTO URL
+.if \n[.g] \{\
+.  mso www.tmac
+.  am URL
+.    ad l
+.  .
+.  am MTO
+.    ad l
+.  .
+.  LINKSTYLE blue R < >
+.\}
+.SH "NAME"
+odgi_stats \- metrics describing variation graphs
+.SH "SYNOPSIS"
+.sp
+\fBodgi stats\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fIOPTION\fP]...
+.SH "DESCRIPTION"
+.sp
+The odgi stats(1) command produces statistics of a variation graph. Among other metrics, it can calculate the #nodes, #edges, #paths and the total nucleotide length of the graph. Various histogram summary options complement the tool. If [\fB\-B, \-\-bed\-multicov\fP=\fIBED\fP] is set, the metrics will be produced for the intervals specified in the BED.
+.SH "OPTIONS"
+.SS "Graph Files IO"
+.sp
+\fB\-i, \-\-idx\fP=\fIFILE\fP
+.RS 4
+File containing the succinct variation graph to create statistics from. The file name usually ends with \fI.og\fP.
+.RE
+.SS "Summary Options"
+.sp
+\fB\-S, \-\-summarize\fP
+.RS 4
+Summarize the graph properties and dimensions. Print to stdout the #nucleotides, #nodes, #edges and #paths of the graph.
+.RE
+.sp
+\fB\-b, \-\-base\-content\fP
+.RS 4
+Describe the base content of the graph. Print to stdout the #A, #C, #G and #T of the graph.
+.RE
+.sp
+\fB\-C, \-\-coverage\fP
+.RS 4
+Provide a histogram of path coverage over bases in the graph. Print three tab\-delimited columns to stdout: \fBtype\fP, \fBcov\fP, \fBN\fP. \fBtype\fP is one of \fIfull\fP or \fIuniq\fP and determines if the histogram corresponds to the full graph or only to a unique paths graph. \fBcov\fP implies the #paths. \fBN\fP implies the #nucleotides.
+.RE
+.sp
+\fB\-V, \-\-set\-coverage\fP
+.RS 4
+Provide a histogram of coverage over unique set of paths. Print two tab\-delimited columns to stdout: \fBcov\fP, \fBsets\fP. \fBcov\fP implies #nucleotides. \fBsets\fP lists the unique set of paths in a comma separated list. Sets with a \fBcov\fP of one and no paths in \fBsets\fP are listed, too.
+.RE
+.sp
+\fB\-M, \-\-multi\-coverage\fP
+.RS 4
+Provide a histogram of coverage over unique multiset, the combination with possible repetition of paths. Print two tab\-delimited columns to stdout: \fBcov\fP, \fBsets\fP. \fBcov\fP implies #nucleotides. \fBsets\fP lists the unique multisets of paths in a comma separated list. Multisets with a \fBcov\fP of one and no paths in \fBsets\fP are listed, too.
+.RE
+.SS "BED Interval"
+.sp
+\fB\-B, \-\-bed\-multicov\fP=\fIBED\fP
+.RS 4
+For each BED entry, provide a table of path coverage over unique multisets of paths in the graph. Each unique multiset of paths overlapping a given BED interval is described in terms of its length relative to the total interval, the number of path traversals and unique paths involved in these traversals.
+.RE
+.SS "Threading"
+.sp
+\fB\-t, \-\-threads\fP=\fIN\fP
+.RS 4
+Number of threads to use.
+.RE
+.SS "Program Information"
+.sp
+\fB\-h, \-\-help\fP
+.RS 4
+Print a help message for \fBodgi stats\fP.
+.RE
+.SH "EXIT STATUS"
+.sp
+\fB0\fP
+.RS 4
+Success.
+.RE
+.sp
+\fB1\fP
+.RS 4
+Failure (syntax or usage error; parameter error; file processing failure; unexpected error).
+.RE
+.SH "BUGS"
+.sp
+Refer to the \fBodgi\fP issue tracker at \c
+.URL "https://github.com/vgteam/odgi/issues" "" "."
+.SH "AUTHORS"
+.sp
+\fBodgi stats\fP was written by Erik Garrison.
+.SH "RESOURCES"
+.sp
+\fBProject web site:\fP \c
+.URL "https://github.com/vgteam/odgi" "" ""
+.sp
+\fBGit source repository on GitHub:\fP \c
+.URL "https://github.com/vgteam/odgi" "" ""
+.sp
+\fBGitHub organization:\fP \c
+.URL "https://github.com/vgteam" "" ""
+.sp
+\fBDiscussion list / forum:\fP \c
+.URL "https://github.com/vgteam/odgi/issues" "" ""
+.SH "COPYING"
+.sp
+The MIT License (MIT)
+.sp
+Copyright (c) 2019 Erik Garrison
+.sp
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+.sp
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+.sp
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+.SH "AUTHOR"
+.sp
+Erik Garrison

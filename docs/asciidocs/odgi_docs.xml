@@ -1132,9 +1132,9 @@ sequence coverage in bins available.</simpara>
 </listitem>
 </varlistentry>
 <varlistentry>
-<term><emphasis role="strong">-R, --path-per-row</emphasis></term>
+<term><emphasis role="strong">-R, --pack-paths</emphasis></term>
 <listitem>
-<simpara>Display a single path per row rather than packing them.</simpara>
+<simpara>Pack all paths rather than displaying a single path per row.</simpara>
 </listitem>
 </varlistentry>
 <varlistentry>

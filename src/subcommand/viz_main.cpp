@@ -83,7 +83,7 @@ namespace odgi {
         args::ValueFlag<uint64_t> image_height(parser, "N", "height in pixels of output image", {'y', "height"});
         args::ValueFlag<uint64_t> path_height(parser, "N", "path display height", {'P', "path-height"});
         args::ValueFlag<uint64_t> path_x_pad(parser, "N", "path x padding", {'X', "path-x-padding"});
-        args::Flag path_per_row(parser, "bool", "display a single path per row rather than packing them",{'R', "path-per-row"});
+        args::Flag pack_paths(parser, "bool", "pack the graphs rather than displaying a single path per row",{'R', "pack-paths"});
         args::ValueFlag<float> link_path_pieces(parser, "FLOAT","show thin links of this relative width to connect path pieces",{'L', "link-path-pieces"});
         args::ValueFlag<std::string> alignment_prefix(parser, "STRING","apply alignment-related visual motifs to paths with this name prefix",{'A', "alignment-prefix"});
         args::Flag show_strands(parser, "bool","use reds and blues to show forward and reverse alignments (depends on -A)",{'S', "show-strand"});
@@ -334,7 +334,7 @@ namespace odgi {
         //hash_map<uint64_t, uint64_t> path_layout_y;
         std::vector<uint64_t> path_layout_y;
         path_layout_y.resize(path_count);
-        if (args::get(path_per_row)) {
+        if (!args::get(pack_paths)) {
             for (uint64_t i = 0; i < path_count; ++i) {
                 path_layout_y[i] = i;
             }

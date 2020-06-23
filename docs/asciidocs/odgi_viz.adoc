@@ -49,8 +49,8 @@ sequence coverage in bins available.
 *-X, --path-x-padding*=_N_::
   The padding in pixels on the x-axis for a path.
 
-*-R, --path-per-row*::
-  Display a single path per row rather than packing them.
+*-R, --pack-paths*::
+  Pack all paths rather than displaying a single path per row.
 
 *-L, --link-path-pieces*=_FLOAT_::
   Show thin links of this relative width to connect path pieces.
