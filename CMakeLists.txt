@@ -409,7 +409,7 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/io_helper.hpp
   ${CMAKE_SOURCE_DIR}/src/dna.hpp
   ${CMAKE_SOURCE_DIR}/src/bgraph.hpp
-  ${CMAKE_SOURCE_DIR}/src/odgi_git_version.hpp
+  ${CMAKE_SOURCE_DIR}/include/odgi_git_version.hpp
   ${CMAKE_SOURCE_DIR}/src/version.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/random_order.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/split_strands.hpp
