@@ -1374,6 +1374,7 @@ void graph_t::to_gfa(std::ostream& out) const {
     for_each_handle([&out,this](const handle_t& h) {
             out << "S\t" << get_id(h) << "\t"
                 << get_sequence(h) << "\t"
+                << "DP:i:" << get_step_count(h) << "\t"
                 << "RC:i:" << get_step_count(h) * get_length(h) << std::endl;
             {
                 // use this direct iteration to avoid double counting edges
