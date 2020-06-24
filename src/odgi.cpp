@@ -1372,7 +1372,9 @@ void graph_t::to_gfa(std::ostream& out) const {
     out << "H\tVN:Z:1.0" << std::endl;
     // for each node
     for_each_handle([&out,this](const handle_t& h) {
-            out << "S\t" << get_id(h) << "\t" << get_sequence(h) << std::endl;
+            out << "S\t" << get_id(h) << "\t"
+                << get_sequence(h) << "\t"
+                << "RC:i:" << get_step_count(h) * get_length(h) << std::endl;
             {
                 // use this direct iteration to avoid double counting edges
                 // we only consider write the edges relative to their start
@@ -1389,10 +1391,10 @@ void graph_t::to_gfa(std::ostream& out) const {
                     bool to_curr = edge_helper::unpack_to_curr(packed_edge);
                     if (!to_curr) {
                         out << "L\t" << node_id << "\t"
-                            << (on_rev?"-":"+")
-                            << "\t" << other_id << "\t"
-                            << (other_rev?"-":"+")
-                            << "\t0M" << std::endl;
+                            << (on_rev?"-":"+") << "\t"
+                            << other_id << "\t"
+                            << (other_rev?"-":"+") << "\t"
+                            << "0M" << std::endl;
                     }
                 }
             }
