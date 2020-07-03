@@ -4,7 +4,7 @@
 <article xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" version="5.0" xml:lang="en">
 <info>
 <title>Reference Documentation for ODGI v0.4.1</title>
-<date>2020-06-10</date>
+<date>2020-06-23</date>
 <author>
 <personname>
 <firstname>Simon Heumos, Erik Garrison</firstname>
@@ -35,7 +35,6 @@
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_bin1">bin</link> -i graph.og -j -w 100 -s -g</simpara>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_matrix1">matrix</link> -i graph.og -e -d</simpara>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_chop1">chop</link> -i graph.og -o graph.choped.og -c 1000</simpara>
-<simpara><emphasis role="strong">odgi</emphasis> <link xl:href="odgi_groom.xml#_odgi_groom1">groom</link> -i graph.og -o graph.groomed.og</simpara>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_layout1">layout</link> -i graph.og -o graph.svg -R 10 -m 100</simpara>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_break1">break</link> -i graph.og -o graph.broken.og -s 100 -d</simpara>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_pathindex1">pathindex</link> -i graph.og -o graph.xp</simpara>
@@ -1079,9 +1078,10 @@ in a fixed sequence quality FASTQ format. Various parameters can refine the unit
 </section>
 <section xml:id="_description_8">
 <title>DESCRIPTION</title>
-<simpara>The odgi viz(1) command can produce a linear, static visualization of an odgi variation graph. It aggregates the pangenome into bins
-and directly renders a raster image. The binning level depends on the target width of the PNG to emit. Can be used to produce visualizations for gigabase scale pangenomes. For more information
-about the binning process, please refer to <link linkend="_odgi_bin1">odgi bin</link>. If reverse coloring was selected, only
+<simpara>The odgi viz(1) command can produce a linear, static visualization of an odgi variation graph. It can aggregate the pangenome into bins
+and directly renders a raster image. The binning level can be specified in input or it is calculated from the target width of the PNG to emit.
+Can be used to produce visualizations for gigabase scale pangenomes. For more information  about the binning process,
+please refer to <link linkend="_odgi_bin1">odgi bin</link>. If reverse coloring was selected, only
 the bins with a reverse rate of at least 0.5 are colored. Currently, there is no parameter to color according to the
 sequence coverage in bins available.</simpara>
 </section>
@@ -1132,9 +1132,9 @@ sequence coverage in bins available.</simpara>
 </listitem>
 </varlistentry>
 <varlistentry>
-<term><emphasis role="strong">-R, --path-per-row</emphasis></term>
+<term><emphasis role="strong">-R, --pack-paths</emphasis></term>
 <listitem>
-<simpara>Display a single path per row rather than packing them.</simpara>
+<simpara>Pack all paths rather than displaying a single path per row.</simpara>
 </listitem>
 </varlistentry>
 <varlistentry>
@@ -1154,6 +1154,41 @@ sequence coverage in bins available.</simpara>
 <listitem>
 <simpara>Use red and blue coloring to display forward and reverse alignments. This parameter should only be set in combination with
 [<emphasis role="strong">-A, --alignment-prefix</emphasis>=<emphasis>STRING</emphasis>].</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_binned_mode_options">
+<title>Binned Mode Options</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-b, --binned-mode</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>The variation graph is binned before its visualization. Each pixel in the output image will correspond to a bin.
+For more information about the binning process, please refer to <link linkend="_odgi_bin1">odgi bin</link>.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-w, --bin-width</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>The bin width specifies the size of each bin in the binned mode. If it is not specified, the bin width is calculated
+from the width in pixels of the output image.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-g, --no-gap-links</emphasis></term>
+<listitem>
+<simpara>We divide links into 2 classes:</simpara>
+<orderedlist numeration="arabic">
+<listitem>
+<simpara>Class: The links which help to follow complex variations. They need to be drawn, else one could not follow
+the sequence of a path.</simpara>
+</listitem>
+<listitem>
+<simpara>Class: The links helping to follow simple variations. Such links solely connecting a path from left to right may not
+be relevant to understand a path&#8217;s traversal through the bins. Therefore, they are not drawn in the binned mode.</simpara>
+</listitem>
+</orderedlist>
 </listitem>
 </varlistentry>
 </variablelist>

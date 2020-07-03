@@ -2,12 +2,12 @@
 .\"     Title: odgi viz
 .\"    Author: Erik Garrison
 .\" Generator: Asciidoctor 2.0.10
-.\"      Date: 2020-06-10
+.\"      Date: 2020-06-23
 .\"    Manual: odgi viz
 .\"    Source: odgi v0.4.1
 .\"  Language: English
 .\"
-.TH "ODGI_VIZ" "1" "2020-06-10" "odgi v0.4.1" "odgi viz"
+.TH "ODGI_VIZ" "1" "2020-06-23" "odgi v0.4.1" "odgi viz"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -34,9 +34,10 @@ odgi_viz \- variation graph visualizations
 \fBodgi viz\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
 .SH "DESCRIPTION"
 .sp
-The odgi viz(1) command can produce a linear, static visualization of an odgi variation graph. It aggregates the pangenome into bins
-and directly renders a raster image. The binning level depends on the target width of the PNG to emit. Can be used to produce visualizations for gigabase scale pangenomes. For more information
-about the binning process, please refer to odgi bin. If reverse coloring was selected, only
+The odgi viz(1) command can produce a linear, static visualization of an odgi variation graph. It can aggregate the pangenome into bins
+and directly renders a raster image. The binning level can be specified in input or it is calculated from the target width of the PNG to emit.
+Can be used to produce visualizations for gigabase scale pangenomes. For more information  about the binning process,
+please refer to odgi bin. If reverse coloring was selected, only
 the bins with a reverse rate of at least 0.5 are colored. Currently, there is no parameter to color according to the
 sequence coverage in bins available.
 .SH "OPTIONS"
@@ -73,9 +74,9 @@ The height in pixels for a path.
 The padding in pixels on the x\-axis for a path.
 .RE
 .sp
-\fB\-R, \-\-path\-per\-row\fP
+\fB\-R, \-\-pack\-paths\fP
 .RS 4
-Display a single path per row rather than packing them.
+Pack all paths rather than displaying a single path per row.
 .RE
 .sp
 \fB\-L, \-\-link\-path\-pieces\fP=\fIFLOAT\fP
@@ -92,6 +93,48 @@ Apply alignment related visual motifs to paths which have this name prefix.
 .RS 4
 Use red and blue coloring to display forward and reverse alignments. This parameter should only be set in combination with
 [\fB\-A, \-\-alignment\-prefix\fP=\fISTRING\fP].
+.RE
+.SS "Binned Mode Options"
+.sp
+\fB\-b, \-\-binned\-mode\fP=\fIN\fP
+.RS 4
+The variation graph is binned before its visualization. Each pixel in the output image will correspond to a bin.
+For more information about the binning process, please refer to odgi bin.
+.RE
+.sp
+\fB\-w, \-\-bin\-width\fP=\fIN\fP
+.RS 4
+The bin width specifies the size of each bin in the binned mode. If it is not specified, the bin width is calculated
+from the width in pixels of the output image.
+.RE
+.sp
+\fB\-g, \-\-no\-gap\-links\fP
+.RS 4
+We divide links into 2 classes:
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 1.\h'+01'\c
+.\}
+.el \{\
+.  sp -1
+.  IP " 1." 4.2
+.\}
+Class: The links which help to follow complex variations. They need to be drawn, else one could not follow
+the sequence of a path.
+.RE
+.sp
+.RS 4
+.ie n \{\
+\h'-04' 2.\h'+01'\c
+.\}
+.el \{\
+.  sp -1
+.  IP " 2." 4.2
+.\}
+Class: The links helping to follow simple variations. Such links solely connecting a path from left to right may not
+be relevant to understand a path\(cqs traversal through the bins. Therefore, they are not drawn in the binned mode.
+.RE
 .RE
 .SS "Threading"
 .sp

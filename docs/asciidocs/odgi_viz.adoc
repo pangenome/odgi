@@ -18,9 +18,10 @@ odgi_viz - variation graph visualizations
 
 == DESCRIPTION
 
-The odgi viz(1) command can produce a linear, static visualization of an odgi variation graph. It aggregates the pangenome into bins
-and directly renders a raster image. The binning level depends on the target width of the PNG to emit. Can be used to produce visualizations for gigabase scale pangenomes. For more information
-about the binning process, please refer to <<odgi_bin.adoc#_odgi_bin1, odgi bin>>. If reverse coloring was selected, only
+The odgi viz(1) command can produce a linear, static visualization of an odgi variation graph. It can aggregate the pangenome into bins
+and directly renders a raster image. The binning level can be specified in input or it is calculated from the target width of the PNG to emit.
+Can be used to produce visualizations for gigabase scale pangenomes. For more information  about the binning process,
+please refer to <<odgi_bin.adoc#_odgi_bin1, odgi bin>>. If reverse coloring was selected, only
 the bins with a reverse rate of at least 0.5 are colored. Currently, there is no parameter to color according to the
 sequence coverage in bins available.
 
@@ -48,8 +49,8 @@ sequence coverage in bins available.
 *-X, --path-x-padding*=_N_::
   The padding in pixels on the x-axis for a path.
 
-*-R, --path-per-row*::
-  Display a single path per row rather than packing them.
+*-R, --pack-paths*::
+  Pack all paths rather than displaying a single path per row.
 
 *-L, --link-path-pieces*=_FLOAT_::
   Show thin links of this relative width to connect path pieces.
@@ -60,6 +61,23 @@ sequence coverage in bins available.
 *-S, --show-strand*::
   Use red and blue coloring to display forward and reverse alignments. This parameter should only be set in combination with
   [*-A, --alignment-prefix*=_STRING_].
+
+=== Binned Mode Options
+
+*-b, --binned-mode*=_N_::
+  The variation graph is binned before its visualization. Each pixel in the output image will correspond to a bin.
+  For more information about the binning process, please refer to <<odgi_bin.adoc#_odgi_bin1, odgi bin>>.
+
+*-w, --bin-width*=_N_::
+  The bin width specifies the size of each bin in the binned mode. If it is not specified, the bin width is calculated
+  from the width in pixels of the output image.
+
+*-g, --no-gap-links*::
+  We divide links into 2 classes:
+1. Class: The links which help to follow complex variations. They need to be drawn, else one could not follow
+  the sequence of a path.
+2. Class: The links helping to follow simple variations. Such links solely connecting a path from left to right may not
+  be relevant to understand a path's traversal through the bins. Therefore, they are not drawn in the binned mode.
 
 === Threading
 

@@ -1661,9 +1661,10 @@ in a fixed sequence quality FASTQ format. Various parameters can refine the unit
 <div class="sect2">
 <h3 id="_description_8">8.3. DESCRIPTION</h3>
 <div class="paragraph">
-<p>The odgi viz(1) command can produce a linear, static visualization of an odgi variation graph. It aggregates the pangenome into bins
-and directly renders a raster image. The binning level depends on the target width of the PNG to emit. Can be used to produce visualizations for gigabase scale pangenomes. For more information
-about the binning process, please refer to <a href="#_odgi_bin1">odgi bin</a>. If reverse coloring was selected, only
+<p>The odgi viz(1) command can produce a linear, static visualization of an odgi variation graph. It can aggregate the pangenome into bins
+and directly renders a raster image. The binning level can be specified in input or it is calculated from the target width of the PNG to emit.
+Can be used to produce visualizations for gigabase scale pangenomes. For more information  about the binning process,
+please refer to <a href="#_odgi_bin1">odgi bin</a>. If reverse coloring was selected, only
 the bins with a reverse rate of at least 0.5 are colored. Currently, there is no parameter to color according to the
 sequence coverage in bins available.</p>
 </div>
@@ -1705,9 +1706,9 @@ sequence coverage in bins available.</p>
 <dd>
 <p>The padding in pixels on the x-axis for a path.</p>
 </dd>
-<dt class="hdlist1"><strong>-R, --path-per-row</strong></dt>
+<dt class="hdlist1"><strong>-R, --pack-paths</strong></dt>
 <dd>
-<p>Display a single path per row rather than packing them.</p>
+<p>Pack all paths rather than displaying a single path per row.</p>
 </dd>
 <dt class="hdlist1"><strong>-L, --link-path-pieces</strong>=<em>FLOAT</em></dt>
 <dd>
@@ -1726,7 +1727,40 @@ sequence coverage in bins available.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_threading_4">8.4.3. Threading</h4>
+<h4 id="_binned_mode_options">8.4.3. Binned Mode Options</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-b, --binned-mode</strong>=<em>N</em></dt>
+<dd>
+<p>The variation graph is binned before its visualization. Each pixel in the output image will correspond to a bin.
+For more information about the binning process, please refer to <a href="#_odgi_bin1">odgi bin</a>.</p>
+</dd>
+<dt class="hdlist1"><strong>-w, --bin-width</strong>=<em>N</em></dt>
+<dd>
+<p>The bin width specifies the size of each bin in the binned mode. If it is not specified, the bin width is calculated
+from the width in pixels of the output image.</p>
+</dd>
+<dt class="hdlist1"><strong>-g, --no-gap-links</strong></dt>
+<dd>
+<p>We divide links into 2 classes:</p>
+<div class="olist arabic">
+<ol class="arabic">
+<li>
+<p>Class: The links which help to follow complex variations. They need to be drawn, else one could not follow
+the sequence of a path.</p>
+</li>
+<li>
+<p>Class: The links helping to follow simple variations. Such links solely connecting a path from left to right may not
+be relevant to understand a path&#8217;s traversal through the bins. Therefore, they are not drawn in the binned mode.</p>
+</li>
+</ol>
+</div>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_threading_4">8.4.4. Threading</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-t, --threads</strong>=<em>N</em></dt>
@@ -1737,7 +1771,7 @@ sequence coverage in bins available.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_program_information_7">8.4.4. Program Information</h4>
+<h4 id="_program_information_7">8.4.5. Program Information</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-h, --help</strong></dt>
@@ -3520,7 +3554,7 @@ be selected. odgi test(1) depends on <a href="https://github.com/catchorg/Catch2
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2020-06-10 17:28:59 +0200
+Last updated 2020-06-23 15:03:35 +0200
 </div>
 </div>
 </body>
