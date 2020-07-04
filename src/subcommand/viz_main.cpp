@@ -411,12 +411,14 @@ namespace odgi {
             path_g_f /= sum;
             path_b_f /= sum;
 
+            bool _color_by_nt_pos = args::get(color_by_nt_pos);
+
             // Calculate the number or steps, the reverse steps and the length of the path if any of this information
             // is needed depending on the input arguments.
             uint64_t steps = 0;
             uint64_t rev = 0;
             uint64_t path_len = 0;
-            if ((is_aln && args::get(show_strands)) || args::get(color_by_nt_pos)){
+            if ((is_aln && args::get(show_strands)) || _color_by_nt_pos){
                 graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
                     handle_t h = graph.get_handle_of_step(occ);
                     ++steps;
@@ -455,6 +457,8 @@ namespace odgi {
             //          << " " << (int)path_r << " " << (int)path_g << " " << (int)path_b << std::endl;
             uint64_t path_rank = as_integer(path) - 1;
 
+            uint64_t curr_len = 0;
+            float x = 1;
             if (args::get(binned_mode)) {
                 std::vector<std::pair<uint64_t, uint64_t>> links;
                 std::vector<uint64_t> bin_ids;
@@ -473,7 +477,11 @@ namespace odgi {
 #ifdef debug_odgi_viz
                             std::cerr << "curr_bin: " << curr_bin << std::endl;
 #endif
-                            add_path_step(curr_bin - 1, path_y, path_r, path_g, path_b);
+
+                            if (_color_by_nt_pos){
+                                x = 1 - ( (float)(curr_len + k) / (float)(len))*0.8;
+                            }
+                            add_path_step(curr_bin - 1, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
 
                             if (std::abs(curr_bin - last_bin) > 1 || last_bin == 0) {
                                 // bin cross!
@@ -484,6 +492,8 @@ namespace odgi {
 
                         last_bin = curr_bin;
                     }
+
+                    curr_len += hl;
                 });
                 links.push_back(std::make_pair(last_bin, 0));
 
@@ -543,8 +553,13 @@ namespace odgi {
                     // make contects for the bases in the node
                     uint64_t path_y = path_layout_y[path_rank];
                     for (uint64_t i = 0; i < hl; i+=1/scale_x) {
-                        add_path_step(p+i, path_y, path_r, path_g, path_b);
+                        if (_color_by_nt_pos){
+                            x = 1 - ((float)(curr_len + i*scale_x) / (float)(len))*0.8;
+                        }
+                        add_path_step(p+i, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
                     }
+
+                    curr_len += hl;
                 });
             }
 
