@@ -92,7 +92,7 @@ namespace odgi {
         args::Flag drop_gap_links(parser, "drop-gap-links", "don't include gap links in the output", {'g', "no-gap-links"});
         args::Flag color_by_nt_pos(parser, "color-by-nt-pos", "change the color intensity based on nucleotide position", {'c', "color-by-nt-pos"});
         args::Flag use_pangenome_pos(parser, "use-pangenome-pos", "use the position in the pangenome to change the color intensity", {'p', "use-pangenome-length"});
-
+        args::Flag white_to_black(parser, "white-to-black", "change the color intensity from white to black", {'u', "white-to-black"});
         args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
         try {
@@ -133,6 +133,13 @@ namespace odgi {
         if (!args::get(binned_mode) && ((args::get(bin_width) > 0) || (args::get(drop_gap_links)))){
             std::cerr
                     << "[odgi viz] error: Please specify the -b/--binned-mode option to use the -w/--bin_width and -g/--no-gap-links options."
+                    << std::endl;
+            return 1;
+        }
+
+        if (!args::get(color_by_nt_pos) && (args::get(use_pangenome_pos) || args::get(white_to_black))){
+            std::cerr
+                    << "[odgi viz] error: Please specify the -c/--color-by-nt-pos option to use the -p/--use-pangenome-length and -u/--white-to-black options."
                     << std::endl;
             return 1;
         }
@@ -383,6 +390,7 @@ namespace odgi {
 
         bool _color_by_nt_pos = args::get(color_by_nt_pos);
         bool _use_pangenome_pos = args::get(use_pangenome_pos);
+        bool _white_to_black = args::get(white_to_black);
 
         std::unordered_set<pair<uint64_t, uint64_t>> edges_drawn;
         uint64_t gap_links_removed = 0;
@@ -451,11 +459,17 @@ namespace odgi {
                 }
             }
 
-            // brighten the color
-            float f = std::min(1.5, 1.0 / std::max(std::max(path_r_f, path_g_f), path_b_f));
-            path_r = (uint8_t) std::round(255 * std::min(path_r_f * f, (float) 1.0));
-            path_g = (uint8_t) std::round(255 * std::min(path_g_f * f, (float) 1.0));
-            path_b = (uint8_t) std::round(255 * std::min(path_b_f * f, (float) 1.0));
+            if (_white_to_black){
+                path_r = 240;
+                path_g = 240;
+                path_b = 240;
+            }else{
+                // brighten the color
+                float f = std::min(1.5, 1.0 / std::max(std::max(path_r_f, path_g_f), path_b_f));
+                path_r = (uint8_t) std::round(255 * std::min(path_r_f * f, (float) 1.0));
+                path_g = (uint8_t) std::round(255 * std::min(path_g_f * f, (float) 1.0));
+                path_b = (uint8_t) std::round(255 * std::min(path_b_f * f, (float) 1.0));
+            }
             //std::cerr << "path " << as_integer(path) << " " << graph.get_path_name(path) << " " << path_r_f << " " << path_g_f << " " << path_b_f
             //          << " " << (int)path_r << " " << (int)path_g << " " << (int)path_b << std::endl;
             uint64_t path_rank = as_integer(path) - 1;
