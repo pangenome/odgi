@@ -90,6 +90,7 @@ namespace odgi {
         args::Flag binned_mode(parser, "binned-mode", "bin the variation graph before its visualization", {'b', "binned-mode"});
         args::ValueFlag<uint64_t> bin_width(parser, "bp", "width of each bin in basepairs along the graph vector",{'w', "bin-width"});
         args::Flag drop_gap_links(parser, "drop-gap-links", "don't include gap links in the output", {'g', "no-gap-links"});
+        args::Flag color_by_nt_pos(parser, "color-by-nt-pos", "change the color intensity based on nucleotide positionb", {'c', "color-by-nt-pos"});
         args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
         try {
@@ -409,6 +410,22 @@ namespace odgi {
             path_r_f /= sum;
             path_g_f /= sum;
             path_b_f /= sum;
+
+            // Calculate the number or steps, the reverse steps and the length of the path if any of this information
+            // is needed depending on the input arguments.
+            uint64_t steps = 0;
+            uint64_t rev = 0;
+            uint64_t path_len = 0;
+            if ((is_aln && args::get(show_strands)) || args::get(color_by_nt_pos)){
+                graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
+                    handle_t h = graph.get_handle_of_step(occ);
+                    ++steps;
+                    rev += graph.get_is_reverse(h);
+
+                    path_len += graph.get_length(h);
+                });
+            }
+
             if (is_aln) {
                 float x = path_r_f;
                 path_r_f = (x + 0.5 * 9) / 10;
@@ -416,13 +433,6 @@ namespace odgi {
                 path_b_f = (x + 0.5 * 9) / 10;
                 // check the path orientations
                 if (args::get(show_strands)) {
-                    uint64_t steps = 0;
-                    uint64_t rev = 0;
-                    graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
-                        handle_t h = graph.get_handle_of_step(occ);
-                        ++steps;
-                        rev += graph.get_is_reverse(h);
-                    });
                     bool is_rev = (float) rev / (float) steps > 0.5;
                     if (is_rev) {
                         path_r_f = path_r_f * 0.9;
