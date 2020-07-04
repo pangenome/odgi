@@ -90,7 +90,9 @@ namespace odgi {
         args::Flag binned_mode(parser, "binned-mode", "bin the variation graph before its visualization", {'b', "binned-mode"});
         args::ValueFlag<uint64_t> bin_width(parser, "bp", "width of each bin in basepairs along the graph vector",{'w', "bin-width"});
         args::Flag drop_gap_links(parser, "drop-gap-links", "don't include gap links in the output", {'g', "no-gap-links"});
-        args::Flag color_by_nt_pos(parser, "color-by-nt-pos", "change the color intensity based on nucleotide positionb", {'c', "color-by-nt-pos"});
+        args::Flag color_by_nt_pos(parser, "color-by-nt-pos", "change the color intensity based on nucleotide position", {'c', "color-by-nt-pos"});
+        args::Flag use_pangenome_pos(parser, "use-pangenome-pos", "use the position in the pangenome to change the color intensity", {'p', "use-pangenome-length"});
+
         args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
         try {
@@ -379,6 +381,9 @@ namespace odgi {
             }
         }
 
+        bool _color_by_nt_pos = args::get(color_by_nt_pos);
+        bool _use_pangenome_pos = args::get(use_pangenome_pos);
+
         std::unordered_set<pair<uint64_t, uint64_t>> edges_drawn;
         uint64_t gap_links_removed = 0;
         uint64_t total_links = 0;
@@ -410,8 +415,6 @@ namespace odgi {
             path_r_f /= sum;
             path_g_f /= sum;
             path_b_f /= sum;
-
-            bool _color_by_nt_pos = args::get(color_by_nt_pos);
 
             // Calculate the number or steps, the reverse steps and the length of the path if any of this information
             // is needed depending on the input arguments.
@@ -479,7 +482,12 @@ namespace odgi {
 #endif
 
                             if (_color_by_nt_pos){
-                                x = 1 - ( (float)(curr_len + k) / (float)(len))*0.8;
+                                if (_use_pangenome_pos){
+                                    // In binned mode, width is the number of bin
+                                    x = 1 - ( (float)(curr_bin) / (float)(width))*0.8;
+                                }else{
+                                    x = 1 - ( (float)(curr_len + k) / (float)(path_len))*0.8;
+                                }
                             }
                             add_path_step(curr_bin - 1, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
 
@@ -554,7 +562,11 @@ namespace odgi {
                     uint64_t path_y = path_layout_y[path_rank];
                     for (uint64_t i = 0; i < hl; i+=1/scale_x) {
                         if (_color_by_nt_pos){
-                            x = 1 - ((float)(curr_len + i*scale_x) / (float)(len))*0.8;
+                            if (_use_pangenome_pos) {
+                                x = 1 - ((float) (p+i) / (float) (width)) * 0.8;
+                            }else{
+                                x = 1 - ((float)(curr_len + i*scale_x) / (float)(path_len))*0.8;
+                            }
                         }
                         add_path_step(p+i, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
                     }
