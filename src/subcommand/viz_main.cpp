@@ -90,8 +90,8 @@ namespace odgi {
         args::Flag binned_mode(parser, "binned-mode", "bin the variation graph before its visualization", {'b', "binned-mode"});
         args::ValueFlag<uint64_t> bin_width(parser, "bp", "width of each bin in basepairs along the graph vector",{'w', "bin-width"});
         args::Flag drop_gap_links(parser, "drop-gap-links", "don't include gap links in the output", {'g', "no-gap-links"});
-        args::Flag color_by_nt_pos(parser, "color-by-nt-pos", "change the color intensity based on nucleotide position", {'c', "color-by-nt-pos"});
-        args::Flag use_pangenome_pos(parser, "use-pangenome-pos", "use the position in the pangenome to change the color intensity", {'p', "use-pangenome-length"});
+        args::Flag change_darkness(parser, "change-darkness", "change the color darkness based on nucleotide position in the path", {'d', "change-darkness"});
+        args::Flag longest_path(parser, "longest-path", "use the longest path length to change the color darkness", {'l', "longest-path"});
         args::Flag white_to_black(parser, "white-to-black", "change the color intensity from white to black", {'u', "white-to-black"});
         args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
@@ -137,9 +137,9 @@ namespace odgi {
             return 1;
         }
 
-        if (!args::get(color_by_nt_pos) && (args::get(use_pangenome_pos) || args::get(white_to_black))){
+        if (!args::get(change_darkness) && (args::get(longest_path) || args::get(white_to_black))){
             std::cerr
-                    << "[odgi viz] error: Please specify the -c/--color-by-nt-pos option to use the -p/--use-pangenome-length and -u/--white-to-black options."
+                    << "[odgi viz] error: Please specify the -d/--change-darkness option to use the -l/--longest-path and -u/--white-to-black options."
                     << std::endl;
             return 1;
         }
@@ -388,9 +388,21 @@ namespace odgi {
             }
         }
 
-        bool _color_by_nt_pos = args::get(color_by_nt_pos);
-        bool _use_pangenome_pos = args::get(use_pangenome_pos);
+        bool _change_darkness = args::get(change_darkness);
+        bool _longest_path = args::get(longest_path);
         bool _white_to_black = args::get(white_to_black);
+
+        uint64_t longest_path_len = 0;
+        if (change_darkness && _longest_path){
+            graph.for_each_path_handle([&](const path_handle_t &path) {
+                uint64_t curr_len = 0;
+                graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
+                    curr_len += graph.get_length(graph.get_handle_of_step(occ));
+                });
+
+                longest_path_len = std::max(longest_path_len, curr_len);
+            });
+        }
 
         std::unordered_set<pair<uint64_t, uint64_t>> edges_drawn;
         uint64_t gap_links_removed = 0;
@@ -428,15 +440,19 @@ namespace odgi {
             // is needed depending on the input arguments.
             uint64_t steps = 0;
             uint64_t rev = 0;
-            uint64_t path_len = 0;
-            if ((is_aln && args::get(show_strands)) || _color_by_nt_pos){
+            uint64_t path_len_to_use = 0;
+            if ((is_aln && args::get(show_strands)) || (change_darkness && !_longest_path)){
                 graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
                     handle_t h = graph.get_handle_of_step(occ);
                     ++steps;
                     rev += graph.get_is_reverse(h);
 
-                    path_len += graph.get_length(h);
+                    path_len_to_use += graph.get_length(h);
                 });
+            }
+
+            if (change_darkness && _longest_path){
+                path_len_to_use = longest_path_len;
             }
 
             if (is_aln) {
@@ -495,13 +511,8 @@ namespace odgi {
                             std::cerr << "curr_bin: " << curr_bin << std::endl;
 #endif
 
-                            if (_color_by_nt_pos){
-                                if (_use_pangenome_pos){
-                                    // In binned mode, width is the number of bin
-                                    x = 1 - ( (float)(curr_bin) / (float)(width))*0.8;
-                                }else{
-                                    x = 1 - ( (float)(curr_len + k) / (float)(path_len))*0.8;
-                                }
+                            if (change_darkness){
+                                x = 1 - ( (float)(curr_len + k) / (float)(path_len_to_use))*0.9;
                             }
                             add_path_step(curr_bin - 1, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
 
@@ -575,12 +586,8 @@ namespace odgi {
                     // make contects for the bases in the node
                     uint64_t path_y = path_layout_y[path_rank];
                     for (uint64_t i = 0; i < hl; i+=1/scale_x) {
-                        if (_color_by_nt_pos){
-                            if (_use_pangenome_pos) {
-                                x = 1 - ((float) (p+i) / (float) (width)) * 0.8;
-                            }else{
-                                x = 1 - ((float)(curr_len + i*scale_x) / (float)(path_len))*0.8;
-                            }
+                        if (change_darkness){
+                            x = 1 - ((float)(curr_len + i*scale_x) / (float)(path_len_to_use))*0.9;
                         }
                         add_path_step(p+i, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
                     }
