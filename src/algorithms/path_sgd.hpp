@@ -15,6 +15,7 @@
 #include <zipfian_int_distribution.h>
 #include <iomanip>
 #include <string>
+#include "weakly_connected_components.hpp"
 
 namespace odgi {
     namespace algorithms {
