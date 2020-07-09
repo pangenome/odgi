@@ -391,9 +391,80 @@ set(odgi_LIBS
   "-ldl")
 
 set(odgi_HEADERS
-  ${CMAKE_SOURCE_DIR}/src/*.hpp
   ${CMAKE_SOURCE_DIR}/include/odgi_git_version.hpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/*.hpp)
+  ${CMAKE_SOURCE_DIR}/src/hash_map.hpp
+  ${CMAKE_SOURCE_DIR}/src/odgi.hpp
+  ${CMAKE_SOURCE_DIR}/src/node.hpp
+  ${CMAKE_SOURCE_DIR}/src/subgraph.hpp
+  ${CMAKE_SOURCE_DIR}/src/split.hpp
+  ${CMAKE_SOURCE_DIR}/src/varint.hpp
+  ${CMAKE_SOURCE_DIR}/src/dna.hpp
+  ${CMAKE_SOURCE_DIR}/src/phf.hpp
+  ${CMAKE_SOURCE_DIR}/src/threads.hpp
+  ${CMAKE_SOURCE_DIR}/src/bgraph.hpp
+  ${CMAKE_SOURCE_DIR}/src/gfa_to_handle.hpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/subcommand.hpp
+  ${CMAKE_SOURCE_DIR}/src/io_helper.hpp
+  ${CMAKE_SOURCE_DIR}/src/version.hpp
+  ${CMAKE_SOURCE_DIR}/src/btypes.hpp
+  ${CMAKE_SOURCE_DIR}/src/dynamic_types.hpp
+  ${CMAKE_SOURCE_DIR}/src/dynamic_structs.hpp
+  ${CMAKE_SOURCE_DIR}/src/position.hpp
+  ${CMAKE_SOURCE_DIR}/src/unittest/driver.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/linear_index.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/random_order.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/cycle_breaking_sort.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/prune.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/reverse_complement.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_info.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/dfs.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/unchop.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/apply_bulk_modifications.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/dagify.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/weakly_connected_components.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/extract_containing_graph.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/eades_algorithm.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/perfect_neighbors.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/temp_file.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/distance_to_tail.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/simple_components.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/cut_tips.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/break_cycles.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/bfs.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/is_acyclic.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/id_sort.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/linear_sgd.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/matrix_writer.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/find_shortest_paths.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/extend.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/split_strands.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/extract_extending_graph.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/extract_connecting_graph.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/path_sgd.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/expand_context.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/id_ordered_paths.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/normalize.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/merge.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/count_walks.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/remove_high_degree.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/a_star.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/dagify_sort.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/xp.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/remove_isolated.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/sgd_term.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/simplify_siblings.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/sgd_layout.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/coverage.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/sorted_id_ranges.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/strongly_connected_components.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/mondriaan_sort.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/hash.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/groom.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/distance_to_head.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/is_single_stranded.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/shortest_cycle.hpp)
 
 target_include_directories(odgi_objs PUBLIC ${odgi_INCLUDES})
 set_target_properties(odgi_objs PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
