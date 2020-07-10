@@ -31,6 +31,11 @@ uint64_t graph_t::get_node_rank(const nid_t& node_id) const {
 void graph_t::set_id_increment(const nid_t& min_id) {
     _id_increment = min_id;
 }
+
+/// Increment node ids, using the builtin id increment, assumes we're increasing by a positive value
+void graph_t::increment_node_ids(nid_t increment) {
+    _id_increment += increment;
+}
     
 /// Get the orientation of a handle
 bool graph_t::get_is_reverse(const handle_t& handle) const {

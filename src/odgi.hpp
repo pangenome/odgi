@@ -99,10 +99,9 @@ public:
     /// Set a minimum id to increment the id space by, used as a hint during construction.
     /// May have no effect on a backing implementation.
     void set_id_increment(const nid_t& min_id);
-    
-    /// Get a handle from a Visit Protobuf object.
-    /// Must be using'd to avoid shadowing.
-    //handle_t get_handle(const Visit& visit) const;
+
+    /// Increment node ids, using the builtin id increment, assumes we're increasing by a positive value
+    void increment_node_ids(nid_t increment);
     
     ////////////////////////////////////////////////////////////////////////////
     // Additional optional interface with a default implementation
