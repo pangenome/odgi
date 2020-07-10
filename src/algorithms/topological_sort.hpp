@@ -10,7 +10,7 @@
 //#include <set>
 #include <map>
 #include <iostream>
-#include "../hash_map.hpp"
+#include "hash_map.hpp"
 #include <handlegraph/handle_graph.hpp>
 #include <handlegraph/util.hpp>
 #include "dynamic.hpp"

@@ -3,10 +3,9 @@
 
 #include <unordered_map>
 
-#include "../position.hpp"
-#include "../cached_position.hpp"
-#include "../vg.pb.h"
-#include "../hash_map.hpp"
+#include "position.hpp"
+#include "cached_position.hpp"
+#include "hash_map.hpp"
 #include <handlegraph/handle_graph.hpp>
 
 namespace vg {
