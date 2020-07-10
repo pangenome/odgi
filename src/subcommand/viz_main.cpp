@@ -90,6 +90,9 @@ namespace odgi {
         args::Flag binned_mode(parser, "binned-mode", "bin the variation graph before its visualization", {'b', "binned-mode"});
         args::ValueFlag<uint64_t> bin_width(parser, "bp", "width of each bin in basepairs along the graph vector",{'w', "bin-width"});
         args::Flag drop_gap_links(parser, "drop-gap-links", "don't include gap links in the output", {'g', "no-gap-links"});
+        args::Flag change_darkness(parser, "change-darkness", "change the color darkness based on nucleotide position in the path", {'d', "change-darkness"});
+        args::Flag longest_path(parser, "longest-path", "use the longest path length to change the color darkness", {'l', "longest-path"});
+        args::Flag white_to_black(parser, "white-to-black", "change the color darkness from white (for the first nucleotide position) to black (for the last nucleotide position)", {'u', "white-to-black"});
         args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
         try {
@@ -130,6 +133,13 @@ namespace odgi {
         if (!args::get(binned_mode) && ((args::get(bin_width) > 0) || (args::get(drop_gap_links)))){
             std::cerr
                     << "[odgi viz] error: Please specify the -b/--binned-mode option to use the -w/--bin_width and -g/--no-gap-links options."
+                    << std::endl;
+            return 1;
+        }
+
+        if (!args::get(change_darkness) && (args::get(longest_path) || args::get(white_to_black))){
+            std::cerr
+                    << "[odgi viz] error: Please specify the -d/--change-darkness option to use the -l/--longest-path and -u/--white-to-black options."
                     << std::endl;
             return 1;
         }
@@ -378,6 +388,22 @@ namespace odgi {
             }
         }
 
+        bool _change_darkness = args::get(change_darkness);
+        bool _longest_path = args::get(longest_path);
+        bool _white_to_black = args::get(white_to_black);
+
+        uint64_t longest_path_len = 0;
+        if (change_darkness && _longest_path){
+            graph.for_each_path_handle([&](const path_handle_t &path) {
+                uint64_t curr_len = 0;
+                graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
+                    curr_len += graph.get_length(graph.get_handle_of_step(occ));
+                });
+
+                longest_path_len = std::max(longest_path_len, curr_len);
+            });
+        }
+
         std::unordered_set<pair<uint64_t, uint64_t>> edges_drawn;
         uint64_t gap_links_removed = 0;
         uint64_t total_links = 0;
@@ -409,6 +435,26 @@ namespace odgi {
             path_r_f /= sum;
             path_g_f /= sum;
             path_b_f /= sum;
+
+            // Calculate the number or steps, the reverse steps and the length of the path if any of this information
+            // is needed depending on the input arguments.
+            uint64_t steps = 0;
+            uint64_t rev = 0;
+            uint64_t path_len_to_use = 0;
+            if ((is_aln && args::get(show_strands)) || (change_darkness && !_longest_path)){
+                graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
+                    handle_t h = graph.get_handle_of_step(occ);
+                    ++steps;
+                    rev += graph.get_is_reverse(h);
+
+                    path_len_to_use += graph.get_length(h);
+                });
+            }
+
+            if (change_darkness && _longest_path){
+                path_len_to_use = longest_path_len;
+            }
+
             if (is_aln) {
                 float x = path_r_f;
                 path_r_f = (x + 0.5 * 9) / 10;
@@ -416,13 +462,6 @@ namespace odgi {
                 path_b_f = (x + 0.5 * 9) / 10;
                 // check the path orientations
                 if (args::get(show_strands)) {
-                    uint64_t steps = 0;
-                    uint64_t rev = 0;
-                    graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
-                        handle_t h = graph.get_handle_of_step(occ);
-                        ++steps;
-                        rev += graph.get_is_reverse(h);
-                    });
                     bool is_rev = (float) rev / (float) steps > 0.5;
                     if (is_rev) {
                         path_r_f = path_r_f * 0.9;
@@ -436,15 +475,23 @@ namespace odgi {
                 }
             }
 
-            // brighten the color
-            float f = std::min(1.5, 1.0 / std::max(std::max(path_r_f, path_g_f), path_b_f));
-            path_r = (uint8_t) std::round(255 * std::min(path_r_f * f, (float) 1.0));
-            path_g = (uint8_t) std::round(255 * std::min(path_g_f * f, (float) 1.0));
-            path_b = (uint8_t) std::round(255 * std::min(path_b_f * f, (float) 1.0));
+            if (_white_to_black){
+                path_r = 240;
+                path_g = 240;
+                path_b = 240;
+            }else{
+                // brighten the color
+                float f = std::min(1.5, 1.0 / std::max(std::max(path_r_f, path_g_f), path_b_f));
+                path_r = (uint8_t) std::round(255 * std::min(path_r_f * f, (float) 1.0));
+                path_g = (uint8_t) std::round(255 * std::min(path_g_f * f, (float) 1.0));
+                path_b = (uint8_t) std::round(255 * std::min(path_b_f * f, (float) 1.0));
+            }
             //std::cerr << "path " << as_integer(path) << " " << graph.get_path_name(path) << " " << path_r_f << " " << path_g_f << " " << path_b_f
             //          << " " << (int)path_r << " " << (int)path_g << " " << (int)path_b << std::endl;
             uint64_t path_rank = as_integer(path) - 1;
 
+            uint64_t curr_len = 0;
+            float x = 1;
             if (args::get(binned_mode)) {
                 std::vector<std::pair<uint64_t, uint64_t>> links;
                 std::vector<uint64_t> bin_ids;
@@ -463,7 +510,11 @@ namespace odgi {
 #ifdef debug_odgi_viz
                             std::cerr << "curr_bin: " << curr_bin << std::endl;
 #endif
-                            add_path_step(curr_bin - 1, path_y, path_r, path_g, path_b);
+
+                            if (change_darkness){
+                                x = 1 - ( (float)(curr_len + k) / (float)(path_len_to_use))*0.9;
+                            }
+                            add_path_step(curr_bin - 1, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
 
                             if (std::abs(curr_bin - last_bin) > 1 || last_bin == 0) {
                                 // bin cross!
@@ -474,6 +525,8 @@ namespace odgi {
 
                         last_bin = curr_bin;
                     }
+
+                    curr_len += hl;
                 });
                 links.push_back(std::make_pair(last_bin, 0));
 
@@ -533,8 +586,13 @@ namespace odgi {
                     // make contects for the bases in the node
                     uint64_t path_y = path_layout_y[path_rank];
                     for (uint64_t i = 0; i < hl; i+=1/scale_x) {
-                        add_path_step(p+i, path_y, path_r, path_g, path_b);
+                        if (change_darkness){
+                            x = 1 - ((float)(curr_len + i*scale_x) / (float)(path_len_to_use))*0.9;
+                        }
+                        add_path_step(p+i, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
                     }
+
+                    curr_len += hl;
                 });
             }
 
