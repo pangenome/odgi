@@ -701,37 +701,28 @@ namespace odgi {
 
             // refine order by weakly connected components
             std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components = algorithms::weakly_connected_components(&graph);
-            std::vector<std::vector<handle_t>> weak_components_order;
-            weak_components_order.reserve(weak_components.size());
             // this might be RAM intensive, but we make sure that the actual look up of a handle is reasonably fast
             ska::flat_hash_map<handlegraph::nid_t, uint64_t> weak_components_map;
             weak_components_map.reserve(graph.get_node_count());
             // reserve the space we need
             for (int i = 0; i < weak_components.size(); i++) {
                 ska::flat_hash_set<handlegraph::nid_t> weak_component = weak_components[i];
-                weak_components_order.push_back(std::vector<handle_t>());
-                weak_components_order[i].reserve(weak_component.size());
-                // translate from node identifier to component identifier
+                uint64_t component_indices = 0;
+                // store for each node identifier to component start index
                 for (auto node_id : weak_component) {
-                    weak_components_map.emplace(node_id, i);
+                    weak_components_map.emplace(node_id, component_indices);
                 }
+                component_indices *= weak_component.size();
+                // TODO write start pangenome node indices of each weakly connected component into a tab-separated file
             }
+            std::vector<handle_t> order;
+            order.reserve(graph.get_node_count());
             for (int j = 0; j < layout_handles.size(); j++) {
                 std::pair<double, handle_t> layout_handle = layout_handles[j];
                 handle_t handle = layout_handle.second;
                 handlegraph::nid_t handle_nid_t = number_bool_packing::unpack_number(handle) + 1;
-                uint64_t component_id = weak_components_map.at(handle_nid_t);
-                weak_components_order[component_id].push_back(handle);;
-            }
-            // order components from largest to smallest
-            std::sort(weak_components_order.begin(), weak_components_order.end(),
-                    [](const std::vector<handle_t> &a, const std::vector<handle_t> &b)
-                    {return a.size() > b.size(); });
-            std::vector<handle_t> order;
-            order.reserve(graph.get_node_count());
-            // concatenate the ordered weak components into the final order
-            for (auto weak_component_order : weak_components_order) {
-                order.insert(order.end(), weak_component_order.begin(), weak_component_order.end());
+                uint64_t component_index = weak_components_map.at(handle_nid_t);
+                order.insert(order.begin() + component_index + j, handle);
             }
             return order;
         }
