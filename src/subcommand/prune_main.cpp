@@ -111,11 +111,17 @@ int main_prune(int argc, char** argv) {
         if (args::get(best_edges)) {
             edges_to_drop_best = algorithms::keep_mutual_best_edges(graph, args::get(best_edges));
         }
+        // TODO this needs fixing
+        // we should split up the paths rather than drop them
         // remove the paths, because it's likely we have damaged some
         // and at present, we have no mechanism to reconstruct them
         auto do_destroy =
             [&](void) {
-                graph.clear_paths();
+                if (args::get(min_coverage) == 1 && args::get(max_coverage) == 0) {
+                    // we could not have damaged any paths
+                } else {
+                    graph.clear_paths();
+                }
                 //std::cerr << "got " << to_drop.size() << " handles to drop" << std::endl;
                 for (auto& edge : edges_to_drop_coverage) {
                     graph.destroy_edge(edge);
