@@ -698,12 +698,15 @@ namespace odgi {
                                  || (a.first == b.first
                                      && as_integer(a.second) < as_integer(b.second));
                       });
-
+            std::cerr << "node count: " << graph.get_node_count() << std::endl;
             // refine order by weakly connected components
             std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components = algorithms::weakly_connected_components(&graph);
+            std::cerr << "components count: " << weak_components.size() << std::endl;
             // this might be RAM intensive, but we make sure that the actual look up of a handle is reasonably fast
             ska::flat_hash_map<handlegraph::nid_t, uint64_t> weak_components_map;
             weak_components_map.reserve(graph.get_node_count());
+            ska::flat_hash_map<uint64_t, uint64_t> monitor_components_indices;
+            monitor_components_indices.reserve(weak_components.size());
             // reserve the space we need
             for (int i = 0; i < weak_components.size(); i++) {
                 ska::flat_hash_set<handlegraph::nid_t> weak_component = weak_components[i];
@@ -711,9 +714,9 @@ namespace odgi {
                 // store for each node identifier to component start index
                 for (auto node_id : weak_component) {
                     weak_components_map.emplace(node_id, component_indices);
+                    monitor_components_indices.emplace(component_indices, 0);
                 }
                 component_indices *= weak_component.size();
-                // TODO write start pangenome node indices of each weakly connected component into a tab-separated file
             }
             std::vector<handle_t> order;
             order.reserve(graph.get_node_count());
@@ -722,8 +725,12 @@ namespace odgi {
                 handle_t handle = layout_handle.second;
                 handlegraph::nid_t handle_nid_t = number_bool_packing::unpack_number(handle) + 1;
                 uint64_t component_index = weak_components_map.at(handle_nid_t);
-                order.insert(order.begin() + component_index + j, handle);
+                uint64_t component_offset = monitor_components_indices.at(component_index);
+                order.insert(order.begin() + component_index + component_offset, handle);
+                monitor_components_indices.emplace(component_index, component_offset + 1);
+                std::cerr << "nid_t: " << handle_nid_t << " index in order: " << component_index + component_offset << std::endl;
             }
+            std::cerr << "order.size(): " << order.size() << std::endl;
             return order;
         }
 
