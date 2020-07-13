@@ -9,7 +9,7 @@
 
 #include <handlegraph/handle_graph.hpp>
 #include <handlegraph/deletable_handle_graph.hpp>
-#include "../utility.hpp"
+#include "utility.hpp"
 
 namespace vg {
 namespace algorithms {

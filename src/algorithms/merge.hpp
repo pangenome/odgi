@@ -6,7 +6,7 @@
 
 #include <vector>
 
-#include "../hash_map.hpp"
+#include "hash_map.hpp"
 
 namespace odgi {
 namespace algorithms {

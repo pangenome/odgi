@@ -8,7 +8,7 @@
 
 #include <iostream>
 #include <fstream>
-#include "../hash_map.hpp"
+#include "hash_map.hpp"
 #include <handlegraph/handle_graph.hpp>
 #include <handlegraph/util.hpp>
 #include "matrix_writer.hpp"

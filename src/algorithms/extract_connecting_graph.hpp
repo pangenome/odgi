@@ -9,12 +9,11 @@
 
 #include <unordered_map>
 
-#include "../position.hpp"
-#include "../cached_position.hpp"
+#include "position.hpp"
+#include "cached_position.hpp"
 #include <handlegraph/handle_graph.hpp>
 #include <handlegraph/deletable_handle_graph.hpp>
-#include "../vg.pb.h"
-#include "../hash_map.hpp"
+#include "hash_map.hpp"
 
 #include "find_shortest_paths.hpp"
 

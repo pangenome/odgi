@@ -9,7 +9,7 @@
 
 #include <vector>
 
-#include "../position.hpp"
+#include "position.hpp"
 #include <handlegraph/handle_graph.hpp>
 #include <handlegraph/mutable_handle_graph.hpp>
 

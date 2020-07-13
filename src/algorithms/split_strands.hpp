@@ -8,7 +8,7 @@
 
 #include <handlegraph/handle_graph.hpp>
 #include <handlegraph/mutable_handle_graph.hpp>
-//#include "../utility.hpp"
+//#include "utility.hpp"
 #include "dna.hpp"
 #include "hash_map.hpp"
 #include <utility>
