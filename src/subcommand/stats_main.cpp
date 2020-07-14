@@ -7,6 +7,8 @@
 //#include "io_helper.hpp"
 #include "threads.hpp"
 
+//#define debug_odgi_stats
+
 namespace odgi {
 
 using namespace odgi::subcommand;
@@ -33,6 +35,9 @@ int main_stats(int argc, char** argv) {
     args::Flag path_multicov_count(parser, "multicountcov", "provide a histogram of coverage over counts of paths", {'L', "multi-count-coverage"});
     args::ValueFlag<std::string> path_bedmulticov(parser, "BED", "for each BED entry, provide a table of path coverage over unique multisets of paths in the graph. Each unique multiset of paths overlapping a given BED interval is described in terms of its length relative to the total interval, the number of path traversals, and unique paths involved in these traversals.", {'B', "bed-multicov"});
     args::ValueFlag<std::string> path_delim(parser, "CHAR", "the part of each path name before this delimiter is a group identifier, which when specified will cause stats to be collected in a group-wise rather than path-wise fashion", {'D', "delim"});
+
+    args::Flag root_mean_square_nodes_dist(parser, "root_mean_square_nodes_dist", "calculate the root-mean-square nodes pangenomic-distance", {'n', "root-mean-square-nodes-distance"});
+
     args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
     try {
@@ -121,6 +126,51 @@ int main_stats(int argc, char** argv) {
         for (auto& p : unique_histogram) {
             std::cout << "uniq\t" << p.first << "\t" << p.second << std::endl;
         }
+    }
+
+    if (args::get(root_mean_square_nodes_dist)) {
+        std::vector<uint64_t> position_map(graph.get_node_count() + 1);
+        uint64_t len = 0;
+        nid_t last_node_id = graph.min_node_id();
+        graph.for_each_handle([&](const handle_t &h) {
+            nid_t node_id = graph.get_id(h);
+            if (node_id - last_node_id > 1) {
+                std::cerr << "[odgi stats] error: The graph is not optimized. Please run 'odgi sort' using -O, --optimize" << std::endl;
+                exit(1);
+            }
+            last_node_id = node_id;
+
+            position_map[number_bool_packing::unpack_number(h)] = len;
+            uint64_t hl = graph.get_length(h);
+            len += hl;
+
+#ifdef debug_odgi_stats
+            std::cerr << "SEGMENT ID: " << graph.get_id(h) << " - " << as_integer(h) << " - index_in_position_map (" << number_bool_packing::unpack_number(h) << ") = " << len << std::endl;
+#endif
+        });
+        position_map[position_map.size() - 1] = len;
+
+        // TODO: calculate n before to divide each term by n, avoiding overflow problems for big graphs? size!/(2*(size-2)!)
+        uint64_t n = 0;
+        uint64_t sum = 0;
+        for (uint64_t i = 0; i < position_map.size(); i++) {
+            for (uint64_t j = 0; j < position_map.size(); j++) {
+                if (i < j) {
+                    sum += pow(position_map[j] - position_map[i], 2.0);
+                    n++;
+
+#ifdef debug_odgi_stats
+                    std::cerr << "position_map[" << j << "]: " << position_map[j] << " - position_map[" << i << "]: "
+                              << position_map[i] << std::endl;
+                    std::cerr << "p[j] - p[i]: " << position_map[j] - position_map[i] << std::endl;
+                    std::cerr << "(p[j] - p[i])^2: " << pow(position_map[j] - position_map[i], 2.0) << std::endl;
+                    std::cerr << "sum: " << sum << std::endl;
+#endif
+                }
+            }
+        }
+
+        std::cerr << "mean-root-square nodes pangenomic-distance:\t" << sqrt((float)sum / (float)n) << std::endl;
     }
 
     bool using_delim = !args::get(path_delim).empty();
