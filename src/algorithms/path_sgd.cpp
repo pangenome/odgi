@@ -710,20 +710,16 @@ namespace odgi {
             }
             std::vector<uint64_t> weak_components_map;
             weak_components_map.resize(graph.get_node_count());
-            uint64_t seen_nodes = 0;
-            uint64_t component_index = 0;
             // reserve the space we need
             for (int i = 0; i < weak_components.size(); i++) {
                 auto& weak_component = weak_components[i];
                 // store for each node identifier to component start index
                 for (auto node_id : weak_component) {
-                    weak_components_map[node_id-1] = weak_component_id[component_index];
+                    weak_components_map[node_id-1] = weak_component_id[i];
                 }
-                ++component_index;
-                seen_nodes += weak_component.size();
 #ifdef debug_components
                 std::cerr << "weak_component.size(): " << weak_component.size() << std::endl;
-                std::cerr << "component_index: " << component_index << std::endl;
+                std::cerr << "component_index: " << i << std::endl;
 #endif
             }
             weak_components_map.clear();
