@@ -691,6 +691,23 @@ namespace odgi {
 #ifdef debug_components
             std::cerr << "components count: " << weak_components.size() << std::endl;
 #endif
+            std::vector<std::pair<double, uint64_t>> weak_component_order;
+            for (int i = 0; i < weak_components.size(); i++) {
+                auto& weak_component = weak_components[i];
+                uint64_t id_sum = 0;
+                for (auto node_id : weak_component) {
+                    id_sum += node_id;
+                }
+                double avg_id = id_sum / (double)weak_component.size();
+                weak_component_order.push_back(std::make_pair(avg_id, i));
+            }
+            std::sort(weak_component_order.begin(), weak_component_order.end());
+            std::vector<uint64_t> weak_component_id; // maps rank to "id" based on the orignial sorted order
+            weak_component_id.resize(weak_component_order.size());
+            uint64_t component_id = 0;
+            for (auto& component_order : weak_component_order) {
+                weak_component_id[component_order.second] = component_id++;
+            }
             std::vector<uint64_t> weak_components_map;
             weak_components_map.resize(graph.get_node_count());
             uint64_t seen_nodes = 0;
@@ -700,7 +717,7 @@ namespace odgi {
                 auto& weak_component = weak_components[i];
                 // store for each node identifier to component start index
                 for (auto node_id : weak_component) {
-                    weak_components_map[node_id-1] = component_index;
+                    weak_components_map[node_id-1] = weak_component_id[component_index];
                 }
                 ++component_index;
                 seen_nodes += weak_component.size();
@@ -710,7 +727,6 @@ namespace odgi {
 #endif
             }
             weak_components_map.clear();
-
             std::vector<handle_layout_t> handle_layout;
             uint64_t i = 0;
             graph.for_each_handle(
