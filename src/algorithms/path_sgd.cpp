@@ -683,21 +683,6 @@ namespace odgi {
                                          nthreads,
                                          progress);
             }
-            std::vector<std::pair<double, handle_t>> layout_handles;
-            uint64_t i = 0;
-            graph.for_each_handle([&i, &layout, &layout_handles](const handle_t &handle) {
-                layout_handles.push_back(
-                        std::make_pair(
-                                layout[i++],
-                                handle));
-            });
-            std::sort(layout_handles.begin(), layout_handles.end(),
-                      [&](const std::pair<double, handle_t> &a,
-                          const std::pair<double, handle_t> &b) {
-                          return a.first < b.first
-                                 || (a.first == b.first
-                                     && as_integer(a.second) < as_integer(b.second));
-                      });
 #ifdef debug_components
             std::cerr << "node count: " << graph.get_node_count() << std::endl;
 #endif
@@ -706,42 +691,51 @@ namespace odgi {
 #ifdef debug_components
             std::cerr << "components count: " << weak_components.size() << std::endl;
 #endif
-            // this might be RAM intensive, but we make sure that the actual look up of a handle is reasonably fast
-            ska::flat_hash_map<handlegraph::nid_t, uint64_t> weak_components_map;
-            weak_components_map.reserve(graph.get_node_count());
-            ska::flat_hash_map<uint64_t, uint64_t> monitor_components_indices;
-            monitor_components_indices.reserve(weak_components.size());
-            uint64_t component_indices = 0;
+            std::vector<uint64_t> weak_components_map;
+            weak_components_map.resize(graph.get_node_count());
+            uint64_t seen_nodes = 0;
+            uint64_t component_index = 0;
             // reserve the space we need
             for (int i = 0; i < weak_components.size(); i++) {
-                ska::flat_hash_set<handlegraph::nid_t> weak_component = weak_components[i];
+                auto& weak_component = weak_components[i];
                 // store for each node identifier to component start index
                 for (auto node_id : weak_component) {
-                    weak_components_map.emplace(node_id, component_indices);
-                    monitor_components_indices.emplace(component_indices, 0);
+                    weak_components_map[node_id-1] = component_index;
                 }
-                component_indices += weak_component.size();
+                ++component_index;
+                seen_nodes += weak_component.size();
 #ifdef debug_components
                 std::cerr << "weak_component.size(): " << weak_component.size() << std::endl;
-                std::cerr << "component_indices: " << component_indices << std::endl;
+                std::cerr << "component_index: " << component_index << std::endl;
 #endif
             }
+            weak_components_map.clear();
+
+            std::vector<handle_layout_t> handle_layout;
+            uint64_t i = 0;
+            graph.for_each_handle(
+                [&i, &layout, &weak_components_map, &handle_layout](const handle_t &handle) {
+                    handle_layout.push_back(
+                        {
+                            weak_components_map[number_bool_packing::unpack_number(handle)],
+                            layout[i++],
+                            handle
+                        });
+                });
+            // sort the graph layout by component, then pos, then handle rank
+            std::sort(handle_layout.begin(), handle_layout.end(),
+                      [&](const handle_layout_t& a,
+                          const handle_layout_t& b) {
+                          return a.weak_component < b.weak_component
+                                   || (a.weak_component == b.weak_component
+                                       && a.pos < b.pos
+                                       || (a.pos == b.pos
+                                           && as_integer(a.handle) < as_integer(b.handle)));
+                      });
             std::vector<handle_t> order;
             order.reserve(graph.get_node_count());
-            for (int j = 0; j < layout_handles.size(); j++) {
-                std::pair<double, handle_t> layout_handle = layout_handles[j];
-                handle_t handle = layout_handle.second;
-                handlegraph::nid_t handle_nid_t = number_bool_packing::unpack_number(handle) + 1;
-                uint64_t component_index = weak_components_map.at(handle_nid_t);
-                uint64_t component_offset = monitor_components_indices.at(component_index);
-                order[component_index + component_offset] = handle;
-                uint64_t new_component_offset = component_offset + 1;
-                monitor_components_indices.at(component_index) = new_component_offset;
-#ifdef debug_components
-                std::cerr << "component_index: " << component_index << std::endl;
-                std::cerr << "new_component_offset: " << new_component_offset << std::endl;
-                std::cerr << "nid_t: " << handle_nid_t << " index in order: " << component_index + component_offset << std::endl;
-#endif
+            for (auto& layout_handle : handle_layout) {
+                order.push_back(layout_handle.handle);
             }
             return order;
         }
