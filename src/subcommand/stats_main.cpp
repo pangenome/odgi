@@ -36,7 +36,8 @@ int main_stats(int argc, char** argv) {
     args::ValueFlag<std::string> path_bedmulticov(parser, "BED", "for each BED entry, provide a table of path coverage over unique multisets of paths in the graph. Each unique multiset of paths overlapping a given BED interval is described in terms of its length relative to the total interval, the number of path traversals, and unique paths involved in these traversals.", {'B', "bed-multicov"});
     args::ValueFlag<std::string> path_delim(parser, "CHAR", "the part of each path name before this delimiter is a group identifier, which when specified will cause stats to be collected in a group-wise rather than path-wise fashion", {'D', "delim"});
 
-    args::Flag root_mean_square_nodes_dist(parser, "root_mean_square_nodes_dist", "calculate the root-mean-square nodes pangenomic-distance", {'n', "root-mean-square-nodes-distance"});
+    args::Flag absolute_mean_nodes_dist(parser, "absolute_mean_nodes_dist", "calculate the absolute-mean nodes distance", {'n', "absolute-mean-nodes-distance"});
+    args::Flag path_statistics(parser, "path_statistics", "display the root-mean-square nodes distance for each path", {'P', "path-statistics"});
 
     args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
@@ -128,7 +129,7 @@ int main_stats(int argc, char** argv) {
         }
     }
 
-    if (args::get(root_mean_square_nodes_dist)) {
+    if (args::get(absolute_mean_nodes_dist)) {
         std::vector<uint64_t> position_map(graph.get_node_count() + 1);
         uint64_t len = 0;
         nid_t last_node_id = graph.min_node_id();
@@ -150,27 +151,61 @@ int main_stats(int argc, char** argv) {
         });
         position_map[position_map.size() - 1] = len;
 
-        // TODO: calculate n before to divide each term by n, avoiding overflow problems for big graphs? size!/(2*(size-2)!)
-        uint64_t n = 0;
-        uint64_t sum = 0;
-        for (uint64_t i = 0; i < position_map.size(); i++) {
-            for (uint64_t j = 0; j < position_map.size(); j++) {
-                if (i < j) {
-                    sum += pow(position_map[j] - position_map[i], 2.0);
-                    n++;
+        uint64_t squared_sum_node_space = 0;
+        uint64_t squared_sum_nt_space = 0;
+        uint64_t num_pairs = 0;
+
+        std::cerr << "mean-root-square nodes distance\npath\tvalue_in_node_space\tvalue_in_nucleotide_space\tnum_pairs" << std::endl;
+
+        graph.for_each_path_handle([&](const path_handle_t &path) {
+#ifdef debug_odgi_stats
+            std::cerr << "path_name: " << graph.get_path_name(path) << std::endl;
+#endif
+            std::set<uint64_t> tmp;
+            uint64_t squared_sum_in_path_node_space = 0;
+            uint64_t squared_sum_in_path_nt_space = 0;
+            uint64_t num_pairs_in_path = 0;
+
+            graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
+                tmp.insert(number_bool_packing::unpack_number(graph.get_handle_of_step(occ)));
+            });
+
+            if (tmp.size() > 1){
+                std::vector<uint64_t> v(tmp.begin(), tmp.end());
+
+                for (uint64_t i = 0; i < v.size(); i++) {
+                    for (uint64_t j = 0; j < v.size(); j++) {
+                        if (i < j) {
+                            // As they are calculated (major one minus minor one), the distances are always positive
+                            squared_sum_in_path_node_space += v[j] - v[i];//pow(v[j] - v[i], 2);
+                            squared_sum_in_path_nt_space += position_map[v[j]] - position_map[v[i]];//pow(position_map[v[j]] - position_map[v[i]], 2);
 
 #ifdef debug_odgi_stats
-                    std::cerr << "position_map[" << j << "]: " << position_map[j] << " - position_map[" << i << "]: "
-                              << position_map[i] << std::endl;
-                    std::cerr << "p[j] - p[i]: " << position_map[j] - position_map[i] << std::endl;
-                    std::cerr << "(p[j] - p[i])^2: " << pow(position_map[j] - position_map[i], 2.0) << std::endl;
-                    std::cerr << "sum: " << sum << std::endl;
+                            std::cerr << "position_map[" << v[j] << "]: " << position_map[v[j]] << " - position_map[" << v[i] << "]: "
+                                  << position_map[v[i]] << std::endl;
+                            std::cerr << "p[j] - p[i]: " << position_map[v[j]] - position_map[v[i]] << std::endl;
+                            //std::cerr << "(p[j] - p[i])^2: " << pow(position_map[v[j]] - position_map[v[i]], 2.0) << std::endl;
+                            std::cerr << "sum: " << squared_sum_in_path << std::endl;
 #endif
+                        }
+                    }
                 }
-            }
-        }
 
-        std::cerr << "mean-root-square nodes pangenomic-distance:\t" << sqrt((float)sum / (float)n) << std::endl;
+                num_pairs_in_path = (v.size() * (v.size() - 1)) / 2;
+
+                squared_sum_node_space += squared_sum_in_path_node_space;
+                squared_sum_nt_space += squared_sum_in_path_nt_space;
+                num_pairs += num_pairs_in_path;
+            }else{
+                num_pairs_in_path = 1;
+            }
+
+            if (args::get(path_statistics)) {
+                std::cerr << graph.get_path_name(path) << "\t" << (double)squared_sum_in_path_node_space / (double)num_pairs_in_path << "\t" << (double)squared_sum_in_path_nt_space / (double)num_pairs_in_path << "\t" << num_pairs_in_path << std::endl;
+            }
+        });
+
+        std::cerr << "all_paths\t" << (double)squared_sum_node_space / (double)num_pairs << "\t" << (double)squared_sum_nt_space / (double)num_pairs << "\t" << num_pairs << std::endl;
     }
 
     bool using_delim = !args::get(path_delim).empty();
