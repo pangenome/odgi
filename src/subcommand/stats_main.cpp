@@ -36,8 +36,9 @@ int main_stats(int argc, char** argv) {
     args::ValueFlag<std::string> path_bedmulticov(parser, "BED", "for each BED entry, provide a table of path coverage over unique multisets of paths in the graph. Each unique multiset of paths overlapping a given BED interval is described in terms of its length relative to the total interval, the number of path traversals, and unique paths involved in these traversals.", {'B', "bed-multicov"});
     args::ValueFlag<std::string> path_delim(parser, "CHAR", "the part of each path name before this delimiter is a group identifier, which when specified will cause stats to be collected in a group-wise rather than path-wise fashion", {'D', "delim"});
 
-    args::Flag absolute_mean_nodes_dist(parser, "absolute_mean_nodes_dist", "calculate the absolute-mean nodes distance", {'n', "absolute-mean-nodes-distance"});
-    args::Flag path_statistics(parser, "path_statistics", "display the root-mean-square nodes distance for each path", {'P', "path-statistics"});
+    args::Flag absolute_mean_nodes_dist(parser, "absolute_mean_nodes_dist", "calculate the absolute-mean nodes distance", {'a', "absolute-mean-nodes-distance"});
+    args::Flag sum_of_path_node_distances(parser, "sum_of_path_node_distances", "calculate the sum of path nodes distances", {'s', "sum-path-nodes-distances"});
+    args::Flag path_statistics(parser, "path_statistics", "display the statistics for each path", {'P', "path-statistics"});
 
     args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
@@ -53,6 +54,13 @@ int main_stats(int argc, char** argv) {
     }
     if (argc==1) {
         std::cout << parser;
+        return 1;
+    }
+
+    if ((!args::get(absolute_mean_nodes_dist) && !args::get(sum_of_path_node_distances)) && args::get(path_statistics)){
+        std::cerr
+                << "[odgi stats] error: Please specify the -a/--absolute-mean-nodes-distance and/or the -s/--sum-path-nodes-distances options to use the -P/--path-statistics option."
+                << std::endl;
         return 1;
     }
 
@@ -74,6 +82,7 @@ int main_stats(int argc, char** argv) {
             f.close();
         }
     }
+
     if (args::get(summarize)) {
         uint64_t length_in_bp = 0, node_count = 0, edge_count = 0, path_count = 0;
         graph.for_each_handle([&](const handle_t& h) {
@@ -129,7 +138,7 @@ int main_stats(int argc, char** argv) {
         }
     }
 
-    if (args::get(absolute_mean_nodes_dist)) {
+    if (args::get(absolute_mean_nodes_dist) || args::get(sum_of_path_node_distances)) {
         std::vector<uint64_t> position_map(graph.get_node_count() + 1);
         uint64_t len = 0;
         nid_t last_node_id = graph.min_node_id();
@@ -151,61 +160,132 @@ int main_stats(int argc, char** argv) {
         });
         position_map[position_map.size() - 1] = len;
 
-        uint64_t squared_sum_node_space = 0;
-        uint64_t squared_sum_nt_space = 0;
-        uint64_t num_pairs = 0;
+        if(args::get(absolute_mean_nodes_dist)){
+            uint64_t absolute_sum_node_space = 0;
+            uint64_t absolute_sum_nt_space = 0;
+            uint64_t num_pairs = 0;
 
-        std::cerr << "mean-root-square nodes distance\npath\tvalue_in_node_space\tvalue_in_nucleotide_space\tnum_pairs" << std::endl;
+            std::cerr << "absolute-mean nodes distance\npath\tvalue_in_node_space\tvalue_in_nucleotide_space\tnum_pairs" << std::endl;
 
-        graph.for_each_path_handle([&](const path_handle_t &path) {
+            graph.for_each_path_handle([&](const path_handle_t &path) {
 #ifdef debug_odgi_stats
-            std::cerr << "path_name: " << graph.get_path_name(path) << std::endl;
+                std::cerr << "path_name: " << graph.get_path_name(path) << std::endl;
 #endif
-            std::set<uint64_t> tmp;
-            uint64_t squared_sum_in_path_node_space = 0;
-            uint64_t squared_sum_in_path_nt_space = 0;
-            uint64_t num_pairs_in_path = 0;
+                std::set<uint64_t> tmp;
+                uint64_t absolute_sum_in_path_node_space = 0;
+                uint64_t absolute_sum_in_path_nt_space = 0;
+                uint64_t num_pairs_in_path = 0;
 
-            graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
-                tmp.insert(number_bool_packing::unpack_number(graph.get_handle_of_step(occ)));
-            });
+                graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
+                    tmp.insert(number_bool_packing::unpack_number(graph.get_handle_of_step(occ)));
+                });
 
-            if (tmp.size() > 1){
-                std::vector<uint64_t> v(tmp.begin(), tmp.end());
+                if (tmp.size() > 1){
+                    std::vector<uint64_t> v(tmp.begin(), tmp.end());
 
-                for (uint64_t i = 0; i < v.size(); i++) {
-                    for (uint64_t j = 0; j < v.size(); j++) {
-                        if (i < j) {
-                            // As they are calculated (major one minus minor one), the distances are always positive
-                            squared_sum_in_path_node_space += v[j] - v[i];//pow(v[j] - v[i], 2);
-                            squared_sum_in_path_nt_space += position_map[v[j]] - position_map[v[i]];//pow(position_map[v[j]] - position_map[v[i]], 2);
+                    for (uint64_t i = 0; i < v.size(); i++) {
+                        for (uint64_t j = 0; j < v.size(); j++) {
+                            if (i < j) {
+                                // As they are calculated (major one minus minor one), the distances are always positive
+                                absolute_sum_in_path_node_space += v[j] - v[i];//pow(v[j] - v[i], 2);
+                                absolute_sum_in_path_nt_space += position_map[v[j]] - position_map[v[i]];//pow(position_map[v[j]] - position_map[v[i]], 2);
 
 #ifdef debug_odgi_stats
-                            std::cerr << "position_map[" << v[j] << "]: " << position_map[v[j]] << " - position_map[" << v[i] << "]: "
+                                std::cerr << "position_map[" << v[j] << "]: " << position_map[v[j]] << " - position_map[" << v[i] << "]: "
                                   << position_map[v[i]] << std::endl;
                             std::cerr << "p[j] - p[i]: " << position_map[v[j]] - position_map[v[i]] << std::endl;
                             //std::cerr << "(p[j] - p[i])^2: " << pow(position_map[v[j]] - position_map[v[i]], 2.0) << std::endl;
                             std::cerr << "sum: " << squared_sum_in_path << std::endl;
 #endif
+                            }
                         }
                     }
+
+                    num_pairs_in_path = (v.size() * (v.size() - 1)) / 2;
+
+                    absolute_sum_node_space += absolute_sum_in_path_node_space;
+                    absolute_sum_nt_space += absolute_sum_in_path_nt_space;
+                    num_pairs += num_pairs_in_path;
+                }else{
+                    num_pairs_in_path = 1;
                 }
 
-                num_pairs_in_path = (v.size() * (v.size() - 1)) / 2;
+                if (args::get(path_statistics)) {
+                    std::cerr << graph.get_path_name(path) << "\t" << (double)absolute_sum_in_path_node_space / (double)num_pairs_in_path << "\t" << (double)absolute_sum_in_path_nt_space / (double)num_pairs_in_path << "\t" << num_pairs_in_path << std::endl;
+                }
+            });
 
-                squared_sum_node_space += squared_sum_in_path_node_space;
-                squared_sum_nt_space += squared_sum_in_path_nt_space;
-                num_pairs += num_pairs_in_path;
-            }else{
-                num_pairs_in_path = 1;
-            }
+            std::cerr << "all_paths\t" << (double)absolute_sum_node_space / (double)num_pairs << "\t" << (double)absolute_sum_nt_space / (double)num_pairs << "\t" << num_pairs << std::endl;
+        }
 
-            if (args::get(path_statistics)) {
-                std::cerr << graph.get_path_name(path) << "\t" << (double)squared_sum_in_path_node_space / (double)num_pairs_in_path << "\t" << (double)squared_sum_in_path_nt_space / (double)num_pairs_in_path << "\t" << num_pairs_in_path << std::endl;
-            }
-        });
+        if(args::get(sum_of_path_node_distances)){
+            uint64_t sum_all_path_node_dist_node_space = 0;
+            uint64_t sum_all_path_node_dist_nt_space = 0;
+            uint64_t len_all_path_node_space = 0;
+            uint64_t len_all_path_nt_space = 0;
+            uint64_t num_all_penalties = 0;
 
-        std::cerr << "all_paths\t" << (double)squared_sum_node_space / (double)num_pairs << "\t" << (double)squared_sum_nt_space / (double)num_pairs << "\t" << num_pairs << std::endl;
+            std::cerr << "sum of path node distances\npath\tvalue_in_node_space\tlength_in_nodes\tvalue_in_nucleotide_space\tlength_in_nucleotides\tnum_penalties" << std::endl;
+
+            graph.for_each_path_handle([&](const path_handle_t &path) {
+#ifdef debug_odgi_stats
+                std::cerr << "path_name: " << graph.get_path_name(path) << std::endl;
+#endif
+                uint64_t sum_path_node_dist_node_space = 0;
+                uint64_t sum_path_node_dist_nt_space = 0;
+                uint64_t len_path_node_space = 0;
+                uint64_t len_path_nt_space = 0;
+                uint64_t num_penalties = 0;
+
+                graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
+                    handle_t h = graph.get_handle_of_step(occ);
+
+                    if (graph.has_next_step(occ)){
+                        handle_t i = graph.get_handle_of_step(graph.get_next_step(occ));
+
+                        uint64_t unpacked_h = number_bool_packing::unpack_number(h);
+                        uint64_t unpacked_i = number_bool_packing::unpack_number(i);
+
+                        if (unpacked_i >= unpacked_h){
+                            sum_path_node_dist_node_space += unpacked_i - unpacked_h;
+                            sum_path_node_dist_nt_space += position_map[unpacked_i] - position_map[unpacked_h];
+                        }else{
+                            // When a path goes back in terms of pangenomic order, this is punished
+                            sum_path_node_dist_node_space += 2 * (unpacked_h - unpacked_i);
+                            sum_path_node_dist_nt_space += 2 * (position_map[unpacked_h] - position_map[unpacked_i]);
+                            num_penalties++;
+                        }
+
+                        /*
+                        TODO option to penalize also links +/- and -/+?
+                        std::cerr << "number_bool_packing::unpack_number(h): " << unpacked_h << std::endl;
+                        std::cerr << "number_bool_packing::unpack_number(i): " << unpacked_i << std::endl;
+
+                        bool unpacked_bit_h = number_bool_packing::unpack_bit(h);
+                        bool unpacked_bit_i = number_bool_packing::unpack_bit(i);
+
+                        // 0/1: forward/reverse: +/-
+                        std::cerr << "unpacked_bit_h: " << unpacked_bit_h << std::endl;
+                        std::cerr << "unpacked_bit_i: " << unpacked_bit_i << std::endl;*/
+                    }
+
+                    len_path_node_space++;
+                    len_path_nt_space += graph.get_length(h);
+                });
+
+                if (args::get(path_statistics)) {
+                    std::cerr << graph.get_path_name(path) << "\t" << (double)sum_path_node_dist_node_space / (double)len_path_node_space << "\t" << len_path_node_space << "\t" << (double)sum_path_node_dist_nt_space / (double)len_path_nt_space << "\t" << len_path_nt_space  << "\t" << num_penalties << std::endl;
+                }
+
+                sum_all_path_node_dist_node_space += sum_path_node_dist_node_space;
+                sum_all_path_node_dist_nt_space += sum_path_node_dist_nt_space;
+                len_all_path_node_space += len_path_node_space;
+                len_all_path_nt_space += len_path_nt_space;
+                num_all_penalties += num_penalties;
+            });
+
+            std::cerr << "all_paths\t" << (double)sum_all_path_node_dist_node_space / (double)len_all_path_node_space << "\t" << len_all_path_node_space << "\t" << (double)sum_all_path_node_dist_nt_space / (double)len_all_path_nt_space << "\t" << len_all_path_nt_space << "\t" << num_all_penalties << std::endl;
+        }
     }
 
     bool using_delim = !args::get(path_delim).empty();
