@@ -256,24 +256,29 @@ int main_stats(int argc, char** argv) {
                         uint64_t unpacked_h = number_bool_packing::unpack_number(h);
                         uint64_t unpacked_i = number_bool_packing::unpack_number(i);
 
+                        uint64_t dist_node_space = 0;
+                        uint64_t dist_nt_space = 0;
+                        uint8_t weight = 1;
                         if (unpacked_i >= unpacked_h){
-                            sum_path_node_dist_node_space += unpacked_i - unpacked_h;
-                            sum_path_node_dist_nt_space += position_map[unpacked_i] - position_map[unpacked_h];
+                            dist_node_space = unpacked_i - unpacked_h;
+                            dist_nt_space = position_map[unpacked_i] - position_map[unpacked_h];
                         }else{
+                            dist_node_space = unpacked_h - unpacked_i;
+                            dist_nt_space = position_map[unpacked_h] - position_map[unpacked_i];
+
                             // When a path goes back in terms of pangenomic order, this is punished
-                            sum_path_node_dist_node_space += 3 * (unpacked_h - unpacked_i);
-                            sum_path_node_dist_nt_space += 3 * (position_map[unpacked_h] - position_map[unpacked_i]);
+                            weight = 3;
                             num_penalties++;
                         }
 
-                        if (_penalize_reversed_nodes){
-                            // 0/1: forward/reverse: +/-
-                            if(number_bool_packing::unpack_bit(h)){
-                                sum_path_node_dist_node_space += 2 * (unpacked_h - unpacked_i);
-                                sum_path_node_dist_nt_space += 2 * (position_map[unpacked_h] - position_map[unpacked_i]);
+                        sum_path_node_dist_node_space += weight * dist_node_space;
+                        sum_path_node_dist_nt_space += weight * dist_nt_space;
 
-                                num_penalties_rev_nodes++;
-                            }
+                        if (_penalize_reversed_nodes && number_bool_packing::unpack_bit(h)){
+                            sum_path_node_dist_node_space += 2 * dist_node_space;
+                            sum_path_node_dist_nt_space += 2 * dist_nt_space;
+
+                            num_penalties_rev_nodes++;
                         }
                     }
 
