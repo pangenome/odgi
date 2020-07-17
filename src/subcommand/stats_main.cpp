@@ -7,7 +7,7 @@
 //#include "io_helper.hpp"
 #include "threads.hpp"
 
-//#define debug_odgi_stats
+#define debug_odgi_stats
 
 namespace odgi {
 
@@ -166,12 +166,13 @@ int main_stats(int argc, char** argv) {
             last_node_id = node_id;
 
             position_map[number_bool_packing::unpack_number(h)] = len;
-            uint64_t hl = graph.get_length(h);
-            len += hl;
 
 #ifdef debug_odgi_stats
             std::cerr << "SEGMENT ID: " << graph.get_id(h) << " - " << as_integer(h) << " - index_in_position_map (" << number_bool_packing::unpack_number(h) << ") = " << len << std::endl;
 #endif
+
+            uint64_t hl = graph.get_length(h);
+            len += hl;
         });
         position_map[position_map.size() - 1] = len;
 
@@ -204,6 +205,10 @@ int main_stats(int argc, char** argv) {
                                 // As they are calculated (major one minus minor one), the distances are always positive
                                 sum_in_path_node_space += v[j] - v[i];//pow(v[j] - v[i], 2);
                                 sum_in_path_nt_space += position_map[v[j]] - position_map[v[i]];//pow(position_map[v[j]] - position_map[v[i]], 2);
+
+#ifdef debug_odgi_stats
+                                std::cerr << v[j] << " - " << v[i] << ": " << position_map[v[j]] - position_map[v[i]] << std::endl;
+#endif
                             }
                         }
                     }
@@ -267,17 +272,21 @@ int main_stats(int argc, char** argv) {
                         // The position map is encoding 2x the number of nodes: it includes the start and end of the node in successive
                         // entries. Edges leave from the end (or start) of one node (depending on whether they are on the forward or
                         // reverse strand) and go to the start (or end) of the other side of the link.
-                        uint64_t _info_h = unpacked_h + !number_bool_packing::unpack_bit(h);
-                        uint64_t _info_i = unpacked_i + number_bool_packing::unpack_bit(i);
+                        uint64_t _info_a = unpacked_h + !number_bool_packing::unpack_bit(h);
+                        uint64_t _info_b = unpacked_i + number_bool_packing::unpack_bit(i);
 
                         if (!_ignore_gap_links || next(ordered_unpacked_numbers_in_path.find(unpacked_h)) != ordered_unpacked_numbers_in_path.find(unpacked_i)){
-                            if (_info_h >= _info_i){
-                                sum_node_space += _info_h - _info_i;
-                                sum_nt_space += position_map[_info_h] - position_map[_info_i];
-                            }else{
-                                sum_node_space += _info_i - _info_h;
-                                sum_nt_space += position_map[_info_i] - position_map[_info_h];
+                            if (_info_b < _info_a){
+                                _info_a = _info_b;
+                                _info_b = unpacked_h + !number_bool_packing::unpack_bit(h);
                             }
+
+                            sum_node_space += _info_b - _info_a;
+                            sum_nt_space += position_map[_info_b] - position_map[_info_a];
+
+#ifdef debug_odgi_stats
+                            std::cerr << _info_b << " - " << _info_a << ": " << position_map[_info_b] - position_map[_info_a] << std::endl;
+#endif
 
                             num_links++;
                         }else if (_ignore_gap_links){
@@ -346,30 +355,29 @@ int main_stats(int argc, char** argv) {
                     if (graph.has_next_step(occ)){
                         handle_t i = graph.get_handle_of_step(graph.get_next_step(occ));
 
-                        uint64_t unpacked_h = number_bool_packing::unpack_number(h);
-                        uint64_t unpacked_i = number_bool_packing::unpack_number(i);
+                        uint64_t unpacked_a = number_bool_packing::unpack_number(h);
+                        uint64_t unpacked_b = number_bool_packing::unpack_number(i);
 
-                        uint64_t dist_node_space = 0;
-                        uint64_t dist_nt_space = 0;
                         uint8_t weight = 1;
-                        if (unpacked_i >= unpacked_h){
-                            dist_node_space = unpacked_i - unpacked_h;
-                            dist_nt_space = position_map[unpacked_i] - position_map[unpacked_h];
-                        }else{
-                            dist_node_space = unpacked_h - unpacked_i;
-                            dist_nt_space = position_map[unpacked_h] - position_map[unpacked_i];
+                        if (unpacked_b < unpacked_a){
+                            unpacked_a = unpacked_b;
+                            unpacked_b = number_bool_packing::unpack_number(h);
 
                             // When a path goes back in terms of pangenomic order, this is punished
                             weight = 3;
                             num_penalties++;
                         }
 
-                        sum_path_node_dist_node_space += weight * dist_node_space;
-                        sum_path_node_dist_nt_space += weight * dist_nt_space;
+#ifdef debug_odgi_stats
+                        std::cerr << unpacked_b << " - " << unpacked_a << ": " << position_map[unpacked_b] - position_map[unpacked_a] << " * " << weight << std::endl;
+#endif
+
+                        sum_path_node_dist_node_space += weight * (unpacked_b - unpacked_a);
+                        sum_path_node_dist_nt_space += weight * (position_map[unpacked_b] - position_map[unpacked_a]);
 
                         if (_penalize_reversed_nodes && number_bool_packing::unpack_bit(h)){
-                            sum_path_node_dist_node_space += 2 * dist_node_space;
-                            sum_path_node_dist_nt_space += 2 * dist_nt_space;
+                            sum_path_node_dist_node_space += 2 * (unpacked_b - unpacked_a);
+                            sum_path_node_dist_nt_space += 2 * (position_map[unpacked_b] - position_map[unpacked_a]);
 
                             num_penalties_rev_nodes++;
                         }
