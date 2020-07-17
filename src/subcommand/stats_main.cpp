@@ -7,7 +7,7 @@
 //#include "io_helper.hpp"
 #include "threads.hpp"
 
-#define debug_odgi_stats
+//#define debug_odgi_stats
 
 namespace odgi {
 
@@ -181,7 +181,8 @@ int main_stats(int argc, char** argv) {
             uint64_t sum_nt_space = 0;
             uint64_t num_pairs = 0;
 
-            std::cerr << "mean nodes distance\npath\tvalue_in_node_space\tvalue_in_nucleotide_space\tnum_pairs" << std::endl;
+            std::cout << "#mean_nodes_distance" << std::endl;
+            std::cout << "path\tin_node_space\tin_nucleotide_space\tnum_pairs" << std::endl;
 
             graph.for_each_path_handle([&](const path_handle_t &path) {
 #ifdef debug_odgi_stats
@@ -223,11 +224,11 @@ int main_stats(int argc, char** argv) {
                 }
 
                 if (args::get(path_statistics)) {
-                    std::cerr << graph.get_path_name(path) << "\t" << (double)sum_in_path_node_space / (double)num_pairs_in_path << "\t" << (double)sum_in_path_nt_space / (double)num_pairs_in_path << "\t" << num_pairs_in_path << std::endl;
+                    std::cout << graph.get_path_name(path) << "\t" << (double)sum_in_path_node_space / (double)num_pairs_in_path << "\t" << (double)sum_in_path_nt_space / (double)num_pairs_in_path << "\t" << num_pairs_in_path << std::endl;
                 }
             });
 
-            std::cerr << "all_paths\t" << (double)sum_node_space / (double)num_pairs << "\t" << (double)sum_nt_space / (double)num_pairs << "\t" << num_pairs << std::endl;
+            std::cout << "all_paths\t" << (double)sum_node_space / (double)num_pairs << "\t" << (double)sum_nt_space / (double)num_pairs << "\t" << num_pairs << std::endl;
         }
 
         if (args::get(mean_links_length)){
@@ -238,12 +239,13 @@ int main_stats(int argc, char** argv) {
             uint64_t num_all_links = 0;
             uint64_t num_all_gap_links_ignored = 0;
 
-            std::cerr << "mean links length\npath\tvalue_in_node_space\tvalue_in_nucleotide_space\tnum_links_considered";
+            std::cout << "#mean_links_length" << std::endl;
+            std::cout << "path\tin_node_space\tin_nucleotide_space\tnum_links_considered";
 
             if (_ignore_gap_links){
-                std::cerr << "\tnum_gap_links_ignored" << std::endl;
+                std::cout << "\tnum_gap_links_ignored" << std::endl;
             }else{
-                std::cerr << std::endl;
+                std::cout << std::endl;
             }
 
             graph.for_each_path_handle([&](const path_handle_t &path) {
@@ -296,12 +298,12 @@ int main_stats(int argc, char** argv) {
                 });
 
                 if (args::get(path_statistics)) {
-                    std::cerr << graph.get_path_name(path) << "\t" << (double)sum_node_space / (double)num_links << "\t" << (double)sum_nt_space / (double)num_links << "\t" << num_links;
+                    std::cout << graph.get_path_name(path) << "\t" << (double)sum_node_space / (double)num_links << "\t" << (double)sum_nt_space / (double)num_links << "\t" << num_links;
 
                     if (_ignore_gap_links){
-                        std::cerr << "\t" << num_gap_links_ignored << std::endl;
+                        std::cout << "\t" << num_gap_links_ignored << std::endl;
                     }else{
-                        std::cerr << std::endl;
+                        std::cout << std::endl;
                     }
                 }
 
@@ -311,12 +313,12 @@ int main_stats(int argc, char** argv) {
                 num_all_gap_links_ignored += num_gap_links_ignored;
             });
 
-            std::cerr << "all_paths\t" << (double)sum_all_node_space / (double)num_all_links << "\t" << (double)sum_all_nt_space / (double)num_all_links << "\t" << num_all_links;
+            std::cout << "all_paths\t" << (double)sum_all_node_space / (double)num_all_links << "\t" << (double)sum_all_nt_space / (double)num_all_links << "\t" << num_all_links;
 
             if (_ignore_gap_links){
-                std::cerr << "\t" << num_all_gap_links_ignored << std::endl;
+                std::cout << "\t" << num_all_gap_links_ignored << std::endl;
             }else{
-                std::cerr << std::endl;
+                std::cout << std::endl;
             }
         }
 
@@ -330,12 +332,13 @@ int main_stats(int argc, char** argv) {
             uint64_t num_all_penalties = 0;
             uint64_t num_all_penalties_rev_nodes = 0;
 
-            std::cerr << "sum of path node distances\npath\tvalue_in_node_space\tlength_in_nodes\tvalue_in_nucleotide_space\tlength_in_nucleotides\tnum_penalties";
+            std::cout << "#sum_of_path_node_distances" << std::endl;
+            std::cout << "path\tin_node_space\tnodes\tin_nucleotide_space\tnucleotides\tnum_penalties";
 
             if (_penalize_reversed_nodes){
-                std::cerr << "\tnum_penalties_reversed_nodes" << std::endl;
+                std::cout << "\tnum_penalties_reversed_nodes" << std::endl;
             }else{
-                std::cerr << std::endl;
+                std::cout << std::endl;
             }
 
             graph.for_each_path_handle([&](const path_handle_t &path) {
@@ -388,12 +391,12 @@ int main_stats(int argc, char** argv) {
                 });
 
                 if (args::get(path_statistics)) {
-                    std::cerr << graph.get_path_name(path) << "\t" << (double)sum_path_node_dist_node_space / (double)len_path_node_space << "\t" << len_path_node_space << "\t" << (double)sum_path_node_dist_nt_space / (double)len_path_nt_space << "\t" << len_path_nt_space  << "\t" << num_penalties;
+                    std::cout << graph.get_path_name(path) << "\t" << (double)sum_path_node_dist_node_space / (double)len_path_node_space << "\t" << len_path_node_space << "\t" << (double)sum_path_node_dist_nt_space / (double)len_path_nt_space << "\t" << len_path_nt_space  << "\t" << num_penalties;
 
                     if (_penalize_reversed_nodes){
-                        std::cerr << "\t" << num_penalties_rev_nodes << std::endl;
+                        std::cout << "\t" << num_penalties_rev_nodes << std::endl;
                     }else{
-                        std::cerr << std::endl;
+                        std::cout << std::endl;
                     }
                 }
 
@@ -405,12 +408,12 @@ int main_stats(int argc, char** argv) {
                 num_all_penalties_rev_nodes += num_penalties_rev_nodes;
             });
 
-            std::cerr << "all_paths\t" << (double)sum_all_path_node_dist_node_space / (double)len_all_path_node_space << "\t" << len_all_path_node_space << "\t" << (double)sum_all_path_node_dist_nt_space / (double)len_all_path_nt_space << "\t" << len_all_path_nt_space << "\t" << num_all_penalties;
+            std::cout << "all_paths\t" << (double)sum_all_path_node_dist_node_space / (double)len_all_path_node_space << "\t" << len_all_path_node_space << "\t" << (double)sum_all_path_node_dist_nt_space / (double)len_all_path_nt_space << "\t" << len_all_path_nt_space << "\t" << num_all_penalties;
 
             if (_penalize_reversed_nodes){
-                std::cerr << "\t" << num_all_penalties_rev_nodes << std::endl;
+                std::cout << "\t" << num_all_penalties_rev_nodes << std::endl;
             }else{
-                std::cerr << std::endl;
+                std::cout << std::endl;
             }
         }
     }
