@@ -298,7 +298,14 @@ int main_stats(int argc, char** argv) {
                 });
 
                 if (args::get(path_statistics)) {
-                    std::cout << graph.get_path_name(path) << "\t" << (double)sum_node_space / (double)num_links << "\t" << (double)sum_nt_space / (double)num_links << "\t" << num_links;
+                    double ratio_node_space = 0;
+                    double ratio_nt_space = 0;
+                    if (num_links > 0){
+                        ratio_node_space = (double)sum_node_space / (double)num_links;
+                        ratio_nt_space = (double)sum_nt_space / (double)num_links;
+                    }
+
+                    std::cout << graph.get_path_name(path) << "\t" << ratio_node_space << "\t" << ratio_nt_space << "\t" << num_links;
 
                     if (_ignore_gap_links){
                         std::cout << "\t" << num_gap_links_ignored << std::endl;
