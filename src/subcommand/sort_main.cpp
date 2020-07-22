@@ -60,7 +60,7 @@ int main_sort(int argc, char** argv) {
     args::Flag mondriaan_path_weight(parser, "path-weight", "weight mondriaan input matrix by path coverage of edges", {'W', "mondriaan-path-weight"});
     args::Flag p_sgd(parser, "path-sgd", "apply path guided linear 1D SGD algorithm to organize graph", {'Y', "path-sgd"});
     args::ValueFlag<std::string> p_sgd_in_file(parser, "FILE", "specify a line separated list of paths to sample from for the on the fly term generation process in the path guided linear 1D SGD (default: sample from all paths)", {'f', "path-sgd-use-paths"});
-    args::ValueFlag<uint64_t> p_sgd_min_term_updates(parser, "N", "minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of total path length (default: 10)", {'G', "path-sgd-min-term-updates"});
+    args::ValueFlag<double> p_sgd_min_term_updates(parser, "N", "minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of total path length (default: 10)", {'G', "path-sgd-min-term-updates"});
     args::ValueFlag<double> p_sgd_delta(parser, "N", "threshold of maximum displacement approximately in bp at which to stop path guided linear 1D SGD (default: 0)", {'j', "path-sgd-delta"});
     args::ValueFlag<double> p_sgd_eps(parser, "N", "final learning rate for path guided linear 1D SGD model (default: 0.01)", {'g', "path-sgd-eps"});
     args::ValueFlag<double> p_sgd_zipf_theta(parser, "N", "the theta value for the Zipfian distrubution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: 0.99)", {'a', "path-sgd-zipf-theta"});
@@ -133,9 +133,19 @@ int main_sort(int argc, char** argv) {
     double sgd_delta = args::get(lsgd_delta) ? args::get(lsgd_delta) : 0;
     uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
     bool sgd_use_paths = args::get(lsgd_use_paths);
-    /// path guided linear 1D SGD sort
+    /// path guided linear 1D SGD sort helpers
     std::function<uint64_t(const std::set<std::string> &,
-                           const xp::XP &)> get_max_path_lengths
+                           const xp::XP &)> get_sum_path_lengths
+            = [&](const std::set<std::string> &path_sgd_use_paths, const xp::XP &path_index) {
+                uint64_t sum_path_length = 0;
+                for (auto path_name : path_sgd_use_paths) {
+                    path_handle_t path = path_index.get_path_handle(path_name);
+                    sum_path_length += path_index.get_path_length(path);
+                }
+                return sum_path_length;
+              };
+    std::function<uint64_t(const std::set<std::string> &,
+                           const xp::XP &)> get_max_path_length
             = [&](const std::set<std::string> &path_sgd_use_paths, const xp::XP &path_index) {
                 uint64_t max_path_length = 0;
                 for (auto path_name : path_sgd_use_paths) {
@@ -143,7 +153,7 @@ int main_sort(int argc, char** argv) {
                     max_path_length = std::max(max_path_length, path_index.get_path_length(path));
                 }
                 return max_path_length;
-    };
+              };
     // default parameters
     std::string path_sgd_seed;
     if (p_sgd_seed) {
@@ -195,9 +205,9 @@ int main_sort(int argc, char** argv) {
                 path_sgd_use_paths.insert(graph.get_path_name(path));
             });
         }
-        uint64_t max_path_length = get_max_path_lengths(path_sgd_use_paths, path_index);
-        path_sgd_min_term_updates = args::get(p_sgd_min_term_updates) ? (args::get(p_sgd_min_term_updates) * max_path_length) : (max_path_length * 10);
-        path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? args::get(p_sgd_zipf_space) : max_path_length;
+        uint64_t sum_path_length = get_sum_path_lengths(path_sgd_use_paths, path_index);
+        path_sgd_min_term_updates = args::get(p_sgd_min_term_updates) ? (args::get(p_sgd_min_term_updates) * sum_path_length) : sum_path_length;
+        path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? args::get(p_sgd_zipf_space) : get_max_path_length(path_sgd_use_paths, path_index);
     }
 
     // helper, TODO: move into its own file
