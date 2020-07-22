@@ -328,6 +328,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/merge.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/normalize.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/simplify_siblings.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/chop.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/unchop.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/perfect_neighbors.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/path_sgd.cpp
@@ -418,6 +419,7 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/algorithms/reverse_complement.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_info.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/dfs.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/chop.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/unchop.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/apply_bulk_modifications.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/dagify.hpp
