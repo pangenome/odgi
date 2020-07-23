@@ -146,11 +146,9 @@ namespace odgi {
             auto worker_lambda =
                     [&](uint64_t tid) {
                         // everyone tries to seed with their own random data
-                        std::array<int, 624> seed_data;
-                        std::random_device rd;
-                        std::generate_n(seed_data.data(), seed_data.size(), std::ref(rd));
-                        std::seed_seq seq(std::begin(seed_data), std::end(seed_data));
-                        std::mt19937 gen(seq);
+                        std::array<uint64_t, 2> seed_data = {(uint64_t)std::time(0), tid};
+                        std::seed_seq sseq(std::begin(seed_data), std::end(seed_data));
+                        std::mt19937_64 gen(sseq);
                         std::uniform_int_distribution<uint64_t> dis(1, total_path_len_in_nucleotides);
                         std::uniform_int_distribution<uint64_t> flip(0, 1);
                         while (work_todo.load()) {
