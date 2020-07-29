@@ -218,10 +218,11 @@ int main_stats(int argc, char** argv) {
 
                     sum_node_space += sum_in_path_node_space;
                     sum_nt_space += sum_in_path_nt_space;
-                    num_pairs += num_pairs_in_path;
                 }else{
                     num_pairs_in_path = 1;
                 }
+
+                num_pairs += num_pairs_in_path;
 
                 if (args::get(path_statistics)) {
                     std::cout << graph.get_path_name(path) << "\t" << (double)sum_in_path_node_space / (double)num_pairs_in_path << "\t" << (double)sum_in_path_nt_space / (double)num_pairs_in_path << "\t" << num_pairs_in_path << std::endl;
@@ -346,7 +347,7 @@ int main_stats(int argc, char** argv) {
             uint64_t num_all_penalties_rev_nodes = 0;
 
             std::cout << "#sum_of_path_node_distances" << std::endl;
-            std::cout << "path\tin_node_space\tnodes\tin_nucleotide_space\tnucleotides\tnum_penalties";
+            std::cout << "path\tin_node_space\tin_nucleotide_space\tnodes\tnucleotides\tnum_penalties";
 
             if (_penalize_reversed_nodes){
                 std::cout << "\tnum_penalties_reversed_nodes" << std::endl;
@@ -404,7 +405,7 @@ int main_stats(int argc, char** argv) {
                 });
 
                 if (args::get(path_statistics)) {
-                    std::cout << graph.get_path_name(path) << "\t" << (double)sum_path_node_dist_node_space / (double)len_path_node_space << "\t" << len_path_node_space << "\t" << (double)sum_path_node_dist_nt_space / (double)len_path_nt_space << "\t" << len_path_nt_space  << "\t" << num_penalties;
+                    std::cout << graph.get_path_name(path) << "\t" << (double)sum_path_node_dist_node_space / (double)len_path_node_space << "\t" << (double)sum_path_node_dist_nt_space / (double)len_path_nt_space << "\t" << len_path_node_space << "\t" << len_path_nt_space  << "\t" << num_penalties;
 
                     if (_penalize_reversed_nodes){
                         std::cout << "\t" << num_penalties_rev_nodes << std::endl;
@@ -421,7 +422,7 @@ int main_stats(int argc, char** argv) {
                 num_all_penalties_rev_nodes += num_penalties_rev_nodes;
             });
 
-            std::cout << "all_paths\t" << (double)sum_all_path_node_dist_node_space / (double)len_all_path_node_space << "\t" << len_all_path_node_space << "\t" << (double)sum_all_path_node_dist_nt_space / (double)len_all_path_nt_space << "\t" << len_all_path_nt_space << "\t" << num_all_penalties;
+            std::cout << "all_paths\t" << (double)sum_all_path_node_dist_node_space / (double)len_all_path_node_space << "\t" << (double)sum_all_path_node_dist_nt_space / (double)len_all_path_nt_space << "\t" << len_all_path_node_space << "\t" << len_all_path_nt_space << "\t" << num_all_penalties;
 
             if (_penalize_reversed_nodes){
                 std::cout << "\t" << num_all_penalties_rev_nodes << std::endl;
