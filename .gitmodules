@@ -55,3 +55,6 @@
 [submodule "deps/cpp_random_distributions"]
 	path = deps/cpp_random_distributions
 	url = https://github.com/llersch/cpp_random_distributions.git
+[submodule "deps/cgranges"]
+	path = deps/cgranges
+	url = https://github.com/lh3/cgranges.git

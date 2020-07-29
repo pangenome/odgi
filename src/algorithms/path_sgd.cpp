@@ -41,8 +41,7 @@ namespace odgi {
             // the total path length in nucleotides
             size_t total_path_len_in_nucleotides = 0;
             // here we store all path nucleotides lengths so we know later from which path we sampled our random position from
-            IntervalTree<size_t, path_handle_t> path_nucleotide_tree;
-            std::vector<Interval<size_t, path_handle_t> > path_nucleotide_intervals;
+            IITree<uint64_t, path_handle_t> path_nucleotide_tree;
             // iterate over all relevant path_handles:
             //  1. build the interval tree
             //  2. find out the longest path in nucleotides and store this number size_t
@@ -57,34 +56,16 @@ namespace odgi {
 #ifdef debug_path_sgd
                 std::cerr << path_name << " has length: " << path_len << std::endl;
 #endif
-                path_nucleotide_intervals.push_back(Interval<size_t, path_handle_t>(total_path_len_in_nucleotides + 1,
-                                                                                    total_path_len_in_nucleotides +
-                                                                                    path_len, path));
+                path_nucleotide_tree.add(total_path_len_in_nucleotides,
+                                         total_path_len_in_nucleotides + path_len,
+                                         path);
+
                 if (path_len > longest_path_in_nucleotides) {
                     longest_path_in_nucleotides = path_len;
                 }
                 total_path_len_in_nucleotides += path_len;
             }
-            path_nucleotide_tree = IntervalTree<size_t, path_handle_t>(
-                    static_cast<IntervalTree<unsigned long, path_handle_t>::interval_vector &&>(path_nucleotide_intervals));
-
-#ifdef debug_path_sgd
-
-            std::vector<Interval<size_t, path_handle_t> > results;
-            results = path_nucleotide_tree.findOverlapping(2, 2);
-            std::cerr << "found " << results.size() << " overlapping intervals" << std::endl;
-            std::cerr << "found " << results[0].start << " start in intervals" << std::endl;
-            std::cerr << "found " << results[0].stop << " stop in intervals" << std::endl;
-            std::cerr << "the real path position " << 2 - results[0].start + 1 << std::endl;
-            std::cerr << "found " << path_index.get_path_name(results[0].value) << " value in intervals" << std::endl;
-            results = path_nucleotide_tree.findOverlapping(20, 20);
-            std::cerr << "found " << results.size() << " overlapping intervals" << std::endl;
-            std::cerr << "found " << results[0].start << " start in intervals" << std::endl;
-            std::cerr << "found " << results[0].stop << " stop in intervals" << std::endl;
-            std::cerr << "found " << path_index.get_path_name(results[0].value) << " value in intervals" << std::endl;
-            std::cerr << "the real path position is: " << 20 - results[0].start + 1 << std::endl;
-            std::cerr << "longest path " << longest_path_in_nucleotides << std::endl;
-#endif
+            path_nucleotide_tree.index();
 
             double w_min = (double) 1.0 / (double) (longest_path_in_nucleotides * longest_path_in_nucleotides);
 #ifdef debug_path_sgd
@@ -149,16 +130,23 @@ namespace odgi {
                         std::array<uint64_t, 2> seed_data = {(uint64_t)std::time(0), tid};
                         std::seed_seq sseq(std::begin(seed_data), std::end(seed_data));
                         std::mt19937_64 gen(sseq);
-                        std::uniform_int_distribution<uint64_t> dis(1, total_path_len_in_nucleotides);
+                        std::uniform_int_distribution<uint64_t> dis(0, total_path_len_in_nucleotides-1);
                         std::uniform_int_distribution<uint64_t> flip(0, 1);
                         while (work_todo.load()) {
                             // pick a random position from all paths
                             uint64_t pos = dis(gen);
                             // use our interval tree to get the path handle and path nucleotide position of the picked position
-                            std::vector<Interval<size_t, path_handle_t> > result;
-                            result = path_nucleotide_tree.findOverlapping(pos, pos);
-                            path_handle_t path = result[0].value;
-                            size_t path_start_pos = result[0].start;
+                            //std::vector<Interval<size_t, path_handle_t> > result;
+                            //result = path_nucleotide_tree.findOverlapping(pos, pos);
+                            std::vector<size_t> a;
+                            path_nucleotide_tree.overlap(pos, pos+1, a);
+                            if (a.empty()) {
+                                std::cerr << "[odgi::path_sgd] no overlapping intervals at position " << pos << std::endl;
+                                exit(1);
+                            }
+                            auto& p = a[0];
+                            path_handle_t path = path_nucleotide_tree.data(p);
+                            size_t path_start_pos = path_nucleotide_tree.start(p);
                             // size_t path_end_pos = result[0].stop;
                             size_t path_len = path_index.get_path_length(path) - 1;
                             // we have a 0-based positioning in the path index
@@ -388,8 +376,7 @@ namespace odgi {
             // the total path length in nucleotides
             size_t total_path_len_in_nucleotides = 0;
             // here we store all path nucleotides lengths so we know later from which path we sampled our random position from
-            IntervalTree<size_t, path_handle_t> path_nucleotide_tree;
-            std::vector<Interval<size_t, path_handle_t> > path_nucleotide_intervals;
+            IITree<uint64_t, path_handle_t> path_nucleotide_tree;
             // iterate over all relevant path_handles:
             //  1. build the interval tree
             //  2. find out the longest path in nucleotides and store this number size_t
@@ -404,34 +391,16 @@ namespace odgi {
 #ifdef debug_path_sgd
                 std::cerr << path_name << " has length: " << path_len << std::endl;
 #endif
-                path_nucleotide_intervals.push_back(Interval<size_t, path_handle_t>(total_path_len_in_nucleotides + 1,
-                                                                                    total_path_len_in_nucleotides +
-                                                                                    path_len, path));
+                path_nucleotide_tree.add(total_path_len_in_nucleotides,
+                                         total_path_len_in_nucleotides + path_len,
+                                         path);
+
                 if (path_len > longest_path_in_nucleotides) {
                     longest_path_in_nucleotides = path_len;
                 }
                 total_path_len_in_nucleotides += path_len;
             }
-            path_nucleotide_tree = IntervalTree<size_t, path_handle_t>(
-                    static_cast<IntervalTree<unsigned long, path_handle_t>::interval_vector &&>(path_nucleotide_intervals));
-
-#ifdef debug_path_sgd
-
-            std::vector<Interval<size_t, path_handle_t> > results;
-            results = path_nucleotide_tree.findOverlapping(2, 2);
-            std::cerr << "found " << results.size() << " overlapping intervals" << std::endl;
-            std::cerr << "found " << results[0].start << " start in intervals" << std::endl;
-            std::cerr << "found " << results[0].stop << " stop in intervals" << std::endl;
-            std::cerr << "the real path position " << 2 - results[0].start + 1 << std::endl;
-            std::cerr << "found " << path_index.get_path_name(results[0].value) << " value in intervals" << std::endl;
-            results = path_nucleotide_tree.findOverlapping(20, 20);
-            std::cerr << "found " << results.size() << " overlapping intervals" << std::endl;
-            std::cerr << "found " << results[0].start << " start in intervals" << std::endl;
-            std::cerr << "found " << results[0].stop << " stop in intervals" << std::endl;
-            std::cerr << "found " << path_index.get_path_name(results[0].value) << " value in intervals" << std::endl;
-            std::cerr << "the real path position is: " << 20 - results[0].start + 1 << std::endl;
-            std::cerr << "longest path " << longest_path_in_nucleotides << std::endl;
-#endif
+            path_nucleotide_tree.index();
 
             double w_min = (double) 1.0 / (double) (longest_path_in_nucleotides * longest_path_in_nucleotides);
 #ifdef debug_path_sgd
@@ -457,7 +426,7 @@ namespace odgi {
             // seed with the given string
             std::seed_seq seed(seeding_string.begin(), seeding_string.end());
             std::mt19937 gen(seed);
-            std::uniform_int_distribution<uint64_t> dis(1, total_path_len_in_nucleotides);
+            std::uniform_int_distribution<uint64_t> dis(0, total_path_len_in_nucleotides-1);
             std::uniform_int_distribution<uint64_t> flip(0, 1);
             for (uint64_t iteration = 0; iteration < iter_max; iteration++) {
                 for (uint64_t term_update = 0; term_update < min_term_updates; term_update++) {
@@ -467,10 +436,15 @@ namespace odgi {
                     std::cerr << "uniform_position: " << pos << std::endl;
 #endif
                     // use our interval tree to get the path handle and path nucleotide position of the picked position
-                    std::vector<Interval<size_t, path_handle_t> > result;
-                    result = path_nucleotide_tree.findOverlapping(pos, pos);
-                    path_handle_t path = result[0].value;
-                    size_t path_start_pos = result[0].start;
+                    std::vector<size_t> a;
+                    path_nucleotide_tree.overlap(pos, pos+1, a);
+                    if (a.empty()) {
+                        std::cerr << "[odgi::path_sgd] no overlapping intervals at position " << pos << std::endl;
+                        exit(1);
+                    }
+                    auto& p = a[0];
+                    path_handle_t path = path_nucleotide_tree.data(p);
+                    size_t path_start_pos = path_nucleotide_tree.start(p);
                     // size_t path_end_pos = result[0].stop;
                     size_t path_len = path_index.get_path_length(path) - 1;
                     // we have a 0-based positioning in the path index
