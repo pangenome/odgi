@@ -165,6 +165,16 @@ ExternalProject_Add(intervaltree
 ExternalProject_Get_property(intervaltree SOURCE_DIR)
 set(intervaltree_INCLUDE "${SOURCE_DIR}")
 
+# cgranges
+ExternalProject_Add(cgranges
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/cgranges"
+  UPDATE_COMMAND ""
+  INSTALL_COMMAND ""
+  BUILD_COMMAND ""
+  CONFIGURE_COMMAND "")
+ExternalProject_Get_property(cgranges SOURCE_DIR)
+set(cgranges_INCLUDE "${SOURCE_DIR}/cpp")
+
 # lodepng
 ExternalProject_Add(lodepng
   SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/lodepng"
@@ -347,6 +357,7 @@ set(odgi_DEPS
     sparsepp
     ska
     intervaltree
+    cgranges
     lodepng
     structures
     picosha256
@@ -371,6 +382,7 @@ set(odgi_INCLUDES
   "${sparsepp_INCLUDE}"
   "${ska_INCLUDE}"
   "${intervaltree_INCLUDE}"
+  "${cgranges_INCLUDE}"
   "${lodepng_INCLUDE}"
   "${bbhash_INCLUDE}"
   "${structures_INCLUDE}"
