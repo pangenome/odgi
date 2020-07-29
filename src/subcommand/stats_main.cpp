@@ -320,7 +320,13 @@ int main_stats(int argc, char** argv) {
                 num_all_gap_links_ignored += num_gap_links_ignored;
             });
 
-            std::cout << "all_paths\t" << (double)sum_all_node_space / (double)num_all_links << "\t" << (double)sum_all_nt_space / (double)num_all_links << "\t" << num_all_links;
+            double ratio_node_space = 0;
+            double ratio_nt_space = 0;
+            if (num_all_links > 0) {
+                ratio_node_space = (double)sum_all_node_space / (double)num_all_links;
+                ratio_nt_space = (double)sum_all_nt_space / (double)num_all_links;
+            }
+            std::cout << "all_paths\t" << ratio_node_space << "\t" << ratio_nt_space << "\t" << num_all_links;
 
             if (_ignore_gap_links){
                 std::cout << "\t" << num_all_gap_links_ignored << std::endl;
