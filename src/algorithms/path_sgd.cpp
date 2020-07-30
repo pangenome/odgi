@@ -8,7 +8,7 @@ namespace odgi {
 
         std::vector<double> path_linear_sgd(const PathHandleGraph &graph,
                                             const xp::XP &path_index,
-                                            const std::set<std::string> path_sgd_use_paths,
+                                            const std::vector<path_handle_t>& path_sgd_use_paths,
                                             const uint64_t &iter_max,
                                             const uint64_t &min_term_updates,
                                             const double &delta,
@@ -46,9 +46,9 @@ namespace odgi {
             //  1. build the interval tree
             //  2. find out the longest path in nucleotides and store this number size_t
             //  3. add the current path length to the total length
-            for (auto path_name : path_sgd_use_paths) {
-                path_handle_t path = path_index.get_path_handle(path_name);
+            for (auto& path : path_sgd_use_paths) {
 #ifdef debug_path_sgd
+                std::string path_name = graph.get_path_name(path);
                 std::cerr << path_name << std::endl;
                 std::cerr << as_integer(path) << std::endl;
 #endif
@@ -351,7 +351,7 @@ namespace odgi {
 
         std::vector<double> deterministic_path_linear_sgd(const PathHandleGraph &graph,
                                                           const xp::XP &path_index,
-                                                          const std::set<std::string> path_sgd_use_paths,
+                                                          const std::vector<path_handle_t>& path_sgd_use_paths,
                                                           const uint64_t &iter_max,
                                                           const uint64_t &min_term_updates,
                                                           const double &delta,
@@ -381,9 +381,9 @@ namespace odgi {
             //  1. build the interval tree
             //  2. find out the longest path in nucleotides and store this number size_t
             //  3. add the current path length to the total length
-            for (auto path_name : path_sgd_use_paths) {
-                path_handle_t path = path_index.get_path_handle(path_name);
+            for (auto& path : path_sgd_use_paths) {
 #ifdef debug_path_sgd
+                std::string path_name = graph.get_path_name(path);
                 std::cerr << path_name << std::endl;
                 std::cerr << as_integer(path) << std::endl;
 #endif
@@ -619,7 +619,7 @@ namespace odgi {
 
         std::vector<handle_t> path_linear_sgd_order(const PathHandleGraph &graph,
                                                     const xp::XP &path_index,
-                                                    const std::set<std::string> path_sgd_use_paths,
+                                                    const std::vector<path_handle_t>& path_sgd_use_paths,
                                                     const uint64_t &iter_max,
                                                     const uint64_t &min_term_updates,
                                                     const double &delta,

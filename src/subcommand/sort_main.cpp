@@ -134,22 +134,20 @@ int main_sort(int argc, char** argv) {
     uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
     bool sgd_use_paths = args::get(lsgd_use_paths);
     /// path guided linear 1D SGD sort helpers
-    std::function<uint64_t(const std::set<std::string> &,
+    std::function<uint64_t(const std::vector<path_handle_t> &,
                            const xp::XP &)> get_sum_path_lengths
-            = [&](const std::set<std::string> &path_sgd_use_paths, const xp::XP &path_index) {
+            = [&](const std::vector<path_handle_t> &path_sgd_use_paths, const xp::XP &path_index) {
                 uint64_t sum_path_length = 0;
-                for (auto path_name : path_sgd_use_paths) {
-                    path_handle_t path = path_index.get_path_handle(path_name);
+                for (auto& path : path_sgd_use_paths) {
                     sum_path_length += path_index.get_path_length(path);
                 }
                 return sum_path_length;
               };
-    std::function<uint64_t(const std::set<std::string> &,
+    std::function<uint64_t(const std::vector<path_handle_t> &,
                            const xp::XP &)> get_max_path_length
-            = [&](const std::set<std::string> &path_sgd_use_paths, const xp::XP &path_index) {
+            = [&](const std::vector<path_handle_t> &path_sgd_use_paths, const xp::XP &path_index) {
                 uint64_t max_path_length = 0;
-                for (auto path_name : path_sgd_use_paths) {
-                    path_handle_t path = path_index.get_path_handle(path_name);
+                for (auto& path : path_sgd_use_paths) {
                     max_path_length = std::max(max_path_length, path_index.get_path_length(path));
                 }
                 return max_path_length;
@@ -172,7 +170,7 @@ int main_sort(int argc, char** argv) {
     // default parameters that need a path index to be present
     uint64_t path_sgd_min_term_updates;
     uint64_t path_sgd_zipf_space;
-    std::set<std::string> path_sgd_use_paths;
+    std::vector<path_handle_t> path_sgd_use_paths;
     xp::XP path_index;
     bool first_time_index = true;
     if (p_sgd || args::get(pipeline).find('Y') != std::string::npos) {
@@ -192,7 +190,7 @@ int main_sort(int argc, char** argv) {
             while (std::getline(use_paths, buf)) {
                 // check if the path is actually in the graph, else print an error and exit 1
                 if (graph.has_path(buf)) {
-                    path_sgd_use_paths.insert(buf);
+                    path_sgd_use_paths.push_back(graph.get_path_handle(buf));
                 } else {
                     std::cerr << "[odgi sort] Error: Path '" << buf
                               << "' as was given by -f=[FILE], --path-sgd-use-paths=[FILE]"
@@ -201,9 +199,10 @@ int main_sort(int argc, char** argv) {
             }
             use_paths.close();
         } else {
-            graph.for_each_path_handle([&](const path_handle_t &path) {
-                path_sgd_use_paths.insert(graph.get_path_name(path));
-            });
+            graph.for_each_path_handle(
+                [&](const path_handle_t &path) {
+                    path_sgd_use_paths.push_back(path);
+                });
         }
         uint64_t sum_path_length = get_sum_path_lengths(path_sgd_use_paths, path_index);
         path_sgd_min_term_updates = args::get(p_sgd_min_term_updates) ? (args::get(p_sgd_min_term_updates) * sum_path_length) : 0.1 * sum_path_length;
