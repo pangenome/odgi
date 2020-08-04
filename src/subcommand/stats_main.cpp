@@ -37,7 +37,7 @@ int main_stats(int argc, char** argv) {
     args::ValueFlag<std::string> path_delim(parser, "CHAR", "the part of each path name before this delimiter is a group identifier, which when specified will cause stats to be collected in a group-wise rather than path-wise fashion", {'D', "delim"});
 
     args::Flag mean_links_length(parser, "mean_links_length", "calculate the mean links length", {'l', "mean-links-length"});
-    args::Flag ignore_gap_links(parser, "ignore-gap-links", "don't include gap links in the mean links length", {'g', "no-gap-links"});
+    args::Flag dont_penalize_gap_links(parser, "dont-penalize-gap-links", "don't penalize gap links in the mean links length", {'g', "no-gap-links"});
     args::Flag sum_of_path_node_distances(parser, "sum_of_path_node_distances", "calculate the sum of path nodes distances", {'s', "sum-path-nodes-distances"});
     args::Flag penalize_reversed_nodes(parser, "penalize_reversed_nodes", "penalize reversed nodes in the sum", {'r', "penalize-reversed-nodes"});
     args::Flag path_statistics(parser, "path_statistics", "display the statistics for each path", {'P', "path-statistics"});
@@ -71,7 +71,7 @@ int main_stats(int argc, char** argv) {
                 << std::endl;
         return 1;
     }
-    if (args::get(ignore_gap_links) && !args::get(mean_links_length)){
+    if (args::get(dont_penalize_gap_links) && !args::get(mean_links_length)){
         std::cerr
                 << "[odgi stats] error: Please specify the -l/--mean-links-length option to use the -g/--no-gap-links option."
                 << std::endl;
@@ -176,18 +176,18 @@ int main_stats(int argc, char** argv) {
         position_map[position_map.size() - 1] = len;
 
         if (args::get(mean_links_length)){
-            bool _ignore_gap_links = args::get(ignore_gap_links);
+            bool _dont_penalize_gap_links = args::get(dont_penalize_gap_links);
 
             uint64_t sum_all_node_space = 0;
             uint64_t sum_all_nt_space = 0;
             uint64_t num_all_links = 0;
-            uint64_t num_all_gap_links_ignored = 0;
+            uint64_t num_all_gap_links = 0;
 
             std::cout << "#mean_links_length" << std::endl;
             std::cout << "path\tin_node_space\tin_nucleotide_space\tnum_links_considered";
 
-            if (_ignore_gap_links){
-                std::cout << "\tnum_gap_links_ignored" << std::endl;
+            if (dont_penalize_gap_links){
+                std::cout << "\tnum_gap_links" << std::endl;
             }else{
                 std::cout << std::endl;
             }
@@ -198,9 +198,9 @@ int main_stats(int argc, char** argv) {
                 uint64_t sum_node_space = 0;
                 uint64_t sum_nt_space = 0;
                 uint64_t num_links = 0;
-                uint64_t num_gap_links_ignored = 0;
+                uint64_t num_gap_links = 0;
 
-                if (_ignore_gap_links){
+                if (_dont_penalize_gap_links){
                     graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
                         ordered_unpacked_numbers_in_path.insert(number_bool_packing::unpack_number(graph.get_handle_of_step(occ)));
                     });
@@ -221,7 +221,7 @@ int main_stats(int argc, char** argv) {
                         uint64_t _info_a = unpacked_h + !number_bool_packing::unpack_bit(h);
                         uint64_t _info_b = unpacked_i + number_bool_packing::unpack_bit(i);
 
-                        if (!_ignore_gap_links || next(ordered_unpacked_numbers_in_path.find(unpacked_h)) != ordered_unpacked_numbers_in_path.find(unpacked_i)){
+                        if (!dont_penalize_gap_links || next(ordered_unpacked_numbers_in_path.find(unpacked_h)) != ordered_unpacked_numbers_in_path.find(unpacked_i)){
                             if (_info_b < _info_a){
                                 _info_a = _info_b;
                                 _info_b = unpacked_h + !number_bool_packing::unpack_bit(h);
@@ -233,11 +233,11 @@ int main_stats(int argc, char** argv) {
 #ifdef debug_odgi_stats
                             std::cerr << _info_b << " - " << _info_a << ": " << position_map[_info_b] - position_map[_info_a] << std::endl;
 #endif
-
-                            num_links++;
-                        }else if (_ignore_gap_links){
-                            num_gap_links_ignored++;
+                        }else if (dont_penalize_gap_links){
+                            num_gap_links++;
                         }
+
+                        num_links++;
                     }
                 });
 
@@ -251,8 +251,8 @@ int main_stats(int argc, char** argv) {
 
                     std::cout << graph.get_path_name(path) << "\t" << ratio_node_space << "\t" << ratio_nt_space << "\t" << num_links;
 
-                    if (_ignore_gap_links){
-                        std::cout << "\t" << num_gap_links_ignored << std::endl;
+                    if (dont_penalize_gap_links){
+                        std::cout << "\t" << num_gap_links << std::endl;
                     }else{
                         std::cout << std::endl;
                     }
@@ -261,7 +261,7 @@ int main_stats(int argc, char** argv) {
                 sum_all_node_space += sum_node_space;
                 sum_all_nt_space += sum_nt_space;
                 num_all_links += num_links;
-                num_all_gap_links_ignored += num_gap_links_ignored;
+                num_all_gap_links += num_gap_links;
             });
 
             double ratio_node_space = 0;
@@ -272,8 +272,8 @@ int main_stats(int argc, char** argv) {
             }
             std::cout << "all_paths\t" << ratio_node_space << "\t" << ratio_nt_space << "\t" << num_all_links;
 
-            if (_ignore_gap_links){
-                std::cout << "\t" << num_all_gap_links_ignored << std::endl;
+            if (_dont_penalize_gap_links){
+                std::cout << "\t" << num_all_gap_links << std::endl;
             }else{
                 std::cout << std::endl;
             }
