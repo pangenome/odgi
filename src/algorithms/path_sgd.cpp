@@ -554,7 +554,7 @@ namespace odgi {
                     std::cerr << "distance is " << dx << " but should be " << d_ij << std::endl;
 #endif
                     //double mag = dx; //sqrt(dx*dx + dy*dy);
-                    double mag = sqrt(dx * dx);
+                    double mag = std::abs(dx);
 #ifdef debug_path_sgd
                     std::cerr << "mu " << mu << " mag " << mag << " d_ij " << d_ij << std::endl;
 #endif
