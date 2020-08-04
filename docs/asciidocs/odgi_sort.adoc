@@ -30,6 +30,10 @@ determine the node order:
  - A 1D linear SGD sort: Odgi implements a 1D linear, variation graph adjusted, multi-threaded version of the https://arxiv.org/abs/1710.04626[Graph Drawing
    by Stochastic Gradient Descent] algorithm. The force-directed graph drawing algorithm minimizes the graph's energy function
    or stress level. It applies stochastic gradient descent (SGD) to move a single pair of nodes at a time.
+ - A path guided, 1D linear SGD sort: The major bottleneck of the 1D linear SGD sort is that the memory allocation is quadratic
+  in number of nodes. So it does not scale for large graphs. This issue is tackled by the path guided, 1D linear SGD sort.
+  Instead of precalculating all terms, it can use a path index to pick the terms to move stochastically. If ran with 1 thread only,
+  the resulting order of the graph is deterministic. Ony can vary the seed.
  - An eades algorithmic sort: Use http://www.it.usyd.edu.au/~pead6616/old_spring_paper.pdf[Peter Eades' heuristic for graph drawing].
 
 Sorting the paths in a graph my refine the sorting process. For the users' convenience, it is possible to specify a whole
@@ -112,6 +116,38 @@ pipeline of sorts within one parameter.
 
 *-C, --sgd-delta*=_sgd-delta_::
   The threshold of the maximum node displacement, approximately in base pairs, at which to stop SGD.
+
+=== Path Guided 1D Linear SGD Sort
+
+*-Y, --path-sgd*::
+  Apply path guided 1D linear SGD algorithm to organize the graph.
+
+*-f, --path-sgd-use-paths*::
+  Specify a line separated list of paths to sample from for the on the fly term generation process in the path guided linear 1D SGD. The default value are _all paths_.
+
+*-G, --path-sgd-min-term-updates-paths*=_N_::
+  The minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of total path length. The default value is _0.1_. Can be overwritten by _-U, -path-sgd-min-term-updates-nodes=N_.
+
+*-U, --path-sgd-min-term-updates-nodes*=_N_::
+  The minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of the number of nodes. Per default, the argument is not set. The default of _-G, path-sgd-min-term-updates-paths=N_ is used).
+
+*-j, --path-sgd-delta*=_N_::
+  The threshold of maximum displacement approximately in bp at which to stop path guided linear 1D SGD. Default values is _0.0_.
+
+*-g, --path-sgd-eps*=_N_::
+  The final learning rate for path guided linear 1D SGD model. The default value is _0.01_.
+
+*-a, --path-sgd-zipf-theta*=_N_::
+  The theta value for the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model. The default value is _0.99_.
+
+*-x, --path-sgd-iter-max*=_N_::
+  The maximum number of iterations for path guided linear 1D SGD model. The default value is 30.
+
+*-k, --path-sgd-zipf-space*=_N_::
+  The maximum space size of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model. The default value is the _maximum path lengths_.
+
+*-q, --path-sgd-seed*=_N_::
+  Set the seed for the deterministic 1-threaded path guided linear 1D SGD model. The default value is _pangenomic!_.
 
 === Eades Sort
 
