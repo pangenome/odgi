@@ -167,6 +167,8 @@ int main_sort(int argc, char** argv) {
     double path_sgd_zipf_theta = args::get(p_sgd_zipf_theta) ? args::get(p_sgd_zipf_theta) : 0.99;
     double path_sgd_eps = args::get(p_sgd_eps) ? args::get(p_sgd_eps) : 0.01;
     double path_sgd_delta = args::get(p_sgd_delta) ? args::get(p_sgd_delta) : 0;
+    // will be filled, if the user decides to write a snapshot of the graph after each sorting iterationn
+    std::vector<std::vector<double>> snapshots;
     // default parameters that need a path index to be present
     uint64_t path_sgd_min_term_updates;
     uint64_t path_sgd_zipf_space;

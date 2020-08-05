@@ -91,6 +91,8 @@ namespace odgi {
             work_todo.store(true);
             // approximately what iteration we're on
             uint64_t iteration = 0;
+            // here we store all the intermediate snapshots after each iteration
+            std::vector<std::vector<double>> snapshots;
             // launch a thread to update the learning rate, count iterations, and decide when to stop
             auto checker_lambda =
                     [&](void) {
@@ -100,7 +102,8 @@ namespace odgi {
                                     work_todo.store(false);
                                 } else if (Delta_max.load() <= delta) { // nb: this will also break at 0
                                     if (progress) {
-                                        std::cerr << "[path sgd sort]: delta_max: " << Delta_max.load() << " <= delta: "
+                                        std::cerr << "[path sgd sort]: delta_max: " << Delta_max.load()
+                                                  << " <= delta: "
                                                   << delta << ". Threshold reached, therefore ending iterations."
                                                   << std::endl;
                                     }
@@ -292,7 +295,28 @@ namespace odgi {
                         }
                     };
 
+            auto snapshot_lambda =
+                    [&](void) {
+                        uint64_t iter = 0;
+                        while (work_todo.load()) {
+                            if ((iter < iteration) && iteration != iter_max) {
+                                // std::cerr << "[odgi sort] snapshot thread: Taking snapshot!" << std::endl;
+                                // drop out of atomic stuff... maybe not the best way to do this
+                                std::vector<double> X_iter(X.size());
+                                uint64_t i = 0;
+                                for (auto &x : X) {
+                                    X_iter[i++] = x.load();
+                                }
+                                snapshots.push_back(X_iter);
+                                iter = iteration;
+                            }
+                            std::this_thread::sleep_for(1ms);
+                        }
+
+                    };
+
             std::thread checker(checker_lambda);
+            std::thread snapshot(snapshot_lambda);
 
             std::vector<std::thread> workers;
             workers.reserve(nthreads);
@@ -303,7 +327,11 @@ namespace odgi {
             for (uint64_t t = 0; t < nthreads; ++t) {
                 workers[t].join();
             }
+
+            snapshot.join();
+
             checker.join();
+;
             // drop out of atomic stuff... maybe not the best way to do this
             std::vector<double> X_final(X.size());
             uint64_t i = 0;
@@ -628,8 +656,11 @@ namespace odgi {
                                                     const uint64_t &space,
                                                     const uint64_t &nthreads,
                                                     const bool &progress,
-                                                    const std::string &seed) {
+                                                    const std::string &seed,
+                                                    const bool &snapshot,
+                                                    const std::vector<std::vector<double>> &snapshots) {
             std::vector<double> layout;
+            // TODO bring the snapshot implementation to the determnistic path linear sgd
             if (nthreads == 1) {
                 layout = deterministic_path_linear_sgd(graph,
                                                        path_index,
@@ -653,7 +684,9 @@ namespace odgi {
                                          theta,
                                          space,
                                          nthreads,
-                                         progress);
+                                         progress,
+                                         snapshot,
+                                         snapshots);
             }
 #ifdef debug_components
             std::cerr << "node count: " << graph.get_node_count() << std::endl;

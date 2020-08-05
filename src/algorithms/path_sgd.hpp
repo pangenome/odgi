@@ -39,7 +39,9 @@ std::vector<double> path_linear_sgd(const PathHandleGraph &graph,
                                     const double &theta,
                                     const uint64_t &space,
                                     const uint64_t &nthreads,
-                                    const bool &progress);
+                                    const bool &progress,
+                                    const bool &snapshot,
+                                    const std::vector<std::vector<double>> &snapshots);
 
 /// our learning schedule
 std::vector<double> path_linear_sgd_schedule(const double &w_min,
@@ -71,7 +73,9 @@ std::vector<handle_t> path_linear_sgd_order(const PathHandleGraph &graph,
                                             const uint64_t &space,
                                             const uint64_t &nthreads,
                                             const bool &progress,
-                                            const std::string &seed);
+                                            const std::string &seed,
+                                            const bool &snapshot,
+                                            const std::vector<std::vector<double>> &snapshots);
 
 }
 
