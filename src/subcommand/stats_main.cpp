@@ -39,7 +39,7 @@ int main_stats(int argc, char** argv) {
     args::Flag mean_links_length(parser, "mean_links_length", "calculate the mean links length", {'l', "mean-links-length"});
     args::Flag dont_penalize_gap_links(parser, "dont-penalize-gap-links", "don't penalize gap links in the mean links length", {'g', "no-gap-links"});
     args::Flag sum_of_path_node_distances(parser, "sum_of_path_node_distances", "calculate the sum of path nodes distances", {'s', "sum-path-nodes-distances"});
-    args::Flag penalize_reversed_nodes(parser, "penalize_reversed_nodes", "penalize reversed nodes in the sum", {'r', "penalize-reversed-nodes"});
+    args::Flag penalize_diff_orientation(parser, "penalize_diff_orientation", "penalize links which connect nodes with different orientation", {'d', "penalize-different-orientation"});
     args::Flag path_statistics(parser, "path_statistics", "display the statistics for each path", {'P', "path-statistics"});
 
     args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
@@ -65,9 +65,9 @@ int main_stats(int argc, char** argv) {
                 << std::endl;
         return 1;
     }
-    if (args::get(penalize_reversed_nodes) && !args::get(sum_of_path_node_distances)){
+    if (args::get(penalize_diff_orientation) && !args::get(sum_of_path_node_distances)){
         std::cerr
-                << "[odgi stats] error: Please specify the -s/--sum-path-nodes-distances option to use the -r/--penalize-reversed-nodes option."
+                << "[odgi stats] error: Please specify the -s/--sum-path-nodes-distances option to use the -d/--penalize-different-orientation option."
                 << std::endl;
         return 1;
     }
@@ -187,7 +187,7 @@ int main_stats(int argc, char** argv) {
             std::cout << "path\tin_node_space\tin_nucleotide_space\tnum_links_considered";
 
             if (dont_penalize_gap_links){
-                std::cout << "\tnum_gap_links" << std::endl;
+                std::cout << "\tnum_gap_links_not_penalized" << std::endl;
             }else{
                 std::cout << std::endl;
             }
@@ -280,20 +280,20 @@ int main_stats(int argc, char** argv) {
         }
 
         if (args::get(sum_of_path_node_distances)){
-            bool _penalize_reversed_nodes = args::get(penalize_reversed_nodes);
+            bool _penalize_diff_orientation = args::get(penalize_diff_orientation);
 
             uint64_t sum_all_path_node_dist_node_space = 0;
             uint64_t sum_all_path_node_dist_nt_space = 0;
             uint64_t len_all_path_node_space = 0;
             uint64_t len_all_path_nt_space = 0;
             uint64_t num_all_penalties = 0;
-            uint64_t num_all_penalties_rev_nodes = 0;
+            uint64_t num_all_penalties_diff_orientation = 0;
 
             std::cout << "#sum_of_path_node_distances" << std::endl;
             std::cout << "path\tin_node_space\tin_nucleotide_space\tnodes\tnucleotides\tnum_penalties";
 
-            if (_penalize_reversed_nodes){
-                std::cout << "\tnum_penalties_reversed_nodes" << std::endl;
+            if (_penalize_diff_orientation){
+                std::cout << "\tnum_penalties_different_orientation" << std::endl;
             }else{
                 std::cout << std::endl;
             }
@@ -307,7 +307,7 @@ int main_stats(int argc, char** argv) {
                 uint64_t len_path_node_space = 0;
                 uint64_t len_path_nt_space = 0;
                 uint64_t num_penalties = 0;
-                uint64_t num_penalties_rev_nodes = 0;
+                uint64_t num_penalties_diff_orientation = 0;
 
                 graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
                     handle_t h = graph.get_handle_of_step(occ);
@@ -335,11 +335,11 @@ int main_stats(int argc, char** argv) {
                         sum_path_node_dist_node_space += weight * (unpacked_b - unpacked_a);
                         sum_path_node_dist_nt_space += weight * (position_map[unpacked_b] - position_map[unpacked_a]);
 
-                        if (_penalize_reversed_nodes && number_bool_packing::unpack_bit(h)){
+                        if (_penalize_diff_orientation && (number_bool_packing::unpack_bit(h) != number_bool_packing::unpack_bit(i))){
                             sum_path_node_dist_node_space += 2 * (unpacked_b - unpacked_a);
                             sum_path_node_dist_nt_space += 2 * (position_map[unpacked_b] - position_map[unpacked_a]);
 
-                            num_penalties_rev_nodes++;
+                            num_penalties_diff_orientation++;
                         }
                     }
 
@@ -350,8 +350,8 @@ int main_stats(int argc, char** argv) {
                 if (args::get(path_statistics)) {
                     std::cout << graph.get_path_name(path) << "\t" << (double)sum_path_node_dist_node_space / (double)len_path_node_space << "\t" << (double)sum_path_node_dist_nt_space / (double)len_path_nt_space << "\t" << len_path_node_space << "\t" << len_path_nt_space  << "\t" << num_penalties;
 
-                    if (_penalize_reversed_nodes){
-                        std::cout << "\t" << num_penalties_rev_nodes << std::endl;
+                    if (_penalize_diff_orientation){
+                        std::cout << "\t" << num_penalties_diff_orientation << std::endl;
                     }else{
                         std::cout << std::endl;
                     }
@@ -362,13 +362,13 @@ int main_stats(int argc, char** argv) {
                 len_all_path_node_space += len_path_node_space;
                 len_all_path_nt_space += len_path_nt_space;
                 num_all_penalties += num_penalties;
-                num_all_penalties_rev_nodes += num_penalties_rev_nodes;
+                num_all_penalties_diff_orientation += num_penalties_diff_orientation;
             });
 
             std::cout << "all_paths\t" << (double)sum_all_path_node_dist_node_space / (double)len_all_path_node_space << "\t" << (double)sum_all_path_node_dist_nt_space / (double)len_all_path_nt_space << "\t" << len_all_path_node_space << "\t" << len_all_path_nt_space << "\t" << num_all_penalties;
 
-            if (_penalize_reversed_nodes){
-                std::cout << "\t" << num_all_penalties_rev_nodes << std::endl;
+            if (_penalize_diff_orientation){
+                std::cout << "\t" << num_all_penalties_diff_orientation << std::endl;
             }else{
                 std::cout << std::endl;
             }
