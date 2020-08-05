@@ -60,7 +60,7 @@ The odgi stats(1) command produces statistics of a variation graph. Among other 
 *-s, --sum-path-nodes-distances*::
   Calculate the sum of path nodes distances. For each path, it iterates from node to node, summing their distances, and normalizing by the path length. If a link goes back in the linearized viewpoint of the graph, this is penalized (adding 3 times its length in the sum).
 
-*-r, --penalize-reversed-nodes*::
+*-d, --penalize-different-orientation*::
   If a link connects two nodes which have different orientations, this is penalized (adding 2 times its length in the sum).
 
 *-P, --path-statistics*::
