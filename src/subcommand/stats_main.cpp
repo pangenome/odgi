@@ -215,9 +215,9 @@ int main_stats(int argc, char** argv) {
                         uint64_t unpacked_h = number_bool_packing::unpack_number(h);
                         uint64_t unpacked_i = number_bool_packing::unpack_number(i);
 
-                        // The position map is encoding 2x the number of nodes: it includes the start and end of the node in successive
-                        // entries. Edges leave from the end (or start) of one node (depending on whether they are on the forward or
-                        // reverse strand) and go to the start (or end) of the other side of the link.
+                        // The position map includes the start and end of the node in successive entries.
+                        // Edges leave from the end (or start) of one node (depending on whether they are on the
+                        // forward or reverse strand) and go to the start (or end) of the other side of the link.
                         uint64_t _info_a = unpacked_h + !number_bool_packing::unpack_bit(h);
                         uint64_t _info_b = unpacked_i + number_bool_packing::unpack_bit(i);
 
