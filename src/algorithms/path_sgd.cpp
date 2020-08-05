@@ -69,8 +69,8 @@ namespace odgi {
             }
             path_nucleotide_tree.index();
 
-            // TODO over the size of the graph in nucleotides
-            double w_min = (double) 1.0 / (double) (longest_path_in_nucleotides * longest_path_in_nucleotides);
+            // TODO over the size of the graph in nodes
+            double w_min = (double) 1.0 / (double) (graph.get_node_count());
 
 #ifdef debug_path_sgd
             std::cerr << "w_min " << w_min << std::endl;
@@ -435,7 +435,7 @@ namespace odgi {
             }
             path_nucleotide_tree.index();
 
-            double w_min = (double) 1.0 / (double) (longest_path_in_nucleotides * longest_path_in_nucleotides);
+            double w_min = (double) 1.0 / (double) (len);
 #ifdef debug_path_sgd
             std::cerr << "w_min " << w_min << std::endl;
 #endif
