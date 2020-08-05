@@ -290,9 +290,9 @@ int main_sort(int argc, char** argv) {
             if (snapshot) {
                 std::string snapshot_prefix = args::get(p_sgd_snapshot);
                 for (int j = 0; j < snapshots.size(); j++) {
-                    std::cerr << "[path sgd sort]: Applying order to graph of iteration: " << std::to_string(j + 1) << std:endl;
-                    std:.string local_snapshot_prefix = snapshot_prefix + std::to_string(j);
-                    graph.apply_order(snapshots[j], true);
+                    std::cerr << "[path sgd sort]: Applying order to graph of iteration: " << std::to_string(j + 1) << std::endl;
+                    std::string local_snapshot_prefix = snapshot_prefix + std::to_string(j);
+                    graph.apply_ordering(snapshots[j], true);
                     ofstream f(local_snapshot_prefix);
                     graph.serialize(f);
                     f.close();
