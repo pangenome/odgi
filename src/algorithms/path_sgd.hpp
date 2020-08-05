@@ -60,7 +60,9 @@ std::vector<double> deterministic_path_linear_sgd(const PathHandleGraph &graph,
                                                   const double &theta,
                                                   const uint64_t &space,
                                                   const std::string &seeding_string,
-                                                  const bool &progress);
+                                                  const bool &progress,
+                                                  const bool &snapshot,
+                                                  std::vector<std::vector<double>> &snapshots);
 
 std::vector<handle_t> path_linear_sgd_order(const PathHandleGraph &graph,
                                             const xp::XP &path_index,

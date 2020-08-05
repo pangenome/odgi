@@ -69,7 +69,9 @@ namespace odgi {
             }
             path_nucleotide_tree.index();
 
+            // TODO over the size of the graph in nucleotides
             double w_min = (double) 1.0 / (double) (longest_path_in_nucleotides * longest_path_in_nucleotides);
+
 #ifdef debug_path_sgd
             std::cerr << "w_min " << w_min << std::endl;
 #endif
@@ -388,7 +390,9 @@ namespace odgi {
                                                           const double &theta,
                                                           const uint64_t &space,
                                                           const std::string &seeding_string,
-                                                          const bool &progress) {
+                                                          const bool &progress,
+                                                          const bool &snapshot,
+                                                          std::vector<std::vector<double>> &snapshots) {
             using namespace std::chrono_literals; // for timing stuff
             // our positions in 1D
             std::vector<std::atomic<double>> X(graph.get_node_count());
@@ -458,6 +462,15 @@ namespace odgi {
             std::uniform_int_distribution<uint64_t> dis(0, total_path_len_in_nucleotides-1);
             std::uniform_int_distribution<uint64_t> flip(0, 1);
             for (uint64_t iteration = 0; iteration < iter_max; iteration++) {
+                if (snapshot && iteration < iter_max - 1) {
+                    // drop out of atomic stuff... maybe not the best way to do this
+                    std::vector<double> X_iter(X.size());
+                    uint64_t i = 0;
+                    for (auto &x : X) {
+                        X_iter[i++] = x.load();
+                    }
+                    snapshots.push_back(X_iter);
+                }
                 for (uint64_t term_update = 0; term_update < min_term_updates; term_update++) {
                     // pick a random position from all paths
                     uint64_t pos = dis(gen);
@@ -662,7 +675,6 @@ namespace odgi {
                                                     std::vector<std::vector<handle_t>> &snapshots) {
             std::vector<double> layout;
             std::vector<std::vector<double>> snapshots_layouts;
-            // TODO bring the snapshot implementation to the determnistic path linear sgd
             if (nthreads == 1) {
                 layout = deterministic_path_linear_sgd(graph,
                                                        path_index,
@@ -674,7 +686,9 @@ namespace odgi {
                                                        theta,
                                                        space,
                                                        seed,
-                                                       progress);
+                                                       progress,
+                                                       snapshot,
+                                                       snapshots_layouts);
             } else {
                 layout = path_linear_sgd(graph,
                                          path_index,
@@ -729,7 +743,6 @@ namespace odgi {
 #endif
             }
             weak_components_map.clear();
-            // TODO Check if we have to take care of the snapshots
             if (snapshot) {
                 for (int j  = 0; j < snapshots_layouts.size(); j++) {
                     std::vector<double> snapshot_layout = snapshots_layouts[j];

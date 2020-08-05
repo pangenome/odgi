@@ -68,7 +68,7 @@ int main_sort(int argc, char** argv) {
     args::ValueFlag<uint64_t> p_sgd_iter_max(parser, "N", "max number of iterations for path guided linear 1D SGD model (default: 30)", {'x', "path-sgd-iter-max"});
     args::ValueFlag<uint64_t> p_sgd_zipf_space(parser, "N", "the maximum space size of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: max path lengths)", {'k', "path-sgd-zipf-space"});
     args::ValueFlag<std::string> p_sgd_seed(parser, "STRING", "set the seed for the deterministic 1-threaded path guided linear 1D SGD model (default: pangenomic!)", {'q', "path-sgd-seed"});
-    args::ValueFlag<std::string> p_sgd_snapshot(parser, "STRING", "set the prefix to which each snapshot graph of a path guided 1D SGD iteration should be written to", {'u', "path-sgd-snapshot"});
+    args::ValueFlag<std::string> p_sgd_snapshot(parser, "STRING", "set the prefix to which each snapshot graph of a path guided 1D SGD iteration should be written to, no default", {'u', "path-sgd-snapshot"});
     args::ValueFlag<std::string> pipeline(parser, "STRING", "apply a series of sorts, based on single-character command line arguments to this command, adding 's' as the default topological sort, 'f' to reverse the sort order, and 'g' to apply graph grooming", {'p', "pipeline"});
     args::Flag paths_by_min_node_id(parser, "paths-min", "sort paths by their lowest contained node id", {'L', "paths-min"});
     args::Flag paths_by_max_node_id(parser, "paths-max", "sort paths by their highest contained node id", {'M', "paths-max"});
@@ -291,10 +291,11 @@ int main_sort(int argc, char** argv) {
                 std::string snapshot_prefix = args::get(p_sgd_snapshot);
                 for (int j = 0; j < snapshots.size(); j++) {
                     std::cerr << "[path sgd sort]: Applying order to graph of iteration: " << std::to_string(j + 1) << std::endl;
-                    std::string local_snapshot_prefix = snapshot_prefix + std::to_string(j);
-                    graph.apply_ordering(snapshots[j], true);
+                    std::string local_snapshot_prefix = snapshot_prefix + std::to_string(j + 1);
+                    graph_t graph_copy = graph;
+                    graph_copy.apply_ordering(snapshots[j], true);
                     ofstream f(local_snapshot_prefix);
-                    graph.serialize(f);
+                    graph_copy.serialize(f);
                     f.close();
                 }
             }
