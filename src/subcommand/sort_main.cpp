@@ -68,6 +68,7 @@ int main_sort(int argc, char** argv) {
     args::ValueFlag<uint64_t> p_sgd_iter_max(parser, "N", "max number of iterations for path guided linear 1D SGD model (default: 30)", {'x', "path-sgd-iter-max"});
     args::ValueFlag<uint64_t> p_sgd_zipf_space(parser, "N", "the maximum space size of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: max path lengths)", {'k', "path-sgd-zipf-space"});
     args::ValueFlag<std::string> p_sgd_seed(parser, "STRING", "set the seed for the deterministic 1-threaded path guided linear 1D SGD model (default: pangenomic!)", {'q', "path-sgd-seed"});
+    args::ValueFlag<std::string> p_sgd_snapshot(parser, "STRING", "set the prefix to which each snapshot graph of a path guided 1D SGD iteration should be written to", {'u', "path-sgd-snapshot"});
     args::ValueFlag<std::string> pipeline(parser, "STRING", "apply a series of sorts, based on single-character command line arguments to this command, adding 's' as the default topological sort, 'f' to reverse the sort order, and 'g' to apply graph grooming", {'p', "pipeline"});
     args::Flag paths_by_min_node_id(parser, "paths-min", "sort paths by their lowest contained node id", {'L', "paths-min"});
     args::Flag paths_by_max_node_id(parser, "paths-max", "sort paths by their highest contained node id", {'M', "paths-max"});
@@ -174,7 +175,8 @@ int main_sort(int argc, char** argv) {
     double path_sgd_eps = args::get(p_sgd_eps) ? args::get(p_sgd_eps) : 0.01;
     double path_sgd_delta = args::get(p_sgd_delta) ? args::get(p_sgd_delta) : 0;
     // will be filled, if the user decides to write a snapshot of the graph after each sorting iterationn
-    std::vector<std::vector<double>> snapshots;
+    std::vector<std::vector<handle_t>> snapshots;
+    const bool snapshot = p_sgd_snapshot;
     // default parameters that need a path index to be present
     uint64_t path_sgd_min_term_updates;
     uint64_t path_sgd_zipf_space;
@@ -269,7 +271,7 @@ int main_sort(int argc, char** argv) {
                                              sgd_delta,
                                              num_threads), true);
         } else if (args::get(p_sgd)) {
-            graph.apply_ordering(
+            std::vector<handle_t> order =
                 algorithms::path_linear_sgd_order(graph,
                                                   path_index,
                                                   path_sgd_use_paths,
@@ -281,7 +283,22 @@ int main_sort(int argc, char** argv) {
                                                   path_sgd_zipf_space,
                                                   num_threads,
                                                   progress,
-                                                  path_sgd_seed), true);
+                                                  path_sgd_seed,
+                                                  snapshot,
+                                                  snapshots);
+            // TODO Check if we have to emit the snapshots
+            if (snapshot) {
+                std::string snapshot_prefix = args::get(p_sgd_snapshot);
+                for (int j = 0; j < snapshots.size(); j++) {
+                    std::cerr << "[path sgd sort]: Applying order to graph of iteration: " << std::to_string(j + 1) << std:endl;
+                    std:.string local_snapshot_prefix = snapshot_prefix + std::to_string(j);
+                    graph.apply_order(snapshots[j], true);
+                    ofstream f(local_snapshot_prefix);
+                    graph.serialize(f);
+                    f.close();
+                }
+            }
+            graph.apply_ordering(order, true);
         } else if (args::get(breadth_first)) {
             graph.apply_ordering(algorithms::breadth_first_topological_order(graph, bf_chunk_size), true);
         } else if (args::get(depth_first)) {
@@ -351,7 +368,9 @@ int main_sort(int argc, char** argv) {
                                                               path_sgd_zipf_space,
                                                               num_threads,
                                                               progress,
-                                                              path_sgd_seed);
+                                                              path_sgd_seed,
+                                                              snapshot,
+                                                              snapshots);
                     break;
                 }
                 case 'f':

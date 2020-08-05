@@ -16,7 +16,9 @@ namespace odgi {
                                             const double &theta,
                                             const uint64_t &space,
                                             const uint64_t &nthreads,
-                                            const bool &progress) {
+                                            const bool &progress,
+                                            const bool &snapshot,
+                                            std::vector<std::vector<double>> &snapshots) {
 #ifdef debug_path_sgd
             std::cerr << "iter_max: " << iter_max << std::endl;
             std::cerr << "min_term_updates: " << min_term_updates << std::endl;
@@ -91,8 +93,6 @@ namespace odgi {
             work_todo.store(true);
             // approximately what iteration we're on
             uint64_t iteration = 0;
-            // here we store all the intermediate snapshots after each iteration
-            std::vector<std::vector<double>> snapshots;
             // launch a thread to update the learning rate, count iterations, and decide when to stop
             auto checker_lambda =
                     [&](void) {
@@ -301,6 +301,7 @@ namespace odgi {
                         while (work_todo.load()) {
                             if ((iter < iteration) && iteration != iter_max) {
                                 // std::cerr << "[odgi sort] snapshot thread: Taking snapshot!" << std::endl;
+
                                 // drop out of atomic stuff... maybe not the best way to do this
                                 std::vector<double> X_iter(X.size());
                                 uint64_t i = 0;
@@ -316,7 +317,7 @@ namespace odgi {
                     };
 
             std::thread checker(checker_lambda);
-            std::thread snapshot(snapshot_lambda);
+            std::thread snapshot_thread(snapshot_lambda);
 
             std::vector<std::thread> workers;
             workers.reserve(nthreads);
@@ -328,7 +329,7 @@ namespace odgi {
                 workers[t].join();
             }
 
-            snapshot.join();
+            snapshot_thread.join();
 
             checker.join();
 ;
@@ -658,8 +659,9 @@ namespace odgi {
                                                     const bool &progress,
                                                     const std::string &seed,
                                                     const bool &snapshot,
-                                                    const std::vector<std::vector<double>> &snapshots) {
+                                                    std::vector<std::vector<handle_t>> &snapshots) {
             std::vector<double> layout;
+            std::vector<std::vector<double>> snapshots_layouts;
             // TODO bring the snapshot implementation to the determnistic path linear sgd
             if (nthreads == 1) {
                 layout = deterministic_path_linear_sgd(graph,
@@ -685,8 +687,7 @@ namespace odgi {
                                          space,
                                          nthreads,
                                          progress,
-                                         snapshot,
-                                         snapshots);
+                                         snapshot,snapshots_layouts);
             }
 #ifdef debug_components
             std::cerr << "node count: " << graph.get_node_count() << std::endl;
@@ -728,6 +729,40 @@ namespace odgi {
 #endif
             }
             weak_components_map.clear();
+            // TODO Check if we have to take care of the snapshots
+            if (snapshot) {
+                for (int j  = 0; j < snapshots_layouts.size(); j++) {
+                    std::vector<double> snapshot_layout = snapshots_layouts[j];
+                    uint64_t i = 0;
+                    std::vector<handle_layout_t> snapshot_handle_layout;
+                    graph.for_each_handle(
+                            [&i, &snapshot_layout, &weak_components_map, &snapshot_handle_layout](const handle_t &handle) {
+                                snapshot_handle_layout.push_back(
+                                        {
+                                                weak_components_map[number_bool_packing::unpack_number(handle)],
+                                                snapshot_layout[i++],
+                                                handle
+                                        });
+                            });
+                    // sort the graph layout by component, then pos, then handle rank
+                    std::sort(snapshot_handle_layout.begin(), snapshot_handle_layout.end(),
+                              [&](const handle_layout_t &a,
+                                  const handle_layout_t &b) {
+                                  return a.weak_component < b.weak_component
+                                         || (a.weak_component == b.weak_component
+                                             && a.pos < b.pos
+                                             || (a.pos == b.pos
+                                                 && as_integer(a.handle) < as_integer(b.handle)));
+                              });
+                    std::vector<handle_t> order;
+                    order.reserve(graph.get_node_count());
+                    for (auto &layout_handle : snapshot_handle_layout) {
+                        order.push_back(layout_handle.handle);
+                    }
+                    snapshots.push_back(order);
+                }
+
+            }
             std::vector<handle_layout_t> handle_layout;
             uint64_t i = 0;
             graph.for_each_handle(
