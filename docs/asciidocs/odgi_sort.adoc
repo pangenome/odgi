@@ -146,6 +146,9 @@ pipeline of sorts within one parameter.
 *-x, --path-sgd-iter-max*=_N_::
   The maximum number of iterations for path guided linear 1D SGD model. The default value is 30.
 
+*-F, --iteration-max-learning-rate::
+  The iteration where the learning rate is max for path guided linear 1D SGD model. The default value is 0.
+
 *-k, --path-sgd-zipf-space*=_N_::
   The maximum space size of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model. The default value is the _maximum path lengths_.
 
