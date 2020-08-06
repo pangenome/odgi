@@ -2,7 +2,7 @@
 
 // #define debug_path_sgd
 // #define eval_path_sgd
-#define debug_schedule
+//#define debug_schedule
 namespace odgi {
     namespace algorithms {
 
@@ -647,7 +647,7 @@ namespace odgi {
                                   ", delta: " << Delta_max.load() <<
                                   ", number of updates: " << term_updates.load() << std::endl;
                     }
-                    eta.store(etas[iteration]); // update our learning rate
+                    eta.store(etas[iteration + 1]); // update our learning rate
                     Delta_max.store(delta); // set our delta max to the threshold
                 }
                 term_updates.store(0);
