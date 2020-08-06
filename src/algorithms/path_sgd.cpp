@@ -2,7 +2,7 @@
 
 // #define debug_path_sgd
 // #define eval_path_sgd
-// #define debug_schedule
+#define debug_schedule
 namespace odgi {
     namespace algorithms {
 
@@ -10,6 +10,7 @@ namespace odgi {
                                             const xp::XP &path_index,
                                             const std::vector<path_handle_t>& path_sgd_use_paths,
                                             const uint64_t &iter_max,
+                                            const uint64_t &iter_with_max_learning_rate,
                                             const uint64_t &min_term_updates,
                                             const double &delta,
                                             const double &eps,
@@ -76,7 +77,7 @@ namespace odgi {
 #endif
             double w_max = 1.0;
             // get our schedule
-            std::vector<double> etas = path_linear_sgd_schedule(w_min, w_max, iter_max, eps);
+            std::vector<double> etas = path_linear_sgd_schedule(w_min, w_max, iter_max, iter_with_max_learning_rate, eps);
             // initialize Zipfian distrubution so we only have to calculate zeta once
             zipfian_int_distribution<uint64_t>::param_type p(1, space, theta);
             zipfian_int_distribution<uint64_t> zipfian(p);
@@ -346,6 +347,7 @@ namespace odgi {
         std::vector<double> path_linear_sgd_schedule(const double &w_min,
                                                      const double &w_max,
                                                      const uint64_t &iter_max,
+                                                     const uint64_t &iter_with_max_learning_rate,
                                                      const double &eps) {
 #ifdef debug_schedule
             std::cerr << "w_min: " << w_min << std::endl;
@@ -367,8 +369,8 @@ namespace odgi {
 #ifdef debug_schedule
             std::cerr << "etas: ";
 #endif
-            for (uint64_t t = 0; t < iter_max; t++) {
-                etas.push_back(eta_max * exp(-lambda * t));
+            for (int64_t t = 0; t < iter_max; t++) {
+                etas.push_back(eta_max * exp(-lambda * (abs(t - (int64_t)iter_with_max_learning_rate))));
 #ifdef debug_schedule
                 std::cerr << etas.back() << ", ";
 #endif
@@ -383,6 +385,7 @@ namespace odgi {
                                                           const xp::XP &path_index,
                                                           const std::vector<path_handle_t>& path_sgd_use_paths,
                                                           const uint64_t &iter_max,
+                                                          const uint64_t &iter_with_max_learning_rate,
                                                           const uint64_t &min_term_updates,
                                                           const double &delta,
                                                           const double &eps,
@@ -441,7 +444,7 @@ namespace odgi {
 #endif
             double w_max = 1.0;
             // get our schedule
-            std::vector<double> etas = path_linear_sgd_schedule(w_min, w_max, iter_max, eps);
+            std::vector<double> etas = path_linear_sgd_schedule(w_min, w_max, iter_max, iter_with_max_learning_rate, eps);
             // initialize Zipfian distrubution so we only have to calculate zeta once
             zipfian_int_distribution<uint64_t>::param_type p(1, space, theta);
             zipfian_int_distribution<uint64_t> zipfian(p);
@@ -663,6 +666,7 @@ namespace odgi {
                                                     const xp::XP &path_index,
                                                     const std::vector<path_handle_t>& path_sgd_use_paths,
                                                     const uint64_t &iter_max,
+                                                    const uint64_t &iter_with_max_learning_rate,
                                                     const uint64_t &min_term_updates,
                                                     const double &delta,
                                                     const double &eps,
@@ -681,6 +685,7 @@ namespace odgi {
                                                        path_index,
                                                        path_sgd_use_paths,
                                                        iter_max,
+                                                       iter_with_max_learning_rate,
                                                        min_term_updates,
                                                        delta,
                                                        eps,
@@ -696,6 +701,7 @@ namespace odgi {
                                          path_index,
                                          path_sgd_use_paths,
                                          iter_max,
+                                         iter_with_max_learning_rate,
                                          min_term_updates,
                                          delta,
                                          eps,
