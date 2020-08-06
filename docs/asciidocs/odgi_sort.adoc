@@ -137,6 +137,9 @@ pipeline of sorts within one parameter.
 *-g, --path-sgd-eps*=_N_::
   The final learning rate for path guided linear 1D SGD model. The default value is _0.01_.
 
+*-v, --path-sgd-eta-max*=_N_::
+  The first and maximum learning rate for path guided linear 1D SGD model. The default value is _number of nodes in the graph_.
+
 *-a, --path-sgd-zipf-theta*=_N_::
   The theta value for the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model. The default value is _0.99_.
 
@@ -148,6 +151,10 @@ pipeline of sorts within one parameter.
 
 *-q, --path-sgd-seed*=_N_::
   Set the seed for the deterministic 1-threaded path guided linear 1D SGD model. The default value is _pangenomic!_.
+
+*-u, --path-sgd-snapshot*=_STRING_::
+  Set the prefix to which each snapshot graph of a path guided 1D SGD iteration should be written to. This is turned off per default.
+  This argument only works when _-Y, --path-sgd_ was specified. Not applicable in a pipeline of sorts.
 
 === Eades Sort
 
