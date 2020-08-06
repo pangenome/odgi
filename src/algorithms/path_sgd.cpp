@@ -647,8 +647,13 @@ namespace odgi {
                                   ", delta: " << Delta_max.load() <<
                                   ", number of updates: " << term_updates.load() << std::endl;
                     }
-                    eta.store(etas[iteration + 1]); // update our learning rate
-                    Delta_max.store(delta); // set our delta max to the threshold
+
+                    // If it is the last iteration, there is no need to update the next values, and it is avoided
+                    // to request an element outside the vector
+                    if (iteration + 1 < iter_max){
+                        eta.store(etas[iteration + 1]); // update our learning rate
+                        Delta_max.store(delta); // set our delta max to the threshold
+                    }
                 }
                 term_updates.store(0);
             }
