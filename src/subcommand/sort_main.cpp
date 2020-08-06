@@ -65,7 +65,7 @@ int main_sort(int argc, char** argv) {
     args::ValueFlag<double> p_sgd_delta(parser, "N", "threshold of maximum displacement approximately in bp at which to stop path guided linear 1D SGD (default: 0)", {'j', "path-sgd-delta"});
     args::ValueFlag<double> p_sgd_eps(parser, "N", "final learning rate for path guided linear 1D SGD model (default: 0.01)", {'g', "path-sgd-eps"});
     args::ValueFlag<double> p_sgd_eta_max(parser, "N", "first and maximum learning rate for path guided linear 1D SGD model (default: number of nodes in the graph)", {'v', "path-sgd-eta-max"});
-    args::ValueFlag<double> p_sgd_zipf_theta(parser, "N", "the theta value for the Zipfian distrubution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: 0.99)", {'a', "path-sgd-zipf-theta"});
+    args::ValueFlag<double> p_sgd_zipf_theta(parser, "N", "the theta value for the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: 0.99)", {'a', "path-sgd-zipf-theta"});
     args::ValueFlag<uint64_t> p_sgd_iter_max(parser, "N", "max number of iterations for path guided linear 1D SGD model (default: 30)", {'x', "path-sgd-iter-max"});
     args::ValueFlag<uint64_t> p_sgd_iter_with_max_learning_rate(parser, "N", "iteration where the learning rate is max for path guided linear 1D SGD model (default: 0)", {'F', "iteration-max-learning-rate"});
     args::ValueFlag<uint64_t> p_sgd_zipf_space(parser, "N", "the maximum space size of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: max path lengths)", {'k', "path-sgd-zipf-space"});

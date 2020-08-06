@@ -445,7 +445,7 @@ namespace odgi {
             double w_max = 1.0;
             // get our schedule
             std::vector<double> etas = path_linear_sgd_schedule(w_min, w_max, iter_max, iter_with_max_learning_rate, eps);
-            // initialize Zipfian distrubution so we only have to calculate zeta once
+            // initialize Zipfian distribution so we only have to calculate zeta once
             zipfian_int_distribution<uint64_t>::param_type p(1, space, theta);
             zipfian_int_distribution<uint64_t> zipfian(p);
             // how many term updates we make
