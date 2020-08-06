@@ -64,6 +64,7 @@ int main_sort(int argc, char** argv) {
     args::ValueFlag<double> p_sgd_min_term_updates_num_nodes(parser, "N", "minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of the number of nodes (default: argument is not set, the default of -G=[N], path-sgd-min-term-updates-paths=[N] is used)", {'U', "path-sgd-min-term-updates-nodes"});
     args::ValueFlag<double> p_sgd_delta(parser, "N", "threshold of maximum displacement approximately in bp at which to stop path guided linear 1D SGD (default: 0)", {'j', "path-sgd-delta"});
     args::ValueFlag<double> p_sgd_eps(parser, "N", "final learning rate for path guided linear 1D SGD model (default: 0.01)", {'g', "path-sgd-eps"});
+    args::ValueFlag<double> p_sgd_eta_max(parser, "N", "first and maximum learning rate for path guided linear 1D SGD model (default: number of nodes in the graph)", {'v', "path-sgd-eta-max"});
     args::ValueFlag<double> p_sgd_zipf_theta(parser, "N", "the theta value for the Zipfian distrubution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: 0.99)", {'a', "path-sgd-zipf-theta"});
     args::ValueFlag<uint64_t> p_sgd_iter_max(parser, "N", "max number of iterations for path guided linear 1D SGD model (default: 30)", {'x', "path-sgd-iter-max"});
     args::ValueFlag<uint64_t> p_sgd_zipf_space(parser, "N", "the maximum space size of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: max path lengths)", {'k', "path-sgd-zipf-space"});
@@ -136,6 +137,7 @@ int main_sort(int argc, char** argv) {
     uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
     bool sgd_use_paths = args::get(lsgd_use_paths);
     /// path guided linear 1D SGD sort helpers
+    // TODO beautify this, maybe put into its own file
     std::function<uint64_t(const std::vector<path_handle_t> &,
                            const xp::XP &)> get_sum_path_lengths
             = [&](const std::vector<path_handle_t> &path_sgd_use_paths, const xp::XP &path_index) {
@@ -174,6 +176,7 @@ int main_sort(int argc, char** argv) {
     double path_sgd_zipf_theta = args::get(p_sgd_zipf_theta) ? args::get(p_sgd_zipf_theta) : 0.99;
     double path_sgd_eps = args::get(p_sgd_eps) ? args::get(p_sgd_eps) : 0.01;
     double path_sgd_delta = args::get(p_sgd_delta) ? args::get(p_sgd_delta) : 0;
+    double path_sgd_max_eta = args::get(p_sgd_eta_max) ? args::get(p_sgd_eta_max) : graph.get_node_count();
     // will be filled, if the user decides to write a snapshot of the graph after each sorting iterationn
     std::vector<std::vector<handle_t>> snapshots;
     const bool snapshot = p_sgd_snapshot;
@@ -279,6 +282,7 @@ int main_sort(int argc, char** argv) {
                                                   path_sgd_min_term_updates,
                                                   path_sgd_delta,
                                                   path_sgd_eps,
+                                                  path_sgd_max_eta,
                                                   path_sgd_zipf_theta,
                                                   path_sgd_zipf_space,
                                                   num_threads,
@@ -365,6 +369,7 @@ int main_sort(int argc, char** argv) {
                                                               path_sgd_min_term_updates,
                                                               path_sgd_delta,
                                                               path_sgd_eps,
+                                                              path_sgd_max_eta,
                                                               path_sgd_zipf_theta,
                                                               path_sgd_zipf_space,
                                                               num_threads,

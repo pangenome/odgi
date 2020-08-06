@@ -137,6 +137,9 @@ pipeline of sorts within one parameter.
 *-g, --path-sgd-eps*=_N_::
   The final learning rate for path guided linear 1D SGD model. The default value is _0.01_.
 
+*-v, --path-sgd-eta-max*=_N_::
+  The first and maximum learning rate for path guided linear 1D SGD model. The default value is _number of nodes in the graph_.
+
 *-a, --path-sgd-zipf-theta*=_N_::
   The theta value for the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model. The default value is _0.99_.
 

@@ -13,6 +13,7 @@ namespace odgi {
                                             const uint64_t &min_term_updates,
                                             const double &delta,
                                             const double &eps,
+                                            const double &eta_max,
                                             const double &theta,
                                             const uint64_t &space,
                                             const uint64_t &nthreads,
@@ -68,9 +69,7 @@ namespace odgi {
                 total_path_len_in_nucleotides += path_len;
             }
             path_nucleotide_tree.index();
-
-            // TODO over the size of the graph in nodes
-            double w_min = (double) 1.0 / (double) (graph.get_node_count());
+            double w_min = (double) 1.0 / (double) (eta_max);
 
 #ifdef debug_path_sgd
             std::cerr << "w_min " << w_min << std::endl;
@@ -387,6 +386,7 @@ namespace odgi {
                                                           const uint64_t &min_term_updates,
                                                           const double &delta,
                                                           const double &eps,
+                                                          const double &eta_max,
                                                           const double &theta,
                                                           const uint64_t &space,
                                                           const std::string &seeding_string,
@@ -435,7 +435,7 @@ namespace odgi {
             }
             path_nucleotide_tree.index();
 
-            double w_min = (double) 1.0 / (double) (len);
+            double w_min = (double) 1.0 / (double) (eta_max);
 #ifdef debug_path_sgd
             std::cerr << "w_min " << w_min << std::endl;
 #endif
@@ -666,6 +666,7 @@ namespace odgi {
                                                     const uint64_t &min_term_updates,
                                                     const double &delta,
                                                     const double &eps,
+                                                    const double &eta_max,
                                                     const double &theta,
                                                     const uint64_t &space,
                                                     const uint64_t &nthreads,
@@ -683,6 +684,7 @@ namespace odgi {
                                                        min_term_updates,
                                                        delta,
                                                        eps,
+                                                       eta_max,
                                                        theta,
                                                        space,
                                                        seed,
@@ -697,12 +699,14 @@ namespace odgi {
                                          min_term_updates,
                                          delta,
                                          eps,
+                                         eta_max,
                                          theta,
                                          space,
                                          nthreads,
                                          progress,
                                          snapshot,snapshots_layouts);
             }
+            // TODO move the followin into its own function that we can reuse
 #ifdef debug_components
             std::cerr << "node count: " << graph.get_node_count() << std::endl;
 #endif
