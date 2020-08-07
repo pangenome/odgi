@@ -284,6 +284,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/build_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/test_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/stats_main.cpp
+        ${CMAKE_SOURCE_DIR}/src/subcommand/cover_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/sort_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/view_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/kmers_main.cpp

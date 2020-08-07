@@ -1,10 +1,12 @@
+
 #include "cover.hpp"
 
-// #define debug_cover
+#define debug_cover
 
 namespace odgi {
     namespace algorithms {
 
+        //TODO: check if there is already an implementation like that somewhere
         ska::flat_hash_set<handlegraph::nid_t>
         is_nice_and_acyclic(const HandleGraph &graph, const ska::flat_hash_set<long int> &component) {
             ska::flat_hash_set<handlegraph::nid_t> head_nodes;
@@ -302,6 +304,12 @@ namespace odgi {
             }
 
             return true;
+        }
+
+        void path_cover(handlegraph::MutablePathDeletableHandleGraph &graph,
+                        size_t n, size_t k,
+                        bool show_progress) {
+
         }
 
     }

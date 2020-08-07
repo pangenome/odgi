@@ -4,6 +4,7 @@
 #include <stack>
 #include <map>
 
+#include <handlegraph/mutable_path_deletable_handle_graph.hpp>
 #include <handlegraph/util.hpp>
 #include "weakly_connected_components.hpp"
 
@@ -38,11 +39,8 @@ namespace odgi {
             - When determining window coverage, we consider the window equivalent to its reverse
               complement.
         */
-        /*gbwt::GBWT path_cover_gbwt(const HandleGraph &graph,
-                                   size_t n = PATH_COVER_DEFAULT_N, size_t k = PATH_COVER_DEFAULT_K,
-                                   gbwt::size_type batch_size = gbwt::DynamicGBWT::INSERT_BATCH_SIZE,
-                                   gbwt::size_type sample_interval = gbwt::DynamicGBWT::SAMPLE_INTERVAL,
-                                   bool show_progress = false);*/
+        void path_cover(handlegraph::MutablePathDeletableHandleGraph &graph,
+                        size_t n, size_t k,
+                        bool show_progress = false);
     }
-
 }
