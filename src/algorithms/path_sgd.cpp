@@ -19,6 +19,8 @@ namespace odgi {
                                             const uint64_t &space,
                                             const uint64_t &nthreads,
                                             const bool &progress,
+                                            const bool &switch_nodes,
+                                            const bool &sample_from_nodes,
                                             const bool &snapshot,
                                             std::vector<std::vector<double>> &snapshots) {
 #ifdef debug_path_sgd
@@ -288,6 +290,13 @@ namespace odgi {
 #ifdef debug_path_sgd
                             std::cerr << "before X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
 #endif
+                            if (switch_nodes) {
+                                // the nodes are not in the ideal nucleotide order of the path
+                                if (pos_in_path_a > pos_in_path_b) {
+                                    X[i].exchange(j);
+                                    X[j].exchange(i);
+                                }
+                            }
                             X[i].store(X[i].load() - r_x);
                             X[j].store(X[j].load() + r_x);
 #ifdef debug_path_sgd
@@ -394,6 +403,8 @@ namespace odgi {
                                                           const uint64_t &space,
                                                           const std::string &seeding_string,
                                                           const bool &progress,
+                                                          const bool &switch_nodes,
+                                                          const bool &sample_from_nodes,
                                                           const bool &snapshot,
                                                           std::vector<std::vector<double>> &snapshots) {
             using namespace std::chrono_literals; // for timing stuff
@@ -625,6 +636,13 @@ namespace odgi {
 #ifdef debug_path_sgd
                     std::cerr << "before X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
 #endif
+                    if (switch_nodes) {
+                        // the nodes are not in the ideal nucleotide order of the path
+                        if (pos_in_path_a > pos_in_path_b) {
+                            X[i].exchange(j);
+                            X[j].exchange(i);
+                        }
+                    }
                     X[i].store(X[i].load() - r_x);
                     X[j].store(X[j].load() + r_x);
 #ifdef debug_path_sgd
@@ -724,7 +742,7 @@ namespace odgi {
                                          snapshot,
                                          snapshots_layouts);
             }
-            // TODO move the followin into its own function that we can reuse
+            // TODO move the following into its own function that we can reuse
 #ifdef debug_components
             std::cerr << "node count: " << graph.get_node_count() << std::endl;
 #endif
