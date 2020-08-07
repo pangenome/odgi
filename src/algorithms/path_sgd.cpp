@@ -628,7 +628,8 @@ namespace odgi {
                                                     const uint64_t &space,
                                                     const uint64_t &nthreads,
                                                     const bool &progress,
-                                                    const std::string &seed) {
+                                                    const std::string &seed,
+                                                    const bool ) {
             std::vector<double> layout;
             if (nthreads == 1) {
                 layout = deterministic_path_linear_sgd(graph,

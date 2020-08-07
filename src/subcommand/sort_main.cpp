@@ -34,7 +34,6 @@ int main_sort(int argc, char** argv) {
     args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store the graph in this file", {'o', "out"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> xp_in_file(parser, "FILE", "load the path index from this file", {'X', "path-index"});
-    //args::Flag show_sort(parser, "show", "write the sort order mapping", {'S', "show"});
     args::ValueFlag<std::string> sort_order_in(parser, "FILE", "load the sort order from this file", {'s', "sort-order"});
     args::Flag cycle_breaking(parser, "cycle_breaking", "use a cycle breaking sort", {'c', "cycle-breaking"});
     args::Flag breadth_first(parser, "breadth_first", "use a breadth first topological sort", {'b', "breadth-first"});
@@ -43,7 +42,7 @@ int main_sort(int argc, char** argv) {
     args::ValueFlag<uint64_t> depth_first_chunk(parser, "N", "chunk size for depth first topological sort", {'Z', "depth-first-chunk"});
     args::Flag dagify(parser, "dagify", "sort on the basis of the DAGified graph", {'d', "dagify-sort"});
     args::Flag eades(parser, "eades", "use eades algorithm", {'e', "eades"});
-    //args::Flag lazy(parser, "lazy", "use lazy topological algorithm (DAG only)", {'l', "lazy"});
+    /// linear SGD
     args::Flag lsgd(parser, "linear-sgd", "apply 1D (linear) SGD algorithm to organize graph", {'S', "linear-sgd"});
     args::ValueFlag<uint64_t> lsgd_bandwidth(parser, "sgd-bandwidth", "bandwidth of linear SGD model (default: 1000)", {'H', "sgd-bandwidth"});
     args::ValueFlag<double> lsgd_sampling_rate(parser, "sgd-sampling-rate", "sample pairs of nodes with probability distance between them divided by the sampling rate (default: 20)", {'Q', "sgd-sampling-rate"});
@@ -58,6 +57,7 @@ int main_sort(int argc, char** argv) {
     args::ValueFlag<uint64_t> mondriaan_n_parts(parser, "N", "number of partitions for mondriaan", {'N', "mondriaan-n-parts"});
     args::ValueFlag<double> mondriaan_epsilon(parser, "N", "epsilon parameter to mondriaan", {'E', "mondriaan-epsilon"});
     args::Flag mondriaan_path_weight(parser, "path-weight", "weight mondriaan input matrix by path coverage of edges", {'W', "mondriaan-path-weight"});
+    /// path guided linear 1D SGD
     args::Flag p_sgd(parser, "path-sgd", "apply path guided linear 1D SGD algorithm to organize graph", {'Y', "path-sgd"});
     args::ValueFlag<std::string> p_sgd_in_file(parser, "FILE", "specify a line separated list of paths to sample from for the on the fly term generation process in the path guided linear 1D SGD (default: sample from all paths)", {'f', "path-sgd-use-paths"});
     args::ValueFlag<double> p_sgd_min_term_updates_paths(parser, "N", "minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of total path length (default: 0.1)", {'G', "path-sgd-min-term-updates-paths"});
@@ -68,6 +68,9 @@ int main_sort(int argc, char** argv) {
     args::ValueFlag<uint64_t> p_sgd_iter_max(parser, "N", "max number of iterations for path guided linear 1D SGD model (default: 30)", {'x', "path-sgd-iter-max"});
     args::ValueFlag<uint64_t> p_sgd_zipf_space(parser, "N", "the maximum space size of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: max path lengths)", {'k', "path-sgd-zipf-space"});
     args::ValueFlag<std::string> p_sgd_seed(parser, "STRING", "set the seed for the deterministic 1-threaded path guided linear 1D SGD model (default: pangenomic!)", {'q', "path-sgd-seed"});
+    args::Flag p_sgd_switch_nodes(parser, "path-sgd-switch-nodes", "before a term update, if necessary, rearrange the 2 nodes so that their position in the layout reflects how they are visited by the path (default: FALSE)", {'I', "path-sgd-switch-nodes"});
+    args::Flag p_sgd_sample_from_nodes(parser, "path-sgd-switch-nodes", "instead of sampling the first node of a term from all paths' positions, we sample from all paths' nodes (default: FALSE)", {'J', "path-sgd-sample-from-nodes"});
+    /// pipeline
     args::ValueFlag<std::string> pipeline(parser, "STRING", "apply a series of sorts, based on single-character command line arguments to this command, adding 's' as the default topological sort, 'f' to reverse the sort order, and 'g' to apply graph grooming", {'p', "pipeline"});
     args::Flag paths_by_min_node_id(parser, "paths-min", "sort paths by their lowest contained node id", {'L', "paths-min"});
     args::Flag paths_by_max_node_id(parser, "paths-max", "sort paths by their highest contained node id", {'M', "paths-max"});
@@ -279,7 +282,9 @@ int main_sort(int argc, char** argv) {
                                                   path_sgd_zipf_space,
                                                   num_threads,
                                                   progress,
-                                                  path_sgd_seed), true);
+                                                  path_sgd_seed,
+                                                  p_sgd_switch_nodes,
+                                                  p_sgd_sample_from_nodes), true);
         } else if (args::get(breadth_first)) {
             graph.apply_ordering(algorithms::breadth_first_topological_order(graph, bf_chunk_size), true);
         } else if (args::get(depth_first)) {
@@ -349,7 +354,9 @@ int main_sort(int argc, char** argv) {
                                                               path_sgd_zipf_space,
                                                               num_threads,
                                                               progress,
-                                                              path_sgd_seed);
+                                                              path_sgd_seed,
+                                                              p_sgd_switch_nodes,
+                                                              p_sgd_sample_from_nodes);
                     break;
                 }
                 case 'f':
