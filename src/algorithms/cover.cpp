@@ -1,14 +1,13 @@
-
 #include "cover.hpp"
 
-#define debug_cover
+//#define debug_cover
 
 namespace odgi {
     namespace algorithms {
 
         //TODO: check if there is already an implementation like that somewhere
         ska::flat_hash_set<handlegraph::nid_t>
-        is_nice_and_acyclic(const HandleGraph &graph, const ska::flat_hash_set<long int> &component) {
+        is_nice_and_acyclic(const HandleGraph &graph, const ska::flat_hash_set<handlegraph::nid_t> &component) {
             ska::flat_hash_set<handlegraph::nid_t> head_nodes;
             if (component.empty()) { return head_nodes; }
 
@@ -233,7 +232,7 @@ namespace odgi {
 
         template<class Coverage>
         bool
-        component_path_cover(const typename Coverage::graph_t &graph,
+        component_path_cover(handlegraph::MutablePathDeletableHandleGraph& graph,
                              std::vector<ska::flat_hash_set<handlegraph::nid_t>> &components, size_t component_id,
                              size_t n, size_t k, bool show_progress, size_t sample_id_offset, size_t contig_id) {
             typedef typename Coverage::coverage_t coverage_t;
@@ -294,10 +293,15 @@ namespace odgi {
                     }
                 }
 
-#ifdef debug_cover
-                std::cerr << "Path " << i << " -->";
+                path_handle_t new_path = graph.create_path_handle("Path_" + std::to_string(component_id) + "_" + std::to_string(i));
                 for (handle_t handle : path) {
-                    std::cerr << " " << graph.get_id(handle);
+                    graph.append_step(new_path, handle);
+                }
+
+#ifdef debug_cover
+                std::cerr << "Path_" + std::to_string(component_id) + "_" + std::to_string(i) << " -->";
+                for (handle_t handle : path) {
+                    std::cerr << " " << graph.get_id(handle) << (number_bool_packing::unpack_bit(handle) ? "-" : "+");
                 }
                 std::cerr << std::endl;
 #endif
@@ -309,7 +313,25 @@ namespace odgi {
         void path_cover(handlegraph::MutablePathDeletableHandleGraph &graph,
                         size_t n, size_t k,
                         bool show_progress) {
+            std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components = algorithms::weakly_connected_components(
+                    &graph);
 
+            // Handle each component separately.
+            size_t processed_components = 0;
+            for (size_t contig = 0; contig < weak_components.size(); contig++) {
+                auto &weak_component = weak_components[contig];
+
+#ifdef debug_cover
+                std::cerr << "component " << contig << "; size " << weak_component.size() << std::endl;
+#endif
+
+                if (component_path_cover<SimpleCoverage>(graph, weak_components, contig, n, k, show_progress, 0,
+                                                         contig)) {
+                    processed_components++;
+
+                    std::cerr << "Processed: " << processed_components << std::endl;
+                }
+            }
         }
 
     }
