@@ -639,8 +639,7 @@ namespace odgi {
                     if (switch_nodes) {
                         // the nodes are not in the ideal nucleotide order of the path
                         if (pos_in_path_a > pos_in_path_b) {
-                            X[i].exchange(j);
-                            X[j].exchange(i);
+                            X[i].exchange(X[j]);
                         }
                     }
                     X[i].store(X[i].load() - r_x);

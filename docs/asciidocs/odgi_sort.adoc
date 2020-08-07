@@ -155,6 +155,10 @@ pipeline of sorts within one parameter.
 *-q, --path-sgd-seed*=_N_::
   Set the seed for the deterministic 1-threaded path guided linear 1D SGD model. The default value is _pangenomic!_.
 
+*-I, --path-sgd-switch-nodes*::
+  Switch two nodes of a term if that results in a more linear nucleotide positioning of the sampled path.
+
+
 *-u, --path-sgd-snapshot*=_STRING_::
   Set the prefix to which each snapshot graph of a path guided 1D SGD iteration should be written to. This is turned off per default.
   This argument only works when _-Y, --path-sgd_ was specified. Not applicable in a pipeline of sorts.
