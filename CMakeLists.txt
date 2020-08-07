@@ -341,6 +341,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/chop.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/unchop.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/perfect_neighbors.cpp
+        ${CMAKE_SOURCE_DIR}/src/algorithms/cover.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/path_sgd.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/remove_isolated.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/expand_context.cpp
@@ -454,6 +455,7 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/algorithms/split_strands.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/extract_extending_graph.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/extract_connecting_graph.hpp
+        ${CMAKE_SOURCE_DIR}/src/algorithms/cover.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/path_sgd.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/expand_context.hpp
