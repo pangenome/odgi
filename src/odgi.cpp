@@ -1323,6 +1323,31 @@ std::pair<step_handle_t, step_handle_t> graph_t::rewrite_segment(const step_hand
     }
 }
 
+    ////////////////////////////////////////////////////////////////////////////
+    // Rank handle interface
+    ////////////////////////////////////////////////////////////////////////////
+    //Return the rank of a node (ranks start at 1 and are dense).
+    size_t graph_t::id_to_rank(const nid_t &node_id) const {
+        return node_id + 1;
+    }
+
+    //Return the node with a given rank.
+    nid_t graph_t::rank_to_id(const size_t &rank) const {
+        return rank - 1;
+    }
+
+    // Return the rank of a handle (ranks start at 1 and are dense, and each
+    // orientation has its own rank). Handle ranks may not have anything to do
+    // with node ranks.
+    size_t graph_t::handle_to_rank(const handle_t &handle) const {
+        return number_bool_packing::unpack_number(handle);
+    }
+
+    // Return the handle with a given rank.
+    handle_t graph_t::rank_to_handle(const size_t &rank) const {
+        return number_bool_packing::pack(rank, false);
+    }
+
 void graph_t::display(void) const {
     std::cerr << "------ graph state ------" << std::endl;
 
