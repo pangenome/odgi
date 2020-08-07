@@ -18,67 +18,80 @@
 #include "weakly_connected_components.hpp"
 
 namespace odgi {
-namespace algorithms {
+    namespace algorithms {
 
-using namespace handlegraph;
+        using namespace handlegraph;
 
-struct handle_layout_t {
-    uint64_t weak_component = 0;
-    double pos = 0;
-    handle_t handle = as_handle(0);
-};
+        struct handle_layout_t {
+            uint64_t weak_component = 0;
+            double pos = 0;
+            handle_t handle = as_handle(0);
+        };
 
 /// use SGD driven, by path guided, and partly zipfian distribution sampled pairwise distances to obtain a 1D linear layout of the graph that respects its topology
-std::vector<double> path_linear_sgd(const PathHandleGraph &graph,
-                                    const xp::XP &path_index,
-                                    const std::vector<path_handle_t>& path_sgd_use_paths,
-                                    const uint64_t &iter_max,
-                                    const uint64_t &min_term_updates,
-                                    const double &delta,
-                                    const double &eps,
-                                    const double &theta,
-                                    const uint64_t &space,
-                                    const uint64_t &nthreads,
-                                    const bool &progress,
-                                    const bool &switch_nodes,
-                                    const bool &sample_from_nodes);
-
-/// our learning schedule
-std::vector<double> path_linear_sgd_schedule(const double &w_min,
-                                             const double &w_max,
-                                             const uint64_t &iter_max,
-                                             const double &eps);
-
-/// single threaded and deterministic path guided 1D linear SGD
-std::vector<double> deterministic_path_linear_sgd(const PathHandleGraph &graph,
-                                                  const xp::XP &path_index,
-                                                  const std::vector<path_handle_t>& path_sgd_use_paths,
-                                                  const uint64_t &iter_max,
-                                                  const uint64_t &min_term_updates,
-                                                  const double &delta,
-                                                  const double &eps,
-                                                  const double &theta,
-                                                  const uint64_t &space,
-                                                  const std::string &seeding_string,
-                                                  const bool &progress,
-                                                  const bool &switch_nodes,
-                                                  const bool &sample_from_nodes);
-
-std::vector<handle_t> path_linear_sgd_order(const PathHandleGraph &graph,
+        std::vector<double> path_linear_sgd(const PathHandleGraph &graph,
                                             const xp::XP &path_index,
-                                            const std::vector<path_handle_t>& path_sgd_use_paths,
+                                            const std::vector<path_handle_t> &path_sgd_use_paths,
                                             const uint64_t &iter_max,
+                                            const uint64_t &iter_with_max_learning_rate,
                                             const uint64_t &min_term_updates,
                                             const double &delta,
                                             const double &eps,
+                                            const double &eta_max,
                                             const double &theta,
                                             const uint64_t &space,
                                             const uint64_t &nthreads,
                                             const bool &progress,
-                                            const std::string &seed,
                                             const bool &switch_nodes,
-                                            const bool &sample_from_nodes);
+                                            const bool &sample_from_nodes,
+                                            const bool &snapshot,
+                                            std::vector<std::vector<double>> &snapshots);
 
-}
+/// our learning schedule
+        std::vector<double> path_linear_sgd_schedule(const double &w_min,
+                                                     const double &w_max,
+                                                     const uint64_t &iter_max,
+                                                     const uint64_t &iter_with_max_learning_rate,
+                                                     const double &eps);
+
+/// single threaded and deterministic path guided 1D linear SGD
+        std::vector<double> deterministic_path_linear_sgd(const PathHandleGraph &graph,
+                                                          const xp::XP &path_index,
+                                                          const std::vector<path_handle_t> &path_sgd_use_paths,
+                                                          const uint64_t &iter_max,
+                                                          const uint64_t &iter_with_max_learning_rate,
+                                                          const uint64_t &min_term_updates,
+                                                          const double &delta,
+                                                          const double &eps,
+                                                          const double &eta_max,
+                                                          const double &theta,
+                                                          const uint64_t &space,
+                                                          const std::string &seeding_string,
+                                                          const bool &progress,
+                                                          const bool &switch_nodes,
+                                                          const bool &sample_from_nodes,
+                                                          const bool &snapshot,
+                                                          std::vector<std::vector<double>> &snapshots);
+
+        std::vector<handle_t> path_linear_sgd_order(const PathHandleGraph &graph,
+                                                    const xp::XP &path_index,
+                                                    const std::vector<path_handle_t> &path_sgd_use_paths,
+                                                    const uint64_t &iter_max,
+                                                    const uint64_t &iter_with_max_learning_rate,
+                                                    const uint64_t &min_term_updates,
+                                                    const double &delta,
+                                                    const double &eps,
+                                                    const double &eta_max,
+                                                    const double &theta,
+                                                    const uint64_t &space,
+                                                    const uint64_t &nthreads,
+                                                    const bool &progress,
+                                                    const std::string &seed,
+                                                    const bool &switch_nodes,
+                                                    const bool &sample_from_nodes,
+                                                    const bool &snapshot,
+                                                    std::vector<std::vector<handle_t>> &snapshots);
+
+    }
 
 }
