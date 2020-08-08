@@ -37,7 +37,7 @@ using namespace handlegraph;
 // Resolve ambiguous nid_t typedef by putting it in our namespace.
 using nid_t = handlegraph::nid_t;
 
-class graph_t : public MutablePathDeletableHandleGraph, public SerializableHandleGraph {
+class graph_t : public MutablePathDeletableHandleGraph, public SerializableHandleGraph, public RankedHandleGraph {
 
 public:
 
@@ -123,6 +123,26 @@ public:
     /// Such a pair can be viewed from either inward end handle and produce the
     /// outward handle you would arrive at.
     handle_t traverse_edge_handle(const edge_t& edge, const handle_t& left) const;
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Rank handle interface
+    ////////////////////////////////////////////////////////////////////////////
+    /// Return the rank of a node (ranks start at 1 and are dense).
+    size_t id_to_rank(const nid_t& node_id) const;
+
+    /// Return the node with a given rank.
+    nid_t rank_to_id(const size_t& rank) const;
+
+    // If you define node ID ranks you get a default implementation of handle ranks.
+
+    /// Return the rank of a handle (ranks start at 1 and are dense, and each
+    /// orientation has its own rank). Handle ranks may not have anything to do
+    /// with node ranks.
+    size_t handle_to_rank(const handle_t& handle) const;
+
+    /// Return the handle with a given rank.
+    handle_t rank_to_handle(const size_t& rank) const;
+
     
     ////////////////////////////////////////////////////////////////////////////
     // Path handle interface
