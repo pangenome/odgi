@@ -23,7 +23,7 @@ int main_cover(int argc, char** argv) {
     args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store the graph with the generated paths in this file", {'o', "out"});
     args::ValueFlag<uint64_t> num_paths_per_component(parser, "N", "number of paths to generate per component", {'n', "num-paths-per-component"});
     args::ValueFlag<uint64_t> node_window_size(parser, "N", "size of the node window to check each time a new path is extended (it has to be greater than or equal to 2)", {'k', "node-window-size"});
-    args::Flag debug(parser, "debug", "print information about the components", {'d', "debug"});
+    args::Flag debug(parser, "debug", "Print information about the components and the progress to stdout", {'d', "debug"});
 
     try {
         parser.ParseCLI(argc, argv);

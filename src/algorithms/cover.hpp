@@ -27,7 +27,7 @@ namespace odgi {
         */
         ska::flat_hash_set<handlegraph::nid_t>
         is_nice_and_acyclic(const HandleGraph &graph, const ska::flat_hash_set<handlegraph::nid_t> &component);
-cd
+
         /*
           Find a path cover of the graph with n paths per component, adding the generated paths in the graph.
           The path cover is built greedily. Each time we extend a path, we choose the extension,
