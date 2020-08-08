@@ -5,7 +5,6 @@
 namespace odgi {
     namespace algorithms {
 
-        //TODO: check if there is already an implementation like that somewhere
         ska::flat_hash_set<handlegraph::nid_t>
         is_nice_and_acyclic(const HandleGraph &graph, const ska::flat_hash_set<handlegraph::nid_t> &component) {
             ska::flat_hash_set<handlegraph::nid_t> head_nodes;
@@ -232,9 +231,9 @@ namespace odgi {
 
         template<class Coverage>
         bool
-        component_path_cover(handlegraph::MutablePathDeletableHandleGraph& graph,
+        component_path_cover(handlegraph::MutablePathDeletableHandleGraph &graph,
                              std::vector<ska::flat_hash_set<handlegraph::nid_t>> &components, size_t component_id,
-                             size_t n, size_t k, bool show_progress, size_t sample_id_offset, size_t contig_id) {
+                             size_t n, size_t k, bool show_progress) {
             typedef typename Coverage::coverage_t coverage_t;
             typedef typename Coverage::node_coverage_t node_coverage_t;
 
@@ -243,10 +242,9 @@ namespace odgi {
             ska::flat_hash_set<handlegraph::nid_t> head_nodes = is_nice_and_acyclic(graph, component);
             bool acyclic = !(head_nodes.empty());
             if (show_progress) {
-                std::cerr << Coverage::name() << ": Processing component " << (component_id + 1) << " / "
-                          << components.size();
-                if (acyclic) { std::cerr << " (acyclic)"; }
-                std::cerr << std::endl;
+                std::cerr << Coverage::name() << ": processing component " << (component_id + 1) << " / "
+                          << components.size() << ", which has " << component.size() << " node(s) and it is "
+                          << (acyclic ? "acyclic." : "cyclic.") << std::endl;
             }
 
             // Node coverage for the potential starting nodes.
@@ -293,13 +291,14 @@ namespace odgi {
                     }
                 }
 
-                path_handle_t new_path = graph.create_path_handle("Path_" + std::to_string(component_id) + "_" + std::to_string(i));
+                path_handle_t new_path = graph.create_path_handle(
+                        "Path_" + std::to_string(component_id) + "_" + std::to_string(i));
                 for (handle_t handle : path) {
                     graph.append_step(new_path, handle);
                 }
 
 #ifdef debug_cover
-                std::cerr << "Path_" + std::to_string(component_id) + "_" + std::to_string(i) << " -->";
+                std::cerr << "Path_" + std::to_string(component_id) + "_" + std::to_string(i) << ":";
                 for (handle_t handle : path) {
                     std::cerr << " " << graph.get_id(handle) << (number_bool_packing::unpack_bit(handle) ? "-" : "+");
                 }
@@ -319,17 +318,12 @@ namespace odgi {
             // Handle each component separately.
             size_t processed_components = 0;
             for (size_t contig = 0; contig < weak_components.size(); contig++) {
-                auto &weak_component = weak_components[contig];
-
-#ifdef debug_cover
-                std::cerr << "component " << contig << "; size " << weak_component.size() << std::endl;
-#endif
-
-                if (component_path_cover<SimpleCoverage>(graph, weak_components, contig, n, k, show_progress, 0,
-                                                         contig)) {
+                if (component_path_cover<SimpleCoverage>(graph, weak_components, contig, n, k, show_progress)) {
                     processed_components++;
 
-                    std::cerr << "Processed: " << processed_components << std::endl;
+                    if (show_progress) {
+                        std::cerr << "Processed: " << processed_components << std::endl;
+                    }
                 }
             }
         }
