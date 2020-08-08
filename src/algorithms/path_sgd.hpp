@@ -9,6 +9,7 @@
 #include <thread>
 #include <atomic>
 #include <handlegraph/path_handle_graph.hpp>
+#include <handlegraph/handle_graph.hpp>
 #include "xp.hpp"
 #include "sgd_term.hpp"
 #include "IITree.h"

@@ -31,7 +31,10 @@ namespace odgi {
             std::cerr << "theta: " << theta << std::endl;
             std::cerr << "space: " << space << std::endl;
 #endif
+
             using namespace std::chrono_literals; // for timing stuff
+            // we need to access functions from the RankedHandleGraph interface
+            const RankedHandleGraph* ranked_graph = dynamic_cast<const RankedHandleGraph*>(&graph);
             // our positions in 1D
             std::vector<std::atomic<double>> X(graph.get_node_count());
             // the bit vector we store all the nodes (as "1") and all the corresponding number of paths ("0") in
@@ -197,9 +200,43 @@ namespace odgi {
 
                                 // pick a random position from all nodes
                             } else {
+                                step_handle_t step_in_path_handle;
                                 size_t node_rank = nodes_paths_bv_rank(pos);
                                 size_t node_offset_in_bv = nodes_paths_bv_select(node_rank);
-
+                                std::cerr << "graph size: " << graph.get_node_count() << std::endl;
+#ifdef debug_sample_from_nodes
+                                std::cerr << "[path sgd sample from nodes]: node_rank: " << node_rank << std::endl;
+#endif
+                                handle_t handle_r = ranked_graph->rank_to_handle(node_rank - 1);
+                                std::cerr << "node id of handle: " << graph.get_id(handle_r) << std::endl;
+                                std::cerr << "sequence of handle: " << graph.get_sequence(handle_r) << std::endl;
+#ifdef debug_sample_from_nodes
+                                std::cerr << "[path sgd sample from nodes]: after handle" << std::endl;
+#endif
+                                uint64_t number_paths_bv = pos - node_offset_in_bv + 1;
+                                uint64_t path_number_in_handle_steps = 0;
+                                graph.for_each_step_on_handle(handle_r, [&](const step_handle_t &step) {
+                                    path_number_in_handle_steps += 1;
+                                });
+                                uint64_t iter = 0;
+                                // we can't work with nodes which no paths are going through
+                                if (path_number_in_handle_steps == 0) {
+                                    continue;
+                                } else {
+                                    graph.for_each_step_on_handle(handle_r, [&](const step_handle_t &step) {
+                                        iter++;
+                                        if (iter == number_paths_bv) {
+                                            std::cerr << "hit it!" << std::endl;
+                                            step_in_path_handle = step;
+                                        }
+                                    });
+                                }
+                                std::cerr << "before path index" << std::endl;
+                                std::cerr << "step_in_path_handle: path: " << as_integers(step_in_path_handle)[0] << " step_rank: " << as_integers(step_in_path_handle)[1] << std::endl;
+                                std::cerr << "path name: " << graph.get_path_name(graph.get_path_handle_of_step(step_in_path_handle)) << std::endl;
+                                // CUSTOM FUNCTION: GIVE ME THE ABSOLUTE RANK OF THE N#TH STEP ON A GIVEN HANDLE IN ITS PATH
+                                pos_in_path_a = path_index.get_position_of_step(step_in_path_handle);
+                                std::cerr << "pos_in_path_a: " << pos_in_path_a << std::endl;
                             }
                             uint64_t zipf_int = zipfian(gen);
 #ifdef debug_path_sgd
@@ -732,7 +769,7 @@ namespace odgi {
                                                     const bool &sample_from_nodes) {
             std::vector<double> layout;
             std::vector<std::vector<double>> snapshots_layouts;
-            if (nthreads == 1) {
+            /*if (nthreads == 1) {
                 layout = deterministic_path_linear_sgd(graph,
                                                        path_index,
                                                        path_sgd_use_paths,
@@ -749,7 +786,8 @@ namespace odgi {
                                                        snapshot,
                                                        snapshots_layouts,
                                                        sample_from_nodes);
-            } else {
+                                                       */
+            //} else {
                 layout = path_linear_sgd(graph,
                                          path_index,
                                          path_sgd_use_paths,
@@ -766,7 +804,7 @@ namespace odgi {
                                          snapshot,
                                          snapshots_layouts,
                                          sample_from_nodes);
-            }
+            //}
             // TODO move the following into its own function that we can reuse
 #ifdef debug_components
             std::cerr << "node count: " << graph.get_node_count() << std::endl;
