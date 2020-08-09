@@ -1,7 +1,7 @@
 #include "xp.hpp"
 
-#include <arpa/inet.h>
-#include <mutex>
+#define debug_load
+#define debug_np
 namespace xp {
 
     using namespace handlegraph;
@@ -42,6 +42,11 @@ namespace xp {
             uint64_t hl = graph.get_length(h);
             len += hl;
             last_node_id = node_id;
+            /*np_size++;
+            graph.for_each_step_on_handle(h, [&](const step_handle_t &step_handle) {
+               np_size++;
+            });
+             */
         });
         position_map[position_map.size() - 1] = len;
 #ifdef debug_from_handle_graph
@@ -52,13 +57,25 @@ namespace xp {
         }
         std::cerr << position_map[position_map.size() - 1] << std::endl;
 #endif
-
+        // record the number of nodes + the number of paths within each node
+        uint64_t np_size = 0;
+        std::string node_path_idx = basename + ".node_path.mm";
+        // we fill the multiset with a tuple[handle id, step_rank, path_handle, rank_of_handle_in_path]
+        auto node_path_ms = std::make_unique<mmmulti::map<uint64_t , std::tuple<uint64_t, uint64_t, uint64_t, uint64_t>>> (node_path_idx);
+        node_path_ms->open_writer();
+        // TODO fill mmmultiset
         graph.for_each_path_handle([&](const path_handle_t &path) {
             std::vector<handle_t> p;
+            uint64_t handle_rank_of_path = 0;
             graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
                 handle_t h = graph.get_handle_of_step(occ);
+                uint64_t step_rank = as_integers(occ)[1];
                 p.push_back(h);
                 uint64_t hl = graph.get_length(h);
+                handle_rank_of_path++;
+                size_t node_id = graph.get_id(h);
+                node_path_ms->append(node_id, std::make_tuple(node_id, step_rank, as_integer(path), handle_rank_of_path));
+                np_size++;
             });
             std::string path_name = graph.get_path_name(path);
             // std::cout << "[XP CONSTRUCTION]: Indexing path: " << path_name << std::endl;
@@ -67,6 +84,7 @@ namespace xp {
             paths.push_back(path_index);
             path_names += start_marker + path_name + end_marker;
         });
+        np_size += graph.get_node_count();
         // assign the position map iv
         sdsl::util::assign(pos_map_iv, sdsl::enc_vector<>(position_map));
         // set the path counts
@@ -92,6 +110,40 @@ namespace xp {
         sdsl::store_to_file((const char *) path_names.c_str(), path_name_file);
         // read file and construct compressed suffix array
         sdsl::construct(pn_csa, path_name_file, 1);
+        // we need to take care of the node->path vectors
+        node_path_ms->index(get_thread_count(), graph.get_node_count() + 1);
+        sdsl::util::assign(nr_iv, sdsl::int_vector<>(np_size));
+        sdsl::util::assign(np_bv, sdsl::bit_vector(np_size));
+        // fill the node->path vectors
+        uint64_t  np_offset = 0;
+        for (int64_t i = 0; i < graph.get_node_count(); i++) {
+            np_bv[np_offset] = 1; // mark node start
+            // nr_iv[np_offset] = 0;
+            np_offset++;
+            uint64_t has_steps = false;
+            node_path_ms->for_values_of(i+1, [&](const std::tuple<uint64_t, uint64_t, uint64_t, uint64_t>& v) {
+                nr_iv[np_offset] = std::get<3>(v); // handle_rank_of_path
+                has_steps = true;
+                np_offset++;
+            });
+        }
+        sdsl::util::assign(np_bv_select, sdsl::bit_vector::select_1_type(&np_bv));
+#ifdef debug_np
+        std::cerr << "number of nodes and paths: " << np_size << std::endl;
+        std::cerr << "np_bv: ";
+        for (uint64_t i = 0; i < np_bv.size(); i++) {
+            std::cerr << np_bv[i];
+        }
+        std::cerr << std::endl << "np_bv_select: ";
+        for (uint64_t i = 0; i < np_bv.size(); i++) {
+            std::cerr << (np_bv_select(nr_iv[i] + 1)+1);
+        }
+        std::cerr << std::endl << "nr_iv: ";
+        for (uint64_t i = 0; i < nr_iv.size(); i++) {
+            std::cerr << nr_iv[i];
+        }
+        std::cerr << std::endl;
+#endif
     }
 
     std::vector<XPPath *> XP::get_paths() const {
@@ -145,6 +197,10 @@ namespace xp {
             paths_written += path->serialize(out, paths_child,
                                              "path:" + XP::get_path_name(handlegraph::as_path_handle(i + 1)));
         }
+
+        paths_written += np_bv.serialize(out, paths_child, "node_path_mapping_starts");
+        paths_written += np_bv_select.serialize(out, paths_child, "node_path_mapping_starts_select");
+        paths_written += nr_iv.serialize(out, paths_child, "node_path_rank");
 
         sdsl::structure_tree::add_size(paths_child, paths_written);
         written += paths_written;
@@ -200,6 +256,25 @@ namespace xp {
                 path->load(in);
                 paths.push_back(path);
             }
+            // load node path rank vectors
+            np_bv.load(in);
+            np_bv_select.load(in, &np_bv);
+            nr_iv.load(in);
+#ifdef debug_load
+            std::cerr << "np_bv: ";
+            for (uint64_t i = 0; i < np_bv.size(); i++) {
+                std::cerr << np_bv[i];
+            }
+            std::cerr << std::endl << "np_bv_select: ";
+            for (uint64_t i = 0; i < np_bv.size(); i++) {
+                std::cerr << np_bv_select(np_bv[i]);
+            }
+            std::cerr << std::endl << "nr_iv: ";
+            for (uint64_t i = 0; i < nr_iv.size(); i++) {
+                std::cerr << std::endl << nr_iv[i];
+            }
+            std::cerr << std::endl;
+#endif
         } catch (const XPFormatError &e) {
             // Pass XGFormatErrors through
             throw e;
@@ -457,7 +532,7 @@ namespace xp {
         sdsl::util::assign(handles, sdsl::enc_vector<>(handles_iv));
 
 #ifdef debug_xppath
-        for (size_t i = 0; i < path.size(); i++) {
+        for (size_t i = 0; i < path.size(); i++) {bit_
         std::cerr << "Encoded handle as " << handles[i] << std::endl;
     }
 #endif
@@ -658,5 +733,15 @@ namespace xp {
 
             return temp_dir;
         }
+    }
+
+    int get_thread_count(void) {
+        int thread_count = 1;
+#pragma omp parallel
+        {
+#pragma omp master
+            thread_count = omp_get_num_threads();
+        }
+        return thread_count;
     }
 }
