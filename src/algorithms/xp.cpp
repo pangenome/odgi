@@ -55,10 +55,9 @@ namespace xp {
         // record the number of nodes + the number of paths within each node
         uint64_t np_size = 0;
         std::string node_path_idx = basename + ".node_path.mm";
-        // we fill the multiset with a tuple[handle id, step_rank, path_handle, rank_of_handle_in_path]
+        // we fill the multiset with a tuple[handle id, step_rank, path_id, rank_of_handle_in_path]
         auto node_path_ms = std::make_unique<mmmulti::map<uint64_t , std::tuple<uint64_t, uint64_t, uint64_t, uint64_t>>> (node_path_idx);
         node_path_ms->open_writer();
-        // TODO fill mmmultiset
         graph.for_each_path_handle([&](const path_handle_t &path) {
             std::vector<handle_t> p;
             uint64_t handle_rank_of_path = 0;
@@ -109,6 +108,7 @@ namespace xp {
         node_path_ms->index(get_thread_count(), graph.get_node_count() + 1);
         sdsl::util::assign(nr_iv, sdsl::int_vector<>(np_size));
         sdsl::util::assign(np_bv, sdsl::bit_vector(np_size));
+        sdsl::util::assign(npi_iv, sdsl::int_vector<>(np_size));
         // fill the node->path vectors
         uint64_t  np_offset = 0;
         for (int64_t i = 0; i < graph.get_node_count(); i++) {
@@ -118,11 +118,14 @@ namespace xp {
             uint64_t has_steps = false;
             node_path_ms->for_values_of(i+1, [&](const std::tuple<uint64_t, uint64_t, uint64_t, uint64_t>& v) {
                 nr_iv[np_offset] = std::get<3>(v); // handle_rank_of_path
+                npi_iv[np_offset] = std::get<2>(v); // path id
                 has_steps = true;
                 np_offset++;
             });
         }
         sdsl::util::bit_compress(nr_iv);
+        sdsl::util::bit_compress(npi_iv);
+        sdsl::util::assign(np_bv_rank, sdsl::rank_support_v<1>(&np_bv));
         sdsl::util::assign(np_bv_select, sdsl::bit_vector::select_1_type(&np_bv));
 #ifdef debug_np
         std::cerr << "number of nodes and paths: " << np_size << std::endl;
@@ -195,8 +198,10 @@ namespace xp {
         }
 
         paths_written += np_bv.serialize(out, paths_child, "node_path_mapping_starts");
+        paths_written += np_bv_rank.serialize(out, paths_child, "node_path_mapping_sarts_rank");
         paths_written += np_bv_select.serialize(out, paths_child, "node_path_mapping_starts_select");
         paths_written += nr_iv.serialize(out, paths_child, "node_path_rank");
+        paths_written += npi_iv.serialize(out, paths_child, "node_path_id");
 
         sdsl::structure_tree::add_size(paths_child, paths_written);
         written += paths_written;
@@ -254,8 +259,10 @@ namespace xp {
             }
             // load node path rank vectors
             np_bv.load(in);
+            np_bv_rank.load(in, &np_bv);
             np_bv_select.load(in, &np_bv);
             nr_iv.load(in);
+            npi_iv.load(in);
 #ifdef debug_load
             std::cerr << "np_bv: ";
             for (uint64_t i = 0; i < np_bv.size(); i++) {
@@ -387,6 +394,15 @@ namespace xp {
     const sdsl::bit_vector XP::get_np_bv() const {
         return np_bv;
     }
+
+    const sdsl::int_vector<>& XP::get_npi_iv() const {
+        return npi_iv;
+    }
+
+    const sdsl::rank_support_v<1> XP::get_np_bv_rank() const {
+        return np_bv_rank;
+    }
+
 
     size_t XP::get_pangenome_pos(const std::string &path_name, const size_t &nuc_pos) const {
 #ifdef debug_get_pangenome_pos
