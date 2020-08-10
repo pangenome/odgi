@@ -221,6 +221,12 @@ namespace odgi {
                 for (size_t i = 0; i < loaded_path_index.get_np_bv().size(); i++) {
                     REQUIRE(np_bv_l[i] == np_bv[i]);
                 }
+                // compare npi_iv
+                sdsl::int_vector<> npi_iv_l = loaded_path_index.get_npi_iv();
+                sdsl::int_vector<> npi_iv = path_index.get_npi_iv();
+                for (size_t i = 0; i < loaded_path_index.get_npi_iv().size(); i++) {
+                    REQUIRE(npi_iv_l[i] == npi_iv_l[i]);
+                }
 
                 // compare all fields of all XPPATHs
                 std::vector<XPPath*> xppaths_lpi = loaded_path_index.get_paths();
