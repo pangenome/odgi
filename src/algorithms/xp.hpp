@@ -128,6 +128,12 @@ namespace xp {
 
         const sdsl::int_vector<>& get_pn_iv() const;
 
+        const sdsl::int_vector<>& get_nr_iv() const;
+
+        const sdsl::bit_vector::select_1_type get_np_bv_select() const;
+
+        const sdsl::bit_vector get_np_bv() const;
+
         size_t path_count = 0;
 
         char start_marker = '#';

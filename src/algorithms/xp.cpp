@@ -1,7 +1,7 @@
 #include "xp.hpp"
 
-#define debug_load
-#define debug_np
+// #define debug_load
+// #define debug_np
 namespace xp {
 
     using namespace handlegraph;
@@ -42,11 +42,6 @@ namespace xp {
             uint64_t hl = graph.get_length(h);
             len += hl;
             last_node_id = node_id;
-            /*np_size++;
-            graph.for_each_step_on_handle(h, [&](const step_handle_t &step_handle) {
-               np_size++;
-            });
-             */
         });
         position_map[position_map.size() - 1] = len;
 #ifdef debug_from_handle_graph
@@ -127,6 +122,7 @@ namespace xp {
                 np_offset++;
             });
         }
+        sdsl::util::bit_compress(nr_iv);
         sdsl::util::assign(np_bv_select, sdsl::bit_vector::select_1_type(&np_bv));
 #ifdef debug_np
         std::cerr << "number of nodes and paths: " << np_size << std::endl;
@@ -134,13 +130,13 @@ namespace xp {
         for (uint64_t i = 0; i < np_bv.size(); i++) {
             std::cerr << np_bv[i];
         }
-        std::cerr << std::endl << "np_bv_select: ";
-        for (uint64_t i = 0; i < np_bv.size(); i++) {
-            std::cerr << (np_bv_select(nr_iv[i] + 1)+1);
-        }
         std::cerr << std::endl << "nr_iv: ";
         for (uint64_t i = 0; i < nr_iv.size(); i++) {
             std::cerr << nr_iv[i];
+        }
+        std::cerr << std::endl << "np_bv_select: ";
+        for (uint64_t i = 0; i < np_bv.size(); i++) {
+            std::cerr << (np_bv_select(nr_iv[i] + 1));
         }
         std::cerr << std::endl;
 #endif
@@ -265,13 +261,13 @@ namespace xp {
             for (uint64_t i = 0; i < np_bv.size(); i++) {
                 std::cerr << np_bv[i];
             }
-            std::cerr << std::endl << "np_bv_select: ";
-            for (uint64_t i = 0; i < np_bv.size(); i++) {
-                std::cerr << np_bv_select(np_bv[i]);
-            }
             std::cerr << std::endl << "nr_iv: ";
             for (uint64_t i = 0; i < nr_iv.size(); i++) {
-                std::cerr << std::endl << nr_iv[i];
+                std::cerr << nr_iv[i];
+            }
+            std::cerr << std::endl << "np_bv_select: ";
+            for (uint64_t i = 0; i < np_bv.size(); i++) {
+                std::cerr << np_bv_select(np_bv[i] + 1);
             }
             std::cerr << std::endl;
 #endif
@@ -378,6 +374,18 @@ namespace xp {
 
     const sdsl::int_vector<>& XP::get_pn_iv() const {
         return pn_iv;
+    }
+
+    const sdsl::int_vector<>& XP::get_nr_iv() const {
+        return nr_iv;
+    }
+
+    const sdsl::bit_vector::select_1_type XP::get_np_bv_select() const {
+        return np_bv_select;
+    }
+
+    const sdsl::bit_vector XP::get_np_bv() const {
+        return np_bv;
     }
 
     size_t XP::get_pangenome_pos(const std::string &path_name, const size_t &nuc_pos) const {
