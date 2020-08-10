@@ -4,6 +4,7 @@
 #include <fstream>
 #include <string>
 #include <dirent.h>
+#include <omp.h>
 
 #include <sdsl/bit_vectors.hpp>
 #include <sdsl/enc_vector.hpp>
@@ -13,6 +14,10 @@
 #include <handlegraph/util.hpp>
 #include <handlegraph/handle_graph.hpp>
 #include <handlegraph/path_position_handle_graph.hpp>
+#include <mmmultimap.hpp>
+#include <odgi.hpp>
+#include <arpa/inet.h>
+#include <mutex>
 
 namespace xp {
 
@@ -123,6 +128,12 @@ namespace xp {
 
         const sdsl::int_vector<>& get_pn_iv() const;
 
+        const sdsl::int_vector<>& get_nr_iv() const;
+
+        const sdsl::bit_vector::select_1_type get_np_bv_select() const;
+
+        const sdsl::bit_vector get_np_bv() const;
+
         size_t path_count = 0;
 
         char start_marker = '#';
@@ -144,6 +155,13 @@ namespace xp {
         sdsl::enc_vector<> pos_map_iv; // store each offset of each node in the sequence vector
 
         std::vector<XPPath *> paths; // path structure
+
+        // node->path rank
+        sdsl::int_vector<> nr_iv;
+        // entity delimiter
+        sdsl::bit_vector np_bv;
+        // select for the compressed bit vector
+        sdsl::bit_vector::select_1_type np_bv_select;
     };
 
     class XPPath {
@@ -191,7 +209,6 @@ namespace xp {
         handlegraph::handle_t local_handle(const handlegraph::handle_t &handle) const;
         handlegraph::handle_t external_handle(const handlegraph::handle_t& handle) const;
         handlegraph::handle_t handle(size_t offset) const;
-
     };
 
     /**
@@ -219,5 +236,8 @@ namespace xp {
         std::string get_dir();
 
     } // namespace temp_file
+
+    /// Uses OMP to get the count of threads
+    int get_thread_count(void);
 
 }

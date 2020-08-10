@@ -58,3 +58,12 @@
 [submodule "deps/cgranges"]
 	path = deps/cgranges
 	url = https://github.com/lh3/cgranges.git
+[submodule "deps/mmmulti"]
+	path = deps/mmmulti
+	url = https://github.com/ekg/mmmulti
+[submodule "deps/ips4o"]
+	path = deps/ips4o
+	url = https://github.com/SaschaWitt/ips4o
+[submodule "deps/atomic_queue"]
+	path = deps/atomic_queue
+	url = https://github.com/max0x7ba/atomic_queue.git
