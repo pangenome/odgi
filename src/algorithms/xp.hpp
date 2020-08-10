@@ -11,13 +11,13 @@
 #include <sdsl/csa_wt.hpp>
 #include <sdsl/suffix_arrays.hpp>
 
-#include <handlegraph/util.hpp>
-#include <handlegraph/handle_graph.hpp>
-#include <handlegraph/path_position_handle_graph.hpp>
-#include <mmmultimap.hpp>
-#include <odgi.hpp>
+#include "handlegraph/util.hpp"
+#include "handlegraph/handle_graph.hpp"
+#include "handlegraph/path_position_handle_graph.hpp"
+#include "mmmultimap.hpp"
+#include "odgi.hpp"
 #include <arpa/inet.h>
-#include <mutex>
+#include "mutex"
 
 namespace xp {
 
@@ -129,10 +129,12 @@ namespace xp {
         const sdsl::int_vector<>& get_pn_iv() const;
 
         const sdsl::int_vector<>& get_nr_iv() const;
+        const sdsl::int_vector<>& get_npi_iv() const;
+
 
         const sdsl::bit_vector::select_1_type get_np_bv_select() const;
-
         const sdsl::bit_vector get_np_bv() const;
+        const sdsl::rank_support_v<1> get_np_bv_rank() const;
 
         size_t path_count = 0;
 
@@ -157,10 +159,12 @@ namespace xp {
         std::vector<XPPath *> paths; // path structure
 
         // node->path rank
-        sdsl::int_vector<> nr_iv;
+        sdsl::int_vector<> nr_iv; // rank of step in path
+        // path integer
+        sdsl::int_vector<> npi_iv; // path integers to directly construct path handles from
         // entity delimiter
         sdsl::bit_vector np_bv;
-        // select for the compressed bit vector
+        sdsl::rank_support_v<1> np_bv_rank;
         sdsl::bit_vector::select_1_type np_bv_select;
     };
 
