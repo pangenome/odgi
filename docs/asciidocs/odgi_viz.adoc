@@ -8,13 +8,16 @@ Erik Garrison
 :page-layout: base
 endif::[]
 
+
 == NAME
 
 odgi_viz - variation graph visualizations
 
+
 == SYNOPSIS
 
 *odgi viz* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]...
+
 
 == DESCRIPTION
 
@@ -34,6 +37,7 @@ sequence coverage in bins available.
 
 *-o, --out*=_FILE_::
   Write the visualization in PNG format to this file.
+
 
 === Visualization Options
 
@@ -56,11 +60,11 @@ sequence coverage in bins available.
   Show thin links of this relative width to connect path pieces.
 
 *-A, --alignment-prefix*=_STRING_::
-  Apply alignment related visual motifs to paths which have this name prefix.
+  Apply alignment related visual motifs to paths which have this name prefix. It affects the -S and -d options."
 
 *-S, --show-strand*::
-  Use red and blue coloring to display forward and reverse alignments. This parameter should only be set in combination with
-  [*-A, --alignment-prefix*=_STRING_].
+  Use red and blue coloring to display forward and reverse alignments. This parameter can be set in combination with [*-A, --alignment-prefix*=_STRING_].
+
 
 === Binned Mode Options
 
@@ -74,20 +78,35 @@ sequence coverage in bins available.
 
 *-g, --no-gap-links*::
   We divide links into 2 classes:
-1. Class: The links which help to follow complex variations. They need to be drawn, else one could not follow
+  1. Class: The links which help to follow complex variations. They need to be drawn, else one could not follow
   the sequence of a path.
-2. Class: The links helping to follow simple variations. Such links solely connecting a path from left to right may not
+  2. Class: The links helping to follow simple variations. Such links solely connecting a path from left to right may not
   be relevant to understand a path's traversal through the bins. Therefore, they are not drawn in the binned mode.
+
+
+=== Position Mode (also known as Gradient Mode) Options
+
+*-d, --change-darkness*::
+  Change the color darkness based on nucleotide position in the path.  This parameter can be set in combination with [*-A, --alignment-prefix*=_STRING_].
+
+*-l, --longest-path*::
+  Use the longest path length to change the color darkness.
+
+*-u, --white-to-black*::
+  Change the color darkness from white (for the first nucleotide position) to black (for the last nucleotide position).
+
 
 === Threading
 
 *-t, --threads*=_N_::
   Number of threads to use.
 
+
 === Program Information
 
 *-h, --help*::
   Print a help message for *odgi viz*.
+
 
 == EXIT STATUS
 
@@ -97,15 +116,19 @@ sequence coverage in bins available.
 *1*::
   Failure (syntax or usage error; parameter error; file processing failure; unexpected error).
 
+
 == BUGS
 
-Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
+  Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
+
 
 == AUTHORS
 
 *odgi viz* was written by Erik Garrison.
 
 ifdef::backend-manpage[]
+
+
 == RESOURCES
 
 *Project web site:* https://github.com/vgteam/odgi
@@ -115,6 +138,7 @@ ifdef::backend-manpage[]
 *GitHub organization:* https://github.com/vgteam
 
 *Discussion list / forum:* https://github.com/vgteam/odgi/issues
+
 
 == COPYING
 
