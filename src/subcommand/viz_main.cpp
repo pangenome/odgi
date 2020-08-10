@@ -415,11 +415,11 @@ namespace odgi {
             std::cerr << "path_name: " << path_name << std::endl;
 #endif
 
-            bool is_aln = false;
+            bool is_aln = true;
             if (aln_mode) {
                 std::string::size_type n = path_name.find(aln_prefix);
-                if (n == 0) {
-                    is_aln = true;
+                if (n != 0) {
+                    is_aln = false;
                 }
             }
             // use a sha256 to get a few bytes that we'll use for a color
