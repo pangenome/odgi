@@ -60,7 +60,7 @@ int main_sort(int argc, char** argv) {
     args::Flag mondriaan_path_weight(parser, "path-weight", "weight mondriaan input matrix by path coverage of edges", {'W', "mondriaan-path-weight"});
     /// path guided linear 1D SGD
     args::Flag p_sgd(parser, "path-sgd", "apply path guided linear 1D SGD algorithm to organize graph", {'Y', "path-sgd"});
-    args::Flag p_sgd_sample_from_nodes(parser, "path-sgd-sample-from-nodes", "instead of sampling the first term from all nucleotide positions of the paths we sample from all nodes of the paths (default: flag not set)", {'J', "path-sgd-sample-from-nodes"});
+    args::Flag p_sgd_sample_from_paths(parser, "path-sgd-sample-from-nodes", "instead of sampling the first term from all nodes of the paths we sample from  all nucleotide positions of the paths (default: flag not set)", {'J', "path-sgd-sample-from-paths"});
     args::ValueFlag<std::string> p_sgd_in_file(parser, "FILE", "specify a line separated list of paths to sample from for the on the fly term generation process in the path guided linear 1D SGD (default: sample from all paths)", {'f', "path-sgd-use-paths"});
     args::ValueFlag<double> p_sgd_min_term_updates_paths(parser, "N", "minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of total path length (default: 0.1)", {'G', "path-sgd-min-term-updates-paths"});
     args::ValueFlag<double> p_sgd_min_term_updates_num_nodes(parser, "N", "minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of the number of nodes (default: argument is not set, the default of -G=[N], path-sgd-min-term-updates-paths=[N] is used)", {'U', "path-sgd-min-term-updates-nodes"});
@@ -186,7 +186,7 @@ int main_sort(int argc, char** argv) {
     // will be filled, if the user decides to write a snapshot of the graph after each sorting iterationn
     std::vector<std::vector<handle_t>> snapshots;
     const bool snapshot = p_sgd_snapshot;
-    const bool sample_from_nodes = p_sgd_sample_from_nodes;
+    const bool sample_from_paths = p_sgd_sample_from_paths;
     // default parameters that need a path index to be present
     uint64_t path_sgd_min_term_updates;
     uint64_t path_sgd_zipf_space;
@@ -298,7 +298,7 @@ int main_sort(int argc, char** argv) {
                                                   path_sgd_seed,
                                                   snapshot,
                                                   snapshots,
-                                                  sample_from_nodes);
+                                                  sample_from_paths);
             // TODO Check if we have to emit the snapshots
             if (snapshot) {
                 std::string snapshot_prefix = args::get(p_sgd_snapshot);
@@ -387,7 +387,7 @@ int main_sort(int argc, char** argv) {
                                                               path_sgd_seed,
                                                               snapshot,
                                                               snapshots,
-                                                              sample_from_nodes);
+                                                              sample_from_paths);
                     break;
                 }
                 case 'f':

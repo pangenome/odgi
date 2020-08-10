@@ -22,7 +22,7 @@ namespace odgi {
                                             const bool &progress,
                                             const bool &snapshot,
                                             std::vector<std::vector<double>> &snapshots,
-                                            const bool &sample_from_nodes) {
+                                            const bool &sample_from_paths) {
 #ifdef debug_path_sgd
             std::cerr << "iter_max: " << iter_max << std::endl;
             std::cerr << "min_term_updates: " << min_term_updates << std::endl;
@@ -38,7 +38,7 @@ namespace odgi {
             // seed them with the graph order
             uint64_t len = 0;
             graph.for_each_handle(
-                    [&X, &graph, &len, &sample_from_nodes](const handle_t &handle) {
+                    [&X, &graph, &len, &sample_from_paths](const handle_t &handle) {
                         // nb: we assume that the graph provides a compact handle set
                         X[number_bool_packing::unpack_number(handle)].store(len);
                         len += graph.get_length(handle);
@@ -139,7 +139,7 @@ namespace odgi {
                         std::seed_seq sseq(std::begin(seed_data), std::end(seed_data));
                         std::mt19937_64 gen(sseq);
                         std::uniform_int_distribution<uint64_t> dis(0, total_path_len_in_nucleotides - 1);
-                        if (sample_from_nodes) {
+                        if (sample_from_paths) {
                             dis = std::uniform_int_distribution<uint64_t>(0, path_index.get_np_bv().size() - 1);
                         }
                         std::uniform_int_distribution<uint64_t> flip(0, 1);
@@ -149,7 +149,7 @@ namespace odgi {
                             size_t path_len;
                             path_handle_t path;
                             // pick a random position from all paths
-                            if (!sample_from_nodes) {
+                            if (sample_from_paths) {
                                 // use our interval tree to get the path handle and path nucleotide position of the picked position
                                 //std::vector<Interval<size_t, path_handle_t> > result;
                                 //result = path_nucleotide_tree.findOverlapping(pos, pos);
@@ -433,7 +433,7 @@ namespace odgi {
                                                           const bool &progress,
                                                           const bool &snapshot,
                                                           std::vector<std::vector<double>> &snapshots,
-                                                          const bool &sample_from_nodes) {
+                                                          const bool &sample_from_paths) {
             using namespace std::chrono_literals; // for timing stuff
             // our positions in 1D
             std::vector<std::atomic<double>> X(graph.get_node_count());
@@ -721,7 +721,7 @@ namespace odgi {
                                                     const std::string &seed,
                                                     const bool &snapshot,
                                                     std::vector<std::vector<handle_t>> &snapshots,
-                                                    const bool &sample_from_nodes) {
+                                                    const bool &sample_from_paths) {
             std::vector<double> layout;
             std::vector<std::vector<double>> snapshots_layouts;
             /*if (nthreads == 1) {
@@ -740,7 +740,7 @@ namespace odgi {
                                                        progress,
                                                        snapshot,
                                                        snapshots_layouts,
-                                                       sample_from_nodes);
+                                                       sample_from_paths);
                                                        */
             //} else {
                 layout = path_linear_sgd(graph,
@@ -758,7 +758,7 @@ namespace odgi {
                                          progress,
                                          snapshot,
                                          snapshots_layouts,
-                                         sample_from_nodes);
+                                         sample_from_paths);
             //}
             // TODO move the following into its own function that we can reuse
 #ifdef debug_components
