@@ -235,6 +235,7 @@ namespace odgi {
                              std::vector<ska::flat_hash_set<handlegraph::nid_t>> &components, size_t component_id,
                              size_t num_paths_per_component, size_t node_window_size,
                              size_t min_node_coverage, size_t max_number_of_paths_generable,
+                             bool write_node_covearges, std::string &node_coverages,
                              bool show_progress) {
             typedef typename Coverage::coverage_t coverage_t;
             typedef typename Coverage::node_coverage_t node_coverage_t;
@@ -268,9 +269,9 @@ namespace odgi {
             // the component.
             component = ska::flat_hash_set<handlegraph::nid_t>();
 
-            if (num_paths_per_component > 0){
+            if (num_paths_per_component > 0) {
                 min_node_coverage = std::numeric_limits<uint64_t>::max();
-            }else{
+            } else {
                 num_paths_per_component = max_number_of_paths_generable;
             }
             // Generate num_paths_per_component paths in the component.
@@ -286,7 +287,7 @@ namespace odgi {
                 std::cerr << node_coverage.front().first << " --- " << node_coverage.front().second << std::endl;
 #endif
 
-                if (node_coverage.front().second >= min_node_coverage){
+                if (node_coverage.front().second >= min_node_coverage) {
                     std::cerr << "Minimum node coverage reached after generating " << i << " paths." << std::endl;
                     break;
                 }
@@ -325,12 +326,25 @@ namespace odgi {
 #endif
             }
 
+            if (write_node_covearges) {
+                if (component_id == 0) {
+                    node_coverages += "component_id\tnode_id\tcoverage\n";
+                }
+
+                for (node_coverage_t single_coverage : node_coverage) {
+                    node_coverages +=
+                            std::to_string(component_id) + "\t" + std::to_string(single_coverage.first) + "\t" +
+                            std::to_string(single_coverage.second) + "\n";
+                }
+            }
+
             return true;
         }
 
         void path_cover(handlegraph::MutablePathDeletableHandleGraph &graph,
                         size_t num_paths_per_component, size_t node_window_size,
                         size_t min_node_coverage, size_t max_number_of_paths_generable,
+                        bool write_node_coverages, std::string &node_coverages,
                         bool show_progress) {
             std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components = algorithms::weakly_connected_components(
                     &graph);
@@ -341,6 +355,7 @@ namespace odgi {
                 if (component_path_cover<SimpleCoverage>(graph, weak_components, contig,
                                                          num_paths_per_component, node_window_size,
                                                          min_node_coverage, max_number_of_paths_generable,
+                                                         write_node_coverages, node_coverages,
                                                          show_progress)) {
                     processed_components++;
 

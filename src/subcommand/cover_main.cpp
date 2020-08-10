@@ -20,18 +20,12 @@ namespace odgi {
         args::ArgumentParser parser("find a path cover of the graph");
         args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
         args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-        args::ValueFlag<std::string> dg_out_file(parser, "FILE",
-                                                 "store the graph with the generated paths in this file", {'o', "out"});
-        args::ValueFlag<uint64_t> num_paths_per_component(parser, "N", "number of paths to generate per component",
-                                                          {'n', "num-paths-per-component"});
-        args::ValueFlag<uint64_t> node_window_size(parser, "N",
-                                                   "size of the node window to check each time a new path is extended (it has to be greater than or equal to 2)",
-                                                   {'k', "node-window-size"});
-        args::ValueFlag<uint64_t> min_node_coverage(parser, "N",
-                                                    "minimum node coverage to reach (it has to be greater than 0)",
-                                                    {'c', "min-node-coverage"});
-        args::Flag debug(parser, "debug", "print information about the components and the progress to stdout",
-                         {'d', "debug"});
+        args::ValueFlag<std::string> dg_out_file(parser, "FILE","store the graph with the generated paths in this file", {'o', "out"});
+        args::ValueFlag<uint64_t> num_paths_per_component(parser, "N", "number of paths to generate per component",{'n', "num-paths-per-component"});
+        args::ValueFlag<uint64_t> node_window_size(parser, "N","size of the node window to check each time a new path is extended (it has to be greater than or equal to 2)",{'k', "node-window-size"});
+        args::ValueFlag<uint64_t> min_node_coverage(parser, "N","minimum node coverage to reach (it has to be greater than 0)",{'c', "min-node-coverage"});
+        args::ValueFlag<std::string> write_node_coverages(parser, "FILE","write the node coverages at the end of the paths generation in this file",{'w', "write-node-coverages"});
+        args::Flag debug(parser, "debug", "print information about the components and the progress to stderr",{'d', "debug"});
 
         try {
             parser.ParseCLI(argc, argv);
@@ -101,11 +95,23 @@ namespace odgi {
                       << ", or until the maximum number of allowed generated paths is reached ("
                       << max_number_of_paths_generable << ")." << std::endl;
         } else {
-            std::cerr << "There will be generated " << _num_paths_per_component << " paths per component." << std::endl;
+            std::cerr << "There will be generated " << _num_paths_per_component << " paths per component."
+                      << std::endl;
         }
 
+        std::string node_coverages;
         algorithms::path_cover(graph, _num_paths_per_component, _node_window_size, _min_node_coverage,
-                               max_number_of_paths_generable, args::get(debug));
+                               max_number_of_paths_generable,
+                               write_node_coverages, node_coverages,
+                               args::get(debug));
+
+        if (write_node_coverages) {
+            std::string covfile = args::get(write_node_coverages);
+
+            ofstream f(covfile.c_str());
+            f << node_coverages;
+            f.close();
+        }
 
         std::string outfile = args::get(dg_out_file);
         if (outfile.size()) {

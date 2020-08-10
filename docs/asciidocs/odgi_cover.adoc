@@ -41,14 +41,17 @@ The odgi cover(1) command find a path cover of a variation graph, with a specifi
 *-k, --node-windows-size*=_N_::
   Size of the node window to check each time a new path is extended (it has to be greater than or equal to 2).
 
-*-c/ --min-node-coverage*=_N_::
+*-c, --min-node-coverage*=_N_::
   Minimum node coverage to reach (it has to be greater than 0). There will be generated paths until the specified minimum node coverage is reached, or until the maximum number of allowed generated paths is reached (number of nodes in the input variation graph).
+
+*-w, --write-node-coverages*=_FILE_::
+  Write the node coverages at the end of the paths generation to FILE. The file will contain tab-separated values (header included), and have 3 columns: _component_id_, _node_id_, and _coverage_.
 
 
 === Processing Information
 
 *-d, --debug*::
-  Print information about the components and the progress to stdout.
+  Print information about the components and the progress to stderr.
 
 
 === Program Information

@@ -16,7 +16,7 @@ namespace odgi {
         /* This implementation has been been inspired by: https://github.com/jltsiren/gbwtgraph */
 
         constexpr size_t PATH_COVER_DEFAULT_N = 16;
-        constexpr size_t PATH_COVER_DEFAULT_K = 3;
+        constexpr size_t PATH_COVER_DEFAULT_K = 2;
 
         /*
           Determine whether the given component is acyclic in a nice way. In such graphs,
@@ -54,6 +54,7 @@ namespace odgi {
         void path_cover(handlegraph::MutablePathDeletableHandleGraph &graph,
                         size_t num_paths_per_component, size_t node_window_size,
                         size_t min_node_coverage, size_t max_number_of_paths_generable,
+                        bool write_node_coverages, std::string &node_coverages,
                         bool show_progress = false);
     }
 }
