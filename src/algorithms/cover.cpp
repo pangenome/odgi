@@ -149,6 +149,8 @@ namespace odgi {
                     // We are actually interested in the intersection of this graph and the component.
                     // For example, some nodes of the original graph may be missing from a GBWTGraph.
                     if (!(graph.has_node(id))) { continue; }
+
+                    // TODO: if the graph already have paths, init with the current already present
                     node_coverage.emplace_back(id, static_cast<coverage_t>(0));
                 }
                 return node_coverage;
@@ -275,7 +277,8 @@ namespace odgi {
                 num_paths_per_component = max_number_of_paths_generable;
             }
             // Generate num_paths_per_component paths in the component.
-            for (size_t i = 0; i < num_paths_per_component; i++) {
+            uint64_t i;
+            for (i = 0; i < num_paths_per_component; i++) {
                 // Choose a starting node with minimum coverage and then sort the nodes by id.
                 std::deque<handle_t> path;
                 std::sort(node_coverage.begin(), node_coverage.end(),
@@ -324,6 +327,10 @@ namespace odgi {
                 }
                 std::cerr << std::endl;
 #endif
+            }
+
+            if ((min_node_coverage != std::numeric_limits<uint64_t>::max()) && (i >= num_paths_per_component)){
+                std::cerr << "Maximum number of generable paths reached." << std::endl;
             }
 
             if (write_node_covearges) {
