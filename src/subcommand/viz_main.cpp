@@ -479,14 +479,14 @@ namespace odgi {
                         path_g_f = path_g_f * 0.9;
                         path_r_f = path_r_f * 1.2;
                     }
-                }else if (_white_to_black) {
+                } else if (_white_to_black) {
                     path_r = 240;
                     path_g = 240;
                     path_b = 240;
                 }
             }
 
-            if(!aln_mode || !_white_to_black){
+            if (!(is_aln && _white_to_black)) {
                 // brighten the color
                 float f = std::min(1.5, 1.0 / std::max(std::max(path_r_f, path_g_f), path_b_f));
                 path_r = (uint8_t) std::round(255 * std::min(path_r_f * f, (float) 1.0));
