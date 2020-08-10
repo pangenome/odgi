@@ -175,6 +175,35 @@ ExternalProject_Add(cgranges
 ExternalProject_Get_property(cgranges SOURCE_DIR)
 set(cgranges_INCLUDE "${SOURCE_DIR}/cpp")
 
+# mmmulti (memory mapped multimap, multiset, and interval tree)
+ExternalProject_Add(mmmulti
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/mmmulti"
+  BUILD_COMMAND ""
+  UPDATE_COMMAND ""
+  INSTALL_COMMAND ""
+  CONFIGURE_COMMAND "")
+ExternalProject_Get_property(mmmulti SOURCE_DIR)
+set(mmmulti_INCLUDE "${SOURCE_DIR}/src")
+
+# In-place Parallel Super Scalar Samplesort (IPS⁴o), header only
+ExternalProject_Add(ips4o
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/ips4o"
+  INSTALL_COMMAND ""
+  BUILD_COMMAND ""
+  CONFIGURE_COMMAND "")
+ExternalProject_Get_property(ips4o SOURCE_DIR)
+set(ips4o_INCLUDE "${SOURCE_DIR}")
+
+# atomic queue library
+ExternalProject_Add(atomicqueue
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/atomic_queue/include/atomic_queue"
+  UPDATE_COMMAND ""
+  INSTALL_COMMAND ""
+  BUILD_COMMAND ""
+  CONFIGURE_COMMAND "")
+ExternalProject_Get_property(atomicqueue SOURCE_DIR)
+set(atomicqueue_INCLUDE "${SOURCE_DIR}/")
+
 # lodepng
 ExternalProject_Add(lodepng
   SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/lodepng"
@@ -365,7 +394,10 @@ set(odgi_DEPS
     mondriaan
     libbf
     httplib
-    random_distributions)
+    random_distributions
+    mmmulti
+    ips4o
+    atomicqueue)
 add_dependencies(odgi_objs ${odgi_DEPS})
 
 set(odgi_INCLUDES
@@ -383,6 +415,9 @@ set(odgi_INCLUDES
   "${ska_INCLUDE}"
   "${intervaltree_INCLUDE}"
   "${cgranges_INCLUDE}"
+  "${mmmulti_INCLUDE}"
+  "${ips4o_INCLUDE}"
+  "${atomicqueue_INCLUDE}"
   "${lodepng_INCLUDE}"
   "${bbhash_INCLUDE}"
   "${structures_INCLUDE}"
@@ -401,7 +436,8 @@ set(odgi_LIBS
   "${lodepng_LIB}/liblodepng.a"
   "${mondriaan_LIB}/libmondriaan.a"
   "${libbf_LIB}/libbf.a"
-  "-ldl")
+  "-ldl"
+  "-latomic")
 
 set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/include/odgi_git_version.hpp

@@ -8,6 +8,7 @@
 #include <handlegraph/util.hpp>
 #include "odgi.hpp"
 #include "algorithms/xp.hpp"
+#include <sdsl/bit_vectors.hpp>
 
 namespace odgi {
     namespace unittest {
@@ -79,6 +80,17 @@ namespace odgi {
                 REQUIRE(as_integer(path_index.get_path_handle("5")) == as_integer(graph.get_path_handle("5")));
                 REQUIRE(as_integer(path_index.get_path_handle("5-")) == as_integer(graph.get_path_handle("5-")));
                 REQUIRE(as_integer(path_index.get_path_handle("5-m")) == as_integer(graph.get_path_handle("5-m")));
+                uint64_t np_size = 0;
+                sdsl::bit_vector np_bv = path_index.get_np_bv();
+                graph.for_each_handle([&](const handle_t &h) {
+                    REQUIRE(np_bv[np_size] == 1);
+                    np_size++;
+                    graph.for_each_step_on_handle(h, [&](const step_handle_t &step_handle) {
+                        REQUIRE(np_bv[np_size] == 0);
+                       np_size++;
+                    });
+
+                });
             }
 
             SECTION("The index has path and position") {
@@ -166,6 +178,17 @@ namespace odgi {
                 REQUIRE(as_integer(loaded_path_index.get_path_handle("5")) == as_integer(graph.get_path_handle("5")));
                 REQUIRE(as_integer(loaded_path_index.get_path_handle("5-")) == as_integer(graph.get_path_handle("5-")));
                 REQUIRE(as_integer(loaded_path_index.get_path_handle("5-m")) == as_integer(graph.get_path_handle("5-m")));
+                uint64_t np_size = 0;
+                sdsl::bit_vector np_bv = loaded_path_index.get_np_bv();
+                graph.for_each_handle([&](const handle_t &h) {
+                    REQUIRE(np_bv[np_size] == 1);
+                    np_size++;
+                    graph.for_each_step_on_handle(h, [&](const step_handle_t &step_handle) {
+                        REQUIRE(np_bv[np_size] == 0);
+                        np_size++;
+                    });
+
+                });
             }
 
             SECTION("The loaded index mirrors the actual index") {
@@ -185,6 +208,18 @@ namespace odgi {
                 sdsl::enc_vector<> pos_map_iv = path_index.get_pos_map_iv();
                 for (size_t i = 0; i < loaded_path_index.get_pos_map_iv().size(); i++) {
                     REQUIRE(pos_map_iv_l[i] == pos_map_iv[i]);
+                }
+                // compare nr_iv
+                sdsl::enc_vector<> nr_iv_l = loaded_path_index.get_nr_iv();
+                sdsl::enc_vector<> nr_iv = path_index.get_nr_iv();
+                for (size_t i = 0; i < loaded_path_index.get_nr_iv().size(); i++) {
+                    REQUIRE(nr_iv_l[i] == nr_iv[i]);
+                }
+                // compare np_bv
+                sdsl::enc_vector<> np_bv_l = loaded_path_index.get_np_bv();
+                sdsl::enc_vector<> np_bv = path_index.get_np_bv();
+                for (size_t i = 0; i < loaded_path_index.get_np_bv().size(); i++) {
+                    REQUIRE(np_bv_l[i] == np_bv[i]);
                 }
 
                 // compare all fields of all XPPATHs
