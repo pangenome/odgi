@@ -233,7 +233,9 @@ namespace odgi {
         bool
         component_path_cover(handlegraph::MutablePathDeletableHandleGraph &graph,
                              std::vector<ska::flat_hash_set<handlegraph::nid_t>> &components, size_t component_id,
-                             size_t n, size_t k, bool show_progress) {
+                             size_t num_paths_per_component, size_t node_window_size,
+                             size_t min_node_coverage, size_t max_number_of_paths_generable,
+                             bool show_progress) {
             typedef typename Coverage::coverage_t coverage_t;
             typedef typename Coverage::node_coverage_t node_coverage_t;
 
@@ -266,14 +268,29 @@ namespace odgi {
             // the component.
             component = ska::flat_hash_set<handlegraph::nid_t>();
 
-            // Generate n paths in the component.
-            for (size_t i = 0; i < n; i++) {
+            if (num_paths_per_component > 0){
+                min_node_coverage = std::numeric_limits<uint64_t>::max();
+            }else{
+                num_paths_per_component = max_number_of_paths_generable;
+            }
+            // Generate num_paths_per_component paths in the component.
+            for (size_t i = 0; i < num_paths_per_component; i++) {
                 // Choose a starting node with minimum coverage and then sort the nodes by id.
                 std::deque<handle_t> path;
                 std::sort(node_coverage.begin(), node_coverage.end(),
                           [](const node_coverage_t &a, const node_coverage_t &b) -> bool {
                               return (a.second < b.second);
                           });
+
+#ifdef debug_cover
+                std::cerr << node_coverage.front().first << " --- " << node_coverage.front().second << std::endl;
+#endif
+
+                if (node_coverage.front().second >= min_node_coverage){
+                    std::cerr << "Minimum node coverage reached after generating " << i << " paths." << std::endl;
+                    break;
+                }
+
                 path.push_back(graph.get_handle(node_coverage.front().first, false));
                 Coverage::increase_coverage(node_coverage.front());
                 std::sort(node_coverage.begin(), node_coverage.end(),
@@ -285,9 +302,11 @@ namespace odgi {
                 bool success = true;
                 while (success && path.size() < component_size) {
                     success = false;
-                    success |= Coverage::extend_forward(graph, path, k, node_coverage, path_coverage, acyclic);
+                    success |= Coverage::extend_forward(graph, path, node_window_size, node_coverage, path_coverage,
+                                                        acyclic);
                     if (!acyclic && path.size() < component_size) {
-                        success |= Coverage::extend_backward(graph, path, k, node_coverage, path_coverage);
+                        success |= Coverage::extend_backward(graph, path, node_window_size, node_coverage,
+                                                             path_coverage);
                     }
                 }
 
@@ -310,7 +329,8 @@ namespace odgi {
         }
 
         void path_cover(handlegraph::MutablePathDeletableHandleGraph &graph,
-                        size_t n, size_t k,
+                        size_t num_paths_per_component, size_t node_window_size,
+                        size_t min_node_coverage, size_t max_number_of_paths_generable,
                         bool show_progress) {
             std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components = algorithms::weakly_connected_components(
                     &graph);
@@ -318,7 +338,10 @@ namespace odgi {
             // Handle each component separately.
             size_t processed_components = 0;
             for (size_t contig = 0; contig < weak_components.size(); contig++) {
-                if (component_path_cover<SimpleCoverage>(graph, weak_components, contig, n, k, show_progress)) {
+                if (component_path_cover<SimpleCoverage>(graph, weak_components, contig,
+                                                         num_paths_per_component, node_window_size,
+                                                         min_node_coverage, max_number_of_paths_generable,
+                                                         show_progress)) {
                     processed_components++;
 
                     if (show_progress) {

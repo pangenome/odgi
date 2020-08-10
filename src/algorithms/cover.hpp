@@ -13,7 +13,7 @@ namespace odgi {
 
         using namespace handlegraph;
 
-        /* This implementation has been took, and slightly modified, by: https://github.com/jltsiren/gbwtgraph */
+        /* This implementation has been been inspired by: https://github.com/jltsiren/gbwtgraph */
 
         constexpr size_t PATH_COVER_DEFAULT_N = 16;
         constexpr size_t PATH_COVER_DEFAULT_K = 3;
@@ -29,9 +29,9 @@ namespace odgi {
         is_nice_and_acyclic(const HandleGraph &graph, const ska::flat_hash_set<handlegraph::nid_t> &component);
 
         /*
-          Find a path cover of the graph with n paths per component, adding the generated paths in the graph.
-          The path cover is built greedily. Each time we extend a path, we choose the extension,
-          where the coverage of the k >= 2 node window is the lowest. Note that this is a maximum
+          Find a path cover of the graph with num_paths_per_component paths per component, adding the generated paths in
+          the graph. The path cover is built greedily. Each time we extend a path, we choose the extension,
+          where the coverage of the node_window_size >= 2 node window is the lowest. Note that this is a maximum
           coverage algorithm that tries to maximize the number of windows covered by a fixed number
           of paths.
 
@@ -46,13 +46,14 @@ namespace odgi {
             - We stop when the length of the path reaches the size of the component.
             - The length of the window is in nodes instead of base pairs. We expect a sparse graph,
               where the nodes between variants are long.
-            - If the component is not a DAG and the path is shorter than k - 1 nodes, we consider
+            - If the component is not a DAG and the path is shorter than node_window_size - 1 nodes, we consider
               the coverage of individual nodes instead of windows.
             - When determining window coverage, we consider the window equivalent to its reverse
               complement.
         */
         void path_cover(handlegraph::MutablePathDeletableHandleGraph &graph,
-                        size_t n, size_t k,
+                        size_t num_paths_per_component, size_t node_window_size,
+                        size_t min_node_coverage, size_t max_number_of_paths_generable,
                         bool show_progress = false);
     }
 }
