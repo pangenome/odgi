@@ -186,7 +186,7 @@ int main_sort(int argc, char** argv) {
     // will be filled, if the user decides to write a snapshot of the graph after each sorting iterationn
     std::vector<std::vector<handle_t>> snapshots;
     const bool snapshot = p_sgd_snapshot;
-    const bool sample_from_paths = p_sgd_sample_from_paths;
+    const bool sample_from_paths = args::get(p_sgd_sample_from_paths) ? args::get(p_sgd_sample_from_paths) : false;
     // default parameters that need a path index to be present
     uint64_t path_sgd_min_term_updates;
     uint64_t path_sgd_zipf_space;
