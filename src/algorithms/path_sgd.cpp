@@ -38,7 +38,7 @@ namespace odgi {
             // seed them with the graph order
             uint64_t len = 0;
             graph.for_each_handle(
-                    [&X, &graph, &len, &sample_from_paths](const handle_t &handle) {
+                    [&X, &graph, &len](const handle_t &handle) {
                         // nb: we assume that the graph provides a compact handle set
                         X[number_bool_packing::unpack_number(handle)].store(len);
                         len += graph.get_length(handle);
@@ -139,7 +139,7 @@ namespace odgi {
                         std::seed_seq sseq(std::begin(seed_data), std::end(seed_data));
                         std::mt19937_64 gen(sseq);
                         std::uniform_int_distribution<uint64_t> dis(0, total_path_len_in_nucleotides - 1);
-                        if (sample_from_paths) {
+                        if (!sample_from_paths) {
                             dis = std::uniform_int_distribution<uint64_t>(0, path_index.get_np_bv().size() - 1);
                         }
                         std::uniform_int_distribution<uint64_t> flip(0, 1);

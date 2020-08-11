@@ -123,7 +123,7 @@ pipeline of sorts within one parameter.
   Apply path guided 1D linear SGD algorithm to organize the graph.
 
 *-J, --path-sgd-sample-from-paths*::
-  Instead of sampling the first term from all nodes of paths we sample from all nucleotide positions of the paths. Default value is _FALSE_.
+  Instead of sampling the first node from all nodes we sample from all nucleotide positions of the paths. Default value is _FALSE_.
 
 *-f, --path-sgd-use-paths*=FILE::
   Specify a line separated list of paths to sample from for the on the fly term generation process in the path guided linear 1D SGD. The default value are _all paths_.
