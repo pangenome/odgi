@@ -85,8 +85,8 @@ namespace odgi {
         args::ValueFlag<uint64_t> path_x_pad(parser, "N", "path x padding", {'X', "path-x-padding"});
         args::Flag pack_paths(parser, "bool", "pack the graphs rather than displaying a single path per row",{'R', "pack-paths"});
         args::ValueFlag<float> link_path_pieces(parser, "FLOAT","show thin links of this relative width to connect path pieces",{'L', "link-path-pieces"});
-        args::ValueFlag<std::string> alignment_prefix(parser, "STRING","apply alignment-related visual motifs to paths with this name prefix",{'A', "alignment-prefix"});
-        args::Flag show_strands(parser, "bool","use reds and blues to show forward and reverse alignments (depends on -A)",{'S', "show-strand"});
+        args::ValueFlag<std::string> alignment_prefix(parser, "STRING","apply alignment-related visual motifs to paths with this name prefix (it affects the -S and -d options)",{'A', "alignment-prefix"});
+        args::Flag show_strands(parser, "bool","use reds and blues to show forward and reverse alignments",{'S', "show-strand"});
         args::Flag binned_mode(parser, "binned-mode", "bin the variation graph before its visualization", {'b', "binned-mode"});
         args::ValueFlag<uint64_t> bin_width(parser, "bp", "width of each bin in basepairs along the graph vector",{'w', "bin-width"});
         args::Flag drop_gap_links(parser, "drop-gap-links", "don't include gap links in the output", {'g', "no-gap-links"});
@@ -140,6 +140,13 @@ namespace odgi {
         if (!args::get(change_darkness) && (args::get(longest_path) || args::get(white_to_black))){
             std::cerr
                     << "[odgi viz] error: Please specify the -d/--change-darkness option to use the -l/--longest-path and -u/--white-to-black options."
+                    << std::endl;
+            return 1;
+        }
+
+        if (args::get(show_strands) && args::get(white_to_black)) {
+            std::cerr
+                    << "[odgi cover] error: please specify -S/--show-strand or -u/--white-to-black, not both."
                     << std::endl;
             return 1;
         }
@@ -415,11 +422,11 @@ namespace odgi {
             std::cerr << "path_name: " << path_name << std::endl;
 #endif
 
-            bool is_aln = false;
+            bool is_aln = true;
             if (aln_mode) {
                 std::string::size_type n = path_name.find(aln_prefix);
-                if (n == 0) {
-                    is_aln = true;
+                if (n != 0) {
+                    is_aln = false;
                 }
             }
             // use a sha256 to get a few bytes that we'll use for a color
@@ -441,27 +448,27 @@ namespace odgi {
             uint64_t steps = 0;
             uint64_t rev = 0;
             uint64_t path_len_to_use = 0;
-            if ((is_aln && args::get(show_strands)) || (change_darkness && !_longest_path)){
-                graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
-                    handle_t h = graph.get_handle_of_step(occ);
-                    ++steps;
-                    rev += graph.get_is_reverse(h);
+            if (is_aln){
+                if ((args::get(show_strands) || (change_darkness && !_longest_path))) {
+                    graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
+                        handle_t h = graph.get_handle_of_step(occ);
+                        ++steps;
+                        rev += graph.get_is_reverse(h);
 
-                    path_len_to_use += graph.get_length(h);
-                });
-            }
+                        path_len_to_use += graph.get_length(h);
+                    });
+                }
 
-            if (change_darkness && _longest_path){
-                path_len_to_use = longest_path_len;
-            }
+                if (change_darkness && _longest_path){
+                    path_len_to_use = longest_path_len;
+                }
 
-            if (is_aln) {
-                float x = path_r_f;
-                path_r_f = (x + 0.5 * 9) / 10;
-                path_g_f = (x + 0.5 * 9) / 10;
-                path_b_f = (x + 0.5 * 9) / 10;
-                // check the path orientations
                 if (args::get(show_strands)) {
+                    float x = path_r_f;
+                    path_r_f = (x + 0.5 * 9) / 10;
+                    path_g_f = (x + 0.5 * 9) / 10;
+                    path_b_f = (x + 0.5 * 9) / 10;
+                    // check the path orientations
                     bool is_rev = (float) rev / (float) steps > 0.5;
                     if (is_rev) {
                         path_r_f = path_r_f * 0.9;
@@ -472,14 +479,14 @@ namespace odgi {
                         path_g_f = path_g_f * 0.9;
                         path_r_f = path_r_f * 1.2;
                     }
+                } else if (_white_to_black) {
+                    path_r = 240;
+                    path_g = 240;
+                    path_b = 240;
                 }
             }
 
-            if (_white_to_black){
-                path_r = 240;
-                path_g = 240;
-                path_b = 240;
-            }else{
+            if (!(is_aln && _white_to_black)) {
                 // brighten the color
                 float f = std::min(1.5, 1.0 / std::max(std::max(path_r_f, path_g_f), path_b_f));
                 path_r = (uint8_t) std::round(255 * std::min(path_r_f * f, (float) 1.0));
@@ -511,7 +518,7 @@ namespace odgi {
                             std::cerr << "curr_bin: " << curr_bin << std::endl;
 #endif
 
-                            if (change_darkness){
+                            if (is_aln && change_darkness){
                                 x = 1 - ( (float)(curr_len + k) / (float)(path_len_to_use))*0.9;
                             }
                             add_path_step(curr_bin - 1, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
@@ -586,7 +593,7 @@ namespace odgi {
                     // make contects for the bases in the node
                     uint64_t path_y = path_layout_y[path_rank];
                     for (uint64_t i = 0; i < hl; i+=1/scale_x) {
-                        if (change_darkness){
+                        if (is_aln && change_darkness){
                             x = 1 - ((float)(curr_len + i*scale_x) / (float)(path_len_to_use))*0.9;
                         }
                         add_path_step(p+i, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
