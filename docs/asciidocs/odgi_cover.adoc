@@ -1,0 +1,112 @@
+= odgi cover(1)
+ifdef::backend-manpage[]
+Andrea Guarracino
+:doctype: manpage
+:release-version: v0.4.1 
+:man manual: odgi cover
+:man source: odgi v0.4.1 
+:page-layout: base
+endif::[]
+
+== NAME
+
+odgi_cover - find a path cover of the variation graph
+
+
+== SYNOPSIS
+
+*odgi cover* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]...
+
+== DESCRIPTION
+
+The odgi cover(1) command find a path cover of a variation graph, with a specified number of paths per component.
+
+
+== OPTIONS
+
+=== Graph Files IO
+
+*-i, --idx*=_FILE_::
+  File containing the succinct variation graph where find a path cover. The file name usually ends with _.og_.
+
+*-o, --out*=_FILE_::
+  Write the succinct variation graph with the generated paths to _FILE_. The file name usually ends with _.og_.
+
+
+=== Cover Options
+
+*-n, --num-paths-per-component*=_N_::
+  Number of paths to generate per component.
+
+*-k, --node-windows-size*=_N_::
+  Size of the node window to check each time a new path is extended (it has to be greater than or equal to 2).
+
+*-c, --min-node-coverage*=_N_::
+  Minimum node coverage to reach (it has to be greater than 0). There will be generated paths until the specified minimum node coverage is reached, or until the maximum number of allowed generated paths is reached (number of nodes in the input variation graph).
+
+*-w, --write-node-coverages*=_FILE_::
+  Write the node coverages at the end of the paths generation to FILE. The file will contain tab-separated values (header included), and have 3 columns: _component_id_, _node_id_, and _coverage_.
+
+
+=== Processing Information
+
+*-d, --debug*::
+  Print information about the components and the progress to stderr.
+
+
+=== Program Information
+
+*-h, --help*::
+  Print a help message for *odgi cover*.
+
+
+== EXIT STATUS
+
+*0*::
+  Success.
+
+*1*::
+  Failure (syntax or usage error; parameter error; file processing failure; unexpected error).
+
+== BUGS
+
+Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
+
+== AUTHORS
+
+*odgi cover* was written by Erik Garrison.
+
+ifdef::backend-manpage[]
+== RESOURCES
+
+*Project web site:* https://github.com/vgteam/odgi
+
+*Git source repository on GitHub:* https://github.com/vgteam/odgi
+
+*GitHub organization:* https://github.com/vgteam
+
+*Discussion list / forum:* https://github.com/vgteam/odgi/issues
+
+== COPYING
+
+The MIT License (MIT)
+
+Copyright (c) 2019 Erik Garrison
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+endif::[]

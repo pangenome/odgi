@@ -18,6 +18,8 @@ odgi - dynamic succinct variation graph tool
 
 *odgi* <<odgi_stats.adoc#_odgi_stats1, stats>> -i graph.og -S
 
+*odgi* <<odgi_cover.adoc#_odgi_cover1, cover>> -i graph.og -o graph.paths.og
+
 *odgi* <<odgi_sort.adoc#_odgi_sort1, sort>> -i graph.og -o graph.sorted.og -p bSnSnS
 
 *odgi* <<odgi_view.adoc#_odgi_view1, view>> -i graph.og -g
@@ -78,6 +80,9 @@ The odgi build(1) command constructs a succinct variation graph from a GFA. Curr
 
 *odgi stats* [*-i, --idx*=_FILE_] [_OPTION_]... +
 The odgi stats(1) command produces statistics of a variation graph. Among other metrics, it can calculate the #nodes, #edges, #paths and the total nucleotide length of the graph. Various histogram summary options complement the tool. If [*-B, --bed-multicov*=_BED_] is set, the metrics will be produced for the intervals specified in the BED.
+
+*odgi cover* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]... +
+The odgi cover(1) command find a path cover of a variation graph, with a specified number of paths per component.
 
 *odgi sort* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]... +
 The odgi sort(1) command sorts a succinct variation graph. Odgi sort offers a diverse palette of sorting algorithms to
@@ -200,7 +205,7 @@ Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
 
 == AUTHORS
 
-Erik Garrison from the University of California Santa Cruz wrote the whole *odgi* tool. Simon Heumos from the Quantitative Biology Center Tübingen wrote *odgi pathindex*, *odgi panpos*, *odgi server*, and this documentation.
+Erik Garrison from the University of California Santa Cruz wrote the whole *odgi* tool. Simon Heumos from the Quantitative Biology Center Tübingen wrote *odgi pathindex*, *odgi panpos*, *odgi server*, and this documentation. Andrea Guarracino from the University of Rome Tor Vergata wrote *odgi cover*.
 
 == RESOURCES
 
