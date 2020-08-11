@@ -89,7 +89,8 @@ std::vector<handle_t> path_linear_sgd_order(const PathHandleGraph &graph,
                                             const std::string &seed,
                                             const bool &snapshot,
                                             std::vector<std::vector<handle_t>> &snapshots,
-                                            const bool &sample_from_paths);
+                                            const bool &sample_from_paths,
+                                            const bool &path_sgd_deterministic);
 
 }
 

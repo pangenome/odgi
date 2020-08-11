@@ -61,6 +61,7 @@ int main_sort(int argc, char** argv) {
     /// path guided linear 1D SGD
     args::Flag p_sgd(parser, "path-sgd", "apply path guided linear 1D SGD algorithm to organize graph", {'Y', "path-sgd"});
     args::Flag p_sgd_sample_from_paths(parser, "path-sgd-sample-from-nodes", "instead of sampling the first node from all nodes of the graph we sample from all nucleotide positions of the paths (default: flag not set)", {'J', "path-sgd-sample-from-paths"});
+    args::Flag p_sgd_deterministic(parser, "path-sgd-deterministic", "run the path guided 1D linear SGD in deterministic mode, will automatically set the number of threads to 1, multithreading is not supported in this mode (default: flag not set)", {'I', "path-sgd-deterministic"});
     args::ValueFlag<std::string> p_sgd_in_file(parser, "FILE", "specify a line separated list of paths to sample from for the on the fly term generation process in the path guided linear 1D SGD (default: sample from all paths)", {'f', "path-sgd-use-paths"});
     args::ValueFlag<double> p_sgd_min_term_updates_paths(parser, "N", "minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of total path length (default: 0.1)", {'G', "path-sgd-min-term-updates-paths"});
     args::ValueFlag<double> p_sgd_min_term_updates_num_nodes(parser, "N", "minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of the number of nodes (default: argument is not set, the default of -G=[N], path-sgd-min-term-updates-paths=[N] is used)", {'U', "path-sgd-min-term-updates-nodes"});
@@ -187,6 +188,7 @@ int main_sort(int argc, char** argv) {
     std::vector<std::vector<handle_t>> snapshots;
     const bool snapshot = p_sgd_snapshot;
     const bool sample_from_paths = args::get(p_sgd_sample_from_paths) ? args::get(p_sgd_sample_from_paths) : false;
+    const bool path_sgd_deterministic = p_sgd_deterministic;
     // default parameters that need a path index to be present
     uint64_t path_sgd_min_term_updates;
     uint64_t path_sgd_zipf_space;
@@ -298,7 +300,8 @@ int main_sort(int argc, char** argv) {
                                                   path_sgd_seed,
                                                   snapshot,
                                                   snapshots,
-                                                  sample_from_paths);
+                                                  sample_from_paths,
+                                                  path_sgd_deterministic);
             // TODO Check if we have to emit the snapshots
             if (snapshot) {
                 std::string snapshot_prefix = args::get(p_sgd_snapshot);
@@ -387,7 +390,8 @@ int main_sort(int argc, char** argv) {
                                                               path_sgd_seed,
                                                               snapshot,
                                                               snapshots,
-                                                              sample_from_paths);
+                                                              sample_from_paths,
+                                                              path_sgd_deterministic);
                     break;
                 }
                 case 'f':
