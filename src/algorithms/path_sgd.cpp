@@ -2,7 +2,8 @@
 
 // #define debug_path_sgd
 // #define eval_path_sgd
-//#define debug_schedule
+// #define debug_schedule
+// # define debug_sample_from_nodes
 namespace odgi {
     namespace algorithms {
 
@@ -20,7 +21,8 @@ namespace odgi {
                                             const uint64_t &nthreads,
                                             const bool &progress,
                                             const bool &snapshot,
-                                            std::vector<std::vector<double>> &snapshots) {
+                                            std::vector<std::vector<double>> &snapshots,
+                                            const bool &sample_from_paths) {
 #ifdef debug_path_sgd
             std::cerr << "iter_max: " << iter_max << std::endl;
             std::cerr << "min_term_updates: " << min_term_updates << std::endl;
@@ -29,6 +31,7 @@ namespace odgi {
             std::cerr << "theta: " << theta << std::endl;
             std::cerr << "space: " << space << std::endl;
 #endif
+
             using namespace std::chrono_literals; // for timing stuff
             // our positions in 1D
             std::vector<std::atomic<double>> X(graph.get_node_count());
@@ -135,27 +138,61 @@ namespace odgi {
                         std::array<uint64_t, 2> seed_data = {(uint64_t)std::time(0), tid};
                         std::seed_seq sseq(std::begin(seed_data), std::end(seed_data));
                         std::mt19937_64 gen(sseq);
-                        std::uniform_int_distribution<uint64_t> dis(0, total_path_len_in_nucleotides-1);
+                        std::uniform_int_distribution<uint64_t> dis(0, total_path_len_in_nucleotides - 1);
+                        if (!sample_from_paths) {
+                            dis = std::uniform_int_distribution<uint64_t>(0, path_index.get_np_bv().size() - 1);
+                        }
                         std::uniform_int_distribution<uint64_t> flip(0, 1);
                         while (work_todo.load()) {
-                            // pick a random position from all paths
                             uint64_t pos = dis(gen);
-                            // use our interval tree to get the path handle and path nucleotide position of the picked position
-                            //std::vector<Interval<size_t, path_handle_t> > result;
-                            //result = path_nucleotide_tree.findOverlapping(pos, pos);
-                            std::vector<size_t> a;
-                            path_nucleotide_tree.overlap(pos, pos+1, a);
-                            if (a.empty()) {
-                                std::cerr << "[odgi::path_sgd] no overlapping intervals at position " << pos << std::endl;
-                                exit(1);
+                            size_t pos_in_path_a;
+                            size_t path_len;
+                            path_handle_t path;
+                            // pick a random position from all paths
+                            if (sample_from_paths) {
+                                // use our interval tree to get the path handle and path nucleotide position of the picked position
+                                //std::vector<Interval<size_t, path_handle_t> > result;
+                                //result = path_nucleotide_tree.findOverlapping(pos, pos);
+                                std::vector<size_t> a;
+                                path_nucleotide_tree.overlap(pos, pos + 1, a);
+                                if (a.empty()) {
+                                    std::cerr << "[odgi::path_sgd] no overlapping intervals at position " << pos
+                                              << std::endl;
+                                    exit(1);
+                                }
+                                auto &p = a[0];
+                                path = path_nucleotide_tree.data(p);
+                                size_t path_start_pos = path_nucleotide_tree.start(p);
+                                // size_t path_end_pos = result[0].stop;
+                                path_len = path_index.get_path_length(path) - 1;
+                                // we have a 0-based positioning in the path index
+                                pos_in_path_a = pos - path_start_pos;
+
+                                // pick a random position from all nodes
+                            } else {
+                                sdsl::bit_vector np_bv = path_index.get_np_bv();
+                                sdsl::int_vector<> nr_iv = path_index.get_nr_iv();
+                                sdsl::int_vector<> npi_iv = path_index.get_npi_iv();
+                                sdsl::rank_support_v<1> np_bv_rank = path_index.get_np_bv_rank();
+                                // did we hit a node and not a path?
+                                if (np_bv[pos] == 1) {
+                                    continue;
+                                } else {
+                                    path = as_path_handle(npi_iv[pos]);
+                                    step_handle_t s_h;
+                                    as_integers(s_h)[0] = npi_iv[pos]; // path handle
+                                    as_integers(s_h)[1] = nr_iv[pos] - 1; // maybe -1?! // step rank in path
+                                    pos_in_path_a = path_index.get_position_of_step(s_h);
+                                    path_len = path_index.get_path_length(path) - 1;
+#ifdef debug_sample_from_nodes
+                                    std::cerr << "path_len: " << path_len << std::endl;
+                                    std::cerr << "path id: " << (npi_iv[pos]) << std::endl;
+                                    std::cerr << "step rank in path: " << (nr_iv[pos] - 1) << std::endl;
+                                    std::cerr << "pos_in_path_a: " << pos_in_path_a << std::endl;
+#endif
+                                }
+
                             }
-                            auto& p = a[0];
-                            path_handle_t path = path_nucleotide_tree.data(p);
-                            size_t path_start_pos = path_nucleotide_tree.start(p);
-                            // size_t path_end_pos = result[0].stop;
-                            size_t path_len = path_index.get_path_length(path) - 1;
-                            // we have a 0-based positioning in the path index
-                            size_t pos_in_path_a = pos - path_start_pos;
                             uint64_t zipf_int = zipfian(gen);
 #ifdef debug_path_sgd
                             std::cerr << "random pos: " << pos << std::endl;
@@ -395,7 +432,8 @@ namespace odgi {
                                                           const std::string &seeding_string,
                                                           const bool &progress,
                                                           const bool &snapshot,
-                                                          std::vector<std::vector<double>> &snapshots) {
+                                                          std::vector<std::vector<double>> &snapshots,
+                                                          const bool &sample_from_paths) {
             using namespace std::chrono_literals; // for timing stuff
             // our positions in 1D
             std::vector<std::atomic<double>> X(graph.get_node_count());
@@ -457,12 +495,13 @@ namespace odgi {
             // our max delta
             std::atomic<double> Delta_max;
             Delta_max.store(0);
-            // approximately what iteration we're on
-            uint64_t iteration = 0;
             // seed with the given string
             std::seed_seq seed(seeding_string.begin(), seeding_string.end());
             std::mt19937 gen(seed);
-            std::uniform_int_distribution<uint64_t> dis(0, total_path_len_in_nucleotides-1);
+            std::uniform_int_distribution<uint64_t> dis(0, total_path_len_in_nucleotides - 1);
+            if (!sample_from_paths) {
+                dis = std::uniform_int_distribution<uint64_t>(0, path_index.get_np_bv().size() - 1);
+            }
             std::uniform_int_distribution<uint64_t> flip(0, 1);
             for (uint64_t iteration = 0; iteration < iter_max; iteration++) {
                 if (snapshot && iteration < iter_max - 1) {
@@ -477,23 +516,50 @@ namespace odgi {
                 for (uint64_t term_update = 0; term_update < min_term_updates; term_update++) {
                     // pick a random position from all paths
                     uint64_t pos = dis(gen);
+                    size_t pos_in_path_a;
+                    size_t path_len;
+                    path_handle_t path;
 #ifdef debug_path_sgd
                     std::cerr << "uniform_position: " << pos << std::endl;
 #endif
-                    // use our interval tree to get the path handle and path nucleotide position of the picked position
-                    std::vector<size_t> a;
-                    path_nucleotide_tree.overlap(pos, pos+1, a);
-                    if (a.empty()) {
-                        std::cerr << "[odgi::path_sgd] no overlapping intervals at position " << pos << std::endl;
-                        exit(1);
+                    if (sample_from_paths) {
+                        // use our interval tree to get the path handle and path nucleotide position of the picked position
+                        std::vector<size_t> a;
+                        path_nucleotide_tree.overlap(pos, pos + 1, a);
+                        if (a.empty()) {
+                            std::cerr << "[odgi::path_sgd] no overlapping intervals at position " << pos << std::endl;
+                            exit(1);
+                        }
+                        auto &p = a[0];
+                        path = path_nucleotide_tree.data(p);
+                        size_t path_start_pos = path_nucleotide_tree.start(p);
+                        // size_t path_end_pos = result[0].stop;
+                        path_len = path_index.get_path_length(path) - 1;
+                        // we have a 0-based positioning in the path index
+                        pos_in_path_a = pos - path_start_pos;
+                    } else {
+                        sdsl::bit_vector np_bv = path_index.get_np_bv();
+                        sdsl::int_vector<> nr_iv = path_index.get_nr_iv();
+                        sdsl::int_vector<> npi_iv = path_index.get_npi_iv();
+                        sdsl::rank_support_v<1> np_bv_rank = path_index.get_np_bv_rank();
+                        // did we hit a node and not a path?
+                        if (np_bv[pos] == 1) {
+                            continue;
+                        } else {
+                            path = as_path_handle(npi_iv[pos]);
+                            step_handle_t s_h;
+                            as_integers(s_h)[0] = npi_iv[pos]; // path handle
+                            as_integers(s_h)[1] = nr_iv[pos] - 1; // maybe -1?! // step rank in path
+                            pos_in_path_a = path_index.get_position_of_step(s_h);
+                            path_len = path_index.get_path_length(path) - 1;
+#ifdef debug_sample_from_nodes
+                            std::cerr << "path_len: " << path_len << std::endl;
+                            std::cerr << "path id: " << (npi_iv[pos]) << std::endl;
+                            std::cerr << "step rank in path: " << (nr_iv[pos] - 1) << std::endl;
+                            std::cerr << "pos_in_path_a: " << pos_in_path_a << std::endl;
+#endif
+                        }
                     }
-                    auto& p = a[0];
-                    path_handle_t path = path_nucleotide_tree.data(p);
-                    size_t path_start_pos = path_nucleotide_tree.start(p);
-                    // size_t path_end_pos = result[0].stop;
-                    size_t path_len = path_index.get_path_length(path) - 1;
-                    // we have a 0-based positioning in the path index
-                    size_t pos_in_path_a = pos - path_start_pos;
                     uint64_t zipf_int = zipfian(gen);
 #ifdef debug_path_sgd
                     std::cerr << "random pos: " << pos << std::endl;
@@ -682,10 +748,12 @@ namespace odgi {
                                                     const bool &progress,
                                                     const std::string &seed,
                                                     const bool &snapshot,
-                                                    std::vector<std::vector<handle_t>> &snapshots) {
+                                                    std::vector<std::vector<handle_t>> &snapshots,
+                                                    const bool &sample_from_paths,
+                                                    const bool &path_sgd_deterministic) {
             std::vector<double> layout;
             std::vector<std::vector<double>> snapshots_layouts;
-            if (nthreads == 1) {
+            if (path_sgd_deterministic) {
                 layout = deterministic_path_linear_sgd(graph,
                                                        path_index,
                                                        path_sgd_use_paths,
@@ -700,7 +768,9 @@ namespace odgi {
                                                        seed,
                                                        progress,
                                                        snapshot,
-                                                       snapshots_layouts);
+                                                       snapshots_layouts,
+                                                       sample_from_paths);
+
             } else {
                 layout = path_linear_sgd(graph,
                                          path_index,
@@ -715,9 +785,11 @@ namespace odgi {
                                          space,
                                          nthreads,
                                          progress,
-                                         snapshot,snapshots_layouts);
+                                         snapshot,
+                                         snapshots_layouts,
+                                         sample_from_paths);
             }
-            // TODO move the followin into its own function that we can reuse
+            // TODO move the following into its own function that we can reuse
 #ifdef debug_components
             std::cerr << "node count: " << graph.get_node_count() << std::endl;
 #endif
