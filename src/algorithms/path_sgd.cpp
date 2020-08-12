@@ -23,7 +23,7 @@ namespace odgi {
                                             const bool &snapshot,
                                             std::vector<std::vector<double>> &snapshots,
                                             const bool &sample_from_paths,
-                                            const bool &sample_from_nodes) {
+                                            const bool &sample_from_path_steps) {
 #ifdef debug_path_sgd
             std::cerr << "iter_max: " << iter_max << std::endl;
             std::cerr << "min_term_updates: " << min_term_updates << std::endl;
@@ -140,12 +140,12 @@ namespace odgi {
                         std::array<uint64_t, 2> seed_data = {(uint64_t)std::time(0), tid};
                         std::seed_seq sseq(std::begin(seed_data), std::end(seed_data));
                         std::mt19937_64 gen(sseq);
-                        std::uniform_int_distribution<uint64_t> dis(0, total_path_len_in_nucleotides - 1);
-                        if (!sample_from_paths) {
+                        std::uniform_int_distribution<uint64_t> dis(1, num_nodes);
+                        if (sample_from_path_steps) {
                             dis = std::uniform_int_distribution<uint64_t>(0, path_index.get_np_bv().size() - 1);
                         }
-                        if (sample_from_nodes) {
-                            dis = std::uniform_int_distribution<uint64_t>(1, num_nodes);
+                        if (sample_from_paths) {
+                            dis = std::uniform_int_distribution<uint64_t>(0, total_path_len_in_nucleotides - 1);
                         }
                         std::uniform_int_distribution<uint64_t> flip(0, 1);
                         const sdsl::bit_vector& np_bv = path_index.get_np_bv();
@@ -181,7 +181,26 @@ namespace odgi {
                                 // we have a 0-based positioning in the path index
                                 pos_in_path_a = pos - path_start_pos;
                             } else {
-                                if (sample_from_nodes) {
+                                if (sample_from_path_steps) {
+                                    // did we hit a node and not a path?
+                                    if (np_bv[pos] == 1) {
+                                        continue;
+                                    } else {
+                                        uint64_t path_i = npi_iv[pos];
+                                        path = as_path_handle(path_i);
+                                        as_integers(s_h)[0] = path_i; // path index
+                                        as_integers(s_h)[1] = nr_iv[pos] - 1; // maybe -1?! // step rank in path
+                                        pos_in_path_a = path_index.get_position_of_step(s_h);
+                                        path_len = path_index.get_path_length(path) - 1;
+#ifdef debug_sample_from_nodes
+                                        std::cerr << "path_len: " << path_len << std::endl;
+                                        std::cerr << "path id: " << (npi_iv[pos]) << std::endl;
+                                        std::cerr << "step rank in path: " << (nr_iv[pos] - 1) << std::endl;
+                                        std::cerr << "pos_in_path_a: " << pos_in_path_a << std::endl;
+#endif
+                                    }
+                                    // default: sample the first node from all the nodes in the graph
+                                } else {
                                     node_index = np_bv_select(pos);
                                     // did we hit the last node?
                                     if (pos == num_nodes) {
@@ -222,24 +241,6 @@ namespace odgi {
                                     std::cerr << "path_len " << path_len << std::endl;
                                     std::cerr << "node count " << num_nodes << std::endl;
 #endif
-                                } else {
-                                    // did we hit a node and not a path?
-                                    if (np_bv[pos] == 1) {
-                                        continue;
-                                    } else {
-                                        uint64_t path_i = npi_iv[pos];
-                                        path = as_path_handle(path_i);
-                                        as_integers(s_h)[0] = path_i; // path index
-                                        as_integers(s_h)[1] = nr_iv[pos] - 1; // maybe -1?! // step rank in path
-                                        pos_in_path_a = path_index.get_position_of_step(s_h);
-                                        path_len = path_index.get_path_length(path) - 1;
-#ifdef debug_sample_from_nodes
-                                        std::cerr << "path_len: " << path_len << std::endl;
-                                        std::cerr << "path id: " << (npi_iv[pos]) << std::endl;
-                                        std::cerr << "step rank in path: " << (nr_iv[pos] - 1) << std::endl;
-                                        std::cerr << "pos_in_path_a: " << pos_in_path_a << std::endl;
-#endif
-                                    }
                                 }
                             }
                             uint64_t zipf_int = zipfian(gen);
@@ -483,7 +484,7 @@ namespace odgi {
                                                           const bool &snapshot,
                                                           std::vector<std::vector<double>> &snapshots,
                                                           const bool &sample_from_paths,
-                                                          const bool &sample_from_nodes) {
+                                                          const bool &sample_from_path_steps) {
             using namespace std::chrono_literals; // for timing stuff
             uint64_t num_nodes = graph.get_node_count();
             // our positions in 1D
@@ -549,12 +550,12 @@ namespace odgi {
             // seed with the given string
             std::seed_seq seed(seeding_string.begin(), seeding_string.end());
             std::mt19937 gen(seed);
-            std::uniform_int_distribution<uint64_t> dis(0, total_path_len_in_nucleotides - 1);
-            if (!sample_from_paths) {
+            std::uniform_int_distribution<uint64_t> dis(1, num_nodes);
+            if (sample_from_path_steps) {
                 dis = std::uniform_int_distribution<uint64_t>(0, path_index.get_np_bv().size() - 1);
             }
-            if (sample_from_nodes) {
-                dis = std::uniform_int_distribution<uint64_t>(1, num_nodes);
+            if (sample_from_paths) {
+                dis = std::uniform_int_distribution<uint64_t>(0, total_path_len_in_nucleotides - 1);
             }
             std::uniform_int_distribution<uint64_t> flip(0, 1);
             const sdsl::bit_vector &np_bv = path_index.get_np_bv();
@@ -585,85 +586,86 @@ namespace odgi {
                     std::cerr << "uniform_position: " << pos << std::endl;
 #endif
                     if (sample_from_paths) {
-                                // use our interval tree to get the path handle and path nucleotide position of the picked position
-                                //std::vector<Interval<size_t, path_handle_t> > result;
-                                //result = path_nucleotide_tree.findOverlapping(pos, pos);
-                                std::vector<size_t> a;
-                                path_nucleotide_tree.overlap(pos, pos + 1, a);
-                                if (a.empty()) {
-                                    std::cerr << "[odgi::path_sgd] no overlapping intervals at position " << pos
-                                              << std::endl;
-                                    exit(1);
-                                }
-                                auto &p = a[0];
-                                path = path_nucleotide_tree.data(p);
-                                size_t path_start_pos = path_nucleotide_tree.start(p);
-                                // size_t path_end_pos = result[0].stop;
-                                path_len = path_index.get_path_length(path) - 1;
-                                // we have a 0-based positioning in the path index
-                                pos_in_path_a = pos - path_start_pos;
+                        // use our interval tree to get the path handle and path nucleotide position of the picked position
+                        //std::vector<Interval<size_t, path_handle_t> > result;
+                        //result = path_nucleotide_tree.findOverlapping(pos, pos);
+                        std::vector<size_t> a;
+                        path_nucleotide_tree.overlap(pos, pos + 1, a);
+                        if (a.empty()) {
+                            std::cerr << "[odgi::path_sgd] no overlapping intervals at position " << pos
+                                      << std::endl;
+                            exit(1);
+                        }
+                        auto &p = a[0];
+                        path = path_nucleotide_tree.data(p);
+                        size_t path_start_pos = path_nucleotide_tree.start(p);
+                        // size_t path_end_pos = result[0].stop;
+                        path_len = path_index.get_path_length(path) - 1;
+                        // we have a 0-based positioning in the path index
+                        pos_in_path_a = pos - path_start_pos;
+                    } else {
+                        if (sample_from_path_steps) {
+                            // did we hit a node and not a path?
+                            if (np_bv[pos] == 1) {
+                                continue;
                             } else {
-                                if (sample_from_nodes) {
-                                    node_index = np_bv_select(pos);
-                                    // did we hit the last node?
-                                    if (pos == num_nodes) {
-                                        next_node_index = np_bv.size();
-                                    } else {
-                                        next_node_index = np_bv_select(pos + 1);
-                                    }
-                                    hit_num_paths = next_node_index - node_index - 1;
-                                    if (hit_num_paths == 0) {
-                                        continue;
-                                    }
-                                    std::uniform_int_distribution<uint64_t> dis_path(1, hit_num_paths);
-                                    uint64_t path_pos_in_np_iv = dis_path(gen);
+                                uint64_t path_i = npi_iv[pos];
+                                path = as_path_handle(path_i);
+                                as_integers(s_h)[0] = path_i; // path index
+                                as_integers(s_h)[1] = nr_iv[pos] - 1; // maybe -1?! // step rank in path
+                                pos_in_path_a = path_index.get_position_of_step(s_h);
+                                path_len = path_index.get_path_length(path) - 1;
 #ifdef debug_sample_from_nodes
-                                    std::cerr << "path_pos_in_np_iv first: " << path_pos_in_np_iv << std::endl;
-                                    std::cerr << "node_index: " << node_index << std::endl;
+                                std::cerr << "path_len: " << path_len << std::endl;
+                                std::cerr << "path id: " << (npi_iv[pos]) << std::endl;
+                                std::cerr << "step rank in path: " << (nr_iv[pos] - 1) << std::endl;
+                                std::cerr << "pos_in_path_a: " << pos_in_path_a << std::endl;
 #endif
-                                    path_pos_in_np_iv = node_index + path_pos_in_np_iv;
-#ifdef debug_sample_from_nodes
-                                    std::cerr << "path pos in np_iv: " << path_pos_in_np_iv << std::endl;
-#endif
-                                    uint64_t path_i = npi_iv[path_pos_in_np_iv];
-                                    path = as_path_handle(path_i);
-#ifdef debug_sample_from_nodes
-                                    std::cerr << "path integer: " << path_i << std::endl;
-#endif
-                                    as_integers(s_h)[0] = path_i; // path index
-                                    as_integers(s_h)[1] = nr_iv[path_pos_in_np_iv] - 1; // step rank in path
-#ifdef debug_sample_from_nodes
-                                    std::cerr << "step rank in path: " << nr_iv[path_pos_in_np_iv]  << std::endl;
-#endif
-                                    pos_in_path_a = path_index.get_position_of_step(s_h);
-#ifdef debug_sample_from_nodes
-                                    std::cerr << "pos_in_path_a: " << pos_in_path_a << std::endl;
-#endif
-                                    path_len = path_index.get_path_length(path) - 1;
-#ifdef debug_sample_from_nodes
-                                    std::cerr << "path_len " << path_len << std::endl;
-                                    std::cerr << "node count " << num_nodes << std::endl;
-#endif
-                                } else {
-                                    // did we hit a node and not a path?
-                                    if (np_bv[pos] == 1) {
-                                        continue;
-                                    } else {
-                                        uint64_t path_i = npi_iv[pos];
-                                        path = as_path_handle(path_i);
-                                        as_integers(s_h)[0] = path_i; // path index
-                                        as_integers(s_h)[1] = nr_iv[pos] - 1; // maybe -1?! // step rank in path
-                                        pos_in_path_a = path_index.get_position_of_step(s_h);
-                                        path_len = path_index.get_path_length(path) - 1;
-#ifdef debug_sample_from_nodes
-                                        std::cerr << "path_len: " << path_len << std::endl;
-                                        std::cerr << "path id: " << (npi_iv[pos]) << std::endl;
-                                        std::cerr << "step rank in path: " << (nr_iv[pos] - 1) << std::endl;
-                                        std::cerr << "pos_in_path_a: " << pos_in_path_a << std::endl;
-#endif
-                                    }
-                                }
                             }
+                            // default: sample the first node from all the nodes in the graph
+                        } else {
+                            node_index = np_bv_select(pos);
+                            // did we hit the last node?
+                            if (pos == num_nodes) {
+                                next_node_index = np_bv.size();
+                            } else {
+                                next_node_index = np_bv_select(pos + 1);
+                            }
+                            hit_num_paths = next_node_index - node_index - 1;
+                            if (hit_num_paths == 0) {
+                                continue;
+                            }
+                            std::uniform_int_distribution<uint64_t> dis_path(1, hit_num_paths);
+                            uint64_t path_pos_in_np_iv = dis_path(gen);
+#ifdef debug_sample_from_nodes
+                            std::cerr << "path_pos_in_np_iv first: " << path_pos_in_np_iv << std::endl;
+                            std::cerr << "node_index: " << node_index << std::endl;
+#endif
+                            path_pos_in_np_iv = node_index + path_pos_in_np_iv;
+#ifdef debug_sample_from_nodes
+                            std::cerr << "path pos in np_iv: " << path_pos_in_np_iv << std::endl;
+#endif
+                            uint64_t path_i = npi_iv[path_pos_in_np_iv];
+                            path = as_path_handle(path_i);
+#ifdef debug_sample_from_nodes
+                            std::cerr << "path integer: " << path_i << std::endl;
+#endif
+                            as_integers(s_h)[0] = path_i; // path index
+                            as_integers(s_h)[1] = nr_iv[path_pos_in_np_iv] - 1; // step rank in path
+#ifdef debug_sample_from_nodes
+                            std::cerr << "step rank in path: " << nr_iv[path_pos_in_np_iv]  << std::endl;
+#endif
+                            pos_in_path_a = path_index.get_position_of_step(s_h);
+#ifdef debug_sample_from_nodes
+                            std::cerr << "pos_in_path_a: " << pos_in_path_a << std::endl;
+#endif
+                            path_len = path_index.get_path_length(path) - 1;
+#ifdef debug_sample_from_nodes
+                            std::cerr << "path_len " << path_len << std::endl;
+                            std::cerr << "node count " << num_nodes << std::endl;
+#endif
+                        }
+                    }
                     uint64_t zipf_int = zipfian(gen);
 #ifdef debug_path_sgd
                     std::cerr << "random pos: " << pos << std::endl;
@@ -855,7 +857,7 @@ namespace odgi {
                                                     std::vector<std::vector<handle_t>> &snapshots,
                                                     const bool &sample_from_paths,
                                                     const bool &path_sgd_deterministic,
-                                                    const bool &sample_from_nodes) {
+                                                    const bool &sample_from_path_steps) {
             std::vector<double> layout;
             std::vector<std::vector<double>> snapshots_layouts;
             if (path_sgd_deterministic) {
@@ -875,7 +877,7 @@ namespace odgi {
                                                        snapshot,
                                                        snapshots_layouts,
                                                        sample_from_paths,
-                                                       sample_from_nodes);
+                                                       sample_from_path_steps);
 
             } else {
                 layout = path_linear_sgd(graph,
@@ -894,7 +896,7 @@ namespace odgi {
                                          snapshot,
                                          snapshots_layouts,
                                          sample_from_paths,
-                                         sample_from_nodes);
+                                         sample_from_path_steps);
             }
             // TODO move the following into its own function that we can reuse
 #ifdef debug_components
