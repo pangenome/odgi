@@ -204,7 +204,6 @@ int main_sort(int argc, char** argv) {
     uint64_t path_sgd_zipf_space;
     std::vector<path_handle_t> path_sgd_use_paths;
     xp::XP path_index;
-    bool first_time_index = true;
     if (p_sgd || args::get(pipeline).find('Y') != std::string::npos) {
         // take care of path index
         if (xp_in_file) {
@@ -379,12 +378,8 @@ int main_sort(int argc, char** argv) {
                                                          num_threads);
                     break;
                 case 'Y': {
-                    if (!first_time_index) {
-                        path_index.clean();
-                        path_index.from_handle_graph(graph);
-                    } else {
-                        first_time_index = false;
-                    }
+                    path_index.clean();
+                    path_index.from_handle_graph(graph);
                     order = algorithms::path_linear_sgd_order(graph,
                                                               path_index,
                                                               path_sgd_use_paths,
