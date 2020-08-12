@@ -125,6 +125,9 @@ pipeline of sorts within one parameter.
 *-J, --path-sgd-sample-from-paths*::
   Instead of sampling the first node from all nodes we sample from all nucleotide positions of the paths. Default value is _FALSE_.
 
+*-l, --path-sgd-sample-from-path-steps*::
+  Instead of sampling the first node from all nodes we sample from all path steps of the paths. Default value is _FALSE_.
+
 *-I, --path-sgd-deterministic*::
   Run the path guided 1D linear SGD in deterministic mode. Will automatically set the number of threads to 1, multithreading is not supported in this mode. Default value is _FALSE_.
 
