@@ -5,6 +5,7 @@
 #include "threads.hpp"
 #include "algorithms/xp.hpp"
 #include "algorithms/sgd_layout.hpp"
+#include "algorithms/path_sgd_layout.hpp"
 
 namespace odgi {
 
@@ -315,8 +316,8 @@ namespace odgi {
         }
         std::sort(weak_component_order.begin(), weak_component_order.end());*/
 
-        std::vector<double> graph_X(graph.get_node_count() * 2); // Graph's X coordinates for node+ and node-
-        std::vector<double> graph_Y(graph.get_node_count() * 2); // Graph's Y coordinates for node+ and node-
+        std::vector<std::atomic<double>> graph_X(graph.get_node_count() * 2);  // Graph's X coordinates for node+ and node-
+        std::vector<std::atomic<double>> graph_Y(graph.get_node_count() * 2);  // Graph's Y coordinates for node+ and node-
 
         std::random_device dev;
         std::mt19937 rng(dev());
@@ -335,36 +336,37 @@ namespace odgi {
             uint64_t pos = 2 * number_bool_packing::unpack_number(h);
             uint64_t y_offset = dist(rng);
 
-            graph_X[pos] = len;             // node+
-            graph_Y[pos] = y_offset;
+            graph_X[pos].store(len);             // node+
+            graph_Y[pos].store(y_offset);
             len += graph.get_length(h);
-            graph_X[pos + 1] = len;         // node-
-            graph_Y[pos + 1] = y_offset;
+            graph_X[pos + 1].store(len);         // node-
+            graph_Y[pos + 1].store(y_offset);
 
             //std::cerr << pos << ": " << graph_X[pos] << "," << graph_Y[pos] << " ------ " << graph_X[pos + 1] << "," << graph_Y[pos + 1] << std::endl;
         });
 
         //double max_x = 0;
 
-        /// single threaded and deterministic path guided 1D linear SGD
-        /*deterministic_path_linear_sgd_layout(const PathHandleGraph &graph,
-                                                  const xp::XP &path_index,
-                                                  const std::vector<path_handle_t> &path_sgd_use_paths,
-                                                  const uint64_t &iter_max,
-                                                  const uint64_t &iter_with_max_learning_rate,
-                                                  const uint64_t &min_term_updates,
-                                                  const double &delta,
-                                                  const double &eps,
-                                                  const double &eta_max,
-                                                  const double &theta,
-                                                  const uint64_t &space,
-                                                  const std::string &seeding_string,
-                                                  const bool &progress,
-                                                  const bool &snapshot,
-                                                  std::vector<std::vector<double>> &snapshots,
-                                                  std::vector<std::atomic<double>> &X,
-                                                  std::vector<std::atomic<double>> &Y);
-        */
+        std::vector<std::vector<double>> snapshotsX; // TODO to remove
+        algorithms::path_linear_sgd_layout(
+                graph,
+                path_index,
+                path_sgd_use_paths,
+                path_sgd_iter_max,
+                0,
+                path_sgd_min_term_updates,
+                sgd_delta,
+                eps,
+                path_sgd_max_eta,
+                path_sgd_zipf_theta,
+                path_sgd_zipf_space,
+                nthreads,
+                true,
+                snapshot,
+                snapshotsX,
+                graph_X,
+                graph_Y
+            );
 
         /*for (auto &component_order : weak_component_order) {
             auto &weak_component = weak_components[component_order.second];
@@ -439,14 +441,26 @@ namespace odgi {
 
 
 
+        // drop out of atomic stuff... maybe not the best way to do this
+        // TODO: use directly the atomic vector?
+        std::vector<double> X_final(graph_X.size());
+        uint64_t i = 0;
+        for (auto& x : graph_X) {
+            X_final[i++] = x.load();
+        }
+        std::vector<double> Y_final(graph_Y.size());
+        i = 0;
+        for (auto& y : graph_Y) {
+            Y_final[i++] = y.load();
+        }
 
         std::string outfile = args::get(svg_out_file);
         if (outfile.size()) {
             if (outfile == "-") {
-                draw_svg(std::cout, graph_X, graph_Y, graph, svg_scale);
+                draw_svg(std::cout, X_final, Y_final, graph, svg_scale);
             } else {
                 ofstream f(outfile.c_str());
-                draw_svg(f, graph_X, graph_Y, graph, svg_scale);
+                draw_svg(f, X_final, Y_final, graph, svg_scale);
                 f.close();
             }
         }
