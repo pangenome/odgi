@@ -334,7 +334,8 @@ namespace odgi {
 
         std::random_device dev;
         std::mt19937 rng(dev());
-        std::uniform_int_distribution<uint64_t> dist(1, graph.get_node_count());
+        // std::uniform_int_distribution<uint64_t> dist(1, graph.get_node_count());
+        std::normal_distribution<double> dist(0,1.0);
 
         uint64_t len = 0;
         nid_t last_node_id = graph.min_node_id();
@@ -347,13 +348,13 @@ namespace odgi {
             last_node_id = node_id;
 
             uint64_t pos = 2 * number_bool_packing::unpack_number(h);
-            uint64_t y_offset = dist(rng);
-
-            graph_X[pos].store(len);             // node+
+            double y_offset = dist(rng);
+            double x_offset = dist(rng);
+            graph_X[pos].store(x_offset);             // node+
             graph_Y[pos].store(y_offset);
             len += graph.get_length(h);
-            graph_X[pos + 1].store(len);         // node-
-            graph_Y[pos + 1].store(y_offset);
+            graph_X[pos + 1].store(x_offset + len);         // node-
+            graph_Y[pos + 1].store(y_offset + len);
 
             //std::cerr << pos << ": " << graph_X[pos] << "," << graph_Y[pos] << " ------ " << graph_X[pos + 1] << "," << graph_Y[pos + 1] << std::endl;
         });
