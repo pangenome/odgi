@@ -235,8 +235,7 @@ namespace odgi {
                                     static_cast<double>(pos_in_path_a) - static_cast<double>(pos_in_path_b));
 
                             if (term_dist == 0) {
-                                continue;
-                                // term_dist = 1e-9;
+                                term_dist = 1e-9;
                             }
 #ifdef eval_path_sgd
                             std::string path_name = path_index.get_path_name(path);
@@ -246,7 +245,7 @@ namespace odgi {
 #ifdef debug_path_sgd
                             std::cerr << "term_dist: " << term_dist << std::endl;
 #endif
-                            double term_weight = 1.0 / term_dist;
+                            double term_weight = 1.0 / (double)term_dist;
 
                             double w_ij = term_weight;
 #ifdef debug_path_sgd

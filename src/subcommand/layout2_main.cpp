@@ -348,13 +348,13 @@ namespace odgi {
             last_node_id = node_id;
 
             uint64_t pos = 2 * number_bool_packing::unpack_number(h);
+            double x_offset = len;
             double y_offset = dist(rng);
-            double x_offset = dist(rng);
-            graph_X[pos].store(x_offset);             // node+
+            graph_X[pos].store(x_offset);
             graph_Y[pos].store(y_offset);
             len += graph.get_length(h);
-            graph_X[pos + 1].store(x_offset + len);         // node-
-            graph_Y[pos + 1].store(y_offset + len);
+            graph_X[pos + 1].store(len);
+            graph_Y[pos + 1].store(y_offset);
 
             //std::cerr << pos << ": " << graph_X[pos] << "," << graph_Y[pos] << " ------ " << graph_X[pos + 1] << "," << graph_Y[pos + 1] << std::endl;
         });
