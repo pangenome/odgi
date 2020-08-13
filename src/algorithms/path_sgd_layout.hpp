@@ -39,8 +39,6 @@ namespace odgi {
                                     const bool &progress,
                                     const bool &snapshot,
                                     std::vector<std::vector<double>> &snapshots,
-                                    const bool &sample_from_paths,
-                                    const bool &sample_from_path_steps,
                                     std::vector<std::atomic<double>> &X,
                                     std::vector<std::atomic<double>> &Y);
 
@@ -67,8 +65,6 @@ namespace odgi {
                                                   const bool &progress,
                                                   const bool &snapshot,
                                                   std::vector<std::vector<double>> &snapshots,
-                                                  const bool &sample_from_paths,
-                                                  const bool &sample_from_path_steps,
                                                   std::vector<std::atomic<double>> &X,
                                                   std::vector<std::atomic<double>> &Y);
 
