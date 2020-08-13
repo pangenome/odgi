@@ -27,10 +27,13 @@ namespace odgi {
             if (x > max_x) max_x = x;
             if (y < min_y) min_y = y;
             if (y > max_y) max_y = y;
+            std::cerr << "X" << i << ": " << X[i] << "Y" << i << ": " << Y[i] << std::endl;
         }
 
         double width = max_x - min_x;
         double height = max_y - min_y;
+        std::cerr << "width: " << width << std::endl;
+        std::cerr << "height: " << height << std::endl;
 
         out << "<svg width=\"" << width + border << "\" height=\"" << height + border << "\" "
             << "viewBox=\"" << min_x - border / 2 << " " << min_y - border / 2 << " " << width + border << " "
@@ -74,6 +77,16 @@ namespace odgi {
         */
 
         out << "</svg>" << std::endl;
+    }
+
+        void to_tsv(ostream &out, const std::vector<double> &X, const std::vector<double> &Y, const HandleGraph &graph, double scale) {
+        // determine boundaries
+        uint64_t n = graph.get_node_count() * 2;
+        out << "idx" << "\t" << "X" << "\t" << "Y" << std::endl;
+        for (uint64_t i = 0; i < n; ++i) {
+            out << i << "\t" << X[i] << "\t" << Y[i] << std::endl;
+            // std::cerr << "X" << i << ": " << X[i] << "Y" << i << ": " << Y[i] << std::endl;
+        }
     }
 
     int main_layout2(int argc, char **argv) {
@@ -360,7 +373,7 @@ namespace odgi {
                 path_sgd_max_eta,
                 path_sgd_zipf_theta,
                 path_sgd_zipf_space,
-                nthreads,
+                num_threads,
                 true,
                 snapshot,
                 snapshotsX,
@@ -460,7 +473,8 @@ namespace odgi {
                 draw_svg(std::cout, X_final, Y_final, graph, svg_scale);
             } else {
                 ofstream f(outfile.c_str());
-                draw_svg(f, X_final, Y_final, graph, svg_scale);
+                //draw_svg(f, X_final, Y_final, graph, svg_scale);
+                to_tsv(f, X_final, Y_final, graph, svg_scale);
                 f.close();
             }
         }
