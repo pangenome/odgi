@@ -387,7 +387,7 @@ namespace odgi {
             auto snapshot_lambda =
                     [&](void) {
                         uint64_t iter = 0;
-                        while (work_todo.load()) {
+                        while (snapshot && work_todo.load()) {
                             if ((iter < iteration) && iteration != iter_max) {
                                 // std::cerr << "[odgi sort] snapshot thread: Taking snapshot!" << std::endl;
 

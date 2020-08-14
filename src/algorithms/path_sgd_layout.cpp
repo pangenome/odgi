@@ -294,8 +294,8 @@ namespace odgi {
 #ifdef debug_path_sgd
 #pragma omp critical (cerr)
                             std::cerr << "Delta_abs " << Delta_abs << std::endl;
-                            std::cerr <
 #endif
+                            // todo use atomic compare and swap
                             while (Delta_abs > Delta_max.load()) {
                                 Delta_max.store(Delta_abs);
                             }
@@ -318,6 +318,7 @@ namespace odgi {
 #ifdef debug_path_sgd
                             std::cerr << "after X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
 #endif
+                            // atomic increment?
                             term_updates.store(term_updates.load() + 1);
                         }
                     };
@@ -325,7 +326,7 @@ namespace odgi {
             auto snapshot_lambda =
                     [&](void) {
                         uint64_t iter = 0;
-                        while (work_todo.load()) {
+                        while (snapshot && work_todo.load()) {
                             if ((iter < iteration) && iteration != iter_max) {
                                 // std::cerr << "[odgi sort] snapshot thread: Taking snapshot!" << std::endl;
 
