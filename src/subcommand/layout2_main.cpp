@@ -253,7 +253,6 @@ namespace odgi {
         double path_sgd_zipf_theta = args::get(p_sgd_zipf_theta) ? args::get(p_sgd_zipf_theta) : 0.99;
         double path_sgd_eps = args::get(p_sgd_eps) ? args::get(p_sgd_eps) : 0.01;
         double path_sgd_delta = args::get(p_sgd_delta) ? args::get(p_sgd_delta) : 0;
-        double path_sgd_max_eta = args::get(p_sgd_eta_max) ? args::get(p_sgd_eta_max) : graph.get_node_count();
         // will be filled, if the user decides to write a snapshot of the graph after each sorting iterationn
         std::vector<std::vector<handle_t>> snapshots;
         const bool snapshot = p_sgd_snapshot;
@@ -306,9 +305,9 @@ namespace odgi {
                 path_sgd_min_term_updates = 0.1 * sum_path_length;
             }
         }
-        path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? args::get(p_sgd_zipf_space) : get_max_path_length(
-                path_sgd_use_paths, path_index);
-
+        uint64_t max_path_length = get_max_path_length(path_sgd_use_paths, path_index);
+        path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? args::get(p_sgd_zipf_space) : max_path_length;
+        double path_sgd_max_eta = args::get(p_sgd_eta_max) ? args::get(p_sgd_eta_max) : max_path_length * max_path_length;
 
 
         /*// refine order by weakly connected components
@@ -335,7 +334,7 @@ namespace odgi {
         std::random_device dev;
         std::mt19937 rng(dev());
         // std::uniform_int_distribution<uint64_t> dist(1, graph.get_node_count());
-        std::normal_distribution<double> dist(0,1.0);
+        std::normal_distribution<double> dist(0,1); //graph.get_node_count());
 
         uint64_t len = 0;
         nid_t last_node_id = graph.min_node_id();
@@ -348,13 +347,13 @@ namespace odgi {
             last_node_id = node_id;
 
             uint64_t pos = 2 * number_bool_packing::unpack_number(h);
-            double x_offset = len;
-            double y_offset = dist(rng);
-            graph_X[pos].store(x_offset);
-            graph_Y[pos].store(y_offset);
+            //double x_offset = len;
+            //double y_offset = dist(rng);
+            graph_X[pos].store(len); //dist(rng));
+            graph_Y[pos].store(dist(rng));
             len += graph.get_length(h);
-            graph_X[pos + 1].store(len);
-            graph_Y[pos + 1].store(y_offset);
+            graph_X[pos + 1].store(len); //dist(rng));
+            graph_Y[pos + 1].store(dist(rng));
 
             //std::cerr << pos << ": " << graph_X[pos] << "," << graph_Y[pos] << " ------ " << graph_X[pos + 1] << "," << graph_Y[pos + 1] << std::endl;
         });

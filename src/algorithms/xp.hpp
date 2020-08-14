@@ -196,7 +196,8 @@ namespace xp {
 
         handlegraph::handle_t min_handle;
 
-        sdsl::enc_vector<> handles;
+        sdsl::int_vector<> handles;
+        sdsl::int_vector<> positions;
         sdsl::rrr_vector<> offsets;
         sdsl::rrr_vector<>::rank_1_type offsets_rank;
         sdsl::rrr_vector<>::select_1_type offsets_select;

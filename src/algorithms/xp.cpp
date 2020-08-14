@@ -358,7 +358,7 @@ namespace xp {
     size_t XP::get_position_of_step(const step_handle_t& step_handle) const {
         const auto& xppath = *paths[as_integer(get_path_handle_of_step(step_handle)) - 1];
         auto& step_rank = as_integers(step_handle)[1];
-        return xppath.offsets_select(step_rank + 1);
+        return xppath.positions[step_rank];
     }
 
     path_handle_t XP::get_path_handle_of_step(const step_handle_t& step_handle) const {
@@ -494,6 +494,7 @@ namespace xp {
         size_t written = 0;
         written += sdsl::write_member(min_handle, out, child, "min_handle" + name);
         written += handles.serialize(out, child, "path_handles_" + name);
+        written += positions.serialize(out, child, "path_positions_" + name);
         written += offsets.serialize(out, child, "path_node_starts_" + name);
         written += offsets_rank.serialize(out, child, "path_node_starts_rank_" + name);
         written += offsets_select.serialize(out, child, "path_node_starts_select_" + name);
@@ -518,8 +519,9 @@ namespace xp {
         this->is_circular = is_circular;
 
         // handle integer values, the literal path
-        sdsl::int_vector<> handles_iv;
-        sdsl::util::assign(handles_iv, sdsl::int_vector<>(path.size()));
+        sdsl::util::assign(handles, sdsl::int_vector<>(path.size()));
+        // positions at each step (for fast position lookup)
+        sdsl::util::assign(positions, sdsl::int_vector<>(path.size()));
         // directions of traversal (typically forward, but we allow backwards)
         sdsl::bit_vector directions_bv;
         sdsl::util::assign(directions_bv, sdsl::bit_vector(path.size()));
@@ -546,14 +548,13 @@ namespace xp {
         for (size_t i = 0; i < path.size(); ++i) {
             const handle_t &handle = path[i];
             path_length += graph.get_length(handle);
-            handles_iv[i] = as_integer(local_handle(handle));
+            handles[i] = as_integer(local_handle(handle));
 
 #ifdef debug_xppath
-            std::cerr << "Recorded handle as " << handles_iv[i] << std::endl;
+            std::cerr << "Recorded handle as " << handles[i] << std::endl;
 #endif
             // we will explode if the node isn't in the graph
         }
-        sdsl::util::assign(handles, sdsl::enc_vector<>(handles_iv));
 
 #ifdef debug_xppath
         for (size_t i = 0; i < path.size(); i++) {bit_
@@ -570,6 +571,8 @@ namespace xp {
             auto &handle = path[i];
             // record position of node
             offsets_bv[path_off] = 1;
+            // cache the position
+            positions[i] = path_off;
             // and update the offset counter
             path_off += graph.get_length(handle);
         }
@@ -609,6 +612,7 @@ namespace xp {
     void XPPath::load(std::istream &in) {
         sdsl::read_member(min_handle, in);
         handles.load(in);
+        positions.load(in);
         offsets.load(in);
         offsets_rank.load(in, &offsets);
         offsets_select.load(in, &offsets);

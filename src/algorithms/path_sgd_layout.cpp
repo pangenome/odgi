@@ -104,12 +104,12 @@ namespace odgi {
                         std::array<uint64_t, 2> seed_data = {(uint64_t) std::time(0), tid};
                         std::seed_seq sseq(std::begin(seed_data), std::end(seed_data));
                         std::mt19937_64 gen(sseq);
-                        std::uniform_int_distribution<uint64_t> dis(1, num_nodes);
-                        std::uniform_int_distribution<uint64_t> flip(0, 1);
                         const sdsl::bit_vector &np_bv = path_index.get_np_bv();
                         const sdsl::int_vector<> &nr_iv = path_index.get_nr_iv();
                         const sdsl::int_vector<> &npi_iv = path_index.get_npi_iv();
                         auto &np_bv_select = path_index.get_np_bv_select();
+                        std::uniform_int_distribution<uint64_t> dis(0, np_bv.size()-1); //num_nodes);
+                        std::uniform_int_distribution<uint64_t> flip(0, 1);
                         uint64_t hit_num_paths = 0;
                         step_handle_t s_h;
                         uint64_t node_index;
@@ -120,15 +120,29 @@ namespace odgi {
                             size_t path_len;
                             path_handle_t path;
                             // pick a random position from all paths
-                            node_index = np_bv_select(pos);
+                            node_index = dis(gen); //np_bv_select(pos);
+                            while (np_bv[node_index] == 0 && node_index-- != 0);
+                            //if (next_node_index == np_bv.size()) continue; // shouldn't happen
                             // did we hit the last node?
+                            /*
                             if (pos == num_nodes) {
                                 next_node_index = np_bv.size();
                             } else {
                                 next_node_index = np_bv_select(pos + 1);
                             }
+                            */
+                            /*
+                            if (np_bv[node_index] != 1) {
+                                std::cerr << "fail" << std::endl;
+                                exit(1);
+                            }
+                            */
+                            next_node_index = node_index;
+                            while (++next_node_index != np_bv.size() && np_bv[next_node_index] == 0);
                             hit_num_paths = next_node_index - node_index - 1;
                             if (hit_num_paths == 0) {
+                                //std::cerr << "node_index " << node_index << " next_node_index " << next_node_index << std::endl;
+                                //exit(1);
                                 continue;
                             }
                             std::uniform_int_distribution<uint64_t> dis_path(1, hit_num_paths);
@@ -194,7 +208,7 @@ namespace odgi {
                             std::cerr << "pos_in_path_b: " << pos_in_path_b << std::endl;
 #endif
                             // get the step handles
-                            step_handle_t step_a = path_index.get_step_at_position(path, pos_in_path_a);
+                            step_handle_t step_a = s_h; //path_index.get_step_at_position(path, pos_in_path_a);
                             step_handle_t step_b = path_index.get_step_at_position(path, pos_in_path_b);
 
                             // and the graph handles, which we need to record the update
