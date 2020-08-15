@@ -69,6 +69,7 @@ int main_chop(int argc, char** argv) {
     }
 
     algorithms::chop(graph, args::get(chop_to));
+    graph.optimize();
     
     std::string outfile = args::get(dg_out_file);
     if (outfile.size()) {
