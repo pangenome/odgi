@@ -69,6 +69,7 @@ int main_unchop(int argc, char** argv) {
     }
     */
     algorithms::unchop(graph);
+    graph.optimize();
     
     std::string outfile = args::get(og_out_file);
     if (outfile.size()) {
