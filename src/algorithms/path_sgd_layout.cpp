@@ -108,41 +108,24 @@ namespace odgi {
                         const sdsl::int_vector<> &nr_iv = path_index.get_nr_iv();
                         const sdsl::int_vector<> &npi_iv = path_index.get_npi_iv();
                         auto &np_bv_select = path_index.get_np_bv_select();
-                        std::uniform_int_distribution<uint64_t> dis(0, np_bv.size()-1); //num_nodes);
+                        std::uniform_int_distribution<uint64_t> dis(0, np_bv.size()-1);
                         std::uniform_int_distribution<uint64_t> flip(0, 1);
                         uint64_t hit_num_paths = 0;
                         step_handle_t s_h;
                         uint64_t node_index;
                         uint64_t next_node_index;
                         while (work_todo.load()) {
-                            uint64_t pos = dis(gen);
                             size_t pos_in_path_a;
                             size_t path_len;
                             path_handle_t path;
                             // pick a random position from all paths
-                            node_index = dis(gen); //np_bv_select(pos);
+                            node_index = dis(gen);
                             while (np_bv[node_index] == 0 && node_index-- != 0);
-                            //if (next_node_index == np_bv.size()) continue; // shouldn't happen
                             // did we hit the last node?
-                            /*
-                            if (pos == num_nodes) {
-                                next_node_index = np_bv.size();
-                            } else {
-                                next_node_index = np_bv_select(pos + 1);
-                            }
-                            */
-                            /*
-                            if (np_bv[node_index] != 1) {
-                                std::cerr << "fail" << std::endl;
-                                exit(1);
-                            }
-                            */
                             next_node_index = node_index;
                             while (++next_node_index != np_bv.size() && np_bv[next_node_index] == 0);
                             hit_num_paths = next_node_index - node_index - 1;
                             if (hit_num_paths == 0) {
-                                //std::cerr << "node_index " << node_index << " next_node_index " << next_node_index << std::endl;
-                                //exit(1);
                                 continue;
                             }
                             std::uniform_int_distribution<uint64_t> dis_path(1, hit_num_paths);

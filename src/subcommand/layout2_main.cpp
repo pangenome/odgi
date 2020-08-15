@@ -127,7 +127,7 @@ namespace odgi {
                                           "final learning rate for path guided linear 1D SGD model (default: 0.01)",
                                           {'g', "path-sgd-eps"});
         args::ValueFlag<double> p_sgd_eta_max(parser, "N",
-                                              "first and maximum learning rate for path guided linear 1D SGD model (default: number of nodes in the graph)",
+                                              "first and maximum learning rate for path guided linear 1D SGD model (default: squared longest path length)",
                                               {'v', "path-sgd-eta-max"});
         args::ValueFlag<double> p_sgd_zipf_theta(parser, "N",
                                                  "the theta value for the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: 0.99)",
