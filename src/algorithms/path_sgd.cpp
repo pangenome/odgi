@@ -246,7 +246,7 @@ namespace odgi {
                             uint64_t zipf_int = zipfian(gen);
 #ifdef debug_path_sgd
                             std::cerr << "random pos: " << pos << std::endl;
-                            std::cerr << "path_start_pos: " << path_start_pos << std::endl;
+                            //std::cerr << "path_start_pos: " << path_start_pos << std::endl;
                             std::cerr << "pos_in_path_a: " << pos_in_path_a << std::endl;
                             std::cerr << "path_len: " << path_len << std::endl;
                             //std::cerr << "zipf: " << zipf_int << std::endl;
@@ -277,7 +277,12 @@ namespace odgi {
                             std::cerr << "pos_in_path_b: " << pos_in_path_b << std::endl;
 #endif
                             // get the step handles
-                            step_handle_t step_a = s_h;
+                            step_handle_t step_a;
+                            if (sample_from_paths) {
+                                step_a = path_index.get_step_at_position(path, pos_in_path_a);
+                            } else {
+                                step_a = s_h;
+                            }
                             step_handle_t step_b = path_index.get_step_at_position(path, pos_in_path_b);
 
                             // and the graph handles, which we need to record the update
@@ -577,17 +582,14 @@ namespace odgi {
                 }
                 for (uint64_t term_update = 0; term_update < min_term_updates; term_update++) {
                     // pick a random position from all paths
-                    uint64_t pos = dis(gen);
                     size_t pos_in_path_a;
                     size_t path_len;
                     path_handle_t path;
-#ifdef debug_path_sgd
-                    std::cerr << "uniform_position: " << pos << std::endl;
-#endif
+//#ifdef debug_path_sgd
+//                    std::cerr << "uniform_position: " << pos << std::endl;
+//#endif
                     if (sample_from_paths) {
-                        // use our interval tree to get the path handle and path nucleotide position of the picked position
-                        //std::vector<Interval<size_t, path_handle_t> > result;
-                        //result = path_nucleotide_tree.findOverlapping(pos, pos);
+                        uint64_t pos = dis(gen);
                         std::vector<size_t> a;
                         path_nucleotide_tree.overlap(pos, pos + 1, a);
                         if (a.empty()) {
@@ -598,11 +600,11 @@ namespace odgi {
                         auto &p = a[0];
                         path = path_nucleotide_tree.data(p);
                         size_t path_start_pos = path_nucleotide_tree.start(p);
-                        // size_t path_end_pos = result[0].stop;
                         path_len = path_index.get_path_length(path) - 1;
                         // we have a 0-based positioning in the path index
                         pos_in_path_a = pos - path_start_pos;
                     } else if (sample_from_path_steps) {
+                        uint64_t pos = dis(gen);
                         // did we hit a node and not a path?
                         if (np_bv[pos] == 1) {
                             continue;
@@ -622,7 +624,7 @@ namespace odgi {
                         }
                         // default: sample the first node from all the nodes in the graph
                     } else {
-                        uint64_t pos = dis(gen);
+                        //uint64_t pos = dis(gen);
                         size_t pos_in_path_a;
                         size_t path_len;
                         path_handle_t path;
@@ -668,7 +670,7 @@ namespace odgi {
                     }
                     uint64_t zipf_int = zipfian(gen);
 #ifdef debug_path_sgd
-                    std::cerr << "random pos: " << pos << std::endl;
+                    //std::cerr << "random pos: " << pos << std::endl;
                     //std::cerr << "path_start_pos: " << path_start_pos << std::endl;
                     std::cerr << "pos_in_path_a: " << pos_in_path_a << std::endl;
                     std::cerr << "path_len: " << path_len << std::endl;
