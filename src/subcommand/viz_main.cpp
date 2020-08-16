@@ -2,6 +2,7 @@
 #include "odgi.hpp"
 #include "args.hxx"
 #include "threads.hpp"
+#include "algorithms/bin_path_info.hpp"
 #include "algorithms/hash.hpp"
 #include "algorithms/id_ordered_paths.hpp"
 #include "lodepng.h"
@@ -87,12 +88,19 @@ namespace odgi {
         args::ValueFlag<float> link_path_pieces(parser, "FLOAT","show thin links of this relative width to connect path pieces",{'L', "link-path-pieces"});
         args::ValueFlag<std::string> alignment_prefix(parser, "STRING","apply alignment-related visual motifs to paths with this name prefix (it affects the -S and -d options)",{'A', "alignment-prefix"});
         args::Flag show_strands(parser, "bool","use reds and blues to show forward and reverse alignments",{'S', "show-strand"});
+
+        /// Binned mode
         args::Flag binned_mode(parser, "binned-mode", "bin the variation graph before its visualization", {'b', "binned-mode"});
         args::ValueFlag<uint64_t> bin_width(parser, "bp", "width of each bin in basepairs along the graph vector",{'w', "bin-width"});
         args::Flag drop_gap_links(parser, "drop-gap-links", "don't include gap links in the output", {'g', "no-gap-links"});
+        args::Flag color_by_mean_coverage(parser, "color-by-mean-coverage", "change the color intensity respect to the mean coverage of the path for each bin", {'c', "color-by-mean-coverage"});
+        args::Flag color_by_mean_inversion_rate(parser, "color-by-mean-inversion-rate", "change the color intensity respect to the mean inversion rate of the path for each bin", {'z', "color-by-mean-inversion"});
+
+        /// Gradient mode
         args::Flag change_darkness(parser, "change-darkness", "change the color darkness based on nucleotide position in the path", {'d', "change-darkness"});
         args::Flag longest_path(parser, "longest-path", "use the longest path length to change the color darkness", {'l', "longest-path"});
         args::Flag white_to_black(parser, "white-to-black", "change the color darkness from white (for the first nucleotide position) to black (for the last nucleotide position)", {'u', "white-to-black"});
+
         args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
         try {
@@ -207,7 +215,8 @@ namespace odgi {
         float scale_y = (float) height / (float) len;
 
         float _bin_width = args::get(bin_width);
-        if (args::get(binned_mode)){
+        bool _binned_mode = args::get(binned_mode);
+        if (_binned_mode){
             if (_bin_width == 0){
                 _bin_width = 1 / scale_x; // It can be a float value.
             }else{
@@ -285,7 +294,7 @@ namespace odgi {
             add_edge_from_positions(a, b);
         };
 
-        if (args::get(binned_mode)){
+        if (_binned_mode){
             graph.for_each_handle([&](const handle_t &h) {
                 uint64_t p = position_map[number_bool_packing::unpack_number(h)];
                 uint64_t hl = graph.get_length(h);
@@ -395,12 +404,17 @@ namespace odgi {
             }
         }
 
+        bool _show_strands = args::get(show_strands);
+
         bool _change_darkness = args::get(change_darkness);
         bool _longest_path = args::get(longest_path);
         bool _white_to_black = args::get(white_to_black);
 
+        bool _color_by_mean_coverage = args::get(color_by_mean_coverage);
+        bool _color_by_mean_inversion_rate = args::get(color_by_mean_inversion_rate);
+
         uint64_t longest_path_len = 0;
-        if (change_darkness && _longest_path){
+        if (_change_darkness && _longest_path){
             graph.for_each_path_handle([&](const path_handle_t &path) {
                 uint64_t curr_len = 0;
                 graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
@@ -448,22 +462,58 @@ namespace odgi {
             uint64_t steps = 0;
             uint64_t rev = 0;
             uint64_t path_len_to_use = 0;
-            if (is_aln){
-                if ((args::get(show_strands) || (change_darkness && !_longest_path))) {
+            std::map<uint64_t, algorithms::path_info_t> bins;
+            if (is_aln) {
+                if (
+                        _show_strands ||
+                        (_change_darkness && !_longest_path) ||
+                        (_binned_mode && (_color_by_mean_coverage || _color_by_mean_inversion_rate))
+                        ) {
+                    handle_t h;
+                    uint64_t hl, p;
+                    bool is_rev;
                     graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
-                        handle_t h = graph.get_handle_of_step(occ);
-                        ++steps;
-                        rev += graph.get_is_reverse(h);
+                        h = graph.get_handle_of_step(occ);
+                        is_rev = graph.get_is_reverse(h);
+                        hl = graph.get_length(h);
 
-                        path_len_to_use += graph.get_length(h);
+                        if (_show_strands) {
+                            ++steps;
+
+                            rev += is_rev;
+                        }
+
+                        if (_change_darkness && !_longest_path) {
+                            path_len_to_use += hl;
+                        }
+
+                        if (_binned_mode && (_color_by_mean_coverage || _color_by_mean_inversion_rate)){
+                            p = position_map[number_bool_packing::unpack_number(h)];
+                            for (uint64_t k = 0; k < hl; ++k) {
+                                int64_t curr_bin = (p + k) / _bin_width + 1;
+
+                                ++bins[curr_bin].mean_cov;
+                                if (is_rev) {
+                                    ++bins[curr_bin].mean_inv;
+                                }
+                            }
+                        }
                     });
+
+                    if (_binned_mode && (_color_by_mean_coverage || _color_by_mean_inversion_rate)) {
+                        for (auto &entry : bins) {
+                            auto &v = entry.second;
+                            v.mean_inv /= (v.mean_cov ? v.mean_cov : 1);
+                            v.mean_cov /= _bin_width;
+                        }
+                    }
                 }
 
-                if (change_darkness && _longest_path){
+                if (_change_darkness && _longest_path){
                     path_len_to_use = longest_path_len;
                 }
 
-                if (args::get(show_strands)) {
+                if (_show_strands) {
                     float x = path_r_f;
                     path_r_f = (x + 0.5 * 9) / 10;
                     path_g_f = (x + 0.5 * 9) / 10;
@@ -479,14 +529,26 @@ namespace odgi {
                         path_g_f = path_g_f * 0.9;
                         path_r_f = path_r_f * 1.2;
                     }
-                } else if (_white_to_black) {
+                } else if (_change_darkness && _white_to_black) {
                     path_r = 240;
                     path_g = 240;
                     path_b = 240;
+                } else if (_binned_mode) {
+                    if (_color_by_mean_coverage) {
+                        path_r = 0;
+                        path_g = 0;
+                        path_b = 255;
+                    } else if (_color_by_mean_inversion_rate) {
+                        path_r = 255;
+                        path_g = 0;
+                        path_b = 0;
+                    }
                 }
             }
 
-            if (!(is_aln && _white_to_black)) {
+            if (!(
+                    is_aln && (( _change_darkness && _white_to_black) || (_binned_mode && (_color_by_mean_coverage || _color_by_mean_inversion_rate)))
+                    )) {
                 // brighten the color
                 float f = std::min(1.5, 1.0 / std::max(std::max(path_r_f, path_g_f), path_b_f));
                 path_r = (uint8_t) std::round(255 * std::min(path_r_f * f, (float) 1.0));
@@ -498,29 +560,41 @@ namespace odgi {
             uint64_t path_rank = as_integer(path) - 1;
 
             uint64_t curr_len = 0;
-            float x = 1;
-            if (args::get(binned_mode)) {
+            double x = 1.0;
+            if (_binned_mode) {
                 std::vector<std::pair<uint64_t, uint64_t>> links;
                 std::vector<uint64_t> bin_ids;
                 int64_t last_bin = 0; // flag meaning "null bin"
+
+                handle_t h;
+                uint64_t p, hl;
+
                 graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
-                    handle_t h = graph.get_handle_of_step(occ);
-                    uint64_t p = position_map[number_bool_packing::unpack_number(h)];
-                    uint64_t hl = graph.get_length(h);
+                    h = graph.get_handle_of_step(occ);
+                    p = position_map[number_bool_packing::unpack_number(h)];
+                    hl = graph.get_length(h);
 
                     // make contents for the bases in the node
 
                     uint64_t path_y = path_layout_y[path_rank];
                     for (uint64_t k = 0; k < hl; ++k) {
                         int64_t curr_bin = (p + k) / _bin_width + 1;
+
                         if (curr_bin != last_bin) {
 #ifdef debug_odgi_viz
                             std::cerr << "curr_bin: " << curr_bin << std::endl;
 #endif
 
-                            if (is_aln && change_darkness){
-                                x = 1 - ( (float)(curr_len + k) / (float)(path_len_to_use))*0.9;
+                            if (is_aln) {
+                                if (_change_darkness){
+                                    x = 1 - ( (float)(curr_len + k) / (float)(path_len_to_use)) * 0.9;
+                                } else if (_color_by_mean_coverage) {
+                                    x = bins[curr_bin].mean_cov;
+                                } else if (_color_by_mean_inversion_rate) {
+                                    x = bins[curr_bin].mean_inv;
+                                }
                             }
+
                             add_path_step(curr_bin - 1, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
 
                             if (std::abs(curr_bin - last_bin) > 1 || last_bin == 0) {
@@ -593,7 +667,7 @@ namespace odgi {
                     // make contects for the bases in the node
                     uint64_t path_y = path_layout_y[path_rank];
                     for (uint64_t i = 0; i < hl; i+=1/scale_x) {
-                        if (is_aln && change_darkness){
+                        if (is_aln && _change_darkness){
                             x = 1 - ((float)(curr_len + i*scale_x) / (float)(path_len_to_use))*0.9;
                         }
                         add_path_step(p+i, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
