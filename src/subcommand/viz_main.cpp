@@ -581,6 +581,8 @@ namespace odgi {
                         int64_t curr_bin = (p + k) / _bin_width + 1;
 
                         if (curr_bin != last_bin) {
+                            bin_ids.push_back(curr_bin);
+
 #ifdef debug_odgi_viz
                             std::cerr << "curr_bin: " << curr_bin << std::endl;
 #endif
@@ -602,7 +604,6 @@ namespace odgi {
                                 links.push_back(std::make_pair(last_bin, curr_bin));
                             }
                         }
-                        bin_ids.push_back(curr_bin);
 
                         last_bin = curr_bin;
                     }
