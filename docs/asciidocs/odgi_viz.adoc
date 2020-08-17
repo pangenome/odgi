@@ -68,7 +68,7 @@ sequence coverage in bins available.
 
 === Binned Mode Options
 
-*-b, --binned-mode*=_N_::
+*-b, --binned-mode*::
   The variation graph is binned before its visualization. Each pixel in the output image will correspond to a bin.
   For more information about the binning process, please refer to <<odgi_bin.adoc#_odgi_bin1, odgi bin>>.
 
@@ -83,8 +83,14 @@ sequence coverage in bins available.
   2. Class: The links helping to follow simple variations. Such links solely connecting a path from left to right may not
   be relevant to understand a path's traversal through the bins. Therefore, they are not drawn in the binned mode.
 
+*-c, --color-by-mean-coverage*::
+  Change the color (from black to blue) respect to the mean coverage of the path for each bin.
 
-=== Position Mode (also known as Gradient Mode) Options
+*-c, --color-by-mean-inversion*::
+  Change the color (from black to red) respect to the mean inversion rate of the path for each bin".
+
+
+=== Gradient Mode (also known as Position Mode) Options
 
 *-d, --change-darkness*::
   Change the color darkness based on nucleotide position in the path.  This parameter can be set in combination with [*-A, --alignment-prefix*=_STRING_].
