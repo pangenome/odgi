@@ -138,9 +138,15 @@ namespace odgi {
             return 1;
         }
 
-        if (!args::get(binned_mode) && ((args::get(bin_width) > 0) || (args::get(drop_gap_links)))){
+        if (
+                !args::get(binned_mode) &&
+                ((args::get(bin_width) > 0) || args::get(drop_gap_links) ||
+                args::get(color_by_mean_coverage) || args::get(color_by_mean_inversion_rate))
+                ){
             std::cerr
-                    << "[odgi viz] error: Please specify the -b/--binned-mode option to use the -w/--bin_width and -g/--no-gap-links options."
+                    << "[odgi viz] error: Please specify the -b/--binned-mode option to use the "
+                       "-w/--bin_width, -g/--no-gap-links, -c/--color-by-mean-coverage, and -z/--color-by-mean-inversion "
+                       "options."
                     << std::endl;
             return 1;
         }
@@ -152,9 +158,11 @@ namespace odgi {
             return 1;
         }
 
-        if (args::get(show_strands) && args::get(white_to_black)) {
+        if (args::get(show_strands) + args::get(white_to_black) + args::get(color_by_mean_coverage)  + args::get(color_by_mean_inversion_rate) > 1) {
             std::cerr
-                    << "[odgi cover] error: please specify -S/--show-strand or -u/--white-to-black, not both."
+                    << "[odgi cover] error: please specify only one of the following options: "
+                       "-S/--show-strand, -u/--white-to-black, "
+                       "-c/--color-by-mean-coverage, and -z/--color-by-mean-inversion."
                     << std::endl;
             return 1;
         }
