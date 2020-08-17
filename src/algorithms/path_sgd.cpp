@@ -456,11 +456,11 @@ namespace odgi {
 #endif
             // initialize step sizes
             std::vector<double> etas;
-            etas.reserve(iter_max);
+            etas.reserve(iter_max+1);
 #ifdef debug_schedule
             std::cerr << "etas: ";
 #endif
-            for (int64_t t = 0; t < iter_max; t++) {
+            for (int64_t t = 0; t <= iter_max; t++) {
                 etas.push_back(eta_max * exp(-lambda * (abs(t - (int64_t)iter_with_max_learning_rate))));
 #ifdef debug_schedule
                 std::cerr << etas.back() << ", ";
