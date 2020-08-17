@@ -332,9 +332,7 @@ namespace odgi {
                 for (uint64_t i = 0; i < hl; i += 1 / scale_x) {
                     add_point(p + i, 0, 0, 0, 0);
                 }
-            });
 
-            graph.for_each_handle([&](const handle_t& h) {
                 // add contacts for the edges
                 graph.follow_edges(h, false, [&](const handle_t& o) {
                     add_edge_from_handles(h, o);
