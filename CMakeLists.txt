@@ -328,8 +328,8 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/matrix_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/chop_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/groom_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/layout0_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/layout_main.cpp
-  ${CMAKE_SOURCE_DIR}/src/subcommand/layout2_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/flatten_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/break_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/pathindex_main.cpp
