@@ -63,7 +63,7 @@ int main_layout0(int argc, char** argv) {
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
-    args::ArgumentParser parser("draw 2D layouts of the graph using stocastic gradient descent (the graph must be sorted and id-compacted)");
+    args::ArgumentParser parser("draw 2D layouts of the graph using stochastic gradient descent (the graph must be sorted and id-compacted)");
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> svg_out_file(parser, "FILE", "write the SVG rendering to this file", {'o', "out"});

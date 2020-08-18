@@ -107,7 +107,7 @@ int main_layout(int argc, char **argv) {
     --argc;
 
     args::ArgumentParser parser(
-        "draw 2D layouts of the graph using stocastic gradient descent (the graph must be sorted and id-compacted)");
+        "draw 2D layouts of the graph using path-guided stochastic gradient descent (the graph must be sorted and id-compacted)");
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> layout_out_file(parser, "FILE", "write the layout coordinates to this file", {'o', "out"});
