@@ -161,6 +161,7 @@ int main_layout2(int argc, char **argv) {
 
     args::ValueFlag<double> x_pad(parser, "N", "padding between connected component layouts (default 10.0)",
                                   {'p', "x-padding"});
+    args::Flag progress(parser, "progress", "display progress of the sort", {'P', "progress"});
     args::ValueFlag<uint64_t> nthreads(parser, "N",
                                        "number of threads to use for parallel sorters (currently only SGD is supported)",
                                        {'t', "threads"});
@@ -188,7 +189,7 @@ int main_layout2(int argc, char **argv) {
         return 1;
     }
 
-    if (!layout_out_file || !svg_out_file) {
+    if (!layout_out_file && !svg_out_file) {
         std::cerr
             << "[odgi layout2] error: Please specify an output file to where to store the layout via -o=[FILE], --out=[FILE] or -s=[FILE], --svg=[FILE]"
             << std::endl;
@@ -208,13 +209,14 @@ int main_layout2(int argc, char **argv) {
         }
     }
 
-    uint64_t t_max = !p_sgd_iter_max ? 30 : args::get(p_sgd_iter_max);
-    double eps = !p_sgd_eps ? 0.01 : args::get(p_sgd_eps);
-    double x_padding = !x_pad ? 10.0 : args::get(x_pad);
-    double svg_scale = !render_scale ? 1.0 : args::get(render_scale);
-    double svg_border = !render_border ? 10.0 : args::get(render_border);
-    double sgd_delta = p_sgd_delta ? args::get(p_sgd_delta) : 0;
-    uint64_t num_threads = nthreads ? args::get(nthreads) : 1;
+    const uint64_t t_max = !p_sgd_iter_max ? 30 : args::get(p_sgd_iter_max);
+    const double eps = !p_sgd_eps ? 0.01 : args::get(p_sgd_eps);
+    const double x_padding = !x_pad ? 10.0 : args::get(x_pad);
+    const double svg_scale = !render_scale ? 1.0 : args::get(render_scale);
+    const double svg_border = !render_border ? 10.0 : args::get(render_border);
+    const double sgd_delta = p_sgd_delta ? args::get(p_sgd_delta) : 0;
+    const uint64_t num_threads = nthreads ? args::get(nthreads) : 1;
+    const bool show_progress = progress ? args::get(progress) : false;
     /// path guided linear 2D SGD sort helpers
     // TODO beautify this, maybe put into its own file
     std::function<uint64_t(const std::vector<path_handle_t> &,
@@ -385,7 +387,7 @@ int main_layout2(int argc, char **argv) {
         path_sgd_zipf_theta,
         path_sgd_zipf_space,
         num_threads,
-        true,
+        show_progress,
         snapshot,
         snapshotsX,
         graph_X,
