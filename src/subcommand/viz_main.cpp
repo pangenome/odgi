@@ -93,8 +93,8 @@ namespace odgi {
         args::Flag binned_mode(parser, "binned-mode", "bin the variation graph before its visualization", {'b', "binned-mode"});
         args::ValueFlag<uint64_t> bin_width(parser, "bp", "width of each bin in basepairs along the graph vector",{'w', "bin-width"});
         args::Flag drop_gap_links(parser, "drop-gap-links", "don't include gap links in the output", {'g', "no-gap-links"});
-        args::Flag color_by_mean_coverage(parser, "color-by-mean-coverage", "change the color respect to the mean coverage of the path for each bin", {'c', "color-by-mean-coverage"});
-        args::Flag color_by_mean_inversion_rate(parser, "color-by-mean-inversion-rate", "change the color respect to the mean inversion rate of the path for each bin", {'z', "color-by-mean-inversion"});
+        args::Flag color_by_mean_coverage(parser, "color-by-mean-coverage", "change the color respect to the mean coverage of the path for each bin, from black (no coverage) to blue (max bin mean coverage in the entire graph)", {'m', "color-by-mean-coverage"});
+        args::Flag color_by_mean_inversion_rate(parser, "color-by-mean-inversion-rate", "change the color respect to the mean inversion rate of the path for each bin, from black (no inversions) to red (bin mean inversion rate equals to 1)", {'z', "color-by-mean-inversion"});
 
         /// Gradient mode
         args::Flag change_darkness(parser, "change-darkness", "change the color darkness based on nucleotide position in the path", {'d', "change-darkness"});
@@ -145,7 +145,7 @@ namespace odgi {
                 ){
             std::cerr
                     << "[odgi viz] error: Please specify the -b/--binned-mode option to use the "
-                       "-w/--bin_width, -g/--no-gap-links, -c/--color-by-mean-coverage, and -z/--color-by-mean-inversion "
+                       "-w/--bin_width, -g/--no-gap-links, -m/--color-by-mean-coverage, and -z/--color-by-mean-inversion "
                        "options."
                     << std::endl;
             return 1;
@@ -162,7 +162,7 @@ namespace odgi {
             std::cerr
                     << "[odgi cover] error: please specify only one of the following options: "
                        "-S/--show-strand, -u/--white-to-black, "
-                       "-c/--color-by-mean-coverage, and -z/--color-by-mean-inversion."
+                       "-m/--color-by-mean-coverage, and -z/--color-by-mean-inversion."
                     << std::endl;
             return 1;
         }
@@ -420,15 +420,34 @@ namespace odgi {
         bool _color_by_mean_inversion_rate = args::get(color_by_mean_inversion_rate);
 
         uint64_t longest_path_len = 0;
-        if (_change_darkness && _longest_path){
+        double max_mean_cov = 0.0;
+        if ((_change_darkness && _longest_path) || (_binned_mode && _color_by_mean_coverage)){
             graph.for_each_path_handle([&](const path_handle_t &path) {
-                uint64_t curr_len = 0;
+                uint64_t curr_len = 0, p, hl;
+                handle_t h;
+                std::map<uint64_t, algorithms::path_info_t> bins;
                 graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
-                    curr_len += graph.get_length(graph.get_handle_of_step(occ));
+                    h = graph.get_handle_of_step(occ);
+                    hl = graph.get_length(h);
+
+                    curr_len += hl;
+
+                    p = position_map[number_bool_packing::unpack_number(h)];
+                    for (uint64_t k = 0; k < hl; ++k) {
+                        int64_t curr_bin = (p + k) / _bin_width + 1;
+
+                        ++bins[curr_bin].mean_cov;
+                    }
                 });
+
+                for (auto &entry : bins) {
+                    max_mean_cov = std::max(entry.second.mean_cov, max_mean_cov);
+                }
 
                 longest_path_len = std::max(longest_path_len, curr_len);
             });
+
+            max_mean_cov /= _bin_width;
         }
 
         std::unordered_set<pair<uint64_t, uint64_t>> edges_drawn;
@@ -597,7 +616,7 @@ namespace odgi {
                                 if (_change_darkness){
                                     x = 1 - ( (float)(curr_len + k) / (float)(path_len_to_use)) * 0.9;
                                 } else if (_color_by_mean_coverage) {
-                                    x = bins[curr_bin].mean_cov;
+                                    x = bins[curr_bin].mean_cov / max_mean_cov;
                                 } else if (_color_by_mean_inversion_rate) {
                                     x = bins[curr_bin].mean_inv;
                                 }

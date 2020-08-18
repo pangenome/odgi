@@ -83,11 +83,11 @@ sequence coverage in bins available.
   2. Class: The links helping to follow simple variations. Such links solely connecting a path from left to right may not
   be relevant to understand a path's traversal through the bins. Therefore, they are not drawn in the binned mode.
 
-*-c, --color-by-mean-coverage*::
-  Change the color (from black to blue) respect to the mean coverage of the path for each bin.
+*-m, --color-by-mean-coverage*::
+  Change the color respect to the mean coverage of the path for each bin, from black (no coverage) to blue (max bin mean coverage in the entire graph).
 
-*-c, --color-by-mean-inversion*::
-  Change the color (from black to red) respect to the mean inversion rate of the path for each bin".
+*-z, --color-by-mean-inversion*::
+  Change the color respect to the mean inversion rate of the path for each bin, from black (no inversions) to red (bin mean inversion rate equals to 1).
 
 
 === Gradient Mode (also known as Position Mode) Options
