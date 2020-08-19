@@ -86,7 +86,7 @@ sequence coverage in bins available.
 *-m, --color-by-mean-coverage*::
   Change the color respect to the mean coverage of the path for each bin, from black (no coverage) to blue (max bin mean coverage in the entire graph).
 
-*-z, --color-by-mean-inversion*::
+*-z, --color-by-mean-inversion-rate*::
   Change the color respect to the mean inversion rate of the path for each bin, from black (no inversions) to red (bin mean inversion rate equals to 1).
 
 
