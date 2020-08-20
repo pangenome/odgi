@@ -13,7 +13,7 @@ namespace odgi {
 
         using namespace handlegraph;
 
-        /* This implementation has been been inspired by: https://github.com/jltsiren/gbwtgraph */
+        /* This implementation has been inspired by: https://github.com/jltsiren/gbwtgraph */
 
         constexpr size_t PATH_COVER_DEFAULT_N = 16;
         constexpr size_t PATH_COVER_DEFAULT_K = 2;
