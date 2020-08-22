@@ -13,7 +13,7 @@ namespace subcommand {
 std::ostream& operator<<(std::ostream& out, const CommandCategory& category) {
     switch(category) {
     case PIPELINE:
-        out << "main mapping and calling pipeline";
+        out << "overview of available subcommands";
         break;
     case TOOLKIT:
         out << "useful graph tools";

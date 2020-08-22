@@ -313,7 +313,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/build_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/test_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/stats_main.cpp
-        ${CMAKE_SOURCE_DIR}/src/subcommand/cover_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/cover_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/sort_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/view_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/kmers_main.cpp
@@ -328,6 +328,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/matrix_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/chop_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/groom_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/layout0_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/layout_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/flatten_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/break_main.cpp
@@ -371,8 +372,9 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/chop.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/unchop.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/perfect_neighbors.cpp
-        ${CMAKE_SOURCE_DIR}/src/algorithms/cover.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/cover.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/path_sgd.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/path_sgd_layout.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/remove_isolated.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/expand_context.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/groom.cpp)
@@ -492,8 +494,9 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/algorithms/split_strands.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/extract_extending_graph.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/extract_connecting_graph.hpp
-        ${CMAKE_SOURCE_DIR}/src/algorithms/cover.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/cover.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/path_sgd.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/path_sgd_layout.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/expand_context.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/id_ordered_paths.hpp
