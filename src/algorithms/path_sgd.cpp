@@ -9,7 +9,7 @@ namespace odgi {
 
         std::vector<double> path_linear_sgd(const PathHandleGraph &graph,
                                             const xp::XP &path_index,
-                                            const std::vector<path_handle_t>& path_sgd_use_paths,
+                                            const std::vector<path_handle_t> &path_sgd_use_paths,
                                             const uint64_t &iter_max,
                                             const uint64_t &iter_with_max_learning_rate,
                                             const uint64_t &min_term_updates,
@@ -55,7 +55,7 @@ namespace odgi {
             //  1. build the interval tree
             //  2. find out the longest path in nucleotides and store this number size_t
             //  3. add the current path length to the total length
-            for (auto& path : path_sgd_use_paths) {
+            for (auto &path : path_sgd_use_paths) {
 #ifdef debug_path_sgd
                 std::string path_name = graph.get_path_name(path);
                 std::cerr << path_name << std::endl;
@@ -82,7 +82,8 @@ namespace odgi {
 #endif
             double w_max = 1.0;
             // get our schedule
-            std::vector<double> etas = path_linear_sgd_schedule(w_min, w_max, iter_max, iter_with_max_learning_rate, eps);
+            std::vector<double> etas = path_linear_sgd_schedule(w_min, w_max, iter_max, iter_with_max_learning_rate,
+                                                                eps);
             // initialize Zipfian distrubution so we only have to calculate zeta once
             zipfian_int_distribution<uint64_t>::param_type p(1, space, theta);
             zipfian_int_distribution<uint64_t> zipfian(p);
@@ -137,20 +138,20 @@ namespace odgi {
             auto worker_lambda =
                     [&](uint64_t tid) {
                         // everyone tries to seed with their own random data
-                        std::array<uint64_t, 2> seed_data = {(uint64_t)std::time(0), tid};
+                        std::array<uint64_t, 2> seed_data = {(uint64_t) std::time(0), tid};
                         std::seed_seq sseq(std::begin(seed_data), std::end(seed_data));
                         std::mt19937_64 gen(sseq);
                         std::uniform_int_distribution<uint64_t> dis;
-                        const sdsl::bit_vector& np_bv = path_index.get_np_bv();
-                        const sdsl::int_vector<>& nr_iv = path_index.get_nr_iv();
-                        const sdsl::int_vector<>& npi_iv = path_index.get_npi_iv();
+                        const sdsl::bit_vector &np_bv = path_index.get_np_bv();
+                        const sdsl::int_vector<> &nr_iv = path_index.get_nr_iv();
+                        const sdsl::int_vector<> &npi_iv = path_index.get_npi_iv();
                         //auto& np_bv_select = path_index.get_np_bv_select();
                         if (sample_from_path_steps) {
                             dis = std::uniform_int_distribution<uint64_t>(0, path_index.get_np_bv().size() - 1);
                         } else if (sample_from_paths) {
                             dis = std::uniform_int_distribution<uint64_t>(0, total_path_len_in_nucleotides - 1);
                         } else {
-                            dis = std::uniform_int_distribution<uint64_t>(0, np_bv.size()-1);
+                            dis = std::uniform_int_distribution<uint64_t>(0, np_bv.size() - 1);
                         }
                         std::uniform_int_distribution<uint64_t> flip(0, 1);
                         uint64_t hit_num_paths = 0;
@@ -424,8 +425,7 @@ namespace odgi {
 
             snapshot_thread.join();
 
-            checker.join();
-;
+            checker.join();;
             // drop out of atomic stuff... maybe not the best way to do this
             std::vector<double> X_final(X.size());
             uint64_t i = 0;
@@ -456,12 +456,12 @@ namespace odgi {
 #endif
             // initialize step sizes
             std::vector<double> etas;
-            etas.reserve(iter_max+1);
+            etas.reserve(iter_max + 1);
 #ifdef debug_schedule
             std::cerr << "etas: ";
 #endif
             for (int64_t t = 0; t <= iter_max; t++) {
-                etas.push_back(eta_max * exp(-lambda * (abs(t - (int64_t)iter_with_max_learning_rate))));
+                etas.push_back(eta_max * exp(-lambda * (abs(t - (int64_t) iter_with_max_learning_rate))));
 #ifdef debug_schedule
                 std::cerr << etas.back() << ", ";
 #endif
@@ -474,7 +474,7 @@ namespace odgi {
 
         std::vector<double> deterministic_path_linear_sgd(const PathHandleGraph &graph,
                                                           const xp::XP &path_index,
-                                                          const std::vector<path_handle_t>& path_sgd_use_paths,
+                                                          const std::vector<path_handle_t> &path_sgd_use_paths,
                                                           const uint64_t &iter_max,
                                                           const uint64_t &iter_with_max_learning_rate,
                                                           const uint64_t &min_term_updates,
@@ -511,7 +511,7 @@ namespace odgi {
             //  1. build the interval tree
             //  2. find out the longest path in nucleotides and store this number size_t
             //  3. add the current path length to the total length
-            for (auto& path : path_sgd_use_paths) {
+            for (auto &path : path_sgd_use_paths) {
 #ifdef debug_path_sgd
                 std::string path_name = graph.get_path_name(path);
                 std::cerr << path_name << std::endl;
@@ -538,7 +538,8 @@ namespace odgi {
 #endif
             double w_max = 1.0;
             // get our schedule
-            std::vector<double> etas = path_linear_sgd_schedule(w_min, w_max, iter_max, iter_with_max_learning_rate, eps);
+            std::vector<double> etas = path_linear_sgd_schedule(w_min, w_max, iter_max, iter_with_max_learning_rate,
+                                                                eps);
             // initialize Zipfian distribution so we only have to calculate zeta once
             zipfian_int_distribution<uint64_t>::param_type p(1, space, theta);
             zipfian_int_distribution<uint64_t> zipfian(p);
@@ -554,17 +555,18 @@ namespace odgi {
             // seed with the given string
             std::seed_seq seed(seeding_string.begin(), seeding_string.end());
             std::mt19937 gen(seed);
-            std::uniform_int_distribution<uint64_t> dis(1, num_nodes);
-            if (sample_from_path_steps) {
-                dis = std::uniform_int_distribution<uint64_t>(0, path_index.get_np_bv().size() - 1);
-            }
-            if (sample_from_paths) {
-                dis = std::uniform_int_distribution<uint64_t>(0, total_path_len_in_nucleotides - 1);
-            }
-            std::uniform_int_distribution<uint64_t> flip(0, 1);
+            std::uniform_int_distribution<uint64_t> dis;
             const sdsl::bit_vector &np_bv = path_index.get_np_bv();
             const sdsl::int_vector<> &nr_iv = path_index.get_nr_iv();
             const sdsl::int_vector<> &npi_iv = path_index.get_npi_iv();
+            if (sample_from_path_steps) {
+                dis = std::uniform_int_distribution<uint64_t>(0, path_index.get_np_bv().size() - 1);
+            } else if (sample_from_paths) {
+                dis = std::uniform_int_distribution<uint64_t>(0, total_path_len_in_nucleotides - 1);
+            } else {
+                dis = std::uniform_int_distribution<uint64_t>(0, np_bv.size() - 1);
+            }
+            std::uniform_int_distribution<uint64_t> flip(0, 1);
             //auto &np_bv_select = path_index.get_np_bv_select();
             uint64_t hit_num_paths = 0;
             step_handle_t s_h;
@@ -582,6 +584,7 @@ namespace odgi {
                 }
                 for (uint64_t term_update = 0; term_update < min_term_updates; term_update++) {
                     // pick a random position from all paths
+                    uint64_t pos;
                     size_t pos_in_path_a;
                     size_t path_len;
                     path_handle_t path;
@@ -589,7 +592,7 @@ namespace odgi {
 //                    std::cerr << "uniform_position: " << pos << std::endl;
 //#endif
                     if (sample_from_paths) {
-                        uint64_t pos = dis(gen);
+                        pos = dis(gen);
                         std::vector<size_t> a;
                         path_nucleotide_tree.overlap(pos, pos + 1, a);
                         if (a.empty()) {
@@ -604,7 +607,7 @@ namespace odgi {
                         // we have a 0-based positioning in the path index
                         pos_in_path_a = pos - path_start_pos;
                     } else if (sample_from_path_steps) {
-                        uint64_t pos = dis(gen);
+                        pos = dis(gen);
                         // did we hit a node and not a path?
                         if (np_bv[pos] == 1) {
                             continue;
@@ -624,10 +627,6 @@ namespace odgi {
                         }
                         // default: sample the first node from all the nodes in the graph
                     } else {
-                        //uint64_t pos = dis(gen);
-                        size_t pos_in_path_a;
-                        size_t path_len;
-                        path_handle_t path;
                         // pick a random position from all paths
                         node_index = dis(gen);
                         while (np_bv[node_index] == 0 && node_index-- != 0);
@@ -813,7 +812,8 @@ namespace odgi {
                 }
                 if (Delta_max.load() <= delta) {
                     if (progress) {
-                        std::cerr << "[path sgd sort]: delta_max: " << Delta_max.load() << " <= delta: " << delta << ". Threshold reached, therefore ending iterations." << std::endl;
+                        std::cerr << "[path sgd sort]: delta_max: " << Delta_max.load() << " <= delta: " << delta
+                                  << ". Threshold reached, therefore ending iterations." << std::endl;
                     }
                     break;
                 } else {
@@ -829,7 +829,7 @@ namespace odgi {
 
                     // If it is the last iteration, there is no need to update the next values, and it is avoided
                     // to request an element outside the vector
-                    if (iteration + 1 < iter_max){
+                    if (iteration + 1 < iter_max) {
                         eta.store(etas[iteration + 1]); // update our learning rate
                         Delta_max.store(delta); // set our delta max to the threshold
                     }
@@ -848,7 +848,7 @@ namespace odgi {
 
         std::vector<handle_t> path_linear_sgd_order(const PathHandleGraph &graph,
                                                     const xp::XP &path_index,
-                                                    const std::vector<path_handle_t>& path_sgd_use_paths,
+                                                    const std::vector<path_handle_t> &path_sgd_use_paths,
                                                     const uint64_t &iter_max,
                                                     const uint64_t &iter_with_max_learning_rate,
                                                     const uint64_t &min_term_updates,
@@ -910,35 +910,36 @@ namespace odgi {
             std::cerr << "node count: " << graph.get_node_count() << std::endl;
 #endif
             // refine order by weakly connected components
-            std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components = algorithms::weakly_connected_components(&graph);
+            std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components = algorithms::weakly_connected_components(
+                    &graph);
 #ifdef debug_components
             std::cerr << "components count: " << weak_components.size() << std::endl;
 #endif
             std::vector<std::pair<double, uint64_t>> weak_component_order;
             for (int i = 0; i < weak_components.size(); i++) {
-                auto& weak_component = weak_components[i];
+                auto &weak_component = weak_components[i];
                 uint64_t id_sum = 0;
                 for (auto node_id : weak_component) {
                     id_sum += node_id;
                 }
-                double avg_id = id_sum / (double)weak_component.size();
+                double avg_id = id_sum / (double) weak_component.size();
                 weak_component_order.push_back(std::make_pair(avg_id, i));
             }
             std::sort(weak_component_order.begin(), weak_component_order.end());
             std::vector<uint64_t> weak_component_id; // maps rank to "id" based on the orignial sorted order
             weak_component_id.resize(weak_component_order.size());
             uint64_t component_id = 0;
-            for (auto& component_order : weak_component_order) {
+            for (auto &component_order : weak_component_order) {
                 weak_component_id[component_order.second] = component_id++;
             }
             std::vector<uint64_t> weak_components_map;
             weak_components_map.resize(graph.get_node_count());
             // reserve the space we need
             for (int i = 0; i < weak_components.size(); i++) {
-                auto& weak_component = weak_components[i];
+                auto &weak_component = weak_components[i];
                 // store for each node identifier to component start index
                 for (auto node_id : weak_component) {
-                    weak_components_map[node_id-1] = weak_component_id[i];
+                    weak_components_map[node_id - 1] = weak_component_id[i];
                 }
 #ifdef debug_components
                 std::cerr << "weak_component.size(): " << weak_component.size() << std::endl;
@@ -947,12 +948,13 @@ namespace odgi {
             }
             weak_components_map.clear();
             if (snapshot) {
-                for (int j  = 0; j < snapshots_layouts.size(); j++) {
+                for (int j = 0; j < snapshots_layouts.size(); j++) {
                     std::vector<double> snapshot_layout = snapshots_layouts[j];
                     uint64_t i = 0;
                     std::vector<handle_layout_t> snapshot_handle_layout;
                     graph.for_each_handle(
-                            [&i, &snapshot_layout, &weak_components_map, &snapshot_handle_layout](const handle_t &handle) {
+                            [&i, &snapshot_layout, &weak_components_map, &snapshot_handle_layout](
+                                    const handle_t &handle) {
                                 snapshot_handle_layout.push_back(
                                         {
                                                 weak_components_map[number_bool_packing::unpack_number(handle)],
@@ -982,27 +984,27 @@ namespace odgi {
             std::vector<handle_layout_t> handle_layout;
             uint64_t i = 0;
             graph.for_each_handle(
-                [&i, &layout, &weak_components_map, &handle_layout](const handle_t &handle) {
-                    handle_layout.push_back(
-                        {
-                            weak_components_map[number_bool_packing::unpack_number(handle)],
-                            layout[i++],
-                            handle
-                        });
-                });
+                    [&i, &layout, &weak_components_map, &handle_layout](const handle_t &handle) {
+                        handle_layout.push_back(
+                                {
+                                        weak_components_map[number_bool_packing::unpack_number(handle)],
+                                        layout[i++],
+                                        handle
+                                });
+                    });
             // sort the graph layout by component, then pos, then handle rank
             std::sort(handle_layout.begin(), handle_layout.end(),
-                      [&](const handle_layout_t& a,
-                          const handle_layout_t& b) {
+                      [&](const handle_layout_t &a,
+                          const handle_layout_t &b) {
                           return a.weak_component < b.weak_component
-                                   || (a.weak_component == b.weak_component
-                                       && a.pos < b.pos
-                                       || (a.pos == b.pos
-                                           && as_integer(a.handle) < as_integer(b.handle)));
+                                 || (a.weak_component == b.weak_component
+                                     && a.pos < b.pos
+                                     || (a.pos == b.pos
+                                         && as_integer(a.handle) < as_integer(b.handle)));
                       });
             std::vector<handle_t> order;
             order.reserve(graph.get_node_count());
-            for (auto& layout_handle : handle_layout) {
+            for (auto &layout_handle : handle_layout) {
                 order.push_back(layout_handle.handle);
             }
             return order;
