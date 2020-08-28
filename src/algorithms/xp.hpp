@@ -164,7 +164,7 @@ namespace xp {
         sdsl::int_vector<> npi_iv; // path integers to directly construct path handles from
         // entity delimiter
         sdsl::bit_vector np_bv;
-        sdsl::rank_support_v<1> np_bv_rank;
+        sdsl::bit_vector::rank_1_type np_bv_rank;
         sdsl::bit_vector::select_1_type np_bv_select;
     };
 

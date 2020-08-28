@@ -558,6 +558,7 @@ namespace xp {
 #endif
             // we will explode if the node isn't in the graph
         }
+        sdsl::util::bit_compress(handles);
 
 #ifdef debug_xppath
         for (size_t i = 0; i < path.size(); i++) {bit_
@@ -579,6 +580,7 @@ namespace xp {
             // and update the offset counter
             path_off += graph.get_length(handle);
         }
+        sdsl::util::bit_compress(positions);
         // and path offsets
         //sdsl::util::assign(offsets, sdsl::sd_vector<>(offsets_bv));
         // and set up rank/select dictionary on them
