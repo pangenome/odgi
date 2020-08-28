@@ -756,7 +756,13 @@ namespace xp {
                         system_temp_dir = getenv(var_name);
                     }
                 }
-                temp_dir = (system_temp_dir == nullptr ? "/tmp" : system_temp_dir);
+                if (system_temp_dir == nullptr) {
+                    char* cwd = get_current_dir_name();
+                    temp_dir = std::string(cwd);
+                    free(cwd);
+                } else {
+                    temp_dir = system_temp_dir;
+                }
             }
 
             return temp_dir;

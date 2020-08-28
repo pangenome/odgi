@@ -247,8 +247,8 @@ namespace odgi {
                     for (size_t j = 0; j < xppath_lpi->offsets.size(); j++) {
                         REQUIRE(xppath_lpi->offsets_rank(j) == xppath_pi->offsets_rank(j));
                     }
-                    for (size_t j = 0; j < xppath_lpi->offsets.size(); j++) {
-                        REQUIRE(xppath_lpi->offsets_select(j) == xppath_pi->offsets_select(j));
+                    for (size_t j = 0; j < xppath_lpi->handles.size(); j++) {
+                        REQUIRE(xppath_lpi->offsets_select(j+1) == xppath_pi->offsets_select(j+1));
                     }
                 }
             }
