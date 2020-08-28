@@ -198,9 +198,9 @@ namespace xp {
 
         sdsl::int_vector<> handles;
         sdsl::int_vector<> positions;
-        sdsl::rrr_vector<> offsets;
-        sdsl::rrr_vector<>::rank_1_type offsets_rank;
-        sdsl::rrr_vector<>::select_1_type offsets_select;
+        sdsl::bit_vector offsets;
+        sdsl::bit_vector::rank_1_type offsets_rank;
+        sdsl::bit_vector::select_1_type offsets_select;
         bool is_circular = false;
 
         void load(std::istream &in);

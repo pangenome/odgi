@@ -244,10 +244,10 @@ namespace odgi {
                     for (size_t j = 0; j < xppath_lpi->offsets.size(); j++) {
                         REQUIRE(xppath_lpi->offsets[j] == xppath_pi->offsets[j]);
                     }
-                    for (size_t j = 0; j < xppath_lpi->offsets_rank.size(); j++) {
+                    for (size_t j = 0; j < xppath_lpi->offsets.size(); j++) {
                         REQUIRE(xppath_lpi->offsets_rank(j) == xppath_pi->offsets_rank(j));
                     }
-                    for (size_t j = 0; j < xppath_lpi->offsets_select.size(); j++) {
+                    for (size_t j = 0; j < xppath_lpi->offsets.size(); j++) {
                         REQUIRE(xppath_lpi->offsets_select(j) == xppath_pi->offsets_select(j));
                     }
                 }

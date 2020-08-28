@@ -562,25 +562,25 @@ namespace xp {
     }
 #endif
         // make the bitvector for path offsets
-        sdsl::bit_vector offsets_bv;
-        sdsl::util::assign(offsets_bv, sdsl::bit_vector(path_length));
+        //sdsl::bit_vector offsets_bv;
+        sdsl::util::assign(offsets, sdsl::bit_vector(path_length));
 
         //cerr << "path " << path_name << " has " << path.size() << endl;
         for (size_t i = 0; i < path.size(); ++i) {
             //cerr << i << endl;
             auto &handle = path[i];
             // record position of node
-            offsets_bv[path_off] = 1;
+            offsets[path_off] = 1;
             // cache the position
             positions[i] = path_off;
             // and update the offset counter
             path_off += graph.get_length(handle);
         }
         // and path offsets
-        sdsl::util::assign(offsets, sdsl::rrr_vector<>(offsets_bv));
+        //sdsl::util::assign(offsets, sdsl::sd_vector<>(offsets_bv));
         // and set up rank/select dictionary on them
-        sdsl::util::assign(offsets_rank, sdsl::rrr_vector<>::rank_1_type(&offsets));
-        sdsl::util::assign(offsets_select, sdsl::rrr_vector<>::select_1_type(&offsets));
+        sdsl::util::assign(offsets_rank, sdsl::bit_vector::rank_1_type(&offsets));
+        sdsl::util::assign(offsets_select, sdsl::bit_vector::select_1_type(&offsets));
 
 #ifdef debug_xppath
         std::cerr << "[XPPATH CONSTRUCTION]: offsets_bv: ";
