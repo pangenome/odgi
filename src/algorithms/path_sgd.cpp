@@ -18,6 +18,8 @@ namespace odgi {
                                             const double &eta_max,
                                             const double &theta,
                                             const uint64_t &space,
+                                            const uint64_t &space_max,
+                                            const uint64_t &space_quantization_step,
                                             const uint64_t &nthreads,
                                             const bool &progress,
                                             const bool &snapshot,
@@ -29,6 +31,8 @@ namespace odgi {
             std::cerr << "eps: " << eps << std::endl;
             std::cerr << "theta: " << theta << std::endl;
             std::cerr << "space: " << space << std::endl;
+            std::cerr << "space_max: " << space_max << std::endl;
+            std::cerr << "space_quantization_step: " << space_quantization_step << std::endl;
 #endif
 
             using namespace std::chrono_literals; // for timing stuff
@@ -89,16 +93,29 @@ namespace odgi {
                                                                 iter_max,
                                                                 iter_with_max_learning_rate,
                                                                 eps);
+
             // cache zipf zetas for our full path space (heavy, but one-off)
             if (progress) {
-                std::cerr << "[path sgd sort]: calculating zetas for " << space << " zipf distributions" << std::endl;
+                std::cerr << "[path sgd sort]: calculating zetas for " << (space <= space_max ? space : space_max + (space - space_max) / space_quantization_step + 1) << " zipf distributions" << std::endl;
             }
-            std::vector<double> zetas(space+1);
+
+            std::vector<double> zetas((space <= space_max ? space : space_max + (space - space_max) / space_quantization_step + 1)+1);
+            uint64_t last_quantized_i = 0;
 #pragma omp parallel for schedule(static,1)
             for (uint64_t i = 1; i < space+1; ++i) {
-                zipfian_int_distribution<uint64_t>::param_type z_p(1, i, theta);
-                zetas[i] = z_p.zeta();
+                uint64_t quantized_i = i;
+                if (i > space_max){
+                    quantized_i = space_max + (i - space_max) / space_quantization_step + 1;
+                }
+
+                if (quantized_i != last_quantized_i){
+                    zipfian_int_distribution<uint64_t>::param_type z_p(1, quantized_i, theta);
+                    zetas[quantized_i] = z_p.zeta();
+
+                    last_quantized_i = quantized_i;
+                }
             }
+
             // how many term updates we make
             std::atomic<uint64_t> term_updates;
             term_updates.store(0);
@@ -198,8 +215,12 @@ namespace odgi {
                             if (s_rank > 0 && (unif_sample_value < 0.5) || s_rank == path_step_count-1) {
                                 // go backward
                                 uint64_t jump_space = std::min(space, s_rank);
+                                uint64_t space = jump_space;
+                                if (jump_space > space_max){
+                                    space = space_max + (jump_space - space_max) / space_quantization_step + 1;
+                                }
                                 // hack--- the zeta from the larger distribution is taken to avoid the cost of recomputing
-                                zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, theta, zetas[jump_space]);
+                                zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, theta, zetas[space]);
                                 zipfian_int_distribution<uint64_t> z(z_p);
                                 uint64_t z_i = z(gen);
                                 //assert(z_i <= path_space);
@@ -208,7 +229,11 @@ namespace odgi {
                             } else {
                                 // go forward
                                 uint64_t jump_space = std::min(space, path_step_count - s_rank - 1);
-                                zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, theta, zetas[jump_space]);
+                                uint64_t space = jump_space;
+                                if (jump_space > space_max){
+                                    space = space_max + (jump_space - space_max) / space_quantization_step + 1;
+                                }
+                                zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, theta, zetas[space]);
                                 zipfian_int_distribution<uint64_t> z(z_p);
                                 uint64_t z_i = z(gen);
                                 //assert(z_i <= path_space);
@@ -418,6 +443,8 @@ namespace odgi {
                                                     const double &eta_max,
                                                     const double &theta,
                                                     const uint64_t &space,
+                                                    const uint64_t &space_max,
+                                                    const uint64_t &space_quantization_step,
                                                     const uint64_t &nthreads,
                                                     const bool &progress,
                                                     const std::string &seed,
@@ -435,6 +462,8 @@ namespace odgi {
                                                          eta_max,
                                                          theta,
                                                          space,
+                                                         space_max,
+                                                         space_quantization_step,
                                                          nthreads,
                                                          progress,
                                                          snapshot,
