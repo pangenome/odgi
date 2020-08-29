@@ -85,8 +85,8 @@ namespace odgi {
             std::vector<double> etas = path_linear_sgd_schedule(w_min, w_max, iter_max, iter_with_max_learning_rate,
                                                                 eps);
             // initialize Zipfian distrubution so we only have to calculate zeta once
-            zipfian_int_distribution<uint64_t>::param_type p(1, space, theta);
-            zipfian_int_distribution<uint64_t> zipfian(p);
+            zipfian_int_distribution<uint64_t>::param_type zeta_param(1, space, theta);
+            zipfian_int_distribution<uint64_t> zipfian(zeta_param);
             // how many term updates we make
             std::atomic<uint64_t> term_updates;
             term_updates.store(0);
@@ -214,6 +214,7 @@ namespace odgi {
                                 if (hit_num_paths == 0) {
                                     continue;
                                 }
+                                // todo stop generating this every time, just use a uniform distribution in 0,1 and map into the num steps
                                 std::uniform_int_distribution<uint64_t> dis_path(1, hit_num_paths);
                                 uint64_t path_pos_in_np_iv = dis_path(gen);
 #ifdef debug_sample_from_nodes
@@ -234,6 +235,7 @@ namespace odgi {
 #ifdef debug_sample_from_nodes
                                 std::cerr << "step rank in path: " << nr_iv[path_pos_in_np_iv]  << std::endl;
 #endif
+                                /*
                                 pos_in_path_a = path_index.get_position_of_step(s_h);
 #ifdef debug_sample_from_nodes
                                 std::cerr << "pos_in_path_a: " << pos_in_path_a << std::endl;
@@ -243,7 +245,36 @@ namespace odgi {
                                 std::cerr << "path_len " << path_len << std::endl;
                                 std::cerr << "node count " << num_nodes << std::endl;
 #endif
+                                */
                             }
+
+                            size_t s_rank = as_integers(s_h)[1];
+                            step_handle_t step_a = s_h;
+                            step_handle_t step_b;
+                            size_t pos_in_path_b;
+                            size_t path_step_count = path_index.get_path_step_count(path);
+                            if (s_rank > 0 && flip(gen) || s_rank == path_step_count-1) {
+                                // go backward
+                                uint64_t path_space = s_rank;
+                                // hack--- the zeta from the larger distribution is taken to avoid the cost of recomputing
+                                zipfian_int_distribution<uint64_t>::param_type z_p(1, path_space, theta, z_p.zeta());
+                                zipfian_int_distribution<uint64_t> z(z_p);
+                                uint64_t z_i = z(gen);
+                                assert(z_i <= path_space);
+                                as_integers(step_b)[0] = as_integer(path);
+                                as_integers(step_b)[1] = s_rank - z_i;
+                            } else {
+                                // go forward
+                                uint64_t path_space = path_step_count - s_rank - 1;
+                                zipfian_int_distribution<uint64_t>::param_type z_p(1, path_space, theta, z_p.zeta());
+                                zipfian_int_distribution<uint64_t> z(z_p);
+                                uint64_t z_i = z(gen);
+                                assert(z_i <= path_space);
+                                as_integers(step_b)[0] = as_integer(path);
+                                as_integers(step_b)[1] = s_rank + z_i;
+                            }
+
+                            /*
                             uint64_t zipf_int = zipfian(gen);
 #ifdef debug_path_sgd
                             std::cerr << "random pos: " << pos << std::endl;
@@ -252,6 +283,8 @@ namespace odgi {
                             std::cerr << "path_len: " << path_len << std::endl;
                             //std::cerr << "zipf: " << zipf_int << std::endl;
 #endif
+                            // TODO here sample a zipfian jump in the path steps
+                            // ...
                             size_t pos_in_path_b = pos_in_path_a;
                             if (flip(gen)) {
                                 if (zipf_int > pos_in_path_a) {
@@ -285,6 +318,7 @@ namespace odgi {
                                 step_a = s_h;
                             }
                             step_handle_t step_b = path_index.get_step_at_position(path, pos_in_path_b);
+                            */
 
                             // and the graph handles, which we need to record the update
                             handle_t term_i = path_index.get_handle_of_step(step_a);
@@ -385,7 +419,8 @@ namespace odgi {
 #ifdef debug_path_sgd
                             std::cerr << "after X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
 #endif
-                            term_updates.store(term_updates.load() + 1);
+                            //term_updates.store(term_updates.load() + 1);
+                            term_updates++; // atomic
                         }
                     };
 

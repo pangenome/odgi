@@ -442,6 +442,7 @@ set(odgi_LIBS
   "${libbf_LIB}/libbf.a"
   "-ldl"
   "-latomic")
+#"-ltcmalloc") # for heap profiling
 
 set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/include/odgi_git_version.hpp

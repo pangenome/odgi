@@ -144,8 +144,9 @@ namespace xp {
         std::cerr << std::endl;
 #endif
         node_path_ms.reset(); // free the mmmultimap
-        std::remove(node_path_idx.c_str());
-        std::remove(path_name_file.c_str());
+        //std::remove(node_path_idx.c_str());
+        //std::remove(path_name_file.c_str());
+        temp_file::cleanup(); // clean up our temporary files
     }
 
     std::vector<XPPath *> XP::get_paths() const {
@@ -342,6 +343,10 @@ namespace xp {
 
     size_t XP::get_path_length(const path_handle_t& path_handle) const {
         return paths[as_integer(path_handle) - 1]->offsets.size();
+    }
+
+    size_t XP::get_path_step_count(const handlegraph::path_handle_t& path_handle) const {
+        return paths[as_integer(path_handle) - 1]->handles.size();
     }
 
     /// Get the step at a given position
@@ -674,29 +679,33 @@ namespace xp {
         struct Handler {
             std::set<std::string> filenames;
             std::string parent_directory;
-
             ~Handler() {
-                // No need to lock in static destructor
-                for (auto &filename : filenames) {
-                    std::remove(filename.c_str());
-                }
-                if (!parent_directory.empty()) {
-                    // There may be extraneous files in the directory still (like .fai files)
-                    auto directory = opendir(parent_directory.c_str());
-
-                    dirent *dp;
-                    while ((dp = readdir(directory)) != nullptr) {
-                        // For every item still in it, delete it.
-                        // TODO: Maybe eventually recursively delete?
-                        std::remove((parent_directory + "/" + dp->d_name).c_str());
-                    }
-                    closedir(directory);
-
-                    // Delete the directory itself
-                    std::remove(parent_directory.c_str());
-                }
+                cleanup();
             }
         } handler;
+
+        void cleanup(void) {
+            std::lock_guard<std::recursive_mutex> lock(monitor);
+            for (auto &filename : handler.filenames) {
+                std::remove(filename.c_str());
+            }
+            handler.filenames.clear();
+            if (!handler.parent_directory.empty()) {
+                // There may be extraneous files in the directory still (like .fai files)
+                auto directory = opendir(handler.parent_directory.c_str());
+                dirent *dp;
+                while ((dp = readdir(directory)) != nullptr) {
+                    // For every item still in it, delete it.
+                    // TODO: Maybe eventually recursively delete?
+                    std::remove((handler.parent_directory + "/" + dp->d_name).c_str());
+                }
+                closedir(directory);
+                // Delete the directory itself
+                std::remove(handler.parent_directory.c_str());
+                // clean up record of directory
+                handler.parent_directory.clear();
+            }
+        }
 
         std::string create(const std::string &base) {
             std::lock_guard<std::recursive_mutex> lock(monitor);

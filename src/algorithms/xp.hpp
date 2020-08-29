@@ -100,6 +100,9 @@ namespace xp {
         /// Returns the total length of sequence in the path
         size_t get_path_length(const handlegraph::path_handle_t& path_handle) const;
 
+        /// Returns the total length of sequence in the path
+        size_t get_path_step_count(const handlegraph::path_handle_t& path_handle) const;
+
         /// Returns a handle to the path that an step is on
         handlegraph::path_handle_t get_path_handle_of_step(const handlegraph::step_handle_t& step_handle) const;
 
@@ -224,6 +227,9 @@ namespace xp {
  * The interface is thread-safe.
  */
     namespace temp_file {
+
+/// Clean up our files and temporary directory
+        void cleanup(void);
 
 /// Create a temporary file starting with the given base name
         std::string create(const std::string &base);
