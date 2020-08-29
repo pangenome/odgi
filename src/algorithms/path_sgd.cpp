@@ -80,9 +80,19 @@ namespace odgi {
 #endif
             double w_max = 1.0;
             // get our schedule
-            std::vector<double> etas = path_linear_sgd_schedule(w_min, w_max, iter_max, iter_with_max_learning_rate,
+            if (progress) {
+                std::cerr << "[path sgd sort]: calculating linear SGD schedule (" << w_min << " " << w_max << " "
+                          << iter_max << " " << iter_with_max_learning_rate << " " << eps << ")" << std::endl;
+            }
+            std::vector<double> etas = path_linear_sgd_schedule(w_min,
+                                                                w_max,
+                                                                iter_max,
+                                                                iter_with_max_learning_rate,
                                                                 eps);
             // cache zipf zetas for our full path space (heavy, but one-off)
+            if (progress) {
+                std::cerr << "[path sgd sort]: calculating zetas for " << space << " zipf distributions" << std::endl;
+            }
             std::vector<double> zetas(space+1);
 #pragma omp parallel for schedule(static,1)
             for (uint64_t i = 1; i < space+1; ++i) {
@@ -331,6 +341,10 @@ namespace odgi {
                         }
 
                     };
+
+            if (progress) {
+                std::cerr << "[path sgd sort]: running SGD" << std::endl;
+            }
 
             std::thread checker(checker_lambda);
             std::thread snapshot_thread(snapshot_lambda);
