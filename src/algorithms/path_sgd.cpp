@@ -158,7 +158,7 @@ namespace odgi {
                         const sdsl::int_vector<> &npi_iv = path_index.get_npi_iv();
                         // we'll sample from all path steps
                         std::uniform_int_distribution<uint64_t> dis = std::uniform_int_distribution<uint64_t>(0, np_bv.size() - 1);
-                        std::uniform_int_distribution<uint64_t> flip(0, 1);
+
                         std::uniform_real_distribution<double> dis_path(0.0,1.0);
                         uint64_t hit_num_paths = 0;
                         while (work_todo.load()) {
@@ -177,7 +177,8 @@ namespace odgi {
 #ifdef debug_sample_from_nodes
                             std::cerr << "node_index: " << node_index << std::endl;
 #endif
-                            uint64_t path_pos_in_np_iv = node_index + (1 + dis_path(gen) * hit_num_paths);
+                            double unif_sample_value = dis_path(gen);
+                            uint64_t path_pos_in_np_iv = node_index + (1 + unif_sample_value * hit_num_paths);
 #ifdef debug_sample_from_nodes
                             std::cerr << "path pos in np_iv: " << path_pos_in_np_iv << std::endl;
 #endif
@@ -194,7 +195,7 @@ namespace odgi {
                             std::cerr << "step rank in path: " << nr_iv[path_pos_in_np_iv]  << std::endl;
 #endif
                             size_t path_step_count = path_index.get_path_step_count(path);
-                            if (s_rank > 0 && flip(gen) || s_rank == path_step_count-1) {
+                            if (s_rank > 0 && (unif_sample_value < 0.5) || s_rank == path_step_count-1) {
                                 // go backward
                                 uint64_t jump_space = std::min(space, s_rank);
                                 // hack--- the zeta from the larger distribution is taken to avoid the cost of recomputing
