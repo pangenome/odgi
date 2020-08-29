@@ -191,6 +191,7 @@ int main_sort(int argc, char** argv) {
     uint64_t path_sgd_zipf_space;
     std::vector<path_handle_t> path_sgd_use_paths;
     xp::XP path_index;
+    bool fresh_path_index = false;
     if (p_sgd || args::get(pipeline).find('Y') != std::string::npos) {
         // take care of path index
         if (xp_in_file) {
@@ -201,6 +202,7 @@ int main_sort(int argc, char** argv) {
         } else {
             path_index.from_handle_graph(graph);
         }
+        fresh_path_index = true;
         // do we only want so sample from a subset of paths?
         if (p_sgd_in_file) {
             std::string buf;
@@ -364,8 +366,10 @@ int main_sort(int argc, char** argv) {
                                                          num_threads);
                     break;
                 case 'Y': {
-                    path_index.clean();
-                    path_index.from_handle_graph(graph);
+                    if (!fresh_path_index) {
+                        path_index.clean();
+                        path_index.from_handle_graph(graph);
+                    }
                     order = algorithms::path_linear_sgd_order(graph,
                                                               path_index,
                                                               path_sgd_use_paths,
@@ -418,6 +422,7 @@ int main_sort(int argc, char** argv) {
                 } else {
                     was_groomed = false;
                 }
+                fresh_path_index = false;
             }
         } else {
             graph.apply_ordering(algorithms::topological_order(&graph, true, false, args::get(progress)), true);
