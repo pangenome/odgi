@@ -159,6 +159,7 @@ namespace odgi {
                         // we'll sample from all path steps
                         std::uniform_int_distribution<uint64_t> dis = std::uniform_int_distribution<uint64_t>(0, np_bv.size() - 1);
                         std::uniform_int_distribution<uint64_t> flip(0, 1);
+                        std::uniform_real_distribution<double> dis_path(0.0,1.0);
                         uint64_t hit_num_paths = 0;
                         while (work_todo.load()) {
                             // sample the first node from all the nodes in the graph
@@ -172,14 +173,11 @@ namespace odgi {
                             if (hit_num_paths == 0) {
                                 continue;
                             }
-                            // todo stop generating this every time, just use a uniform distribution in 0,1 and map into the num steps
-                            std::uniform_int_distribution<uint64_t> dis_path(1, hit_num_paths);
-                            uint64_t path_pos_in_np_iv = dis_path(gen);
+
 #ifdef debug_sample_from_nodes
-                            std::cerr << "path_pos_in_np_iv first: " << path_pos_in_np_iv << std::endl;
                             std::cerr << "node_index: " << node_index << std::endl;
 #endif
-                            path_pos_in_np_iv = node_index + path_pos_in_np_iv;
+                            uint64_t path_pos_in_np_iv = node_index + (1 + dis_path(gen) * hit_num_paths);
 #ifdef debug_sample_from_nodes
                             std::cerr << "path pos in np_iv: " << path_pos_in_np_iv << std::endl;
 #endif
