@@ -82,9 +82,13 @@ namespace odgi {
             // get our schedule
             std::vector<double> etas = path_linear_sgd_schedule(w_min, w_max, iter_max, iter_with_max_learning_rate,
                                                                 eps);
-            // initialize Zipfian distrubution so we only have to calculate zeta once
-            zipfian_int_distribution<uint64_t>::param_type zeta_param(1, space, theta);
-            zipfian_int_distribution<uint64_t> zipfian(zeta_param);
+            // cache zipf zetas for our full path space (heavy, but one-off)
+            std::vector<double> zetas(space+1);
+#pragma omp parallel for schedule(static,1)
+            for (uint64_t i = 1; i < space+1; ++i) {
+                zipfian_int_distribution<uint64_t>::param_type z_p(1, i, theta);
+                zetas[i] = z_p.zeta();
+            }
             // how many term updates we make
             std::atomic<uint64_t> term_updates;
             term_updates.store(0);
@@ -184,9 +188,9 @@ namespace odgi {
                             size_t path_step_count = path_index.get_path_step_count(path);
                             if (s_rank > 0 && flip(gen) || s_rank == path_step_count-1) {
                                 // go backward
-                                uint64_t path_space = s_rank;
+                                uint64_t jump_space = std::min(space, s_rank);
                                 // hack--- the zeta from the larger distribution is taken to avoid the cost of recomputing
-                                zipfian_int_distribution<uint64_t>::param_type z_p(1, path_space, theta, z_p.zeta());
+                                zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, theta, zetas[jump_space]);
                                 zipfian_int_distribution<uint64_t> z(z_p);
                                 uint64_t z_i = z(gen);
                                 //assert(z_i <= path_space);
@@ -194,8 +198,8 @@ namespace odgi {
                                 as_integers(step_b)[1] = s_rank - z_i;
                             } else {
                                 // go forward
-                                uint64_t path_space = path_step_count - s_rank - 1;
-                                zipfian_int_distribution<uint64_t>::param_type z_p(1, path_space, theta, z_p.zeta());
+                                uint64_t jump_space = std::min(space, path_step_count - s_rank - 1);
+                                zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, theta, zetas[jump_space]);
                                 zipfian_int_distribution<uint64_t> z(z_p);
                                 uint64_t z_i = z(gen);
                                 //assert(z_i <= path_space);
