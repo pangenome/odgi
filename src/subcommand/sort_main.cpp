@@ -236,7 +236,7 @@ int main_sort(int argc, char** argv) {
         }
         uint64_t max_path_step_count = get_max_path_step_count(path_sgd_use_paths, path_index);
         path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? args::get(p_sgd_zipf_space) : max_path_step_count;
-        path_sgd_max_eta = args::get(p_sgd_eta_max) ? args::get(p_sgd_eta_max) : max_path_step_count; // * max_path_step_count;
+        path_sgd_max_eta = args::get(p_sgd_eta_max) ? args::get(p_sgd_eta_max) : max_path_step_count * max_path_step_count;
     }
 
     // helper, TODO: move into its own file
