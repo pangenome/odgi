@@ -61,9 +61,6 @@ int main_sort(int argc, char** argv) {
     args::Flag mondriaan_path_weight(parser, "path-weight", "weight mondriaan input matrix by path coverage of edges", {'W', "mondriaan-path-weight"});
     /// path guided linear 1D SGD
     args::Flag p_sgd(parser, "path-sgd", "apply path guided linear 1D SGD algorithm to organize graph", {'Y', "path-sgd"});
-    args::Flag p_sgd_sample_from_paths(parser, "path-sgd-sample-from-paths", "instead of sampling the first node from all nodes of the graph we sample from all nucleotide positions of the paths (default: flag not set)", {'J', "path-sgd-sample-from-paths"});
-    args::Flag p_sgd_sample_from_path_steps(parser, "path-sgd-sample-from-path-steps", "instead of sampling the first node from all nodes of the graph we sample from all path steps of the graph (default: flag not set)", {'l', "path-sgd-sample-from-nodes"});
-    args::Flag p_sgd_deterministic(parser, "path-sgd-deterministic", "run the path guided 1D linear SGD in deterministic mode, will automatically set the number of threads to 1, multithreading is not supported in this mode (default: flag not set)", {'I', "path-sgd-deterministic"});
     args::ValueFlag<std::string> p_sgd_in_file(parser, "FILE", "specify a line separated list of paths to sample from for the on the fly term generation process in the path guided linear 1D SGD (default: sample from all paths)", {'f', "path-sgd-use-paths"});
     args::ValueFlag<double> p_sgd_min_term_updates_paths(parser, "N", "minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of the sum of total path steps (default: 10.0)", {'G', "path-sgd-min-term-updates-paths"});
     args::ValueFlag<double> p_sgd_min_term_updates_num_nodes(parser, "N", "minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of the number of nodes (default: argument is not set, the default of -G=[N], path-sgd-min-term-updates-paths=[N] is used)", {'U', "path-sgd-min-term-updates-nodes"});
@@ -74,7 +71,7 @@ int main_sort(int argc, char** argv) {
     args::ValueFlag<uint64_t> p_sgd_iter_max(parser, "N", "max number of iterations for path guided linear 1D SGD model (default: 30)", {'x', "path-sgd-iter-max"});
     args::ValueFlag<uint64_t> p_sgd_iter_with_max_learning_rate(parser, "N", "iteration where the learning rate is max for path guided linear 1D SGD model (default: 0)", {'F', "iteration-max-learning-rate"});
     args::ValueFlag<uint64_t> p_sgd_zipf_space(parser, "N", "the maximum space size of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: max path lengths)", {'k', "path-sgd-zipf-space"});
-    args::ValueFlag<std::string> p_sgd_seed(parser, "STRING", "set the seed for the deterministic 1-threaded path guided linear 1D SGD model (default: pangenomic!)", {'q', "path-sgd-seed"});
+    args::ValueFlag<std::string> p_sgd_seed(parser, "STRING", "set the base seed for the 1-threaded path guided linear 1D SGD model (default: pangenomic!)", {'q', "path-sgd-seed"});
     args::ValueFlag<std::string> p_sgd_snapshot(parser, "STRING", "set the prefix to which each snapshot graph of a path guided 1D SGD iteration should be written to, no default", {'u', "path-sgd-snapshot"});
     /// pipeline
     args::ValueFlag<std::string> pipeline(parser, "STRING", "apply a series of sorts, based on single-character command line arguments to this command, adding 's' as the default topological sort, 'f' to reverse the sort order, and 'g' to apply graph grooming", {'p', "pipeline"});
@@ -189,16 +186,6 @@ int main_sort(int argc, char** argv) {
     // will be filled, if the user decides to write a snapshot of the graph after each sorting iterationn
     std::vector<std::vector<handle_t>> snapshots;
     const bool snapshot = p_sgd_snapshot;
-    const bool sample_from_paths = args::get(p_sgd_sample_from_paths) ? args::get(p_sgd_sample_from_paths) : false;
-    const bool path_sgd_deterministic = p_sgd_deterministic;
-    const bool path_sgd_sample_from_path_steps = args::get(p_sgd_sample_from_path_steps) ? args::get(p_sgd_sample_from_path_steps) : false;
-    if (sample_from_paths && path_sgd_sample_from_path_steps) {
-        std::cerr
-                << "[odgi sort] Error: There can only be one argument provided for the sampling of the first node in the path guided 1D SGD."
-                   "Please either use -J=, path-sgd-sample-from-paths or -l=, path-sgd-sample-from-path-steps, or none of them to sample from all nodes of the graph."
-                << std::endl;
-        return 1;
-    }
     // default parameters that need a path index to be present
     uint64_t path_sgd_min_term_updates;
     uint64_t path_sgd_zipf_space;
@@ -310,8 +297,7 @@ int main_sort(int argc, char** argv) {
                                                   progress,
                                                   path_sgd_seed,
                                                   snapshot,
-                                                  snapshots,
-                                                  path_sgd_deterministic);
+                                                  snapshots);
             // TODO Check if we have to emit the snapshots
             if (snapshot) {
                 std::string snapshot_prefix = args::get(p_sgd_snapshot);
@@ -395,8 +381,7 @@ int main_sort(int argc, char** argv) {
                                                               progress,
                                                               path_sgd_seed,
                                                               snapshot,
-                                                              snapshots,
-                                                              path_sgd_deterministic);
+                                                              snapshots);
                     break;
                 }
                 case 'f':
