@@ -311,9 +311,7 @@ int main_sort(int argc, char** argv) {
                                                   path_sgd_seed,
                                                   snapshot,
                                                   snapshots,
-                                                  sample_from_paths,
-                                                  path_sgd_deterministic,
-                                                  path_sgd_sample_from_path_steps);
+                                                  path_sgd_deterministic);
             // TODO Check if we have to emit the snapshots
             if (snapshot) {
                 std::string snapshot_prefix = args::get(p_sgd_snapshot);
@@ -398,9 +396,7 @@ int main_sort(int argc, char** argv) {
                                                               path_sgd_seed,
                                                               snapshot,
                                                               snapshots,
-                                                              sample_from_paths,
-                                                              path_sgd_deterministic,
-                                                              path_sgd_sample_from_path_steps);
+                                                              path_sgd_deterministic);
                     break;
                 }
                 case 'f':

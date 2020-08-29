@@ -45,9 +45,7 @@ std::vector<double> path_linear_sgd(const PathHandleGraph &graph,
                                     const uint64_t &nthreads,
                                     const bool &progress,
                                     const bool &snapshot,
-                                    std::vector<std::vector<double>> &snapshots,
-                                    const bool &sample_from_paths,
-                                    const bool &sample_from_path_steps);
+                                    std::vector<std::vector<double>> &snapshots);
 
 /// our learning schedule
 std::vector<double> path_linear_sgd_schedule(const double &w_min,
@@ -71,9 +69,7 @@ std::vector<double> deterministic_path_linear_sgd(const PathHandleGraph &graph,
                                                   const std::string &seeding_string,
                                                   const bool &progress,
                                                   const bool &snapshot,
-                                                  std::vector<std::vector<double>> &snapshots,
-                                                  const bool &sample_from_paths,
-                                                  const bool &sample_from_path_steps);
+                                                  std::vector<std::vector<double>> &snapshots);
 
 std::vector<handle_t> path_linear_sgd_order(const PathHandleGraph &graph,
                                             const xp::XP &path_index,
@@ -91,9 +87,7 @@ std::vector<handle_t> path_linear_sgd_order(const PathHandleGraph &graph,
                                             const std::string &seed,
                                             const bool &snapshot,
                                             std::vector<std::vector<handle_t>> &snapshots,
-                                            const bool &sample_from_paths,
-                                            const bool &path_sgd_deterministic,
-                                            const bool &sample_from_path_steps);
+                                            const bool &path_sgd_deterministic);
 
 }
 
