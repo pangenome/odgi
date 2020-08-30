@@ -212,7 +212,8 @@ namespace odgi {
                             std::cerr << "step rank in path: " << nr_iv[path_pos_in_np_iv]  << std::endl;
 #endif
                             size_t path_step_count = path_index.get_path_step_count(path);
-                            if (s_rank > 0 && (unif_sample_value < 0.5) || s_rank == path_step_count-1) {
+                            double flip_sample_value = dis_path(gen);
+                            if (s_rank > 0 && (flip_sample_value < 0.5) || s_rank == path_step_count-1) {
                                 // go backward
                                 uint64_t jump_space = std::min(space, s_rank);
                                 uint64_t space = jump_space;
