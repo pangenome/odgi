@@ -220,7 +220,6 @@ namespace odgi {
                                 if (jump_space > space_max){
                                     space = space_max + (jump_space - space_max) / space_quantization_step + 1;
                                 }
-                                // hack--- the zeta from the larger distribution is taken to avoid the cost of recomputing
                                 zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, theta, zetas[space]);
                                 zipfian_int_distribution<uint64_t> z(z_p);
                                 uint64_t z_i = z(gen);
