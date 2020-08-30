@@ -254,13 +254,6 @@ namespace odgi {
                             // assert(pos_in_path_a < path_index.get_path_length(path));
                             // assert(pos_in_path_b < path_index.get_path_length(path));
 
-                            // and adjust to account for our relative orientation
-                            if (graph.get_is_reverse(term_i)) {
-                                pos_in_path_a += graph.get_length(term_i);
-                            }
-                            if (graph.get_is_reverse(term_j)) {
-                                pos_in_path_b += graph.get_length(term_j);
-                            }
 #ifdef debug_path_sgd
                             std::cerr << "2. pos in path " << pos_in_path_a << " " << pos_in_path_b << std::endl;
 #endif
