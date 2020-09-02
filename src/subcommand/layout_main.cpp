@@ -123,7 +123,7 @@ int main_layout(int argc, char **argv) {
                                                {'f', "path-sgd-use-paths"});
     args::Flag p_sgd_gaussian_layout(parser, "N", "use a gaussian layout of nodes in 2D rather than node rank in X and gaussian in Y", {'N', "gaussian-initial-layout"});
     args::ValueFlag<double> p_sgd_min_term_updates_paths(parser, "N",
-                                                         "minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of total path length (default: 1)",
+                                                         "minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of total path length (default: 10)",
                                                          {'G', "path-sgd-min-term-updates-paths"});
     args::ValueFlag<double> p_sgd_min_term_updates_num_nodes(parser, "N",
                                                              "minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of the number of nodes (default: argument is not set, the default of -G=[N], path-sgd-min-term-updates-paths=[N] is used)",
@@ -313,7 +313,7 @@ int main_layout(int argc, char **argv) {
         if (args::get(p_sgd_min_term_updates_num_nodes)) {
             path_sgd_min_term_updates = args::get(p_sgd_min_term_updates_num_nodes) * graph.get_node_count();
         } else {
-            path_sgd_min_term_updates = 1.0 * sum_path_step_count;
+            path_sgd_min_term_updates = 10.0 * sum_path_step_count;
         }
     }
     uint64_t max_path_step_count = get_max_path_step_count(path_sgd_use_paths, path_index);
