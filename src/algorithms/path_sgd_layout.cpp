@@ -164,8 +164,7 @@ namespace odgi {
                             std::cerr << "step rank in path: " << nr_iv[path_pos_in_np_iv]  << std::endl;
 #endif
                             size_t path_step_count = path_index.get_path_step_count(path);
-                            double flip_sample_value = dis_path(gen);
-                            if (s_rank > 0 && (flip_sample_value < 0.5) || s_rank == path_step_count-1) {
+                            if (s_rank > 0 && flip(gen) || s_rank == path_step_count-1) {
                                 // go backward
                                 uint64_t jump_space = std::min(space, s_rank);
                                 uint64_t space = jump_space;
@@ -203,19 +202,21 @@ namespace odgi {
                             size_t pos_in_path_a = path_index.get_position_of_step(step_a);
                             size_t pos_in_path_b = path_index.get_position_of_step(step_b);
 
-                            // flip a coin to decide if we are at the + or - end of the node
-                            bool final_node_adjust_a = flip(gen); // 1 == +; 0 == -
-                            if (final_node_adjust_a) {
-                                // - end of the node
+                            // determine which end we're working with for each node
+                            bool term_i_is_rev = graph.get_is_reverse(term_i);
+                            bool use_other_end_a = flip(gen); // 1 == +; 0 == -
+                            if (use_other_end_a) {
                                 pos_in_path_a += term_i_length;
-                            } // we don't need an else case, because it is the default
-                            // flip a coin to decide if we are at the + or - end of the node
-                            bool final_node_adjust_b = flip(gen); // 1 == +; 0 == -
-                            if (final_node_adjust_b) {
-                                // - end of the node
+                                // flip back if we were already reversed
+                                use_other_end_a = !term_i_is_rev;
+                            }
+                            bool term_j_is_rev = graph.get_is_reverse(term_j);
+                            bool use_other_end_b = flip(gen); // 1 == +; 0 == -
+                            if (use_other_end_b) {
                                 pos_in_path_b += term_j_length;
-                            } // we don't need an else case, because it is the default
-
+                                // flip back if we were already reversed
+                                use_other_end_b = !term_j_is_rev;
+                            }
 
 #ifdef debug_path_sgd
                             std::cerr << "1. pos in path " << pos_in_path_a << " " << pos_in_path_b << std::endl;
@@ -262,10 +263,10 @@ namespace odgi {
                             // distance == magnitude in our 2D situation
                             uint64_t offset_i = 0;
                             uint64_t offset_j = 0;
-                            if (final_node_adjust_a) {
+                            if (use_other_end_a) {
                                 offset_i += 1;
                             }
-                            if (final_node_adjust_b) {
+                            if (use_other_end_b) {
                                 offset_j += 1;
                             }
                             double dx = X[2 * i + offset_i].load() - X[2 * j + offset_j].load();
