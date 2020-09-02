@@ -52,8 +52,6 @@ void draw_svg(std::ostream &out,
     
     double width = rendered_range.width();
     double height = rendered_range.height();
-    std::cerr << "width: " << width << std::endl;
-    std::cerr << "height: " << height << std::endl;
 
     out << "<svg width=\"" << width << "\" height=\"" << height << "\" "
         << "viewBox=\"" << viewbox_x1 << " " << viewbox_y1
@@ -71,7 +69,6 @@ void draw_svg(std::ostream &out,
         uint64_t y_off = range.y_offset;
         for (auto& handle : component) {
             uint64_t a = 2 * number_bool_packing::unpack_number(handle);
-            //std::cerr << a << ": " << X[a] << "," << Y[a] << " ------ " << X[a + 1] << "," << Y[a + 1] << std::endl;
             out << "<line x1=\""
                 << (X[a] * scale) - x_off
                 << "\" x2=\""
@@ -86,46 +83,7 @@ void draw_svg(std::ostream &out,
         }
     }
 
-    /*
-    graph.for_each_handle(
-        [&](const handle_t& handle) {
-            uint64_t a = 2 * number_bool_packing::unpack_number(handle);
-            //std::cerr << a << ": " << X[a] << "," << Y[a] << " ------ " << X[a + 1] << "," << Y[a + 1] << std::endl;
-            out << "<line x1=\""
-                << border + X[a] * scale
-                << "\" x2=\""
-                << border + X[a + 1] * scale
-                << "\" y1=\""
-                << border + Y[a] * scale
-                << "\" y2=\""
-                << border + Y[a + 1] * scale
-                << "\"/>"
-                << std::endl;
-        });
-    */
-
-    // iterate through graph edges
-    /*graph.for_each_edge([&](const edge_t &e) {
-      uint64_t a = 2 * number_bool_packing::unpack_number(e.first);
-      uint64_t b = 2 * number_bool_packing::unpack_number(e.second);
-
-      //std::cerr << a << ": " << X[a] << "," << Y[a] << " ------ " << X[a + 1] << "," << Y[a + 1] << std::endl;
-      out << "<line x1=\"" << X[a] * scale << "\" x2=\"" << X[a + 1] * scale
-      << "\" y1=\"" << Y[a] * scale << "\" y2=\"" << Y[a + 1] * scale << "\"/>"
-      << std::endl;
-
-      //std::cerr << b << ": " << X[b] << "," << Y[b] << " ------ " << X[b + 1] << "," << Y[b + 1] << std::endl;
-      out << "<line x1=\"" << X[b] * scale << "\" x2=\"" << X[b + 1] * scale
-      << "\" y1=\"" << Y[b] * scale << "\" y2=\"" << Y[b + 1] * scale << "\"/>"
-      << std::endl;
-      });*/
-
-
-    /* // to draw nodes
-       for (uint64_t i = 0; i < n; ++i) {
-       std::cout << "<circle cx=\"" << X[i*2]*scale << "\" cy=\"" << X[i*2+1]*scale << "\" r=\"1.0\"/>" << std::endl;
-       }
-    */
+    // todo, edges, paths, coverage, bins
 
     out << "</svg>" << std::endl;
 }
