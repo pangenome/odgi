@@ -14,6 +14,7 @@ using namespace odgi::subcommand;
 
 void to_tsv(ostream &out, const std::vector<double> &X, const std::vector<double> &Y, const HandleGraph &graph) {
     uint64_t n = graph.get_node_count() * 2;
+    out << std::setprecision(std::numeric_limits<double>::digits10 + 1);
     out << "idx" << "\t" << "X" << "\t" << "Y" << std::endl;
     for (uint64_t i = 0; i < n; ++i) {
         out << i << "\t" << X[i] << "\t" << Y[i] << std::endl;

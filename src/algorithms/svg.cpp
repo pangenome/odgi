@@ -34,10 +34,12 @@ void draw_svg(std::ostream &out,
     // now examine the coordinates to determine our window size
     coord_range_2d_t rendered_range = {0, 0, 0, 0};
     for (auto& component_range : component_ranges) {
+        /*
         std::cerr << component_range.min_x << " "
                   << component_range.max_x << " "
                   << component_range.min_y << " "
                   << component_range.max_x << std::endl;
+        */
         rendered_range.include(
             component_range.width() + 2 * border,
             component_range.max_y + component_range.y_offset + border);
@@ -53,6 +55,7 @@ void draw_svg(std::ostream &out,
     double width = rendered_range.width();
     double height = rendered_range.height();
 
+    out << std::setprecision(std::numeric_limits<double>::digits10 + 1);
     out << "<svg width=\"" << width << "\" height=\"" << height << "\" "
         << "viewBox=\"" << viewbox_x1 << " " << viewbox_y1
         << " " << width << " " << height << "\""
@@ -65,8 +68,8 @@ void draw_svg(std::ostream &out,
     auto range_itr = component_ranges.begin();
     for (auto& component : weak_components) {
         auto& range = *range_itr++;
-        uint64_t x_off = range.x_offset;
-        uint64_t y_off = range.y_offset;
+        auto& x_off = range.x_offset;
+        auto& y_off = range.y_offset;
         for (auto& handle : component) {
             uint64_t a = 2 * number_bool_packing::unpack_number(handle);
             out << "<line x1=\""
