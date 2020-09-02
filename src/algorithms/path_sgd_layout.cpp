@@ -204,18 +204,13 @@ namespace odgi {
                             size_t pos_in_path_b = path_index.get_position_of_step(step_b);
 
                             // flip a coin to decide if we are at the + or - end of the node
-                            bool pos_in_path_a_end = flip(gen); // 1 == +; 0 == -
-                            bool term_i_is_rev = graph.get_is_reverse(term_i);
-                            bool final_node_adjust_a = (pos_in_path_a_end && term_i_is_rev) || (!pos_in_path_a_end && !term_i_is_rev);
+                            bool final_node_adjust_a = flip(gen); // 1 == +; 0 == -
                             if (final_node_adjust_a) {
                                 // - end of the node
                                 pos_in_path_a += term_i_length;
                             } // we don't need an else case, because it is the default
-                            pos_in_path_b = path_index.get_position_of_step(step_b);
                             // flip a coin to decide if we are at the + or - end of the node
-                            bool pos_in_path_b_end = flip(gen); // 1 == +, 0 == -
-                            bool term_j_is_rev = graph.get_is_reverse(term_j);
-                            bool final_node_adjust_b = (pos_in_path_b_end && term_j_is_rev) || (!pos_in_path_b_end && !term_j_is_rev);
+                            bool final_node_adjust_b = flip(gen); // 1 == +; 0 == -
                             if (final_node_adjust_b) {
                                 // - end of the node
                                 pos_in_path_b += term_j_length;
