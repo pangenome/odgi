@@ -175,7 +175,6 @@ namespace odgi {
                         const sdsl::int_vector<> &npi_iv = path_index.get_npi_iv();
                         // we'll sample from all path steps
                         std::uniform_int_distribution<uint64_t> dis = std::uniform_int_distribution<uint64_t>(0, np_bv.size() - 1);
-
                         std::uniform_real_distribution<double> dis_path(0.0,1.0);
                         uint64_t hit_num_paths = 0;
                         while (work_todo.load()) {
@@ -333,7 +332,6 @@ namespace odgi {
 #ifdef debug_path_sgd
                             std::cerr << "after X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
 #endif
-                            //term_updates.store(term_updates.load() + 1);
                             term_updates++; // atomic
                         }
                     };
