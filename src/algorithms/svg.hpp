@@ -19,6 +19,28 @@ namespace algorithms {
 
 using namespace handlegraph;
 
+struct coord_range_2d_t {
+    double min_x = std::numeric_limits<double>::max();
+    double max_x = std::numeric_limits<double>::min();
+    double min_y = std::numeric_limits<double>::max();
+    double max_y = std::numeric_limits<double>::min();
+    double x_offset = 0;
+    double y_offset = 0;
+    double width(void) {
+        return max_x - min_x;
+    }
+    double height(void) {
+        return max_y - min_y;
+    }
+    void include(const double& x,
+                 const double& y) {
+        if (x < min_x) min_x = x;
+        if (x > max_x) max_x = x;
+        if (y < min_y) min_y = y;
+        if (y > max_y) max_y = y;
+    }
+};
+
 void draw_svg(std::ostream &out,
               const std::vector<double> &X,
               const std::vector<double> &Y,
