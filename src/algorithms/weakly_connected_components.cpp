@@ -50,6 +50,23 @@ std::vector<ska::flat_hash_set<handlegraph::nid_t>> weakly_connected_components(
     return to_return;
 }
 
+std::vector<std::vector<handlegraph::handle_t>> weakly_connected_component_vectors(const HandleGraph* graph) {
+    std::vector<std::vector<handlegraph::handle_t>> components;
+    for (auto& component : weakly_connected_components(graph)) {
+        components.emplace_back();
+        auto& v = components.back();
+        for (auto& id : component) {
+            v.push_back(graph->get_handle(id));
+        }
+        std::sort(v.begin(), v.end(),
+                  [](const handle_t& a,
+                     const handle_t& b) {
+                      return as_integer(a) < as_integer(b);
+                  });
+    }
+    return components;
+}
+
 std::vector<std::pair<ska::flat_hash_set<handlegraph::nid_t>, std::vector<handle_t>>> weakly_connected_components_with_tips(const HandleGraph* graph) {
     // TODO: deduplicate with above
     

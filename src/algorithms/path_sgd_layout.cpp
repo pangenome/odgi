@@ -209,6 +209,8 @@ namespace odgi {
                                 pos_in_path_a += term_i_length;
                                 // flip back if we were already reversed
                                 use_other_end_a = !term_i_is_rev;
+                            } else {
+                                use_other_end_a = term_i_is_rev;
                             }
                             bool term_j_is_rev = graph.get_is_reverse(term_j);
                             bool use_other_end_b = flip(gen); // 1 == +; 0 == -
@@ -216,6 +218,8 @@ namespace odgi {
                                 pos_in_path_b += term_j_length;
                                 // flip back if we were already reversed
                                 use_other_end_b = !term_j_is_rev;
+                            } else {
+                                use_other_end_b = term_j_is_rev;
                             }
 
 #ifdef debug_path_sgd
