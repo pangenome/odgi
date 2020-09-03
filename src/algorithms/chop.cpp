@@ -8,7 +8,7 @@
 
 #include <vector>
 #include <iostream>
-#include <algorithm>
+#include <deps/ips4o/ips4o.hpp>
 
 namespace odgi {
 namespace algorithms {
@@ -44,7 +44,7 @@ void chop(handlegraph::MutablePathDeletableHandleGraph &graph,
         }
     }
 
-    std::sort(originalRank_inChoppedNodeRank_handle.begin(), originalRank_inChoppedNodeRank_handle.end());
+    ips4o::parallel::sort(originalRank_inChoppedNodeRank_handle.begin(), originalRank_inChoppedNodeRank_handle.end());
 
     std::vector<handle_t> new_handles;
     for (auto x_y_z : originalRank_inChoppedNodeRank_handle) {
