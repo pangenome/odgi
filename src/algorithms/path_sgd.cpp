@@ -176,6 +176,7 @@ namespace odgi {
                         // we'll sample from all path steps
                         std::uniform_int_distribution<uint64_t> dis = std::uniform_int_distribution<uint64_t>(0, np_bv.size() - 1);
                         std::uniform_real_distribution<double> dis_path(0.0,1.0);
+                        std::uniform_int_distribution<uint64_t> flip(0, 1);
                         uint64_t hit_num_paths = 0;
                         while (work_todo.load()) {
                             // sample the first node from all the nodes in the graph
@@ -211,8 +212,7 @@ namespace odgi {
                             std::cerr << "step rank in path: " << nr_iv[path_pos_in_np_iv]  << std::endl;
 #endif
                             size_t path_step_count = path_index.get_path_step_count(path);
-                            double flip_sample_value = dis_path(gen);
-                            if (s_rank > 0 && (flip_sample_value < 0.5) || s_rank == path_step_count-1) {
+                            if (s_rank > 0 && flip(gen) || s_rank == path_step_count-1) {
                                 // go backward
                                 uint64_t jump_space = std::min(space, s_rank);
                                 uint64_t space = jump_space;
