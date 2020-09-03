@@ -127,7 +127,9 @@ namespace odgi {
                         const sdsl::int_vector<> &npi_iv = path_index.get_npi_iv();
                         // we'll sample from all path steps
                         std::uniform_int_distribution<uint64_t> dis = std::uniform_int_distribution<uint64_t>(0, np_bv.size() - 1);
-                        std::uniform_real_distribution<double> dis_path(0.0,1.0);
+                        // we should generate in the range [0, 1), but this fails once every ~10^9 samples and returns 1.0 due to a bug in the implementation
+                        // "generate_canonical can occasionally return 1.0" http://open-std.org/JTC1/SC22/WG21/docs/lwg-active.html#2524
+                        std::uniform_real_distribution<double> dis_path(0.0, 1.0 - std::numeric_limits<double>::epsilon());
                         std::uniform_int_distribution<uint64_t> flip(0, 1);
                         uint64_t hit_num_paths = 0;
                         while (work_todo.load()) {
@@ -146,8 +148,7 @@ namespace odgi {
 #ifdef debug_sample_from_nodes
                             std::cerr << "node_index: " << node_index << std::endl;
 #endif
-                            double unif_sample_value = dis_path(gen);
-                            uint64_t path_pos_in_np_iv = node_index + (1 + unif_sample_value * hit_num_paths);
+                            uint64_t path_pos_in_np_iv = node_index + 1 + std::floor(dis_path(gen) * (double)hit_num_paths);
 #ifdef debug_sample_from_nodes
                             std::cerr << "path pos in np_iv: " << path_pos_in_np_iv << std::endl;
 #endif

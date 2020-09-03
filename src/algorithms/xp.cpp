@@ -60,15 +60,15 @@ namespace xp {
         node_path_ms->open_writer();
         graph.for_each_path_handle([&](const path_handle_t &path) {
             std::vector<handle_t> p;
-            uint64_t handle_rank_of_path = 0;
+            uint64_t handle_rank_in_path = 0;
             graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
                 handle_t h = graph.get_handle_of_step(occ);
                 uint64_t step_rank = as_integers(occ)[1];
                 p.push_back(h);
                 uint64_t hl = graph.get_length(h);
-                handle_rank_of_path++;
+                ++handle_rank_in_path; // handle ranks in path are 1-based
                 size_t node_id = graph.get_id(h);
-                node_path_ms->append(node_id, std::make_tuple(node_id, step_rank, as_integer(path), handle_rank_of_path));
+                node_path_ms->append(node_id, std::make_tuple(node_id, step_rank, as_integer(path), handle_rank_in_path));
                 np_size++;
             });
             std::string path_name = graph.get_path_name(path);
