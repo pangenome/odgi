@@ -375,6 +375,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/cover.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/path_sgd.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/path_sgd_layout.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/svg.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/remove_isolated.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/expand_context.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/groom.cpp)
@@ -442,6 +443,7 @@ set(odgi_LIBS
   "${libbf_LIB}/libbf.a"
   "-ldl"
   "-latomic")
+#"-ltcmalloc") # for heap profiling
 
 set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/include/odgi_git_version.hpp

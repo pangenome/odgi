@@ -60,15 +60,15 @@ namespace xp {
         node_path_ms->open_writer();
         graph.for_each_path_handle([&](const path_handle_t &path) {
             std::vector<handle_t> p;
-            uint64_t handle_rank_of_path = 0;
+            uint64_t handle_rank_in_path = 0;
             graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
                 handle_t h = graph.get_handle_of_step(occ);
                 uint64_t step_rank = as_integers(occ)[1];
                 p.push_back(h);
                 uint64_t hl = graph.get_length(h);
-                handle_rank_of_path++;
+                ++handle_rank_in_path; // handle ranks in path are 1-based
                 size_t node_id = graph.get_id(h);
-                node_path_ms->append(node_id, std::make_tuple(node_id, step_rank, as_integer(path), handle_rank_of_path));
+                node_path_ms->append(node_id, std::make_tuple(node_id, step_rank, as_integer(path), handle_rank_in_path));
                 np_size++;
             });
             std::string path_name = graph.get_path_name(path);
@@ -143,6 +143,10 @@ namespace xp {
         }
         std::cerr << std::endl;
 #endif
+        node_path_ms.reset(); // free the mmmultimap
+        //std::remove(node_path_idx.c_str());
+        //std::remove(path_name_file.c_str());
+        temp_file::cleanup(); // clean up our temporary files
     }
 
     std::vector<XPPath *> XP::get_paths() const {
@@ -339,6 +343,10 @@ namespace xp {
 
     size_t XP::get_path_length(const path_handle_t& path_handle) const {
         return paths[as_integer(path_handle) - 1]->offsets.size();
+    }
+
+    size_t XP::get_path_step_count(const handlegraph::path_handle_t& path_handle) const {
+        return paths[as_integer(path_handle) - 1]->handles.size();
     }
 
     /// Get the step at a given position
@@ -555,6 +563,7 @@ namespace xp {
 #endif
             // we will explode if the node isn't in the graph
         }
+        sdsl::util::bit_compress(handles);
 
 #ifdef debug_xppath
         for (size_t i = 0; i < path.size(); i++) {bit_
@@ -562,25 +571,26 @@ namespace xp {
     }
 #endif
         // make the bitvector for path offsets
-        sdsl::bit_vector offsets_bv;
-        sdsl::util::assign(offsets_bv, sdsl::bit_vector(path_length));
+        //sdsl::bit_vector offsets_bv;
+        sdsl::util::assign(offsets, sdsl::bit_vector(path_length));
 
         //cerr << "path " << path_name << " has " << path.size() << endl;
         for (size_t i = 0; i < path.size(); ++i) {
             //cerr << i << endl;
             auto &handle = path[i];
             // record position of node
-            offsets_bv[path_off] = 1;
+            offsets[path_off] = 1;
             // cache the position
             positions[i] = path_off;
             // and update the offset counter
             path_off += graph.get_length(handle);
         }
+        sdsl::util::bit_compress(positions);
         // and path offsets
-        sdsl::util::assign(offsets, sdsl::rrr_vector<>(offsets_bv));
+        //sdsl::util::assign(offsets, sdsl::sd_vector<>(offsets_bv));
         // and set up rank/select dictionary on them
-        sdsl::util::assign(offsets_rank, sdsl::rrr_vector<>::rank_1_type(&offsets));
-        sdsl::util::assign(offsets_select, sdsl::rrr_vector<>::select_1_type(&offsets));
+        sdsl::util::assign(offsets_rank, sdsl::bit_vector::rank_1_type(&offsets));
+        sdsl::util::assign(offsets_select, sdsl::bit_vector::select_1_type(&offsets));
 
 #ifdef debug_xppath
         std::cerr << "[XPPATH CONSTRUCTION]: offsets_bv: ";
@@ -669,29 +679,33 @@ namespace xp {
         struct Handler {
             std::set<std::string> filenames;
             std::string parent_directory;
-
             ~Handler() {
-                // No need to lock in static destructor
-                for (auto &filename : filenames) {
-                    std::remove(filename.c_str());
-                }
-                if (!parent_directory.empty()) {
-                    // There may be extraneous files in the directory still (like .fai files)
-                    auto directory = opendir(parent_directory.c_str());
-
-                    dirent *dp;
-                    while ((dp = readdir(directory)) != nullptr) {
-                        // For every item still in it, delete it.
-                        // TODO: Maybe eventually recursively delete?
-                        std::remove((parent_directory + "/" + dp->d_name).c_str());
-                    }
-                    closedir(directory);
-
-                    // Delete the directory itself
-                    std::remove(parent_directory.c_str());
-                }
+                cleanup();
             }
         } handler;
+
+        void cleanup(void) {
+            std::lock_guard<std::recursive_mutex> lock(monitor);
+            for (auto &filename : handler.filenames) {
+                std::remove(filename.c_str());
+            }
+            handler.filenames.clear();
+            if (!handler.parent_directory.empty()) {
+                // There may be extraneous files in the directory still (like .fai files)
+                auto directory = opendir(handler.parent_directory.c_str());
+                dirent *dp;
+                while ((dp = readdir(directory)) != nullptr) {
+                    // For every item still in it, delete it.
+                    // TODO: Maybe eventually recursively delete?
+                    std::remove((handler.parent_directory + "/" + dp->d_name).c_str());
+                }
+                closedir(directory);
+                // Delete the directory itself
+                std::remove(handler.parent_directory.c_str());
+                // clean up record of directory
+                handler.parent_directory.clear();
+            }
+        }
 
         std::string create(const std::string &base) {
             std::lock_guard<std::recursive_mutex> lock(monitor);
@@ -756,7 +770,13 @@ namespace xp {
                         system_temp_dir = getenv(var_name);
                     }
                 }
-                temp_dir = (system_temp_dir == nullptr ? "/tmp" : system_temp_dir);
+                if (system_temp_dir == nullptr) {
+                    char* cwd = get_current_dir_name();
+                    temp_dir = std::string(cwd);
+                    free(cwd);
+                } else {
+                    temp_dir = system_temp_dir;
+                }
             }
 
             return temp_dir;

@@ -6,90 +6,15 @@
 #include "algorithms/xp.hpp"
 #include "algorithms/sgd_layout.hpp"
 #include "algorithms/path_sgd_layout.hpp"
+#include "algorithms/svg.hpp"
 
 namespace odgi {
 
 using namespace odgi::subcommand;
 
-
-void draw_svg(ostream &out,
-              const std::vector<double> &X,
-              const std::vector<double> &Y,
-              const HandleGraph &graph,
-              const double& scale,
-              const double& border) {
-    double min_x = std::numeric_limits<double>::max();
-    double min_y = std::numeric_limits<double>::max();
-    double max_x = std::numeric_limits<double>::min();
-    double max_y = std::numeric_limits<double>::min();
-    // determine boundaries
-    uint64_t n = graph.get_node_count() * 2;
-    for (uint64_t i = 0; i < n; ++i) {
-        double x = X[i] * scale;
-        double y = Y[i] * scale;
-        if (x < min_x) min_x = x;
-        if (x > max_x) max_x = x;
-        if (y < min_y) min_y = y;
-        if (y > max_y) max_y = y;
-    }
-
-    double width = max_x - min_x;
-    double height = max_y - min_y;
-    std::cerr << "width: " << width << std::endl;
-    std::cerr << "height: " << height << std::endl;
-
-    out << "<svg width=\"" << width + border << "\" height=\"" << height + border << "\" "
-        << "viewBox=\"" << min_x - border / 2 << " " << min_y - border / 2 << " " << width + 2 * border << " "
-        << height + 2 * border << "\" xmlns=\"http://www.w3.org/2000/svg\">"
-        << "<style type=\"text/css\">"
-        << "line{stroke:black;stroke-width:1.0;stroke-opacity:1.0;stroke-linecap:round;}"
-        << "</style>"
-        << std::endl;
-
-    graph.for_each_handle(
-        [&](const handle_t& handle) {
-            uint64_t a = 2 * number_bool_packing::unpack_number(handle);
-            //std::cerr << a << ": " << X[a] << "," << Y[a] << " ------ " << X[a + 1] << "," << Y[a + 1] << std::endl;
-            out << "<line x1=\""
-                << border + X[a] * scale
-                << "\" x2=\""
-                << border + X[a + 1] * scale
-                << "\" y1=\""
-                << border + Y[a] * scale
-                << "\" y2=\""
-                << border + Y[a + 1] * scale
-                << "\"/>"
-                << std::endl;
-        });
-
-    // iterate through graph edges
-    /*graph.for_each_edge([&](const edge_t &e) {
-      uint64_t a = 2 * number_bool_packing::unpack_number(e.first);
-      uint64_t b = 2 * number_bool_packing::unpack_number(e.second);
-
-      //std::cerr << a << ": " << X[a] << "," << Y[a] << " ------ " << X[a + 1] << "," << Y[a + 1] << std::endl;
-      out << "<line x1=\"" << X[a] * scale << "\" x2=\"" << X[a + 1] * scale
-      << "\" y1=\"" << Y[a] * scale << "\" y2=\"" << Y[a + 1] * scale << "\"/>"
-      << std::endl;
-
-      //std::cerr << b << ": " << X[b] << "," << Y[b] << " ------ " << X[b + 1] << "," << Y[b + 1] << std::endl;
-      out << "<line x1=\"" << X[b] * scale << "\" x2=\"" << X[b + 1] * scale
-      << "\" y1=\"" << Y[b] * scale << "\" y2=\"" << Y[b + 1] * scale << "\"/>"
-      << std::endl;
-      });*/
-
-
-    /* // to draw nodes
-       for (uint64_t i = 0; i < n; ++i) {
-       std::cout << "<circle cx=\"" << X[i*2]*scale << "\" cy=\"" << X[i*2+1]*scale << "\" r=\"1.0\"/>" << std::endl;
-       }
-    */
-
-    out << "</svg>" << std::endl;
-}
-
 void to_tsv(ostream &out, const std::vector<double> &X, const std::vector<double> &Y, const HandleGraph &graph) {
     uint64_t n = graph.get_node_count() * 2;
+    out << std::setprecision(std::numeric_limits<double>::digits10 + 1);
     out << "idx" << "\t" << "X" << "\t" << "Y" << std::endl;
     for (uint64_t i = 0; i < n; ++i) {
         out << i << "\t" << X[i] << "\t" << Y[i] << std::endl;
@@ -118,15 +43,12 @@ int main_layout(int argc, char **argv) {
     args::ValueFlag<double> render_border(parser, "N", "image border (default 10.0)", {'B', "border"});
     args::ValueFlag<std::string> xp_in_file(parser, "FILE", "load the path index from this file", {'X', "path-index"});
     /// Path-guided-2D-SGD parameters
-    args::Flag p_sgd_deterministic(parser, "path-sgd-deterministic",
-                                   "run the path guided 1D linear SGD in deterministic mode, will automatically set the number of threads to 1, multithreading is not supported in this mode (default: flag not set)",
-                                   {'I', "path-sgd-deterministic"});
     args::ValueFlag<std::string> p_sgd_in_file(parser, "FILE",
                                                "specify a line separated list of paths to sample from for the on the fly term generation process in the path guided linear 1D SGD (default: sample from all paths)",
                                                {'f', "path-sgd-use-paths"});
     args::Flag p_sgd_gaussian_layout(parser, "N", "use a gaussian layout of nodes in 2D rather than node rank in X and gaussian in Y", {'N', "gaussian-initial-layout"});
     args::ValueFlag<double> p_sgd_min_term_updates_paths(parser, "N",
-                                                         "minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of total path length (default: 1)",
+                                                         "minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of total path length (default: 10)",
                                                          {'G', "path-sgd-min-term-updates-paths"});
     args::ValueFlag<double> p_sgd_min_term_updates_num_nodes(parser, "N",
                                                              "minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of the number of nodes (default: argument is not set, the default of -G=[N], path-sgd-min-term-updates-paths=[N] is used)",
@@ -152,6 +74,9 @@ int main_layout(int argc, char **argv) {
     args::ValueFlag<uint64_t> p_sgd_zipf_space(parser, "N",
                                                "the maximum space size of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: max path lengths)",
                                                {'k', "path-sgd-zipf-space"});
+    args::ValueFlag<uint64_t> p_sgd_zipf_space_max(parser, "N", "the maximum space size of the Zipfian distribution beyond which quantization occurs (default: 1000000)", {'I', "path-sgd-zipf-space-max"});
+    args::ValueFlag<uint64_t> p_sgd_zipf_space_quantization_step(parser, "N", "quantization step when the maximum space size of the Zipfian distribution is exceeded (default: 100)", {'l', "path-sgd-zipf-space-quantization-step"});
+
     args::ValueFlag<std::string> p_sgd_seed(parser, "STRING",
                                             "set the seed for the deterministic 1-threaded path guided linear 1D SGD model (default: pangenomic!)",
                                             {'q', "path-sgd-seed"});
@@ -220,22 +145,22 @@ int main_layout(int argc, char **argv) {
     /// path guided linear 2D SGD sort helpers
     // TODO beautify this, maybe put into its own file
     std::function<uint64_t(const std::vector<path_handle_t> &,
-                           const xp::XP &)> get_sum_path_lengths
+                           const xp::XP &)> get_sum_path_step_count
         = [&](const std::vector<path_handle_t> &path_sgd_use_paths, const xp::XP &path_index) {
-              uint64_t sum_path_length = 0;
-              for (auto &path : path_sgd_use_paths) {
-                  sum_path_length += path_index.get_path_length(path);
+              uint64_t sum_path_step_count = 0;
+              for (auto& path : path_sgd_use_paths) {
+                  sum_path_step_count += path_index.get_path_step_count(path);
               }
-              return sum_path_length;
+              return sum_path_step_count;
           };
     std::function<uint64_t(const std::vector<path_handle_t> &,
-                           const xp::XP &)> get_max_path_length
+                           const xp::XP &)> get_max_path_step_count
         = [&](const std::vector<path_handle_t> &path_sgd_use_paths, const xp::XP &path_index) {
-              uint64_t max_path_length = 0;
-              for (auto &path : path_sgd_use_paths) {
-                  max_path_length = std::max(max_path_length, path_index.get_path_length(path));
+              uint64_t max_path_step_count = 0;
+              for (auto& path : path_sgd_use_paths) {
+                  max_path_step_count = std::max(max_path_step_count, path_index.get_path_step_count(path));
               }
-              return max_path_length;
+              return max_path_step_count;
           };
     // default parameters
     std::string path_sgd_seed;
@@ -266,11 +191,10 @@ int main_layout(int argc, char **argv) {
     // will be filled, if the user decides to write a snapshot of the graph after each sorting iterationn
     std::vector<std::vector<handle_t>> snapshots;
     const bool snapshot = p_sgd_snapshot;
-    const bool path_sgd_deterministic = p_sgd_deterministic;
 
     // default parameters that need a path index to be present
     uint64_t path_sgd_min_term_updates;
-    uint64_t path_sgd_zipf_space;
+    uint64_t path_sgd_zipf_space, path_sgd_zipf_space_max, path_sgd_zipf_space_quantization_step;
     std::vector<path_handle_t> path_sgd_use_paths;
     xp::XP path_index;
     bool first_time_index = true;
@@ -305,18 +229,24 @@ int main_layout(int argc, char **argv) {
                 path_sgd_use_paths.push_back(path);
             });
     }
-    uint64_t sum_path_length = get_sum_path_lengths(path_sgd_use_paths, path_index);
-    if (args::get(p_sgd_min_term_updates_paths)) {
-        path_sgd_min_term_updates = args::get(p_sgd_min_term_updates_paths) * sum_path_length;
-    } else if (args::get(p_sgd_min_term_updates_num_nodes)) {
-        path_sgd_min_term_updates = args::get(p_sgd_min_term_updates_num_nodes) * graph.get_node_count();
-    } else {
-        path_sgd_min_term_updates = 1.0 * sum_path_length;
-    }
-    uint64_t max_path_length = get_max_path_length(path_sgd_use_paths, path_index);
-    path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? args::get(p_sgd_zipf_space) : max_path_length;
-    double path_sgd_max_eta = args::get(p_sgd_eta_max) ? args::get(p_sgd_eta_max) : max_path_length * max_path_length;
 
+
+    uint64_t sum_path_step_count = get_sum_path_step_count(path_sgd_use_paths, path_index);
+    if (args::get(p_sgd_min_term_updates_paths)) {
+        path_sgd_min_term_updates = args::get(p_sgd_min_term_updates_paths) * sum_path_step_count;
+    } else {
+        if (args::get(p_sgd_min_term_updates_num_nodes)) {
+            path_sgd_min_term_updates = args::get(p_sgd_min_term_updates_num_nodes) * graph.get_node_count();
+        } else {
+            path_sgd_min_term_updates = 10.0 * sum_path_step_count;
+        }
+    }
+    uint64_t max_path_step_count = get_max_path_step_count(path_sgd_use_paths, path_index);
+    path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? args::get(p_sgd_zipf_space) : std::min((uint64_t)1000000, max_path_step_count);
+    double path_sgd_max_eta = args::get(p_sgd_eta_max) ? args::get(p_sgd_eta_max) : max_path_step_count * max_path_step_count;
+
+    path_sgd_zipf_space_max = args::get(p_sgd_zipf_space_max) ? std::min(path_sgd_zipf_space, args::get(p_sgd_zipf_space_max)) : 1000;
+    path_sgd_zipf_space_quantization_step = args::get(p_sgd_zipf_space_quantization_step) ? std::max((uint64_t)2, args::get(p_sgd_zipf_space_quantization_step)) : 100;
 
     /*// refine order by weakly connected components
       std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components = algorithms::weakly_connected_components(
@@ -386,6 +316,8 @@ int main_layout(int argc, char **argv) {
         path_sgd_max_eta,
         path_sgd_zipf_theta,
         path_sgd_zipf_space,
+        path_sgd_zipf_space_max,
+        path_sgd_zipf_space_quantization_step,
         num_threads,
         show_progress,
         snapshot,
@@ -496,7 +428,7 @@ int main_layout(int argc, char **argv) {
     if (svg_out_file) {
         auto& outfile = args::get(svg_out_file);
         ofstream f(outfile.c_str());
-        draw_svg(f, X_final, Y_final, graph, svg_scale, svg_border);
+        algorithms::draw_svg(f, X_final, Y_final, graph, svg_scale, svg_border);
         f.close();    
     }
     

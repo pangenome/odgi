@@ -100,6 +100,9 @@ namespace xp {
         /// Returns the total length of sequence in the path
         size_t get_path_length(const handlegraph::path_handle_t& path_handle) const;
 
+        /// Returns the total length of sequence in the path
+        size_t get_path_step_count(const handlegraph::path_handle_t& path_handle) const;
+
         /// Returns a handle to the path that an step is on
         handlegraph::path_handle_t get_path_handle_of_step(const handlegraph::step_handle_t& step_handle) const;
 
@@ -164,7 +167,7 @@ namespace xp {
         sdsl::int_vector<> npi_iv; // path integers to directly construct path handles from
         // entity delimiter
         sdsl::bit_vector np_bv;
-        sdsl::rank_support_v<1> np_bv_rank;
+        sdsl::bit_vector::rank_1_type np_bv_rank;
         sdsl::bit_vector::select_1_type np_bv_select;
     };
 
@@ -198,9 +201,9 @@ namespace xp {
 
         sdsl::int_vector<> handles;
         sdsl::int_vector<> positions;
-        sdsl::rrr_vector<> offsets;
-        sdsl::rrr_vector<>::rank_1_type offsets_rank;
-        sdsl::rrr_vector<>::select_1_type offsets_select;
+        sdsl::bit_vector offsets;
+        sdsl::bit_vector::rank_1_type offsets_rank;
+        sdsl::bit_vector::select_1_type offsets_select;
         bool is_circular = false;
 
         void load(std::istream &in);
@@ -224,6 +227,9 @@ namespace xp {
  * The interface is thread-safe.
  */
     namespace temp_file {
+
+/// Clean up our files and temporary directory
+        void cleanup(void);
 
 /// Create a temporary file starting with the given base name
         std::string create(const std::string &base);
