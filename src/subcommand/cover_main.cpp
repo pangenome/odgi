@@ -89,7 +89,7 @@ namespace odgi {
             }
         }
 
-        uint64_t max_number_of_paths_generable = graph.get_node_count();
+        uint64_t max_number_of_paths_generable = graph.get_node_count() * 5;
         if (_min_node_coverage) {
             std::cerr << "There will be generated paths until the minimum node coverage is " << _min_node_coverage
                       << ", or until the maximum number of allowed generated paths is reached ("
