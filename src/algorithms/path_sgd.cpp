@@ -480,7 +480,9 @@ namespace odgi {
                 double avg_id = id_sum / (double) weak_component.size();
                 weak_component_order.push_back(std::make_pair(avg_id, i));
             }
-            std::sort(weak_component_order.begin(), weak_component_order.end());
+            ips4o::parallel::sort(weak_component_order.begin(), weak_component_order.end(),
+                    std::less<>(),
+                            nthreads);
             std::vector<uint64_t> weak_component_id; // maps rank to "id" based on the orignial sorted order
             weak_component_id.resize(weak_component_order.size());
             uint64_t component_id = 0;
@@ -548,7 +550,7 @@ namespace odgi {
                                 });
                     });
             // sort the graph layout by component, then pos, then handle rank
-            std::sort(handle_layout.begin(), handle_layout.end(),
+            ips4o::parallel::sort(handle_layout.begin(), handle_layout.end(),
                       [&](const handle_layout_t &a,
                           const handle_layout_t &b) {
                           return a.weak_component < b.weak_component
@@ -556,7 +558,7 @@ namespace odgi {
                                      && a.pos < b.pos
                                      || (a.pos == b.pos
                                          && as_integer(a.handle) < as_integer(b.handle)));
-                      });
+                      }, nthreads);
             std::vector<handle_t> order;
             order.reserve(graph.get_node_count());
             for (auto &layout_handle : handle_layout) {
