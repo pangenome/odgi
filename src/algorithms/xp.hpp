@@ -137,7 +137,7 @@ namespace xp {
 
         const sdsl::bit_vector::select_1_type get_np_bv_select() const;
         const sdsl::bit_vector get_np_bv() const;
-        const sdsl::rank_support_v<1> get_np_bv_rank() const;
+        // const sdsl::rank_support_v<1> get_np_bv_rank() const;
 
         size_t path_count = 0;
 
@@ -167,7 +167,7 @@ namespace xp {
         sdsl::int_vector<> npi_iv; // path integers to directly construct path handles from
         // entity delimiter
         sdsl::bit_vector np_bv;
-        sdsl::bit_vector::rank_1_type np_bv_rank;
+        // sdsl::bit_vector::rank_1_type np_bv_rank;
         sdsl::bit_vector::select_1_type np_bv_select;
     };
 
