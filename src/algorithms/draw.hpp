@@ -76,8 +76,10 @@ void draw_png(std::ostream &out,
               const HandleGraph &graph,
               const double& scale,
               const double& border,
-              const uint64_t& height = 0,
-              const uint64_t& width = 1000);
+              uint64_t width = 1000,
+              uint64_t height = 0);
+
 
 }
+
 }

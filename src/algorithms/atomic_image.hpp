@@ -17,6 +17,16 @@ namespace algorithms {
 struct xy_d_t {
     double x = 0;
     double y = 0;
+    // project a point from a source 2D range into a target 2D range
+    void into(const double& source_min_x,
+              const double& source_min_y,
+              const double& source_width,
+              const double& source_height,
+              const double& target_width,
+              const double& target_height) {
+        x = x * (target_width / source_width) - source_min_x;
+        y = y * (target_height / source_height) - source_min_y;
+    }
 };
 
 struct xy_u_t {
