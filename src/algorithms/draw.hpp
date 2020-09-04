@@ -70,14 +70,22 @@ void draw_svg(std::ostream &out,
               const double& scale,
               const double& border);
 
-void draw_png(std::ostream &out,
+std::vector<uint8_t> rasterize(const std::vector<double> &X,
+                               const std::vector<double> &Y,
+                               const HandleGraph &graph,
+                               const double& scale,
+                               const double& border,
+                               uint64_t width = 0,
+                               uint64_t height = 1000);
+
+void draw_png(const std::string& filename,
               const std::vector<double> &X,
               const std::vector<double> &Y,
               const HandleGraph &graph,
               const double& scale,
               const double& border,
-              uint64_t width = 1000,
-              uint64_t height = 0);
+              uint64_t width = 0,
+              uint64_t height = 1000);
 
 
 }

@@ -37,8 +37,9 @@ int main_layout(int argc, char **argv) {
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> layout_out_file(parser, "FILE", "write the layout coordinates to this file", {'o', "out"});
     args::ValueFlag<std::string> svg_out_file(parser, "FILE", "write an SVG rendering to this file", {'s', "svg"});
-    args::ValueFlag<std::string> png_out_file(parser, "FILE", "write a rasterized PNG rendering to this file", {'r', "png"});
-    args::ValueFlag<std::string> png_height(parser, "FILE", "height of PNG rendering (default: 1000)", {'H', "png-height"});
+    args::ValueFlag<std::string> png_out_file(parser, "FILE", "write a rasterized PNG rendering to this file", {'p', "png"});
+    args::ValueFlag<uint64_t> png_height(parser, "FILE", "height of PNG rendering (default: 1000)", {'H', "png-height"});
+    args::ValueFlag<uint64_t> png_border(parser, "FILE", "size of PNG border in bp (default: 0)", {'E', "png-border"});
     args::ValueFlag<double> render_scale(parser, "N", "image scaling (default 1.0)", {'R', "scale"});
     args::ValueFlag<double> render_border(parser, "N", "image border (default 10.0)", {'B', "border"});
     args::ValueFlag<std::string> xp_in_file(parser, "FILE", "load the path index from this file", {'X', "path-index"});
@@ -84,8 +85,8 @@ int main_layout(int argc, char **argv) {
                                                 "set the prefix to which each snapshot graph of a path guided 1D SGD iteration should be written to, no default",
                                                 {'u', "path-sgd-snapshot"});
 
-    args::ValueFlag<double> x_pad(parser, "N", "padding between connected component layouts (default 10.0)",
-                                  {'p', "x-padding"});
+    //args::ValueFlag<double> x_pad(parser, "N", "padding between connected component layouts (default 10.0)",
+    //{'p', "x-padding"});
     args::Flag progress(parser, "progress", "display progress of the sort", {'P', "progress"});
     args::ValueFlag<uint64_t> nthreads(parser, "N",
                                        "number of threads to use for parallel sorters (currently only SGD is supported)",
@@ -114,7 +115,7 @@ int main_layout(int argc, char **argv) {
         return 1;
     }
 
-    if (!layout_out_file && !svg_out_file) {
+    if (!layout_out_file && !svg_out_file && !png_out_file) {
         std::cerr
             << "[odgi layout] error: Please specify an output file to where to store the layout via -o=[FILE], --out=[FILE] or -s=[FILE], --svg=[FILE]"
             << std::endl;
@@ -136,7 +137,7 @@ int main_layout(int argc, char **argv) {
 
     const uint64_t t_max = !p_sgd_iter_max ? 30 : args::get(p_sgd_iter_max);
     const double eps = !p_sgd_eps ? 0.01 : args::get(p_sgd_eps);
-    const double x_padding = !x_pad ? 10.0 : args::get(x_pad);
+    //const double x_padding = !x_pad ? 10.0 : args::get(x_pad);
     const double svg_scale = !render_scale ? 1.0 : args::get(render_scale);
     const double svg_border = !render_border ? 10.0 : args::get(render_border);
     const double sgd_delta = p_sgd_delta ? args::get(p_sgd_delta) : 0;
@@ -430,6 +431,13 @@ int main_layout(int argc, char **argv) {
         ofstream f(outfile.c_str());
         algorithms::draw_svg(f, X_final, Y_final, graph, svg_scale, svg_border);
         f.close();    
+    }
+
+    if (png_out_file) {
+        auto& outfile = args::get(png_out_file);
+        uint64_t _png_height = png_height ? args::get(png_height) : 1000;
+        double _png_border = png_border ? args::get(png_border) : 0;
+        algorithms::draw_png(outfile, X_final, Y_final, graph, 1.0, _png_border, 0, _png_height);
     }
     
     return 0;

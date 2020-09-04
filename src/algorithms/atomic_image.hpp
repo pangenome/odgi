@@ -58,6 +58,18 @@ struct atomic_image_buf_t {
         , width(w) {
         image = std::make_unique<std::vector<std::atomic<uint32_t>>>(height * width);
     }
+    std::vector<uint8_t> to_bytes(void) {
+        std::vector<uint8_t> bytes(4 * height * width);
+        for (uint64_t i = 0; i < image->size(); ++i) {
+            color_t c = {(*image)[i].load()};
+            uint64_t j = i * 4;
+            bytes[j    ] = c.c.r;
+            bytes[j + 1] = c.c.g;
+            bytes[j + 2] = c.c.b;
+            bytes[j + 3] = 0; // alpha channel
+        }
+        return bytes;
+    }
     // ablative
     void set_pixel(const uint64_t& x,
                    const uint64_t& y,

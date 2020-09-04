@@ -155,14 +155,13 @@ void draw_svg(std::ostream &out,
     out << "</svg>" << std::endl;
 }
 
-void draw_png(std::ostream &out,
-              const std::vector<double> &X,
-              const std::vector<double> &Y,
-              const HandleGraph &graph,
-              const double& scale,
-              const double& border,
-              uint64_t width,
-              uint64_t height) {
+std::vector<uint8_t> rasterize(const std::vector<double> &X,
+                               const std::vector<double> &Y,
+                               const HandleGraph &graph,
+                               const double& scale,
+                               const double& border,
+                               uint64_t width,
+                               uint64_t height) {
 
     std::vector<std::vector<handle_t>> weak_components;
     coord_range_2d_t rendered_range;
@@ -175,8 +174,8 @@ void draw_png(std::ostream &out,
     uint64_t source_height = rendered_range.height();
 
     // determine height and width based on the width, if height = 0
-    if (height == 0) {
-        height = std::round(width * (source_width / source_height));
+    if (width == 0) {
+        width = std::round(height * (source_height / source_width));
     }
 
     atomic_image_buf_t image(width, height);
@@ -208,7 +207,20 @@ void draw_png(std::ostream &out,
     }
 
     // todo, edges, paths, coverage, bins
+    
+    return image.to_bytes();
+}
 
+void draw_png(const std::string& filename,
+              const std::vector<double> &X,
+              const std::vector<double> &Y,
+              const HandleGraph &graph,
+              const double& scale,
+              const double& border,
+              uint64_t width,
+              uint64_t height) {
+    auto bytes = rasterize(X, Y, graph, scale, border, width, height);
+    png::encodeOneStep(filename.c_str(), bytes, width, height);
 }
 
 }
