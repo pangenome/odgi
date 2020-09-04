@@ -13,11 +13,23 @@
 #include "weakly_connected_components.hpp"
 #include <sdsl/bit_vectors.hpp>
 #include <handlegraph/util.hpp>
+#include "atomic_image.hpp"
+#include "lodepng.h"
 
 namespace odgi {
+
+namespace png {
+
+void encodeOneStep(const char *filename, std::vector<unsigned char> &image, unsigned width, unsigned height);
+void encodeTwoSteps(const char *filename, std::vector<unsigned char> &image, unsigned width, unsigned height);
+void encodeWithState(const char *filename, std::vector<unsigned char> &image, unsigned width, unsigned height);
+
+}
+
 namespace algorithms {
 
 using namespace handlegraph;
+
 
 struct coord_range_2d_t {
     double min_x = std::numeric_limits<double>::max();
@@ -41,12 +53,31 @@ struct coord_range_2d_t {
     }
 };
 
+
+void get_layout(const std::vector<double> &X,
+                const std::vector<double> &Y,
+                const HandleGraph &graph,
+                const double& scale,
+                const double& border,
+                std::vector<std::vector<handle_t>>& weak_components,
+                coord_range_2d_t& rendered_range,
+                std::vector<coord_range_2d_t>& component_ranges);
+
 void draw_svg(std::ostream &out,
               const std::vector<double> &X,
               const std::vector<double> &Y,
               const HandleGraph &graph,
               const double& scale,
               const double& border);
+
+void draw_png(std::ostream &out,
+              const std::vector<double> &X,
+              const std::vector<double> &Y,
+              const HandleGraph &graph,
+              const double& scale,
+              const double& border,
+              const uint64_t& height = 0,
+              const uint64_t& width = 1000);
 
 }
 }

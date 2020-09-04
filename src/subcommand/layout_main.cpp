@@ -6,7 +6,7 @@
 #include "algorithms/xp.hpp"
 #include "algorithms/sgd_layout.hpp"
 #include "algorithms/path_sgd_layout.hpp"
-#include "algorithms/svg.hpp"
+#include "algorithms/draw.hpp"
 
 namespace odgi {
 
