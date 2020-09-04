@@ -125,8 +125,8 @@ namespace xp {
         }
         sdsl::util::bit_compress(nr_iv);
         sdsl::util::bit_compress(npi_iv);
-        sdsl::util::assign(np_bv_rank, sdsl::rank_support_v<1>(&np_bv));
-        sdsl::util::assign(np_bv_select, sdsl::bit_vector::select_1_type(&np_bv));
+        // sdsl::util::assign(np_bv_rank, sdsl::rank_support_v<1>(&np_bv));
+        // sdsl::util::assign(np_bv_select, sdsl::bit_vector::select_1_type(&np_bv));
 #ifdef debug_np
         std::cerr << "number of nodes and paths: " << np_size << std::endl;
         std::cerr << "np_bv: ";
@@ -137,10 +137,12 @@ namespace xp {
         for (uint64_t i = 0; i < nr_iv.size(); i++) {
             std::cerr << nr_iv[i];
         }
+        /*
         std::cerr << std::endl << "np_bv_select: ";
         for (uint64_t i = 0; i < np_bv.size(); i++) {
             std::cerr << (np_bv_select(nr_iv[i] + 1));
         }
+        */
         std::cerr << std::endl;
 #endif
         node_path_ms.reset(); // free the mmmultimap
@@ -202,8 +204,8 @@ namespace xp {
         }
 
         paths_written += np_bv.serialize(out, paths_child, "node_path_mapping_starts");
-        paths_written += np_bv_rank.serialize(out, paths_child, "node_path_mapping_sarts_rank");
-        paths_written += np_bv_select.serialize(out, paths_child, "node_path_mapping_starts_select");
+        // paths_written += np_bv_rank.serialize(out, paths_child, "node_path_mapping_sarts_rank");
+        // paths_written += np_bv_select.serialize(out, paths_child, "node_path_mapping_starts_select");
         paths_written += nr_iv.serialize(out, paths_child, "node_path_rank");
         paths_written += npi_iv.serialize(out, paths_child, "node_path_id");
 
@@ -263,8 +265,8 @@ namespace xp {
             }
             // load node path rank vectors
             np_bv.load(in);
-            np_bv_rank.load(in, &np_bv);
-            np_bv_select.load(in, &np_bv);
+            // np_bv_rank.load(in, &np_bv);
+            // np_bv_select.load(in, &np_bv);
             nr_iv.load(in);
             npi_iv.load(in);
 #ifdef debug_load
@@ -276,10 +278,12 @@ namespace xp {
             for (uint64_t i = 0; i < nr_iv.size(); i++) {
                 std::cerr << nr_iv[i];
             }
+            /*
             std::cerr << std::endl << "np_bv_select: ";
             for (uint64_t i = 0; i < np_bv.size(); i++) {
                 std::cerr << np_bv_select(np_bv[i] + 1);
             }
+            */
             std::cerr << std::endl;
 #endif
         } catch (const XPFormatError &e) {
@@ -394,10 +398,11 @@ namespace xp {
     const sdsl::int_vector<>& XP::get_nr_iv() const {
         return nr_iv;
     }
-
+/*
     const sdsl::bit_vector::select_1_type XP::get_np_bv_select() const {
         return np_bv_select;
     }
+*/
 
     const sdsl::bit_vector XP::get_np_bv() const {
         return np_bv;
@@ -406,10 +411,11 @@ namespace xp {
     const sdsl::int_vector<>& XP::get_npi_iv() const {
         return npi_iv;
     }
-
+/*
     const sdsl::rank_support_v<1> XP::get_np_bv_rank() const {
         return np_bv_rank;
     }
+*/
 
 
     size_t XP::get_pangenome_pos(const std::string &path_name, const size_t &nuc_pos) const {
