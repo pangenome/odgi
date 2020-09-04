@@ -18,7 +18,7 @@ odgi_chop - divide nodes into smaller pieces
 
 == DESCRIPTION
 
-The odgi chop(1) command chops long nodes into short ones while preserving the graph topology.
+The odgi chop(1) command chops long nodes into short ones while preserving the graph topology and node order.
 
 == OPTIONS
 
@@ -35,10 +35,15 @@ The odgi chop(1) command chops long nodes into short ones while preserving the g
 *-c, --chop-to*=_N_::
   Divide nodes that longer than _N_ into nodes no longer than _N_ while maintaining graph topology.
 
+=== Threading
+
+*-t, --threads*=_N_::
+Number of threads to use for the parallel sorter.
+
 === Processing Information
 
 *-d, --debug*::
-  Print information about the components to stdout.
+  Print information about the process to stderr.
 
 === Program Information
 
