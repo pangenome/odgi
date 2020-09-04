@@ -23,6 +23,7 @@ int main_chop(int argc, char** argv) {
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store the graph self index in this file", {'o', "out"});
     args::ValueFlag<uint64_t> chop_to(parser, "N", "divide nodes to be shorter than this length", {'c', "chop-to"});
+    args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel sorter", {'t', "threads"});
     args::Flag debug(parser, "debug", "print information about the components", {'d', "debug"});
 
     try {
@@ -68,7 +69,9 @@ int main_chop(int argc, char** argv) {
         }
     }
 
-    algorithms::chop(graph, args::get(chop_to));
+    uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+
+    algorithms::chop(graph, args::get(chop_to), num_threads);
     
     std::string outfile = args::get(dg_out_file);
     if (outfile.size()) {

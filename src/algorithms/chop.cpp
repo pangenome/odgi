@@ -14,7 +14,7 @@ namespace odgi {
 namespace algorithms {
 
 void chop(handlegraph::MutablePathDeletableHandleGraph &graph,
-          const uint64_t &max_node_length) {
+          const uint64_t &max_node_length, const uint64_t& nthreads) {
     std::vector<std::tuple<uint64_t, uint64_t, handle_t>> originalRank_inChoppedNodeRank_handle;
     std::vector<std::pair<uint64_t , handle_t>> originalRank_handleToChop;
     uint64_t rank = 0;
@@ -44,7 +44,10 @@ void chop(handlegraph::MutablePathDeletableHandleGraph &graph,
         }
     }
 
-    ips4o::parallel::sort(originalRank_inChoppedNodeRank_handle.begin(), originalRank_inChoppedNodeRank_handle.end());
+    ips4o::parallel::sort(
+            originalRank_inChoppedNodeRank_handle.begin(), originalRank_inChoppedNodeRank_handle.end(),
+            std::less<>(), nthreads
+            );
 
     std::vector<handle_t> new_handles;
     for (auto x_y_z : originalRank_inChoppedNodeRank_handle) {
