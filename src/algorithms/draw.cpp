@@ -160,24 +160,27 @@ std::vector<uint8_t> rasterize(const std::vector<double> &X,
                                const HandleGraph &graph,
                                const double& scale,
                                const double& border,
-                               uint64_t width,
-                               uint64_t height) {
+                               uint64_t& width,
+                               uint64_t& height) {
 
     std::vector<std::vector<handle_t>> weak_components;
     coord_range_2d_t rendered_range;
     std::vector<coord_range_2d_t> component_ranges;
     get_layout(X, Y, graph, scale, border, weak_components, rendered_range, component_ranges);
 
-    uint64_t source_min_x = rendered_range.min_x;
-    uint64_t source_min_y = rendered_range.min_y;
-    uint64_t source_width = rendered_range.width();
-    uint64_t source_height = rendered_range.height();
+    double source_min_x = rendered_range.min_x;
+    double source_min_y = rendered_range.min_y;
+    double source_width = rendered_range.width();
+    double source_height = rendered_range.height();
 
-    // determine height and width based on the width, if height = 0
+    // determine height and width based on the width, if width = 0
     if (width == 0) {
-        width = std::round(height * (source_height / source_width));
+        width = std::ceil(height * (source_width / source_height));
     }
+    //std::cerr << "source " << source_width << "×" << source_height << std::endl;
+    //std::cerr << "raster " << width << "×" << height << std::endl;
 
+    // an atomic image buffer that we can write into in parallel
     atomic_image_buf_t image(width, height);
 
     auto range_itr = component_ranges.begin();
@@ -194,14 +197,16 @@ std::vector<uint8_t> rasterize(const std::vector<double> &X,
             };
             xy0.into(source_min_x, source_min_y,
                      source_width, source_height,
-                     width, height);
+                     2, 2,
+                     width-4, height-4);
             xy_d_t xy1 = {
                 (X[a + 1] * scale) - x_off,
                 (Y[a + 1] * scale) + y_off
             };
             xy1.into(source_min_x, source_min_y,
                      source_width, source_height,
-                     width, height);
+                     2, 2,
+                     width-4, height-4);
             wu_calc_line(xy0, xy1, image);
         }
     }

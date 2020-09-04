@@ -75,8 +75,8 @@ std::vector<uint8_t> rasterize(const std::vector<double> &X,
                                const HandleGraph &graph,
                                const double& scale,
                                const double& border,
-                               uint64_t width = 0,
-                               uint64_t height = 1000);
+                               uint64_t& width,
+                               uint64_t& height);
 
 void draw_png(const std::string& filename,
               const std::vector<double> &X,

@@ -39,9 +39,9 @@ int main_layout(int argc, char **argv) {
     args::ValueFlag<std::string> svg_out_file(parser, "FILE", "write an SVG rendering to this file", {'s', "svg"});
     args::ValueFlag<std::string> png_out_file(parser, "FILE", "write a rasterized PNG rendering to this file", {'p', "png"});
     args::ValueFlag<uint64_t> png_height(parser, "FILE", "height of PNG rendering (default: 1000)", {'H', "png-height"});
-    args::ValueFlag<uint64_t> png_border(parser, "FILE", "size of PNG border in bp (default: 0)", {'E', "png-border"});
+    args::ValueFlag<uint64_t> png_border(parser, "FILE", "size of PNG border in bp (default: 10)", {'E', "png-border"});
     args::ValueFlag<double> render_scale(parser, "N", "image scaling (default 1.0)", {'R', "scale"});
-    args::ValueFlag<double> render_border(parser, "N", "image border (default 10.0)", {'B', "border"});
+    args::ValueFlag<double> render_border(parser, "N", "image border (in approximate bp) (default 100.0)", {'B', "border"});
     args::ValueFlag<std::string> xp_in_file(parser, "FILE", "load the path index from this file", {'X', "path-index"});
     /// Path-guided-2D-SGD parameters
     args::ValueFlag<std::string> p_sgd_in_file(parser, "FILE",
@@ -139,7 +139,7 @@ int main_layout(int argc, char **argv) {
     const double eps = !p_sgd_eps ? 0.01 : args::get(p_sgd_eps);
     //const double x_padding = !x_pad ? 10.0 : args::get(x_pad);
     const double svg_scale = !render_scale ? 1.0 : args::get(render_scale);
-    const double svg_border = !render_border ? 10.0 : args::get(render_border);
+    const double border_bp = !render_border ? 100.0 : args::get(render_border);
     const double sgd_delta = p_sgd_delta ? args::get(p_sgd_delta) : 0;
     const uint64_t num_threads = nthreads ? args::get(nthreads) : 1;
     const bool show_progress = progress ? args::get(progress) : false;
@@ -429,15 +429,14 @@ int main_layout(int argc, char **argv) {
     if (svg_out_file) {
         auto& outfile = args::get(svg_out_file);
         ofstream f(outfile.c_str());
-        algorithms::draw_svg(f, X_final, Y_final, graph, svg_scale, svg_border);
+        algorithms::draw_svg(f, X_final, Y_final, graph, svg_scale, border_bp);
         f.close();    
     }
 
     if (png_out_file) {
         auto& outfile = args::get(png_out_file);
         uint64_t _png_height = png_height ? args::get(png_height) : 1000;
-        double _png_border = png_border ? args::get(png_border) : 0;
-        algorithms::draw_png(outfile, X_final, Y_final, graph, 1.0, _png_border, 0, _png_height);
+        algorithms::draw_png(outfile, X_final, Y_final, graph, 1.0, border_bp, 0, _png_height);
     }
     
     return 0;
