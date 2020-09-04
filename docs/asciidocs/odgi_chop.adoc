@@ -43,7 +43,7 @@ Number of threads to use for the parallel sorter.
 === Processing Information
 
 *-d, --debug*::
-  Print information about the components to stdout.
+  Print information about the process to stderr.
 
 === Program Information
 

@@ -71,7 +71,7 @@ int main_chop(int argc, char** argv) {
 
     uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
 
-    algorithms::chop(graph, args::get(chop_to), num_threads);
+    algorithms::chop(graph, args::get(chop_to), num_threads, args::get(debug));
     
     std::string outfile = args::get(dg_out_file);
     if (outfile.size()) {
