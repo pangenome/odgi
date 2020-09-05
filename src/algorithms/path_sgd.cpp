@@ -38,14 +38,16 @@ namespace odgi {
             using namespace std::chrono_literals; // for timing stuff
             uint64_t num_nodes = graph.get_node_count();
             // our positions in 1D
-            std::vector<std::atomic<double>> X(num_nodes);
+            std::vector<std::atomic<double>> X(num_nodes * 2); // Graph's coordinates for node+ and node-
             // seed them with the graph order
             uint64_t len = 0;
             graph.for_each_handle(
                     [&X, &graph, &len](const handle_t &handle) {
                         // nb: we assume that the graph provides a compact handle set
-                        X[number_bool_packing::unpack_number(handle)].store(len);
+                        uint64_t pos = 2 * number_bool_packing::unpack_number(handle);
+                        X[pos].store(len);
                         len += graph.get_length(handle);
+                        X[pos + 1].store(len);
                     });
             // the longest path length measured in nucleotides
             size_t longest_path_in_nucleotides = 0;
@@ -244,10 +246,32 @@ namespace odgi {
                             // and the graph handles, which we need to record the update
                             handle_t term_i = path_index.get_handle_of_step(step_a);
                             handle_t term_j = path_index.get_handle_of_step(step_b);
+                            uint64_t term_i_length = graph.get_length(term_i);
+                            uint64_t term_j_length = graph.get_length(term_j);
 
                             // adjust the positions to the node starts
                             size_t pos_in_path_a = path_index.get_position_of_step(step_a);
                             size_t pos_in_path_b = path_index.get_position_of_step(step_b);
+
+                            // determine which end we're working with for each node
+                            bool term_i_is_rev = graph.get_is_reverse(term_i);
+                            bool use_other_end_a = flip(gen); // 1 == +; 0 == -
+                            if (use_other_end_a) {
+                                pos_in_path_a += term_i_length;
+                                // flip back if we were already reversed
+                                use_other_end_a = !term_i_is_rev;
+                            } else {
+                                use_other_end_a = term_i_is_rev;
+                            }
+                            bool term_j_is_rev = graph.get_is_reverse(term_j);
+                            bool use_other_end_b = flip(gen); // 1 == +; 0 == -
+                            if (use_other_end_b) {
+                                pos_in_path_b += term_j_length;
+                                // flip back if we were already reversed
+                                use_other_end_b = !term_j_is_rev;
+                            } else {
+                                use_other_end_b = term_j_is_rev;
+                            }
 #ifdef debug_path_sgd
                             std::cerr << "1. pos in path " << pos_in_path_a << " " << pos_in_path_b << std::endl;
 #endif
@@ -262,8 +286,7 @@ namespace odgi {
                                     static_cast<double>(pos_in_path_a) - static_cast<double>(pos_in_path_b));
 
                             if (term_dist == 0) {
-                                continue;
-                                // term_dist = 1e-9;
+                                term_dist = 1e-9;
                             }
 #ifdef eval_path_sgd
                             std::string path_name = path_index.get_path_name(path);
@@ -293,7 +316,15 @@ namespace odgi {
                             std::cerr << "nodes are " << graph.get_id(term_i) << " and " << graph.get_id(term_j) << std::endl;
 #endif
                             // distance == magnitude in our 1D situation
-                            double dx = X[i].load() - X[j].load();
+                            uint64_t offset_i = 0;
+                            uint64_t offset_j = 0;
+                            if (use_other_end_a) {
+                                offset_i += 1;
+                            }
+                            if (use_other_end_b) {
+                                offset_j += 1;
+                            }
+                            double dx = X[2 * i + offset_i].load() - X[2 * j + offset_j].load();
                             if (dx == 0) {
                                 dx = 1e-9; // avoid nan
                             }
@@ -328,8 +359,8 @@ namespace odgi {
 #ifdef debug_path_sgd
                             std::cerr << "before X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
 #endif
-                            X[i].store(X[i].load() - r_x);
-                            X[j].store(X[j].load() + r_x);
+                            X[2 * i + offset_i].store(X[2 * i + offset_i].load() - r_x);
+                            X[2 * j + offset_j].store(X[2 * j + offset_j].load() + r_x);
 #ifdef debug_path_sgd
                             std::cerr << "after X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
 #endif
@@ -379,7 +410,7 @@ namespace odgi {
 
             checker.join();;
             // drop out of atomic stuff... maybe not the best way to do this
-            std::vector<double> X_final(X.size());
+            std::vector<double> X_final(num_nodes * 2);
             uint64_t i = 0;
             for (auto &x : X) {
                 X_final[i++] = x.load();
