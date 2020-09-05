@@ -288,8 +288,9 @@ int main_sort(int argc, char** argv) {
                                              sgd_delta,
                                              num_threads), true);
         } else if (args::get(p_sgd)) {
+            graph_t target;
             std::vector<handle_t> order =
-                algorithms::path_linear_sgd_order(graph,
+                algorithms::path_linear_sgd_order(graph, target,
                                                   path_index,
                                                   path_sgd_use_paths,
                                                   path_sgd_iter_max,
@@ -320,6 +321,7 @@ int main_sort(int argc, char** argv) {
                     f.close();
                 }
             }
+            graph = target;
             graph.apply_ordering(order, true);
         } else if (args::get(breadth_first)) {
             graph.apply_ordering(algorithms::breadth_first_topological_order(graph, bf_chunk_size), true);

@@ -455,7 +455,7 @@ namespace odgi {
             return etas;
         }
 
-        std::vector<handle_t> path_linear_sgd_order(const PathHandleGraph &graph,
+        std::vector<handle_t> path_linear_sgd_order(const PathHandleGraph &graph, handlegraph::MutablePathDeletableHandleGraph& target,
                                                     const xp::XP &path_index,
                                                     const std::vector<path_handle_t> &path_sgd_use_paths,
                                                     const uint64_t &iter_max,
@@ -567,14 +567,26 @@ namespace odgi {
                 }
 
             }
+
+            dyn::succinct_bitvector<dyn::spsi<dyn::packed_vector,256,16> > flipped;
+            graph.for_each_handle([&](const handle_t& found) {
+                flipped.push_back(0);
+            });
+
             std::vector<handle_layout_t> handle_layout;
-            uint64_t i = 0;
             graph.for_each_handle(
-                    [&i, &layout, &weak_components_map, &handle_layout](const handle_t &handle) {
+                    [&flipped, &layout, &weak_components_map, &handle_layout](const handle_t &handle) {
+                        uint64_t rank = number_bool_packing::unpack_number(handle);
+
+                        bool node_flipped = layout[2*rank] > layout[2*rank + 1];
+
+                        flipped.set(rank, node_flipped);
+
                         handle_layout.push_back(
                                 {
-                                        weak_components_map[number_bool_packing::unpack_number(handle)],
-                                        layout[i++],
+                                        weak_components_map[rank],
+                                        //node_flipped ? layout[2*rank + 1] : layout[2*rank],
+                                        (layout[2*rank + 1] + layout[2*rank]) / 2.0,
                                         handle
                                 });
                     });
@@ -591,8 +603,47 @@ namespace odgi {
             std::vector<handle_t> order;
             order.reserve(graph.get_node_count());
             for (auto &layout_handle : handle_layout) {
+                bool node_flipped = flipped[number_bool_packing::unpack_number(layout_handle.handle)];
+
+                target.create_handle(
+                        graph.get_sequence(
+                                node_flipped ? graph.flip(layout_handle.handle) : layout_handle.handle
+                                ),
+                        graph.get_id(layout_handle.handle)
+                        );
+
                 order.push_back(layout_handle.handle);
             }
+
+            // add the edges
+            graph.for_each_edge(
+                    [&](const edge_t& edge) {
+                        //source.get_id(edge.first),
+                        bool from_flipped = flipped[number_bool_packing::unpack_number(edge.first)];
+                        handle_t from = target.get_handle(
+                                graph.get_id(edge.first),
+                                graph.get_is_reverse(edge.first)^from_flipped);
+                        bool to_flipped = flipped[number_bool_packing::unpack_number(edge.second)];
+                        handle_t to = target.get_handle(
+                                graph.get_id(edge.second),
+                                graph.get_is_reverse(edge.second)^to_flipped);
+                        target.create_edge(from, to);
+                    });
+            // now add the paths back in
+            graph.for_each_path_handle(
+                    [&](const path_handle_t& path) {
+                        auto into = target.create_path_handle(graph.get_path_name(path));
+                        graph.for_each_step_in_path(
+                                path,
+                                [&](const step_handle_t& step) {
+                                    handle_t h = graph.get_handle_of_step(step);
+                                    bool h_flipped = flipped[number_bool_packing::unpack_number(h)];
+                                    handle_t handle = target.get_handle(graph.get_id(h),
+                                                                        graph.get_is_reverse(h)^h_flipped);
+                                    target.append_step(into, handle);
+                                });
+                    });
+
             return order;
         }
 

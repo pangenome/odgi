@@ -56,7 +56,7 @@ std::vector<double> path_linear_sgd_schedule(const double &w_min,
                                              const uint64_t &iter_with_max_learning_rate,
                                              const double &eps);
 
-std::vector<handle_t> path_linear_sgd_order(const PathHandleGraph &graph,
+std::vector<handle_t> path_linear_sgd_order(const PathHandleGraph &graph, handlegraph::MutablePathDeletableHandleGraph& target,
                                             const xp::XP &path_index,
                                             const std::vector<path_handle_t>& path_sgd_use_paths,
                                             const uint64_t &iter_max,
