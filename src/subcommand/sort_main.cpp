@@ -379,7 +379,8 @@ int main_sort(int argc, char** argv) {
                         path_index.clean();
                         path_index.from_handle_graph(graph);
                     }
-                    order = algorithms::path_linear_sgd_order(graph,
+                    graph_t target;
+                    order = algorithms::path_linear_sgd_order(graph, target,
                                                               path_index,
                                                               path_sgd_use_paths,
                                                               path_sgd_iter_max,
@@ -397,6 +398,7 @@ int main_sort(int argc, char** argv) {
                                                               path_sgd_seed,
                                                               snapshot,
                                                               snapshots);
+                    graph = target;
                     break;
                 }
                 case 'f':
