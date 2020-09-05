@@ -48,6 +48,12 @@ The odgi cover(1) command find a path cover of a variation graph, with a specifi
   Write the node coverages at the end of the paths generation to FILE. The file will contain tab-separated values (header included), and have 3 columns: _component_id_, _node_id_, and _coverage_.
 
 
+=== Threading
+
+*-t, --threads*=_N_::
+Number of threads to use for the parallel sorter.
+
+
 === Processing Information
 
 *-d, --debug*::
