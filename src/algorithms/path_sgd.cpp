@@ -520,7 +520,7 @@ namespace odgi {
                                         });
                             });
                     // sort the graph layout by component, then pos, then handle rank
-                    std::sort(snapshot_handle_layout.begin(), snapshot_handle_layout.end(),
+                    ips4o::parallel::sort(snapshot_handle_layout.begin(), snapshot_handle_layout.end(),
                               [&](const handle_layout_t &a,
                                   const handle_layout_t &b) {
                                   return a.weak_component < b.weak_component
@@ -528,7 +528,7 @@ namespace odgi {
                                              && a.pos < b.pos
                                              || (a.pos == b.pos
                                                  && as_integer(a.handle) < as_integer(b.handle)));
-                              });
+                              }, nthreads);
                     std::vector<handle_t> order;
                     order.reserve(graph.get_node_count());
                     for (auto &layout_handle : snapshot_handle_layout) {
