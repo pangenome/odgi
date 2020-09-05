@@ -14,7 +14,7 @@ namespace odgi {
 namespace algorithms {
 
 void chop(handlegraph::MutablePathDeletableHandleGraph &graph,
-          const uint64_t &max_node_length, const uint64_t& nthreads, const bool show_info) {
+          const uint64_t &max_node_length, const uint64_t& nthreads, const bool& show_info) {
     std::vector<std::tuple<uint64_t, uint64_t, handle_t>> originalRank_inChoppedNodeRank_handle;
     std::vector<std::pair<uint64_t , handle_t>> originalRank_handleToChop;
     uint64_t rank = 0;
