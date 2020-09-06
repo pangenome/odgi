@@ -7,7 +7,7 @@
 namespace odgi {
     namespace algorithms {
 
-        std::vector<double> path_linear_sgd(const PathHandleGraph &graph,
+        std::vector<double> path_linear_sgd(const graph_t &graph,
                                             const xp::XP &path_index,
                                             const std::vector<path_handle_t> &path_sgd_use_paths,
                                             const uint64_t &iter_max,
@@ -23,7 +23,7 @@ namespace odgi {
                                             const uint64_t &nthreads,
                                             const bool &progress,
                                             const bool &snapshot,
-                                            std::vector<std::vector<double>> &snapshots) {
+                                            std::vector<std::string> &snapshots) {
 #ifdef debug_path_sgd
             std::cerr << "iter_max: " << iter_max << std::endl;
             std::cerr << "min_term_updates: " << min_term_updates << std::endl;
@@ -345,13 +345,23 @@ namespace odgi {
                                 // std::cerr << "[odgi sort] snapshot thread: Taking snapshot!" << std::endl;
 
                                 // drop out of atomic stuff... maybe not the best way to do this
-                                std::vector<double> X_iter(X.size());
-                                uint64_t i = 0;
+                                //std::vector<double> X_iter(X.size());
+                                //uint64_t i = 0;
+                                //for (auto &x : X) {
+                                //    X_iter[i++] = x.load();
+                                //}
+                                // TODO create temp file
+                                std::string snapshot_tmp_file = xp::temp_file::create("snapshot");
+                                // TODO write to temp file
+                                ofstream snapshot_stream;
+                                snapshot_stream.open(snapshot_tmp_file);
                                 for (auto &x : X) {
-                                    X_iter[i++] = x.load();
+                                    snapshot_stream << x << std::endl;
                                 }
-                                snapshots.push_back(X_iter);
+                                // TODO push back the name of the temp file
+                                snapshots.push_back(snapshot_tmp_file);
                                 iter = iteration;
+                                std::cerr << "ITER: " << iter << std::endl;
                             }
                             std::this_thread::sleep_for(1ms);
                         }
@@ -377,7 +387,7 @@ namespace odgi {
 
             snapshot_thread.join();
 
-            checker.join();;
+            checker.join();
             // drop out of atomic stuff... maybe not the best way to do this
             std::vector<double> X_final(X.size());
             uint64_t i = 0;
@@ -424,7 +434,7 @@ namespace odgi {
             return etas;
         }
 
-        std::vector<handle_t> path_linear_sgd_order(const PathHandleGraph &graph,
+        std::vector<handle_t> path_linear_sgd_order(const graph_t &graph,
                                                     const xp::XP &path_index,
                                                     const std::vector<path_handle_t> &path_sgd_use_paths,
                                                     const uint64_t &iter_max,
@@ -441,8 +451,8 @@ namespace odgi {
                                                     const bool &progress,
                                                     const std::string &seed,
                                                     const bool &snapshot,
-                                                    std::vector<std::vector<handle_t>> &snapshots) {
-            std::vector<std::vector<double>> snapshots_layouts;
+                                                    const std::string &snapshot_prefix) {
+            std::vector<string> snapshots;
             std::vector<double> layout = path_linear_sgd(graph,
                                                          path_index,
                                                          path_sgd_use_paths,
@@ -459,7 +469,7 @@ namespace odgi {
                                                          nthreads,
                                                          progress,
                                                          snapshot,
-                                                         snapshots_layouts);
+                                                         snapshots);
             // TODO move the following into its own function that we can reuse
 #ifdef debug_components
             std::cerr << "node count: " << graph.get_node_count() << std::endl;
@@ -503,8 +513,15 @@ namespace odgi {
             }
             weak_components_map.clear();
             if (snapshot) {
-                for (int j = 0; j < snapshots_layouts.size(); j++) {
-                    std::vector<double> snapshot_layout = snapshots_layouts[j];
+                for (int j = 0; j < snapshots.size(); j++) {
+                    std::string snapshot_file_name = snapshots[j];
+                    std::ifstream snapshot_instream(snapshot_file_name);
+                    std::vector<double> snapshot_layout;
+                    std::string line;
+                    while(std::getline(snapshot_instream, line)) {
+                        snapshot_layout.push_back(std::stod(line));
+                    }
+                    snapshot_instream.close();
                     uint64_t i = 0;
                     std::vector<handle_layout_t> snapshot_handle_layout;
                     graph.for_each_handle(
@@ -532,9 +549,15 @@ namespace odgi {
                     for (auto &layout_handle : snapshot_handle_layout) {
                         order.push_back(layout_handle.handle);
                     }
-                    snapshots.push_back(order);
+                    std::cerr << "[path sgd sort]: Applying order to graph of iteration: " << std::to_string(j + 1)
+                              << std::endl;
+                    std::string local_snapshot_prefix = snapshot_prefix + std::to_string(j + 1);
+                    graph_t graph_copy = graph;
+                    graph_copy.apply_ordering(order, true);
+                    ofstream f(local_snapshot_prefix);
+                    graph_copy.serialize(f);
+                    f.close();
                 }
-
             }
             std::vector<handle_layout_t> handle_layout;
             uint64_t i = 0;
