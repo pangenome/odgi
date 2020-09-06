@@ -37,7 +37,7 @@ int main_draw(int argc, char **argv) {
     args::ValueFlag<double> png_line_width(parser, "N", "line width (in approximate bp) (default 1.0)", {'l', "line-width"});
     args::ValueFlag<std::string> xp_in_file(parser, "FILE", "load the path index from this file", {'X', "path-index"});
     args::Flag progress(parser, "progress", "display progress of the sort", {'P', "progress"});
-    args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel sorters (currently only SGD is supported)", {'t', "threads"});
+    args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel phases", {'t', "threads"});
     args::Flag debug(parser, "debug", "print information about the layout", {'d', "debug"});
 
     try {
@@ -53,6 +53,10 @@ int main_draw(int argc, char **argv) {
     if (argc == 1) {
         std::cout << parser;
         return 1;
+    }
+
+    if (args::get(nthreads)) {
+        omp_set_num_threads(args::get(nthreads));
     }
 
     if (!dg_in_file) {

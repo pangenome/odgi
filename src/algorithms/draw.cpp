@@ -188,8 +188,9 @@ std::vector<uint8_t> rasterize(const std::vector<double> &X,
         auto& range = *range_itr++;
         auto& x_off = range.x_offset;
         auto& y_off = range.y_offset;
-        // todo parallel
-        for (auto& handle : component) {
+#pragma omp parallel for
+        for (uint64_t i = 0; i < component.size(); ++i) {
+            const handle_t& handle = component[i];
             uint64_t a = 2 * number_bool_packing::unpack_number(handle);
             xy_d_t xy0 = {
                 (X[a] * scale) - x_off,
