@@ -50,9 +50,20 @@ typedef union rgb_t {
 } color_t;
 
 color_t lighten(const color_t& c, const double& f);
+color_t brighten(const color_t& a, const color_t& b, const double& f);
+color_t layer(const color_t& a, const color_t& b);
 
 const color_t COLOR_BLACK = { 0xff000000 };
 const color_t COLOR_WHITE = { 0xffffffff };
+
+# define COLOR_MAX  255
+# define COLOR_MIN  0
+
+/*
+# define INRANGE(c)	((COLOR_MAX < (c)) \
+	? COLOR_MAX : ((COLOR_MIN > (c)) \
+		? COLOR_MIN : (c)))
+*/
 
 struct atomic_image_buf_t {
     std::unique_ptr<std::vector<std::atomic<uint32_t>>> image;
@@ -96,12 +107,13 @@ struct atomic_image_buf_t {
                      const double& f) {
         size_t i = width * y + x;
         //std::cerr << "getting i=" << i << " in image " << height << "x" << width << std::endl;
-        color_t v = {(*image)[i].load()};
-        // update until we saturate
-        v.c.r += std::round((double)(255 - v.c.r) / 255.0 * std::round(f * c.c.r));
-        v.c.g += std::round((double)(255 - v.c.g) / 255.0 * std::round(f * c.c.g));
-        v.c.b += std::round((double)(255 - v.c.b) / 255.0 * std::round(f * c.c.b));
-        //v.c.a += std::round((double)(255 - v.c.a) / 255.0 * std::round(f * c.c.a));
+        color_t v;
+        v.hex = (*image)[i].load();
+        //std::cerr << "got " << v.hex << " " << (int)v.c.r << "," << (int)v.c.g << "," << (int)v.c.b << std::endl;
+        //std::cerr << "layer " << c.hex << " " << (int)c.c.r << "," << (int)c.c.g << "," << (int)c.c.b << std::endl;
+        //v = layer(v, c);
+        v = brighten(c, v, f);
+        //std::cerr << "assigned " << v.hex << " " << (int)v.c.r << "," << (int)v.c.g << "," << (int)v.c.b << std::endl;
         // there is the possibility of a race decreasing how bright pixels get
         // but, at least we won't overflow
         (*image)[i] = v.hex; // atomic assignment
