@@ -40,12 +40,50 @@ void Layout::load(std::istream& in) {
     xy.load(in);
 }
 
+void Layout::to_tsv(std::ostream &out) {
+    out << std::setprecision(std::numeric_limits<double>::digits10 + 1);
+    out << "idx" << "\t" << "X" << "\t" << "Y" << std::endl;
+    for (uint64_t i = 0; i < size(); ++i) {
+        out << i << "\t" << get_x(i) << "\t" << get_y(i) << std::endl;
+    }
+}
+
 xy_d_t Layout::coords(const handle_t& handle) {
-    uint64_t idx = 2 * number_bool_packing::unpack_number(handle);
-    conv_t x, y;
-    x.i = xy[idx];
-    y.i = xy[idx+1];
-    return { x.d + min_value, y.d + min_value };
+    uint64_t idx = 2 * number_bool_packing::unpack_number(handle)
+        + number_bool_packing::unpack_bit(handle);
+    return { get_x(idx), get_y(idx) };
+}
+
+size_t Layout::size(void) {
+    return xy.size()/2;
+}
+
+double Layout::get_x(uint64_t i) {
+    conv_t x;
+    x.i = xy[2*i];
+    return x.d + min_value;
+}
+
+double Layout::get_y(uint64_t i) {
+    conv_t y;
+    y.i = xy[2*i+1];
+    return y.d + min_value;
+}
+
+std::vector<double> Layout::get_X(void) {
+    std::vector<double> X(size());
+    for (uint64_t i = 0; i < size(); ++i) {
+        X[i] = get_x(i);
+    }
+    return X;
+}
+
+std::vector<double> Layout::get_Y(void) {
+    std::vector<double> Y(size());
+    for (uint64_t i = 0; i < size(); ++i) {
+        Y[i] = get_y(i);
+    }
+    return Y;
 }
 
 }

@@ -13,8 +13,9 @@
 #include "weakly_connected_components.hpp"
 #include <sdsl/bit_vectors.hpp>
 #include <handlegraph/util.hpp>
-#include "atomic_image.hpp"
 #include "lodepng.h"
+#include "atomic_image.hpp"
+//#include "layout.hpp" // for callback interaction with succinct Layout
 
 namespace odgi {
 
