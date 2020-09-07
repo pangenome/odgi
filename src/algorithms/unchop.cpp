@@ -212,19 +212,35 @@ namespace algorithms {
     */
 
     // Return the new handle we merged to.
-    return new_node;
+    return std::make_pair(min_rank, new_node);
 }
 
 void unchop(handlegraph::MutablePathDeletableHandleGraph& graph) {
 #ifdef debug
     std::cerr << "Running unchop" << std::endl;
 #endif
-    for (auto& comp : simple_components(graph, 2)) {
+    std::vector<std::pair<uint64_t , handle_t>> rank_handle;
+
+    for (auto& comp : simple_components(graph, 2, true)) {
 #ifdef debug
         std::cerr << "Unchop " << comp.size() << " nodes together" << std::endl;
 #endif
-        concat_nodes(graph, comp);
+
+        if (comp.size() >= 2){
+            rank_handle.push_back(concat_nodes(graph, comp));
+        }else{
+            rank_handle.push_back(std::make_pair(number_bool_packing::unpack_number(comp.front()), comp.front()));
+        }
     }
+
+    ips4o::parallel::sort(rank_handle.begin(), rank_handle.end());
+
+    std::vector<handle_t> new_handles;
+    for (auto x : rank_handle) {
+        new_handles.push_back(x.second);
+    }
+
+    graph.apply_ordering(new_handles, true);
 }
 
 
