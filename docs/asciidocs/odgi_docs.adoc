@@ -3,7 +3,7 @@
 :sectnums:
 
 = Reference Documentation for ODGI v0.4.1
-Simon Heumos, Erik Garrison
+Simon Heumos, Andrea Guarracino, Erik Garrison
 
 include::odgi.adoc[leveloffset=+1]
 include::odgi_build.adoc[leveloffset=+1]

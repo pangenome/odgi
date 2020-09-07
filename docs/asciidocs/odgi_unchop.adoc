@@ -18,7 +18,7 @@ odgi_unchop - merge unitigs into single nodes
 
 == DESCRIPTION
 
-The odgi unchop(1) command merges each unitig into a single node.
+The odgi unchop(1) command merges each unitig into a single node preserving the node order.
 
 == OPTIONS
 
@@ -30,10 +30,24 @@ The odgi unchop(1) command merges each unitig into a single node.
 *-o, --out*=_FILE_::
   Write the unchopped dynamic succinct variation graph to this file. A file ending with _.og_ is recommended.
 
+
+=== Threading
+
+*-t, --threads*=_N_::
+Number of threads to use for the parallel sorter.
+
+
+=== Processing Information
+
+*-d, --debug*::
+Print information about the process to stderr.
+
+
 === Program Information
 
 *-h, --help*::
   Print a help message for *odgi unchop*.
+
 
 == EXIT STATUS
 
