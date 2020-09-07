@@ -142,11 +142,18 @@ namespace odgi {
                                 if (snapshot) {
                                     if (snapshot_progress[iteration].load() || iteration == iter_max) {
                                         iteration++;
+                                        if (iteration == iter_max) {
+                                            snapshot_in_progress.store(false);
+                                        } else {
+                                            snapshot_in_progress.store(true);
+                                        }
                                     } else {
+                                        snapshot_in_progress.store(true);
                                         continue;
                                     }
                                 } else {
                                     iteration++;
+                                    snapshot_in_progress.store(false);
                                 }
                                 if (iteration > iter_max) {
                                     work_todo.store(false);
@@ -361,7 +368,7 @@ namespace odgi {
                         uint64_t iter = 0;
                         while (snapshot && work_todo.load()) {
                             if ((iter < iteration) && iteration != iter_max) {
-                                snapshot_in_progress.store(true);
+                                //snapshot_in_progress.store(true); // will be released again by the snapshot thread
                                 std::cerr << "[path sgd sort]: snapshot thread: Taking snapshot!" << std::endl;
                                 // create temp file
                                 std::string snapshot_tmp_file = xp::temp_file::create("snapshot");
