@@ -330,6 +330,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/groom_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/layout0_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/layout_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/draw_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/flatten_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/break_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/pathindex_main.cpp
@@ -375,7 +376,9 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/cover.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/path_sgd.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/path_sgd_layout.cpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/svg.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/draw.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/layout.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/atomic_image.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/remove_isolated.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/expand_context.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/groom.cpp)
