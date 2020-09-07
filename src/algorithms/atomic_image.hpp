@@ -69,16 +69,33 @@ struct atomic_image_buf_t {
     std::unique_ptr<std::vector<std::atomic<uint32_t>>> image;
     uint64_t height = 0;
     uint64_t width = 0;
+    double source_width = 0;
+    double source_height = 0;
+    double source_per_px_x = 0;
+    double source_per_px_y = 0;
+    double source_min_x = 0;
+    double source_min_y = 0;
     atomic_image_buf_t(const uint64_t& w,
-                       const uint64_t& h)
+                       const uint64_t& h,
+                       const double& s_w,
+                       const double& s_h,
+                       const double& s_m_x,
+                       const double& s_m_y)
         : width(w)
-        , height(h) {
+        , height(h)
+        , source_width(s_w)
+        , source_height(s_h)
+        , source_min_x(s_m_x)
+        , source_min_y(s_m_y)
+        {
         //std::cerr << "width x height " << w << "x" << h << std::endl;
         image = std::make_unique<std::vector<std::atomic<uint32_t>>>(height * width);
         for (uint64_t i = 0; i < image->size(); ++i) {
             //std::cerr << "coloring " << COLOR_WHITE.hex << std::endl;
             (*image)[i] = COLOR_WHITE.hex; // atomic assignment
         }
+        source_per_px_x = source_width / width;
+        source_per_px_y = source_height / height;
     }
     std::vector<uint8_t> to_bytes(void) {
         std::vector<uint8_t> bytes(4 * height * width);
@@ -105,8 +122,11 @@ struct atomic_image_buf_t {
                      const uint64_t& y,
                      const color_t& c,
                      const double& f) {
+        if (x >= width || y >= height) {
+            return; // bail out
+        }
         size_t i = width * y + x;
-        //std::cerr << "getting i=" << i << " in image " << height << "x" << width << std::endl;
+        //std::cerr << "getting i=" << i << " " << y << " " << x << " " << " in image " << height << "x" << width << std::endl;
         color_t v;
         v.hex = (*image)[i].load();
         //std::cerr << "got " << v.hex << " " << (int)v.c.r << "," << (int)v.c.g << "," << (int)v.c.b << std::endl;
@@ -137,6 +157,9 @@ xy_d_t wu_calc_endpoint(xy_d_t xy, const double_t gradient, const bool steep,
                         atomic_image_buf_t& image);
 
 void wu_calc_line(xy_d_t xy0, xy_d_t xy1, atomic_image_buf_t& image);
+
+void wu_calc_multiline(xy_d_t xy0, xy_d_t xy1, atomic_image_buf_t& image,
+                       const double& width = 0, const double& overlay = 10);
 
 }
 

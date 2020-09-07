@@ -161,7 +161,8 @@ std::vector<uint8_t> rasterize(const std::vector<double> &X,
                                const double& scale,
                                const double& border,
                                uint64_t& width,
-                               uint64_t& height) {
+                               uint64_t& height,
+                               const double& line_width) {
 
     std::vector<std::vector<handle_t>> weak_components;
     coord_range_2d_t rendered_range;
@@ -181,7 +182,9 @@ std::vector<uint8_t> rasterize(const std::vector<double> &X,
     //std::cerr << "raster " << width << "×" << height << std::endl;
 
     // an atomic image buffer that we can write into in parallel
-    atomic_image_buf_t image(width, height);
+    atomic_image_buf_t image(width, height,
+                             source_width, source_height,
+                             source_min_x, source_min_y);
 
     auto range_itr = component_ranges.begin();
     for (auto& component : weak_components) {
@@ -208,7 +211,7 @@ std::vector<uint8_t> rasterize(const std::vector<double> &X,
                      source_width, source_height,
                      2, 2,
                      width-4, height-4);
-            wu_calc_line(xy0, xy1, image);
+            wu_calc_multiline(xy0, xy1, image, line_width);
         }
     }
 
@@ -224,8 +227,9 @@ void draw_png(const std::string& filename,
               const double& scale,
               const double& border,
               uint64_t width,
-              uint64_t height) {
-    auto bytes = rasterize(X, Y, graph, scale, border, width, height);
+              uint64_t height,
+              const double& line_width) {
+    auto bytes = rasterize(X, Y, graph, scale, border, width, height, line_width);
     png::encodeOneStep(filename.c_str(), bytes, width, height);
 }
 

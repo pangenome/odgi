@@ -165,8 +165,79 @@ void wu_calc_line(xy_d_t xy0, xy_d_t xy1, atomic_image_buf_t& image) {
                  (xy0.y + gradient * (u_round(xy0.x) - xy0.x)) + gradient,
                  wu_calc_endpoint(xy0, gradient, steep, image),
                  wu_calc_endpoint(xy1, gradient, steep, image), image);
+        //wu_draw_line
 }
 
+void wu_calc_multiline(xy_d_t xy0, xy_d_t xy1, atomic_image_buf_t& image,
+                       const double& width, const double& overlay) {
+
+    if (width == 0) {
+        wu_calc_line(xy0, xy1, image);
+    }
+
+    const xy_d_t d = { xy1.x - xy0.x, xy1.y - xy0.y };
+    double gradient = d.y / d.x;
+    if (d.x == 0.0) {
+        gradient = d.y > 0 ? 1.0 : -1.0;
+    }
+    double inv_gradient = d.x / d.y;
+    if (d.y == 0.0) {
+        inv_gradient = d.x > 0 ? 1.0 : -1.0;
+    }
+
+    // width is given in bp space (units in the base layout)
+    // we will generate a series of lines parallel to the center line
+    // to simulate a line with the given width
+    double width_in_px = width / image.source_per_px_y;
+
+    xy_d_t xyA = xy0;
+    xy_d_t xyB = xy1;
+    // how for to get to a Y such that the length is w/2
+    double move_in_x = width_in_px / ( 2 * sqrt(pow(inv_gradient, 2) + 1));
+    double move_in_y = sqrt(pow(width_in_px/2,2) - pow(move_in_x, 2));
+
+    if (gradient == 0.0) {
+        move_in_x = 0.0;
+        move_in_y = width_in_px / 2.0;
+    } else if (inv_gradient == 0.0) {
+        move_in_x = width_in_px / 2.0;
+        move_in_y = 0.0;
+    }
+
+    // adjust the moves to reflect our line
+    if (xyA.x > xyB.x && xyA.y > xyB.y) {
+        move_in_x = -move_in_x;
+        move_in_y = move_in_y;
+    } else if (xyA.x > xyB.x && xyA.y <= xyB.y) {
+        move_in_x = -move_in_x;
+        move_in_y = -move_in_y;
+    } else if (xyA.x <= xyB.x && xyA.y > xyB.y) {
+        move_in_x = move_in_x;
+        move_in_y = move_in_y;
+    } else { //if //(xyA.x < xyB.x && xyA.y < xyB.y) {
+        move_in_x = move_in_x;
+        move_in_y = -move_in_y;
+    }
+
+    xyA.x -= move_in_x;
+    xyA.y -= move_in_y;
+    xyB.x -= move_in_x;
+    xyB.y -= move_in_y;
+
+    double pix = image.source_per_px_x / overlay;
+    // make sure we always make at least two steps
+    uint64_t total_steps = std::ceil(std::max((double)2, width_in_px / pix));
+    double step_x = 2*move_in_x / (double)total_steps;
+    double step_y = 2*move_in_y / (double)total_steps;
+
+    for (uint64_t i = 0; i < total_steps; ++i) {
+        xyA.x += step_x;
+        xyA.y += step_y;
+        xyB.x += step_x;
+        xyB.y += step_y;
+        wu_calc_line(xyA, xyB, image);
+    }
+}
 
 }
 

@@ -34,7 +34,7 @@ int main_draw(int argc, char **argv) {
     args::ValueFlag<uint64_t> png_border(parser, "FILE", "size of PNG border in bp (default: 10)", {'E', "png-border"});
     args::ValueFlag<double> render_scale(parser, "N", "image scaling (default 1.0)", {'R', "scale"});
     args::ValueFlag<double> render_border(parser, "N", "image border (in approximate bp) (default 100.0)", {'B', "border"});
-    args::ValueFlag<double> png_line_width(parser, "N", "line width (in approximate bp) (default 1.0)", {'l', "line-width"});
+    args::ValueFlag<double> png_line_width(parser, "N", "line width (in approximate bp) (default 0.0)", {'l', "line-width"});
     args::ValueFlag<std::string> xp_in_file(parser, "FILE", "load the path index from this file", {'X', "path-index"});
     args::Flag progress(parser, "progress", "display progress of the sort", {'P', "progress"});
     args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel phases", {'t', "threads"});
@@ -130,10 +130,11 @@ int main_draw(int argc, char **argv) {
     if (png_out_file) {
         auto& outfile = args::get(png_out_file);
         uint64_t _png_height = png_height ? args::get(png_height) : 1000;
+        double _png_line_width = png_line_width ? args::get(png_line_width) : 0;
         // todo could be done with callbacks
         std::vector<double> X = layout.get_X();
         std::vector<double> Y = layout.get_Y();
-        algorithms::draw_png(outfile, X, Y, graph, 1.0, border_bp, 0, _png_height);
+        algorithms::draw_png(outfile, X, Y, graph, 1.0, border_bp, 0, _png_height, _png_line_width);
     }
     
     return 0;

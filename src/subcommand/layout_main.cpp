@@ -370,7 +370,7 @@ int main_layout(int argc, char **argv) {
     if (png_out_file) {
         auto& outfile = args::get(png_out_file);
         uint64_t _png_height = png_height ? args::get(png_height) : 1000;
-        algorithms::draw_png(outfile, X_final, Y_final, graph, 1.0, border_bp, 0, _png_height);
+        algorithms::draw_png(outfile, X_final, Y_final, graph, 1.0, border_bp, 0, _png_height, 0.0);
     }
     
     return 0;
