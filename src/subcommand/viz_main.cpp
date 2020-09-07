@@ -677,7 +677,9 @@ namespace odgi {
         });
 
         if (args::get(drop_gap_links)) {
-            std::cerr << "Gap links removed: " << gap_links_removed << " of " << total_links << " total links" << std::endl;
+            std::cerr << "Gap links removed: " << gap_links_removed << " (" << path_count << " path start links + "
+            << path_count << " path end links + " << (gap_links_removed - path_count * 2) << " inner gap links) of "
+            << total_links << " total links" << std::endl;
         }
 
         // trim vertical space to fit
