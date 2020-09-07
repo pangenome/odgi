@@ -7,6 +7,7 @@
 #include <handlegraph/mutable_path_deletable_handle_graph.hpp>
 #include <handlegraph/util.hpp>
 #include "weakly_connected_components.hpp"
+#include <deps/ips4o/ips4o.hpp>
 
 namespace odgi {
     namespace algorithms {
@@ -55,6 +56,6 @@ namespace odgi {
                         size_t num_paths_per_component, size_t node_window_size,
                         size_t min_node_coverage, size_t max_number_of_paths_generable,
                         bool write_node_coverages, std::string &node_coverages,
-                        bool show_progress = false);
+                        const uint64_t& nthreads, const bool& show_progress);
     }
 }

@@ -238,7 +238,7 @@ namespace odgi {
                              size_t num_paths_per_component, size_t node_window_size,
                              size_t min_node_coverage, size_t max_number_of_paths_generable,
                              bool write_node_covearges, std::string &node_coverages,
-                             bool show_progress) {
+                             const uint64_t& nthreads, const bool& show_progress) {
             typedef typename Coverage::coverage_t coverage_t;
             typedef typename Coverage::node_coverage_t node_coverage_t;
 
@@ -281,10 +281,10 @@ namespace odgi {
             for (i = 0; i < num_paths_per_component; i++) {
                 // Choose a starting node with minimum coverage and then sort the nodes by id.
                 std::deque<handle_t> path;
-                std::sort(node_coverage.begin(), node_coverage.end(),
+                ips4o::parallel::sort(node_coverage.begin(), node_coverage.end(),
                           [](const node_coverage_t &a, const node_coverage_t &b) -> bool {
                               return (a.second < b.second);
-                          });
+                          }, nthreads);
 
 #ifdef debug_cover
                 std::cerr << node_coverage.front().first << " --- " << node_coverage.front().second << std::endl;
@@ -297,10 +297,10 @@ namespace odgi {
 
                 path.push_back(graph.get_handle(node_coverage.front().first, false));
                 Coverage::increase_coverage(node_coverage.front());
-                std::sort(node_coverage.begin(), node_coverage.end(),
+                ips4o::parallel::sort(node_coverage.begin(), node_coverage.end(),
                           [](const node_coverage_t &a, const node_coverage_t &b) -> bool {
                               return (a.first < b.first);
-                          });
+                          }, nthreads);
 
                 // Extend the path forward if acyclic or in both directions otherwise.
                 bool success = true;
@@ -352,7 +352,7 @@ namespace odgi {
                         size_t num_paths_per_component, size_t node_window_size,
                         size_t min_node_coverage, size_t max_number_of_paths_generable,
                         bool write_node_coverages, std::string &node_coverages,
-                        bool show_progress) {
+                        const uint64_t& nthreads, const bool& show_progress) {
             std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components = algorithms::weakly_connected_components(
                     &graph);
 
@@ -363,7 +363,7 @@ namespace odgi {
                                                          num_paths_per_component, node_window_size,
                                                          min_node_coverage, max_number_of_paths_generable,
                                                          write_node_coverages, node_coverages,
-                                                         show_progress)) {
+                                                         nthreads, show_progress)) {
                     processed_components++;
 
                     if (show_progress) {

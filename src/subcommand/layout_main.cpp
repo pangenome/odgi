@@ -6,20 +6,12 @@
 #include "algorithms/xp.hpp"
 #include "algorithms/sgd_layout.hpp"
 #include "algorithms/path_sgd_layout.hpp"
-#include "algorithms/svg.hpp"
+#include "algorithms/draw.hpp"
+#include "algorithms/layout.hpp"
 
 namespace odgi {
 
 using namespace odgi::subcommand;
-
-void to_tsv(ostream &out, const std::vector<double> &X, const std::vector<double> &Y, const HandleGraph &graph) {
-    uint64_t n = graph.get_node_count() * 2;
-    out << std::setprecision(std::numeric_limits<double>::digits10 + 1);
-    out << "idx" << "\t" << "X" << "\t" << "Y" << std::endl;
-    for (uint64_t i = 0; i < n; ++i) {
-        out << i << "\t" << X[i] << "\t" << Y[i] << std::endl;
-    }
-}
 
 int main_layout(int argc, char **argv) {
 
@@ -32,15 +24,17 @@ int main_layout(int argc, char **argv) {
     --argc;
 
     args::ArgumentParser parser(
-        "draw 2D layouts of the graph using path-guided stochastic gradient descent (the graph must be sorted and id-compacted)");
+        "establish 2D layouts of the graph using path-guided stochastic gradient descent (the graph must be sorted and id-compacted)");
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-    args::ValueFlag<std::string> layout_out_file(parser, "FILE", "write the layout coordinates to this file", {'o', "out"});
+    args::ValueFlag<std::string> layout_out_file(parser, "FILE", "write the layout coordinates to this file in .lay binary format", {'o', "out"});
+    args::ValueFlag<std::string> tsv_out_file(parser, "FILE", "write the TSV layout to this file", {'T', "tsv"});
     args::ValueFlag<std::string> svg_out_file(parser, "FILE", "write an SVG rendering to this file", {'s', "svg"});
-    args::ValueFlag<std::string> png_out_file(parser, "FILE", "write a rasterized PNG rendering to this file", {'r', "png"});
-    args::ValueFlag<std::string> png_height(parser, "FILE", "height of PNG rendering (default: 1000)", {'H', "png-height"});
+    args::ValueFlag<std::string> png_out_file(parser, "FILE", "write a rasterized PNG rendering to this file", {'p', "png"});
+    args::ValueFlag<uint64_t> png_height(parser, "FILE", "height of PNG rendering (default: 1000)", {'H', "png-height"});
+    args::ValueFlag<uint64_t> png_border(parser, "FILE", "size of PNG border in bp (default: 10)", {'E', "png-border"});
     args::ValueFlag<double> render_scale(parser, "N", "image scaling (default 1.0)", {'R', "scale"});
-    args::ValueFlag<double> render_border(parser, "N", "image border (default 10.0)", {'B', "border"});
+    args::ValueFlag<double> render_border(parser, "N", "image border (in approximate bp) (default 100.0)", {'B', "border"});
     args::ValueFlag<std::string> xp_in_file(parser, "FILE", "load the path index from this file", {'X', "path-index"});
     /// Path-guided-2D-SGD parameters
     args::ValueFlag<std::string> p_sgd_in_file(parser, "FILE",
@@ -84,8 +78,8 @@ int main_layout(int argc, char **argv) {
                                                 "set the prefix to which each snapshot graph of a path guided 1D SGD iteration should be written to, no default",
                                                 {'u', "path-sgd-snapshot"});
 
-    args::ValueFlag<double> x_pad(parser, "N", "padding between connected component layouts (default 10.0)",
-                                  {'p', "x-padding"});
+    //args::ValueFlag<double> x_pad(parser, "N", "padding between connected component layouts (default 10.0)",
+    //{'p', "x-padding"});
     args::Flag progress(parser, "progress", "display progress of the sort", {'P', "progress"});
     args::ValueFlag<uint64_t> nthreads(parser, "N",
                                        "number of threads to use for parallel sorters (currently only SGD is supported)",
@@ -114,9 +108,9 @@ int main_layout(int argc, char **argv) {
         return 1;
     }
 
-    if (!layout_out_file && !svg_out_file) {
+    if (!layout_out_file && !svg_out_file && !png_out_file && !tsv_out_file) {
         std::cerr
-            << "[odgi layout] error: Please specify an output file to where to store the layout via -o=[FILE], --out=[FILE] or -s=[FILE], --svg=[FILE]"
+            << "[odgi layout] error: Please specify an output file to where to store the layout via -o/--out=[FILE], -p/--png=[FILE], -s/--svg=[FILE], -T/--tsv=[FILE]"
             << std::endl;
         return 1;
     }
@@ -136,9 +130,9 @@ int main_layout(int argc, char **argv) {
 
     const uint64_t t_max = !p_sgd_iter_max ? 30 : args::get(p_sgd_iter_max);
     const double eps = !p_sgd_eps ? 0.01 : args::get(p_sgd_eps);
-    const double x_padding = !x_pad ? 10.0 : args::get(x_pad);
+    //const double x_padding = !x_pad ? 10.0 : args::get(x_pad);
     const double svg_scale = !render_scale ? 1.0 : args::get(render_scale);
-    const double svg_border = !render_border ? 10.0 : args::get(render_border);
+    const double border_bp = !render_border ? 100.0 : args::get(render_border);
     const double sgd_delta = p_sgd_delta ? args::get(p_sgd_delta) : 0;
     const uint64_t num_threads = nthreads ? args::get(nthreads) : 1;
     const bool show_progress = progress ? args::get(progress) : false;
@@ -326,79 +320,6 @@ int main_layout(int argc, char **argv) {
         graph_Y
         );
 
-    /*for (auto &component_order : weak_component_order) {
-      auto &weak_component = weak_components[component_order.second];
-
-      std::vector<handlegraph::nid_t> component_ids;
-      for (auto &id : weak_component) {
-      component_ids.push_back(id);
-      }
-
-      std::sort(component_ids.begin(), component_ids.end());
-      const handle_t &first_handle = graph.get_handle(component_ids.front());
-      uint64_t pos_offset = number_bool_packing::unpack_number(first_handle);
-
-      uint64_t n = weak_component.size();
-
-      // Generate randomly X and Y
-      std::vector<double> component_X(2 * n);
-      std::vector<double> component_Y(2 * n);
-
-      uint64_t len = 0;
-      for (auto node_id : weak_component) {
-      const handle_t &h = graph.get_handle(node_id);
-
-      uint64_t pos = number_bool_packing::unpack_number(h) - pos_offset;
-
-      graph_X[pos] = len;     // node+
-      graph_Y[pos] = dist(rng);
-      len += graph.get_length(h);
-      graph_X[pos + 1] = len; // node-
-      graph_Y[pos + 1] = dist(rng); // node-
-      }
-
-      ///std::vector<double> component_layout = algorithms::path_2D_sgd_order(graph,
-      //                                                  path_index,
-      //                                                  path_sgd_use_paths,
-      //                                                  path_sgd_iter_max,
-      //                                                  path_sgd_iter_max_learning_rate,
-      //                                                  path_sgd_min_term_updates,
-      //                                                  path_sgd_delta,
-      //                                                  path_sgd_eps,
-      //                                                  path_sgd_max_eta,
-      //                                                  path_sgd_zipf_theta,
-      //                                                  path_sgd_zipf_space,
-      //                                                  num_threads,
-      //                                                  progress,
-      //                                                  path_sgd_seed,
-      //                                                  snapshot,
-      //                                                  snapshots,
-      //                                                  component_X,
-      //                                                  component_Y);
-
-
-      // ToDo Formula: 2(id-1) + alfa (if reverse)
-      for (uint64_t i = 0; i < 2 * n; i += 2) {
-      //std::cerr << "i = " << i << std::endl;
-      uint64_t j = component_ids[i / 2] - 1;
-
-      graph_X[j * 2] = component_X[i] + max_x;
-      graph_X[j * 2 + 1] = component_X[i] + max_x;
-
-      graph_Y[j * 2] = component_Y[i];
-      graph_Y[j * 2 + 1] = component_Y[i];
-
-      //std::cerr << "layout " << j << " " << layout[j*2] << " " << layout[j*2+1] << std::endl;
-      }
-      // set new max_x
-      for (uint64_t i = 0; i < 2 * n; i += 2) {
-      max_x = std::max(component_X[i], max_x);
-      }
-      max_x += x_padding;
-      }*/
-
-
-
     // drop out of atomic stuff... maybe not the best way to do this
     // TODO: use directly the atomic vector?
     std::vector<double> X_final(graph_X.size());
@@ -412,14 +333,28 @@ int main_layout(int argc, char **argv) {
         Y_final[i++] = y.load();
     }
 
+    if (tsv_out_file) {
+        auto& outfile = args::get(tsv_out_file);
+        if (outfile.size()) {
+            if (outfile == "-") {
+                algorithms::layout::to_tsv(std::cout, X_final, Y_final, graph);
+            } else {
+                ofstream f(outfile.c_str());
+                algorithms::layout::to_tsv(f, X_final, Y_final, graph);
+                f.close();
+            }
+        }
+    }
+
     if (layout_out_file) {
         auto& outfile = args::get(layout_out_file);
         if (outfile.size()) {
+            algorithms::layout::Layout lay(X_final, Y_final);
             if (outfile == "-") {
-                to_tsv(std::cout, X_final, Y_final, graph);
+                lay.serialize(std::cout);
             } else {
                 ofstream f(outfile.c_str());
-                to_tsv(f, X_final, Y_final, graph);
+                lay.serialize(f);
                 f.close();
             }
         }
@@ -428,8 +363,14 @@ int main_layout(int argc, char **argv) {
     if (svg_out_file) {
         auto& outfile = args::get(svg_out_file);
         ofstream f(outfile.c_str());
-        algorithms::draw_svg(f, X_final, Y_final, graph, svg_scale, svg_border);
+        algorithms::draw_svg(f, X_final, Y_final, graph, svg_scale, border_bp);
         f.close();    
+    }
+
+    if (png_out_file) {
+        auto& outfile = args::get(png_out_file);
+        uint64_t _png_height = png_height ? args::get(png_height) : 1000;
+        algorithms::draw_png(outfile, X_final, Y_final, graph, 1.0, border_bp, 0, _png_height, 0.0);
     }
     
     return 0;
