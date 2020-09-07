@@ -216,15 +216,17 @@ namespace algorithms {
 }
 
     void unchop(handlegraph::MutablePathDeletableHandleGraph& graph) {
-        unchop(graph, 1);
+        unchop(graph, 1, false);
     }
 
-void unchop(handlegraph::MutablePathDeletableHandleGraph& graph, const uint64_t& nthreads) {
+void unchop(handlegraph::MutablePathDeletableHandleGraph& graph, const uint64_t& nthreads, const bool& show_info) {
 #ifdef debug
     std::cerr << "Running unchop" << std::endl;
 #endif
     std::vector<std::pair<uint64_t , handle_t>> rank_handle;
 
+    uint64_t num_node_unchopped = 0;
+    uint64_t num_new_nodes = 0;
     for (auto& comp : simple_components(graph, 2, true)) {
 #ifdef debug
         std::cerr << "Unchop " << comp.size() << " nodes together" << std::endl;
@@ -232,9 +234,16 @@ void unchop(handlegraph::MutablePathDeletableHandleGraph& graph, const uint64_t&
 
         if (comp.size() >= 2){
             rank_handle.push_back(concat_nodes(graph, comp));
+
+            num_node_unchopped += comp.size();
+            num_new_nodes++;
         }else{
             rank_handle.push_back(std::make_pair(number_bool_packing::unpack_number(comp.front()), comp.front()));
         }
+    }
+
+    if (show_info){
+        std::cerr << "[odgi unchop]: unchopped " << num_node_unchopped << " nodes into " << num_new_nodes << " new nodes." << std::endl;
     }
 
     ips4o::parallel::sort(rank_handle.begin(), rank_handle.end(), std::less<>(), nthreads);

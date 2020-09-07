@@ -28,8 +28,10 @@ void unchop(handlegraph::MutablePathDeletableHandleGraph& graph);
  * compatible path steps together.
  * @param graph
  * @param nthreads
+ * @param show_info
  */
-void unchop(handlegraph::MutablePathDeletableHandleGraph& graph, const uint64_t& nthreads);
+
+void unchop(handlegraph::MutablePathDeletableHandleGraph& graph, const uint64_t& nthreads, const bool& show_info);
 
 //std::vector<std::deque<handle_t>> simple_components(PathHandleGraph* graph, int min_size = 1, false);
 
