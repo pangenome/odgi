@@ -17,7 +17,8 @@ namespace algorithms {
 
 using namespace handlegraph;
 
-std::vector<std::vector<handle_t>> simple_components(const PathHandleGraph& graph, uint64_t min_size);
+std::vector<std::vector<handle_t>> simple_components(
+        const PathHandleGraph& graph, uint64_t min_size, bool return_all_handles);
 
 }
 

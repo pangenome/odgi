@@ -34,7 +34,7 @@ TEST_CASE("Graph simplification reduces a simple graph to a single node", "[simp
     graph.create_edge(n3, n4);
     graph.create_edge(n4, n5);
     graph.create_edge(n5, n6);
-    std::vector<std::vector<handle_t>> linear_components = algorithms::simple_components(graph, 2);
+    std::vector<std::vector<handle_t>> linear_components = algorithms::simple_components(graph, 2, false);
     for (auto& v : linear_components) {
         graph.combine_handles(v);
     }
@@ -60,7 +60,7 @@ TEST_CASE("Graph simplification reduces a graph with a self loop", "[simplify]")
     graph.create_edge(n3, n4);
     graph.create_edge(n4, n5);
     graph.create_edge(n5, n6);
-    std::vector<std::vector<handle_t>> linear_components = algorithms::simple_components(graph, 2);
+    std::vector<std::vector<handle_t>> linear_components = algorithms::simple_components(graph, 2, false);
     for (auto& v : linear_components) {
         graph.combine_handles(v);
     }
@@ -90,7 +90,7 @@ TEST_CASE("Graph simplification reduces a graph with a self inverting +/- loop",
     graph.create_edge(n3, n4);
     graph.create_edge(n4, n5);
     graph.create_edge(n5, n6);
-    std::vector<std::vector<handle_t>> linear_components = algorithms::simple_components(graph, 2);
+    std::vector<std::vector<handle_t>> linear_components = algorithms::simple_components(graph, 2, false);
     for (auto& v : linear_components) {
         graph.combine_handles(v);
     }
@@ -118,7 +118,7 @@ TEST_CASE("Graph simplification reduces a graph with a self inverting -/+ loop",
     graph.create_edge(n3, n4);
     graph.create_edge(n4, n5);
     graph.create_edge(n5, n6);
-    std::vector<std::vector<handle_t>> linear_components = algorithms::simple_components(graph, 2);
+    std::vector<std::vector<handle_t>> linear_components = algorithms::simple_components(graph, 2, false);
     for (auto& v : linear_components) {
         graph.combine_handles(v);
     }
