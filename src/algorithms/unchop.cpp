@@ -20,11 +20,12 @@ namespace algorithms {
 /// consistent orientation. All paths present must run all the way through the
 /// run of nodes from start to end or end to start.
 ///
-/// Returns the handle to the newly created node.
+/// Returns the min rank of the concatenated nodes and the handle to the newly created node in the new graph.
 ///
 /// After calling this on a vg::VG, paths will be invalid until
 /// Paths::compact_ranks() is called.
-handle_t concat_nodes(handlegraph::MutablePathDeletableHandleGraph& graph, const std::vector<handle_t>& nodes) {
+    std::pair<uint64_t, handle_t> concat_nodes(
+            handlegraph::MutablePathDeletableHandleGraph& graph, const std::vector<handle_t>& nodes) {
 
     // Make sure we have at least 2 nodes
     assert(!nodes.empty() && nodes.front() != nodes.back());
@@ -45,12 +46,16 @@ handle_t concat_nodes(handlegraph::MutablePathDeletableHandleGraph& graph, const
     */
 
     // We also require no edges enter or leave the run of nodes, but we can't check that now.
-    
+
+    uint64_t min_rank = std::numeric_limits<uint64_t>::max();
+
     // Make the new node
     handle_t new_node;
     {
         std::stringstream ss;
         for (auto& n : nodes) {
+            min_rank = std::min(min_rank, number_bool_packing::unpack_number(n));
+
             ss << graph.get_sequence(n);
         }
         
