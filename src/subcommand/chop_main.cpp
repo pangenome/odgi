@@ -24,7 +24,7 @@ int main_chop(int argc, char** argv) {
     args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store the graph self index in this file", {'o', "out"});
     args::ValueFlag<uint64_t> chop_to(parser, "N", "divide nodes to be shorter than this length", {'c', "chop-to"});
     args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for the parallel sorter", {'t', "threads"});
-    args::Flag debug(parser, "debug", "print information about the components", {'d', "debug"});
+    args::Flag debug(parser, "debug", "  print information about the process to stderr.", {'d', "debug"});
 
     try {
         parser.ParseCLI(argc, argv);

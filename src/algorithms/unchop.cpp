@@ -215,7 +215,11 @@ namespace algorithms {
     return std::make_pair(min_rank, new_node);
 }
 
-void unchop(handlegraph::MutablePathDeletableHandleGraph& graph) {
+    void unchop(handlegraph::MutablePathDeletableHandleGraph& graph) {
+        unchop(graph, 1);
+    }
+
+void unchop(handlegraph::MutablePathDeletableHandleGraph& graph, const uint64_t& nthreads) {
 #ifdef debug
     std::cerr << "Running unchop" << std::endl;
 #endif
@@ -233,7 +237,7 @@ void unchop(handlegraph::MutablePathDeletableHandleGraph& graph) {
         }
     }
 
-    ips4o::parallel::sort(rank_handle.begin(), rank_handle.end());
+    ips4o::parallel::sort(rank_handle.begin(), rank_handle.end(), std::less<>(), nthreads);
 
     std::vector<handle_t> new_handles;
     for (auto x : rank_handle) {
