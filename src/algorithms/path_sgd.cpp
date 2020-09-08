@@ -42,6 +42,7 @@ namespace odgi {
             atomic<bool> snapshot_in_progress;
             snapshot_in_progress.store(false);
             std::vector<atomic<bool>> snapshot_progress(iter_max);
+            // we will produce one less snapshot compared to iterations
             snapshot_progress[0].store(true);
             // seed them with the graph order
             uint64_t len = 0;

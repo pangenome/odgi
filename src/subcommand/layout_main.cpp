@@ -183,8 +183,11 @@ int main_layout(int argc, char **argv) {
     double path_sgd_eps = p_sgd_eps ? args::get(p_sgd_eps) : 0.01;
     double path_sgd_delta = p_sgd_delta ? args::get(p_sgd_delta) : 0;
     // will be filled, if the user decides to write a snapshot of the graph after each sorting iterationn
-    std::vector<std::vector<handle_t>> snapshots;
     const bool snapshot = p_sgd_snapshot;
+    std::string snapshot_prefix;
+    if (snapshot) {
+        snapshot_prefix = args::get(p_sgd_snapshot);
+    }
 
     // default parameters that need a path index to be present
     uint64_t path_sgd_min_term_updates;
@@ -296,8 +299,6 @@ int main_layout(int argc, char **argv) {
                           });
 
     //double max_x = 0;
-
-    std::vector<std::vector<double>> snapshotsX; // TODO to remove
     algorithms::path_linear_sgd_layout(
         graph,
         path_index,
@@ -315,7 +316,7 @@ int main_layout(int argc, char **argv) {
         num_threads,
         show_progress,
         snapshot,
-        snapshotsX,
+        snapshot_prefix,
         graph_X,
         graph_Y
         );
