@@ -167,9 +167,9 @@ namespace odgi {
             auto worker_lambda =
                     [&](uint64_t tid) {
                         // everyone tries to seed with their own random data
-                        std::array<uint64_t, 2> seed_data = {(uint64_t) std::time(0), tid};
-                        std::seed_seq sseq(std::begin(seed_data), std::end(seed_data));
-                        std::mt19937_64 gen(sseq);
+                        const std::uint64_t seed = 9399220 + tid;
+                        XoshiroCpp::Xoshiro256Plus gen(seed); // a nice, fast PRNG
+                        // some references to literal bitvectors in the path index hmmm
                         const sdsl::bit_vector &np_bv = path_index.get_np_bv();
                         const sdsl::int_vector<> &nr_iv = path_index.get_nr_iv();
                         const sdsl::int_vector<> &npi_iv = path_index.get_npi_iv();

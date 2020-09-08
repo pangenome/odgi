@@ -17,6 +17,7 @@
 #include <string>
 #include "weakly_connected_components.hpp"
 #include <sdsl/bit_vectors.hpp>
+#include "XoshiroCpp.hpp"
 
 namespace odgi {
     namespace algorithms {

@@ -67,3 +67,6 @@
 [submodule "deps/atomic_queue"]
 	path = deps/atomic_queue
 	url = https://github.com/max0x7ba/atomic_queue.git
+[submodule "deps/Xoshiro-cpp"]
+	path = deps/Xoshiro-cpp
+	url = https://github.com/Reputeless/Xoshiro-cpp.git
