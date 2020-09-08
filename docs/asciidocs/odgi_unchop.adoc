@@ -31,12 +31,6 @@ The odgi unchop(1) command merges each unitig into a single node preserving the 
   Write the unchopped dynamic succinct variation graph to this file. A file ending with _.og_ is recommended.
 
 
-=== Threading
-
-*-t, --threads*=_N_::
-Number of threads to use for the parallel sorter.
-
-
 === Processing Information
 
 *-d, --debug*::

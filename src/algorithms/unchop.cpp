@@ -20,12 +20,11 @@ namespace algorithms {
 /// consistent orientation. All paths present must run all the way through the
 /// run of nodes from start to end or end to start.
 ///
-/// Returns the min rank of the concatenated nodes and the handle to the newly created node in the new graph.
+/// Returns the handle to the newly created node in the new graph.
 ///
 /// After calling this on a vg::VG, paths will be invalid until
 /// Paths::compact_ranks() is called.
-    std::pair<uint64_t, handle_t> concat_nodes(
-            handlegraph::MutablePathDeletableHandleGraph& graph, const std::vector<handle_t>& nodes) {
+    handle_t concat_nodes(handlegraph::MutablePathDeletableHandleGraph& graph, const std::vector<handle_t>& nodes) {
 
     // Make sure we have at least 2 nodes
     assert(!nodes.empty() && nodes.front() != nodes.back());
@@ -47,15 +46,11 @@ namespace algorithms {
 
     // We also require no edges enter or leave the run of nodes, but we can't check that now.
 
-    uint64_t min_rank = std::numeric_limits<uint64_t>::max();
-
     // Make the new node
     handle_t new_node;
     {
         std::stringstream ss;
         for (auto& n : nodes) {
-            min_rank = std::min(min_rank, number_bool_packing::unpack_number(n));
-
             ss << graph.get_sequence(n);
         }
         
@@ -212,18 +207,18 @@ namespace algorithms {
     */
 
     // Return the new handle we merged to.
-    return std::make_pair(min_rank, new_node);
+    return new_node;
 }
 
     void unchop(handlegraph::MutablePathDeletableHandleGraph& graph) {
-        unchop(graph, 1, false);
+        unchop(graph, false);
     }
 
-void unchop(handlegraph::MutablePathDeletableHandleGraph& graph, const uint64_t& nthreads, const bool& show_info) {
+void unchop(handlegraph::MutablePathDeletableHandleGraph& graph, const bool& show_info) {
 #ifdef debug
     std::cerr << "Running unchop" << std::endl;
 #endif
-    std::vector<std::pair<uint64_t , handle_t>> rank_handle;
+    std::vector<handle_t> handle_order;
 
     uint64_t num_node_unchopped = 0;
     uint64_t num_new_nodes = 0;
@@ -233,12 +228,12 @@ void unchop(handlegraph::MutablePathDeletableHandleGraph& graph, const uint64_t&
 #endif
 
         if (comp.size() >= 2){
-            rank_handle.push_back(concat_nodes(graph, comp));
+            handle_order.push_back(concat_nodes(graph, comp));
 
             num_node_unchopped += comp.size();
             num_new_nodes++;
         }else{
-            rank_handle.push_back(std::make_pair(number_bool_packing::unpack_number(comp.front()), comp.front()));
+            handle_order.push_back(comp.front());
         }
     }
 
@@ -246,14 +241,7 @@ void unchop(handlegraph::MutablePathDeletableHandleGraph& graph, const uint64_t&
         std::cerr << "[odgi unchop]: unchopped " << num_node_unchopped << " nodes into " << num_new_nodes << " new nodes." << std::endl;
     }
 
-    ips4o::parallel::sort(rank_handle.begin(), rank_handle.end(), std::less<>(), nthreads);
-
-    std::vector<handle_t> new_handles;
-    for (auto x : rank_handle) {
-        new_handles.push_back(x.second);
-    }
-
-    graph.apply_ordering(new_handles, true);
+    graph.apply_ordering(handle_order, true);
 }
 
 

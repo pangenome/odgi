@@ -22,8 +22,6 @@ int main_unchop(int argc, char** argv) {
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> og_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> og_out_file(parser, "FILE", "store the graph self index in this file", {'o', "out"});
-    //args::ValueFlag<uint64_t> max_iterations(parser, "FILE", "iterate normalization up to this many times (default: 10)", {'I', "max-iterations"});
-    args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for the parallel sorter", {'t', "threads"});
     args::Flag debug(parser, "debug", "print information about the process to stderr.", {'d', "debug"});
 
     try {
@@ -64,9 +62,7 @@ int main_unchop(int argc, char** argv) {
         }
     }
 
-    uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
-
-    algorithms::unchop(graph, num_threads, args::get(debug));
+    algorithms::unchop(graph, args::get(debug));
     
     std::string outfile = args::get(og_out_file);
     if (outfile.size()) {
