@@ -17,6 +17,7 @@
 #include <string>
 #include "weakly_connected_components.hpp"
 #include <sdsl/bit_vectors.hpp>
+#include "dirty_zipfian_int_distribution.h"
 #include "XoshiroCpp.hpp"
 
 namespace odgi {

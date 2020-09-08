@@ -1,4 +1,5 @@
 #include "path_sgd.hpp"
+#include "dirty_zipfian_int_distribution.h"
 
 // #define debug_path_sgd
 // #define eval_path_sgd
@@ -109,7 +110,7 @@ namespace odgi {
                 }
 
                 if (quantized_i != last_quantized_i){
-                    zipfian_int_distribution<uint64_t>::param_type z_p(1, quantized_i, theta);
+                    dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, quantized_i, theta);
                     zetas[quantized_i] = z_p.zeta();
 
                     last_quantized_i = quantized_i;
@@ -220,8 +221,8 @@ namespace odgi {
                                 if (jump_space > space_max){
                                     space = space_max + (jump_space - space_max) / space_quantization_step + 1;
                                 }
-                                zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, theta, zetas[space]);
-                                zipfian_int_distribution<uint64_t> z(z_p);
+                                dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, theta, zetas[space]);
+                                dirtyzipf::dirty_zipfian_int_distribution<uint64_t> z(z_p);
                                 uint64_t z_i = z(gen);
                                 //assert(z_i <= path_space);
                                 as_integers(step_b)[0] = as_integer(path);
@@ -233,8 +234,8 @@ namespace odgi {
                                 if (jump_space > space_max){
                                     space = space_max + (jump_space - space_max) / space_quantization_step + 1;
                                 }
-                                zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, theta, zetas[space]);
-                                zipfian_int_distribution<uint64_t> z(z_p);
+                                dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, theta, zetas[space]);
+                                dirtyzipf::dirty_zipfian_int_distribution<uint64_t> z(z_p);
                                 uint64_t z_i = z(gen);
                                 //assert(z_i <= path_space);
                                 as_integers(step_b)[0] = as_integer(path);

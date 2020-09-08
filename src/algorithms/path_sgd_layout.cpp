@@ -61,7 +61,7 @@ namespace odgi {
                 }
 
                 if (quantized_i != last_quantized_i){
-                    zipfian_int_distribution<uint64_t>::param_type z_p(1, quantized_i, theta);
+                    dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, quantized_i, theta);
                     zetas[quantized_i] = z_p.zeta();
 
                     last_quantized_i = quantized_i;
@@ -172,8 +172,8 @@ namespace odgi {
                                 if (jump_space > space_max){
                                     space = space_max + (jump_space - space_max) / space_quantization_step + 1;
                                 }
-                                zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, theta, zetas[space]);
-                                zipfian_int_distribution<uint64_t> z(z_p);
+                                dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, theta, zetas[space]);
+                                dirtyzipf::dirty_zipfian_int_distribution<uint64_t> z(z_p);
                                 uint64_t z_i = z(gen);
                                 //assert(z_i <= path_space);
                                 as_integers(step_b)[0] = as_integer(path);
@@ -185,8 +185,8 @@ namespace odgi {
                                 if (jump_space > space_max){
                                     space = space_max + (jump_space - space_max) / space_quantization_step + 1;
                                 }
-                                zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, theta, zetas[space]);
-                                zipfian_int_distribution<uint64_t> z(z_p);
+                                dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, theta, zetas[space]);
+                                dirtyzipf::dirty_zipfian_int_distribution<uint64_t> z(z_p);
                                 uint64_t z_i = z(gen);
                                 //assert(z_i <= path_space);
                                 as_integers(step_b)[0] = as_integer(path);
@@ -473,8 +473,8 @@ namespace odgi {
                                                                        iter_with_max_learning_rate,
                                                                        eps);
             // initialize Zipfian distribution so we only have to calculate zeta once
-            zipfian_int_distribution<uint64_t>::param_type p(1, space, theta);
-            zipfian_int_distribution<uint64_t> zipfian(p);
+            dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type p(1, space, theta);
+            dirtyzipf::dirty_zipfian_int_distribution<uint64_t> zipfian(p);
             // how many term updates we make
             std::atomic<uint64_t> term_updates;
             term_updates.store(0);

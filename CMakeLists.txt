@@ -278,6 +278,16 @@ ExternalProject_Add(random_distributions
 ExternalProject_Get_property(random_distributions SOURCE_DIR)
 set(random_distributions_INCLUDE "${SOURCE_DIR}")
 
+# dirtyzipf pow-approximate Zipf distribution
+ExternalProject_Add(dirtyzipf
+        SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/dirtyzipf"
+        UPDATE_COMMAND ""
+        INSTALL_COMMAND ""
+        BUILD_COMMAND ""
+        CONFIGURE_COMMAND "")
+ExternalProject_Get_property(dirtyzipf SOURCE_DIR)
+set(dirtyzipf_INCLUDE "${SOURCE_DIR}")
+
 # header-only pseudorandom number generator library
 ExternalProject_Add(xoshiro
   SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/Xoshiro-cpp"
@@ -413,8 +423,10 @@ set(odgi_DEPS
     libbf
     httplib
     random_distributions
+    dirtyzipf
     mmmulti
     ips4o
+    xoshiro
     atomicqueue)
 add_dependencies(odgi_objs ${odgi_DEPS})
 
@@ -445,6 +457,7 @@ set(odgi_INCLUDES
   "${libbf_INCLUDE}"
   "${httplib_INCLUDE}"
   "${random_distributions_INCLUDE}"
+  "${dirtyzipf_INCLUDE}"
   "${xoshiro_INCLUDE}")
 
 set(odgi_LIBS
