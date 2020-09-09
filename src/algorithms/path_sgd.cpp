@@ -175,43 +175,26 @@ namespace odgi {
                         const sdsl::int_vector<> &nr_iv = path_index.get_nr_iv();
                         const sdsl::int_vector<> &npi_iv = path_index.get_npi_iv();
                         // we'll sample from all path steps
-                        std::uniform_int_distribution<uint64_t> dis = std::uniform_int_distribution<uint64_t>(0, np_bv.size() - 1);
-                        // we should generate in the range [0, 1), but this fails once every ~10^9 samples and returns 1.0 due to a bug in the implementation
-                        // "generate_canonical can occasionally return 1.0" http://open-std.org/JTC1/SC22/WG21/docs/lwg-active.html#2524
-                        std::uniform_real_distribution<double> dis_path(0.0, 1.0 - std::numeric_limits<double>::epsilon());
+                        std::uniform_int_distribution<uint64_t> dis_step = std::uniform_int_distribution<uint64_t>(0, np_bv.size() - 1);
                         std::uniform_int_distribution<uint64_t> flip(0, 1);
-                        uint64_t hit_num_paths = 0;
                         while (work_todo.load()) {
                             // sample the first node from all the nodes in the graph
                             // pick a random position from all paths
-                            uint64_t node_index = dis(gen);
-                            while (np_bv[node_index] == 0 && node_index-- != 0);
-                            // did we hit the last node?
-                            uint64_t next_node_index = node_index;
-                            while (++next_node_index != np_bv.size() && np_bv[next_node_index] == 0);
-                            hit_num_paths = next_node_index - node_index - 1;
-                            if (hit_num_paths == 0) {
-                                continue;
-                            }
-
+                            uint64_t step_index = dis_step(gen);
 #ifdef debug_sample_from_nodes
-                            std::cerr << "node_index: " << node_index << std::endl;
+                            std::cerr << "step_index: " << step_index << std::endl;
 #endif
-                            uint64_t path_pos_in_np_iv = node_index + 1 + std::floor(dis_path(gen) * (double)hit_num_paths);
-#ifdef debug_sample_from_nodes
-                            std::cerr << "path pos in np_iv: " << path_pos_in_np_iv << std::endl;
-#endif
-                            uint64_t path_i = npi_iv[path_pos_in_np_iv];
+                            uint64_t path_i = npi_iv[step_index];
                             path_handle_t path = as_path_handle(path_i);
 #ifdef debug_sample_from_nodes
                             std::cerr << "path integer: " << path_i << std::endl;
 #endif
                             step_handle_t step_a, step_b;
                             as_integers(step_a)[0] = path_i; // path index
-                            size_t s_rank = nr_iv[path_pos_in_np_iv] - 1; // step rank in path
+                            size_t s_rank = nr_iv[step_index] - 1; // step rank in path
                             as_integers(step_a)[1] = s_rank;
 #ifdef debug_sample_from_nodes
-                            std::cerr << "step rank in path: " << nr_iv[path_pos_in_np_iv]  << std::endl;
+                            std::cerr << "step rank in path: " << nr_iv[step_index]  << std::endl;
 #endif
                             size_t path_step_count = path_index.get_path_step_count(path);
                             if (s_rank > 0 && flip(gen) || s_rank == path_step_count-1) {
