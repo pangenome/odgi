@@ -110,12 +110,14 @@ namespace odgi {
 #pragma omp parallel for schedule(static,1)
             for (uint64_t i = 1; i < space+1; ++i) {
                 uint64_t quantized_i = i;
+                uint64_t compressed_space = i;
                 if (i > space_max){
                     quantized_i = space_max + (i - space_max) / space_quantization_step + 1;
+                    compressed_space = space_max + ((i - space_max) / space_quantization_step) * space_quantization_step;
                 }
 
                 if (quantized_i != last_quantized_i){
-                    dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, quantized_i, theta);
+                    dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, compressed_space, theta);
                     zetas[quantized_i] = z_p.zeta();
 
                     last_quantized_i = quantized_i;
