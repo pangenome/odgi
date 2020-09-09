@@ -7,7 +7,7 @@
 namespace odgi {
     namespace algorithms {
 
-        std::vector<double> path_linear_sgd(const PathHandleGraph &graph,
+        std::vector<double> path_linear_sgd(const graph_t &graph,
                                             const xp::XP &path_index,
                                             const std::vector<path_handle_t> &path_sgd_use_paths,
                                             const uint64_t &iter_max,
@@ -23,7 +23,7 @@ namespace odgi {
                                             const uint64_t &nthreads,
                                             const bool &progress,
                                             const bool &snapshot,
-                                            std::vector<std::vector<double>> &snapshots) {
+                                            std::vector<std::string> &snapshots) {
 #ifdef debug_path_sgd
             std::cerr << "iter_max: " << iter_max << std::endl;
             std::cerr << "min_term_updates: " << min_term_updates << std::endl;
@@ -39,6 +39,11 @@ namespace odgi {
             uint64_t num_nodes = graph.get_node_count();
             // our positions in 1D
             std::vector<std::atomic<double>> X(num_nodes);
+            atomic<bool> snapshot_in_progress;
+            snapshot_in_progress.store(false);
+            std::vector<atomic<bool>> snapshot_progress(iter_max);
+            // we will produce one less snapshot compared to iterations
+            snapshot_progress[0].store(true);
             // seed them with the graph order
             uint64_t len = 0;
             graph.for_each_handle(
@@ -135,7 +140,23 @@ namespace odgi {
                     [&](void) {
                         while (work_todo.load()) {
                             if (term_updates.load() > min_term_updates) {
-                                if (++iteration > iter_max) {
+                                if (snapshot) {
+                                    if (snapshot_progress[iteration].load() || iteration == iter_max) {
+                                        iteration++;
+                                        if (iteration == iter_max) {
+                                            snapshot_in_progress.store(false);
+                                        } else {
+                                            snapshot_in_progress.store(true);
+                                        }
+                                    } else {
+                                        snapshot_in_progress.store(true);
+                                        continue;
+                                    }
+                                } else {
+                                    iteration++;
+                                    snapshot_in_progress.store(false);
+                                }
+                                if (iteration > iter_max) {
                                     work_todo.store(false);
                                 } else if (Delta_max.load() <= delta) { // nb: this will also break at 0
                                     if (progress) {
@@ -161,6 +182,7 @@ namespace odgi {
                                 term_updates.store(0);
                             }
                             std::this_thread::sleep_for(1ms);
+
                         }
                     };
 
@@ -181,159 +203,164 @@ namespace odgi {
                         std::uniform_int_distribution<uint64_t> flip(0, 1);
                         uint64_t hit_num_paths = 0;
                         while (work_todo.load()) {
-                            // sample the first node from all the nodes in the graph
-                            // pick a random position from all paths
-                            uint64_t node_index = dis(gen);
-                            while (np_bv[node_index] == 0 && node_index-- != 0);
-                            // did we hit the last node?
-                            uint64_t next_node_index = node_index;
-                            while (++next_node_index != np_bv.size() && np_bv[next_node_index] == 0);
-                            hit_num_paths = next_node_index - node_index - 1;
-                            if (hit_num_paths == 0) {
-                                continue;
-                            }
-
-#ifdef debug_sample_from_nodes
-                            std::cerr << "node_index: " << node_index << std::endl;
-#endif
-                            uint64_t path_pos_in_np_iv = node_index + 1 + std::floor(dis_path(gen) * (double)hit_num_paths);
-#ifdef debug_sample_from_nodes
-                            std::cerr << "path pos in np_iv: " << path_pos_in_np_iv << std::endl;
-#endif
-                            uint64_t path_i = npi_iv[path_pos_in_np_iv];
-                            path_handle_t path = as_path_handle(path_i);
-#ifdef debug_sample_from_nodes
-                            std::cerr << "path integer: " << path_i << std::endl;
-#endif
-                            step_handle_t step_a, step_b;
-                            as_integers(step_a)[0] = path_i; // path index
-                            size_t s_rank = nr_iv[path_pos_in_np_iv] - 1; // step rank in path
-                            as_integers(step_a)[1] = s_rank;
-#ifdef debug_sample_from_nodes
-                            std::cerr << "step rank in path: " << nr_iv[path_pos_in_np_iv]  << std::endl;
-#endif
-                            size_t path_step_count = path_index.get_path_step_count(path);
-                            if (s_rank > 0 && flip(gen) || s_rank == path_step_count-1) {
-                                // go backward
-                                uint64_t jump_space = std::min(space, s_rank);
-                                uint64_t space = jump_space;
-                                if (jump_space > space_max){
-                                    space = space_max + (jump_space - space_max) / space_quantization_step + 1;
+                            if (!snapshot_in_progress.load()) {
+                                // sample the first node from all the nodes in the graph
+                                // pick a random position from all paths
+                                uint64_t node_index = dis(gen);
+                                while (np_bv[node_index] == 0 && node_index-- != 0);
+                                // did we hit the last node?
+                                uint64_t next_node_index = node_index;
+                                while (++next_node_index != np_bv.size() && np_bv[next_node_index] == 0);
+                                hit_num_paths = next_node_index - node_index - 1;
+                                if (hit_num_paths == 0) {
+                                    continue;
                                 }
-                                zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, theta, zetas[space]);
-                                zipfian_int_distribution<uint64_t> z(z_p);
-                                uint64_t z_i = z(gen);
-                                //assert(z_i <= path_space);
-                                as_integers(step_b)[0] = as_integer(path);
-                                as_integers(step_b)[1] = s_rank - z_i;
-                            } else {
-                                // go forward
-                                uint64_t jump_space = std::min(space, path_step_count - s_rank - 1);
-                                uint64_t space = jump_space;
-                                if (jump_space > space_max){
-                                    space = space_max + (jump_space - space_max) / space_quantization_step + 1;
+
+#ifdef debug_sample_from_nodes
+                                std::cerr << "node_index: " << node_index << std::endl;
+#endif
+                                uint64_t path_pos_in_np_iv =
+                                        node_index + 1 + std::floor(dis_path(gen) * (double) hit_num_paths);
+#ifdef debug_sample_from_nodes
+                                std::cerr << "path pos in np_iv: " << path_pos_in_np_iv << std::endl;
+#endif
+                                uint64_t path_i = npi_iv[path_pos_in_np_iv];
+                                path_handle_t path = as_path_handle(path_i);
+#ifdef debug_sample_from_nodes
+                                std::cerr << "path integer: " << path_i << std::endl;
+#endif
+                                step_handle_t step_a, step_b;
+                                as_integers(step_a)[0] = path_i; // path index
+                                size_t s_rank = nr_iv[path_pos_in_np_iv] - 1; // step rank in path
+                                as_integers(step_a)[1] = s_rank;
+#ifdef debug_sample_from_nodes
+                                std::cerr << "step rank in path: " << nr_iv[path_pos_in_np_iv]  << std::endl;
+#endif
+                                size_t path_step_count = path_index.get_path_step_count(path);
+                                if (s_rank > 0 && flip(gen) || s_rank == path_step_count - 1) {
+                                    // go backward
+                                    uint64_t jump_space = std::min(space, s_rank);
+                                    uint64_t space = jump_space;
+                                    if (jump_space > space_max) {
+                                        space = space_max + (jump_space - space_max) / space_quantization_step + 1;
+                                    }
+                                    zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, theta,
+                                                                                       zetas[space]);
+                                    zipfian_int_distribution<uint64_t> z(z_p);
+                                    uint64_t z_i = z(gen);
+                                    //assert(z_i <= path_space);
+                                    as_integers(step_b)[0] = as_integer(path);
+                                    as_integers(step_b)[1] = s_rank - z_i;
+                                } else {
+                                    // go forward
+                                    uint64_t jump_space = std::min(space, path_step_count - s_rank - 1);
+                                    uint64_t space = jump_space;
+                                    if (jump_space > space_max) {
+                                        space = space_max + (jump_space - space_max) / space_quantization_step + 1;
+                                    }
+                                    zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, theta,
+                                                                                       zetas[space]);
+                                    zipfian_int_distribution<uint64_t> z(z_p);
+                                    uint64_t z_i = z(gen);
+                                    //assert(z_i <= path_space);
+                                    as_integers(step_b)[0] = as_integer(path);
+                                    as_integers(step_b)[1] = s_rank + z_i;
                                 }
-                                zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, theta, zetas[space]);
-                                zipfian_int_distribution<uint64_t> z(z_p);
-                                uint64_t z_i = z(gen);
-                                //assert(z_i <= path_space);
-                                as_integers(step_b)[0] = as_integer(path);
-                                as_integers(step_b)[1] = s_rank + z_i;
-                            }
 
-                            // and the graph handles, which we need to record the update
-                            handle_t term_i = path_index.get_handle_of_step(step_a);
-                            handle_t term_j = path_index.get_handle_of_step(step_b);
+                                // and the graph handles, which we need to record the update
+                                handle_t term_i = path_index.get_handle_of_step(step_a);
+                                handle_t term_j = path_index.get_handle_of_step(step_b);
 
-                            // adjust the positions to the node starts
-                            size_t pos_in_path_a = path_index.get_position_of_step(step_a);
-                            size_t pos_in_path_b = path_index.get_position_of_step(step_b);
+                                // adjust the positions to the node starts
+                                size_t pos_in_path_a = path_index.get_position_of_step(step_a);
+                                size_t pos_in_path_b = path_index.get_position_of_step(step_b);
 #ifdef debug_path_sgd
-                            std::cerr << "1. pos in path " << pos_in_path_a << " " << pos_in_path_b << std::endl;
+                                std::cerr << "1. pos in path " << pos_in_path_a << " " << pos_in_path_b << std::endl;
 #endif
-                            // assert(pos_in_path_a < path_index.get_path_length(path));
-                            // assert(pos_in_path_b < path_index.get_path_length(path));
+                                // assert(pos_in_path_a < path_index.get_path_length(path));
+                                // assert(pos_in_path_b < path_index.get_path_length(path));
 
 #ifdef debug_path_sgd
-                            std::cerr << "2. pos in path " << pos_in_path_a << " " << pos_in_path_b << std::endl;
+                                std::cerr << "2. pos in path " << pos_in_path_a << " " << pos_in_path_b << std::endl;
 #endif
-                            // establish the term distance
-                            double term_dist = std::abs(
-                                    static_cast<double>(pos_in_path_a) - static_cast<double>(pos_in_path_b));
+                                // establish the term distance
+                                double term_dist = std::abs(
+                                        static_cast<double>(pos_in_path_a) - static_cast<double>(pos_in_path_b));
 
-                            if (term_dist == 0) {
-                                continue;
-                                // term_dist = 1e-9;
-                            }
+                                if (term_dist == 0) {
+                                    continue;
+                                    // term_dist = 1e-9;
+                                }
 #ifdef eval_path_sgd
-                            std::string path_name = path_index.get_path_name(path);
-                            std::cerr << path_name << "\t" << pos_in_path_a << "\t" << pos_in_path_b << "\t" << term_dist << std::endl;
+                                std::string path_name = path_index.get_path_name(path);
+                                std::cerr << path_name << "\t" << pos_in_path_a << "\t" << pos_in_path_b << "\t" << term_dist << std::endl;
 #endif
-                            // assert(term_dist == zipf_int);
+                                // assert(term_dist == zipf_int);
 #ifdef debug_path_sgd
-                            std::cerr << "term_dist: " << term_dist << std::endl;
+                                std::cerr << "term_dist: " << term_dist << std::endl;
 #endif
-                            double term_weight = 1.0 / term_dist;
+                                double term_weight = 1.0 / term_dist;
 
-                            double w_ij = term_weight;
+                                double w_ij = term_weight;
 #ifdef debug_path_sgd
-                            std::cerr << "w_ij = " << w_ij << std::endl;
+                                std::cerr << "w_ij = " << w_ij << std::endl;
 #endif
-                            double mu = eta.load() * w_ij;
-                            if (mu > 1) {
-                                mu = 1;
+                                double mu = eta.load() * w_ij;
+                                if (mu > 1) {
+                                    mu = 1;
+                                }
+                                // actual distance in graph
+                                double d_ij = term_dist;
+                                // identities
+                                uint64_t i = number_bool_packing::unpack_number(term_i);
+                                uint64_t j = number_bool_packing::unpack_number(term_j);
+#ifdef debug_path_sgd
+#pragma omp critical (cerr)
+                                std::cerr << "nodes are " << graph.get_id(term_i) << " and " << graph.get_id(term_j) << std::endl;
+#endif
+                                // distance == magnitude in our 1D situation
+                                double dx = X[i].load() - X[j].load();
+                                if (dx == 0) {
+                                    dx = 1e-9; // avoid nan
+                                }
+#ifdef debug_path_sgd
+#pragma omp critical (cerr)
+                                std::cerr << "distance is " << dx << " but should be " << d_ij << std::endl;
+#endif
+                                //double mag = dx; //sqrt(dx*dx + dy*dy);
+                                double mag = std::abs(dx);
+#ifdef debug_path_sgd
+                                std::cerr << "mu " << mu << " mag " << mag << " d_ij " << d_ij << std::endl;
+#endif
+                                // check distances for early stopping
+                                double Delta = mu * (mag - d_ij) / 2;
+                                // try until we succeed. risky.
+                                double Delta_abs = std::abs(Delta);
+#ifdef debug_path_sgd
+#pragma omp critical (cerr)
+                                std::cerr << "Delta_abs " << Delta_abs << std::endl;
+#endif
+                                while (Delta_abs > Delta_max.load()) {
+                                    Delta_max.store(Delta_abs);
+                                }
+                                // calculate update
+                                double r = Delta / mag;
+                                double r_x = r * dx;
+#ifdef debug_path_sgd
+#pragma omp critical (cerr)
+                                std::cerr << "r_x is " << r_x << std::endl;
+#endif
+                                // update our positions (atomically)
+#ifdef debug_path_sgd
+                                std::cerr << "before X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
+#endif
+                                X[i].store(X[i].load() - r_x);
+                                X[j].store(X[j].load() + r_x);
+#ifdef debug_path_sgd
+                                std::cerr << "after X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
+#endif
+                                term_updates++; // atomic
                             }
-                            // actual distance in graph
-                            double d_ij = term_dist;
-                            // identities
-                            uint64_t i = number_bool_packing::unpack_number(term_i);
-                            uint64_t j = number_bool_packing::unpack_number(term_j);
-#ifdef debug_path_sgd
-#pragma omp critical (cerr)
-                            std::cerr << "nodes are " << graph.get_id(term_i) << " and " << graph.get_id(term_j) << std::endl;
-#endif
-                            // distance == magnitude in our 1D situation
-                            double dx = X[i].load() - X[j].load();
-                            if (dx == 0) {
-                                dx = 1e-9; // avoid nan
-                            }
-#ifdef debug_path_sgd
-#pragma omp critical (cerr)
-                            std::cerr << "distance is " << dx << " but should be " << d_ij << std::endl;
-#endif
-                            //double mag = dx; //sqrt(dx*dx + dy*dy);
-                            double mag = std::abs(dx);
-#ifdef debug_path_sgd
-                            std::cerr << "mu " << mu << " mag " << mag << " d_ij " << d_ij << std::endl;
-#endif
-                            // check distances for early stopping
-                            double Delta = mu * (mag - d_ij) / 2;
-                            // try until we succeed. risky.
-                            double Delta_abs = std::abs(Delta);
-#ifdef debug_path_sgd
-#pragma omp critical (cerr)
-                            std::cerr << "Delta_abs " << Delta_abs << std::endl;
-#endif
-                            while (Delta_abs > Delta_max.load()) {
-                                Delta_max.store(Delta_abs);
-                            }
-                            // calculate update
-                            double r = Delta / mag;
-                            double r_x = r * dx;
-#ifdef debug_path_sgd
-#pragma omp critical (cerr)
-                            std::cerr << "r_x is " << r_x << std::endl;
-#endif
-                            // update our positions (atomically)
-#ifdef debug_path_sgd
-                            std::cerr << "before X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
-#endif
-                            X[i].store(X[i].load() - r_x);
-                            X[j].store(X[j].load() + r_x);
-#ifdef debug_path_sgd
-                            std::cerr << "after X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
-#endif
-                            term_updates++; // atomic
                         }
                     };
 
@@ -342,16 +369,22 @@ namespace odgi {
                         uint64_t iter = 0;
                         while (snapshot && work_todo.load()) {
                             if ((iter < iteration) && iteration != iter_max) {
-                                // std::cerr << "[odgi sort] snapshot thread: Taking snapshot!" << std::endl;
-
-                                // drop out of atomic stuff... maybe not the best way to do this
-                                std::vector<double> X_iter(X.size());
-                                uint64_t i = 0;
+                                //snapshot_in_progress.store(true); // will be released again by the snapshot thread
+                                std::cerr << "[path sgd sort]: snapshot thread: Taking snapshot!" << std::endl;
+                                // create temp file
+                                std::string snapshot_tmp_file = xp::temp_file::create("snapshot");
+                                // write to temp file
+                                ofstream snapshot_stream;
+                                snapshot_stream.open(snapshot_tmp_file);
                                 for (auto &x : X) {
-                                    X_iter[i++] = x.load();
+                                    snapshot_stream << x << std::endl;
                                 }
-                                snapshots.push_back(X_iter);
+                                // push back the name of the temp file
+                                snapshots.push_back(snapshot_tmp_file);
                                 iter = iteration;
+                                // std::cerr << "ITER: " << iter << std::endl;
+                                snapshot_in_progress.store(false);
+                                snapshot_progress[iter].store(true);
                             }
                             std::this_thread::sleep_for(1ms);
                         }
@@ -377,7 +410,7 @@ namespace odgi {
 
             snapshot_thread.join();
 
-            checker.join();;
+            checker.join();
             // drop out of atomic stuff... maybe not the best way to do this
             std::vector<double> X_final(X.size());
             uint64_t i = 0;
@@ -424,7 +457,7 @@ namespace odgi {
             return etas;
         }
 
-        std::vector<handle_t> path_linear_sgd_order(const PathHandleGraph &graph,
+        std::vector<handle_t> path_linear_sgd_order(const graph_t &graph,
                                                     const xp::XP &path_index,
                                                     const std::vector<path_handle_t> &path_sgd_use_paths,
                                                     const uint64_t &iter_max,
@@ -441,8 +474,8 @@ namespace odgi {
                                                     const bool &progress,
                                                     const std::string &seed,
                                                     const bool &snapshot,
-                                                    std::vector<std::vector<handle_t>> &snapshots) {
-            std::vector<std::vector<double>> snapshots_layouts;
+                                                    const std::string &snapshot_prefix) {
+            std::vector<string> snapshots;
             std::vector<double> layout = path_linear_sgd(graph,
                                                          path_index,
                                                          path_sgd_use_paths,
@@ -459,7 +492,7 @@ namespace odgi {
                                                          nthreads,
                                                          progress,
                                                          snapshot,
-                                                         snapshots_layouts);
+                                                         snapshots);
             // TODO move the following into its own function that we can reuse
 #ifdef debug_components
             std::cerr << "node count: " << graph.get_node_count() << std::endl;
@@ -503,8 +536,15 @@ namespace odgi {
             }
             weak_components_map.clear();
             if (snapshot) {
-                for (int j = 0; j < snapshots_layouts.size(); j++) {
-                    std::vector<double> snapshot_layout = snapshots_layouts[j];
+                for (int j = 0; j < snapshots.size(); j++) {
+                    std::string snapshot_file_name = snapshots[j];
+                    std::ifstream snapshot_instream(snapshot_file_name);
+                    std::vector<double> snapshot_layout;
+                    std::string line;
+                    while(std::getline(snapshot_instream, line)) {
+                        snapshot_layout.push_back(std::stod(line));
+                    }
+                    snapshot_instream.close();
                     uint64_t i = 0;
                     std::vector<handle_layout_t> snapshot_handle_layout;
                     graph.for_each_handle(
@@ -532,9 +572,16 @@ namespace odgi {
                     for (auto &layout_handle : snapshot_handle_layout) {
                         order.push_back(layout_handle.handle);
                     }
-                    snapshots.push_back(order);
+                    std::cerr << "[path sgd sort]: Applying order to graph of snapshot: " << std::to_string(j + 1)
+                              << std::endl;
+                    std::string local_snapshot_prefix = snapshot_prefix + std::to_string(j + 1);
+                    graph_t graph_copy = graph;
+                    graph_copy.apply_ordering(order, true);
+                    ofstream f(local_snapshot_prefix);
+                    std::cerr << "[path sgd sort]: Writing snapshot: " << std::to_string(j + 1) << std::endl;
+                    graph_copy.serialize(f);
+                    f.close();
                 }
-
             }
             std::vector<handle_layout_t> handle_layout;
             uint64_t i = 0;
