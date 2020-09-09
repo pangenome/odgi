@@ -69,7 +69,7 @@ namespace odgi {
                 }
 
                 if (quantized_i != last_quantized_i){
-                    zipfian_int_distribution<uint64_t>::param_type z_p(1, quantized_i, theta);
+                    dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, quantized_i, theta);
                     zetas[quantized_i] = z_p.zeta();
 
                     last_quantized_i = quantized_i;
@@ -143,83 +143,63 @@ namespace odgi {
             auto worker_lambda =
                     [&](uint64_t tid) {
                         // everyone tries to seed with their own random data
-                        std::array<uint64_t, 2> seed_data = {(uint64_t) std::time(0), tid};
-                        std::seed_seq sseq(std::begin(seed_data), std::end(seed_data));
-                        std::mt19937_64 gen(sseq);
+                        const std::uint64_t seed = 9399220 + tid;
+                        XoshiroCpp::Xoshiro256Plus gen(seed); // a nice, fast PRNG
+                        // some references to literal bitvectors in the path index hmmm
                         const sdsl::bit_vector &np_bv = path_index.get_np_bv();
                         const sdsl::int_vector<> &nr_iv = path_index.get_nr_iv();
                         const sdsl::int_vector<> &npi_iv = path_index.get_npi_iv();
                         // we'll sample from all path steps
-                        std::uniform_int_distribution<uint64_t> dis = std::uniform_int_distribution<uint64_t>(0, np_bv.size() - 1);
-                        // we should generate in the range [0, 1), but this fails once every ~10^9 samples and returns 1.0 due to a bug in the implementation
-                        // "generate_canonical can occasionally return 1.0" http://open-std.org/JTC1/SC22/WG21/docs/lwg-active.html#2524
-                        std::uniform_real_distribution<double> dis_path(0.0, 1.0 - std::numeric_limits<double>::epsilon());
+                        std::uniform_int_distribution<uint64_t> dis_step = std::uniform_int_distribution<uint64_t>(0, np_bv.size() - 1);
                         std::uniform_int_distribution<uint64_t> flip(0, 1);
-                        uint64_t hit_num_paths = 0;
                         while (work_todo.load()) {
                             if (!snapshot_in_progress.load()) {
-                                // sample the first node from all the nodes in the graph
-                                // pick a random position from all paths
-                                uint64_t node_index = dis(gen);
-                                while (np_bv[node_index] == 0 && node_index-- != 0);
-                                // did we hit the last node?
-                                uint64_t next_node_index = node_index;
-                                while (++next_node_index != np_bv.size() && np_bv[next_node_index] == 0);
-                                hit_num_paths = next_node_index - node_index - 1;
-                                if (hit_num_paths == 0) {
-                                    continue;
-                                }
-
+                            // sample the first node from all the nodes in the graph
+                            // pick a random position from all paths
+                            uint64_t step_index = dis_step(gen);
 #ifdef debug_sample_from_nodes
-                                std::cerr << "node_index: " << node_index << std::endl;
+                            std::cerr << "step_index: " << step_index << std::endl;
 #endif
-                                uint64_t path_pos_in_np_iv =
-                                        node_index + 1 + std::floor(dis_path(gen) * (double) hit_num_paths);
-#ifdef debug_sample_from_nodes
-                                std::cerr << "path pos in np_iv: " << path_pos_in_np_iv << std::endl;
-#endif
-                                uint64_t path_i = npi_iv[path_pos_in_np_iv];
-                                path_handle_t path = as_path_handle(path_i);
+                            uint64_t path_i = npi_iv[step_index];
+                            path_handle_t path = as_path_handle(path_i);
 #ifdef debug_sample_from_nodes
                                 std::cerr << "path integer: " << path_i << std::endl;
 #endif
-                                step_handle_t step_a, step_b;
-                                as_integers(step_a)[0] = path_i; // path index
-                                size_t s_rank = nr_iv[path_pos_in_np_iv] - 1; // step rank in path
-                                as_integers(step_a)[1] = s_rank;
+                            step_handle_t step_a, step_b;
+                            as_integers(step_a)[0] = path_i; // path index
+                            size_t s_rank = nr_iv[step_index] - 1; // step rank in path
+                            as_integers(step_a)[1] = s_rank;
 #ifdef debug_sample_from_nodes
-                                std::cerr << "step rank in path: " << nr_iv[path_pos_in_np_iv]  << std::endl;
+                            std::cerr << "step rank in path: " << nr_iv[step_index]  << std::endl;
 #endif
-                                size_t path_step_count = path_index.get_path_step_count(path);
-                                if (s_rank > 0 && flip(gen) || s_rank == path_step_count - 1) {
-                                    // go backward
-                                    uint64_t jump_space = std::min(space, s_rank);
-                                    uint64_t space = jump_space;
-                                    if (jump_space > space_max) {
-                                        space = space_max + (jump_space - space_max) / space_quantization_step + 1;
-                                    }
-                                    zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, theta,
-                                                                                       zetas[space]);
-                                    zipfian_int_distribution<uint64_t> z(z_p);
-                                    uint64_t z_i = z(gen);
-                                    //assert(z_i <= path_space);
-                                    as_integers(step_b)[0] = as_integer(path);
-                                    as_integers(step_b)[1] = s_rank - z_i;
-                                } else {
-                                    // go forward
-                                    uint64_t jump_space = std::min(space, path_step_count - s_rank - 1);
-                                    uint64_t space = jump_space;
-                                    if (jump_space > space_max) {
-                                        space = space_max + (jump_space - space_max) / space_quantization_step + 1;
-                                    }
-                                    zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, theta,
-                                                                                       zetas[space]);
-                                    zipfian_int_distribution<uint64_t> z(z_p);
-                                    uint64_t z_i = z(gen);
-                                    //assert(z_i <= path_space);
-                                    as_integers(step_b)[0] = as_integer(path);
-                                    as_integers(step_b)[1] = s_rank + z_i;
+                            size_t path_step_count = path_index.get_path_step_count(path);
+                            if (s_rank > 0 && flip(gen) || s_rank == path_step_count-1) {
+                                // go backward
+                                uint64_t jump_space = std::min(space, s_rank);
+                                uint64_t space = jump_space;
+                                if (jump_space > space_max){
+                                    space = space_max + (jump_space - space_max) / space_quantization_step + 1;
                                 }
+                                dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, theta, zetas[space]);
+                                dirtyzipf::dirty_zipfian_int_distribution<uint64_t> z(z_p);
+                                uint64_t z_i = z(gen);
+                                //assert(z_i <= path_space);
+                                as_integers(step_b)[0] = as_integer(path);
+                                as_integers(step_b)[1] = s_rank - z_i;
+                            } else {
+                                // go forward
+                                uint64_t jump_space = std::min(space, path_step_count - s_rank - 1);
+                                uint64_t space = jump_space;
+                                if (jump_space > space_max){
+                                    space = space_max + (jump_space - space_max) / space_quantization_step + 1;
+                                }
+                                dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, theta, zetas[space]);
+                                dirtyzipf::dirty_zipfian_int_distribution<uint64_t> z(z_p);
+                                uint64_t z_i = z(gen);
+                                //assert(z_i <= path_space);
+                                as_integers(step_b)[0] = as_integer(path);
+                                as_integers(step_b)[1] = s_rank + z_i;
+                            }
 
                                 // and the graph handles, which we need to record the update
                                 handle_t term_i = path_index.get_handle_of_step(step_a);
@@ -513,8 +493,8 @@ namespace odgi {
                                                                        iter_with_max_learning_rate,
                                                                        eps);
             // initialize Zipfian distribution so we only have to calculate zeta once
-            zipfian_int_distribution<uint64_t>::param_type p(1, space, theta);
-            zipfian_int_distribution<uint64_t> zipfian(p);
+            dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type p(1, space, theta);
+            dirtyzipf::dirty_zipfian_int_distribution<uint64_t> zipfian(p);
             // how many term updates we make
             std::atomic<uint64_t> term_updates;
             term_updates.store(0);
