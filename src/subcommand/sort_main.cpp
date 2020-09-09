@@ -186,7 +186,7 @@ int main_sort(int argc, char** argv) {
     double path_sgd_delta = args::get(p_sgd_delta) ? args::get(p_sgd_delta) : 0;
     double path_sgd_max_eta = 0; // update below
     // will be filled, if the user decides to write a snapshot of the graph after each sorting iterationn
-    std::vector<std::vector<handle_t>> snapshots;
+    std::vector<std::string> snapshots;
     const bool snapshot = p_sgd_snapshot;
     // default parameters that need a path index to be present
     uint64_t path_sgd_min_term_updates;
@@ -194,6 +194,10 @@ int main_sort(int argc, char** argv) {
     std::vector<path_handle_t> path_sgd_use_paths;
     xp::XP path_index;
     bool fresh_path_index = false;
+    std::string snapshot_prefix;
+    if (snapshot) {
+        snapshot_prefix = args::get(p_sgd_snapshot);
+    }
     if (p_sgd || args::get(pipeline).find('Y') != std::string::npos) {
         // take care of path index
         if (xp_in_file) {
@@ -306,20 +310,7 @@ int main_sort(int argc, char** argv) {
                                                   progress,
                                                   path_sgd_seed,
                                                   snapshot,
-                                                  snapshots);
-            // TODO Check if we have to emit the snapshots
-            if (snapshot) {
-                std::string snapshot_prefix = args::get(p_sgd_snapshot);
-                for (int j = 0; j < snapshots.size(); j++) {
-                    std::cerr << "[path sgd sort]: Applying order to graph of iteration: " << std::to_string(j + 1) << std::endl;
-                    std::string local_snapshot_prefix = snapshot_prefix + std::to_string(j + 1);
-                    graph_t graph_copy = graph;
-                    graph_copy.apply_ordering(snapshots[j], true);
-                    ofstream f(local_snapshot_prefix);
-                    graph_copy.serialize(f);
-                    f.close();
-                }
-            }
+                                                  snapshot_prefix);
             graph.apply_ordering(order, true);
         } else if (args::get(breadth_first)) {
             graph.apply_ordering(algorithms::breadth_first_topological_order(graph, bf_chunk_size), true);
@@ -394,7 +385,7 @@ int main_sort(int argc, char** argv) {
                                                               progress,
                                                               path_sgd_seed,
                                                               snapshot,
-                                                              snapshots);
+                                                              snapshot_prefix);
                     break;
                 }
                 case 'f':

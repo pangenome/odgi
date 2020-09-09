@@ -723,7 +723,7 @@ namespace xp {
                     // Save the directory we got
                     handler.parent_directory = got;
                 } else {
-                    std::cerr << "[xp]: couldn't create temp directory: " << tmpdirname << std::endl;
+                    std::cerr << "[xp::temp_file]: couldn't create temp directory: " << tmpdirname << std::endl;
                     exit(1);
                 }
                 delete[] tmpdirname;
@@ -736,7 +736,7 @@ namespace xp {
                 // we don't leave it open; we are assumed to open it again externally
                 close(fd);
             } else {
-                std::cerr << "[xp]: couldn't create temp file on base "
+                std::cerr << "[xp::temp_file]: couldn't create temp file on base "
                           << base << " : " << tmpname << std::endl;
                 exit(1);
             }
