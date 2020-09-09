@@ -151,15 +151,28 @@ double u_rfpart(double x);
 
 void wu_draw_line(const bool steep, const double_t gradient, double_t intery,
                   const xy_d_t pxl1, const xy_d_t pxl2,
+                  const color_t& color,
                   atomic_image_buf_t& image);
 
 xy_d_t wu_calc_endpoint(xy_d_t xy, const double_t gradient, const bool steep,
+                        const color_t& color,
                         atomic_image_buf_t& image);
 
-void wu_calc_line(xy_d_t xy0, xy_d_t xy1, atomic_image_buf_t& image);
+void wu_calc_line(xy_d_t xy0, xy_d_t xy1,
+                  const color_t& color,
+                  atomic_image_buf_t& image);
 
-void wu_calc_multiline(xy_d_t xy0, xy_d_t xy1, atomic_image_buf_t& image,
-                       const double& width = 0, const double& overlay = 10);
+void wu_calc_multiline(xy_d_t xy0, xy_d_t xy1,
+                       const color_t& color,
+                       atomic_image_buf_t& image,
+                       const double& width = 0,
+                       const double& overlay = 10);
+
+void wu_calc_rainbow_multiline(xy_d_t xy0, xy_d_t xy1, atomic_image_buf_t& image,
+                               const std::vector<color_t>& colors,
+                               const double& spacing = 1,
+                               const double& width = 0,
+                               const double& overlay = 10);
 
 }
 

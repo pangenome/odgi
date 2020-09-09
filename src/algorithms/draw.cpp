@@ -211,7 +211,7 @@ std::vector<uint8_t> rasterize(const std::vector<double> &X,
                      source_width, source_height,
                      2, 2,
                      width-4, height-4);
-            wu_calc_multiline(xy0, xy1, image, line_width);
+            wu_calc_multiline(xy0, xy1, COLOR_BLACK, image, line_width);
         }
     }
 
