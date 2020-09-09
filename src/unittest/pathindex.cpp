@@ -83,13 +83,16 @@ namespace odgi {
                 uint64_t np_size = 0;
                 sdsl::bit_vector np_bv = path_index.get_np_bv();
                 graph.for_each_handle([&](const handle_t &h) {
-                    REQUIRE(np_bv[np_size] == 1);
-                    np_size++;
+                    bool first_step_passed = false;
                     graph.for_each_step_on_handle(h, [&](const step_handle_t &step_handle) {
-                        REQUIRE(np_bv[np_size] == 0);
-                       np_size++;
+                        if (!first_step_passed) {
+                            REQUIRE(np_bv[np_size] == 1);
+                            first_step_passed = true;
+                        } else {
+                            REQUIRE(np_bv[np_size] == 0);
+                        }
+                        np_size++;
                     });
-
                 });
             }
 
@@ -181,10 +184,14 @@ namespace odgi {
                 uint64_t np_size = 0;
                 sdsl::bit_vector np_bv = loaded_path_index.get_np_bv();
                 graph.for_each_handle([&](const handle_t &h) {
-                    REQUIRE(np_bv[np_size] == 1);
-                    np_size++;
+                    bool first_step_passed = false;
                     graph.for_each_step_on_handle(h, [&](const step_handle_t &step_handle) {
-                        REQUIRE(np_bv[np_size] == 0);
+                        if (!first_step_passed) {
+                            REQUIRE(np_bv[np_size] == 1);
+                            first_step_passed = true;
+                        } else {
+                            REQUIRE(np_bv[np_size] == 0);
+                        }
                         np_size++;
                     });
 
