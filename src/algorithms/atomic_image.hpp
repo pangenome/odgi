@@ -10,6 +10,7 @@
 #include <cmath>
 #include <memory>
 #include <iostream>
+#include "picosha2.h"
 
 namespace odgi {
 
@@ -49,9 +50,10 @@ typedef union rgb_t {
 	RGB c;
 } color_t;
 
+color_t hash_color(const std::string& s);
 color_t lighten(const color_t& c, const double& f);
 color_t brighten(const color_t& a, const color_t& b, const double& f);
-color_t layer(const color_t& a, const color_t& b);
+color_t layer(const color_t& a, const color_t& b, const double& f);
 
 const color_t COLOR_BLACK = { 0xff000000 };
 const color_t COLOR_WHITE = { 0xffffffff };
@@ -131,8 +133,8 @@ struct atomic_image_buf_t {
         v.hex = (*image)[i].load();
         //std::cerr << "got " << v.hex << " " << (int)v.c.r << "," << (int)v.c.g << "," << (int)v.c.b << std::endl;
         //std::cerr << "layer " << c.hex << " " << (int)c.c.r << "," << (int)c.c.g << "," << (int)c.c.b << std::endl;
-        //v = layer(v, c);
-        v = brighten(c, v, f);
+        v = layer(c, v, f);
+        //v = layer(c, v, f);
         //std::cerr << "assigned " << v.hex << " " << (int)v.c.r << "," << (int)v.c.g << "," << (int)v.c.b << std::endl;
         // there is the possibility of a race decreasing how bright pixels get
         // but, at least we won't overflow
@@ -152,7 +154,8 @@ double u_rfpart(double x);
 void wu_draw_line(const bool steep, const double_t gradient, double_t intery,
                   const xy_d_t pxl1, const xy_d_t pxl2,
                   const color_t& color,
-                  atomic_image_buf_t& image);
+                  atomic_image_buf_t& image,
+                  bool top, bool bottom);
 
 xy_d_t wu_calc_endpoint(xy_d_t xy, const double_t gradient, const bool steep,
                         const color_t& color,
@@ -160,13 +163,19 @@ xy_d_t wu_calc_endpoint(xy_d_t xy, const double_t gradient, const bool steep,
 
 void wu_calc_line(xy_d_t xy0, xy_d_t xy1,
                   const color_t& color,
-                  atomic_image_buf_t& image);
+                  atomic_image_buf_t& image,
+                  bool top, bool bottom);
 
 void wu_calc_multiline(xy_d_t xy0, xy_d_t xy1,
                        const color_t& color,
                        atomic_image_buf_t& image,
                        const double& width = 0,
                        const double& overlay = 10);
+
+void aaline(xy_d_t xy0, xy_d_t xy1,
+            const color_t& color,
+            atomic_image_buf_t& image,
+            const double& width);
 
 void wu_calc_rainbow_multiline(xy_d_t xy0, xy_d_t xy1, atomic_image_buf_t& image,
                                const std::vector<color_t>& colors,
