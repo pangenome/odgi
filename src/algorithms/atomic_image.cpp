@@ -342,38 +342,33 @@ void wu_calc_multiline(xy_d_t xy0, xy_d_t xy1,
     color_t green  = { 0xffff0000 };
     color_t black  = { 0xff000000 };
 
-    bool swap_lines;
     bool start_at_bottom;
     // adjust the moves to reflect our line
     if (xy0.x > xy1.x && xy0.y > xy1.y) {
         // start at bottom
         // heading NW
         start_at_bottom = true;
-        move_in_x = -move_in_x;
-        move_in_y = move_in_y;
+        move_in_x = move_in_x;
+        move_in_y = -move_in_y;
         wu_calc_line(xy0, xy1, blue, image, true, true);
-        swap_lines = true;
     } else if (xy0.x >= xy1.x && xy0.y <= xy1.y) {
         // heading SW
         start_at_bottom = true;
         move_in_x = -move_in_x;
         move_in_y = -move_in_y;
         wu_calc_line(xy0, xy1, red, image, true, true);
-        swap_lines = false;
     } else if (xy0.x < xy1.x && xy0.y > xy1.y) {
         // heading NE
         start_at_bottom = true;
         move_in_x = move_in_x;
         move_in_y = move_in_y;
         wu_calc_line(xy0, xy1, yellow, image, true, true);
-        swap_lines = false;
     } else { //if //(xyA.x <= xyB.x && xyA.y <= xyB.y) {
         // heading SE
         start_at_bottom = true;
         move_in_x = -move_in_x;
         move_in_y = move_in_y;
         wu_calc_line(xy0, xy1, black, image, true, true);
-        swap_lines = false;
     }
     
     xyA.x += move_in_x;
@@ -388,13 +383,6 @@ void wu_calc_multiline(xy_d_t xy0, xy_d_t xy1,
     xyD.x -= move_in_x;
     xyD.y -= move_in_y;
 
-    if (swap_lines) {
-        std::swap(xyA.x, xyC.x);
-        std::swap(xyA.y, xyC.y);
-        std::swap(xyB.x, xyD.x);
-        std::swap(xyB.y, xyD.y);
-    }
-    
     wu_rect(xyA, xyB, xyC, xyD, color, image);
 
     /*
