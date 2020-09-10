@@ -78,7 +78,6 @@ namespace xp {
             paths.push_back(path_index);
             path_names += start_marker + path_name + end_marker;
         });
-        np_size += graph.get_node_count();
         // assign the position map iv
         sdsl::util::assign(pos_map_iv, sdsl::enc_vector<>(position_map));
         // set the path counts
@@ -113,8 +112,6 @@ namespace xp {
         uint64_t  np_offset = 0;
         for (int64_t i = 0; i < graph.get_node_count(); i++) {
             np_bv[np_offset] = 1; // mark node start
-            // nr_iv[np_offset] = 0;
-            np_offset++;
             uint64_t has_steps = false;
             node_path_ms->for_values_of(i+1, [&](const std::tuple<uint64_t, uint64_t, uint64_t, uint64_t>& v) {
                 nr_iv[np_offset] = std::get<3>(v); // handle_rank_of_path
@@ -726,7 +723,7 @@ namespace xp {
                     // Save the directory we got
                     handler.parent_directory = got;
                 } else {
-                    std::cerr << "[xp]: couldn't create temp directory: " << tmpdirname << std::endl;
+                    std::cerr << "[xp::temp_file]: couldn't create temp directory: " << tmpdirname << std::endl;
                     exit(1);
                 }
                 delete[] tmpdirname;
@@ -739,7 +736,7 @@ namespace xp {
                 // we don't leave it open; we are assumed to open it again externally
                 close(fd);
             } else {
-                std::cerr << "[xp]: couldn't create temp file on base "
+                std::cerr << "[xp::temp_file]: couldn't create temp file on base "
                           << base << " : " << tmpname << std::endl;
                 exit(1);
             }
