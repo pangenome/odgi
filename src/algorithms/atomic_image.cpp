@@ -113,13 +113,13 @@ void wu_draw_line(const bool steep, const double_t gradient, double intery,
                   const xy_d_t pxl1, const xy_d_t pxl2, const color_t& color,
                   atomic_image_buf_t& image, bool top, bool bottom) {
     if (steep) {
-        for (uint64_t i = pxl1.x + 1; i < pxl2.x; ++i) {
+        for (double i = pxl1.x + 1; i < pxl2.x; ++i) {
             image.layer_pixel(u_ipart(intery), i, color, (!bottom ? 1.0 : 1.0-u_rfpart(intery)));
             image.layer_pixel(u_ipart(intery) + 1, i, color, (!top ? 1.0 : 1.0-u_fpart(intery)));
             intery += gradient;
         }
     } else {
-        for (uint64_t i = pxl1.x + 1; i < pxl2.x; ++i) {
+        for (double i = pxl1.x + 1; i < pxl2.x; ++i) {
             image.layer_pixel(i, u_ipart(intery), color, (!bottom ? 1.0 : 1.0-u_rfpart(intery)));
             image.layer_pixel(i, u_ipart(intery) + 1, color, (!top ? 1.0 : 1.0-u_fpart(intery)));
             intery += gradient;
@@ -198,65 +198,7 @@ void wu_calc_line(xy_d_t xy0, xy_d_t xy1,
                  top, bottom);
 }
 
-void aaline(xy_d_t xy0, xy_d_t xy1,
-            const color_t& color,
-            atomic_image_buf_t& image,
-            const double& width) {
-
-    const double ALIASBLUR = 0.38d;
-
-    double width_in_px = width / image.source_per_px_y;
-
-    //std::swap(xy0, xy1);
-
-    auto x0 = std::round(xy0.x);
-    auto y0 = std::round(xy0.y);
-    auto x1 = std::round(xy1.x);
-    auto y1 = std::round(xy1.y);
-    
-    double m = ((double)y1 - (double)y0) / ((double)x1 - (double)x0);
-    double b = (double)y0 - m*(double)x0;
-
-    double dx = abs(x1-x0), sx = x0<x1 ? 1 : -1;
-    double dy = abs(y1-y0), sy = y0<y1 ? 1 : -1; 
-    double err = (dx>dy ? dx : -dy)/2, e2;
- 
-    for(;;){
-
-        // Get formula of line for anti-aliasing 
-        double distY = std::abs( y0 - (m*(double)x0 + b));
-        double distX = std::abs( x0 - ( (y0-b)/m ) );
-        double dist = std::sqrt(distY*distY + distX*distX);
-        //pruint64_tf("%f\r\n", dist);
-        //glColor4f(1,1,1,1.0f - dist*ALIASBLUR);
-
-        image.layer_pixel(x0, y0, color, dist*ALIASBLUR);
-        //PutPixel(x0,y0);
-
-        for (uint64_t i = 0; i < width_in_px; i++)
-        {
-            for (uint64_t j = 0; j < width_in_px; j++)
-            {
-                double offs = i - (width_in_px/2);
-                distY = std::abs( y0 - (m*(double)x0 + b+offs));
-                distX = std::abs( x0 - ( (y0-b)/m + offs) );
-                dist = std::sqrt(distY*distY + distX*distX);
-                //glColor4f(1,1,1, 1.0f - dist*ALIASBLUR);
-
-                //PutPixel(x0 + offs, y0 + offs);
-                image.layer_pixel(x0+offs, y0+offs, color, dist*ALIASBLUR);
-            }
-        }
-
-        //std::cerr << x0 << " " << x1 << " " << y0 << " " << y1 << std::endl;
-        if (x0==x1 && y0==y1) break;
-        e2 = err;
-        if (e2 >-dx) { err -= dy; x0 += sx; }
-        if (e2 < dy) { err += dx; y0 += sy; }
-    }
-}
-
-void wu_rect(xy_d_t xy0, xy_d_t xy1,
+void wu_rekt(xy_d_t xy0, xy_d_t xy1,
              xy_d_t xy2, xy_d_t xy3,
              const color_t& color,
              atomic_image_buf_t& image) {
@@ -270,27 +212,72 @@ void wu_rect(xy_d_t xy0, xy_d_t xy1,
     wu_calc_line(xy0, xy1,
                  red,
                  image,
-                 true, true);
+                 true, false);
 
+    // right line
     wu_calc_line(xy1, xy3,
                  blue,
                  image,
-                 true, true);
+                 false, true);
 
+    // bottom line
     wu_calc_line(xy2, xy3,
                  green,
                  image,
-                 true, true);
+                 false, true);
 
+    // left line
     wu_calc_line(xy2, xy0,
                  purp,
                  image,
-                 true, true);
+                 false, true);
 
+    // now fill with a solid color
+    // follow the top line
+    // moving down with the gradient given by the left line
+
+    color_t black  = { 0xff000000 };
+
+    // find the extents of the rectangle
+    auto xs = {xy0.x, xy1.x, xy2.x, xy3.x};
+    auto mx = std::minmax_element(xs.begin(), xs.end());
+    double min_x = *mx.first;
+    double max_x = *mx.second;
+    auto ys = {xy0.y, xy1.y, xy2.y, xy3.y};
+    auto my = std::minmax_element(ys.begin(), ys.end());
+    double min_y = *my.first;
+    double max_y = *my.second;
+
+    // find the min y point
+    // and the next two highest
+    std::vector<xy_d_t> ps = { xy0, xy1, xy2, xy3 };
+    std::sort(ps.begin(), ps.end(), [](const xy_d_t& a,
+                                       const xy_d_t& b) {
+                                        return a.y < b.y;
+                                    });
+
+    // arranged so that l0 and l1 are < l2 and l3
+    line_t l0(ps[0], ps[1]);
+    line_t l1(ps[0], ps[2]);
+    line_t l2(ps[1], ps[3]);
+    line_t l3(ps[2], ps[3]);
+
+    auto inside =
+        [&](const xy_d_t& p) {
+            return l0.lte(p) && l1.lte(p) && l2.gt(p) && l3.gt(p);
+        };
     
-    // bottom line
-    // left line
-    // right line
+    xy_d_t l = { u_ipart(min_x), u_ipart(min_y) };
+    xy_d_t h = { u_ipart(max_x), u_ipart(max_y) };
+    for (double i = l.y; i < h.y; ++i) {
+        for (double j = l.x; j < h.x; ++j) {
+            // draw if it's in bounds
+            if (inside({j, i})) {
+                image.layer_pixel(j, i, black, 0.9);
+            }
+        }
+    }
+    
 }
 
 void wu_calc_multiline(xy_d_t xy0, xy_d_t xy1,
@@ -342,30 +329,24 @@ void wu_calc_multiline(xy_d_t xy0, xy_d_t xy1,
     color_t green  = { 0xffff0000 };
     color_t black  = { 0xff000000 };
 
-    bool start_at_bottom;
     // adjust the moves to reflect our line
     if (xy0.x > xy1.x && xy0.y > xy1.y) {
-        // start at bottom
         // heading NW
-        start_at_bottom = true;
         move_in_x = move_in_x;
         move_in_y = -move_in_y;
         wu_calc_line(xy0, xy1, blue, image, true, true);
     } else if (xy0.x >= xy1.x && xy0.y <= xy1.y) {
         // heading SW
-        start_at_bottom = true;
         move_in_x = -move_in_x;
         move_in_y = -move_in_y;
         wu_calc_line(xy0, xy1, red, image, true, true);
     } else if (xy0.x < xy1.x && xy0.y > xy1.y) {
         // heading NE
-        start_at_bottom = true;
         move_in_x = move_in_x;
         move_in_y = move_in_y;
         wu_calc_line(xy0, xy1, yellow, image, true, true);
     } else { //if //(xyA.x <= xyB.x && xyA.y <= xyB.y) {
         // heading SE
-        start_at_bottom = true;
         move_in_x = -move_in_x;
         move_in_y = move_in_y;
         wu_calc_line(xy0, xy1, black, image, true, true);
@@ -383,55 +364,8 @@ void wu_calc_multiline(xy_d_t xy0, xy_d_t xy1,
     xyD.x -= move_in_x;
     xyD.y -= move_in_y;
 
-    wu_rect(xyA, xyB, xyC, xyD, color, image);
+    wu_rekt(xyA, xyB, xyC, xyD, color, image);
 
-    /*
-
-    bool start_at_bottom;
-    // adjust the moves to reflect our line
-    if (xyA.x > xyB.x && xyA.y > xyB.y) {
-        // start at bottom
-        start_at_bottom = true;
-        move_in_x = move_in_x;
-        move_in_y = move_in_y;
-    } else if (xyA.x > xyB.x && xyA.y <= xyB.y) {
-        // start at bottom
-        start_at_bottom = true;
-        move_in_x = move_in_x;
-        move_in_y = move_in_y;
-    } else if (xyA.x <= xyB.x && xyA.y > xyB.y) {
-        // start at top
-        start_at_bottom = true;
-        move_in_x = move_in_x;
-        move_in_y = move_in_y;
-    } else { //if //(xyA.x < xyB.x && xyA.y < xyB.y) {
-        // start at top
-        start_at_bottom = true;
-        move_in_x = move_in_x;
-        move_in_y = move_in_y;
-    }
-
-    xyA.x -= move_in_x;
-    xyA.y -= move_in_y;
-    xyB.x -= move_in_x;
-    xyB.y -= move_in_y;
-
-    double pix = image.source_per_px_x / overlay;
-    // make sure we always make at least two steps
-    uint64_t total_steps = std::ceil(std::max((double)2, width_in_px / pix));
-    double step_x = 2*move_in_x / (double)total_steps;
-    double step_y = 2*move_in_y / (double)total_steps;
-
-    for (uint64_t i = 0; i < total_steps; ++i) {
-        bool top = i == 0;
-        bool bottom = i+1 == total_steps;
-        wu_calc_line(xyA, xyB, color, image, top, bottom);
-        xyA.x += step_x;
-        xyA.y += step_y;
-        xyB.x += step_x;
-        xyB.y += step_y;
-    }
-    */
 }
 
 void wu_calc_rainbow_multiline(xy_d_t xy0, xy_d_t xy1, atomic_image_buf_t& image,

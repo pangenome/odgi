@@ -33,6 +33,39 @@ struct xy_d_t {
     }
 };
 
+struct line_t {
+    xy_d_t s = { 0, 0 };
+    xy_d_t e = { 0, 0 };
+    double d_x = 0;
+    double d_y = 0;
+    double a = 0;
+    double b = 0;
+    bool vert = false;
+    line_t(const xy_d_t& _s, const xy_d_t& _e)
+        : s(_s), e(_e) {
+        d_y = (s.y - e.y); // delta y
+        d_x = (s.x - e.x); // delta x
+        a = d_y / d_x; // slope
+        if (d_x == 0) {
+            vert = true;
+        } else {
+            b = s.y - a * s.x; // use one of the points to solve for the intercept
+        }
+    }
+    // if the point occurs above the line
+    bool gt(const xy_d_t& p) {
+        if (vert) {
+            return p.x < s.x;
+        } else {
+            return p.y < a * p.x + b;
+        }
+    }
+    // if the point occurs on or below the line
+    bool lte(const xy_d_t& p) {
+        return !gt(p);
+    }
+};
+
 struct xy_u_t {
     uint64_t x = 0;
     uint64_t y = 0;
@@ -165,6 +198,11 @@ void wu_calc_line(xy_d_t xy0, xy_d_t xy1,
                   const color_t& color,
                   atomic_image_buf_t& image,
                   bool top, bool bottom);
+
+void wu_rekt(xy_d_t xy0, xy_d_t xy1,
+             xy_d_t xy2, xy_d_t xy3,
+             const color_t& color,
+             atomic_image_buf_t& image);
 
 void wu_calc_multiline(xy_d_t xy0, xy_d_t xy1,
                        const color_t& color,
