@@ -345,13 +345,19 @@ int main_stats(int argc, char** argv) {
 
             uint64_t sum_all_path_node_dist_node_space = 0;
             uint64_t sum_all_path_node_dist_nt_space = 0;
+            double sum_all_path_node_dist_2D_space = 0.0;
             uint64_t len_all_path_node_space = 0;
             uint64_t len_all_path_nt_space = 0;
             uint64_t num_all_penalties = 0;
             uint64_t num_all_penalties_diff_orientation = 0;
 
             std::cout << "#sum_of_path_node_distances" << std::endl;
-            std::cout << "path\tin_node_space\tin_nucleotide_space\tnodes\tnucleotides\tnum_penalties";
+
+            if (layout_in_file) {
+                std::cout << "path\tin_2D_space_by_nodes\tin_2D_space_by_nucleotides\tnodes\tnucleotides\tnum_penalties";
+            }else{
+                std::cout << "path\tin_node_space\tin_nucleotide_space\tnodes\tnucleotides\tnum_penalties";
+            }
 
             if (_penalize_diff_orientation){
                 std::cout << "\tnum_penalties_different_orientation" << std::endl;
@@ -365,6 +371,7 @@ int main_stats(int argc, char** argv) {
 #endif
                 uint64_t sum_path_node_dist_node_space = 0;
                 uint64_t sum_path_node_dist_nt_space = 0;
+                double sum_path_node_dist_2D_space = 0.0;
                 uint64_t len_path_node_space = 0;
                 uint64_t len_path_nt_space = 0;
                 uint64_t num_penalties = 0;
@@ -379,28 +386,36 @@ int main_stats(int argc, char** argv) {
                         uint64_t unpacked_a = number_bool_packing::unpack_number(h);
                         uint64_t unpacked_b = number_bool_packing::unpack_number(i);
 
-                        uint8_t weight = 1;
-                        if (unpacked_b < unpacked_a){
-                            unpacked_a = unpacked_b;
-                            unpacked_b = number_bool_packing::unpack_number(h);
+                        if (layout_in_file) {
+                            // 2D metric
+                            double dx = X[2 * unpacked_a + number_bool_packing::unpack_number(h)] - X[2 * unpacked_b + number_bool_packing::unpack_bit(i)];
+                            double dy = Y[2 * unpacked_a + number_bool_packing::unpack_number(h)] - Y[2 * unpacked_b + number_bool_packing::unpack_bit(i)];
 
-                            // When a path goes back in terms of pangenomic order, this is punished
-                            weight = 3;
-                            num_penalties++;
-                        }
+                            sum_path_node_dist_2D_space += sqrt(dx * dx + dy * dy);
+                        }else{
+                            uint8_t weight = 1;
+                            if (unpacked_b < unpacked_a){
+                                unpacked_a = unpacked_b;
+                                unpacked_b = number_bool_packing::unpack_number(h);
+
+                                // When a path goes back in terms of pangenomic order, this is punished
+                                weight = 3;
+                                num_penalties++;
+                            }
 
 #ifdef debug_odgi_stats
-                        std::cerr << unpacked_b << " - " << unpacked_a << ": " << position_map[unpacked_b] - position_map[unpacked_a] << " * " << weight << std::endl;
+                            std::cerr << unpacked_b << " - " << unpacked_a << ": " << position_map[unpacked_b] - position_map[unpacked_a] << " * " << weight << std::endl;
 #endif
 
-                        sum_path_node_dist_node_space += weight * (unpacked_b - unpacked_a);
-                        sum_path_node_dist_nt_space += weight * (position_map[unpacked_b] - position_map[unpacked_a]);
+                            sum_path_node_dist_node_space += weight * (unpacked_b - unpacked_a);
+                            sum_path_node_dist_nt_space += weight * (position_map[unpacked_b] - position_map[unpacked_a]);
 
-                        if (_penalize_diff_orientation && (number_bool_packing::unpack_bit(h) != number_bool_packing::unpack_bit(i))){
-                            sum_path_node_dist_node_space += 2 * (unpacked_b - unpacked_a);
-                            sum_path_node_dist_nt_space += 2 * (position_map[unpacked_b] - position_map[unpacked_a]);
+                            if (_penalize_diff_orientation && (number_bool_packing::unpack_bit(h) != number_bool_packing::unpack_bit(i))){
+                                sum_path_node_dist_node_space += 2 * (unpacked_b - unpacked_a);
+                                sum_path_node_dist_nt_space += 2 * (position_map[unpacked_b] - position_map[unpacked_a]);
 
-                            num_penalties_diff_orientation++;
+                                num_penalties_diff_orientation++;
+                            }
                         }
                     }
 
@@ -409,7 +424,11 @@ int main_stats(int argc, char** argv) {
                 });
 
                 if (args::get(path_statistics)) {
-                    std::cout << graph.get_path_name(path) << "\t" << (double)sum_path_node_dist_node_space / (double)len_path_node_space << "\t" << (double)sum_path_node_dist_nt_space / (double)len_path_nt_space << "\t" << len_path_node_space << "\t" << len_path_nt_space  << "\t" << num_penalties;
+                    if (layout_in_file) {
+                        std::cout << graph.get_path_name(path) << "\t" << (double)sum_path_node_dist_2D_space / (double)len_path_node_space << "\t" << (double)sum_path_node_dist_2D_space / (double)len_path_nt_space << "\t" << len_path_node_space << "\t" << len_path_nt_space  << "\t" << num_penalties;
+                    }else{
+                        std::cout << graph.get_path_name(path) << "\t" << (double)sum_path_node_dist_node_space / (double)len_path_node_space << "\t" << (double)sum_path_node_dist_nt_space / (double)len_path_nt_space << "\t" << len_path_node_space << "\t" << len_path_nt_space  << "\t" << num_penalties;
+                    }
 
                     if (_penalize_diff_orientation){
                         std::cout << "\t" << num_penalties_diff_orientation << std::endl;
@@ -420,13 +439,18 @@ int main_stats(int argc, char** argv) {
 
                 sum_all_path_node_dist_node_space += sum_path_node_dist_node_space;
                 sum_all_path_node_dist_nt_space += sum_path_node_dist_nt_space;
+                sum_all_path_node_dist_2D_space += sum_path_node_dist_2D_space;
                 len_all_path_node_space += len_path_node_space;
                 len_all_path_nt_space += len_path_nt_space;
                 num_all_penalties += num_penalties;
                 num_all_penalties_diff_orientation += num_penalties_diff_orientation;
             });
 
-            std::cout << "all_paths\t" << (double)sum_all_path_node_dist_node_space / (double)len_all_path_node_space << "\t" << (double)sum_all_path_node_dist_nt_space / (double)len_all_path_nt_space << "\t" << len_all_path_node_space << "\t" << len_all_path_nt_space << "\t" << num_all_penalties;
+            if (layout_in_file) {
+                std::cout << "all_paths\t" << (double)sum_all_path_node_dist_2D_space / (double)len_all_path_node_space << "\t" << (double)sum_all_path_node_dist_2D_space / (double)len_all_path_nt_space << "\t" << len_all_path_node_space << "\t" << len_all_path_nt_space << "\t" << num_all_penalties;
+            }else{
+                std::cout << "all_paths\t" << (double)sum_all_path_node_dist_node_space / (double)len_all_path_node_space << "\t" << (double)sum_all_path_node_dist_nt_space / (double)len_all_path_nt_space << "\t" << len_all_path_node_space << "\t" << len_all_path_nt_space << "\t" << num_all_penalties;
+            }
 
             if (_penalize_diff_orientation){
                 std::cout << "\t" << num_all_penalties_diff_orientation << std::endl;
