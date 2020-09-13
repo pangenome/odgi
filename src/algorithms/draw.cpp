@@ -233,7 +233,7 @@ std::vector<uint8_t> rasterize(const std::vector<double> &X,
                     });
                 // for step on handle
                 // get the path color
-                wu_calc_rainbow_multiline(xy0, xy1, image, path_colors, path_line_spacing, line_width, line_overlay);
+                wu_calc_rainbow(xy0, xy1, image, path_colors, path_line_spacing, line_width);
             } else {
                 /*
                 aaline(xy0, xy1,
@@ -241,7 +241,7 @@ std::vector<uint8_t> rasterize(const std::vector<double> &X,
                        image,
                        line_width);
                 */
-                wu_calc_multiline(xy0, xy1, COLOR_BLACK, image, line_width, line_overlay);
+                wu_calc_wide_line(xy0, xy1, COLOR_BLACK, image, line_width);
             }
         }
     }

@@ -204,22 +204,15 @@ void wu_rekt(xy_d_t xy0, xy_d_t xy1,
              const color_t& color,
              atomic_image_buf_t& image);
 
-void wu_calc_multiline(xy_d_t xy0, xy_d_t xy1,
+void wu_calc_wide_line(xy_d_t xy0, xy_d_t xy1,
                        const color_t& color,
                        atomic_image_buf_t& image,
-                       const double& width = 0,
-                       const double& overlay = 10);
+                       const double& width = 0);
 
-void aaline(xy_d_t xy0, xy_d_t xy1,
-            const color_t& color,
-            atomic_image_buf_t& image,
-            const double& width);
-
-void wu_calc_rainbow_multiline(xy_d_t xy0, xy_d_t xy1, atomic_image_buf_t& image,
-                               const std::vector<color_t>& colors,
-                               const double& spacing = 1,
-                               const double& width = 0,
-                               const double& overlay = 10);
+void wu_calc_rainbow(xy_d_t xy0, xy_d_t xy1, atomic_image_buf_t& image,
+                     const std::vector<color_t>& colors,
+                     const double& spacing = 1,
+                     const double& width = 0);
 
 }
 

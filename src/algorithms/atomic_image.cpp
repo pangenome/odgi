@@ -68,6 +68,7 @@ color_t darken(const color_t& c, const double& f) {
 
 // layer a onto b with f intensity
 color_t layer(const color_t& a, const color_t& b, const double& f) {
+    return a;
 	color_t out = a;
 
     auto inrange = [](double x) {
@@ -203,32 +204,32 @@ void wu_rekt(xy_d_t xy0, xy_d_t xy1,
              const color_t& color,
              atomic_image_buf_t& image) {
 
-    color_t red   = { 0xff0000ff };
-    color_t green = { 0xff00ff00 };
-    color_t blue  = { 0xffff0000 };
-    color_t purp  = { 0xffff00ff };
+    //color_t red   = { 0xff0000ff };
+    //color_t green = { 0xff00ff00 };
+    //color_t blue  = { 0xffff0000 };
+    //color_t purp  = { 0xffff00ff };
     
     // top line
     wu_calc_line(xy0, xy1,
-                 red,
+                 color,
                  image,
                  true, false);
 
     // right line
     wu_calc_line(xy1, xy3,
-                 blue,
+                 color,
                  image,
                  false, true);
 
     // bottom line
     wu_calc_line(xy2, xy3,
-                 green,
+                 color,
                  image,
                  false, true);
 
     // left line
     wu_calc_line(xy2, xy0,
-                 purp,
+                 color,
                  image,
                  false, true);
 
@@ -236,7 +237,7 @@ void wu_rekt(xy_d_t xy0, xy_d_t xy1,
     // follow the top line
     // moving down with the gradient given by the left line
 
-    color_t black  = { 0xff000000 };
+    //color_t black  = { 0xff000000 };
 
     // find the extents of the rectangle
     auto xs = {xy0.x, xy1.x, xy2.x, xy3.x};
@@ -273,17 +274,17 @@ void wu_rekt(xy_d_t xy0, xy_d_t xy1,
         for (double j = l.x; j < h.x; ++j) {
             // draw if it's in bounds
             if (inside({j, i})) {
-                image.layer_pixel(j, i, black, 0.9);
+                image.layer_pixel(j, i, color, 0.0);
             }
         }
     }
     
 }
 
-void wu_calc_multiline(xy_d_t xy0, xy_d_t xy1,
+void wu_calc_wide_line(xy_d_t xy0, xy_d_t xy1,
                        const color_t& color,
                        atomic_image_buf_t& image,
-                       const double& width, const double& overlay) {
+                       const double& width) {
 
     //if (width == 0) {
     //wu_calc_line(xy0, xy1, color, image, true, true);
@@ -321,6 +322,7 @@ void wu_calc_multiline(xy_d_t xy0, xy_d_t xy1,
     xy_d_t xyC = xy0;
     xy_d_t xyD = xy1;
 
+    /*
     color_t blue   = { 0xffff0000 };
     color_t cyan   = { 0xffffff00 };
     color_t orange = { 0xff0099ff };
@@ -328,28 +330,29 @@ void wu_calc_multiline(xy_d_t xy0, xy_d_t xy1,
     color_t yellow  = { 0xff00ffff };
     color_t green  = { 0xffff0000 };
     color_t black  = { 0xff000000 };
+    */
 
     // adjust the moves to reflect our line
     if (xy0.x > xy1.x && xy0.y > xy1.y) {
         // heading NW
         move_in_x = move_in_x;
         move_in_y = -move_in_y;
-        wu_calc_line(xy0, xy1, blue, image, true, true);
+        //wu_calc_line(xy0, xy1, blue, image, true, true);
     } else if (xy0.x >= xy1.x && xy0.y <= xy1.y) {
         // heading SW
         move_in_x = -move_in_x;
         move_in_y = -move_in_y;
-        wu_calc_line(xy0, xy1, red, image, true, true);
+        //wu_calc_line(xy0, xy1, red, image, true, true);
     } else if (xy0.x < xy1.x && xy0.y > xy1.y) {
         // heading NE
         move_in_x = move_in_x;
         move_in_y = move_in_y;
-        wu_calc_line(xy0, xy1, yellow, image, true, true);
+        //wu_calc_line(xy0, xy1, yellow, image, true, true);
     } else { //if //(xyA.x <= xyB.x && xyA.y <= xyB.y) {
         // heading SE
         move_in_x = -move_in_x;
         move_in_y = move_in_y;
-        wu_calc_line(xy0, xy1, black, image, true, true);
+        //wu_calc_line(xy0, xy1, black, image, true, true);
     }
     
     xyA.x += move_in_x;
@@ -368,14 +371,14 @@ void wu_calc_multiline(xy_d_t xy0, xy_d_t xy1,
 
 }
 
-void wu_calc_rainbow_multiline(xy_d_t xy0, xy_d_t xy1, atomic_image_buf_t& image,
-                               const std::vector<color_t>& colors,
-                               const double& spacing,
-                               const double& width,
-                               const double& overlay) {
+void wu_calc_rainbow(xy_d_t xy0, xy_d_t xy1, atomic_image_buf_t& image,
+                     const std::vector<color_t>& colors,
+                     const double& spacing,
+                     const double& width) {
 
     // determine how
     double total_width = colors.size() * (width + spacing);
+
 
     const xy_d_t d = { xy1.x - xy0.x, xy1.y - xy0.y };
     double gradient = d.y / d.x;
@@ -392,8 +395,6 @@ void wu_calc_rainbow_multiline(xy_d_t xy0, xy_d_t xy1, atomic_image_buf_t& image
     // to simulate a line with the given width
     double width_in_px = total_width / image.source_per_px_y;
 
-    xy_d_t xyA = xy0;
-    xy_d_t xyB = xy1;
     // how for to get to a Y such that the length is w/2
     double move_in_x = width_in_px / ( 2 * sqrt(pow(inv_gradient, 2) + 1));
     double move_in_y = sqrt(pow(width_in_px/2,2) - pow(move_in_x, 2));
@@ -406,41 +407,64 @@ void wu_calc_rainbow_multiline(xy_d_t xy0, xy_d_t xy1, atomic_image_buf_t& image
         move_in_y = 0.0;
     }
 
+    xy_d_t xyA = xy0;
+    xy_d_t xyB = xy1;
+    //xy_d_t xyC = xy0;
+    //xy_d_t xyD = xy1;
+
+    /*
+    color_t blue   = { 0xffff0000 };
+    color_t cyan   = { 0xffffff00 };
+    color_t orange = { 0xff0099ff };
+    color_t red = { 0xff0000ff };
+    color_t yellow  = { 0xff00ffff };
+    color_t green  = { 0xffff0000 };
+    color_t black  = { 0xff000000 };
+    */
+
     // adjust the moves to reflect our line
-    if (xyA.x > xyB.x && xyA.y > xyB.y) {
-        move_in_x = -move_in_x;
-        move_in_y = move_in_y;
-    } else if (xyA.x > xyB.x && xyA.y <= xyB.y) {
-        move_in_x = -move_in_x;
-        move_in_y = -move_in_y;
-    } else if (xyA.x <= xyB.x && xyA.y > xyB.y) {
-        move_in_x = move_in_x;
-        move_in_y = move_in_y;
-    } else { //if //(xyA.x < xyB.x && xyA.y < xyB.y) {
+    if (xy0.x > xy1.x && xy0.y > xy1.y) {
+        // heading NW
         move_in_x = move_in_x;
         move_in_y = -move_in_y;
+        //wu_calc_line(xy0, xy1, blue, image, true, true);
+    } else if (xy0.x >= xy1.x && xy0.y <= xy1.y) {
+        // heading SW
+        move_in_x = -move_in_x;
+        move_in_y = -move_in_y;
+        //wu_calc_line(xy0, xy1, red, image, true, true);
+    } else if (xy0.x < xy1.x && xy0.y > xy1.y) {
+        // heading NE
+        move_in_x = move_in_x;
+        move_in_y = move_in_y;
+        //wu_calc_line(xy0, xy1, yellow, image, true, true);
+    } else { //if //(xyA.x <= xyB.x && xyA.y <= xyB.y) {
+        // heading SE
+        move_in_x = -move_in_x;
+        move_in_y = move_in_y;
+        //wu_calc_line(xy0, xy1, black, image, true, true);
     }
+    
+    xyA.x += move_in_x;
+    xyA.y += move_in_y;
 
-    xyA.x -= move_in_x;
-    xyA.y -= move_in_y;
-    xyB.x -= move_in_x;
-    xyB.y -= move_in_y;
+    xyB.x += move_in_x;
+    xyB.y += move_in_y;
 
-    double pix = image.source_per_px_x / overlay;
-    // make sure we always make at least two steps
-    uint64_t total_steps = colors.size();//std::ceil(std::max((double)2, width_in_px / pix));
+    uint64_t total_steps = colors.size();
     double step_x = 2*move_in_x / (double)total_steps;
     double step_y = 2*move_in_y / (double)total_steps;
+    double r_width = std::sqrt(step_x*step_x + step_y*step_y);
 
     for (uint64_t i = 0; i < total_steps; ++i) {
-        xyA.x += step_x;
-        xyA.y += step_y;
-        xyB.x += step_x;
-        xyB.y += step_y;
-        wu_calc_line(xyA, xyB,
-                     colors[i],
-                     image,
-                     true, true);
+        xyA.x -= step_x;
+        xyA.y -= step_y;
+        xyB.x -= step_x;
+        xyB.y -= step_y;
+        wu_calc_wide_line(xyA, xyB,
+                          colors[i],
+                          image,
+                          r_width);
     }
 }
 
