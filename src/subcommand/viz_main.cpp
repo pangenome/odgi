@@ -1,7 +1,6 @@
 #include "subcommand.hpp"
 #include "odgi.hpp"
 #include "args.hxx"
-#include "threads.hpp"
 #include "algorithms/bin_path_info.hpp"
 #include "algorithms/hash.hpp"
 #include "algorithms/id_ordered_paths.hpp"
@@ -52,8 +51,6 @@ namespace odgi {
         args::Flag longest_path(parser, "longest-path", "use the longest path length to change the color darkness", {'l', "longest-path"});
         args::Flag white_to_black(parser, "white-to-black", "change the color darkness from white (for the first nucleotide position) to black (for the last nucleotide position)", {'u', "white-to-black"});
 
-        args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
-
         try {
             parser.ParseCLI(argc, argv);
         } catch (args::Help) {
@@ -67,12 +64,6 @@ namespace odgi {
         if (argc == 1) {
             std::cout << parser;
             return 1;
-        }
-
-        if (args::get(threads)) {
-            omp_set_num_threads(args::get(threads));
-        } else {
-            omp_set_num_threads(1);
         }
 
         if (!dg_in_file) {
