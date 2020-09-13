@@ -27,6 +27,7 @@ The odgi stats(1) command produces statistics of a variation graph. Among other 
 *-i, --idx*=_FILE_::
   File containing the succinct variation graph to create statistics from. The file name usually ends with _.og_.
 
+
 === Summary Options
 
 *-S, --summarize*::
@@ -44,24 +45,29 @@ The odgi stats(1) command produces statistics of a variation graph. Among other 
 *-M, --multi-coverage*::
   Provide a histogram of coverage over unique multiset, the combination with possible repetition of paths. Print two tab-delimited columns to stdout: *cov*, *sets*. *cov* implies #nucleotides. *sets* lists the unique multisets of paths in a comma separated list. Multisets with a *cov* of one and no paths in *sets* are listed, too.
 
+
 === BED Interval
 
 *-B, --bed-multicov*=_BED_::
   For each BED entry, provide a table of path coverage over unique multisets of paths in the graph. Each unique multiset of paths overlapping a given BED interval is described in terms of its length relative to the total interval, the number of path traversals and unique paths involved in these traversals.
 
+
 === Sorting goodness evaluation
 
 *-l, --mean-links-length*::
-  Calculate the mean links length.
+  Calculate the mean links length. This metric is path-guided and computable in 1D and 2D.
 
 *-g, --no-gap-links*::
-  Don't penalize gap links in the mean links length.
+  Don't penalize gap links in the mean links length. A gap link is a link which connects two nodes that are consecutive in the linear pangenomic order. This option is specifiable only to compute the mean links length in 1D.
 
 *-s, --sum-path-nodes-distances*::
-  Calculate the sum of path nodes distances. For each path, it iterates from node to node, summing their distances, and normalizing by the path length. If a link goes back in the linearized viewpoint of the graph, this is penalized (adding 3 times its length in the sum).
+  Calculate the sum of path nodes distances. This metric is path-guided and computable in 1D and 2D. For each path, it iterates from node to node, summing their distances, and normalizing by the path length. In 1D, if a link goes back in the linearized viewpoint of the graph, this is penalized (adding 3 times its length in the sum).
 
 *-d, --penalize-different-orientation*::
   If a link connects two nodes which have different orientations, this is penalized (adding 2 times its length in the sum).
+
+*-c, --coords-in*::
+  File containing the layout coordinates of the succinct variation graph specified as input. The file name usually ends with _.lay_. When the layout coordinates are provided, the mean links length and the sum path nodes distances statistics are evaluated in 2D, else in 1D.
 
 *-P, --path-statistics*::
   Display the statistics (mean links length or sum path nodes distances) for each path.
