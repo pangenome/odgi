@@ -111,7 +111,7 @@ namespace odgi {
 
         if (args::get(show_strands) + args::get(white_to_black) + args::get(color_by_mean_coverage)  + args::get(color_by_mean_inversion_rate) > 1) {
             std::cerr
-                    << "[odgi cover] error: please specify only one of the following options: "
+                    << "[odgi viz] error: Please specify only one of the following options: "
                        "-S/--show-strand, -u/--white-to-black, "
                        "-m/--color-by-mean-coverage, and -z/--color-by-mean-inversion."
                     << std::endl;
