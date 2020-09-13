@@ -61,23 +61,40 @@ int main_stats(int argc, char** argv) {
         return 1;
     }
 
-    if (args::get(path_statistics) && (!args::get(mean_links_length) && !args::get(sum_of_path_node_distances))){
-        std::cerr
-                << "[odgi stats] error: Please specify the -l/--mean-links-length and/or the -s/--sum-path-nodes-distances options to use the -P/--path-statistics option."
-                << std::endl;
-        return 1;
+    if (!args::get(mean_links_length) && !args::get(sum_of_path_node_distances)){
+        if (args::get(path_statistics)){
+            std::cerr
+                    << "[odgi stats] error: Please specify the -l/--mean-links-length and/or the -s/--sum-path-nodes-distances options to use the -P/--path-statistics option."
+                    << std::endl;
+            return 1;
+        }
+
+        if (layout_in_file){
+            std::cerr
+                    << "[odgi stats] error: Please specify the -l/--mean-links-length and/or the -s/--sum-path-nodes-distances options to specify the layout coordinates (-c/--coords-in option)."
+                    << std::endl;
+            return 1;
+        }
     }
+
     if (args::get(penalize_diff_orientation) && !args::get(sum_of_path_node_distances)){
         std::cerr
                 << "[odgi stats] error: Please specify the -s/--sum-path-nodes-distances option to use the -d/--penalize-different-orientation option."
                 << std::endl;
         return 1;
     }
-    if (args::get(dont_penalize_gap_links) && !args::get(mean_links_length)){
-        std::cerr
-                << "[odgi stats] error: Please specify the -l/--mean-links-length option to use the -g/--no-gap-links option."
-                << std::endl;
-        return 1;
+    if (args::get(dont_penalize_gap_links)){
+        if (!args::get(mean_links_length)) {
+            std::cerr
+                    << "[odgi stats] error: Please specify the -l/--mean-links-length option to use the -g/--no-gap-links option."
+                    << std::endl;
+            return 1;
+        } else if (layout_in_file){
+            std::cerr
+                    << "[odgi stats] error: The -g/--no-gap-links option can be specified together with the layout coordinates (-c/--coords-in option)."
+                    << std::endl;
+            return 1;
+        }
     }
 
     if (args::get(threads)) {
@@ -211,16 +228,15 @@ int main_stats(int argc, char** argv) {
 
             std::cout << "#mean_links_length" << std::endl;
             if (layout_in_file) {
-                std::cout << "path\tin_2D_space\tnum_links_considered";
+                std::cout << "path\tin_2D_space\tnum_links_considered" << std::endl;
             }else{
                 std::cout << "path\tin_node_space\tin_nucleotide_space\tnum_links_considered";
-            }
 
-
-            if (dont_penalize_gap_links){
-                std::cout << "\tnum_gap_links_not_penalized" << std::endl;
-            }else{
-                std::cout << std::endl;
+                if (dont_penalize_gap_links){
+                    std::cout << "\tnum_gap_links_not_penalized" << std::endl;
+                }else{
+                    std::cout << std::endl;
+                }
             }
 
             graph.for_each_path_handle([&](const path_handle_t &path) {
@@ -296,15 +312,15 @@ int main_stats(int argc, char** argv) {
                     }
 
                     if (layout_in_file) {
-                        std::cout << graph.get_path_name(path) << "\t" << ratio_2D_space << "\t" << num_links;
+                        std::cout << graph.get_path_name(path) << "\t" << ratio_2D_space << "\t" << num_links << std::endl;
                     }else{
                         std::cout << graph.get_path_name(path) << "\t" << ratio_node_space << "\t" << ratio_nt_space << "\t" << num_links;
-                    }
 
-                    if (dont_penalize_gap_links){
-                        std::cout << "\t" << num_gap_links << std::endl;
-                    }else{
-                        std::cout << std::endl;
+                        if (dont_penalize_gap_links){
+                            std::cout << "\t" << num_gap_links << std::endl;
+                        }else{
+                            std::cout << std::endl;
+                        }
                     }
                 }
 
@@ -328,15 +344,15 @@ int main_stats(int argc, char** argv) {
             }
 
             if (layout_in_file) {
-                std::cout << "all_paths\t" << ratio_2D_space << "\t" << num_all_links;
+                std::cout << "all_paths\t" << ratio_2D_space << "\t" << num_all_links << std::endl;
             }else{
                 std::cout << "all_paths\t" << ratio_node_space << "\t" << ratio_nt_space << "\t" << num_all_links;
-            }
 
-            if (_dont_penalize_gap_links){
-                std::cout << "\t" << num_all_gap_links << std::endl;
-            }else{
-                std::cout << std::endl;
+                if (_dont_penalize_gap_links){
+                    std::cout << "\t" << num_all_gap_links << std::endl;
+                }else{
+                    std::cout << std::endl;
+                }
             }
         }
 
@@ -354,7 +370,7 @@ int main_stats(int argc, char** argv) {
             std::cout << "#sum_of_path_node_distances" << std::endl;
 
             if (layout_in_file) {
-                std::cout << "path\tin_2D_space_by_nodes\tin_2D_space_by_nucleotides\tnodes\tnucleotides\tnum_penalties";
+                std::cout << "path\tin_2D_space_by_nodes\tin_2D_space_by_nucleotides\tnodes\tnucleotides";
             }else{
                 std::cout << "path\tin_node_space\tin_nucleotide_space\tnodes\tnucleotides\tnum_penalties";
             }
@@ -386,12 +402,15 @@ int main_stats(int argc, char** argv) {
                         uint64_t unpacked_a = number_bool_packing::unpack_number(h);
                         uint64_t unpacked_b = number_bool_packing::unpack_number(i);
 
+                        double euclidean_distance_2D;
+
                         if (layout_in_file) {
                             // 2D metric
                             double dx = X[2 * unpacked_a + number_bool_packing::unpack_number(h)] - X[2 * unpacked_b + number_bool_packing::unpack_bit(i)];
                             double dy = Y[2 * unpacked_a + number_bool_packing::unpack_number(h)] - Y[2 * unpacked_b + number_bool_packing::unpack_bit(i)];
 
-                            sum_path_node_dist_2D_space += sqrt(dx * dx + dy * dy);
+                            euclidean_distance_2D = sqrt(dx * dx + dy * dy);
+                            sum_path_node_dist_2D_space += euclidean_distance_2D;
                         }else{
                             uint8_t weight = 1;
                             if (unpacked_b < unpacked_a){
@@ -409,13 +428,17 @@ int main_stats(int argc, char** argv) {
 
                             sum_path_node_dist_node_space += weight * (unpacked_b - unpacked_a);
                             sum_path_node_dist_nt_space += weight * (position_map[unpacked_b] - position_map[unpacked_a]);
+                        }
 
-                            if (_penalize_diff_orientation && (number_bool_packing::unpack_bit(h) != number_bool_packing::unpack_bit(i))){
+                        if (_penalize_diff_orientation && (number_bool_packing::unpack_bit(h) != number_bool_packing::unpack_bit(i))){
+                            if (layout_in_file) {
+                                sum_path_node_dist_2D_space += 2 * euclidean_distance_2D;
+                            }else{
                                 sum_path_node_dist_node_space += 2 * (unpacked_b - unpacked_a);
                                 sum_path_node_dist_nt_space += 2 * (position_map[unpacked_b] - position_map[unpacked_a]);
-
-                                num_penalties_diff_orientation++;
                             }
+
+                            num_penalties_diff_orientation++;
                         }
                     }
 
@@ -425,7 +448,7 @@ int main_stats(int argc, char** argv) {
 
                 if (args::get(path_statistics)) {
                     if (layout_in_file) {
-                        std::cout << graph.get_path_name(path) << "\t" << (double)sum_path_node_dist_2D_space / (double)len_path_node_space << "\t" << (double)sum_path_node_dist_2D_space / (double)len_path_nt_space << "\t" << len_path_node_space << "\t" << len_path_nt_space  << "\t" << num_penalties;
+                        std::cout << graph.get_path_name(path) << "\t" << (double)sum_path_node_dist_2D_space / (double)len_path_node_space << "\t" << (double)sum_path_node_dist_2D_space / (double)len_path_nt_space << "\t" << len_path_node_space << "\t" << len_path_nt_space;
                     }else{
                         std::cout << graph.get_path_name(path) << "\t" << (double)sum_path_node_dist_node_space / (double)len_path_node_space << "\t" << (double)sum_path_node_dist_nt_space / (double)len_path_nt_space << "\t" << len_path_node_space << "\t" << len_path_nt_space  << "\t" << num_penalties;
                     }
@@ -447,7 +470,7 @@ int main_stats(int argc, char** argv) {
             });
 
             if (layout_in_file) {
-                std::cout << "all_paths\t" << (double)sum_all_path_node_dist_2D_space / (double)len_all_path_node_space << "\t" << (double)sum_all_path_node_dist_2D_space / (double)len_all_path_nt_space << "\t" << len_all_path_node_space << "\t" << len_all_path_nt_space << "\t" << num_all_penalties;
+                std::cout << "all_paths\t" << (double)sum_all_path_node_dist_2D_space / (double)len_all_path_node_space << "\t" << (double)sum_all_path_node_dist_2D_space / (double)len_all_path_nt_space << "\t" << len_all_path_node_space << "\t" << len_all_path_nt_space;
             }else{
                 std::cout << "all_paths\t" << (double)sum_all_path_node_dist_node_space / (double)len_all_path_node_space << "\t" << (double)sum_all_path_node_dist_nt_space / (double)len_all_path_nt_space << "\t" << len_all_path_node_space << "\t" << len_all_path_nt_space << "\t" << num_all_penalties;
             }
