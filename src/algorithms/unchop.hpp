@@ -13,16 +13,27 @@ namespace algorithms {
 
 using namespace handlegraph;
 
+
 /**
  * Unchop by gluing abutting handles with just a single edge between them and
  * compatible path steps together.
+ * @param graph
  */
 void unchop(handlegraph::MutablePathDeletableHandleGraph& graph);
 
-//std::vector<std::deque<handle_t>> simple_components(PathHandleGraph* graph, int min_size = 1);
+/**
+ * Unchop by gluing abutting handles with just a single edge between them and
+ * compatible path steps together.
+ * @param graph
+ * @param show_info
+ */
+
+void unchop(handlegraph::MutablePathDeletableHandleGraph& graph, const bool& show_info);
+
+//std::vector<std::deque<handle_t>> simple_components(PathHandleGraph* graph, int min_size = 1, false);
 
 handle_t concat_nodes(handlegraph::MutablePathDeletableHandleGraph& graph, const std::vector<handle_t>& nodes);
 //handle_t concat_nodes(handlegraph::MutablePathDeletableHandleGraph* graph, const std::vector<handle_t>& nodes);
-    
+
 }
 }
