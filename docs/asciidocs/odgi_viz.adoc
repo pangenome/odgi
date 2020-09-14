@@ -102,12 +102,6 @@ sequence coverage in bins available.
   Change the color darkness from white (for the first nucleotide position) to black (for the last nucleotide position).
 
 
-=== Threading
-
-*-t, --threads*=_N_::
-  Number of threads to use.
-
-
 === Program Information
 
 *-h, --help*::
