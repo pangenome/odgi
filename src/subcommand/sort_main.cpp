@@ -182,7 +182,7 @@ int main_sort(int argc, char** argv) {
     uint64_t path_sgd_iter_max = args::get(p_sgd_iter_max) ? args::get(p_sgd_iter_max) : 30;
     uint64_t path_sgd_iter_max_learning_rate = args::get(p_sgd_iter_with_max_learning_rate) ? args::get(p_sgd_iter_with_max_learning_rate) : 0;
     double path_sgd_zipf_theta = args::get(p_sgd_zipf_theta) ? args::get(p_sgd_zipf_theta) : 0.99;
-    double path_sgd_eps = args::get(p_sgd_eps) ? args::get(p_sgd_eps) : 0.01;
+    double path_sgd_eps = args::get(p_sgd_eps) ? (double) args::get(p_sgd_eps) : 0.01;
     double path_sgd_delta = args::get(p_sgd_delta) ? args::get(p_sgd_delta) : 0;
     double path_sgd_max_eta = 0; // update below
     // will be filled, if the user decides to write a snapshot of the graph after each sorting iterationn
@@ -242,7 +242,7 @@ int main_sort(int argc, char** argv) {
         }
         uint64_t max_path_step_count = get_max_path_step_count(path_sgd_use_paths, path_index);
         path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? std::min(args::get(p_sgd_zipf_space), max_path_step_count) : std::min((uint64_t)10000, max_path_step_count);
-        path_sgd_max_eta = args::get(p_sgd_eta_max) ? args::get(p_sgd_eta_max) : max_path_step_count * max_path_step_count;
+        path_sgd_max_eta = args::get(p_sgd_eta_max) ? (args::get(p_sgd_eta_max) * max_path_step_count) : max_path_step_count * max_path_step_count;
         path_sgd_zipf_space_max = args::get(p_sgd_zipf_space_max) ? args::get(p_sgd_zipf_space_max) : 1000;
         path_sgd_zipf_space_quantization_step = args::get(p_sgd_zipf_space_quantization_step) ? std::max((uint64_t)2, args::get(p_sgd_zipf_space_quantization_step)) : 100;
     }
