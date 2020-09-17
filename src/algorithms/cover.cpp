@@ -142,7 +142,7 @@ namespace odgi {
             typedef std::pair<nid_t, coverage_t> node_coverage_t;
 
             static std::vector<node_coverage_t>
-            init_node_coverage(const graph_t &graph, const ska::flat_hash_set<handlegraph::nid_t> &component) {
+            init_node_coverage(const MutablePathDeletableHandleGraph &graph, const ska::flat_hash_set<handlegraph::nid_t> &component) {
                 std::vector<node_coverage_t> node_coverage;
                 node_coverage.reserve(component.size());
                 for (nid_t id : component) {
@@ -150,8 +150,13 @@ namespace odgi {
                     // For example, some nodes of the original graph may be missing from a GBWTGraph.
                     if (!(graph.has_node(id))) { continue; }
 
-                    // TODO: if the graph already have paths, init with the current already present
-                    node_coverage.emplace_back(id, static_cast<coverage_t>(0));
+                    uint64_t coverage = 0;
+                    graph.for_each_step_on_handle(graph.get_handle(id), [&](const step_handle_t& step) {
+                        coverage++;
+                    });
+
+                    node_coverage.emplace_back(id, static_cast<coverage_t>(coverage));
+
                 }
                 return node_coverage;
             }
