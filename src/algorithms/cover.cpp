@@ -6,7 +6,7 @@ namespace odgi {
     namespace algorithms {
 
         ska::flat_hash_set<handlegraph::nid_t>
-        is_nice_and_acyclic(const HandleGraph &graph, const ska::flat_hash_set<handlegraph::nid_t> &component) {
+        is_nice_and_acyclic(const HandleGraph &graph, const ska::flat_hash_set<handlegraph::nid_t> &component, const bool& ignore_paths) {
             ska::flat_hash_set<handlegraph::nid_t> head_nodes;
             if (component.empty()) { return head_nodes; }
 
@@ -142,7 +142,7 @@ namespace odgi {
             typedef std::pair<nid_t, coverage_t> node_coverage_t;
 
             static std::vector<node_coverage_t>
-            init_node_coverage(const graph_t &graph, const ska::flat_hash_set<handlegraph::nid_t> &component) {
+            init_node_coverage(const MutablePathDeletableHandleGraph &graph, const ska::flat_hash_set<handlegraph::nid_t> &component, const bool& ignore_paths) {
                 std::vector<node_coverage_t> node_coverage;
                 node_coverage.reserve(component.size());
                 for (nid_t id : component) {
@@ -150,8 +150,15 @@ namespace odgi {
                     // For example, some nodes of the original graph may be missing from a GBWTGraph.
                     if (!(graph.has_node(id))) { continue; }
 
-                    // TODO: if the graph already have paths, init with the current already present
-                    node_coverage.emplace_back(id, static_cast<coverage_t>(0));
+                    uint64_t coverage = 0;
+                    if (!ignore_paths){
+                        graph.for_each_step_on_handle(graph.get_handle(id), [&](const step_handle_t& step) {
+                            coverage++;
+                        });
+                    }
+
+                    node_coverage.emplace_back(id, static_cast<coverage_t>(coverage));
+
                 }
                 return node_coverage;
             }
@@ -238,13 +245,13 @@ namespace odgi {
                              size_t num_paths_per_component, size_t node_window_size,
                              size_t min_node_coverage, size_t max_number_of_paths_generable,
                              bool write_node_covearges, std::string &node_coverages,
-                             const uint64_t& nthreads, const bool& show_progress) {
+                             const uint64_t& nthreads, const bool& ignore_paths, const bool& show_progress) {
             typedef typename Coverage::coverage_t coverage_t;
             typedef typename Coverage::node_coverage_t node_coverage_t;
 
             ska::flat_hash_set<handlegraph::nid_t> &component = components[component_id];
             size_t component_size = component.size();
-            ska::flat_hash_set<handlegraph::nid_t> head_nodes = is_nice_and_acyclic(graph, component);
+            ska::flat_hash_set<handlegraph::nid_t> head_nodes = is_nice_and_acyclic(graph, component, ignore_paths);
             bool acyclic = !(head_nodes.empty());
             if (show_progress) {
                 std::cerr << Coverage::name() << ": processing component " << (component_id + 1) << " / "
@@ -253,8 +260,9 @@ namespace odgi {
             }
 
             // Node coverage for the potential starting nodes.
-            std::vector<node_coverage_t> node_coverage = Coverage::init_node_coverage(graph, (acyclic ? head_nodes
-                                                                                                      : component));
+            std::vector<node_coverage_t> node_coverage = Coverage::init_node_coverage(
+                    graph, (acyclic ? head_nodes : component), ignore_paths
+                    );
             std::map<std::vector<handle_t>, coverage_t> path_coverage; // Path and its reverse complement are equivalent.
 
             // Node coverage will be empty if we cannot create this type of path cover for the component.
@@ -291,7 +299,10 @@ namespace odgi {
 #endif
 
                 if (node_coverage.front().second >= min_node_coverage) {
-                    std::cerr << "Minimum node coverage reached after generating " << i << " paths." << std::endl;
+                    if (show_progress) {
+                        std::cerr << "Minimum node coverage reached after generating " << i << " paths." << std::endl;
+                    }
+
                     break;
                 }
 
@@ -352,7 +363,7 @@ namespace odgi {
                         size_t num_paths_per_component, size_t node_window_size,
                         size_t min_node_coverage, size_t max_number_of_paths_generable,
                         bool write_node_coverages, std::string &node_coverages,
-                        const uint64_t& nthreads, const bool& show_progress) {
+                        const uint64_t& nthreads, const bool& ignore_paths, const bool& show_progress) {
             std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components = algorithms::weakly_connected_components(
                     &graph);
 
@@ -363,7 +374,7 @@ namespace odgi {
                                                          num_paths_per_component, node_window_size,
                                                          min_node_coverage, max_number_of_paths_generable,
                                                          write_node_coverages, node_coverages,
-                                                         nthreads, show_progress)) {
+                                                         nthreads, ignore_paths, show_progress)) {
                     processed_components++;
 
                     if (show_progress) {
