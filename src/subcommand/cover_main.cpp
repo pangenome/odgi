@@ -24,6 +24,7 @@ namespace odgi {
         args::ValueFlag<uint64_t> num_paths_per_component(parser, "N", "number of paths to generate per component",{'n', "num-paths-per-component"});
         args::ValueFlag<uint64_t> node_window_size(parser, "N","size of the node window to check each time a new path is extended (it has to be greater than or equal to 2)",{'k', "node-window-size"});
         args::ValueFlag<uint64_t> min_node_coverage(parser, "N","minimum node coverage to reach (it has to be greater than 0)",{'c', "min-node-coverage"});
+        args::Flag ignore_paths(parser, "ignore-paths", "ignore the paths already embedded in the graph during the nodes coverage initialization",{'I', "ignore-paths"});
         args::ValueFlag<std::string> write_node_coverages(parser, "FILE","write the node coverages at the end of the paths generation in this file",{'w', "write-node-coverages"});
         args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for the parallel sorter", {'t', "threads"});
         args::Flag debug(parser, "debug", "print information about the components and the progress to stderr",{'d', "debug"});
@@ -108,7 +109,7 @@ namespace odgi {
         algorithms::path_cover(graph, _num_paths_per_component, _node_window_size, _min_node_coverage,
                                max_number_of_paths_generable,
                                write_node_coverages, node_coverages,
-                               num_threads, args::get(debug));
+                               num_threads, args::get(ignore_paths), args::get(debug));
 
         if (write_node_coverages) {
             std::string covfile = args::get(write_node_coverages);
