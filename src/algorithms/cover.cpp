@@ -296,7 +296,10 @@ namespace odgi {
 #endif
 
                 if (node_coverage.front().second >= min_node_coverage) {
-                    std::cerr << "Minimum node coverage reached after generating " << i << " paths." << std::endl;
+                    if (show_progress) {
+                        std::cerr << "Minimum node coverage reached after generating " << i << " paths." << std::endl;
+                    }
+
                     break;
                 }
 

@@ -91,13 +91,15 @@ namespace odgi {
         }
 
         uint64_t max_number_of_paths_generable = graph.get_node_count() * 5;
-        if (_min_node_coverage) {
-            std::cerr << "There will be generated paths until the minimum node coverage is " << _min_node_coverage
-                      << ", or until the maximum number of allowed generated paths is reached ("
-                      << max_number_of_paths_generable << ")." << std::endl;
-        } else {
-            std::cerr << "There will be generated " << _num_paths_per_component << " paths per component."
-                      << std::endl;
+        if (args::get(debug)){
+            if (_min_node_coverage) {
+                std::cerr << "There will be generated paths until the minimum node coverage is " << _min_node_coverage
+                          << ", or until the maximum number of allowed generated paths is reached ("
+                          << max_number_of_paths_generable << ")." << std::endl;
+            } else {
+                std::cerr << "There will be generated " << _num_paths_per_component << " paths per component."
+                          << std::endl;
+            }
         }
 
         uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
