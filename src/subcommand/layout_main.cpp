@@ -13,6 +13,47 @@ namespace odgi {
 
 using namespace odgi::subcommand;
 
+    // From https://en.wikipedia.org/wiki/Hilbert_curve
+    //rotate/flip a quadrant appropriately
+    void rot(uint64_t n, uint64_t *x, uint64_t *y, uint64_t rx, uint64_t ry) {
+        if (ry == 0) {
+            if (rx == 1) {
+                *x = n-1 - *x;
+                *y = n-1 - *y;
+            }
+
+            //Swap x and y
+            int t  = *x;
+            *x = *y;
+            *y = t;
+        }
+    }
+    //convert (x,y) to d
+    int xy2d (uint64_t n, uint64_t x, uint64_t y) {
+        int rx, ry, s, d=0;
+        for (s=n/2; s>0; s/=2) {
+            rx = (x & s) > 0;
+            ry = (y & s) > 0;
+            d += s * s * ((3 * rx) ^ ry);
+            rot(n, &x, &y, rx, ry);
+        }
+        return d;
+    }
+    //convert d to (x,y)
+    void d2xy(uint64_t n, uint64_t d, uint64_t *x, uint64_t *y) {
+        int rx, ry, s, t=d;
+        *x = *y = 0;
+        for (s=1; s<n; s*=2) {
+            rx = 1 & (t/2);
+            ry = 1 & (t ^ rx);
+            rot(s, x, y, rx, ry);
+            *x += s * rx;
+            *y += s * ry;
+            t /= 4;
+        }
+    }
+
+
 int main_layout(int argc, char **argv) {
 
     // trick argumentparser to do the right thing with the subcommand
@@ -274,6 +315,7 @@ int main_layout(int argc, char **argv) {
     uint64_t len = 0;
     nid_t last_node_id = graph.min_node_id();
     bool gaussian_layout = args::get(p_sgd_gaussian_layout);
+    uint64_t x, y;
     graph.for_each_handle([&](const handle_t &h) {
                               nid_t node_id = graph.get_id(h);
                               if (node_id - last_node_id > 1) {
@@ -284,10 +326,16 @@ int main_layout(int argc, char **argv) {
 
                               uint64_t pos = 2 * number_bool_packing::unpack_number(h);
                               if (gaussian_layout) {
-                                  graph_X[pos].store(dist(rng));
+                                  /*graph_X[pos].store(dist(rng));
                                   graph_Y[pos].store(dist(rng));
                                   graph_X[pos + 1].store(dist(rng));
-                                  graph_Y[pos + 1].store(dist(rng));
+                                  graph_Y[pos + 1].store(dist(rng));*/
+
+                                  for (uint64_t i = pos; i <= pos + 1; i++){
+                                      d2xy(sqrt(max_path_step_count), i, &x, &y);
+                                      graph_X[i].store(x);
+                                      graph_Y[i].store(y);
+                                  }
                               } else {
                                   graph_X[pos].store(len);
                                   graph_Y[pos].store(dist(rng));
