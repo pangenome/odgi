@@ -20,11 +20,11 @@ namespace algorithms {
 /// consistent orientation. All paths present must run all the way through the
 /// run of nodes from start to end or end to start.
 ///
-/// Returns the handle to the newly created node.
+/// Returns the handle to the newly created node in the new graph.
 ///
 /// After calling this on a vg::VG, paths will be invalid until
 /// Paths::compact_ranks() is called.
-handle_t concat_nodes(handlegraph::MutablePathDeletableHandleGraph& graph, const std::vector<handle_t>& nodes) {
+    handle_t concat_nodes(handlegraph::MutablePathDeletableHandleGraph& graph, const std::vector<handle_t>& nodes) {
 
     // Make sure we have at least 2 nodes
     assert(!nodes.empty() && nodes.front() != nodes.back());
@@ -45,7 +45,7 @@ handle_t concat_nodes(handlegraph::MutablePathDeletableHandleGraph& graph, const
     */
 
     // We also require no edges enter or leave the run of nodes, but we can't check that now.
-    
+
     // Make the new node
     handle_t new_node;
     {
@@ -210,16 +210,38 @@ handle_t concat_nodes(handlegraph::MutablePathDeletableHandleGraph& graph, const
     return new_node;
 }
 
-void unchop(handlegraph::MutablePathDeletableHandleGraph& graph) {
+    void unchop(handlegraph::MutablePathDeletableHandleGraph& graph) {
+        unchop(graph, false);
+    }
+
+void unchop(handlegraph::MutablePathDeletableHandleGraph& graph, const bool& show_info) {
 #ifdef debug
     std::cerr << "Running unchop" << std::endl;
 #endif
-    for (auto& comp : simple_components(graph, 2)) {
+    std::vector<handle_t> handle_order;
+
+    uint64_t num_node_unchopped = 0;
+    uint64_t num_new_nodes = 0;
+    for (auto& comp : simple_components(graph, 2, true)) {
 #ifdef debug
         std::cerr << "Unchop " << comp.size() << " nodes together" << std::endl;
 #endif
-        concat_nodes(graph, comp);
+
+        if (comp.size() >= 2){
+            handle_order.push_back(concat_nodes(graph, comp));
+
+            num_node_unchopped += comp.size();
+            num_new_nodes++;
+        }else{
+            handle_order.push_back(comp.front());
+        }
     }
+
+    if (show_info){
+        std::cerr << "[odgi unchop]: unchopped " << num_node_unchopped << " nodes into " << num_new_nodes << " new nodes." << std::endl;
+    }
+
+    graph.apply_ordering(handle_order, true);
 }
 
 

@@ -22,9 +22,7 @@ int main_unchop(int argc, char** argv) {
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> og_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> og_out_file(parser, "FILE", "store the graph self index in this file", {'o', "out"});
-    //args::ValueFlag<uint64_t> max_iterations(parser, "FILE", "iterate normalization up to this many times (default: 10)", {'I', "max-iterations"});
-    //args::Flag debug(parser, "debug", "print information about the normalization process", {'d', "debug"});
-    //args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
+    args::Flag debug(parser, "debug", "print information about the process to stderr.", {'d', "debug"});
 
     try {
         parser.ParseCLI(argc, argv);
@@ -63,13 +61,8 @@ int main_unchop(int argc, char** argv) {
             f.close();
         }
     }
-    /*
-    if (args::get(threads)) {
-        omp_set_num_threads(args::get(threads));
-    }
-    */
-    algorithms::unchop(graph);
-    graph.optimize();
+
+    algorithms::unchop(graph, args::get(debug));
     
     std::string outfile = args::get(og_out_file);
     if (outfile.size()) {

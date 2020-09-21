@@ -66,9 +66,9 @@ int main_layout(int argc, char **argv) {
                                                                 "iteration where the learning rate is max for path guided linear 1D SGD model (default: 0)",
                                                                 {'F', "iteration-max-learning-rate"});
     args::ValueFlag<uint64_t> p_sgd_zipf_space(parser, "N",
-                                               "the maximum space size of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: max path lengths)",
+                                               "the maximum space size of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: min(max path lengths, 10000)))",
                                                {'k', "path-sgd-zipf-space"});
-    args::ValueFlag<uint64_t> p_sgd_zipf_space_max(parser, "N", "the maximum space size of the Zipfian distribution beyond which quantization occurs (default: 1000000)", {'I', "path-sgd-zipf-space-max"});
+    args::ValueFlag<uint64_t> p_sgd_zipf_space_max(parser, "N", "the maximum space size of the Zipfian distribution beyond which quantization occurs (default: 1000)", {'I', "path-sgd-zipf-space-max"});
     args::ValueFlag<uint64_t> p_sgd_zipf_space_quantization_step(parser, "N", "quantization step when the maximum space size of the Zipfian distribution is exceeded (default: 100)", {'l', "path-sgd-zipf-space-quantization-step"});
 
     args::ValueFlag<std::string> p_sgd_seed(parser, "STRING",
@@ -183,8 +183,11 @@ int main_layout(int argc, char **argv) {
     double path_sgd_eps = p_sgd_eps ? args::get(p_sgd_eps) : 0.01;
     double path_sgd_delta = p_sgd_delta ? args::get(p_sgd_delta) : 0;
     // will be filled, if the user decides to write a snapshot of the graph after each sorting iterationn
-    std::vector<std::vector<handle_t>> snapshots;
     const bool snapshot = p_sgd_snapshot;
+    std::string snapshot_prefix;
+    if (snapshot) {
+        snapshot_prefix = args::get(p_sgd_snapshot);
+    }
 
     // default parameters that need a path index to be present
     uint64_t path_sgd_min_term_updates;
@@ -236,7 +239,7 @@ int main_layout(int argc, char **argv) {
         }
     }
     uint64_t max_path_step_count = get_max_path_step_count(path_sgd_use_paths, path_index);
-    path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? args::get(p_sgd_zipf_space) : std::min((uint64_t)1000000, max_path_step_count);
+    path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? std::min(args::get(p_sgd_zipf_space), max_path_step_count) : std::min((uint64_t)10000, max_path_step_count);
     double path_sgd_max_eta = args::get(p_sgd_eta_max) ? args::get(p_sgd_eta_max) : max_path_step_count * max_path_step_count;
 
     path_sgd_zipf_space_max = args::get(p_sgd_zipf_space_max) ? std::min(path_sgd_zipf_space, args::get(p_sgd_zipf_space_max)) : 1000;
@@ -296,8 +299,6 @@ int main_layout(int argc, char **argv) {
                           });
 
     //double max_x = 0;
-
-    std::vector<std::vector<double>> snapshotsX; // TODO to remove
     algorithms::path_linear_sgd_layout(
         graph,
         path_index,
@@ -315,7 +316,7 @@ int main_layout(int argc, char **argv) {
         num_threads,
         show_progress,
         snapshot,
-        snapshotsX,
+        snapshot_prefix,
         graph_X,
         graph_Y
         );
