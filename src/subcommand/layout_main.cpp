@@ -330,9 +330,10 @@ int main_layout(int argc, char **argv) {
                                   graph_Y[pos].store(dist(rng));
                                   graph_X[pos + 1].store(dist(rng));
                                   graph_Y[pos + 1].store(dist(rng));*/
+                                  uint64_t graph_node_count = graph.get_node_count();
 
                                   for (uint64_t i = pos; i <= pos + 1; i++){
-                                      d2xy(sqrt(max_path_step_count), i, &x, &y);
+                                      d2xy(sqrt(graph_node_count), i, &x, &y);
                                       graph_X[i].store(x);
                                       graph_Y[i].store(y);
                                   }
