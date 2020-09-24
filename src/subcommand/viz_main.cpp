@@ -434,7 +434,7 @@ namespace odgi {
                 if (
                         _show_strands ||
                         (_change_darkness && !_longest_path) ||
-                        (_binned_mode && (_color_by_mean_coverage || _color_by_mean_inversion_rate))
+                        (_binned_mode && (_color_by_mean_coverage || _color_by_mean_inversion_rate || _change_darkness))
                         ) {
                     handle_t h;
                     uint64_t hl, p;
@@ -454,7 +454,7 @@ namespace odgi {
                             path_len_to_use += hl;
                         }
 
-                        if (_binned_mode && (_color_by_mean_coverage || _color_by_mean_inversion_rate)){
+                        if (_binned_mode && (_color_by_mean_coverage || _color_by_mean_inversion_rate || _change_darkness)){
                             p = position_map[number_bool_packing::unpack_number(h)];
                             for (uint64_t k = 0; k < hl; ++k) {
                                 int64_t curr_bin = (p + k) / _bin_width + 1;
@@ -467,7 +467,7 @@ namespace odgi {
                         }
                     });
 
-                    if (_binned_mode && (_color_by_mean_coverage || _color_by_mean_inversion_rate)) {
+                    if (_binned_mode && (_color_by_mean_coverage || _color_by_mean_inversion_rate || _change_darkness)) {
                         for (auto &entry : bins) {
                             auto &v = entry.second;
                             v.mean_inv /= (v.mean_cov ? v.mean_cov : 1);
@@ -514,7 +514,7 @@ namespace odgi {
             }
 
             if (!(
-                    is_aln && (( _change_darkness && _white_to_black) || (_binned_mode && (_color_by_mean_coverage || _color_by_mean_inversion_rate)))
+                    is_aln && (( _change_darkness && _white_to_black) || (_binned_mode && (_color_by_mean_coverage || _color_by_mean_inversion_rate || _change_darkness)))
                     )) {
                 // brighten the color
                 float f = std::min(1.5, 1.0 / std::max(std::max(path_r_f, path_g_f), path_b_f));
@@ -556,7 +556,8 @@ namespace odgi {
 
                             if (is_aln) {
                                 if (_change_darkness){
-                                    x = 1 - ( (float)(curr_len + k) / (float)(path_len_to_use)) * 0.9;
+                                    uint64_t ii = bins[curr_bin].mean_inv > 0.5 ? (hl - k) : k;
+                                    x = 1 - ( (float)(curr_len + ii) / (float)(path_len_to_use)) * 0.9;
                                 } else if (_color_by_mean_coverage) {
                                     x = bins[curr_bin].mean_cov / max_mean_cov;
                                 } else if (_color_by_mean_inversion_rate) {
