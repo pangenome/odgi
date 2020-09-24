@@ -636,7 +636,8 @@ namespace odgi {
                     uint64_t path_y = path_layout_y[path_rank];
                     for (uint64_t i = 0; i < hl; i+=1/scale_x) {
                         if (is_aln && _change_darkness){
-                            x = 1 - ((float)(curr_len + i*scale_x) / (float)(path_len_to_use))*0.9;
+                            uint64_t ii = graph.get_is_reverse(h) ? (hl - i) : i;
+                            x = 1 - ((float)(curr_len + ii*scale_x) / (float)(path_len_to_use))*0.9;
                         }
                         add_path_step(p+i, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
                     }
