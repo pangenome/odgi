@@ -23,10 +23,8 @@ odgi_viz - variation graph visualizations
 
 The odgi viz(1) command can produce a linear, static visualization of an odgi variation graph. It can aggregate the pangenome into bins
 and directly renders a raster image. The binning level can be specified in input or it is calculated from the target width of the PNG to emit.
-Can be used to produce visualizations for gigabase scale pangenomes. For more information  about the binning process,
-please refer to <<odgi_bin.adoc#_odgi_bin1, odgi bin>>. If reverse coloring was selected, only
-the bins with a reverse rate of at least 0.5 are colored. Currently, there is no parameter to color according to the
-sequence coverage in bins available.
+Can be used to produce visualizations for gigabase scale pangenomes. For more information about the binning process,
+please refer to <<odgi_bin.adoc#_odgi_bin1, odgi bin>>.
 
 == OPTIONS
 
