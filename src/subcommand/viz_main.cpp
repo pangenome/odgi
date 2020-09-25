@@ -109,6 +109,14 @@ namespace odgi {
             return 1;
         }
 
+        if (args::get(change_darkness) && (args::get(color_by_mean_coverage) || args::get(color_by_mean_inversion_rate))) {
+            std::cerr
+                    << "[odgi viz] error: Please specify the -d/--change-darkness option without specifying "
+                       "-m/--color-by-mean-coverage or -z/--color-by-mean-inversion."
+                    << std::endl;
+            return 1;
+        }
+
         graph_t graph;
         assert(argc > 0);
         std::string infile = args::get(dg_in_file);
