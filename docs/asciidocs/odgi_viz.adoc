@@ -93,7 +93,9 @@ sequence coverage in bins available.
 === Gradient Mode (also known as Position Mode) Options
 
 *-d, --change-darkness*::
-  Change the color darkness based on nucleotide position in the path.  This parameter can be set in combination with [*-A, --alignment-prefix*=_STRING_].
+  Change the color darkness based on nucleotide position in the path. When it is used in binned mode, the mean inversion
+  rate of the bin node is considered to set the color gradient starting position: when this rate is greater than 0.5, the
+  bin is considered inverted, and the color gradient starts from the right-end of the bin. This parameter can be set in combination with [*-A, --alignment-prefix*=_STRING_].
 
 *-l, --longest-path*::
   Use the longest path length to change the color darkness.
