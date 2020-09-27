@@ -12,7 +12,7 @@
 
 //#define debug_odgi_viz
 
-#define RGB_BIN_LINKS 90
+#define RGB_BIN_LINKS 100
 
 namespace odgi {
 
@@ -85,11 +85,11 @@ namespace odgi {
         if (
                 !args::get(binned_mode) &&
                 ((args::get(bin_width) > 0) || args::get(drop_gap_links) ||
-                args::get(color_by_mean_coverage) || args::get(color_by_mean_inversion_rate))
+                args::get(color_by_mean_coverage))
                 ){
             std::cerr
                     << "[odgi viz] error: Please specify the -b/--binned-mode option to use the "
-                       "-w/--bin_width, -g/--no-gap-links, -m/--color-by-mean-coverage, and -z/--color-by-mean-inversion "
+                       "-w/--bin_width, -g/--no-gap-links, and -m/--color-by-mean-coverage "
                        "options."
                     << std::endl;
             return 1;
@@ -510,21 +510,19 @@ namespace odgi {
                     path_r = 240;
                     path_g = 240;
                     path_b = 240;
-                } else if (_binned_mode) {
-                    if (_color_by_mean_coverage) {
-                        path_r = 0;
-                        path_g = 0;
-                        path_b = 255;
-                    } else if (_color_by_mean_inversion_rate) {
-                        path_r = 255;
-                        path_g = 0;
-                        path_b = 0;
-                    }
+                } else if (_binned_mode && _color_by_mean_coverage) {
+                    path_r = 0;
+                    path_g = 0;
+                    path_b = 255;
+                } else if (_color_by_mean_inversion_rate) {
+                    path_r = 255;
+                    path_g = 0;
+                    path_b = 0;
                 }
             }
 
             if (!(
-                    is_aln && (( _change_darkness && _white_to_black) || (_binned_mode && (_color_by_mean_coverage || _color_by_mean_inversion_rate || _change_darkness)))
+                    is_aln && (( _change_darkness && _white_to_black) || _color_by_mean_inversion_rate || (_binned_mode && (_color_by_mean_coverage || _change_darkness)))
                     )) {
                 // brighten the color
                 float f = std::min(1.5, 1.0 / std::max(std::max(path_r_f, path_g_f), path_b_f));
@@ -532,6 +530,7 @@ namespace odgi {
                 path_g = (uint8_t) std::round(255 * std::min(path_g_f * f, (float) 1.0));
                 path_b = (uint8_t) std::round(255 * std::min(path_b_f * f, (float) 1.0));
             }
+
             //std::cerr << "path " << as_integer(path) << " " << graph.get_path_name(path) << " " << path_r_f << " " << path_g_f << " " << path_b_f
             //          << " " << (int)path_r << " " << (int)path_g << " " << (int)path_b << std::endl;
             uint64_t path_rank = as_integer(path) - 1;
@@ -646,10 +645,19 @@ namespace odgi {
                     // make contects for the bases in the node
                     uint64_t path_y = path_layout_y[path_rank];
                     for (uint64_t i = 0; i < hl; i+=1/scale_x) {
-                        if (is_aln && _change_darkness){
-                            uint64_t ii = graph.get_is_reverse(h) ? (hl - i) : i;
-                            x = 1 - ((float)(curr_len + ii*scale_x) / (float)(path_len_to_use))*0.9;
+                        if (is_aln) {
+                            if (_change_darkness){
+                                uint64_t ii = graph.get_is_reverse(h) ? (hl - i) : i;
+                                x = 1 - ((float)(curr_len + ii*scale_x) / (float)(path_len_to_use))*0.9;
+                            } else if (_color_by_mean_inversion_rate) {
+                                if (graph.get_is_reverse(h)) {
+                                    path_r = 255;
+                                } else {
+                                    path_r = 0;
+                                }
+                            };
                         }
+
                         add_path_step(p+i, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
                     }
 
