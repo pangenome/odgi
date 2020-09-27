@@ -69,8 +69,11 @@ another bin. For an exact positional output, please specify [*-j, --json*].
   If [*-j, --json*] is set, no nucleotide sequences will be printed to stdout in order to save disk space.
 
 *-g, --no-gap-links*::
-  Links connecting a path from left to right may not be relevant to understand a path's traversal through the bins. They
-  can be left out saving disk space.
+  We divide links into 2 classes:
+  1. the links which help to follow complex variations. They need to be drawn, else one could not follow the sequence of a path.
+  2. the links helping to follow simple variations. These links are called *gap-links*. Such links solely connecting a
+  path from left to right may not be relevant to understand a path's traversal through the bins. Therefore, when this option
+  is set, the gap-links are left out saving disk space
 
 === Program Information
 
