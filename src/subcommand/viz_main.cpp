@@ -12,6 +12,8 @@
 
 //#define debug_odgi_viz
 
+#define RGB_BIN_LINKS 90
+
 namespace odgi {
 
     using namespace odgi::subcommand;
@@ -217,7 +219,7 @@ namespace odgi {
             image[4 * width * y + 4 * x + 3] = 255;
         };
 
-        auto add_edge_from_positions = [&](uint64_t a, const uint64_t b) {
+        auto add_edge_from_positions = [&](uint64_t a, const uint64_t b, uint8_t rgb) {
 #ifdef debug_odgi_viz
             std::cerr << "Edge displayed" << std::endl;
             std::cerr << a << " --> " << b << std::endl;
@@ -228,14 +230,14 @@ namespace odgi {
             uint64_t i = 0;
 
             for (; i < dist; i += 1 / scale_y) {
-                add_point(a, i, 0, 0, 0);
+                add_point(a, i, rgb, rgb, rgb);
             }
             while (a <= b) {
-                add_point(a, i, 0, 0, 0);
+                add_point(a, i, rgb, rgb, rgb);
                 a += 1 / scale_x;
             }
             for (uint64_t j = 0; j < dist; j += 1 / scale_y) {
-                add_point(b, j, 0, 0, 0);
+                add_point(b, j, rgb, rgb, rgb);
             }
         };
 
@@ -249,7 +251,7 @@ namespace odgi {
             std::cerr << graph.get_id(h) << " (" << number_bool_packing::unpack_bit(h) << ") --> " << b << " (" << number_bool_packing::unpack_bit(h) << ") " << std::endl;
 #endif
 
-            add_edge_from_positions(a, b);
+            add_edge_from_positions(a, b, 0);
         };
 
         if (_binned_mode){
@@ -265,7 +267,7 @@ namespace odgi {
 #ifdef debug_odgi_viz
                         std::cerr << "position in map (" << p  << ") - curr_bin: " << curr_bin << std::endl;
 #endif
-                        add_point(curr_bin - 1, 0, 0, 0, 0);
+                        add_point(curr_bin - 1, 0, RGB_BIN_LINKS, RGB_BIN_LINKS, RGB_BIN_LINKS);
                     }
 
                     last_bin = curr_bin;
@@ -631,7 +633,7 @@ namespace odgi {
                             edges_drawn.insert(pair);
 
                             // add contents for the edge
-                            add_edge_from_positions(a, b);
+                            add_edge_from_positions(a, b, RGB_BIN_LINKS);
                         }
                     }
                 }
