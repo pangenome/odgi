@@ -65,6 +65,11 @@ please refer to <<odgi_bin.adoc#_odgi_bin1, odgi bin>>.
   Use red and blue coloring to display forward and reverse alignments. This parameter can be set in combination with
   [*-A, --alignment-prefix*=_STRING_].
 
+*-z, --color-by-mean-inversion-rate*::
+  Change the color respect to the node strandness (black for forward, red for reverse); in binned mode (*-b, --binned-mode*),
+  change the color respect to the mean inversion rate of the path for each bin, from black (no inversions) to red (bin
+  mean inversion rate equals to 1).
+
 
 === Binned Mode Options
 
@@ -86,10 +91,6 @@ please refer to <<odgi_bin.adoc#_odgi_bin1, odgi bin>>.
 *-m, --color-by-mean-coverage*::
   Change the color respect to the mean coverage of the path for each bin, from black (no coverage) to blue (max bin mean
   coverage in the entire graph).
-
-*-z, --color-by-mean-inversion-rate*::
-  Change the color respect to the mean inversion rate of the path for each bin, from black (no inversions) to red (bin
-  mean inversion rate equals to 1).
 
 
 === Gradient Mode (also known as Position Mode) Options

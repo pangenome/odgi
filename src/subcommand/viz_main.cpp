@@ -41,12 +41,13 @@ namespace odgi {
         args::ValueFlag<std::string> alignment_prefix(parser, "STRING","apply alignment-related visual motifs to paths with this name prefix (it affects the -S and -d options)",{'A', "alignment-prefix"});
         args::Flag show_strands(parser, "bool","use reds and blues to show forward and reverse alignments",{'S', "show-strand"});
 
+        args::Flag color_by_mean_inversion_rate(parser, "color-by-mean-inversion-rate", "change the color respect to the node strandness (black for forward, red for reverse); in binned mode, change the color respect to the mean inversion rate of the path for each bin, from black (no inversions) to red (bin mean inversion rate equals to 1)", {'z', "color-by-mean-inversion-rate"});
+
         /// Binned mode
         args::Flag binned_mode(parser, "binned-mode", "bin the variation graph before its visualization", {'b', "binned-mode"});
         args::ValueFlag<uint64_t> bin_width(parser, "bp", "width of each bin in basepairs along the graph vector",{'w', "bin-width"});
         args::Flag drop_gap_links(parser, "drop-gap-links", "don't include gap links in the output", {'g', "no-gap-links"});
         args::Flag color_by_mean_coverage(parser, "color-by-mean-coverage", "change the color respect to the mean coverage of the path for each bin, from black (no coverage) to blue (max bin mean coverage in the entire graph)", {'m', "color-by-mean-coverage"});
-        args::Flag color_by_mean_inversion_rate(parser, "color-by-mean-inversion-rate", "change the color respect to the mean inversion rate of the path for each bin, from black (no inversions) to red (bin mean inversion rate equals to 1)", {'z', "color-by-mean-inversion-rate"});
 
         /// Gradient mode
         args::Flag change_darkness(parser, "change-darkness", "change the color darkness based on nucleotide position in the path", {'d', "change-darkness"});
