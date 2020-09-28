@@ -6,8 +6,7 @@ namespace odgi {
     namespace algorithms {
 
         ska::flat_hash_set<handlegraph::nid_t>
-        is_nice_and_acyclic(const HandleGraph &graph, const ska::flat_hash_set<handlegraph::nid_t> &component,
-                            const bool &ignore_paths) {
+        is_nice_and_acyclic(const HandleGraph &graph, const ska::flat_hash_set<handlegraph::nid_t> &component) {
             ska::flat_hash_set<handlegraph::nid_t> head_nodes;
             if (component.empty()) { return head_nodes; }
 
