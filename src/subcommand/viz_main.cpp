@@ -12,7 +12,7 @@
 
 //#define debug_odgi_viz
 
-#define RGB_BIN_LINKS 100
+#define RGB_BIN_LINKS 110
 
 namespace odgi {
 
@@ -508,9 +508,9 @@ namespace odgi {
                         path_r_f = path_r_f * 1.2;
                     }
                 } else if (_change_darkness && _white_to_black) {
-                    path_r = 240;
-                    path_g = 240;
-                    path_b = 240;
+                    path_r = 220;
+                    path_g = 220;
+                    path_b = 220;
                 } else if (_binned_mode && _color_by_mean_coverage) {
                     path_r = 0;
                     path_g = 0;
