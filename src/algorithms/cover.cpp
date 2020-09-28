@@ -193,37 +193,44 @@ namespace odgi {
                         if (!node_seen[graph.get_id(next)]) {
                             // add contacts for the edges
                             graph.follow_edges(next, false, [&](const handle_t &o) {
+                                //std::cerr << graph.get_id(next) << "(" << graph.get_is_reverse(next) << ") +++ " <<
+                                //             graph.get_id(o) << "(" << graph.get_is_reverse(o) <<")" << std::endl;
                                 if (path.back() == o) {
+                                    //std::cerr << "^^^" << std::endl;
                                     success = true;
+
+                                    const nid_t next_id = graph.get_id(next);
+
                                     if (!acyclic && path.size() + 1 < k) // Node coverage.
                                     {
                                         size_t first = find_first(node_coverage, graph.get_id(next));
-                                        best.update(node_coverage[first].second, next);
+                                        best.update(node_coverage[first].second, graph.get_handle(next_id, next_id < graph.get_id(o)));
                                     } else {
                                         std::vector<handle_t> window = forward_window(graph, path, next, k);
-                                        best.update(path_coverage[window], next);
+                                        best.update(path_coverage[window], graph.get_handle(next_id, next_id < graph.get_id(o)));
                                     }
                                 }
                             });
+                            //std::cerr << std::endl;
                         }
                     });
                 }
 
-                if (!success) {
-                    graph.follow_edges(path.back(), false, [&](const handle_t &next) {
-                        if (!node_seen[graph.get_id(next)]) {
-                            success = true;
-                            if (!acyclic && path.size() + 1 < k) // Node coverage.
-                            {
-                                size_t first = find_first(node_coverage, graph.get_id(next));
-                                best.update(node_coverage[first].second, next);
-                            } else {
-                                std::vector<handle_t> window = forward_window(graph, path, next, k);
-                                best.update(path_coverage[window], next);
-                            }
+
+                graph.follow_edges(path.back(), false, [&](const handle_t &next) {
+                    if (!node_seen[graph.get_id(next)]) {
+                        success = true;
+                        if (!acyclic && path.size() + 1 < k) // Node coverage.
+                        {
+                            size_t first = find_first(node_coverage, graph.get_id(next));
+                            best.update(node_coverage[first].second, next);
+                        } else {
+                            std::vector<handle_t> window = forward_window(graph, path, next, k);
+                            best.update(path_coverage[window], next);
                         }
-                    });
-                }
+                    }
+                });
+
 
                 if (success) {
                     if (acyclic || path.size() + 1 >= k) {
@@ -235,6 +242,8 @@ namespace odgi {
                         increase_coverage(node_coverage[first]);
                     }
                     path.push_back(best.handle);
+                    //std::cerr << "\tPush forward: " << graph.get_id(best.handle) << "(" << graph.get_is_reverse(best.handle) << ")" << std::endl;
+
                     node_seen[graph.get_id(best.handle)] = true;
                 }
 
@@ -255,37 +264,44 @@ namespace odgi {
                         if (!node_seen[graph.get_id(prev)]) {
                             // add contacts for the edges
                             graph.follow_edges(prev, true, [&](const handle_t &o) {
+                                //std::cerr << graph.get_id(o) << "(" << graph.get_is_reverse(o) <<") --- " <<
+                                //             graph.get_id(prev) << "(" << graph.get_is_reverse(prev) <<")" << std::endl;
                                 if (path.back() == o) {
+                                    //std::cerr << "\t^^^" << std::endl;
                                     success = true;
+
+                                    const nid_t prev_id = graph.get_id(prev);
+
                                     if (path.size() + 1 < k) // Node coverage.
                                     {
                                         size_t first = find_first(node_coverage, graph.get_id(prev));
-                                        best.update(node_coverage[first].second, prev);
+                                        best.update(node_coverage[first].second, graph.get_handle(prev_id, prev_id < graph.get_id(o)));
                                     } else {
                                         std::vector<handle_t> window = backward_window(graph, path, prev, k);
-                                        best.update(path_coverage[window], prev);
+                                        best.update(path_coverage[window], graph.get_handle(prev_id, prev_id < graph.get_id(o)));
                                     }
                                 }
                             });
+                            //std::cerr << std::endl;
                         }
                     });
                 }
 
-                if (!success) {
-                    graph.follow_edges(path.front(), true, [&](const handle_t &prev) {
-                        if (!node_seen[graph.get_id(prev)]) {
-                            success = true;
-                            if (path.size() + 1 < k) // Node coverage.
-                            {
-                                size_t first = find_first(node_coverage, graph.get_id(prev));
-                                best.update(node_coverage[first].second, prev);
-                            } else {
-                                std::vector<handle_t> window = backward_window(graph, path, prev, k);
-                                best.update(path_coverage[window], prev);
-                            }
+
+                graph.follow_edges(path.front(), true, [&](const handle_t &prev) {
+                    if (!node_seen[graph.get_id(prev)]) {
+                        success = true;
+                        if (path.size() + 1 < k) // Node coverage.
+                        {
+                            size_t first = find_first(node_coverage, graph.get_id(prev));
+                            best.update(node_coverage[first].second, prev);
+                        } else {
+                            std::vector<handle_t> window = backward_window(graph, path, prev, k);
+                            best.update(path_coverage[window], prev);
                         }
-                    });
-                }
+                    }
+                });
+
 
                 if (success) {
                     if (path.size() + 1 >= k) {
@@ -295,6 +311,7 @@ namespace odgi {
                     size_t first = find_first(node_coverage, graph.get_id(best.handle));
                     increase_coverage(node_coverage[first]);
                     path.push_front(best.handle);
+                    //std::cerr << "\tPush backward: " << graph.get_id(best.handle) << "(" << graph.get_is_reverse(best.handle) << ")" << std::endl;
                     node_seen[graph.get_id(best.handle)] = true;
                 }
 
@@ -327,7 +344,7 @@ namespace odgi {
 
             ska::flat_hash_set<handlegraph::nid_t> &component = components[component_id];
             size_t component_size = component.size();
-            ska::flat_hash_set<handlegraph::nid_t> head_nodes = is_nice_and_acyclic(graph, component, ignore_paths);
+            ska::flat_hash_set<handlegraph::nid_t> head_nodes = is_nice_and_acyclic(graph, component);
             bool acyclic = !(head_nodes.empty());
             if (show_progress) {
                 std::cerr << Coverage::name() << ": processing component " << (component_id + 1) << " / "
@@ -337,7 +354,7 @@ namespace odgi {
 
             // Node coverage for the potential starting nodes.
             std::vector<node_coverage_t> node_coverage = Coverage::init_node_coverage(
-                    graph, (acyclic ? head_nodes : component), ignore_paths
+                    graph, (acyclic && false ? head_nodes : component), ignore_paths
             );
             std::map<std::vector<handle_t>, coverage_t> path_coverage; // Path and its reverse complement are equivalent.
 
@@ -405,11 +422,6 @@ namespace odgi {
                         success |= Coverage::extend_backward(graph, path, node_window_size, node_coverage, node_seen,
                                                              path_coverage);
                     }
-
-                    for (auto const& x : node_seen){
-                        std::cerr << x.first << " --- " << x.second << std::endl;
-                    }
-                    std::cerr << std::endl;
                 }
 
                 path_handle_t new_path = graph.create_path_handle(
