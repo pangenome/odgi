@@ -164,6 +164,7 @@ namespace odgi {
                 return node_coverage;
             }
 
+            // To remember the nodes visited, to avoid crossing more than once
             static std::map<nid_t, bool>
             init_node_seen(const MutablePathDeletableHandleGraph &graph,
                            const ska::flat_hash_set<handlegraph::nid_t> &component) {
@@ -185,10 +186,11 @@ namespace odgi {
                 bool success = false;
                 BestCoverage<SimpleCoverage> best;
 
-                // If pseudopaths have to be generated ...
+                // ToDo: to parametrize. If pseudopaths have to be generated ...
                 if (true) {
-                    // ... try them first
+                    // ... it looks for the nodes that have edges entering the last node added in the path being created
 
+                    // ToDo: does a better/efficient way to know which are the nodes with edges entering a node?
                     graph.for_each_handle([&](const handle_t &next) {
                         if (!node_seen[graph.get_id(next)]) {
                             // add contacts for the edges
@@ -199,8 +201,11 @@ namespace odgi {
                                     //std::cerr << "^^^" << std::endl;
                                     success = true;
 
+                                    //ToDo: I assume compacted graph, but, I would need a safe, general,way to get the node rank from the node handle
                                     const nid_t next_id = graph.get_id(next);
 
+                                    // If the new handle has a rank lower than the rank of the last node added in the path,
+                                    // flip the new handle to have smooth path through the graph (1D)
                                     if (!acyclic && path.size() + 1 < k) // Node coverage.
                                     {
                                         size_t first = find_first(node_coverage, graph.get_id(next));
@@ -216,7 +221,7 @@ namespace odgi {
                     });
                 }
 
-
+                // Default way to find new nodes to add to the path being created
                 graph.follow_edges(path.back(), false, [&](const handle_t &next) {
                     if (!node_seen[graph.get_id(next)]) {
                         success = true;
@@ -230,7 +235,6 @@ namespace odgi {
                         }
                     }
                 });
-
 
                 if (success) {
                     if (acyclic || path.size() + 1 >= k) {
@@ -256,10 +260,11 @@ namespace odgi {
                 bool success = false;
                 BestCoverage<SimpleCoverage> best;
 
-                // If pseudopaths have to be generated ...
+                // ToDo: to parametrize. If pseudopaths have to be generated ...
                 if (true) {
-                    // ... try them first
+                    // ... it looks for the nodes that have edges entering the last node added in the path being created
 
+                    // ToDo: does a better/efficient way to know which are the nodes with edges entering a node?
                     graph.for_each_handle([&](const handle_t &prev) {
                         if (!node_seen[graph.get_id(prev)]) {
                             // add contacts for the edges
@@ -270,8 +275,11 @@ namespace odgi {
                                     //std::cerr << "\t^^^" << std::endl;
                                     success = true;
 
+                                    //ToDo: I assume compacted graph, but, I would need a safe, general,way to get the node rank from the node handle
                                     const nid_t prev_id = graph.get_id(prev);
 
+                                    // If the new handle has a rank lower than the rank of the last node added in the path,
+                                    // flip the new handle to have smooth path through the graph (1D)
                                     if (path.size() + 1 < k) // Node coverage.
                                     {
                                         size_t first = find_first(node_coverage, graph.get_id(prev));
@@ -287,7 +295,7 @@ namespace odgi {
                     });
                 }
 
-
+                // Default way to find new nodes to add to the path being created
                 graph.follow_edges(path.front(), true, [&](const handle_t &prev) {
                     if (!node_seen[graph.get_id(prev)]) {
                         success = true;
@@ -302,7 +310,6 @@ namespace odgi {
                     }
                 });
 
-
                 if (success) {
                     if (path.size() + 1 >= k) {
                         std::vector<handle_t> window = backward_window(graph, path, best.handle, k);
@@ -312,6 +319,7 @@ namespace odgi {
                     increase_coverage(node_coverage[first]);
                     path.push_front(best.handle);
                     //std::cerr << "\tPush backward: " << graph.get_id(best.handle) << "(" << graph.get_is_reverse(best.handle) << ")" << std::endl;
+
                     node_seen[graph.get_id(best.handle)] = true;
                 }
 
@@ -345,7 +353,12 @@ namespace odgi {
             ska::flat_hash_set<handlegraph::nid_t> &component = components[component_id];
             size_t component_size = component.size();
             ska::flat_hash_set<handlegraph::nid_t> head_nodes = is_nice_and_acyclic(graph, component);
-            bool acyclic = !(head_nodes.empty());
+
+            //ToDo: to parametrize.
+            // When pseudo-paths have to be generated, consider the component as cyclic. In this way, the new
+            // pseudo-paths will not start always from the head nodes. This could be important because we don't respect
+            // the graph topology in the pseudo-path generation.
+            bool acyclic = !(head_nodes.empty()) && false;
             if (show_progress) {
                 std::cerr << Coverage::name() << ": processing component " << (component_id + 1) << " / "
                           << components.size() << ", which has " << component.size() << " node(s) and it is "
@@ -354,7 +367,7 @@ namespace odgi {
 
             // Node coverage for the potential starting nodes.
             std::vector<node_coverage_t> node_coverage = Coverage::init_node_coverage(
-                    graph, (acyclic && false ? head_nodes : component), ignore_paths
+                    graph, (acyclic ? head_nodes : component), ignore_paths
             );
             std::map<std::vector<handle_t>, coverage_t> path_coverage; // Path and its reverse complement are equivalent.
 
@@ -383,7 +396,6 @@ namespace odgi {
                 std::map<nid_t, bool> node_seen = Coverage::init_node_seen(
                         graph, (acyclic ? head_nodes : component)
                 );
-
                 // Choose a starting node with minimum coverage and then sort the nodes by id.
                 std::deque<handle_t> path;
                 ips4o::parallel::sort(node_coverage.begin(), node_coverage.end(),
@@ -404,6 +416,7 @@ namespace odgi {
                 }
 
                 path.push_back(graph.get_handle(node_coverage.front().first, false));
+
                 node_seen[graph.get_id(path.back())] = true;
                 Coverage::increase_coverage(node_coverage.front());
                 ips4o::parallel::sort(node_coverage.begin(), node_coverage.end(),
@@ -418,7 +431,7 @@ namespace odgi {
                     success |= Coverage::extend_forward(graph, path, node_window_size, node_coverage, node_seen,
                                                         path_coverage,
                                                         acyclic);
-                    if (!acyclic && path.size() < component_size) {
+                    if (!(acyclic) && path.size() < component_size) {
                         success |= Coverage::extend_backward(graph, path, node_window_size, node_coverage, node_seen,
                                                              path_coverage);
                     }
