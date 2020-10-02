@@ -551,6 +551,29 @@ TEST_CASE("Deletable handle graphs work", "[handle][vg]") {
                     });
                     REQUIRE(node_count == 1);
                 }
+
+                SECTION("Reversing self edges are kept when dividing a handle") {
+                    graph_t graph;
+                    handle_t h1 = graph.create_handle("ATGAA");
+                    handle_t h2 = graph.create_handle("ATGAA");
+
+                    graph.create_edge(h1, graph.flip(h1));
+                    graph.create_edge(graph.flip(h2), h2);
+
+                    auto parts1 = graph.divide_handle(h1, {2, 4});
+                    auto parts2 = graph.divide_handle(h2, {2, 4});
+
+                    assert(parts1.size() == 3);
+                    assert(parts2.size() == 3);
+
+                    assert(graph.has_edge(parts1[0], parts1[1]));
+                    assert(graph.has_edge(parts1[1], parts1[2]));
+                    assert(graph.has_edge(parts1[2], graph.flip(parts1[2])));
+
+                    assert(graph.has_edge(parts2[0], parts2[1]));
+                    assert(graph.has_edge(parts2[1], parts2[2]));
+                    assert(graph.has_edge(graph.flip(parts2[0]), parts2[0]));
+                }
             }
         }
     }
