@@ -938,41 +938,20 @@ std::vector<handle_t> graph_t::divide_handle(const handle_t& handle, const std::
         handles.push_back(create_handle(s));
     }
 
-    // TODO move right edges of original node to the final node of the new nodes to return
-    follow_edges(handle, false, [&](const handle_t& h) {
-        create_edge(handles.back(), h);
-    });
-/*
     // update the backwards references back onto this node
     handle_t last_handle = handles.back();
-    follow_edges(last_handle, false, [&](const handle_t& h) {
+    follow_edges(fwd_handle, false, [&](const handle_t& h) {
             if (h == flip(fwd_handle)) {
-                // TODO how to reassign this?!
-                // h = flip(handles.back());
-                destroy_edge(last_handle, h);
+                // destroy_edge(last_handle, h);
                 create_edge(last_handle, flip(handles.back()));
-                std::cerr << "CHECKPOT" << std::endl;
             }
     });
-     */
-
-
-    // TODO move left edges of original node to the first node of the new nodes to return
+    // update the forward references back onto this node
     follow_edges(handle, left, [&](const handle_t& h) {
-        create_edge(h, handles.front());
+        if (h == flip(handle)) {
+            create_edge(h, handles.front());
+        }
     });
-/*
-    handle_t first_handle = handles.front();
-    follow_edges(first_handle, true, [&](const handle_t& h) {
-            if (h == fwd_handle) {
-                // TODO how to reassign this?!
-                // h = flip(handles.back());
-                destroy_edge(h, first_handle);
-                create_edge(flip(handles.front()), first_handle);
-                std::cerr << "REVERSE CHECKPOT" << std::endl;
-            }
-    });
-     */
 
     // and record their reverse, for use in path fixup
     std::vector<handle_t> rev_handles;
@@ -980,6 +959,7 @@ std::vector<handle_t> graph_t::divide_handle(const handle_t& handle, const std::
         rev_handles.push_back(flip(h));
     }
     std::reverse(rev_handles.begin(), rev_handles.end());
+
 
     // connect the pieces head to tail
     for (uint64_t i = 0; i < handles.size()-1; ++i) {
