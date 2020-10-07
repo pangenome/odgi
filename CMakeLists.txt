@@ -550,7 +550,8 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/algorithms/groom.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/distance_to_head.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/is_single_stranded.hpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/shortest_cycle.hpp)
+  ${CMAKE_SOURCE_DIR}/src/algorithms/shortest_cycle.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/progress.hpp)
 
 target_include_directories(odgi_objs PUBLIC ${odgi_INCLUDES})
 set_target_properties(odgi_objs PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
