@@ -18,6 +18,7 @@
 #include <sdsl/bit_vectors.hpp>
 #include "dirty_zipfian_int_distribution.h"
 #include "XoshiroCpp.hpp"
+#include "progress.hpp"
 
 namespace odgi {
     namespace algorithms {

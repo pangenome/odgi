@@ -32,6 +32,8 @@ namespace odgi {
             std::cerr << "space: " << space << std::endl;
 #endif
 
+            uint64_t total_term_updates = iter_max * min_term_updates;
+            progress_meter::ProgressMeter progress_meter(total_term_updates, "[path sgd sort]: terms updated:", 20);
             using namespace std::chrono_literals; // for timing stuff
             uint64_t num_nodes = graph.get_node_count();
             // is a snapshot in progress?
@@ -96,6 +98,7 @@ namespace odgi {
             auto checker_lambda =
                     [&](void) {
                         while (work_todo.load()) {
+                            progress_meter.update(term_updates.load() + min_term_updates * iteration);
                             if (term_updates.load() > min_term_updates) {
                                 if (snapshot) {
                                     if (snapshot_progress[iteration].load() || iteration == iter_max) {
@@ -126,6 +129,9 @@ namespace odgi {
                                 } else {
                                     if (progress) {
                                         double percent_progress = ((double) iteration / (double) iter_max) * 100.0;
+                                        if (progress_meter.in_print_mode.load()) {
+                                            std::cerr << std::endl;
+                                        }
                                         std::cerr << std::fixed << std::setprecision(2) << "[path sgd layout]: "
                                                   << percent_progress << "% progress: "
                                                                          "iteration: " << iteration <<
@@ -381,7 +387,10 @@ namespace odgi {
 
             snapshot_thread.join();
 
-            checker.join();;
+            checker.join();
+
+            progress_meter.finish();
+
             // drop out of atomic stuff... maybe not the best way to do this
             std::vector<double> X_final(X.size());
             uint64_t i = 0;
