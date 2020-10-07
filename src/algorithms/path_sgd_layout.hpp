@@ -15,10 +15,10 @@
 #include <zipfian_int_distribution.h>
 #include <iomanip>
 #include <string>
-#include "weakly_connected_components.hpp"
 #include <sdsl/bit_vectors.hpp>
 #include "dirty_zipfian_int_distribution.h"
 #include "XoshiroCpp.hpp"
+#include "progress.hpp"
 
 namespace odgi {
     namespace algorithms {
@@ -42,7 +42,7 @@ namespace odgi {
                                     const uint64_t &nthreads,
                                     const bool &progress,
                                     const bool &snapshot,
-                                    std::vector<std::vector<double>> &snapshots,
+                                    const std::string &snapshot_prefix,
                                     std::vector<std::atomic<double>> &X,
                                     std::vector<std::atomic<double>> &Y);
 

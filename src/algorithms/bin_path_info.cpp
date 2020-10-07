@@ -61,6 +61,7 @@ namespace odgi {
             graph_seq.clear(); // clean up
             std::unordered_map<path_handle_t, uint64_t> path_length;
             uint64_t gap_links_removed = 0;
+            uint64_t total_links = 0;
             graph.for_each_path_handle([&](const path_handle_t &path) {
                 std::vector<std::pair<uint64_t, uint64_t>> links;
                 std::map<uint64_t, path_info_t> bins;
@@ -135,6 +136,7 @@ namespace odgi {
                         bin_ids.push_back(entry.first);
                     }
                     std::sort(bin_ids.begin(), bin_ids.end());
+                    total_links += links.size();
 
                     uint64_t fill_pos = 0;
 
@@ -164,7 +166,11 @@ namespace odgi {
             });
 
             if (drop_gap_links) {
-                std::cerr << "Gap links removed: " << gap_links_removed << std::endl;
+                uint64_t path_count = graph.get_path_count();
+
+                std::cerr << "Gap links removed: " << gap_links_removed << " (" << path_count << " path start links + "
+                          << path_count << " path end links + " << (gap_links_removed - path_count * 2) << " inner gap links) of "
+                          << total_links << " total links" << std::endl;
             }
         }
 

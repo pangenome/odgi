@@ -1,7 +1,6 @@
 #include "subcommand.hpp"
 #include "odgi.hpp"
 #include "args.hxx"
-#include "threads.hpp"
 #include "algorithms/bin_path_info.hpp"
 #include "algorithms/hash.hpp"
 #include "algorithms/id_ordered_paths.hpp"
@@ -52,8 +51,6 @@ namespace odgi {
         args::Flag longest_path(parser, "longest-path", "use the longest path length to change the color darkness", {'l', "longest-path"});
         args::Flag white_to_black(parser, "white-to-black", "change the color darkness from white (for the first nucleotide position) to black (for the last nucleotide position)", {'u', "white-to-black"});
 
-        args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
-
         try {
             parser.ParseCLI(argc, argv);
         } catch (args::Help) {
@@ -67,12 +64,6 @@ namespace odgi {
         if (argc == 1) {
             std::cout << parser;
             return 1;
-        }
-
-        if (args::get(threads)) {
-            omp_set_num_threads(args::get(threads));
-        } else {
-            omp_set_num_threads(1);
         }
 
         if (!dg_in_file) {
@@ -111,9 +102,17 @@ namespace odgi {
 
         if (args::get(show_strands) + args::get(white_to_black) + args::get(color_by_mean_coverage)  + args::get(color_by_mean_inversion_rate) > 1) {
             std::cerr
-                    << "[odgi cover] error: please specify only one of the following options: "
+                    << "[odgi viz] error: Please specify only one of the following options: "
                        "-S/--show-strand, -u/--white-to-black, "
                        "-m/--color-by-mean-coverage, and -z/--color-by-mean-inversion."
+                    << std::endl;
+            return 1;
+        }
+
+        if (args::get(change_darkness) && (args::get(color_by_mean_coverage) || args::get(color_by_mean_inversion_rate))) {
+            std::cerr
+                    << "[odgi viz] error: Please specify the -d/--change-darkness option without specifying "
+                       "-m/--color-by-mean-coverage or -z/--color-by-mean-inversion."
                     << std::endl;
             return 1;
         }
@@ -443,7 +442,7 @@ namespace odgi {
                 if (
                         _show_strands ||
                         (_change_darkness && !_longest_path) ||
-                        (_binned_mode && (_color_by_mean_coverage || _color_by_mean_inversion_rate))
+                        (_binned_mode && (_color_by_mean_coverage || _color_by_mean_inversion_rate || _change_darkness))
                         ) {
                     handle_t h;
                     uint64_t hl, p;
@@ -463,7 +462,7 @@ namespace odgi {
                             path_len_to_use += hl;
                         }
 
-                        if (_binned_mode && (_color_by_mean_coverage || _color_by_mean_inversion_rate)){
+                        if (_binned_mode && (_color_by_mean_coverage || _color_by_mean_inversion_rate || _change_darkness)){
                             p = position_map[number_bool_packing::unpack_number(h)];
                             for (uint64_t k = 0; k < hl; ++k) {
                                 int64_t curr_bin = (p + k) / _bin_width + 1;
@@ -476,7 +475,7 @@ namespace odgi {
                         }
                     });
 
-                    if (_binned_mode && (_color_by_mean_coverage || _color_by_mean_inversion_rate)) {
+                    if (_binned_mode && (_color_by_mean_coverage || _color_by_mean_inversion_rate || _change_darkness)) {
                         for (auto &entry : bins) {
                             auto &v = entry.second;
                             v.mean_inv /= (v.mean_cov ? v.mean_cov : 1);
@@ -523,7 +522,7 @@ namespace odgi {
             }
 
             if (!(
-                    is_aln && (( _change_darkness && _white_to_black) || (_binned_mode && (_color_by_mean_coverage || _color_by_mean_inversion_rate)))
+                    is_aln && (( _change_darkness && _white_to_black) || (_binned_mode && (_color_by_mean_coverage || _color_by_mean_inversion_rate || _change_darkness)))
                     )) {
                 // brighten the color
                 float f = std::min(1.5, 1.0 / std::max(std::max(path_r_f, path_g_f), path_b_f));
@@ -565,7 +564,8 @@ namespace odgi {
 
                             if (is_aln) {
                                 if (_change_darkness){
-                                    x = 1 - ( (float)(curr_len + k) / (float)(path_len_to_use)) * 0.9;
+                                    uint64_t ii = bins[curr_bin].mean_inv > 0.5 ? (hl - k) : k;
+                                    x = 1 - ( (float)(curr_len + ii) / (float)(path_len_to_use)) * 0.9;
                                 } else if (_color_by_mean_coverage) {
                                     x = bins[curr_bin].mean_cov / max_mean_cov;
                                 } else if (_color_by_mean_inversion_rate) {
@@ -645,7 +645,8 @@ namespace odgi {
                     uint64_t path_y = path_layout_y[path_rank];
                     for (uint64_t i = 0; i < hl; i+=1/scale_x) {
                         if (is_aln && _change_darkness){
-                            x = 1 - ((float)(curr_len + i*scale_x) / (float)(path_len_to_use))*0.9;
+                            uint64_t ii = graph.get_is_reverse(h) ? (hl - i) : i;
+                            x = 1 - ((float)(curr_len + ii*scale_x) / (float)(path_len_to_use))*0.9;
                         }
                         add_path_step(p+i, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
                     }
@@ -677,7 +678,9 @@ namespace odgi {
         });
 
         if (args::get(drop_gap_links)) {
-            std::cerr << "Gap links removed: " << gap_links_removed << " of " << total_links << " total links" << std::endl;
+            std::cerr << "Gap links removed: " << gap_links_removed << " (" << path_count << " path start links + "
+            << path_count << " path end links + " << (gap_links_removed - path_count * 2) << " inner gap links) of "
+            << total_links << " total links" << std::endl;
         }
 
         // trim vertical space to fit

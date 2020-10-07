@@ -937,12 +937,30 @@ std::vector<handle_t> graph_t::divide_handle(const handle_t& handle, const std::
     for (auto& s : seqs) {
         handles.push_back(create_handle(s));
     }
+
+    // update the backwards references back onto this node
+    handle_t last_handle = handles.back();
+    follow_edges(fwd_handle, false, [&](const handle_t& h) {
+            if (h == flip(fwd_handle)) {
+                // destroy_edge(last_handle, h);
+                create_edge(last_handle, flip(handles.back()));
+            }
+    });
+    // update the forward references back onto this node
+    follow_edges(handle, left, [&](const handle_t& h) {
+        if (h == flip(handle)) {
+            create_edge(h, handles.front());
+        }
+    });
+
     // and record their reverse, for use in path fixup
     std::vector<handle_t> rev_handles;
     for (auto& h : handles) {
         rev_handles.push_back(flip(h));
     }
     std::reverse(rev_handles.begin(), rev_handles.end());
+
+
     // connect the pieces head to tail
     for (uint64_t i = 0; i < handles.size()-1; ++i) {
         create_edge(handles[i], handles[i+1]);
@@ -983,6 +1001,7 @@ std::vector<handle_t> graph_t::divide_handle(const handle_t& handle, const std::
         });
     // destroy the handle
     destroy_handle(fwd_handle);
+    destroy_handle(handle);
     // connect the ends to the previous context
     for (auto& h : edges_fwd_fwd) create_edge(handles.back(), h);
     for (auto& h : edges_fwd_rev) create_edge(h, handles.front());

@@ -23,10 +23,8 @@ odgi_viz - variation graph visualizations
 
 The odgi viz(1) command can produce a linear, static visualization of an odgi variation graph. It can aggregate the pangenome into bins
 and directly renders a raster image. The binning level can be specified in input or it is calculated from the target width of the PNG to emit.
-Can be used to produce visualizations for gigabase scale pangenomes. For more information  about the binning process,
-please refer to <<odgi_bin.adoc#_odgi_bin1, odgi bin>>. If reverse coloring was selected, only
-the bins with a reverse rate of at least 0.5 are colored. Currently, there is no parameter to color according to the
-sequence coverage in bins available.
+Can be used to produce visualizations for gigabase scale pangenomes. For more information about the binning process,
+please refer to <<odgi_bin.adoc#_odgi_bin1, odgi bin>>.
 
 == OPTIONS
 
@@ -60,10 +58,12 @@ sequence coverage in bins available.
   Show thin links of this relative width to connect path pieces.
 
 *-A, --alignment-prefix*=_STRING_::
-  Apply alignment related visual motifs to paths which have this name prefix. It affects the -S and -d options."
+  Apply alignment related visual motifs to paths which have this name prefix. It affects the [*-S, --show-strand*] and
+  [*-d, --change-darkness*] options.
 
 *-S, --show-strand*::
-  Use red and blue coloring to display forward and reverse alignments. This parameter can be set in combination with [*-A, --alignment-prefix*=_STRING_].
+  Use red and blue coloring to display forward and reverse alignments. This parameter can be set in combination with
+  [*-A, --alignment-prefix*=_STRING_].
 
 
 === Binned Mode Options
@@ -84,28 +84,27 @@ sequence coverage in bins available.
   be relevant to understand a path's traversal through the bins. Therefore, they are not drawn in the binned mode.
 
 *-m, --color-by-mean-coverage*::
-  Change the color respect to the mean coverage of the path for each bin, from black (no coverage) to blue (max bin mean coverage in the entire graph).
+  Change the color respect to the mean coverage of the path for each bin, from black (no coverage) to blue (max bin mean
+  coverage in the entire graph).
 
 *-z, --color-by-mean-inversion-rate*::
-  Change the color respect to the mean inversion rate of the path for each bin, from black (no inversions) to red (bin mean inversion rate equals to 1).
+  Change the color respect to the mean inversion rate of the path for each bin, from black (no inversions) to red (bin
+  mean inversion rate equals to 1).
 
 
 === Gradient Mode (also known as Position Mode) Options
 
 *-d, --change-darkness*::
-  Change the color darkness based on nucleotide position in the path.  This parameter can be set in combination with [*-A, --alignment-prefix*=_STRING_].
+  Change the color darkness based on nucleotide position in the path. When it is used in binned mode, the mean inversion
+  rate of the bin node is considered to set the color gradient starting position: when this rate is greater than 0.5, the
+  bin is considered inverted, and the color gradient starts from the right-end of the bin. This parameter can be set in
+  combination with [*-A, --alignment-prefix*=_STRING_].
 
 *-l, --longest-path*::
   Use the longest path length to change the color darkness.
 
 *-u, --white-to-black*::
   Change the color darkness from white (for the first nucleotide position) to black (for the last nucleotide position).
-
-
-=== Threading
-
-*-t, --threads*=_N_::
-  Number of threads to use.
 
 
 === Program Information
