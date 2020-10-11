@@ -25,7 +25,7 @@ int main_draw(int argc, char **argv) {
         "draw previously-determined 2D layouts of the graph with diverse annotations");
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-    args::ValueFlag<std::string> layout_in_file(parser, "FILE", "read the layout coordinates from this file", {'l', "layout-in"});
+    args::ValueFlag<std::string> layout_in_file(parser, "FILE", "read the layout coordinates from this .lay format file produced by odgi layout", {'c', "coords-in"});
     //args::Flag in_is_tsv(parser, "is-tsv", "if the input is .tsv format (three column: id, X, Y) rather the default .lay binary format", {'I', "input-is-tsv"});
     args::ValueFlag<std::string> tsv_out_file(parser, "FILE", "write the TSV layout plus displayed annotations to this file", {'T', "tsv"});
     args::ValueFlag<std::string> svg_out_file(parser, "FILE", "write an SVG rendering to this file", {'s', "svg"});
