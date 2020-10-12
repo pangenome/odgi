@@ -68,7 +68,7 @@ color_t darken(const color_t& c, const double& f) {
 
 // layer a onto b with f intensity
 color_t layer(const color_t& a, const color_t& b, const double& f) {
-    return a;
+    //return a;
 	color_t out = a;
 
     auto inrange = [](double x) {
@@ -270,8 +270,9 @@ void wu_rekt(xy_d_t xy0, xy_d_t xy1,
     
     xy_d_t l = { u_ipart(min_x), u_ipart(min_y) };
     xy_d_t h = { u_ipart(max_x), u_ipart(max_y) };
-    for (double i = l.y; i < h.y; ++i) {
-        for (double j = l.x; j < h.x; ++j) {
+    // search the bounding box +/- 1 for pixels inside our bounds
+    for (double i = l.y-1; i < h.y+1; ++i) {
+        for (double j = l.x-1; j < h.x+1; ++j) {
             // draw if it's in bounds
             if (inside({j, i})) {
                 image.layer_pixel(j, i, color, 0.0);
