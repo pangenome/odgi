@@ -557,7 +557,7 @@ set_target_properties(odgi_objs PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 add_library(libodgi_static STATIC $<TARGET_OBJECTS:odgi_objs>)
 set_target_properties(libodgi_static PROPERTIES OUTPUT_NAME "odgi")
 set_target_properties(libodgi_static PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
-add_library(libodgi_shared SHARED $<TARGET_OBJECTS:odgi_objs>)
+add_library(libodgi_shared SHARED $<TARGET_OBJECTS:odgi_objs> src/algorithms/fonts/field8.h src/algorithms/fonts/font5x8.h)
 set_target_properties(libodgi_shared PROPERTIES OUTPUT_NAME "odgi")
 set_target_properties(libodgi_shared PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 
