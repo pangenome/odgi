@@ -24,12 +24,12 @@ color_t hash_color(const std::string& s) {
     path_b_f /= sum;
     double f = std::min(1.5, 1.0 / std::max(std::max(path_r_f, path_g_f), path_b_f));
     color_t c;
-    //c.c.r = (uint8_t) std::round(255 * std::min(path_r_f * f, (double) 1.0));
-    //c.c.g = (uint8_t) std::round(255 * std::min(path_g_f * f, (double) 1.0));
-    //c.c.b = (uint8_t) std::round(255 * std::min(path_b_f * f, (double) 1.0));
-    c.c.r = (uint8_t) std::round(255 * std::min(path_r_f, (double) 1.0));
-    c.c.g = (uint8_t) std::round(255 * std::min(path_g_f, (double) 1.0));
-    c.c.b = (uint8_t) std::round(255 * std::min(path_b_f, (double) 1.0));
+    c.c.r = (uint8_t) std::round(255 * std::min(path_r_f * f, (double) 1.0));
+    c.c.g = (uint8_t) std::round(255 * std::min(path_g_f * f, (double) 1.0));
+    c.c.b = (uint8_t) std::round(255 * std::min(path_b_f * f, (double) 1.0));
+    //c.c.r = (uint8_t) std::round(255 * std::min(path_r_f, (double) 1.0));
+    //c.c.g = (uint8_t) std::round(255 * std::min(path_g_f, (double) 1.0));
+    //c.c.b = (uint8_t) std::round(255 * std::min(path_b_f, (double) 1.0));
     c.c.a = 255;
     return c;
 }
@@ -275,7 +275,7 @@ void wu_rekt(xy_d_t xy0, xy_d_t xy1,
         for (double j = l.x-1; j < h.x+1; ++j) {
             // draw if it's in bounds
             if (inside({j, i})) {
-                image.layer_pixel(j, i, color, 0.0);
+                image.set_pixel(j, i, color);
             }
         }
     }
