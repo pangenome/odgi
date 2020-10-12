@@ -120,7 +120,7 @@ namespace odgi {
         graph_t graph;
         assert(argc > 0);
         std::string infile = args::get(dg_in_file);
-        if (infile.size()) {
+        if (!infile.empty()) {
             if (infile == "-") {
                 graph.deserialize(std::cin);
             } else {
@@ -132,7 +132,7 @@ namespace odgi {
 
         //NOTE: this sample will overwrite the file or test.png without warning!
         //const char* filename = argc > 1 ? argv[1] : "test.png";
-        if (!args::get(png_out_file).size()) {
+        if (args::get(png_out_file).empty()) {
             std::cerr << "[odgi viz] error: output image required" << std::endl;
             return 1;
         }
@@ -178,8 +178,7 @@ namespace odgi {
             if (_bin_width == 0){
                 _bin_width = 1 / scale_x; // It can be a float value.
             }else{
-                float num_bins = (float) len / _bin_width;// + (len % bin_width ? 1 : 0);
-                width = num_bins;
+                width = len / _bin_width;// + (len % bin_width ? 1 : 0);
             }
 
             // Each pixel corresponds to a bin
@@ -223,7 +222,7 @@ namespace odgi {
             std::cerr << a << " --> " << b << std::endl;
 #endif
             // In binned mode, the Links have to be tall to be visible; in standard mode, _bin_width is 1, so nothing changes here
-            uint64_t dist = (b - a)*_bin_width;
+            uint64_t dist = (b - a) * _bin_width;
 
             uint64_t i = 0;
 
@@ -278,7 +277,6 @@ namespace odgi {
                 uint64_t p = position_map[number_bool_packing::unpack_number(h)];
                 uint64_t hl = graph.get_length(h);
                 // make contents for the bases in the node
-                //for (uint64_t i = 0; i < hl; ++i) {
                 for (uint64_t i = 0; i < hl; i += 1 / scale_x) {
                     add_point(p + i, 0, 0, 0, 0);
                 }
@@ -353,7 +351,7 @@ namespace odgi {
                 }
                 for (uint64_t i = min_x * scale_x;
                      i < std::min((uint64_t) (max_x * scale_x + path_padding), width); ++i) {
-                    path_layout_buf[width * path_y + i] = 1;
+                    path_layout_buf[width * path_y + i] = true;
                 }
                 //std::cerr << "path_y " << graph.get_path_name(path) << " " << path_count - path_y - 1 << std::endl;
                 path_layout_y[as_integer(path) - 1] = path_count - path_y - 1;
@@ -691,7 +689,7 @@ namespace odgi {
                 uint8_t r = image[4 * width * y + 4 * x + 0];
                 uint8_t g = image[4 * width * y + 4 * x + 1];
                 uint8_t b = image[4 * width * y + 4 * x + 2];
-                uint8_t a = image[4 * width * y + 4 * x + 3];
+                //uint8_t a = image[4 * width * y + 4 * x + 3];
                 if (r != 255 || g != 255 || b != 255) {
                     min_y = std::min(min_y, y);
                     max_y = std::max(max_y, y);
