@@ -163,7 +163,6 @@ std::vector<uint8_t> rasterize(const std::vector<double> &X,
                                uint64_t& width,
                                uint64_t& height,
                                const double& line_width,
-                               const double& line_overlay,
                                const double& path_line_spacing,
                                bool color_paths) {
 
@@ -260,7 +259,6 @@ void draw_png(const std::string& filename,
               uint64_t width,
               uint64_t height,
               const double& line_width,
-              const double& line_overlay,
               const double& path_line_spacing,
               bool color_paths) {
     auto bytes = rasterize(X, Y,
@@ -270,7 +268,6 @@ void draw_png(const std::string& filename,
                            width,
                            height,
                            line_width,
-                           line_overlay,
                            path_line_spacing,
                            color_paths);
     png::encodeOneStep(filename.c_str(), bytes, width, height);

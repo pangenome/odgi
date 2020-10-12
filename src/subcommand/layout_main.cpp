@@ -373,7 +373,7 @@ int main_layout(int argc, char **argv) {
         auto& outfile = args::get(png_out_file);
         uint64_t _png_height = png_height ? args::get(png_height) : 1000;
         bool _color_paths = args::get(color_paths);
-        algorithms::draw_png(outfile, X_final, Y_final, graph, 1.0, border_bp, 0, _png_height, 0.0, 10.0, 1.0, _color_paths);
+        algorithms::draw_png(outfile, X_final, Y_final, graph, 1.0, border_bp, 0, _png_height, 0.0, 1.0, _color_paths);
     }
     
     return 0;
