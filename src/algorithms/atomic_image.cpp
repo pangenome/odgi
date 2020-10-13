@@ -399,17 +399,19 @@ void wu_calc_rainbow(xy_d_t xy0, xy_d_t xy1, atomic_image_buf_t& image,
     // width is given in bp space (units in the base layout)
     // we will generate a series of lines parallel to the center line
     // to simulate a line with the given width
-    double width_in_px = total_width / image.source_per_px_y;
+    double width_in_px = width / image.source_per_px_y;
+    double spacing_in_px = spacing / image.source_per_px_y;
+    double total_width_in_px = colors.size() * (width_in_px + spacing_in_px); // total_width / image.source_per_px_y;
 
     // how for to get to a Y such that the length is w/2
-    double move_in_x = width_in_px / ( 2 * sqrt(pow(inv_gradient, 2) + 1));
-    double move_in_y = sqrt(pow(width_in_px/2,2) - pow(move_in_x, 2));
+    double move_in_x = total_width_in_px / ( 2 * sqrt(pow(inv_gradient, 2) + 1));
+    double move_in_y = sqrt(pow(total_width_in_px/2,2) - pow(move_in_x, 2));
 
     if (gradient == 0.0) {
         move_in_x = 0.0;
-        move_in_y = width_in_px / 2.0;
+        move_in_y = total_width_in_px / 2.0;
     } else if (inv_gradient == 0.0) {
-        move_in_x = width_in_px / 2.0;
+        move_in_x = total_width_in_px / 2.0;
         move_in_y = 0.0;
     }
 
@@ -451,16 +453,16 @@ void wu_calc_rainbow(xy_d_t xy0, xy_d_t xy1, atomic_image_buf_t& image,
         //wu_calc_line(xy0, xy1, black, image, true, true);
     }
     
-    xyA.x += move_in_x;
-    xyA.y += move_in_y;
+    xyA.x += move_in_x / 2;
+    xyA.y += move_in_y / 2;
 
-    xyB.x += move_in_x;
-    xyB.y += move_in_y;
+    xyB.x += move_in_x / 2;
+    xyB.y += move_in_y / 2;
 
     uint64_t total_steps = colors.size();
-    double step_x = 2*move_in_x / (double)total_steps;
-    double step_y = 2*move_in_y / (double)total_steps;
-    double r_width = std::sqrt(step_x*step_x + step_y*step_y);
+    double step_x = move_in_x / (double)total_steps;
+    double step_y = move_in_y / (double)total_steps;
+    double r_width = width_in_px; // std::sqrt(step_x*step_x + step_y*step_y);
 
     for (uint64_t i = 0; i < total_steps; ++i) {
         xyA.x -= step_x;
