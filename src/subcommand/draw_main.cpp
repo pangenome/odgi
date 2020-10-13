@@ -37,7 +37,7 @@ int main_draw(int argc, char **argv) {
     args::ValueFlag<double> render_border(parser, "N", "image border (in approximate bp) (default 100.0)", {'B', "border"});
     args::ValueFlag<double> png_line_width(parser, "N", "line width (in approximate bp) (default 0.0)", {'w', "line-width"});
     //args::ValueFlag<double> png_line_overlay(parser, "N", "line width (in approximate bp) (default 10.0)", {'O', "line-overlay"});
-    args::ValueFlag<double> png_path_line_spacing(parser, "N", "spacing between path lines in png layout (in approximate bp) (default 1.0)", {'S', "path-line-spacing"});
+    args::ValueFlag<double> png_path_line_spacing(parser, "N", "spacing between path lines in png layout (in approximate bp) (default 0.0)", {'S', "path-line-spacing"});
     args::ValueFlag<std::string> xp_in_file(parser, "FILE", "load the path index from this file", {'X', "path-index"});
     args::Flag progress(parser, "progress", "display progress of the sort", {'P', "progress"});
     args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel phases", {'t', "threads"});
@@ -135,7 +135,7 @@ int main_draw(int argc, char **argv) {
         uint64_t _png_height = png_height ? args::get(png_height) : 1000;
         double _png_line_width = png_line_width ? args::get(png_line_width) : 0;
         bool _color_paths = args::get(color_paths);
-        double _png_path_line_spacing = png_path_line_spacing ? args::get(png_path_line_spacing) : 1.0;
+        double _png_path_line_spacing = png_path_line_spacing ? args::get(png_path_line_spacing) : 0.0;
         // todo could be done with callbacks
         std::vector<double> X = layout.get_X();
         std::vector<double> Y = layout.get_Y();
