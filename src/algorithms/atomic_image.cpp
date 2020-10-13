@@ -40,42 +40,20 @@ std::ostream& operator<<(std::ostream& out, const color_t& c) {
 }
 
 color_t lighten(const color_t& c, const double& f) {
-    color_t l;
-    l.c = {
-        (uint8_t)std::round((double)c.c.r + (double)(0xff - c.c.r) * f), //(1.0 - f)),
-        (uint8_t)std::round((double)c.c.g + (double)(0xff - c.c.g) * f), //(1.0 - f)),
-        (uint8_t)std::round((double)c.c.b + (double)(0xff - c.c.b) * f), //(1.0 - f)),
-        c.c.a
-    };
-    /*
-    std::cerr << "lightening " << (int)c.c.r << " " << (int)c.c.g << " " << (int)c.c.b
-              << " by " << f << " => "
-              << (int)l.c.r << " " << (int)l.c.g << " " << (int)l.c.b << std::endl;
-    */
-    return l;
+    return layer(c, COLOR_WHITE, f);
 }
 
-color_t darken(const color_t& c, const double& f) {
-    color_t l;
-    l.c = {
-        (uint8_t)std::round((double)c.c.r - (double)(c.c.r) * f),
-        (uint8_t)std::round((double)c.c.g - (double)(c.c.g) * f),
-        (uint8_t)std::round((double)c.c.b - (double)(c.c.b) * f),
-        c.c.a
-    };
-    /*
-    std::cerr << "lightening " << (int)c.c.r << " " << (int)c.c.g << " " << (int)c.c.b
-              << " by " << f << " => "
-              << (int)l.c.r << " " << (int)l.c.g << " " << (int)l.c.b << std::endl;
-    */
-    return l;
+color_t darkest(const color_t& a, const color_t& b) {
+    if (a.c.r + a.c.g + a.c.b > b.c.r + b.c.g + b.c.b) {
+        return a;
+    } else {
+        return b;
+    }
 }
 
 // layer a onto b with f intensity
 color_t layer(const color_t& a, const color_t& b, const double& f) {
-    //return a;
 	color_t out = a;
-
     auto inrange = [](double x) {
                        if (COLOR_MAX < x) {
                            return (uint8_t) COLOR_MAX;
@@ -85,7 +63,6 @@ color_t layer(const color_t& a, const color_t& b, const double& f) {
                            return(uint8_t) std::round(x);
                        }
                    };
-
     //std::cerr << "got a = " << a.hex << " " << (int)a.c.r << "," << (int)a.c.g << "," << (int)a.c.b << std::endl;
     //std::cerr << "got b = " << b.hex << " " << (int)b.c.r << "," << (int)b.c.g << "," << (int)b.c.b << std::endl;
     //std::cerr << "f = " << f << std::endl;
@@ -94,15 +71,17 @@ color_t layer(const color_t& a, const color_t& b, const double& f) {
                         inrange((double)b.c.g - ((double)(255 * (1-f) - a.c.g))),
                         inrange((double)b.c.b - ((double)(255 * (1-f) - a.c.b))),
                         255 };
-        /*
-        out.c = (RGB) { inrange(a.c.r + ((double)255 * (1.0d - f))),
-                        inrange(a.c.g + ((double)255 * (1.0d - f))),
-                        inrange(a.c.b + ((double)255 * (1.0d - f))),
-                        255 };
-        */
     }
-    //std::cerr << "return out = " << out.hex << " " << (int)out.c.r << "," << (int)out.c.g << "," << (int)out.c.b << std::endl;
 	return out;
+}
+
+color_t mix(const color_t& a, const color_t& b, const double& f) {
+    color_t out;
+    out.c.a = 255;
+    out.c.r = std::round(((double) a.c.r * f + (double) b.c.r * 1-f)/2.0);
+    out.c.g = std::round(((double) a.c.g * f + (double) b.c.g * 1-f)/2.0);
+    out.c.b = std::round(((double) a.c.b * f + (double) b.c.b * 1-f)/2.0);
+    return out;
 }
 
 // helpers
@@ -120,14 +99,14 @@ void wu_draw_line(const bool steep, const double_t gradient, double intery,
                   atomic_image_buf_t& image, bool top, bool bottom) {
     if (steep) {
         for (double i = pxl1.x + 1; i < pxl2.x; ++i) {
-            image.layer_pixel(u_ipart(intery), i, color, (!bottom ? 1.0 : 1.0-u_rfpart(intery)));
-            image.layer_pixel(u_ipart(intery) + 1, i, color, (!top ? 1.0 : 1.0-u_fpart(intery)));
+            image.layer_pixel(u_ipart(intery), i, lighten(color, (!bottom ? 1.0 : 1.0-u_rfpart(intery))));
+            image.layer_pixel(u_ipart(intery) + 1, i, lighten(color, (!top ? 1.0 : 1.0-u_fpart(intery))));
             intery += gradient;
         }
     } else {
         for (double i = pxl1.x + 1; i < pxl2.x; ++i) {
-            image.layer_pixel(i, u_ipart(intery), color, (!bottom ? 1.0 : 1.0-u_rfpart(intery)));
-            image.layer_pixel(i, u_ipart(intery) + 1, color, (!top ? 1.0 : 1.0-u_fpart(intery)));
+            image.layer_pixel(i, u_ipart(intery), lighten(color, (!bottom ? 1.0 : 1.0-u_rfpart(intery))));
+            image.layer_pixel(i, u_ipart(intery) + 1, lighten(color, (!top ? 1.0 : 1.0-u_fpart(intery))));
             intery += gradient;
         }
     }
@@ -145,11 +124,11 @@ xy_d_t wu_calc_endpoint(xy_d_t xy, const double_t gradient, const bool steep,
     //std::cerr << "pxl is " << "(" << pxl.x << "," << pxl.y << ")" << std::endl;
 
     if (steep) {
-        image.layer_pixel(pxl.y, pxl.x, color, (1.0 - u_rfpart(end.y)) * xgap);
-        image.layer_pixel(pxl.y + 1, pxl.x, color, (1.0 - u_fpart(end.y)) * xgap);
+        image.layer_pixel(pxl.y, pxl.x, lighten(color, (1.0 - u_rfpart(end.y)) * xgap));
+        image.layer_pixel(pxl.y + 1, pxl.x, lighten(color, (1.0 - u_fpart(end.y)) * xgap));
     } else {
-        image.layer_pixel(pxl.x, pxl.y, color, (1.0 - u_rfpart(end.y)) * xgap);
-        image.layer_pixel(pxl.x, pxl.y + 1, color, (1.0 - u_fpart(end.y)) * xgap);
+        image.layer_pixel(pxl.x, pxl.y, lighten(color, (1.0 - u_rfpart(end.y)) * xgap));
+        image.layer_pixel(pxl.x, pxl.y + 1, lighten(color, (1.0 - u_fpart(end.y)) * xgap));
     }
 
     return pxl;

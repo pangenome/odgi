@@ -88,7 +88,9 @@ std::ostream& operator<<(std::ostream& out, const color_t& c);
 color_t hash_color(const std::string& s);
 color_t lighten(const color_t& c, const double& f);
 color_t brighten(const color_t& a, const color_t& b, const double& f);
+color_t darkest(const color_t& a, const color_t& b);
 color_t layer(const color_t& a, const color_t& b, const double& f);
+color_t mix(const color_t& a, const color_t& b, const double& f);
 
 const color_t COLOR_BLACK = { 0xff000000 };
 const color_t COLOR_WHITE = { 0xffffffff };
@@ -157,8 +159,7 @@ struct atomic_image_buf_t {
     // layering
     void layer_pixel(const uint64_t& x,
                      const uint64_t& y,
-                     const color_t& c,
-                     const double& f) {
+                     const color_t& c) {
         if (x >= width || y >= height) {
             return; // bail out
         }
@@ -168,7 +169,7 @@ struct atomic_image_buf_t {
         v.hex = (*image)[i].load();
         //std::cerr << "got " << v.hex << " " << (int)v.c.r << "," << (int)v.c.g << "," << (int)v.c.b << std::endl;
         //std::cerr << "layer " << c.hex << " " << (int)c.c.r << "," << (int)c.c.g << "," << (int)c.c.b << std::endl;
-        v = layer(c, v, f);
+        v = mix(c, v, 0.5);
         //v = layer(c, v, f);
         //std::cerr << "assigned " << v.hex << " " << (int)v.c.r << "," << (int)v.c.g << "," << (int)v.c.b << std::endl;
         // there is the possibility of a race decreasing how bright pixels get
