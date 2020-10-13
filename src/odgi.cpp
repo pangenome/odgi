@@ -1469,6 +1469,68 @@ void graph_t::to_gfa(std::ostream& out) const {
         });
 }
 
+bool graph_t::compare(graph_t& other_graph) const {
+// for each node compare the handles, the orientation and the sequence
+    bool result = true;
+    for_each_handle([&other_graph,&result,this](const handle_t& h) {
+                // use this direct iteration to avoid double counting edges
+                // we only consider write the edges relative to their start
+                const node_t& node = node_v.at(number_bool_packing::unpack_number(h));
+                const node_t& other_node = other_graph.node_v.at(number_bool_packing::unpack_number(h));
+                bool is_rev = get_is_reverse(h);
+                nid_t node_id = get_id(h);
+                const handle_t& other_h = other_graph.get_handle(node_id, is_rev);
+                assert(h == other_h);
+                bool other_is_rev = other_graph.get_is_reverse(h);
+                assert(is_rev == other_is_rev);
+                const std::string seq = get_sequence(h);
+                const std::string other_seq = other_graph.get_sequence(h);
+                assert(seq == other_seq);
+                nid_t other_node_id = other_graph.get_id(other_h);
+                const std::vector<uint64_t> node_edges = node.edges();
+                const std::vector<uint64_t> other_node_edges = other_node.edges();
+                for (uint64_t i = 0; i < node_edges.size(); i+=2) {
+                    // unpack the edge
+                    uint64_t other_id = edge_delta_to_id(node_id, node_edges.at(i));
+                    uint64_t other_other_id = other_graph.edge_delta_to_id(other_node_id, other_node_edges.at(i));
+                    assert(get_handle(node_id, is_rev) == other_graph.get_handle(other_node_id, other_is_rev));
+                    uint8_t packed_edge = node_edges.at(i+1);
+                    uint8_t other_packed_edge = other_node_edges.at(i+1);
+                    bool on_rev = edge_helper::unpack_on_rev(packed_edge);
+                    bool other_on_rev = edge_helper::unpack_on_rev(other_packed_edge);
+                    assert(on_rev == other_on_rev);
+                    bool other_rev = edge_helper::unpack_other_rev(packed_edge);
+                    bool other_other_rev = edge_helper::unpack_other_rev(other_packed_edge);
+                    assert(other_rev == other_other_rev);
+                    bool to_curr = edge_helper::unpack_to_curr(packed_edge);
+                    bool other_to_curr = edge_helper::unpack_to_curr(other_packed_edge);
+                    if (!(to_curr == other_to_curr)) {
+                        std::cerr << "[odgi::compare] error at odgi_node_id: " << node_id << " and odgi_other_edge_id: " <<
+                        other_id << " and gfa_node_id: " << other_node_id << " and gfa_other_edge_id: " << other_other_id
+                        << ":" << std::endl << " odgi_to_curr: " << to_curr << " versus gfa_to_curr: " << other_to_curr << "." << std::endl;
+                        result = false;
+                    }
+                    // assert(to_curr == other_to_curr);
+                }
+        });
+    // TODO ?!
+    for_each_path_handle([&other_graph,this](const path_handle_t& p) {
+            auto& path_meta = path_metadata_v[as_integer(p)-1];
+            uint64_t i = 0;
+            for_each_step_in_path(p, [this,&i,&other_graph](const step_handle_t& step) {
+                    handle_t h = get_handle_of_step(step);
+                    if (has_next_step(step)) {
+
+                    }
+                    ++i;
+                });
+            if (get_is_circular(p)) {
+            }
+            assert(i == path_meta.length);
+        });
+    return result;
+}
+
 uint32_t graph_t::get_magic_number(void) const {
     return 1988148666ul;
 }

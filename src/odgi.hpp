@@ -388,6 +388,9 @@ public:
     /// Convert to GFA (for debugging)
     void to_gfa(std::ostream& out) const;
 
+    /// compare two graphs (for debugging)
+    bool compare(graph_t& other_graph) const;
+
     /// Magic number header for serialization
     uint32_t get_magic_number(void) const;
 
