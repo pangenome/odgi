@@ -25,16 +25,19 @@ int main_draw(int argc, char **argv) {
         "draw previously-determined 2D layouts of the graph with diverse annotations");
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-    args::ValueFlag<std::string> layout_in_file(parser, "FILE", "read the layout coordinates from this file", {'c', "coords-in"});
+    args::ValueFlag<std::string> layout_in_file(parser, "FILE", "read the layout coordinates from this .lay format file produced by odgi layout", {'c', "coords-in"});
     //args::Flag in_is_tsv(parser, "is-tsv", "if the input is .tsv format (three column: id, X, Y) rather the default .lay binary format", {'I', "input-is-tsv"});
     args::ValueFlag<std::string> tsv_out_file(parser, "FILE", "write the TSV layout plus displayed annotations to this file", {'T', "tsv"});
     args::ValueFlag<std::string> svg_out_file(parser, "FILE", "write an SVG rendering to this file", {'s', "svg"});
     args::ValueFlag<std::string> png_out_file(parser, "FILE", "write a rasterized PNG rendering to this file", {'p', "png"});
     args::ValueFlag<uint64_t> png_height(parser, "FILE", "height of PNG rendering (default: 1000)", {'H', "png-height"});
     args::ValueFlag<uint64_t> png_border(parser, "FILE", "size of PNG border in bp (default: 10)", {'E', "png-border"});
+    args::Flag color_paths(parser, "color-paths", "color paths (in PNG output)", {'C', "color-paths"});
     args::ValueFlag<double> render_scale(parser, "N", "image scaling (default 1.0)", {'R', "scale"});
     args::ValueFlag<double> render_border(parser, "N", "image border (in approximate bp) (default 100.0)", {'B', "border"});
-    args::ValueFlag<double> png_line_width(parser, "N", "line width (in approximate bp) (default 0.0)", {'l', "line-width"});
+    args::ValueFlag<double> png_line_width(parser, "N", "line width (in approximate bp) (default 0.0)", {'w', "line-width"});
+    //args::ValueFlag<double> png_line_overlay(parser, "N", "line width (in approximate bp) (default 10.0)", {'O', "line-overlay"});
+    args::ValueFlag<double> png_path_line_spacing(parser, "N", "spacing between path lines in png layout (in approximate bp) (default 0.0)", {'S', "path-line-spacing"});
     args::ValueFlag<std::string> xp_in_file(parser, "FILE", "load the path index from this file", {'X', "path-index"});
     args::Flag progress(parser, "progress", "display progress of the sort", {'P', "progress"});
     args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel phases", {'t', "threads"});
@@ -131,10 +134,12 @@ int main_draw(int argc, char **argv) {
         auto& outfile = args::get(png_out_file);
         uint64_t _png_height = png_height ? args::get(png_height) : 1000;
         double _png_line_width = png_line_width ? args::get(png_line_width) : 0;
+        bool _color_paths = args::get(color_paths);
+        double _png_path_line_spacing = png_path_line_spacing ? args::get(png_path_line_spacing) : 0.0;
         // todo could be done with callbacks
         std::vector<double> X = layout.get_X();
         std::vector<double> Y = layout.get_Y();
-        algorithms::draw_png(outfile, X, Y, graph, 1.0, border_bp, 0, _png_height, _png_line_width);
+        algorithms::draw_png(outfile, X, Y, graph, 1.0, border_bp, 0, _png_height, _png_line_width, _png_path_line_spacing, _color_paths);
     }
     
     return 0;
