@@ -182,6 +182,7 @@ std::vector<uint8_t> rasterize(const std::vector<double> &X,
             [&](const path_handle_t& p) {
                 all_path_colors.push_back(
                     hash_color(graph.get_path_name(p)));
+                //std::cerr << graph.get_path_name(p) << " color " << all_path_colors.back() << std::endl;
             });
     }
 
@@ -228,7 +229,7 @@ std::vector<uint8_t> rasterize(const std::vector<double> &X,
                     handle,
                     [&](const step_handle_t& s) {
                         path_colors.push_back(
-                            all_path_colors[as_integer(graph.get_path_handle_of_step(s))]);
+                            all_path_colors[as_integer(graph.get_path_handle_of_step(s))-1]);
                     });
                 // for step on handle
                 // get the path color

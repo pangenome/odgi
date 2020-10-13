@@ -83,6 +83,8 @@ typedef union rgb_t {
 	RGB c;
 } color_t;
 
+std::ostream& operator<<(std::ostream& out, const color_t& c);
+
 color_t hash_color(const std::string& s);
 color_t lighten(const color_t& c, const double& f);
 color_t brighten(const color_t& a, const color_t& b, const double& f);

@@ -34,6 +34,11 @@ color_t hash_color(const std::string& s) {
     return c;
 }
 
+std::ostream& operator<<(std::ostream& out, const color_t& c) {
+    out << "(" << (int)c.c.r << "," << (int)c.c.g << "," << (int)c.c.b << "," << (int)c.c.a << ")";
+    return out;
+}
+
 color_t lighten(const color_t& c, const double& f) {
     color_t l;
     l.c = {
