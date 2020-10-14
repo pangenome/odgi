@@ -29,7 +29,7 @@ void chop(handlegraph::MutablePathDeletableHandleGraph &graph,
     });
 
     if (show_info){
-        std::cerr << "[odgi chop] " << originalRank_handleToChop.size() << " node(s) to chop." << std::endl;
+        std::cerr << "[odgi::chop] " << originalRank_handleToChop.size() << " node(s) to chop." << std::endl;
     }
 
     for (auto rank_handle : originalRank_handleToChop) {

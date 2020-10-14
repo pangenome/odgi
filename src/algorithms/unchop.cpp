@@ -238,7 +238,7 @@ void unchop(handlegraph::MutablePathDeletableHandleGraph& graph, const bool& sho
     }
 
     if (show_info){
-        std::cerr << "[odgi unchop] unchopped " << num_node_unchopped << " nodes into " << num_new_nodes << " new nodes." << std::endl;
+        std::cerr << "[odgi::unchop] unchopped " << num_node_unchopped << " nodes into " << num_new_nodes << " new nodes." << std::endl;
     }
 
     graph.apply_ordering(handle_order, true);
