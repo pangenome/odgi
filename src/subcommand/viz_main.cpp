@@ -12,6 +12,21 @@
 
 //#define debug_odgi_viz
 
+#define PATH_NAMES_MAX_NUM_OF_CHARACTERS 20
+#define PATH_NAMES_MAX_CHARACTER_SIZE 32
+
+#define CHECK_BIT(var,pos) (((var)>>(pos)) & 1)
+
+#include "fonts/font5x8.h"
+#include <bitset>
+
+uint16_t highestPowerOf2(uint64_t n)
+{
+    int64_t i = -1;
+    for(; n > 0; n = n >> 1){ i += 1; }
+    return 1 << i;
+}
+
 namespace odgi {
 
     using namespace odgi::subcommand;
@@ -197,6 +212,27 @@ namespace odgi {
                     << std::endl;
         }
 
+        // After the bin_width and scale_xy calculations
+        uint16_t offset_in_pix_for_paths_names = 0;
+        uint16_t max_num_of_chars = std::numeric_limits<uint16_t>::min();
+        uint16_t char_size = 0;
+
+        if (pix_per_path >= 8) {
+            graph.for_each_path_handle([&](const path_handle_t &path) {
+                max_num_of_chars = max((uint64_t) max_num_of_chars, graph.get_path_name(path).length());
+            });
+            max_num_of_chars = min(max_num_of_chars, (uint16_t) PATH_NAMES_MAX_NUM_OF_CHARACTERS);
+
+            char_size = min((uint16_t) highestPowerOf2(pix_per_path), (uint16_t)  PATH_NAMES_MAX_CHARACTER_SIZE);
+
+            offset_in_pix_for_paths_names  = max_num_of_chars * char_size + char_size/2;
+
+            width += offset_in_pix_for_paths_names;
+        }
+
+        std::cerr << "offset_in_pix_for_paths_names " << offset_in_pix_for_paths_names << std::endl;
+        std::cerr << "height " << height << std::endl;
+
         std::vector<uint8_t> image;
         image.resize(width * (height + path_space) * 4, 255);
 
@@ -208,8 +244,21 @@ namespace odgi {
 
         auto add_point = [&](const uint64_t &_x, const uint64_t &_y,
                              const uint8_t &_r, const uint8_t &_g, const uint8_t &_b) {
-            uint64_t x = std::min((uint64_t) std::round(_x * scale_x), width - 1);
+            uint64_t x = offset_in_pix_for_paths_names + std::min((uint64_t) std::round(_x * scale_x), width - 1);
             uint64_t y = std::min((uint64_t) std::round(_y * scale_y), height - 1) + path_space;
+            image[4 * width * y + 4 * x + 0] = _r;
+            image[4 * width * y + 4 * x + 1] = _g;
+            image[4 * width * y + 4 * x + 2] = _b;
+            image[4 * width * y + 4 * x + 3] = 255;
+        };
+
+        auto add_point_for_text = [&](const uint64_t &_x, const uint64_t &_y,
+                             const uint8_t &_r, const uint8_t &_g, const uint8_t &_b) {
+            uint64_t x = std::min((uint64_t) std::round(_x * scale_x), width - 1);
+            uint64_t y = (uint64_t) std::round(_y * scale_y);
+
+            //std::cerr << "x: " << x << " -- y " << y << std::endl;
+
             image[4 * width * y + 4 * x + 0] = _r;
             image[4 * width * y + 4 * x + 1] = _g;
             image[4 * width * y + 4 * x + 2] = _b;
@@ -294,7 +343,7 @@ namespace odgi {
 
         auto add_path_step = [&](const uint64_t &_x, const uint64_t &_y,
                                  const uint8_t &_r, const uint8_t &_g, const uint8_t &_b) {
-            uint64_t x = std::min((uint64_t) std::round(_x * scale_x), width - 1);
+            uint64_t x = offset_in_pix_for_paths_names + std::min((uint64_t) std::round(_x * scale_x), width - 1);
             uint64_t t = _y * pix_per_path;
             uint64_t s = t + pix_per_path;
             for (uint64_t y = t; y < s; ++y) {
@@ -307,7 +356,7 @@ namespace odgi {
 
         auto add_path_link = [&](const uint64_t &_x, const uint64_t &_y,
                                  const uint8_t &_r, const uint8_t &_g, const uint8_t &_b) {
-            uint64_t x = std::min((uint64_t) std::round(_x * scale_x), width - 1);
+            uint64_t x = offset_in_pix_for_paths_names + std::min((uint64_t) std::round(_x * scale_x), width - 1);
             uint64_t t = _y * pix_per_path + link_pix_y;
             uint64_t s = t + pix_per_link;
             for (uint64_t y = t; y < s; ++y) {
@@ -401,6 +450,7 @@ namespace odgi {
         std::unordered_set<pair<uint64_t, uint64_t>> edges_drawn;
         uint64_t gap_links_removed = 0;
         uint64_t total_links = 0;
+        uint64_t path_rank = 0;
         graph.for_each_path_handle([&](const path_handle_t &path) {
             // use a sha256 to get a few bytes that we'll use for a color
             std::string path_name = graph.get_path_name(path);
@@ -408,6 +458,29 @@ namespace odgi {
 #ifdef debug_odgi_viz
             std::cerr << "path_name: " << path_name << std::endl;
 #endif
+            if (char_size >= 8){
+                std::cerr << "path_name: " << path_name << std::endl;
+
+                uint16_t num_of_chars = min(path_name.length(), (uint64_t) max_num_of_chars);
+                for(uint16_t i = 0; i < num_of_chars; i++){
+                    auto c = path_name[i];
+
+                    //std::cerr << "\tc: " << c << std::endl;
+                    for(uint8_t j = 0; j < 8; j++){
+                        auto cb = font_5x8[c][j];
+
+                        for(int8_t z = 7; z >=0; z--){
+                            add_point_for_text(
+                                    i * char_size + (7-z), path_rank * pix_per_path + j,
+                                    !CHECK_BIT(cb, z) * 255, !CHECK_BIT(cb, z) * 255, !CHECK_BIT(cb, z) * 255);
+                        }
+
+                    }
+
+                }
+                path_rank++;
+            }
+
 
             bool is_aln = true;
             if (aln_mode) {
@@ -685,7 +758,7 @@ namespace odgi {
         uint64_t min_y = std::numeric_limits<uint64_t>::max();
         uint64_t max_y = std::numeric_limits<uint64_t>::min(); // 0
         for (uint64_t y = 0; y < height + path_space; ++y) {
-            for (uint64_t x = 0; x < width; ++x) {
+            for (uint64_t x = offset_in_pix_for_paths_names; x < width; ++x) {
                 uint8_t r = image[4 * width * y + 4 * x + 0];
                 uint8_t g = image[4 * width * y + 4 * x + 1];
                 uint8_t b = image[4 * width * y + 4 * x + 2];
