@@ -340,17 +340,17 @@ void wu_calc_wide_line(xy_d_t xy0, xy_d_t xy1,
         //wu_calc_line(xy0, xy1, black, image, true, true);
     }
     
-    xyA.x += move_in_x;
-    xyA.y += move_in_y;
+    xyA.x += move_in_x / 2;
+    xyA.y += move_in_y / 2;
 
-    xyB.x += move_in_x;
-    xyB.y += move_in_y;
+    xyB.x += move_in_x / 2;
+    xyB.y += move_in_y / 2;
 
-    xyC.x -= move_in_x;
-    xyC.y -= move_in_y;
+    xyC.x -= move_in_x / 2;
+    xyC.y -= move_in_y / 2;
 
-    xyD.x -= move_in_x;
-    xyD.y -= move_in_y;
+    xyD.x -= move_in_x / 2;
+    xyD.y -= move_in_y / 2;
 
     wu_rekt(xyA, xyB, xyC, xyD, color, image);
 
@@ -380,7 +380,8 @@ void wu_calc_rainbow(xy_d_t xy0, xy_d_t xy1, atomic_image_buf_t& image,
     // to simulate a line with the given width
     double width_in_px = width / image.source_per_px_y;
     double spacing_in_px = spacing / image.source_per_px_y;
-    double total_width_in_px = colors.size() * (width_in_px + spacing_in_px); // total_width / image.source_per_px_y;
+    double total_steps = colors.size();
+    double total_width_in_px = total_steps * (width_in_px + spacing_in_px); // total_width / image.source_per_px_y;
 
     // how for to get to a Y such that the length is w/2
     double move_in_x = total_width_in_px / ( 2 * sqrt(pow(inv_gradient, 2) + 1));
@@ -388,9 +389,9 @@ void wu_calc_rainbow(xy_d_t xy0, xy_d_t xy1, atomic_image_buf_t& image,
 
     if (gradient == 0.0) {
         move_in_x = 0.0;
-        move_in_y = total_width_in_px / 2.0;
+        move_in_y = total_width_in_px;
     } else if (inv_gradient == 0.0) {
-        move_in_x = total_width_in_px / 2.0;
+        move_in_x = total_width_in_px;
         move_in_y = 0.0;
     }
 
@@ -438,20 +439,18 @@ void wu_calc_rainbow(xy_d_t xy0, xy_d_t xy1, atomic_image_buf_t& image,
     xyB.x += move_in_x / 2;
     xyB.y += move_in_y / 2;
 
-    uint64_t total_steps = colors.size();
-    double step_x = move_in_x / (double)total_steps;
-    double step_y = move_in_y / (double)total_steps;
-    double r_width = width_in_px; // std::sqrt(step_x*step_x + step_y*step_y);
-
+    double step_x = move_in_x / total_steps;
+    double step_y = move_in_y / total_steps;
+    double r_width = width_in_px;
     for (uint64_t i = 0; i < total_steps; ++i) {
-        xyA.x -= step_x;
-        xyA.y -= step_y;
-        xyB.x -= step_x;
-        xyB.y -= step_y;
         wu_calc_wide_line(xyA, xyB,
                           colors[i],
                           image,
                           r_width);
+        xyA.x -= step_x;
+        xyA.y -= step_y;
+        xyB.x -= step_x;
+        xyB.y -= step_y;
     }
 }
 

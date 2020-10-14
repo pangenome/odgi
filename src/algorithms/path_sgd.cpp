@@ -37,7 +37,7 @@ namespace odgi {
 #endif
 
             uint64_t total_term_updates = iter_max * min_term_updates;
-            progress_meter::ProgressMeter progress_meter(total_term_updates, "[odgi::path_linear_sgd] SGD terms updated:", 0);
+            progress_meter::ProgressMeter progress_meter(total_term_updates, "[odgi::path_linear_sgd] 1D path-guided SGD:", 0);
             using namespace std::chrono_literals; // for timing stuff
             uint64_t num_nodes = graph.get_node_count();
             // our positions in 1D
