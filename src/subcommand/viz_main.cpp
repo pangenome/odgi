@@ -12,20 +12,14 @@
 
 //#define debug_odgi_viz
 
+#include "fonts/font5x8.h"
+
 #define PATH_NAMES_MAX_NUM_OF_CHARACTERS 32
 #define PATH_NAMES_MAX_CHARACTER_SIZE 64
 
 #define CHECK_BIT(var,pos) (((var)>>(pos)) & 1)
 
-#include "fonts/font5x8.h"
-#include <bitset>
 
-uint16_t highestPowerOf2(uint64_t n)
-{
-    int64_t i = -1;
-    for(; n > 0; n = n >> 1){ i += 1; }
-    return 1 << i;
-}
 
 namespace odgi {
 
@@ -219,15 +213,12 @@ namespace odgi {
             });
             max_num_of_chars = min(_max_num_of_chars, (uint64_t) PATH_NAMES_MAX_NUM_OF_CHARACTERS);
 
-            char_size = min((uint16_t) highestPowerOf2(pix_per_path), (uint16_t) PATH_NAMES_MAX_CHARACTER_SIZE);
+            char_size = min((uint16_t)((pix_per_path / 8) * 8), (uint16_t) PATH_NAMES_MAX_CHARACTER_SIZE);
 
             offset_in_pix_for_paths_names  = max_num_of_chars * char_size + char_size / 2;
 
             width += offset_in_pix_for_paths_names + 1;
         }
-
-        //std::cerr << "offset_in_pix_for_paths_names " << offset_in_pix_for_paths_names << std::endl;
-        //std::cerr << "height " << height << std::endl;
 
         if (width > 50000){
             std::cerr
@@ -256,10 +247,8 @@ namespace odgi {
 
         auto add_point_for_text = [&](const uint64_t &_x, const uint64_t &_y,
                              const uint8_t &_r, const uint8_t &_g, const uint8_t &_b) {
-            uint64_t x = _x;// * scale_x;
-            uint64_t y = _y;// * scale_y;
-
-            //std::cerr << "x: " << x << " -- y " << y << std::endl;
+            uint64_t x = _x;
+            uint64_t y = _y;
 
             image[4 * width * y + 4 * x + 0] = _r;
             image[4 * width * y + 4 * x + 1] = _g;
@@ -464,9 +453,6 @@ namespace odgi {
                 uint8_t num_of_chars = min(path_name.length(), (uint64_t) max_num_of_chars);
 
                 uint8_t ratio = char_size / 8;
-                //std::cerr << "char_size: " << char_size << std::endl;
-                //std::cerr << "ratio: " << ratio << std::endl;
-
                 uint8_t left_padding = max_num_of_chars - num_of_chars;
 
                 for(uint16_t i = 0; i < num_of_chars; i++){
