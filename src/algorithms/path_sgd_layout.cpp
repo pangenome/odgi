@@ -33,7 +33,11 @@ namespace odgi {
 #endif
 
             uint64_t total_term_updates = iter_max * min_term_updates;
-            progress_meter::ProgressMeter progress_meter(total_term_updates, "[odgi::path_linear_sgd_layout] 2D path-guided SGD:", 0);
+            std::unique_ptr<progress_meter::ProgressMeter> progress_meter;
+            if (progress) {
+                progress_meter = std::make_unique<progress_meter::ProgressMeter>(
+                    total_term_updates, "[odgi::path_linear_sgd_layout] 2D path-guided SGD:");
+            }
             using namespace std::chrono_literals; // for timing stuff
             uint64_t num_nodes = graph.get_node_count();
             // is a snapshot in progress?
@@ -323,7 +327,9 @@ namespace odgi {
                                 std::cerr << "after X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
 #endif
                                 term_updates++; // atomic
-                                progress_meter.increment(1);
+                                if (progress) {
+                                    progress_meter->increment(1);
+                                }
                             }
                         }
                     };
@@ -376,7 +382,9 @@ namespace odgi {
 
             checker.join();
 
-            progress_meter.finish();
+            if (progress) {
+                progress_meter->finish();
+            }
 
             // drop out of atomic stuff... maybe not the best way to do this
             std::vector<double> X_final(X.size());

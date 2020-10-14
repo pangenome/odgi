@@ -402,7 +402,7 @@ int main_sort(int argc, char** argv) {
                     break;
                 case 'g': {
                     graph_t groomed;
-                    algorithms::groom(graph, groomed);
+                    algorithms::groom(graph, groomed, progress);
                     graph = groomed;
                     was_groomed = true;
                     break;
