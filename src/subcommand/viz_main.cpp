@@ -12,8 +12,8 @@
 
 //#define debug_odgi_viz
 
-#define PATH_NAMES_MAX_NUM_OF_CHARACTERS 20
-#define PATH_NAMES_MAX_CHARACTER_SIZE 32
+#define PATH_NAMES_MAX_NUM_OF_CHARACTERS 32
+#define PATH_NAMES_MAX_CHARACTER_SIZE 64
 
 #define CHECK_BIT(var,pos) (((var)>>(pos)) & 1)
 

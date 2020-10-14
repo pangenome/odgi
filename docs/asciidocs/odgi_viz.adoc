@@ -65,6 +65,9 @@ please refer to <<odgi_bin.adoc#_odgi_bin1, odgi bin>>.
   Use red and blue coloring to display forward and reverse alignments. This parameter can be set in combination with
   [*-A, --alignment-prefix*=_STRING_].
 
+*-H, --hide-path-names*::
+  Hide the path names on the left of the generated image.
+
 
 === Binned Mode Options
 
