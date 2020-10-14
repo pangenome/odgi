@@ -53,6 +53,7 @@ namespace odgi {
         args::ValueFlag<float> link_path_pieces(parser, "FLOAT","show thin links of this relative width to connect path pieces",{'L', "link-path-pieces"});
         args::ValueFlag<std::string> alignment_prefix(parser, "STRING","apply alignment-related visual motifs to paths with this name prefix (it affects the -S and -d options)",{'A', "alignment-prefix"});
         args::Flag show_strands(parser, "bool","use reds and blues to show forward and reverse alignments",{'S', "show-strand"});
+        args::Flag hide_path_names(parser, "bool","hide path names on the left",{'H', "hide-path-names"});
 
         /// Binned mode
         args::Flag binned_mode(parser, "binned-mode", "bin the variation graph before its visualization", {'b', "binned-mode"});
@@ -211,7 +212,7 @@ namespace odgi {
         uint8_t max_num_of_chars = 0;
         uint8_t char_size = 0;
 
-        if (pix_per_path >= 8) {
+        if (!args::get(hide_path_names) && pix_per_path >= 8) {
             uint64_t _max_num_of_chars = std::numeric_limits<uint64_t>::min();
             graph.for_each_path_handle([&](const path_handle_t &path) {
                 _max_num_of_chars = max((uint64_t) _max_num_of_chars, graph.get_path_name(path).length());
@@ -798,7 +799,7 @@ namespace odgi {
             }
         }
 
-        png::encodeOneStep(filename, image, width, crop_height);
+        png::encodeOneStep(filename, crop, width, crop_height);
 
         return 0;
     }
