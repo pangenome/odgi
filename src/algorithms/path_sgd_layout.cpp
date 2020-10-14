@@ -33,7 +33,7 @@ namespace odgi {
 #endif
 
             uint64_t total_term_updates = iter_max * min_term_updates;
-            progress_meter::ProgressMeter progress_meter(total_term_updates, "[path sgd sort]: terms updated:", 20);
+            progress_meter::ProgressMeter progress_meter(total_term_updates, "[odgi::path_linear_sgd_layout] terms updated:", 0);
             using namespace std::chrono_literals; // for timing stuff
             uint64_t num_nodes = graph.get_node_count();
             // is a snapshot in progress?
@@ -98,7 +98,6 @@ namespace odgi {
             auto checker_lambda =
                     [&](void) {
                         while (work_todo.load()) {
-                            progress_meter.update(term_updates.load() + min_term_updates * iteration);
                             if (term_updates.load() > min_term_updates) {
                                 if (snapshot) {
                                     if (snapshot_progress[iteration].load() || iteration == iter_max) {
@@ -120,25 +119,13 @@ namespace odgi {
                                     work_todo.store(false);
                                 } else if (Delta_max.load() <= delta) { // nb: this will also break at 0
                                     if (progress) {
-                                        std::cerr << "[path sgd layout]: delta_max: " << Delta_max.load()
+                                        std::cerr << "[odgi::path_linear_sgd_layout] delta_max: " << Delta_max.load()
                                                   << " <= delta: "
                                                   << delta << ". Threshold reached, therefore ending iterations."
                                                   << std::endl;
                                     }
                                     work_todo.store(false);
                                 } else {
-                                    if (progress) {
-                                        double percent_progress = ((double) iteration / (double) iter_max) * 100.0;
-                                        if (progress_meter.in_print_mode.load()) {
-                                            std::cerr << std::endl;
-                                        }
-                                        std::cerr << std::fixed << std::setprecision(2) << "[path sgd layout]: "
-                                                  << percent_progress << "% progress: "
-                                                                         "iteration: " << iteration <<
-                                                  ", eta: " << eta.load() <<
-                                                  ", delta_max: " << Delta_max.load() <<
-                                                  ", number of updates: " << term_updates.load() << std::endl;
-                                    }
                                     eta.store(etas[iteration]); // update our learning rate
                                     Delta_max.store(delta); // set our delta max to the threshold
                                 }
@@ -336,6 +323,7 @@ namespace odgi {
                                 std::cerr << "after X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
 #endif
                                 term_updates++; // atomic
+                                progress_meter.increment(1);
                             }
                         }
                     };
@@ -345,8 +333,7 @@ namespace odgi {
                         uint64_t iter = 0;
                         while (snapshot && work_todo.load()) {
                             if ((iter < iteration) && iteration != iter_max) {
-                                std::cerr << "[path sgd layout]: snapshot thread: Taking snapshot!" << std::endl;
-
+                                std::cerr << "[odgi::path_linear_sgd_layout] snapshot thread: Taking snapshot!" << std::endl;
                                 // drop out of atomic stuff... maybe not the best way to do this
                                 std::vector<double> X_iter(X.size());
                                 uint64_t i = 0;
@@ -774,14 +761,14 @@ namespace odgi {
                 }
                 if (Delta_max.load() <= delta) {
                     if (progress) {
-                        std::cerr << "[path sgd sort]: delta_max: " << Delta_max.load() << " <= delta: " << delta
+                        std::cerr << "[odgi::path_linear_sgd_layout] delta_max: " << Delta_max.load() << " <= delta: " << delta
                                   << ". Threshold reached, therefore ending iterations." << std::endl;
                     }
                     break;
                 } else {
                     if (progress) {
                         double percent_progress = ((double) (iteration + 1) / (double) iter_max) * 100.0;
-                        std::cerr << std::fixed << std::setprecision(2) << "[path sgd sort]: " << percent_progress
+                        std::cerr << std::fixed << std::setprecision(2) << "[odgi::path_linear_sgd_layout]: " << percent_progress
                                   << "% progress: "
                                      "iteration: " << (iteration + 1) <<
                                   ", eta: " << eta.load() <<

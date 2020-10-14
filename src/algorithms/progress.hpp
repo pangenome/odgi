@@ -12,6 +12,10 @@
 #include <chrono>
 #include <iomanip>
 
+namespace odgi {
+
+namespace algorithms {
+
 namespace progress_meter {
 
 class ProgressMeter {
@@ -102,5 +106,9 @@ public:
         completed = updt;
     }
 };
+
+}
+
+}
 
 }
