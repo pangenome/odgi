@@ -8,6 +8,7 @@
 
 #include "dynamic.hpp"
 #include "topological_sort.hpp"
+#include "progress.hpp"
 //#include "bfs.cpp"
 
 namespace odgi {
@@ -19,7 +20,8 @@ using namespace handlegraph;
  * Remove spurious inverting links based on a dominant orientation of the graph
  */
 void groom(handlegraph::MutablePathDeletableHandleGraph& source,
-           handlegraph::MutablePathDeletableHandleGraph& target);
+           handlegraph::MutablePathDeletableHandleGraph& target,
+           bool progress_reporting = false);
 
 }
 }
