@@ -89,8 +89,17 @@ int main_draw(int argc, char **argv) {
         }
     }
 
+    const uint64_t _png_height = png_height ? args::get(png_height) : 1000;
+    const double _png_line_width = png_line_width ? args::get(png_line_width) : 0;
+    const bool _color_paths = args::get(color_paths);
+    const double _png_path_line_spacing = png_path_line_spacing ? args::get(png_path_line_spacing) : 0.0;
     const double svg_scale = !render_scale ? 1.0 : args::get(render_scale);
-    const double border_bp = !render_border ? 100.0 : args::get(render_border);
+    uint64_t max_node_depth = 0;
+    graph.for_each_handle(
+        [&](const handle_t& h) {
+            max_node_depth = std::max(graph.get_step_count(h), max_node_depth);
+        });
+    const double border_bp = !render_border ? std::max(100.0, _png_line_width * max_node_depth) : args::get(render_border);
 
     algorithms::layout::Layout layout;
     
@@ -132,10 +141,6 @@ int main_draw(int argc, char **argv) {
 
     if (png_out_file) {
         auto& outfile = args::get(png_out_file);
-        uint64_t _png_height = png_height ? args::get(png_height) : 1000;
-        double _png_line_width = png_line_width ? args::get(png_line_width) : 0;
-        bool _color_paths = args::get(color_paths);
-        double _png_path_line_spacing = png_path_line_spacing ? args::get(png_path_line_spacing) : 0.0;
         // todo could be done with callbacks
         std::vector<double> X = layout.get_X();
         std::vector<double> Y = layout.get_Y();
