@@ -214,24 +214,24 @@ namespace odgi {
 
         // After the bin_width and scale_xy calculations
         uint16_t offset_in_pix_for_paths_names = 0;
-        uint16_t max_num_of_chars = std::numeric_limits<uint16_t>::min();
-        uint16_t char_size = 0;
+        uint8_t max_num_of_chars = std::numeric_limits<uint16_t>::min();
+        uint8_t char_size = 0;
 
         if (pix_per_path >= 8) {
             graph.for_each_path_handle([&](const path_handle_t &path) {
                 max_num_of_chars = max((uint64_t) max_num_of_chars, graph.get_path_name(path).length());
             });
-            max_num_of_chars = min(max_num_of_chars, (uint16_t) PATH_NAMES_MAX_NUM_OF_CHARACTERS);
+            max_num_of_chars = min(max_num_of_chars, (uint8_t) PATH_NAMES_MAX_NUM_OF_CHARACTERS);
 
-            char_size = min((uint16_t) highestPowerOf2(pix_per_path), (uint16_t)  PATH_NAMES_MAX_CHARACTER_SIZE);
+            char_size = min((uint16_t) highestPowerOf2(pix_per_path), (uint16_t) PATH_NAMES_MAX_CHARACTER_SIZE);
 
             offset_in_pix_for_paths_names  = max_num_of_chars * char_size + char_size/2;
 
             width += offset_in_pix_for_paths_names;
         }
 
-        std::cerr << "offset_in_pix_for_paths_names " << offset_in_pix_for_paths_names << std::endl;
-        std::cerr << "height " << height << std::endl;
+        //std::cerr << "offset_in_pix_for_paths_names " << offset_in_pix_for_paths_names << std::endl;
+        //std::cerr << "height " << height << std::endl;
 
         std::vector<uint8_t> image;
         image.resize(width * (height + path_space) * 4, 255);
@@ -254,8 +254,8 @@ namespace odgi {
 
         auto add_point_for_text = [&](const uint64_t &_x, const uint64_t &_y,
                              const uint8_t &_r, const uint8_t &_g, const uint8_t &_b) {
-            uint64_t x = std::min((uint64_t) std::round(_x * scale_x), width - 1);
-            uint64_t y = (uint64_t) std::round(_y * scale_y);
+            uint64_t x = _x;// * scale_x;
+            uint64_t y = _y;// * scale_y;
 
             //std::cerr << "x: " << x << " -- y " << y << std::endl;
 
@@ -459,9 +459,12 @@ namespace odgi {
             std::cerr << "path_name: " << path_name << std::endl;
 #endif
             if (char_size >= 8){
-                std::cerr << "path_name: " << path_name << std::endl;
+                uint8_t num_of_chars = min(path_name.length(), (uint64_t) max_num_of_chars);
 
-                uint16_t num_of_chars = min(path_name.length(), (uint64_t) max_num_of_chars);
+                uint8_t ratio = char_size / 8;
+                //std::cerr << "char_size: " << char_size << std::endl;
+                //std::cerr << "ratio: " << ratio << std::endl;
+
                 for(uint16_t i = 0; i < num_of_chars; i++){
                     auto c = path_name[i];
 
@@ -469,10 +472,19 @@ namespace odgi {
                     for(uint8_t j = 0; j < 8; j++){
                         auto cb = font_5x8[c][j];
 
-                        for(int8_t z = 7; z >=0; z--){
-                            add_point_for_text(
-                                    i * char_size + (7-z), path_rank * pix_per_path + j,
-                                    !CHECK_BIT(cb, z) * 255, !CHECK_BIT(cb, z) * 255, !CHECK_BIT(cb, z) * 255);
+                        uint64_t y = path_rank * pix_per_path + pix_per_path / 2 - char_size / 2 + j * ratio ;
+
+                        for (int8_t z = 7; z >=0; z--){
+                            uint64_t x = i * char_size + (7-z) * ratio;
+
+                            for (uint8_t rx = 0; rx < ratio; rx++){
+                                for (uint8_t ry = 0; ry < ratio; ry++){
+                                    add_point_for_text(
+                                            x + rx, y + ry,
+                                            !CHECK_BIT(cb, z) * 255, !CHECK_BIT(cb, z) * 255, !CHECK_BIT(cb, z) * 255
+                                    );
+                                }
+                            }
                         }
 
                     }
