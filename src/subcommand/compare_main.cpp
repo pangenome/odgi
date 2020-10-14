@@ -82,7 +82,7 @@ namespace odgi {
         return 0;
     }
 
-    static Subcommand odgi_compare("compare", "create a path index for a given graph",
+    static Subcommand odgi_compare("compare", "find out if an odgi graph equals a GFA graph",
                                      PIPELINE, 3, main_compare);
 
 }
