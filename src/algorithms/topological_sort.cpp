@@ -149,6 +149,12 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads, bo
             unvisited.set(rank, !s.at(rank));
     });
 
+    std::unique_ptr<progress_meter::ProgressMeter> progress;
+    if (progress_reporting) {
+        std::string banner = "[odgi::topological_order] sorting nodes:";
+        progress = std::make_unique<progress_meter::ProgressMeter>(g->get_node_count(), banner);
+    }
+
     while(unvisited.rank1(unvisited.size())!=0 || s.rank1(s.size())!=0) {
 
         // Put something in s. First go through seeds until we can find one
@@ -196,10 +202,8 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads, bo
             handle_t n = number_bool_packing::pack(i, false);
             // Emit it
             sorted.push_back(n);
-            if (progress_reporting && sorted.size() % 1000 == 0) {
-                uint64_t i = sorted.size();
-                uint64_t c = g->get_node_count();
-                std::cerr << "topological sort " << i << " of " << c << " ~ " << (float)i/(float)c * 100 << "%" << "\r";
+            if (progress_reporting) {
+                progress->increment(1);
             }
 #ifdef debug
 #pragma omp critical (cerr)
@@ -325,10 +329,9 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads, bo
                 });
         }
     }
-    if (progress_reporting && sorted.size()) {
-        uint64_t i = sorted.size();
-        uint64_t c = g->get_node_count();
-        std::cerr << "topological sort " << i << " of " << c << " ~ " << "100.0000%" << std::endl;
+
+    if (progress_reporting) {
+        progress->finish();
     }
 
     assert(sorted.size() == g->get_node_count());

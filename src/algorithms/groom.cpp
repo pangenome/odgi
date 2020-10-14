@@ -12,7 +12,8 @@ namespace algorithms {
 
 
 void groom(handlegraph::MutablePathDeletableHandleGraph& source,
-           handlegraph::MutablePathDeletableHandleGraph& target) {
+           handlegraph::MutablePathDeletableHandleGraph& target,
+           bool progress_reporting) {
            //bool use_heads, bool use_tails, bool show_progress) {
 
     //std::vector<handle_t> sorted = topological_order(&source, use_heads, use_tails, show_progress);
@@ -73,13 +74,24 @@ void groom(handlegraph::MutablePathDeletableHandleGraph& source,
 
     uint64_t prev_max_root = 0;
     uint64_t prev_max_length = 0;
+
+    std::unique_ptr<progress_meter::ProgressMeter> bfs_progress;
+    if (progress_reporting) {
+        std::string banner = "[odgi::groom] grooming:";
+        bfs_progress = std::make_unique<progress_meter::ProgressMeter>(source.get_node_count(), banner);
+    }
+
+    uint64_t edge_count = 0;
     
     while (unvisited.rank1(unvisited.size())!=0) {
 
         bfs(source,
-            [&source,&target,&unvisited,&flipped]
+            [&source,&target,&unvisited,&flipped,&progress_reporting,&bfs_progress]
             (const handle_t& h, const uint64_t& r, const uint64_t& l, const uint64_t& d) {
                 target.create_handle(source.get_sequence(h), source.get_id(h));
+                if (progress_reporting) {
+                    bfs_progress->increment(1);
+                }
                 uint64_t i = number_bool_packing::unpack_number(h);
                 unvisited.set(i, 0);
                 flipped.set(i, source.get_is_reverse(h));
@@ -88,10 +100,8 @@ void groom(handlegraph::MutablePathDeletableHandleGraph& source,
                 uint64_t i = number_bool_packing::unpack_number(h);
                 return unvisited.at(i)==0;
             },
-            [](const handle_t& l, const handle_t& h) {
-                // add the edge to the graph if it's not there yet
-                //uint64_t i = number_bool_packing::unpack_number(h);
-                //unvisited.set(i, 0);
+            [&edge_count](const handle_t& l, const handle_t& h) {
+                ++edge_count;
                 return false;
             },
             [](void) { return false; },
@@ -104,6 +114,16 @@ void groom(handlegraph::MutablePathDeletableHandleGraph& source,
             handle_t h = number_bool_packing::pack(i, false);
             seeds = { h };
         }
+    }
+
+    if (progress_reporting) {
+        bfs_progress->finish();
+    }
+
+    std::unique_ptr<progress_meter::ProgressMeter> edge_progress;
+    if (progress_reporting) {
+        std::string banner = "[odgi::groom] adding edges:";
+        edge_progress = std::make_unique<progress_meter::ProgressMeter>(edge_count, banner);
     }
 
     // add the edges
@@ -119,7 +139,21 @@ void groom(handlegraph::MutablePathDeletableHandleGraph& source,
                 source.get_id(edge.second),
                 source.get_is_reverse(edge.second)^to_flipped);
             target.create_edge(from, to);
+            if (progress_reporting) {
+                edge_progress->increment(1);
+            }
         });
+
+    if (progress_reporting) {
+        edge_progress->finish();
+    }
+
+    std::unique_ptr<progress_meter::ProgressMeter> path_progress;
+    if (progress_reporting) {
+        std::string banner = "[odgi::groom] adding paths:";
+        path_progress = std::make_unique<progress_meter::ProgressMeter>(source.get_path_count(), banner);
+    }
+
     // now add the paths back in
     source.for_each_path_handle(
         [&](const path_handle_t& path) {
@@ -133,7 +167,14 @@ void groom(handlegraph::MutablePathDeletableHandleGraph& source,
                                                         source.get_is_reverse(h)^h_flipped);
                     target.append_step(into, handle);
                 });
+            if (progress_reporting) {
+                path_progress->increment(1);
+            }
         });
+
+    if (progress_reporting) {
+        path_progress->finish();
+    }
     
     //std::cerr << "order size " << order.size() << " graph size " << g.get_node_count() << std::endl;
     //assert(order.size() == g.get_node_count());

@@ -36,6 +36,12 @@ namespace odgi {
             std::cerr << "space_quantization_step: " << space_quantization_step << std::endl;
 #endif
 
+            uint64_t total_term_updates = iter_max * min_term_updates;
+            std::unique_ptr<progress_meter::ProgressMeter> progress_meter;
+            if (progress) {
+                progress_meter = std::make_unique<progress_meter::ProgressMeter>(
+                    total_term_updates, "[odgi::path_linear_sgd] 1D path-guided SGD:");
+            }
             using namespace std::chrono_literals; // for timing stuff
             uint64_t num_nodes = graph.get_node_count();
             // our positions in 1D
@@ -91,7 +97,7 @@ namespace odgi {
             double w_max = 1.0;
             // get our schedule
             if (progress) {
-                std::cerr << "[path sgd sort]: calculating linear SGD schedule (" << w_min << " " << w_max << " "
+                std::cerr << "[odgi::path_linear_sgd] calculating linear SGD schedule (" << w_min << " " << w_max << " "
                           << iter_max << " " << iter_with_max_learning_rate << " " << eps << ")" << std::endl;
             }
             std::vector<double> etas = path_linear_sgd_schedule(w_min,
@@ -102,7 +108,7 @@ namespace odgi {
 
             // cache zipf zetas for our full path space (heavy, but one-off)
             if (progress) {
-                std::cerr << "[path sgd sort]: calculating zetas for " << (space <= space_max ? space : space_max + (space - space_max) / space_quantization_step + 1) << " zipf distributions" << std::endl;
+                std::cerr << "[odgi::path_linear_sgd] calculating zetas for " << (space <= space_max ? space : space_max + (space - space_max) / space_quantization_step + 1) << " zipf distributions" << std::endl;
             }
 
             std::vector<double> zetas((space <= space_max ? space : space_max + (space - space_max) / space_quantization_step + 1)+1);
@@ -163,22 +169,13 @@ namespace odgi {
                                     work_todo.store(false);
                                 } else if (Delta_max.load() <= delta) { // nb: this will also break at 0
                                     if (progress) {
-                                        std::cerr << "[path sgd sort]: delta_max: " << Delta_max.load()
+                                        std::cerr << "[odgi::path_linear_sgd] delta_max: " << Delta_max.load()
                                                   << " <= delta: "
                                                   << delta << ". Threshold reached, therefore ending iterations."
                                                   << std::endl;
                                     }
                                     work_todo.store(false);
                                 } else {
-                                    if (progress) {
-                                        double percent_progress = ((double) iteration / (double) iter_max) * 100.0;
-                                        std::cerr << std::fixed << std::setprecision(2) << "[path sgd sort]: "
-                                                  << percent_progress << "% progress: "
-                                                                         "iteration: " << iteration <<
-                                                  ", eta: " << eta.load() <<
-                                                  ", delta_max: " << Delta_max.load() <<
-                                                  ", number of updates: " << term_updates.load() << std::endl;
-                                    }
                                     eta.store(etas[iteration]); // update our learning rate
                                     Delta_max.store(delta); // set our delta max to the threshold
                                 }
@@ -343,6 +340,9 @@ namespace odgi {
                                 std::cerr << "after X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
 #endif
                                 term_updates++; // atomic
+                                if (progress) {
+                                    progress_meter->increment(1);
+                                }
                             }
                         }
                     };
@@ -353,7 +353,7 @@ namespace odgi {
                         while (snapshot && work_todo.load()) {
                             if ((iter < iteration) && iteration != iter_max) {
                                 //snapshot_in_progress.store(true); // will be released again by the snapshot thread
-                                std::cerr << "[path sgd sort]: snapshot thread: Taking snapshot!" << std::endl;
+                                std::cerr << "[odgi::path_linear_sgd] snapshot thread: Taking snapshot!" << std::endl;
                                 // create temp file
                                 std::string snapshot_tmp_file = xp::temp_file::create("snapshot");
                                 // write to temp file
@@ -374,10 +374,6 @@ namespace odgi {
 
                     };
 
-            if (progress) {
-                std::cerr << "[path sgd sort]: running SGD" << std::endl;
-            }
-
             std::thread checker(checker_lambda);
             std::thread snapshot_thread(snapshot_lambda);
 
@@ -394,6 +390,11 @@ namespace odgi {
             snapshot_thread.join();
 
             checker.join();
+
+            if (progress) {
+                progress_meter->finish();
+            }
+
             // drop out of atomic stuff... maybe not the best way to do this
             std::vector<double> X_final(X.size());
             uint64_t i = 0;
@@ -555,13 +556,13 @@ namespace odgi {
                     for (auto &layout_handle : snapshot_handle_layout) {
                         order.push_back(layout_handle.handle);
                     }
-                    std::cerr << "[path sgd sort]: Applying order to graph of snapshot: " << std::to_string(j + 1)
+                    std::cerr << "[odgi::path_linear_sgd] Applying order to graph of snapshot: " << std::to_string(j + 1)
                               << std::endl;
                     std::string local_snapshot_prefix = snapshot_prefix + std::to_string(j + 1);
                     graph_t graph_copy = graph;
                     graph_copy.apply_ordering(order, true);
                     ofstream f(local_snapshot_prefix);
-                    std::cerr << "[path sgd sort]: Writing snapshot: " << std::to_string(j + 1) << std::endl;
+                    std::cerr << "[odgi::path_linear_sgd] Writing snapshot: " << std::to_string(j + 1) << std::endl;
                     graph_copy.serialize(f);
                     f.close();
                 }
