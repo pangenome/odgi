@@ -206,32 +206,33 @@ namespace odgi {
             _bin_width = 1;
         }
 
+        // After the bin_width and scale_xy calculations
+        uint16_t offset_in_pix_for_paths_names = 0;
+        uint8_t max_num_of_chars = 0;
+        uint8_t char_size = 0;
+
+        if (pix_per_path >= 8) {
+            uint64_t _max_num_of_chars = std::numeric_limits<uint64_t>::min();
+            graph.for_each_path_handle([&](const path_handle_t &path) {
+                _max_num_of_chars = max((uint64_t) _max_num_of_chars, graph.get_path_name(path).length());
+            });
+            max_num_of_chars = min(_max_num_of_chars, (uint64_t) PATH_NAMES_MAX_NUM_OF_CHARACTERS);
+
+            char_size = min((uint16_t) highestPowerOf2(pix_per_path), (uint16_t) PATH_NAMES_MAX_CHARACTER_SIZE);
+
+            offset_in_pix_for_paths_names  = max_num_of_chars * char_size + char_size / 2;
+
+            width += offset_in_pix_for_paths_names + 1;
+        }
+
+        //std::cerr << "offset_in_pix_for_paths_names " << offset_in_pix_for_paths_names << std::endl;
+        //std::cerr << "height " << height << std::endl;
+
         if (width > 50000){
             std::cerr
                     << "[odgi viz] warning: you are going to create a big image (width > 50000 pixels)."
                     << std::endl;
         }
-
-        // After the bin_width and scale_xy calculations
-        uint16_t offset_in_pix_for_paths_names = 0;
-        uint8_t max_num_of_chars = std::numeric_limits<uint16_t>::min();
-        uint8_t char_size = 0;
-
-        if (pix_per_path >= 8) {
-            graph.for_each_path_handle([&](const path_handle_t &path) {
-                max_num_of_chars = max((uint64_t) max_num_of_chars, graph.get_path_name(path).length());
-            });
-            max_num_of_chars = min(max_num_of_chars, (uint8_t) PATH_NAMES_MAX_NUM_OF_CHARACTERS);
-
-            char_size = min((uint16_t) highestPowerOf2(pix_per_path), (uint16_t) PATH_NAMES_MAX_CHARACTER_SIZE);
-
-            offset_in_pix_for_paths_names  = max_num_of_chars * char_size + char_size/2;
-
-            width += offset_in_pix_for_paths_names;
-        }
-
-        //std::cerr << "offset_in_pix_for_paths_names " << offset_in_pix_for_paths_names << std::endl;
-        //std::cerr << "height " << height << std::endl;
 
         std::vector<uint8_t> image;
         image.resize(width * (height + path_space) * 4, 255);
@@ -465,6 +466,8 @@ namespace odgi {
                 //std::cerr << "char_size: " << char_size << std::endl;
                 //std::cerr << "ratio: " << ratio << std::endl;
 
+                uint8_t left_padding = max_num_of_chars - num_of_chars;
+
                 for(uint16_t i = 0; i < num_of_chars; i++){
                     auto c = path_name[i];
 
@@ -475,7 +478,7 @@ namespace odgi {
                         uint64_t y = path_rank * pix_per_path + pix_per_path / 2 - char_size / 2 + j * ratio ;
 
                         for (int8_t z = 7; z >=0; z--){
-                            uint64_t x = i * char_size + (7-z) * ratio;
+                            uint64_t x = (left_padding + i) * char_size + (7-z) * ratio;
 
                             for (uint8_t rx = 0; rx < ratio; rx++){
                                 for (uint8_t ry = 0; ry < ratio; ry++){
@@ -492,7 +495,6 @@ namespace odgi {
                 }
                 path_rank++;
             }
-
 
             bool is_aln = true;
             if (aln_mode) {
@@ -770,7 +772,7 @@ namespace odgi {
         uint64_t min_y = std::numeric_limits<uint64_t>::max();
         uint64_t max_y = std::numeric_limits<uint64_t>::min(); // 0
         for (uint64_t y = 0; y < height + path_space; ++y) {
-            for (uint64_t x = offset_in_pix_for_paths_names; x < width; ++x) {
+            for (uint64_t x = 0; x < width; ++x) {
                 uint8_t r = image[4 * width * y + 4 * x + 0];
                 uint8_t g = image[4 * width * y + 4 * x + 1];
                 uint8_t b = image[4 * width * y + 4 * x + 2];
@@ -796,7 +798,7 @@ namespace odgi {
             }
         }
 
-        png::encodeOneStep(filename, crop, width, crop_height);
+        png::encodeOneStep(filename, image, width, crop_height);
 
         return 0;
     }
