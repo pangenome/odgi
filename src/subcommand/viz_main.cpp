@@ -14,11 +14,11 @@
 
 #include "fonts/font5x8.h"
 
+
 #define PATH_NAMES_MAX_NUM_OF_CHARACTERS 32
 #define PATH_NAMES_MAX_CHARACTER_SIZE 64
 
 #define CHECK_BIT(var,pos) (((var)>>(pos)) & 1)
-
 
 
 namespace odgi {
@@ -451,16 +451,16 @@ namespace odgi {
 #endif
             if (char_size >= 8){
                 uint8_t num_of_chars = min(path_name.length(), (uint64_t) max_num_of_chars);
+                bool path_name_too_long = path_name.length() > num_of_chars;
 
                 uint8_t ratio = char_size / 8;
                 uint8_t left_padding = max_num_of_chars - num_of_chars;
 
                 for(uint16_t i = 0; i < num_of_chars; i++){
-                    auto c = path_name[i];
+                    auto cb = (i < num_of_chars - 1 || !path_name_too_long) ? font_5x8[path_name[i]] : font_5x8_special[TRAILING_DOTS];
 
-                    //std::cerr << "\tc: " << c << std::endl;
                     for(uint8_t j = 0; j < 8; j++){
-                        auto cb = font_5x8[c][j];
+                        auto cb_row = cb[j];
 
                         uint64_t y = path_rank * pix_per_path + pix_per_path / 2 - char_size / 2 + j * ratio ;
 
@@ -471,7 +471,7 @@ namespace odgi {
                                 for (uint8_t ry = 0; ry < ratio; ry++){
                                     add_point_for_text(
                                             x + rx, y + ry,
-                                            !CHECK_BIT(cb, z) * 255, !CHECK_BIT(cb, z) * 255, !CHECK_BIT(cb, z) * 255
+                                            !CHECK_BIT(cb_row, z) * 255, !CHECK_BIT(cb_row, z) * 255, !CHECK_BIT(cb_row, z) * 255
                                     );
                                 }
                             }

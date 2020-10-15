@@ -7,6 +7,21 @@
 
 #define INCLUDE_UNPRINTABLES true
 
+#define TRAILING_DOTS 0
+
+const uint8_t font_5x8_special[][8] = {
+        {
+                ________,
+                ________,
+                ________,
+                ________,
+                ________,
+                ________,
+                _X_X_X__,
+                ________,
+        },
+};
+
 const uint8_t font_5x8[][8] = {
 #ifdef INCLUDE_UNPRINTABLES
         {
