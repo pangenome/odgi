@@ -60,11 +60,11 @@ namespace odgi {
                         len += graph.get_length(handle);
                     });
             // the longest path length measured in nucleotides
-            size_t longest_path_in_nucleotides = 0;
+            //size_t longest_path_in_nucleotides = 0;
             // the total path length in nucleotides
-            size_t total_path_len_in_nucleotides = 0;
+            //size_t total_path_len_in_nucleotides = 0;
             // here we store all path nucleotides lengths so we know later from which path we sampled our random position from
-            IITree<uint64_t, path_handle_t> path_nucleotide_tree;
+            //IITree<uint64_t, path_handle_t> path_nucleotide_tree;
             // iterate over all relevant path_handles:
             //  1. build the interval tree
             //  2. find out the longest path in nucleotides and store this number size_t
@@ -77,24 +77,22 @@ namespace odgi {
                 std::cerr << path_name << std::endl;
                 std::cerr << as_integer(path) << std::endl;
 #endif
-                size_t path_len = path_index.get_path_length(path);
+                //size_t path_len = path_index.get_path_length(path);
 #ifdef debug_path_sgd
                 std::cerr << path_name << " has length: " << path_len << std::endl;
 #endif
-                path_nucleotide_tree.add(total_path_len_in_nucleotides,
-                                         total_path_len_in_nucleotides + path_len,
-                                         path);
+                //path_nucleotide_tree.add(total_path_len_in_nucleotides, total_path_len_in_nucleotides + path_len, path);
 
-                if (path_len > longest_path_in_nucleotides) {
-                    longest_path_in_nucleotides = path_len;
-                }
-                total_path_len_in_nucleotides += path_len;
+                //if (path_len > longest_path_in_nucleotides) {
+                //    longest_path_in_nucleotides = path_len;
+                //}
+                //total_path_len_in_nucleotides += path_len;
 
                 if (path_index.get_path_step_count(path) > 1){
                     at_least_one_path_with_more_than_one_step = true;
                 }
             }
-            path_nucleotide_tree.index();
+            //path_nucleotide_tree.index();
 
             if (at_least_one_path_with_more_than_one_step){
                 double w_min = (double) 1.0 / (double) (eta_max);
