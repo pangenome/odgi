@@ -219,6 +219,11 @@ namespace odgi {
                             std::cerr << "step rank in path: " << nr_iv[step_index]  << std::endl;
 #endif
                             size_t path_step_count = path_index.get_path_step_count(path);
+                            if (path_step_count == 1){
+                                term_updates++; // necessary if all paths have just 1 node: atomic
+                                continue;
+                            }
+
                             if (s_rank > 0 && flip(gen) || s_rank == path_step_count-1) {
                                 // go backward
                                 uint64_t jump_space = std::min(space, s_rank);
