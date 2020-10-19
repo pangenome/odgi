@@ -90,6 +90,7 @@ namespace odgi {
 
                 if (path_index.get_path_step_count(path) > 1){
                     at_least_one_path_with_more_than_one_step = true;
+                    break;
                 }
             }
             //path_nucleotide_tree.index();
