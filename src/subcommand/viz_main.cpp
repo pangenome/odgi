@@ -60,6 +60,10 @@ namespace odgi {
         args::Flag longest_path(parser, "longest-path", "use the longest path length to change the color darkness", {'l', "longest-path"});
         args::Flag white_to_black(parser, "white-to-black", "change the color darkness from white (for the first nucleotide position) to black (for the last nucleotide position)", {'u', "white-to-black"});
 
+        // Path names
+        args::Flag hide_path_names(parser, "bool","hide path names on the left",{'H', "hide-path-names"});
+        args::Flag color_path_names_background(parser, "bool","color path names background with the same color as paths",{'C', "color-path-names-background"});
+
         try {
             parser.ParseCLI(argc, argv);
         } catch (args::Help) {
@@ -125,6 +129,14 @@ namespace odgi {
                     << std::endl;
             return 1;
         }
+
+        if (args::get(hide_path_names) && args::get(color_path_names_background)){
+            std::cerr
+                    << "[odgi viz] error: Please specify -H/--hide-path-names or -C/--color-path-names-background, not both."
+                    << std::endl;
+            return 1;
+        }
+
 
         graph_t graph;
         assert(argc > 0);
@@ -332,10 +344,11 @@ namespace odgi {
 
 
         auto add_path_step = [&](const uint64_t &_x, const uint64_t &_y,
-                                 const uint8_t &_r, const uint8_t &_g, const uint8_t &_b) {
-            uint64_t x = offset_in_pix_for_paths_names + std::min((uint64_t) std::round(_x * scale_x), width - 1);
+                                 const uint8_t &_r, const uint8_t &_g, const uint8_t &_b, bool add_offset) {
+            uint64_t x = (add_offset ? offset_in_pix_for_paths_names : 0) + std::min((uint64_t) std::round(_x * scale_x), width - 1);
             uint64_t t = _y * pix_per_path;
             uint64_t s = t + pix_per_path;
+
             for (uint64_t y = t; y < s; ++y) {
                 image[4 * width * y + 4 * x + 0] = _r;
                 image[4 * width * y + 4 * x + 1] = _g;
@@ -572,12 +585,21 @@ namespace odgi {
             //          << " " << (int)path_r << " " << (int)path_g << " " << (int)path_b << std::endl;
             uint64_t path_rank = as_integer(path) - 1;
 
+            bool _color_path_names_background = args::get(color_path_names_background);
+
             if (char_size >= 8){
                 uint8_t num_of_chars = min(path_name.length(), (uint64_t) max_num_of_chars);
                 bool path_name_too_long = path_name.length() > num_of_chars;
 
                 uint8_t ratio = char_size / 8;
                 uint8_t left_padding = max_num_of_chars - num_of_chars;
+
+
+                if (_color_path_names_background){
+                    for (uint32_t x = left_padding * char_size; x <= max_num_of_chars * char_size; x++){
+                        add_path_step((float)(x + ratio) * (1 / scale_x), path_layout_y[path_rank], path_r, path_g, path_b,false);
+                    }
+                }
 
                 for(uint16_t i = 0; i < num_of_chars; i++){
                     auto cb = (i < num_of_chars - 1 || !path_name_too_long) ? font_5x8[path_name[i]] : font_5x8_special[TRAILING_DOTS];
@@ -593,7 +615,12 @@ namespace odgi {
 
                                 for (uint8_t rx = 0; rx < ratio; rx++){
                                     for (uint8_t ry = 0; ry < ratio; ry++){
-                                        add_point_for_text( x + rx, y + ry, 0, 0, 0);
+                                        add_point_for_text(
+                                                x + rx, y + ry,
+                                                0, 0, 0
+                                                //color ? path_r : 255, color ? path_g : 255, color ? path_b : 255
+                                                //!color * path_r, !color * path_g, !color * path_b
+                                        );
                                     }
                                 }
                             }
@@ -641,7 +668,7 @@ namespace odgi {
                                 }
                             }
 
-                            add_path_step(curr_bin - 1, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
+                            add_path_step(curr_bin - 1, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x, true);
 
                             if (std::abs(curr_bin - last_bin) > 1 || last_bin == 0) {
                                 // bin cross!
@@ -716,7 +743,7 @@ namespace odgi {
                             uint64_t ii = graph.get_is_reverse(h) ? (hl - i) : i;
                             x = 1 - ((float)(curr_len + ii*scale_x) / (float)(path_len_to_use))*0.9;
                         }
-                        add_path_step(p+i, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
+                        add_path_step(p+i, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x, true);
                     }
 
                     curr_len += hl;
