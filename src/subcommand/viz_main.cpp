@@ -588,20 +588,17 @@ namespace odgi {
                         uint64_t y = path_rank * pix_per_path + pix_per_path / 2 - char_size / 2 + j * ratio ;
 
                         for (int8_t z = 7; z >=0; z--){
-                            uint64_t x = (left_padding + i) * char_size + (7-z) * ratio;
+                            if (CHECK_BIT(cb_row, z)){
+                                uint64_t x = (left_padding + i) * char_size + (7-z) * ratio;
 
-                            for (uint8_t rx = 0; rx < ratio; rx++){
-                                for (uint8_t ry = 0; ry < ratio; ry++){
-                                    add_point_for_text(
-                                            x + rx, y + ry,
-                                            !CHECK_BIT(cb_row, z) * 255, !CHECK_BIT(cb_row, z) * 255, !CHECK_BIT(cb_row, z) * 255
-                                    );
+                                for (uint8_t rx = 0; rx < ratio; rx++){
+                                    for (uint8_t ry = 0; ry < ratio; ry++){
+                                        add_point_for_text( x + rx, y + ry, 0, 0, 0);
+                                    }
                                 }
                             }
                         }
-
                     }
-
                 }
             }
 
