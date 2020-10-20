@@ -47,7 +47,6 @@ namespace odgi {
         args::ValueFlag<float> link_path_pieces(parser, "FLOAT","show thin links of this relative width to connect path pieces",{'L', "link-path-pieces"});
         args::ValueFlag<std::string> alignment_prefix(parser, "STRING","apply alignment-related visual motifs to paths with this name prefix (it affects the -S and -d options)",{'A', "alignment-prefix"});
         args::Flag show_strands(parser, "bool","use reds and blues to show forward and reverse alignments",{'S', "show-strand"});
-        args::Flag hide_path_names(parser, "bool","hide path names on the left",{'H', "hide-path-names"});
 
         /// Binned mode
         args::Flag binned_mode(parser, "binned-mode", "bin the variation graph before its visualization", {'b', "binned-mode"});
@@ -441,7 +440,7 @@ namespace odgi {
         std::unordered_set<pair<uint64_t, uint64_t>> edges_drawn;
         uint64_t gap_links_removed = 0;
         uint64_t total_links = 0;
-        uint64_t path_rank = 0;
+
         graph.for_each_path_handle([&](const path_handle_t &path) {
             // use a sha256 to get a few bytes that we'll use for a color
             std::string path_name = graph.get_path_name(path);
@@ -449,39 +448,6 @@ namespace odgi {
 #ifdef debug_odgi_viz
             std::cerr << "path_name: " << path_name << std::endl;
 #endif
-            if (char_size >= 8){
-                uint8_t num_of_chars = min(path_name.length(), (uint64_t) max_num_of_chars);
-                bool path_name_too_long = path_name.length() > num_of_chars;
-
-                uint8_t ratio = char_size / 8;
-                uint8_t left_padding = max_num_of_chars - num_of_chars;
-
-                for(uint16_t i = 0; i < num_of_chars; i++){
-                    auto cb = (i < num_of_chars - 1 || !path_name_too_long) ? font_5x8[path_name[i]] : font_5x8_special[TRAILING_DOTS];
-
-                    for(uint8_t j = 0; j < 8; j++){
-                        auto cb_row = cb[j];
-
-                        uint64_t y = path_rank * pix_per_path + pix_per_path / 2 - char_size / 2 + j * ratio ;
-
-                        for (int8_t z = 7; z >=0; z--){
-                            uint64_t x = (left_padding + i) * char_size + (7-z) * ratio;
-
-                            for (uint8_t rx = 0; rx < ratio; rx++){
-                                for (uint8_t ry = 0; ry < ratio; ry++){
-                                    add_point_for_text(
-                                            x + rx, y + ry,
-                                            !CHECK_BIT(cb_row, z) * 255, !CHECK_BIT(cb_row, z) * 255, !CHECK_BIT(cb_row, z) * 255
-                                    );
-                                }
-                            }
-                        }
-
-                    }
-
-                }
-                path_rank++;
-            }
 
             bool is_aln = true;
             if (aln_mode) {
@@ -605,6 +571,39 @@ namespace odgi {
             //std::cerr << "path " << as_integer(path) << " " << graph.get_path_name(path) << " " << path_r_f << " " << path_g_f << " " << path_b_f
             //          << " " << (int)path_r << " " << (int)path_g << " " << (int)path_b << std::endl;
             uint64_t path_rank = as_integer(path) - 1;
+
+            if (char_size >= 8){
+                uint8_t num_of_chars = min(path_name.length(), (uint64_t) max_num_of_chars);
+                bool path_name_too_long = path_name.length() > num_of_chars;
+
+                uint8_t ratio = char_size / 8;
+                uint8_t left_padding = max_num_of_chars - num_of_chars;
+
+                for(uint16_t i = 0; i < num_of_chars; i++){
+                    auto cb = (i < num_of_chars - 1 || !path_name_too_long) ? font_5x8[path_name[i]] : font_5x8_special[TRAILING_DOTS];
+
+                    for(uint8_t j = 0; j < 8; j++){
+                        auto cb_row = cb[j];
+
+                        uint64_t y = path_rank * pix_per_path + pix_per_path / 2 - char_size / 2 + j * ratio ;
+
+                        for (int8_t z = 7; z >=0; z--){
+                            uint64_t x = (left_padding + i) * char_size + (7-z) * ratio;
+
+                            for (uint8_t rx = 0; rx < ratio; rx++){
+                                for (uint8_t ry = 0; ry < ratio; ry++){
+                                    add_point_for_text(
+                                            x + rx, y + ry,
+                                            !CHECK_BIT(cb_row, z) * 255, !CHECK_BIT(cb_row, z) * 255, !CHECK_BIT(cb_row, z) * 255
+                                    );
+                                }
+                            }
+                        }
+
+                    }
+
+                }
+            }
 
             uint64_t curr_len = 0;
             double x = 1.0;
