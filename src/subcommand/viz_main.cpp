@@ -581,7 +581,7 @@ namespace odgi {
             //          << " " << (int)path_r << " " << (int)path_g << " " << (int)path_b << std::endl;
             uint64_t path_rank = as_integer(path) - 1;
 
-            if (path_layout_y[path_rank] > 0){
+            if (path_layout_y[path_rank] >= 0){
                 uint64_t curr_len = 0;
                 double x = 1.0;
                 if (_binned_mode) {
