@@ -328,22 +328,32 @@ namespace odgi {
         path_layout_y.resize(path_count, -1);
         if (!args::get(pack_paths)) {
             std::string _path_names = args::get(path_names_file);
-            uint64_t rank_for_visualization = 0;
             if (!_path_names.empty()){
                 std::ifstream path_names_in(_path_names);
+
+                uint64_t rank_for_visualization = 0;
+                uint64_t num_of_paths_in_file = 0;
 
                 std::string line;
                 while (std::getline(path_names_in, line) && !line.empty()) {
                     if (graph.has_path(line)){
-                        path_layout_y[as_integer(graph.get_path_handle(line)) - 1] = rank_for_visualization;
+                        uint64_t path_rank = as_integer(graph.get_path_handle(line)) - 1;
+                        if (path_layout_y[path_rank] < 0){
+                            path_layout_y[path_rank] = rank_for_visualization;
+                        }else{
+                            std::cerr << "[odgi viz] error: In the path list there are duplicated path names." << std::endl;
+                            exit(1);
+                        }
 
                         rank_for_visualization++;
                     }else{
                         std::cerr << "Missing path: " << line << " --- " << graph.has_path(line) << std::endl;
                     }
+
+                    num_of_paths_in_file++;
                 }
 
-                //ToDo: add statistic X paths read / TOT
+                std::cerr << "Found " << rank_for_visualization << "/" << num_of_paths_in_file << " paths to visualize." << std::endl;
             }else{
                 for (uint64_t i = 0; i < path_count; ++i) {
                     path_layout_y[i] = i;
