@@ -39,6 +39,8 @@ namespace odgi {
         args::ValueFlag<std::string> alignment_prefix(parser, "STRING","apply alignment-related visual motifs to paths with this name prefix (it affects the -S and -d options)",{'A', "alignment-prefix"});
         args::Flag show_strands(parser, "bool","use reds and blues to show forward and reverse alignments",{'S', "show-strand"});
 
+        args::ValueFlag<std::string> path_names_file(parser, "FILE", "list of path to visualize, specifying their names", {'f', "paths-to-visualize"});
+
         /// Binned mode
         args::Flag binned_mode(parser, "binned-mode", "bin the variation graph before its visualization", {'b', "binned-mode"});
         args::ValueFlag<uint64_t> bin_width(parser, "bp", "width of each bin in basepairs along the graph vector",{'w', "bin-width"});
@@ -322,11 +324,30 @@ namespace odgi {
 
         // map from path id to its starting y position
         //hash_map<uint64_t, uint64_t> path_layout_y;
-        std::vector<uint64_t> path_layout_y;
-        path_layout_y.resize(path_count);
+        std::vector<int64_t> path_layout_y;
+        path_layout_y.resize(path_count, -1);
         if (!args::get(pack_paths)) {
-            for (uint64_t i = 0; i < path_count; ++i) {
-                path_layout_y[i] = i;
+            std::string _path_names = args::get(path_names_file);
+            uint64_t rank_for_visualization = 0;
+            if (!_path_names.empty()){
+                std::ifstream path_names_in(_path_names);
+
+                std::string line;
+                while (std::getline(path_names_in, line) && !line.empty()) {
+                    if (graph.has_path(line)){
+                        path_layout_y[as_integer(graph.get_path_handle(line)) - 1] = rank_for_visualization;
+
+                        rank_for_visualization++;
+                    }else{
+                        std::cerr << "Missing path: " << line << " --- " << graph.has_path(line) << std::endl;
+                    }
+                }
+
+                //ToDo: add statistic X paths read / TOT
+            }else{
+                for (uint64_t i = 0; i < path_count; ++i) {
+                    path_layout_y[i] = i;
+                }
             }
         } else { // pack the paths
             // buffer to record layout bounds
