@@ -39,7 +39,7 @@ namespace odgi {
         args::ValueFlag<std::string> alignment_prefix(parser, "STRING","apply alignment-related visual motifs to paths with this name prefix (it affects the -S and -d options)",{'A', "alignment-prefix"});
         args::Flag show_strands(parser, "bool","use reds and blues to show forward and reverse alignments",{'S', "show-strand"});
 
-        args::ValueFlag<std::string> path_names_file(parser, "FILE", "list of path to visualize, specifying their names", {'f', "paths-to-visualize"});
+        args::ValueFlag<std::string> path_names_file(parser, "FILE", "list of paths to display, specifying their names", {'p', "paths-to-display"});
 
         /// Binned mode
         args::Flag binned_mode(parser, "binned-mode", "bin the variation graph before its visualization", {'b', "binned-mode"});
@@ -115,6 +115,13 @@ namespace odgi {
             std::cerr
                     << "[odgi viz] error: Please specify the -d/--change-darkness option without specifying "
                        "-m/--color-by-mean-coverage or -z/--color-by-mean-inversion."
+                    << std::endl;
+            return 1;
+        }
+
+        if (args::get(pack_paths) && !args::get(path_names_file).empty()){
+            std::cerr
+                    << "[odgi viz] error: Please specify -R/--pack-paths or -p/--paths-to-display, not both."
                     << std::endl;
             return 1;
         }
@@ -230,7 +237,12 @@ namespace odgi {
                     }
                 }
 
-                std::cerr << "Found " << rank_for_visualization << "/" << num_of_paths_in_file << " paths to visualize." << std::endl;
+                std::cerr << "Found " << rank_for_visualization << "/" << num_of_paths_in_file << " paths to display." << std::endl;
+
+                if (rank_for_visualization == 0){
+                    std::cerr << "[odgi viz] error: No path to display." << std::endl;
+                    exit(1);
+                }
 
                 path_count = rank_for_visualization;
             }else{
