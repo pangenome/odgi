@@ -759,7 +759,9 @@ namespace odgi {
             << total_links << " total links" << std::endl;
         }
 
-        // trim vertical space to fit
+        // trim horizontal and vertical spaces to fit
+        uint64_t min_x = std::numeric_limits<uint64_t>::max();
+        uint64_t max_x = std::numeric_limits<uint64_t>::min(); // 0
         uint64_t min_y = std::numeric_limits<uint64_t>::max();
         uint64_t max_y = std::numeric_limits<uint64_t>::min(); // 0
         for (uint64_t y = 0; y < height + path_space; ++y) {
@@ -767,29 +769,41 @@ namespace odgi {
                 uint8_t r = image[4 * width * y + 4 * x + 0];
                 uint8_t g = image[4 * width * y + 4 * x + 1];
                 uint8_t b = image[4 * width * y + 4 * x + 2];
-                uint8_t a = image[4 * width * y + 4 * x + 3];
+                //uint8_t a = image[4 * width * y + 4 * x + 3];
                 if (r != 255 || g != 255 || b != 255) {
+                    min_x = std::min(min_x, x);
+                    max_x = std::max(max_x, x);
                     min_y = std::min(min_y, y);
                     max_y = std::max(max_y, y);
                 }
             }
         }
+
         // provide some default padding at the bottom, to clarify the edges
         max_y = std::min(path_space + height, max_y + bottom_padding);
-        //std::cerr << "min and max y " << min_y << " " << max_y << std::endl;
+
+        uint64_t crop_width = max_x - min_x + (min_x > 0 ? 1 : 0);
+        uint64_t crop_height = max_y - min_y + (min_y > 0 ? 1 : 0);
+
+        /*std::cerr << "width " << width << std::endl;
+        std::cerr << "height " << height << std::endl;
+        std::cerr << "min and max x " << min_x << " " << max_x << std::endl;
+        std::cerr << "min and max y " << min_y << " " << max_y << std::endl;
+        std::cerr << "crop_width " << crop_width << std::endl;
+        std::cerr << "crop_height " << crop_height << std::endl;*/
+
         std::vector<uint8_t> crop;
-        uint64_t crop_height = max_y - min_y;
-        crop.resize(width * crop_height * 4, 255);
-        for (uint64_t y = 0; y < max_y - min_y; ++y) {
-            for (uint64_t x = 0; x < width; ++x) {
-                crop[4 * width * y + 4 * x + 0] = image[4 * width * (y + min_y) + 4 * x + 0];
-                crop[4 * width * y + 4 * x + 1] = image[4 * width * (y + min_y) + 4 * x + 1];
-                crop[4 * width * y + 4 * x + 2] = image[4 * width * (y + min_y) + 4 * x + 2];
-                crop[4 * width * y + 4 * x + 3] = image[4 * width * (y + min_y) + 4 * x + 3];
+        crop.resize(crop_width * crop_height * 4, 255);
+        for (uint64_t y = 0; y < crop_height; ++y) {
+            for (uint64_t x = 0; x < crop_width; ++x) {
+                crop[4 * crop_width * y + 4 * x + 0] = image[4 * width * (y + min_y) + 4 * (x + min_x) + 0];
+                crop[4 * crop_width * y + 4 * x + 1] = image[4 * width * (y + min_y) + 4 * (x + min_x) + 1];
+                crop[4 * crop_width * y + 4 * x + 2] = image[4 * width * (y + min_y) + 4 * (x + min_x) + 2];
+                crop[4 * crop_width * y + 4 * x + 3] = image[4 * width * (y + min_y) + 4 * (x + min_x) + 3];
             }
         }
 
-        png::encodeOneStep(filename, crop, width, crop_height);
+        png::encodeOneStep(filename, crop, crop_width, crop_height);
 
         return 0;
     }
