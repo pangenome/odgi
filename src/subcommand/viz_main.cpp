@@ -503,28 +503,31 @@ namespace odgi {
         double max_mean_cov = 0.0;
         if ((_change_darkness && _longest_path) || (_binned_mode && _color_by_mean_coverage)){
             graph.for_each_path_handle([&](const path_handle_t &path) {
-                uint64_t curr_len = 0, p, hl;
-                handle_t h;
-                std::map<uint64_t, algorithms::path_info_t> bins;
-                graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
-                    h = graph.get_handle_of_step(occ);
-                    hl = graph.get_length(h);
+                uint64_t path_rank = as_integer(path) - 1;
+                if (path_layout_y[path_rank] >= 0){
+                    uint64_t curr_len = 0, p, hl;
+                    handle_t h;
+                    std::map<uint64_t, algorithms::path_info_t> bins;
+                    graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
+                        h = graph.get_handle_of_step(occ);
+                        hl = graph.get_length(h);
 
-                    curr_len += hl;
+                        curr_len += hl;
 
-                    p = position_map[number_bool_packing::unpack_number(h)];
-                    for (uint64_t k = 0; k < hl; ++k) {
-                        int64_t curr_bin = (p + k) / _bin_width + 1;
+                        p = position_map[number_bool_packing::unpack_number(h)];
+                        for (uint64_t k = 0; k < hl; ++k) {
+                            int64_t curr_bin = (p + k) / _bin_width + 1;
 
-                        ++bins[curr_bin].mean_cov;
+                            ++bins[curr_bin].mean_cov;
+                        }
+                    });
+
+                    for (auto &entry : bins) {
+                        max_mean_cov = std::max(entry.second.mean_cov, max_mean_cov);
                     }
-                });
 
-                for (auto &entry : bins) {
-                    max_mean_cov = std::max(entry.second.mean_cov, max_mean_cov);
+                    longest_path_len = std::max(longest_path_len, curr_len);
                 }
-
-                longest_path_len = std::max(longest_path_len, curr_len);
             });
 
             max_mean_cov /= _bin_width;
@@ -539,7 +542,6 @@ namespace odgi {
             //std::cerr << "path " << as_integer(path) << " " << graph.get_path_name(path) << " " << path_r_f << " " << path_g_f << " " << path_b_f
             //          << " " << (int)path_r << " " << (int)path_g << " " << (int)path_b << std::endl;
             uint64_t path_rank = as_integer(path) - 1;
-
             if (path_layout_y[path_rank] >= 0){
                 // use a sha256 to get a few bytes that we'll use for a color
                 std::string path_name = graph.get_path_name(path);
