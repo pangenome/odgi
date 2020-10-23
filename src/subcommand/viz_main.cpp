@@ -684,7 +684,7 @@ namespace odgi {
                         for(uint8_t j = 0; j < 8; j++){
                             auto cb_row = cb[j];
 
-                            uint64_t y = path_rank * pix_per_path + pix_per_path / 2 - char_size / 2 + j * ratio ;
+                            uint64_t y = path_layout_y[path_rank] * pix_per_path + pix_per_path / 2 - char_size / 2 + j * ratio ;
 
                             for (int8_t z = 7; z >=0; z--){
                                 if (CHECK_BIT(cb_row, z)){
