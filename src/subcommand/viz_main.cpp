@@ -15,7 +15,7 @@
 #include "fonts/font5x8.h"
 
 
-#define PATH_NAMES_MAX_NUM_OF_CHARACTERS 32
+#define PATH_NAMES_MAX_NUM_OF_CHARACTERS 128
 #define PATH_NAMES_MAX_CHARACTER_SIZE 64
 
 #define CHECK_BIT(var,pos) (((var)>>(pos)) & 1)
@@ -61,8 +61,9 @@ namespace odgi {
         args::Flag white_to_black(parser, "white-to-black", "change the color darkness from white (for the first nucleotide position) to black (for the last nucleotide position)", {'u', "white-to-black"});
 
         // Path names
-        args::Flag hide_path_names(parser, "bool","hide path names on the left",{'H', "hide-path-names"});
-        args::Flag color_path_names_background(parser, "bool","color path names background with the same color as paths",{'C', "color-path-names-background"});
+        args::Flag hide_path_names(parser, "bool", "hide path names on the left",{'H', "hide-path-names"});
+        args::Flag color_path_names_background(parser, "bool", "color path names background with the same color as paths",{'C', "color-path-names-background"});
+        args::ValueFlag<uint64_t> _max_num_of_characters(parser, "N", "max number of characters to display for each path name (default: 20)",{'c', "max-num-of-characters"});
 
         try {
             parser.ParseCLI(argc, argv);
@@ -180,8 +181,9 @@ namespace odgi {
         });
         position_map[position_map.size() - 1] = len;
 
+        uint64_t max_num_of_characters = args::get(_max_num_of_characters) > 1 ? min(args::get(_max_num_of_characters), (uint64_t) PATH_NAMES_MAX_NUM_OF_CHARACTERS) : 20;
         uint64_t path_count = graph.get_path_count();
-        uint64_t pix_per_path = (args::get(path_height) ? args::get(path_height) : 10);
+        uint64_t pix_per_path = args::get(path_height) ? args::get(path_height) : 10;
         uint64_t pix_per_link = std::max((uint64_t) 1, (uint64_t) std::round(args::get(link_path_pieces) * pix_per_path));
         uint64_t link_pix_y = pix_per_path / 2 - pix_per_link / 2;
         uint64_t path_space = path_count * pix_per_path;
@@ -222,7 +224,7 @@ namespace odgi {
             graph.for_each_path_handle([&](const path_handle_t &path) {
                 _max_num_of_chars = max((uint64_t) _max_num_of_chars, graph.get_path_name(path).length());
             });
-            max_num_of_chars = min(_max_num_of_chars, (uint64_t) PATH_NAMES_MAX_NUM_OF_CHARACTERS);
+            max_num_of_chars = min(_max_num_of_chars, max_num_of_characters);
 
             char_size = min((uint16_t)((pix_per_path / 8) * 8), (uint16_t) PATH_NAMES_MAX_CHARACTER_SIZE);
 
