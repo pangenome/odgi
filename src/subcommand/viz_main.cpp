@@ -339,47 +339,74 @@ namespace odgi {
             add_edge_from_positions(a, b);
         };
 
-        if (_binned_mode){
-            graph.for_each_handle([&](const handle_t &h) {
-                uint64_t p = position_map[number_bool_packing::unpack_number(h)];
-                uint64_t hl = graph.get_length(h);
+        {
+            std::function<bool(const handle_t)> is_a_handle_to_hide;
+            if (path_count < graph.get_path_count()){
+                is_a_handle_to_hide = [&](const handle_t &h) {
+                    return graph.for_each_step_on_handle(h, [&](const step_handle_t &step) {
+                        auto path_handle = graph.get_path_handle_of_step(step);
+                        if (path_layout_y[as_integer(path_handle) - 1] >= 0) {
+                            return false;
+                        }
 
-                int64_t last_bin = 0; // flag meaning "null bin"
-                // make contents for the bases in the node
-                for (uint64_t k = 0; k < hl; ++k) {
-                    int64_t curr_bin = (p + k) / _bin_width + 1;
-                    if (curr_bin != last_bin) {
+                        return true;
+                    });
+                };
+            }else{
+                is_a_handle_to_hide = [&](const handle_t &h) {
+                    return false;
+                };
+            }
+
+            if (_binned_mode){
+                graph.for_each_handle([&](const handle_t &h) {
+                    if (!is_a_handle_to_hide(h)){
+                        uint64_t p = position_map[number_bool_packing::unpack_number(h)];
+                        uint64_t hl = graph.get_length(h);
+
+                        int64_t last_bin = 0; // flag meaning "null bin"
+                        // make contents for the bases in the node
+                        for (uint64_t k = 0; k < hl; ++k) {
+                            int64_t curr_bin = (p + k) / _bin_width + 1;
+                            if (curr_bin != last_bin) {
 #ifdef debug_odgi_viz
-                        std::cerr << "position in map (" << p  << ") - curr_bin: " << curr_bin << std::endl;
+                                std::cerr << "position in map (" << p  << ") - curr_bin: " << curr_bin << std::endl;
 #endif
-                        add_point(curr_bin - 1, 0, 0, 0, 0);
+                                add_point(curr_bin - 1, 0, 0, 0, 0);
+                            }
+
+                            last_bin = curr_bin;
+                        }
                     }
-
-                    last_bin = curr_bin;
-                }
-            });
-
-            // The links are created later after the binning step.
-        }else{
-            graph.for_each_handle([&](const handle_t &h) {
-                uint64_t p = position_map[number_bool_packing::unpack_number(h)];
-                uint64_t hl = graph.get_length(h);
-                // make contents for the bases in the node
-                //for (uint64_t i = 0; i < hl; ++i) {
-                for (uint64_t i = 0; i < hl; i += 1 / scale_x) {
-                    add_point(p + i, 0, 0, 0, 0);
-                }
-
-                // add contacts for the edges
-                graph.follow_edges(h, false, [&](const handle_t& o) {
-                    add_edge_from_handles(h, o);
                 });
-                graph.follow_edges(h, true, [&](const handle_t& o) {
-                    add_edge_from_handles(o, h);
+
+                // The links are created later after the binning step.
+            }else{
+                graph.for_each_handle([&](const handle_t &h) {
+                    if (!is_a_handle_to_hide(h)){
+                        uint64_t p = position_map[number_bool_packing::unpack_number(h)];
+                        uint64_t hl = graph.get_length(h);
+                        // make contents for the bases in the node
+                        //for (uint64_t i = 0; i < hl; ++i) {
+                        for (uint64_t i = 0; i < hl; i += 1 / scale_x) {
+                            add_point(p + i, 0, 0, 0, 0);
+                        }
+
+                        // add contacts for the edges
+                        graph.follow_edges(h, false, [&](const handle_t& o) {
+                            if (!is_a_handle_to_hide(o)){
+                                add_edge_from_handles(h, o);
+                            }
+                        });
+                        graph.follow_edges(h, true, [&](const handle_t& o) {
+                            if (!is_a_handle_to_hide(o)){
+                                add_edge_from_handles(o, h);
+                            }
+                        });
+                    }
                 });
-            });
+            }
         }
-
 
         auto add_path_step = [&](const uint64_t &_x, const uint64_t &_y,
                                  const uint8_t &_r, const uint8_t &_g, const uint8_t &_b) {
