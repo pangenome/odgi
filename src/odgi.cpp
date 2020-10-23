@@ -248,8 +248,13 @@ std::vector<step_handle_t> graph_t::steps_of_handle(const handle_t& handle,
 }
 
 size_t graph_t::get_step_count(const handle_t& handle) const {
-    const node_t& node = node_v.at(number_bool_packing::unpack_number(handle));
-    return node.path_count();
+    uint64_t count = 0;
+    for_each_step_on_handle(
+        handle,
+        [&count](const step_handle_t& step) {
+            ++count;
+        });
+    return count;
 }
 
 /// Get a node handle (node ID and orientation) from a handle to an step on a path
