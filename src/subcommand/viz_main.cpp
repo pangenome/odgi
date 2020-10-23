@@ -140,10 +140,10 @@ namespace odgi {
             return 1;
         }
 
-        if (args::get(hide_path_names) && args::get(color_path_names_background)){
+        if (args::get(hide_path_names) && (args::get(color_path_names_background) || args::get(_max_num_of_characters))){
             std::cerr
-                    << "[odgi viz] error: Please specify -H/--hide-path-names or -C/--color-path-names-background, not both."
-                    << std::endl;
+                    << "[odgi viz] error: Please specify the -C/--color-path-names-background and -c/--max-num-of-characters "
+                       "options without specifying -H/--hide-path-names." << std::endl;
             return 1;
         }
 
@@ -223,29 +223,9 @@ namespace odgi {
         }
 
         // After the bin_width and scale_xy calculations
-        uint16_t offset_in_pix_for_paths_names = 0;
+        uint16_t width_path_names = 0;
         uint8_t max_num_of_chars = 0;
         uint8_t char_size = 0;
-
-        if (!args::get(hide_path_names) && pix_per_path >= 8) {
-            uint64_t _max_num_of_chars = std::numeric_limits<uint64_t>::min();
-            graph.for_each_path_handle([&](const path_handle_t &path) {
-                _max_num_of_chars = max((uint64_t) _max_num_of_chars, graph.get_path_name(path).length());
-            });
-            max_num_of_chars = min(_max_num_of_chars, max_num_of_characters);
-
-            char_size = min((uint16_t)((pix_per_path / 8) * 8), (uint16_t) PATH_NAMES_MAX_CHARACTER_SIZE);
-
-            offset_in_pix_for_paths_names  = max_num_of_chars * char_size + char_size / 2;
-
-            width += offset_in_pix_for_paths_names + 1;
-        }
-
-        if (width > 50000){
-            std::cerr
-                    << "[odgi viz] warning: you are going to create a big image (width > 50000 pixels)."
-                    << std::endl;
-        }
 
         // map from path id to its starting y position
         //hash_map<uint64_t, uint64_t> path_layout_y;
@@ -323,11 +303,34 @@ namespace odgi {
             }
         }
 
-
         uint64_t path_space = path_count * pix_per_path;
 
         std::vector<uint8_t> image;
         image.resize(width * (height + path_space) * 4, 255);
+
+        std::vector<uint8_t> image_path_names;
+        if (!args::get(hide_path_names) && pix_per_path >= 8) {
+            uint64_t _max_num_of_chars = std::numeric_limits<uint64_t>::min();
+            graph.for_each_path_handle([&](const path_handle_t &path) {
+                uint64_t path_rank = as_integer(path) - 1;
+                if (path_layout_y[path_rank] >= 0){
+                    _max_num_of_chars = max((uint64_t) _max_num_of_chars, graph.get_path_name(path).length());
+                }
+            });
+            max_num_of_chars = min(_max_num_of_chars, max_num_of_characters);
+
+            char_size = min((uint16_t)((pix_per_path / 8) * 8), (uint16_t) PATH_NAMES_MAX_CHARACTER_SIZE);
+
+            width_path_names = max_num_of_chars * char_size + char_size / 2;
+
+            image_path_names.resize(width_path_names * (height + path_space) * 4, 255);
+        }
+
+        if (width_path_names + width > 50000){
+            std::cerr
+                    << "[odgi viz] warning: you are going to create a big image (width > 50000 pixels)."
+                    << std::endl;
+        }
 
         bool aln_mode = !args::get(alignment_prefix).empty();
         std::string aln_prefix;
@@ -337,7 +340,7 @@ namespace odgi {
 
         auto add_point = [&](const uint64_t &_x, const uint64_t &_y,
                              const uint8_t &_r, const uint8_t &_g, const uint8_t &_b) {
-            uint64_t x = offset_in_pix_for_paths_names + std::min((uint64_t) std::round(_x * scale_x), width - 1);
+            uint64_t x = std::min((uint64_t) std::round(_x * scale_x), width - 1);
             uint64_t y = std::min((uint64_t) std::round(_y * scale_y), height - 1) + path_space;
             image[4 * width * y + 4 * x + 0] = _r;
             image[4 * width * y + 4 * x + 1] = _g;
@@ -350,10 +353,10 @@ namespace odgi {
             uint64_t x = _x;
             uint64_t y = _y;
 
-            image[4 * width * y + 4 * x + 0] = _r;
-            image[4 * width * y + 4 * x + 1] = _g;
-            image[4 * width * y + 4 * x + 2] = _b;
-            image[4 * width * y + 4 * x + 3] = 255;
+            image_path_names[4 * width_path_names * y + 4 * x + 0] = _r;
+            image_path_names[4 * width_path_names * y + 4 * x + 1] = _g;
+            image_path_names[4 * width_path_names * y + 4 * x + 2] = _b;
+            image_path_names[4 * width_path_names * y + 4 * x + 3] = 255;
         };
 
         auto add_edge_from_positions = [&](uint64_t a, const uint64_t b) {
@@ -459,23 +462,24 @@ namespace odgi {
             }
         }
 
-        auto add_path_step = [&](const uint64_t &_x, const uint64_t &_y,
-                                 const uint8_t &_r, const uint8_t &_g, const uint8_t &_b, bool add_offset) {
-            uint64_t x = (add_offset ? offset_in_pix_for_paths_names : 0) + std::min((uint64_t) std::round(_x * scale_x), width - 1);
+        auto add_path_step = [&](std::vector<uint8_t> &img, uint64_t width_img,
+                const uint64_t &_x, const uint64_t &_y,
+                const uint8_t &_r, const uint8_t &_g, const uint8_t &_b) {
+            uint64_t x = std::min((uint64_t) std::round(_x * scale_x), width - 1);
             uint64_t t = _y * pix_per_path;
             uint64_t s = t + pix_per_path;
 
             for (uint64_t y = t; y < s; ++y) {
-                image[4 * width * y + 4 * x + 0] = _r;
-                image[4 * width * y + 4 * x + 1] = _g;
-                image[4 * width * y + 4 * x + 2] = _b;
-                image[4 * width * y + 4 * x + 3] = 255;
+                img[4 * width_img * y + 4 * x + 0] = _r;
+                img[4 * width_img * y + 4 * x + 1] = _g;
+                img[4 * width_img * y + 4 * x + 2] = _b;
+                img[4 * width_img * y + 4 * x + 3] = 255;
             }
         };
 
         auto add_path_link = [&](const uint64_t &_x, const uint64_t &_y,
                                  const uint8_t &_r, const uint8_t &_g, const uint8_t &_b) {
-            uint64_t x = offset_in_pix_for_paths_names + std::min((uint64_t) std::round(_x * scale_x), width - 1);
+            uint64_t x = std::min((uint64_t) std::round(_x * scale_x), width - 1);
             uint64_t t = _y * pix_per_path + link_pix_y;
             uint64_t s = t + pix_per_link;
             for (uint64_t y = t; y < s; ++y) {
@@ -674,7 +678,7 @@ namespace odgi {
 
                     if (_color_path_names_background){
                         for (uint32_t x = left_padding * char_size; x <= max_num_of_chars * char_size; x++){
-                            add_path_step((float)(x + ratio) * (1 / scale_x), path_layout_y[path_rank], path_r, path_g, path_b,false);
+                            add_path_step(image_path_names, width_path_names, (float)(x + ratio) * (1 / scale_x), path_layout_y[path_rank], path_r, path_g, path_b);
                         }
                     }
 
@@ -740,7 +744,7 @@ namespace odgi {
                                     }
                                 }
 
-                                add_path_step(curr_bin - 1, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x, true);
+                                add_path_step(image, width, curr_bin - 1, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
 
                                 if (std::abs(curr_bin - last_bin) > 1 || last_bin == 0) {
                                     // bin cross!
@@ -815,7 +819,7 @@ namespace odgi {
                                 uint64_t ii = graph.get_is_reverse(h) ? (hl - i) : i;
                                 x = 1 - ((float)(curr_len + ii*scale_x) / (float)(path_len_to_use))*0.9;
                             }
-                            add_path_step(p+i, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x, true);
+                            add_path_step(image, width, p+i, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
                         }
 
                         curr_len += hl;
@@ -871,16 +875,15 @@ namespace odgi {
             }
         }
 
-        if (char_size >= 8 && min_x >= (char_size / 4)){
-            // provide some padding on the left for the characters
-            min_x -= (char_size / 4);
-        }
-
         // provide some default padding at the bottom, to clarify the edges
         max_y = std::min(path_space + height, max_y + bottom_padding);
 
         uint64_t crop_width = max_x - min_x + (min_x > 0 ? 1 : 0);
         uint64_t crop_height = max_y - min_y + (min_y > 0 ? 1 : 0);
+
+        if (char_size >= 8){
+            crop_width += width_path_names;
+        }
 
         /*std::cerr << "width " << width << std::endl;
         std::cerr << "height " << height << std::endl;
@@ -893,10 +896,11 @@ namespace odgi {
         crop.resize(crop_width * crop_height * 4, 255);
         for (uint64_t y = 0; y < crop_height; ++y) {
             for (uint64_t x = 0; x < crop_width; ++x) {
-                crop[4 * crop_width * y + 4 * x + 0] = image[4 * width * (y + min_y) + 4 * (x + min_x) + 0];
-                crop[4 * crop_width * y + 4 * x + 1] = image[4 * width * (y + min_y) + 4 * (x + min_x) + 1];
-                crop[4 * crop_width * y + 4 * x + 2] = image[4 * width * (y + min_y) + 4 * (x + min_x) + 2];
-                crop[4 * crop_width * y + 4 * x + 3] = image[4 * width * (y + min_y) + 4 * (x + min_x) + 3];
+                for (uint8_t z = 0; z < 4; z++){
+                    crop[4 * crop_width * y + 4 * x + z] = (char_size >= 8 && x < width_path_names) ?
+                            image_path_names[4 * width_path_names * (y + min_y) + 4 * x + z] :
+                            image[4 * width * (y + min_y) + 4 * (x - width_path_names + min_x) + z];
+                }
             }
         }
 
