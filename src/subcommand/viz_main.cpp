@@ -692,12 +692,7 @@ namespace odgi {
 
                                     for (uint8_t rx = 0; rx < ratio; rx++){
                                         for (uint8_t ry = 0; ry < ratio; ry++){
-                                            add_point_for_text(
-                                                    x + rx, y + ry,
-                                                    0, 0, 0
-                                                    //color ? path_r : 255, color ? path_g : 255, color ? path_b : 255
-                                                    //!color * path_r, !color * path_g, !color * path_b
-                                            );
+                                            add_point_for_text(x + rx, y + ry,0, 0, 0);
                                         }
                                     }
                                 }
@@ -874,6 +869,11 @@ namespace odgi {
                     max_y = std::max(max_y, y);
                 }
             }
+        }
+
+        if (char_size >= 8 && min_x >= (char_size / 4)){
+            // provide some padding on the left for the characters
+            min_x -= (char_size / 4);
         }
 
         // provide some default padding at the bottom, to clarify the edges
