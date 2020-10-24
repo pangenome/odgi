@@ -279,7 +279,7 @@ step_handle_t graph_t::path_back(const path_handle_t& path_handle) const {
 step_handle_t graph_t::path_front_end(const path_handle_t& path_handle) const {
     step_handle_t step;
     as_integers(step)[0] = as_integer(path_handle);
-    as_integers(step)[0] = std::numeric_limits<uint64_t>::max()-1;
+    as_integers(step)[1] = std::numeric_limits<uint64_t>::max()-1;
     return step;
 }
 
@@ -287,7 +287,7 @@ step_handle_t graph_t::path_front_end(const path_handle_t& path_handle) const {
 step_handle_t graph_t::path_end(const path_handle_t& path_handle) const {
     step_handle_t step;
     as_integers(step)[0] = as_integer(path_handle);
-    as_integers(step)[0] = std::numeric_limits<uint64_t>::max();
+    as_integers(step)[1] = std::numeric_limits<uint64_t>::max();
     return step;
 }
 
