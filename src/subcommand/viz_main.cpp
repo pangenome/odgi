@@ -18,8 +18,6 @@
 #define PATH_NAMES_MAX_NUM_OF_CHARACTERS 128
 #define PATH_NAMES_MAX_CHARACTER_SIZE 64
 
-#define CHECK_BIT(var,pos) (((var)>>(pos)) & 1)
-
 
 namespace odgi {
 
@@ -348,17 +346,6 @@ namespace odgi {
             image[4 * width * y + 4 * x + 3] = 255;
         };
 
-        auto add_point_for_text = [&](const uint64_t &_x, const uint64_t &_y,
-                             const uint8_t &_r, const uint8_t &_g, const uint8_t &_b) {
-            uint64_t x = _x;
-            uint64_t y = _y;
-
-            image_path_names[4 * width_path_names * y + 4 * x + 0] = _r;
-            image_path_names[4 * width_path_names * y + 4 * x + 1] = _g;
-            image_path_names[4 * width_path_names * y + 4 * x + 2] = _b;
-            image_path_names[4 * width_path_names * y + 4 * x + 3] = 255;
-        };
-
         auto add_edge_from_positions = [&](uint64_t a, const uint64_t b) {
 #ifdef debug_odgi_viz
             std::cerr << "Edge displayed" << std::endl;
@@ -683,26 +670,19 @@ namespace odgi {
                         }
                     }
 
+                    uint64_t base_y = path_layout_y[path_rank] * pix_per_path + pix_per_path / 2 - char_size / 2;
+
                     for(uint16_t i = 0; i < num_of_chars; i++){
+                        uint64_t base_x = (left_padding + i) * char_size;
+
                         auto cb = (i < num_of_chars - 1 || !path_name_too_long) ? font_5x8[path_name[i]] : font_5x8_special[TRAILING_DOTS];
 
-                        for(uint8_t j = 0; j < 8; j++){
-                            auto cb_row = cb[j];
-
-                            uint64_t y = path_layout_y[path_rank] * pix_per_path + pix_per_path / 2 - char_size / 2 + j * ratio ;
-
-                            for (int8_t z = 7; z >=0; z--){
-                                if (CHECK_BIT(cb_row, z)){
-                                    uint64_t x = (left_padding + i) * char_size + (7-z) * ratio;
-
-                                    for (uint8_t rx = 0; rx < ratio; rx++){
-                                        for (uint8_t ry = 0; ry < ratio; ry++){
-                                            add_point_for_text(x + rx, y + ry,0, 0, 0);
-                                        }
-                                    }
-                                }
-                            }
-                        }
+                        write_character_in_matrix(
+                                image_path_names, width_path_names, cb,
+                                char_size,
+                                base_x, base_y,
+                                0, 0, 0
+                        );
                     }
                 }
 

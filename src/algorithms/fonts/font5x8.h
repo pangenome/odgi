@@ -9,6 +9,40 @@
 
 #define TRAILING_DOTS 0
 
+
+#define CHECK_BIT(var,pos) (((var)>>(pos)) & 1)
+
+
+void write_character_in_matrix(
+        std::vector<uint8_t> &matrix, uint64_t const width_matrix, const uint8_t character[8],
+        const uint8_t char_size,
+        const uint64_t &base_x, const uint64_t &base_y,
+        const uint8_t &_r, const uint8_t &_g, const uint8_t &_b
+        ){
+    uint8_t ratio = char_size / 8;
+
+    for(uint8_t j = 0; j < 8; j++){
+        auto cb_row = character[j];
+
+        uint64_t y = base_y + j * ratio ;
+
+        for (int8_t z = 7; z >=0; z--){
+            if (CHECK_BIT(cb_row, z)){
+                uint64_t x = base_x + (7-z) * ratio;
+
+                for (uint8_t rx = 0; rx < ratio; rx++){
+                    for (uint8_t ry = 0; ry < ratio; ry++){
+                        matrix[4 * width_matrix * (y + ry) + 4 * (x + rx) + 0] = _r;
+                        matrix[4 * width_matrix * (y + ry) + 4 * (x + rx) + 1] = _g;
+                        matrix[4 * width_matrix * (y + ry) + 4 * (x + rx) + 2] = _b;
+                        matrix[4 * width_matrix * (y + ry) + 4 * (x + rx) + 3] = 255;
+                    }
+                }
+            }
+        }
+    }
+}
+
 const uint8_t font_5x8_special[][8] = {
         {
                 ________,
