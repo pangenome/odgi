@@ -1,6 +1,6 @@
 = odgi viz(1)
 ifdef::backend-manpage[]
-Erik Garrison
+Erik Garrison, Andrea Guarracino
 :doctype: manpage
 :release-version: v0.4.1 
 :man manual: odgi viz
@@ -69,8 +69,17 @@ please refer to <<odgi_bin.adoc#_odgi_bin1, odgi bin>>.
   List of paths to display in the specified order; the file must contain one path name per line and a subset of all
   paths can be specified.
 
+
+=== Path names visualization Options
+
 *-H, --hide-path-names*::
-  Hide the path names on the left of the generated image.
+Hide the path names on the left of the generated image.
+
+*-C, --color-path-names-background*::
+Color path names background with the same color as paths
+
+*-c, --max-num-of-characters*::
+Maximum number of characters to display for each path name. The default value is _20_.
 
 
 === Binned Mode Options

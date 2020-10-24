@@ -50,6 +50,11 @@ namespace odgi {
 
         args::ValueFlag<std::string> path_names_file(parser, "FILE", "list of paths to display in the specified order; the file must contain one path name per line and a subset of all paths can be specified.", {'p', "paths-to-display"});
 
+        /// Path names
+        args::Flag hide_path_names(parser, "bool", "hide path names on the left",{'H', "hide-path-names"});
+        args::Flag color_path_names_background(parser, "bool", "color path names background with the same color as paths",{'C', "color-path-names-background"});
+        args::ValueFlag<uint64_t> _max_num_of_characters(parser, "N", "max number of characters to display for each path name (default: 20)",{'c', "max-num-of-characters"});
+
         /// Binned mode
         args::Flag binned_mode(parser, "binned-mode", "bin the variation graph before its visualization", {'b', "binned-mode"});
         args::ValueFlag<uint64_t> bin_width(parser, "bp", "width of each bin in basepairs along the graph vector",{'w', "bin-width"});
@@ -61,11 +66,6 @@ namespace odgi {
         args::Flag change_darkness(parser, "change-darkness", "change the color darkness based on nucleotide position in the path", {'d', "change-darkness"});
         args::Flag longest_path(parser, "longest-path", "use the longest path length to change the color darkness", {'l', "longest-path"});
         args::Flag white_to_black(parser, "white-to-black", "change the color darkness from white (for the first nucleotide position) to black (for the last nucleotide position)", {'u', "white-to-black"});
-
-        // Path names
-        args::Flag hide_path_names(parser, "bool", "hide path names on the left",{'H', "hide-path-names"});
-        args::Flag color_path_names_background(parser, "bool", "color path names background with the same color as paths",{'C', "color-path-names-background"});
-        args::ValueFlag<uint64_t> _max_num_of_characters(parser, "N", "max number of characters to display for each path name (default: 20)",{'c', "max-num-of-characters"});
 
         try {
             parser.ParseCLI(argc, argv);
@@ -676,7 +676,6 @@ namespace odgi {
 
                     uint8_t ratio = char_size / 8;
                     uint8_t left_padding = max_num_of_chars - num_of_chars;
-
 
                     if (_color_path_names_background){
                         for (uint32_t x = left_padding * char_size; x <= max_num_of_chars * char_size; x++){
