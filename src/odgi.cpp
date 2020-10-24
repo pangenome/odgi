@@ -279,7 +279,7 @@ step_handle_t graph_t::path_back(const path_handle_t& path_handle) const {
 step_handle_t graph_t::path_front_end(const path_handle_t& path_handle) const {
     step_handle_t step;
     as_integers(step)[0] = as_integer(path_handle);
-    as_integers(step)[0] = std::numeric_limits<uint64_t>::max()-1;
+    as_integers(step)[1] = std::numeric_limits<uint64_t>::max()-1;
     return step;
 }
 
@@ -287,7 +287,7 @@ step_handle_t graph_t::path_front_end(const path_handle_t& path_handle) const {
 step_handle_t graph_t::path_end(const path_handle_t& path_handle) const {
     step_handle_t step;
     as_integers(step)[0] = as_integer(path_handle);
-    as_integers(step)[0] = std::numeric_limits<uint64_t>::max();
+    as_integers(step)[1] = std::numeric_limits<uint64_t>::max();
     return step;
 }
 
@@ -337,7 +337,7 @@ step_handle_t graph_t::get_next_step(const step_handle_t& step_handle) const {
     const node_t& node = node_v.at(number_bool_packing::unpack_number(curr_handle));
     auto& step = node.get_path_step(as_integers(step_handle)[1]);
     if (step.next_id() == path_end_marker) {
-        return path_end(as_path_handle(0));
+        return path_end(get_path_handle_of_step(step_handle));
     }
     nid_t next_id = edge_delta_to_id(curr_id, step.next_id()-2);
     handle_t next_handle = get_handle(next_id);
@@ -364,7 +364,7 @@ step_handle_t graph_t::get_previous_step(const step_handle_t& step_handle) const
     const node_t& node = node_v.at(number_bool_packing::unpack_number(curr_handle));
     auto& step = node.get_path_step(as_integers(step_handle)[1]);
     if (step.prev_id() == path_begin_marker) {
-        return path_front_end(as_path_handle(0));
+        return path_front_end(get_path_handle_of_step(step_handle));
     }
     nid_t prev_id = edge_delta_to_id(curr_id, step.prev_id()-2);
     handle_t prev_handle = get_handle(prev_id);
