@@ -859,8 +859,8 @@ namespace odgi {
         // provide some default padding at the bottom, to clarify the edges
         max_y = std::min(path_space + height, max_y + bottom_padding);
 
-        uint64_t crop_width = max_x - min_x + (min_x > 0 ? 1 : 0);
-        uint64_t crop_height = max_y - min_y + (min_y > 0 ? 1 : 0);
+        uint64_t crop_width = max_x - min_x + 1;
+        uint64_t crop_height = max_y - min_y;
 
         if (char_size >= 8){
             crop_width += width_path_names;
