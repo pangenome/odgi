@@ -318,7 +318,7 @@ void unchop(handlegraph::MutablePathDeletableHandleGraph& graph, const bool& sho
                 rank_sum += node_rank[graph.get_id(handle)];
             }
             double rank_v = rank_sum / comp.size();
-            handle_t n = combine_handles(graph, comp);
+            handle_t n = concat_nodes(graph, comp);
             ordered_handles.push_back(std::make_pair(rank_v, n));
             //node_order.push_back(graph.get_id(n));
             num_node_unchopped += comp.size();

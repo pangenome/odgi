@@ -3,7 +3,6 @@
 #include <handlegraph/types.hpp>
 #include <handlegraph/util.hpp>
 #include <handlegraph/mutable_path_deletable_handle_graph.hpp>
-
 #include <vector>
 
 #include "simple_components.hpp"
