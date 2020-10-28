@@ -168,7 +168,7 @@ namespace odgi {
             if (drop_gap_links) {
                 uint64_t path_count = graph.get_path_count();
 
-                std::cerr << std::setprecision(3) << "Gap links removed: " << ((double)gap_links_removed / (double)total_links)
+                std::cerr << std::setprecision(4) << "Gap links removed: " << (100.0 *  ((double)gap_links_removed / (double)total_links))
                           << "%, that is " << gap_links_removed << " gap links (" << path_count << " path start links + "
                           << path_count << " path end links + " << (gap_links_removed - path_count * 2) << " inner gap links) of "
                           << total_links << " total links" << std::endl;
