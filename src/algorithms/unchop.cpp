@@ -208,6 +208,58 @@ handle_t concat_nodes(handlegraph::MutablePathDeletableHandleGraph& graph, const
     return new_node;
 }
 
+handle_t combine_handles(handlegraph::MutablePathDeletableHandleGraph& graph,
+                         const std::vector<handle_t>& handles) {
+    std::string seq;
+    for (auto& handle : handles) {
+        seq.append(graph.get_sequence(handle));
+    }
+    handle_t combined = graph.create_handle(seq);
+    // relink the inbound and outbound nodes
+    // get the edge context
+    std::vector<handle_t> edges_fwd_fwd;
+    std::vector<handle_t> edges_fwd_rev;
+    std::vector<handle_t> edges_rev_fwd;
+    std::vector<handle_t> edges_rev_rev;
+    graph.follow_edges(
+        handles.back(), false,
+        [&](const handle_t& h) {
+          edges_fwd_fwd.push_back(h);
+        });
+    graph.follow_edges(
+        handles.front(), true,
+        [&](const handle_t& h) {
+            edges_fwd_rev.push_back(h);
+        });
+    // destroy the old handles
+    for (auto& handle : handles) {
+        graph.destroy_handle(handle);
+    }
+    // connect the ends to the previous context
+    // check that we're not trying to make edges that connect back with the nodes in the component
+    // there are three cases
+    // self looping, front and rear inverting
+    for (auto& h : edges_fwd_fwd) {
+        if (h == handles.front()) {
+            graph.create_edge(combined, combined);
+        } else if (h == graph.flip(handles.back())) {
+            graph.create_edge(combined, graph.flip(combined));
+        } else {
+            graph.create_edge(combined, h);
+        }
+    }
+    for (auto& h : edges_fwd_rev) {
+        if (h == handles.back()) {
+            graph.create_edge(combined, combined);
+        } else if (h == graph.flip(handles.front())) {
+            graph.create_edge(graph.flip(combined), combined);
+        } else {
+            graph.create_edge(h, combined);
+        }
+    }
+    return combined;
+}
+
 void unchop(handlegraph::MutablePathDeletableHandleGraph& graph) {
     unchop(graph, false);
 }
@@ -216,7 +268,13 @@ void unchop(handlegraph::MutablePathDeletableHandleGraph& graph, const bool& sho
 #ifdef debug
     std::cerr << "Running unchop" << std::endl;
 #endif
-    std::vector<handle_t> handle_order;
+    //std::vector<handle_t> handle_order;
+    ska::flat_hash_map<nid_t, uint64_t> node_rank;
+    uint64_t idx = 0;
+    graph.for_each_handle(
+        [&](const handle_t& h) {
+            node_rank[graph.get_id(h)] = idx++;
+        });
 
     // if possible, don't hold these in memory
     ska::flat_hash_map<std::string, std::string> path_seqs;
@@ -230,20 +288,45 @@ void unchop(handlegraph::MutablePathDeletableHandleGraph& graph, const bool& sho
                 });
         });
 
+    auto components = simple_components(graph, 2, true);
+    ska::flat_hash_set<nid_t> to_merge;
+    for (auto& comp : components) {
+        for (auto& handle : comp) {
+            to_merge.insert(graph.get_id(handle));
+        }
+    }
+    std::vector<std::pair<double, handle_t>> ordered_handles;
+    graph.for_each_handle(
+        [&](const handle_t& handle) {
+            if (!to_merge.count(graph.get_id(handle))) {
+                ordered_handles.push_back(std::make_pair(
+                                              node_rank[graph.get_id(handle)],
+                                              handle));
+            }
+        });
+
     uint64_t num_node_unchopped = 0;
     uint64_t num_new_nodes = 0;
-    for (auto& comp : simple_components(graph, 1, true)) {
+    for (auto& comp : components) {
 #ifdef debug
         std::cerr << "Unchop " << comp.size() << " nodes together" << std::endl;
 #endif
-
         if (comp.size() >= 2){
-            handle_order.push_back(concat_nodes(graph, comp));
-
+            // sort by lowest rank to maintain order
+            double rank_sum = 0;
+            for (auto& handle : comp) {
+                rank_sum += node_rank[graph.get_id(handle)];
+            }
+            double rank_v = rank_sum / comp.size();
+            handle_t n = combine_handles(graph, comp);
+            ordered_handles.push_back(std::make_pair(rank_v, n));
+            //node_order.push_back(graph.get_id(n));
             num_node_unchopped += comp.size();
             num_new_nodes++;
         } else {
-            handle_order.push_back(comp.front());
+            for (auto& c : comp) {
+                ordered_handles.push_back(std::make_pair(node_rank[graph.get_id(c)], c));
+            }
         }
     }
 
@@ -251,7 +334,13 @@ void unchop(handlegraph::MutablePathDeletableHandleGraph& graph, const bool& sho
         std::cerr << "[odgi::unchop] unchopped " << num_node_unchopped << " nodes into " << num_new_nodes << " new nodes." << std::endl;
     }
 
-    // todo correct ordering.... these handles are invalidated
+    assert(graph.get_node_count() == ordered_handles.size());
+
+    std::vector<handle_t> handle_order;
+    for (auto& h : ordered_handles) {
+        handle_order.push_back(h.second);
+    }
+
     graph.apply_ordering(handle_order, true);
 
     // validate the paths

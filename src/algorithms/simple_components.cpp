@@ -65,6 +65,7 @@ std::vector<std::vector<handle_t>> simple_components(
     std::vector<std::vector<handle_t>> handle_components;
     for (auto& c : simple_components) {
         auto& comp = c.second;
+        assert(comp.size());
         if (comp.size() >= min_size) {
             // start somewhere
             ska::flat_hash_set<uint64_t> comp_set;
@@ -101,7 +102,19 @@ std::vector<std::vector<handle_t>> simple_components(
                     has_next = false;
                 }
             } while (has_next);
+            assert(sorted_comp.size() > 0);
+            if (sorted_comp.size() < min_size) {
+                handle_components.pop_back();
+            }
         }
+    }
+
+    if (min_size == 1) {
+        uint64_t seen_nodes = 0;
+        for (auto& comp : simple_components) {
+            seen_nodes += comp.second.size();
+        }
+        assert(seen_nodes == graph.get_node_count());
     }
 
     return handle_components;
