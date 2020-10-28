@@ -261,10 +261,13 @@ handle_t combine_handles(handlegraph::MutablePathDeletableHandleGraph& graph,
 }
 
 void unchop(handlegraph::MutablePathDeletableHandleGraph& graph) {
-    unchop(graph, false);
+    unchop(graph, 1, false);
 }
 
-void unchop(handlegraph::MutablePathDeletableHandleGraph& graph, const bool& show_info) {
+void unchop(handlegraph::MutablePathDeletableHandleGraph& graph,
+            const uint64_t& nthreads,
+            const bool& show_info) {
+
 #ifdef debug
     std::cerr << "Running unchop" << std::endl;
 #endif
@@ -288,7 +291,7 @@ void unchop(handlegraph::MutablePathDeletableHandleGraph& graph, const bool& sho
                 });
         });
 
-    auto components = simple_components(graph, 2, true);
+    auto components = simple_components(graph, 2, true, nthreads);
     ska::flat_hash_set<nid_t> to_merge;
     for (auto& comp : components) {
         for (auto& handle : comp) {

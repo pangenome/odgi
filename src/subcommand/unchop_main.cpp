@@ -51,7 +51,6 @@ int main_unchop(int argc, char** argv) {
     }
 
     const uint64_t num_threads = nthreads ? args::get(nthreads) : 1;
-    omp_set_num_threads(num_threads);
 
     graph_t graph;
     assert(argc > 0);
@@ -66,7 +65,7 @@ int main_unchop(int argc, char** argv) {
         }
     }
 
-    algorithms::unchop(graph, args::get(debug));
+    algorithms::unchop(graph, num_threads, args::get(debug));
     
     std::string outfile = args::get(og_out_file);
     if (outfile.size()) {

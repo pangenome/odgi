@@ -23,7 +23,7 @@ using namespace handlegraph;
 typedef boomphf::mphf<uint64_t, boomphf::SingleHashFunctor<uint64_t>> boophf_uint64_t;
 
 std::vector<std::vector<handle_t>> simple_components(
-    const PathHandleGraph &graph, const uint64_t& min_size, const bool return_all_handles);
+    const PathHandleGraph &graph, const uint64_t& min_size, const bool& return_all_handles, const uint64_t& nthreads);
 
 }
 

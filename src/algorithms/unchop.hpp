@@ -27,7 +27,9 @@ void unchop(handlegraph::MutablePathDeletableHandleGraph& graph);
  * @param show_info
  */
 
-void unchop(handlegraph::MutablePathDeletableHandleGraph& graph, const bool& show_info);
+void unchop(handlegraph::MutablePathDeletableHandleGraph& graph,
+            const uint64_t& nthreads,
+            const bool& show_info);
 
 //std::vector<std::deque<handle_t>> simple_components(PathHandleGraph* graph, int min_size = 1, false);
 

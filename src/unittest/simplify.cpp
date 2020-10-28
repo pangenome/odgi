@@ -58,7 +58,7 @@ TEST_CASE("Graph simplification reduces a graph with a self loop", "[simplify]")
     graph.create_edge(n3, n4);
     graph.create_edge(n4, n5);
     graph.create_edge(n5, n6);
-    std::vector<std::vector<handle_t>> linear_components = algorithms::simple_components(graph, 2, false);
+    std::vector<std::vector<handle_t>> linear_components = algorithms::simple_components(graph, 2, false, 1);
     for (auto& v : linear_components) {
         graph.combine_handles(v);
     }

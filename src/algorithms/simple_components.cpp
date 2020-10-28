@@ -8,7 +8,7 @@ using namespace handlegraph;
 
 // the set of components that could be merged into single nodes without changing the path space of the graph
 std::vector<std::vector<handle_t>> simple_components(
-    const PathHandleGraph &graph, const uint64_t& min_size, const bool return_all_handles) {
+    const PathHandleGraph &graph, const uint64_t& min_size, const bool& return_all_handles, const uint64_t& nthreads) {
 
     std::vector<uint64_t> data; data.reserve(graph.get_node_count()*2);
     graph.for_each_handle(
@@ -16,7 +16,6 @@ std::vector<std::vector<handle_t>> simple_components(
             data.push_back(as_integer(handle));
             data.push_back(as_integer(graph.flip(handle)));
         });
-    uint64_t nthreads = get_thread_count();
     boophf_uint64_t bphf(data.size(),data,nthreads,2.0,false,false);
 
     // todo check if we should or shouldn't use the gcc atomic primitives
@@ -30,6 +29,9 @@ std::vector<std::vector<handle_t>> simple_components(
             simple_dset.unite(h_i, h_j);
         };
 
+    bool in_parallel = nthreads > 1;
+    uint64_t curr_threads = get_thread_count();
+    if (in_parallel) omp_set_num_threads(nthreads);
     graph.for_each_edge(
         [&](const edge_t& edge) {
             const handle_t& from = edge.first;
@@ -50,8 +52,8 @@ std::vector<std::vector<handle_t>> simple_components(
                     simple_dset.unite(from_i, to_i);
                 }
             }
-        },
-        true); // parallel
+        }, in_parallel);
+    if (in_parallel) omp_set_num_threads(curr_threads);
 
     ska::flat_hash_map<uint64_t, std::vector<handle_t>> simple_components;
     graph.for_each_handle(
