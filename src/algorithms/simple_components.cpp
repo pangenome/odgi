@@ -10,27 +10,23 @@ using namespace handlegraph;
 std::vector<std::vector<handle_t>> simple_components(
     const PathHandleGraph &graph, const uint64_t& min_size, const bool return_all_handles) {
 
-    boophf_uint64_t* bphf = nullptr;
-    uint64_t data_size = 0;
-    {
-        std::vector<uint64_t> data; data.reserve(graph.get_node_count()*2);
-        graph.for_each_handle(
-            [&](const handle_t& handle) {
-                data.push_back(as_integer(handle));
-                data.push_back(as_integer(graph.flip(handle)));
-            });
-        uint64_t nthreads = get_thread_count();
-        bphf = new boophf_uint64_t(data.size(),data,nthreads,2.0,false,false);
-        data_size = data.size();
-    }
+    std::vector<uint64_t> data; data.reserve(graph.get_node_count()*2);
+    graph.for_each_handle(
+        [&](const handle_t& handle) {
+            data.push_back(as_integer(handle));
+            data.push_back(as_integer(graph.flip(handle)));
+        });
+    uint64_t nthreads = get_thread_count();
+    boophf_uint64_t bphf(data.size(),data,nthreads,2.0,false,false);
 
-    std::vector<DisjointSets::Aint> simple_data(data_size);
+    // todo check if we should or shouldn't use the gcc atomic primitives
+    std::vector<DisjointSets::Aint> simple_data(data.size()+1);
     auto simple_dset = DisjointSets(simple_data.data(), simple_data.size());
 
     auto self_unite =
         [&](const handle_t& h) {
-            uint64_t h_i = bphf->lookup(as_integer(h)) - 1;
-            uint64_t h_j = bphf->lookup(as_integer(graph.flip(h))) - 1;
+            uint64_t h_i = bphf.lookup(as_integer(h));
+            uint64_t h_j = bphf.lookup(as_integer(graph.flip(h)));
             simple_dset.unite(h_i, h_j);
         };
 
@@ -47,8 +43,8 @@ std::vector<std::vector<handle_t>> simple_components(
                 && nodes_are_perfect_path_neighbors(graph, from, to)) {
                 //std::cerr << "would merge " << graph.get_id(from)
                 //          << " with " << graph.get_id(to) << std::endl;
-                uint64_t from_i = bphf->lookup(as_integer(from)) - 1;
-                uint64_t to_i = bphf->lookup(as_integer(to)) - 1;
+                uint64_t from_i = bphf.lookup(as_integer(from));
+                uint64_t to_i = bphf.lookup(as_integer(to));
                 //std::cerr << "indexes " << from_i << " and " << to_i << std::endl;
                 simple_dset.unite(from_i, to_i);
             }
@@ -56,18 +52,12 @@ std::vector<std::vector<handle_t>> simple_components(
         true); // parallel
 
     ska::flat_hash_map<uint64_t, std::vector<handle_t>> simple_components;
-    //std::vector<uint64_t> node_dset(simple_dset.size());
     graph.for_each_handle(
         [&](const handle_t& handle) {
-            uint64_t a_id = simple_dset.find(bphf->lookup(as_integer(handle))-1);
-            uint64_t b_id = simple_dset.find(bphf->lookup(as_integer(graph.flip(handle))-1));
-            //assert(a_id == b_id); // apparently not needed
-            //node_dset[++i] = a_id;
+            uint64_t a_id = simple_dset.find(bphf.lookup(as_integer(handle)));
+            // take the component of our forward orientation
             simple_components[a_id].push_back(handle);
-            //std::cerr << "node " << graph.get_id(handle) << " " << a_id << " " << b_id << std::endl;
         });
-
-    delete bphf;
 
     // now we combine and order the nodes in each dset
     std::vector<std::vector<handle_t>> handle_components;
@@ -92,7 +82,6 @@ std::vector<std::vector<handle_t>> simple_components(
                 }
             } while (has_prev);
 
-            //handle_t front = h;
             //std::cerr << "Front is " << graph.get_id(h) << std::endl;
             handle_components.emplace_back();
             auto& sorted_comp = handle_components.back();

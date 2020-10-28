@@ -218,6 +218,18 @@ void unchop(handlegraph::MutablePathDeletableHandleGraph& graph, const bool& sho
 #endif
     std::vector<handle_t> handle_order;
 
+    // if possible, don't hold these in memory
+    ska::flat_hash_map<std::string, std::string> path_seqs;
+    graph.for_each_path_handle(
+        [&](const path_handle_t& p) {
+            auto& seq = path_seqs[graph.get_path_name(p)];
+            graph.for_each_step_in_path(
+                p,
+                [&](const step_handle_t& s) {
+                    seq.append(graph.get_sequence(graph.get_handle_of_step(s)));
+                });
+        });
+
     uint64_t num_node_unchopped = 0;
     uint64_t num_new_nodes = 0;
     for (auto& comp : simple_components(graph, 2, true)) {
@@ -239,7 +251,22 @@ void unchop(handlegraph::MutablePathDeletableHandleGraph& graph, const bool& sho
         std::cerr << "[odgi::unchop] unchopped " << num_node_unchopped << " nodes into " << num_new_nodes << " new nodes." << std::endl;
     }
 
-    graph.apply_ordering(handle_order, true);
+    // todo correct ordering.... these handles are invalidated
+    //graph.apply_ordering(handle_order, true);
+
+    // validate the paths
+    graph.for_each_path_handle(
+        [&](const path_handle_t& p) {
+            std::string seq;
+            graph.for_each_step_in_path(
+                p,
+                [&](const step_handle_t& s) {
+                    seq.append(graph.get_sequence(graph.get_handle_of_step(s)));
+                });
+            assert(seq == path_seqs[graph.get_path_name(p)]);
+            //std::cerr << "is seq " << graph.get_path_name(p) << " ok? " << (seq == path_seqs[graph.get_path_name(p)]) << std::endl;
+        });
+
 }
 
 
