@@ -232,7 +232,7 @@ void unchop(handlegraph::MutablePathDeletableHandleGraph& graph, const bool& sho
 
     uint64_t num_node_unchopped = 0;
     uint64_t num_new_nodes = 0;
-    for (auto& comp : simple_components(graph, 2, true)) {
+    for (auto& comp : simple_components(graph, 1, true)) {
 #ifdef debug
         std::cerr << "Unchop " << comp.size() << " nodes together" << std::endl;
 #endif
@@ -242,7 +242,7 @@ void unchop(handlegraph::MutablePathDeletableHandleGraph& graph, const bool& sho
 
             num_node_unchopped += comp.size();
             num_new_nodes++;
-        }else{
+        } else {
             handle_order.push_back(comp.front());
         }
     }
@@ -252,7 +252,7 @@ void unchop(handlegraph::MutablePathDeletableHandleGraph& graph, const bool& sho
     }
 
     // todo correct ordering.... these handles are invalidated
-    //graph.apply_ordering(handle_order, true);
+    graph.apply_ordering(handle_order, true);
 
     // validate the paths
     graph.for_each_path_handle(

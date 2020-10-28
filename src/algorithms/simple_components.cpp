@@ -37,16 +37,18 @@ std::vector<std::vector<handle_t>> simple_components(
             // unite the handles with themselves
             self_unite(from);
             self_unite(to);
-            // check if they can be linked across the edge
-            if (graph.get_degree(from, false) == 1
-                && graph.get_degree(to, true) == 1
-                && nodes_are_perfect_path_neighbors(graph, from, to)) {
-                //std::cerr << "would merge " << graph.get_id(from)
-                //          << " with " << graph.get_id(to) << std::endl;
-                uint64_t from_i = bphf.lookup(as_integer(from));
-                uint64_t to_i = bphf.lookup(as_integer(to));
-                //std::cerr << "indexes " << from_i << " and " << to_i << std::endl;
-                simple_dset.unite(from_i, to_i);
+            if (graph.get_id(from) != graph.get_id(to)) {
+                // check if they can be linked across the edge
+                if (graph.get_degree(from, false) == 1
+                    && graph.get_degree(to, true) == 1
+                    && nodes_are_perfect_path_neighbors(graph, from, to)) {
+                    //std::cerr << "would merge " << graph.get_id(from)
+                    //          << " with " << graph.get_id(to) << std::endl;
+                    uint64_t from_i = bphf.lookup(as_integer(from));
+                    uint64_t to_i = bphf.lookup(as_integer(to));
+                    //std::cerr << "indexes " << from_i << " and " << to_i << std::endl;
+                    simple_dset.unite(from_i, to_i);
+                }
             }
         },
         true); // parallel
