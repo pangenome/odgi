@@ -18,6 +18,7 @@
 #include "is_single_stranded.hpp"
 #include "bfs.hpp"
 #include "dfs.hpp"
+#include "progress.hpp"
 
 namespace odgi {
 namespace algorithms {

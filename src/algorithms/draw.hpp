@@ -57,7 +57,7 @@ struct coord_range_2d_t {
 
 void get_layout(const std::vector<double> &X,
                 const std::vector<double> &Y,
-                const HandleGraph &graph,
+                const PathHandleGraph &graph,
                 const double& scale,
                 const double& border,
                 std::vector<std::vector<handle_t>>& weak_components,
@@ -67,28 +67,32 @@ void get_layout(const std::vector<double> &X,
 void draw_svg(std::ostream &out,
               const std::vector<double> &X,
               const std::vector<double> &Y,
-              const HandleGraph &graph,
+              const PathHandleGraph &graph,
               const double& scale,
               const double& border);
 
 std::vector<uint8_t> rasterize(const std::vector<double> &X,
                                const std::vector<double> &Y,
-                               const HandleGraph &graph,
+                               const PathHandleGraph &graph,
                                const double& scale,
                                const double& border,
                                uint64_t& width,
                                uint64_t& height,
-                               const double& line_width);
+                               const double& line_width,
+                               const double& path_line_spacing,
+                               bool color_paths);
 
 void draw_png(const std::string& filename,
               const std::vector<double> &X,
               const std::vector<double> &Y,
-              const HandleGraph &graph,
+              const PathHandleGraph &graph,
               const double& scale,
               const double& border,
               uint64_t width,
               uint64_t height,
-              const double& line_width);
+              const double& line_width,
+              const double& path_line_spacing,
+              bool color_paths);
 
 
 

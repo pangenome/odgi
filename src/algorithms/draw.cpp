@@ -55,7 +55,7 @@ namespace algorithms {
 
 void get_layout(const std::vector<double> &X,
                 const std::vector<double> &Y,
-                const HandleGraph &graph,
+                const PathHandleGraph &graph,
                 const double& scale,
                 const double& border,
                 std::vector<std::vector<handle_t>>& weak_components,
@@ -102,7 +102,7 @@ void get_layout(const std::vector<double> &X,
 void draw_svg(std::ostream &out,
               const std::vector<double> &X,
               const std::vector<double> &Y,
-              const HandleGraph &graph,
+              const PathHandleGraph &graph,
               const double& scale,
               const double& border) {
 
@@ -157,12 +157,14 @@ void draw_svg(std::ostream &out,
 
 std::vector<uint8_t> rasterize(const std::vector<double> &X,
                                const std::vector<double> &Y,
-                               const HandleGraph &graph,
+                               const PathHandleGraph &graph,
                                const double& scale,
                                const double& border,
                                uint64_t& width,
                                uint64_t& height,
-                               const double& line_width) {
+                               const double& line_width,
+                               const double& path_line_spacing,
+                               bool color_paths) {
 
     std::vector<std::vector<handle_t>> weak_components;
     coord_range_2d_t rendered_range;
@@ -173,6 +175,16 @@ std::vector<uint8_t> rasterize(const std::vector<double> &X,
     double source_min_y = rendered_range.min_y;
     double source_width = rendered_range.width();
     double source_height = rendered_range.height();
+
+    std::vector<color_t> all_path_colors;
+    if (color_paths) {
+        graph.for_each_path_handle(
+            [&](const path_handle_t& p) {
+                all_path_colors.push_back(
+                    hash_color(graph.get_path_name(p)));
+                //std::cerr << graph.get_path_name(p) << " color " << all_path_colors.back() << std::endl;
+            });
+    }
 
     // determine height and width based on the width, if width = 0
     if (width == 0) {
@@ -211,7 +223,26 @@ std::vector<uint8_t> rasterize(const std::vector<double> &X,
                      source_width, source_height,
                      2, 2,
                      width-4, height-4);
-            wu_calc_multiline(xy0, xy1, image, line_width);
+            if (color_paths) {
+                std::vector<color_t> path_colors;
+                graph.for_each_step_on_handle(
+                    handle,
+                    [&](const step_handle_t& s) {
+                        path_colors.push_back(
+                            all_path_colors[as_integer(graph.get_path_handle_of_step(s))-1]);
+                    });
+                // for step on handle
+                // get the path color
+                wu_calc_rainbow(xy0, xy1, image, path_colors, path_line_spacing, line_width);
+            } else {
+                /*
+                aaline(xy0, xy1,
+                       COLOR_BLACK,
+                       image,
+                       line_width);
+                */
+                wu_calc_wide_line(xy0, xy1, COLOR_BLACK, image, line_width);
+            }
         }
     }
 
@@ -223,13 +254,23 @@ std::vector<uint8_t> rasterize(const std::vector<double> &X,
 void draw_png(const std::string& filename,
               const std::vector<double> &X,
               const std::vector<double> &Y,
-              const HandleGraph &graph,
+              const PathHandleGraph &graph,
               const double& scale,
               const double& border,
               uint64_t width,
               uint64_t height,
-              const double& line_width) {
-    auto bytes = rasterize(X, Y, graph, scale, border, width, height, line_width);
+              const double& line_width,
+              const double& path_line_spacing,
+              bool color_paths) {
+    auto bytes = rasterize(X, Y,
+                           graph,
+                           scale,
+                           border,
+                           width,
+                           height,
+                           line_width,
+                           path_line_spacing,
+                           color_paths);
     png::encodeOneStep(filename.c_str(), bytes, width, height);
 }
 
