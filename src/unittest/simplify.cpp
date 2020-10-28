@@ -6,6 +6,7 @@
 #include "odgi.hpp"
 #include "algorithms/simple_components.hpp"
 #include "algorithms/topological_sort.hpp"
+#include "algorithms/unchop.hpp"
 
 #include <iostream>
 #include <limits>
@@ -34,10 +35,7 @@ TEST_CASE("Graph simplification reduces a simple graph to a single node", "[simp
     graph.create_edge(n3, n4);
     graph.create_edge(n4, n5);
     graph.create_edge(n5, n6);
-    std::vector<std::vector<handle_t>> linear_components = algorithms::simple_components(graph, 2, false);
-    for (auto& v : linear_components) {
-        graph.combine_handles(v);
-    }
+    algorithms::unchop(graph);
     // sort the graph
     graph.apply_ordering(algorithms::topological_order(&graph), true);
     SECTION("The graph is as expected") {
@@ -90,10 +88,7 @@ TEST_CASE("Graph simplification reduces a graph with a self inverting +/- loop",
     graph.create_edge(n3, n4);
     graph.create_edge(n4, n5);
     graph.create_edge(n5, n6);
-    std::vector<std::vector<handle_t>> linear_components = algorithms::simple_components(graph, 2, false);
-    for (auto& v : linear_components) {
-        graph.combine_handles(v);
-    }
+    algorithms::unchop(graph);
     // sort the graph
     graph.apply_ordering(algorithms::topological_order(&graph), true);
     SECTION("The graph is as expected") {
@@ -118,10 +113,7 @@ TEST_CASE("Graph simplification reduces a graph with a self inverting -/+ loop",
     graph.create_edge(n3, n4);
     graph.create_edge(n4, n5);
     graph.create_edge(n5, n6);
-    std::vector<std::vector<handle_t>> linear_components = algorithms::simple_components(graph, 2, false);
-    for (auto& v : linear_components) {
-        graph.combine_handles(v);
-    }
+    algorithms::unchop(graph);
     // sort the graph
     graph.apply_ordering(algorithms::topological_order(&graph), true);
     SECTION("The graph is as expected") {
