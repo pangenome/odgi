@@ -9,6 +9,7 @@
 #include <unordered_set>
 #include <unordered_map>
 #include <map>
+#include <iomanip> // std::setprecision
 #include <handlegraph/handle_graph.hpp>
 #include <handlegraph/util.hpp>
 #include <handlegraph/path_handle_graph.hpp>

@@ -7,7 +7,6 @@
 #include "lodepng.h"
 #include <limits>
 #include "picosha2.h"
-#include <iostream>
 #include "algorithms/draw.hpp"
 
 //#define debug_odgi_viz
@@ -840,7 +839,8 @@ namespace odgi {
         });
 
         if (args::get(drop_gap_links)) {
-            std::cerr << "Gap links removed: " << gap_links_removed << " (" << path_count << " path start links + "
+            std::cerr << std::setprecision(3) << "Gap links removed: " << ((double)gap_links_removed / (double)total_links)
+            << "%, that is " << gap_links_removed << " gap links (" << path_count << " path start links + "
             << path_count << " path end links + " << (gap_links_removed - path_count * 2) << " inner gap links) of "
             << total_links << " total links" << std::endl;
         }
