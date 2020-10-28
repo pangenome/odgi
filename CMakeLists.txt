@@ -493,6 +493,8 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/dynamic_types.hpp
   ${CMAKE_SOURCE_DIR}/src/dynamic_structs.hpp
   ${CMAKE_SOURCE_DIR}/src/position.hpp
+  ${CMAKE_SOURCE_DIR}/src/dset64.hpp
+  ${CMAKE_SOURCE_DIR}/src/dset64-gccAtomic.hpp
   ${CMAKE_SOURCE_DIR}/src/unittest/driver.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/linear_index.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/random_order.hpp
