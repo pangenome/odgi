@@ -22,6 +22,7 @@ int main_unchop(int argc, char** argv) {
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> og_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> og_out_file(parser, "FILE", "store the graph self index in this file", {'o', "out"});
+    args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use", {'t', "threads"});
     args::Flag debug(parser, "debug", "print information about the process to stderr.", {'d', "debug"});
 
     try {
@@ -48,6 +49,9 @@ int main_unchop(int argc, char** argv) {
         std::cerr << "[odgi unchop] error: Please specify an output file to where to store the unchopped graph via -o=[FILE], --out=[FILE]." << std::endl;
         return 1;
     }
+
+    const uint64_t num_threads = nthreads ? args::get(nthreads) : 1;
+    omp_set_num_threads(num_threads);
 
     graph_t graph;
     assert(argc > 0);

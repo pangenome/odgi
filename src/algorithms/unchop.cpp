@@ -24,7 +24,7 @@ namespace algorithms {
 ///
 /// After calling this on a vg::VG, paths will be invalid until
 /// Paths::compact_ranks() is called.
-    handle_t concat_nodes(handlegraph::MutablePathDeletableHandleGraph& graph, const std::vector<handle_t>& nodes) {
+handle_t concat_nodes(handlegraph::MutablePathDeletableHandleGraph& graph, const std::vector<handle_t>& nodes) {
 
     // Make sure we have at least 2 nodes
     assert(!nodes.empty() && nodes.front() != nodes.back());
@@ -32,15 +32,13 @@ namespace algorithms {
     /*
 #ifdef debug
     std::cerr << "Paths before concat: " << std::endl;
-   
     graph.for_each_path_handle([&](const path_handle_t p) {
-        std::cerr << graph.get_path_name(p) << ": ";
-        for (auto h : graph.scan_path(p)) {
-            std::cerr << graph.get_id(h) << (graph.get_is_reverse(h) ? '-' : '+') << " ";
-        }
-        std::cerr << std::endl;
-    });
-   
+                                   std::cerr << graph.get_path_name(p) << ": ";
+                                   for (auto h : graph.scan_path(p)) {
+                                       std::cerr << graph.get_id(h) << (graph.get_is_reverse(h) ? '-' : '+') << " ";
+                                   }
+                                   std::cerr << std::endl;
+                               });
 #endif
     */
 
@@ -72,37 +70,37 @@ namespace algorithms {
     // the run, or self loops.
     std::unordered_set<handle_t> left_neighbors;
     graph.follow_edges(nodes.front(), true, [&](const handle_t& left_neighbor) {
-        if (left_neighbor == nodes.back()) {
-            // Loop back to the end
-            left_neighbors.insert(new_node);
-        } else if (left_neighbor == graph.flip(nodes.front())) {
-            // Loop back to the front
-            left_neighbors.insert(graph.flip(new_node));
-        } else {
-            // Normal edge
-            left_neighbors.insert(left_neighbor);
-        }
-    });
+                                                if (left_neighbor == nodes.back()) {
+                                                    // Loop back to the end
+                                                    left_neighbors.insert(new_node);
+                                                } else if (left_neighbor == graph.flip(nodes.front())) {
+                                                    // Loop back to the front
+                                                    left_neighbors.insert(graph.flip(new_node));
+                                                } else {
+                                                    // Normal edge
+                                                    left_neighbors.insert(left_neighbor);
+                                                }
+                                            });
     
     std::unordered_set<handle_t> right_neighbors;
     graph.follow_edges(nodes.back(), false, [&](const handle_t& right_neighbor) {
-        if (right_neighbor == nodes.front()) {
-            // Loop back to the front.
-            // We will have seen it from the other side, so ignore it here.
-        } else if (right_neighbor == graph.flip(nodes.back())) {
-            // Loop back to the end
-            right_neighbors.insert(graph.flip(new_node));
-        } else {
-            // Normal edge
-            right_neighbors.insert(right_neighbor);
-        }
-    });
+                                                if (right_neighbor == nodes.front()) {
+                                                    // Loop back to the front.
+                                                    // We will have seen it from the other side, so ignore it here.
+                                                } else if (right_neighbor == graph.flip(nodes.back())) {
+                                                    // Loop back to the end
+                                                    right_neighbors.insert(graph.flip(new_node));
+                                                } else {
+                                                    // Normal edge
+                                                    right_neighbors.insert(right_neighbor);
+                                                }
+                                            });
     
     // Make all the edges, now that we can't interfere with edge listing
     for (auto& n : left_neighbors) {
 #ifdef debug
         std::cerr << "Creating edge " << graph.get_id(n) << (graph.get_is_reverse(n) ? "-" : "+") << " -> "
-            <<  graph.get_id(new_node) << (graph.get_is_reverse(new_node) ? "-" : "+") << std::endl;
+                  <<  graph.get_id(new_node) << (graph.get_is_reverse(new_node) ? "-" : "+") << std::endl;
 #endif
         graph.create_edge(n, new_node);
     }
@@ -110,7 +108,7 @@ namespace algorithms {
     
 #ifdef debug
         std::cerr << "Creating edge " << graph.get_id(new_node) << (graph.get_is_reverse(new_node) ? "-" : "+") << " -> "
-            <<  graph.get_id(n) << (graph.get_is_reverse(n) ? "-" : "+") << std::endl;
+                  <<  graph.get_id(n) << (graph.get_is_reverse(n) ? "-" : "+") << std::endl;
 #endif
     
         graph.create_edge(new_node, n);
@@ -125,38 +123,38 @@ namespace algorithms {
         std::vector<std::tuple<step_handle_t, step_handle_t, bool>> ranges_to_rewrite;
         
         graph.for_each_step_on_handle(nodes.front(), [&](const step_handle_t& front_step) {
-            auto path = graph.get_path_handle_of_step(front_step);
+                                                         auto path = graph.get_path_handle_of_step(front_step);
 #ifdef debug
-            std::cerr << "Consider path " << graph.get_path_name(path) << std::endl;
+                                                         std::cerr << "Consider path " << graph.get_path_name(path) << std::endl;
 #endif
         
-            // If we don't get the same oriented node as where this step is
-            // stepping, we must be stepping on the other orientation.
-            bool runs_reverse = (graph.get_handle_of_step(front_step) != nodes.front());
+                                                         // If we don't get the same oriented node as where this step is
+                                                         // stepping, we must be stepping on the other orientation.
+                                                         bool runs_reverse = (graph.get_handle_of_step(front_step) != nodes.front());
        
-            step_handle_t back_step = front_step;
+                                                         step_handle_t back_step = front_step;
             
-            while(graph.get_handle_of_step(back_step) != (runs_reverse ? graph.flip(nodes.back()) : nodes.back())) {
-                // Until we find the step on the path that visits the last node in our run.
-                // Go along the path towards where our last node should be, in our forward orientation.
-                back_step = runs_reverse ? graph.get_previous_step(back_step) : graph.get_next_step(back_step);
-            }
+                                                         while(graph.get_handle_of_step(back_step) != (runs_reverse ? graph.flip(nodes.back()) : nodes.back())) {
+                                                             // Until we find the step on the path that visits the last node in our run.
+                                                             // Go along the path towards where our last node should be, in our forward orientation.
+                                                             back_step = runs_reverse ? graph.get_previous_step(back_step) : graph.get_next_step(back_step);
+                                                         }
             
-            // Now we can record the range to rewrite
-            // Make sure to put it into path-forward order
-            if (runs_reverse) {
+                                                         // Now we can record the range to rewrite
+                                                         // Make sure to put it into path-forward order
+                                                         if (runs_reverse) {
 #ifdef debug
-                std::cerr << "\tGoing to rewrite between " << graph.get_id(graph.get_handle_of_step(front_step)) << " and " << graph.get_id(graph.get_handle_of_step(back_step)) << " backward" << std::endl;
+                                                             std::cerr << "\tGoing to rewrite between " << graph.get_id(graph.get_handle_of_step(front_step)) << " and " << graph.get_id(graph.get_handle_of_step(back_step)) << " backward" << std::endl;
 #endif
-                ranges_to_rewrite.emplace_back(back_step, front_step, true);
-            } else {
+                                                             ranges_to_rewrite.emplace_back(back_step, front_step, true);
+                                                         } else {
             
 #ifdef debug
-                std::cerr << "\tGoing to rewrite between " << graph.get_id(graph.get_handle_of_step(front_step)) << " and " << graph.get_id(graph.get_handle_of_step(back_step)) << std::endl;
+                                                             std::cerr << "\tGoing to rewrite between " << graph.get_id(graph.get_handle_of_step(front_step)) << " and " << graph.get_id(graph.get_handle_of_step(back_step)) << std::endl;
 #endif
-                ranges_to_rewrite.emplace_back(front_step, back_step, false);
-            }
-        });
+                                                             ranges_to_rewrite.emplace_back(front_step, back_step, false);
+                                                         }
+                                                     });
 
         uint64_t i = 0;
         for (auto& range : ranges_to_rewrite) {
@@ -192,27 +190,27 @@ namespace algorithms {
     }
 
     /*
-#ifdef debug
-    std::cerr << "Paths after concat: " << std::endl;
+      #ifdef debug
+      std::cerr << "Paths after concat: " << std::endl;
    
-    graph.for_each_path_handle([&](const path_handle_t p) {
-        std::cerr << graph.get_path_name(p) << ": ";
-        for (auto h : graph.scan_path(p)) {
-            std::cerr << graph.get_id(h) << (graph.get_is_reverse(h) ? '-' : '+') << " ";
-        }
-        std::cerr << std::endl;
-    });
+      graph.for_each_path_handle([&](const path_handle_t p) {
+      std::cerr << graph.get_path_name(p) << ": ";
+      for (auto h : graph.scan_path(p)) {
+      std::cerr << graph.get_id(h) << (graph.get_is_reverse(h) ? '-' : '+') << " ";
+      }
+      std::cerr << std::endl;
+      });
    
-#endif
+      #endif
     */
 
     // Return the new handle we merged to.
     return new_node;
 }
 
-    void unchop(handlegraph::MutablePathDeletableHandleGraph& graph) {
-        unchop(graph, false);
-    }
+void unchop(handlegraph::MutablePathDeletableHandleGraph& graph) {
+    unchop(graph, false);
+}
 
 void unchop(handlegraph::MutablePathDeletableHandleGraph& graph, const bool& show_info) {
 #ifdef debug
