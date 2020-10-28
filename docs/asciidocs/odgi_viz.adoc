@@ -69,6 +69,11 @@ please refer to <<odgi_bin.adoc#_odgi_bin1, odgi bin>>.
   List of paths to display in the specified order; the file must contain one path name per line and a subset of all
   paths can be specified.
 
+*-z, --color-by-mean-inversion-rate*::
+Change the color respect to the node strandness (black for forward, red for reverse); in binned mode (*-b, --binned-mode*),
+change the color respect to the mean inversion rate of the path for each bin, from black (no inversions) to red (bin
+mean inversion rate equals to 1).
+
 
 === Path names visualization Options
 
@@ -94,18 +99,14 @@ Maximum number of characters to display for each path name. The default value is
 
 *-g, --no-gap-links*::
   We divide links into 2 classes:
-  1. Class: The links which help to follow complex variations. They need to be drawn, else one could not follow
-  the sequence of a path.
-  2. Class: The links helping to follow simple variations. Such links solely connecting a path from left to right may not
-  be relevant to understand a path's traversal through the bins. Therefore, they are not drawn in the binned mode.
+  1. the links which help to follow complex variations. They need to be drawn, else one could not follow the sequence of a path.
+  2. the links helping to follow simple variations. These links are called *gap-links*. Such links solely connecting a
+  path from left to right may not be relevant to understand a path's traversal through the bins. Therefore, when this option
+  is set, the gap-links are not drawn in binned mode.
 
 *-m, --color-by-mean-coverage*::
   Change the color respect to the mean coverage of the path for each bin, from black (no coverage) to blue (max bin mean
   coverage in the entire graph).
-
-*-z, --color-by-mean-inversion-rate*::
-  Change the color respect to the mean inversion rate of the path for each bin, from black (no inversions) to red (bin
-  mean inversion rate equals to 1).
 
 
 === Gradient Mode (also known as Position Mode) Options

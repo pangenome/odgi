@@ -7,10 +7,11 @@
 #include "lodepng.h"
 #include <limits>
 #include "picosha2.h"
-#include <iostream>
 #include "algorithms/draw.hpp"
 
 //#define debug_odgi_viz
+
+#define RGB_BIN_LINKS 110
 
 #include "fonts/font5x8.h"
 
@@ -45,6 +46,7 @@ namespace odgi {
         args::ValueFlag<float> link_path_pieces(parser, "FLOAT","show thin links of this relative width to connect path pieces",{'L', "link-path-pieces"});
         args::ValueFlag<std::string> alignment_prefix(parser, "STRING","apply alignment-related visual motifs to paths with this name prefix (it affects the -S and -d options)",{'A', "alignment-prefix"});
         args::Flag show_strands(parser, "bool","use reds and blues to show forward and reverse alignments",{'S', "show-strand"});
+        args::Flag color_by_mean_inversion_rate(parser, "color-by-mean-inversion-rate", "change the color respect to the node strandness (black for forward, red for reverse); in binned mode, change the color respect to the mean inversion rate of the path for each bin, from black (no inversions) to red (bin mean inversion rate equals to 1)", {'z', "color-by-mean-inversion-rate"});
 
         args::ValueFlag<std::string> path_names_file(parser, "FILE", "list of paths to display in the specified order; the file must contain one path name per line and a subset of all paths can be specified.", {'p', "paths-to-display"});
 
@@ -58,7 +60,6 @@ namespace odgi {
         args::ValueFlag<uint64_t> bin_width(parser, "bp", "width of each bin in basepairs along the graph vector",{'w', "bin-width"});
         args::Flag drop_gap_links(parser, "drop-gap-links", "don't include gap links in the output", {'g', "no-gap-links"});
         args::Flag color_by_mean_coverage(parser, "color-by-mean-coverage", "change the color respect to the mean coverage of the path for each bin, from black (no coverage) to blue (max bin mean coverage in the entire graph)", {'m', "color-by-mean-coverage"});
-        args::Flag color_by_mean_inversion_rate(parser, "color-by-mean-inversion-rate", "change the color respect to the mean inversion rate of the path for each bin, from black (no inversions) to red (bin mean inversion rate equals to 1)", {'z', "color-by-mean-inversion-rate"});
 
         /// Gradient mode
         args::Flag change_darkness(parser, "change-darkness", "change the color darkness based on nucleotide position in the path", {'d', "change-darkness"});
@@ -97,11 +98,11 @@ namespace odgi {
         if (
                 !args::get(binned_mode) &&
                 ((args::get(bin_width) > 0) || args::get(drop_gap_links) ||
-                args::get(color_by_mean_coverage) || args::get(color_by_mean_inversion_rate))
+                args::get(color_by_mean_coverage))
                 ){
             std::cerr
                     << "[odgi viz] error: Please specify the -b/--binned-mode option to use the "
-                       "-w/--bin_width, -g/--no-gap-links, -m/--color-by-mean-coverage, and -z/--color-by-mean-inversion "
+                       "-w/--bin_width, -g/--no-gap-links, and -m/--color-by-mean-coverage "
                        "options."
                     << std::endl;
             return 1;
@@ -346,7 +347,7 @@ namespace odgi {
             image[4 * width * y + 4 * x + 3] = 255;
         };
 
-        auto add_edge_from_positions = [&](uint64_t a, const uint64_t b) {
+        auto add_edge_from_positions = [&](uint64_t a, const uint64_t b, uint8_t rgb) {
 #ifdef debug_odgi_viz
             std::cerr << "Edge displayed" << std::endl;
             std::cerr << a << " --> " << b << std::endl;
@@ -357,14 +358,14 @@ namespace odgi {
             uint64_t i = 0;
 
             for (; i < dist; i += 1 / scale_y) {
-                add_point(a, i, 0, 0, 0);
+                add_point(a, i, rgb, rgb, rgb);
             }
             while (a <= b) {
-                add_point(a, i, 0, 0, 0);
+                add_point(a, i, rgb, rgb, rgb);
                 a += 1 / scale_x;
             }
             for (uint64_t j = 0; j < dist; j += 1 / scale_y) {
-                add_point(b, j, 0, 0, 0);
+                add_point(b, j, rgb, rgb, rgb);
             }
         };
 
@@ -378,7 +379,7 @@ namespace odgi {
             std::cerr << graph.get_id(h) << " (" << number_bool_packing::unpack_bit(h) << ") --> " << b << " (" << number_bool_packing::unpack_bit(h) << ") " << std::endl;
 #endif
 
-            add_edge_from_positions(a, b);
+            add_edge_from_positions(a, b, 0);
         };
 
         {
@@ -414,7 +415,7 @@ namespace odgi {
 #ifdef debug_odgi_viz
                                 std::cerr << "position in map (" << p  << ") - curr_bin: " << curr_bin << std::endl;
 #endif
-                                add_point(curr_bin - 1, 0, 0, 0, 0);
+                                add_point(curr_bin - 1, 0, RGB_BIN_LINKS, RGB_BIN_LINKS, RGB_BIN_LINKS);
                             }
 
                             last_bin = curr_bin;
@@ -631,24 +632,22 @@ namespace odgi {
                             path_r_f = path_r_f * 1.2;
                         }
                     } else if (_change_darkness && _white_to_black) {
-                        path_r = 240;
-                        path_g = 240;
-                        path_b = 240;
-                    } else if (_binned_mode) {
-                        if (_color_by_mean_coverage) {
-                            path_r = 0;
-                            path_g = 0;
-                            path_b = 255;
-                        } else if (_color_by_mean_inversion_rate) {
-                            path_r = 255;
-                            path_g = 0;
-                            path_b = 0;
-                        }
+                        path_r = 220;
+                        path_g = 220;
+                        path_b = 220;
+                    } else if (_binned_mode && _color_by_mean_coverage) {
+                        path_r = 0;
+                        path_g = 0;
+                        path_b = 255;
+                    } else if (_color_by_mean_inversion_rate) {
+                        path_r = 255;
+                        path_g = 0;
+                        path_b = 0;
                     }
                 }
 
                 if (!(
-                        is_aln && (( _change_darkness && _white_to_black) || (_binned_mode && (_color_by_mean_coverage || _color_by_mean_inversion_rate || _change_darkness)))
+                        is_aln && (( _change_darkness && _white_to_black) || _color_by_mean_inversion_rate || (_binned_mode && (_color_by_mean_coverage || _change_darkness)))
                         )) {
                     // brighten the color
                     float f = std::min(1.5, 1.0 / std::max(std::max(path_r_f, path_g_f), path_b_f));
@@ -783,7 +782,7 @@ namespace odgi {
                                 edges_drawn.insert(pair);
 
                                 // add contents for the edge
-                                add_edge_from_positions(a, b);
+                                add_edge_from_positions(a, b, RGB_BIN_LINKS);
                             }
                         }
                     }
@@ -796,10 +795,19 @@ namespace odgi {
                         // make contects for the bases in the node
                         uint64_t path_y = path_layout_y[path_rank];
                         for (uint64_t i = 0; i < hl; i+=1/scale_x) {
-                            if (is_aln && _change_darkness){
-                                uint64_t ii = graph.get_is_reverse(h) ? (hl - i) : i;
-                                x = 1 - ((float)(curr_len + ii*scale_x) / (float)(path_len_to_use))*0.9;
+                            if (is_aln) {
+                                if (_change_darkness){
+                                    uint64_t ii = graph.get_is_reverse(h) ? (hl - i) : i;
+                                    x = 1 - ((float)(curr_len + ii*scale_x) / (float)(path_len_to_use))*0.9;
+                                } else if (_color_by_mean_inversion_rate) {
+                                    if (graph.get_is_reverse(h)) {
+                                        path_r = 255;
+                                    } else {
+                                        path_r = 0;
+                                    }
+                                };
                             }
+
                             add_path_step(image, width, p+i, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
                         }
 
@@ -831,7 +839,8 @@ namespace odgi {
         });
 
         if (args::get(drop_gap_links)) {
-            std::cerr << "Gap links removed: " << gap_links_removed << " (" << path_count << " path start links + "
+            std::cerr << std::setprecision(4) << "Gap links removed: " << (100.0 *  ((double)gap_links_removed / (double)total_links))
+            << "%, that is " << gap_links_removed << " gap links (" << path_count << " path start links + "
             << path_count << " path end links + " << (gap_links_removed - path_count * 2) << " inner gap links) of "
             << total_links << " total links" << std::endl;
         }
