@@ -117,10 +117,8 @@ TEST_CASE("Unchop reduces a graph that makes a simple loop", "[simplify]") {
     // sort the graph
     graph.apply_ordering(algorithms::topological_order(&graph), true);
     SECTION("The graph is as expected") {
-        REQUIRE(graph.get_sequence(graph.get_handle(1)) == "CAAATAAG");
-        REQUIRE(graph.get_sequence(graph.get_handle(2)) == "AGTCTTG");
-        REQUIRE(graph.has_edge(graph.get_handle(1), graph.get_handle(2)));
-        REQUIRE(graph.has_edge(graph.get_handle(2), graph.get_handle(1)));
+        REQUIRE(graph.get_sequence(graph.get_handle(1)) == "CAAATAAGAGTCTTG");
+        REQUIRE(graph.has_edge(graph.get_handle(1), graph.get_handle(1)));
     }
 }
 

@@ -65,8 +65,15 @@ std::vector<std::vector<handle_t>> simple_components(
 
     // now we combine and order the nodes in each dset
     std::vector<std::vector<handle_t>> handle_components;
+    //std::cerr << "processing components" << std::endl;
     for (auto& c : simple_components) {
+        //std::cerr << "on component " << i++ << std::endl;
         auto& comp = c.second;
+        std::sort(
+            comp.begin(), comp.end(),
+            [&](const handle_t& a, const handle_t& b) {
+                return as_integer(a) > as_integer(b);
+            });
         assert(comp.size());
         if (comp.size() >= min_size) {
             // start somewhere
@@ -74,6 +81,7 @@ std::vector<std::vector<handle_t>> simple_components(
             for (auto& h : comp) comp_set.insert(as_integer(h));
             handle_t h = comp.front();
             handle_t base = h; // so we don't loop endlessly in self-linking components
+            //std::cerr << "base is " << graph.get_id(base) << std::endl;
             bool has_prev = false;
             do {
                 has_prev = graph.get_degree(h, true) == 1;
@@ -84,12 +92,14 @@ std::vector<std::vector<handle_t>> simple_components(
                 if (h != prev
                     && prev != base
                     && comp_set.count(as_integer(prev))) {
+                    //std::cerr << "continuing to prev = " << graph.get_id(prev) << std::endl;
                     h = prev;
                 } else {
+                    //std::cerr << "breaking at prev = " << graph.get_id(prev) << std::endl;
                     has_prev = false;
                 }
             } while (has_prev);
-
+            base = h; // reset base
             //std::cerr << "Front is " << graph.get_id(h) << std::endl;
             handle_components.emplace_back();
             auto& sorted_comp = handle_components.back();
@@ -104,8 +114,10 @@ std::vector<std::vector<handle_t>> simple_components(
                 if (h != next
                     && next != base
                     && comp_set.count(as_integer(next))) {
+                    //std::cerr << "continuing to next = " << graph.get_id(next) << std::endl;
                     h = next;
                 } else {
+                    //std::cerr << "breaking at next = " << graph.get_id(next) << std::endl;
                     has_next = false;
                 }
             } while (has_next);
