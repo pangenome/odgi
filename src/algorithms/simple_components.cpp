@@ -8,6 +8,7 @@ using namespace handlegraph;
 
 // the set of components that could be merged into single nodes without changing the path space of the graph
 std::vector<std::vector<handle_t>> simple_components(
+    // todo unused return_all_handles
     const PathHandleGraph &graph, const uint64_t& min_size, const bool& return_all_handles, const uint64_t& nthreads) {
 
     std::vector<uint64_t> data; data.reserve(graph.get_node_count()*2);
@@ -16,36 +17,36 @@ std::vector<std::vector<handle_t>> simple_components(
             data.push_back(as_integer(handle));
             data.push_back(as_integer(graph.flip(handle)));
         });
-    boophf_uint64_t bphf(data.size(),data,nthreads,2.0,false,false);
+    boophf_uint64_t bphf(data.size(),data,nthreads,2.0,false,false); // mapping structure for original node ids
 
     // todo check if we should or shouldn't use the gcc atomic primitives
-    std::vector<DisjointSets::Aint> simple_data(data.size()+1);
+    std::vector<DisjointSets::Aint> simple_data(data.size()+1); // maps into this set of disjoint sets
     auto simple_dset = DisjointSets(simple_data.data(), simple_data.size());
-
-    auto self_unite =
-        [&](const handle_t& h) {
-            uint64_t h_i = bphf.lookup(as_integer(h));
-            uint64_t h_j = bphf.lookup(as_integer(graph.flip(h)));
-            simple_dset.unite(h_i, h_j);
-        };
 
     bool in_parallel = nthreads > 1;
     uint64_t curr_threads = get_thread_count();
     if (in_parallel) omp_set_num_threads(nthreads);
+
+    graph.for_each_handle(
+        [&](const handle_t& h) {
+            uint64_t h_i = bphf.lookup(as_integer(h));
+            uint64_t h_j = bphf.lookup(as_integer(graph.flip(h)));
+            simple_dset.unite(h_i, h_j);
+        }, in_parallel);
+
     graph.for_each_edge(
         [&](const edge_t& edge) {
             const handle_t& from = edge.first;
             const handle_t& to = edge.second;
-            // unite the handles with themselves
-            self_unite(from);
-            self_unite(to);
             if (graph.get_id(from) != graph.get_id(to)) {
                 // check if they can be linked across the edge
                 if (graph.get_degree(from, false) == 1
-                    && graph.get_degree(to, true) == 1
+                    && graph.get_degree(to, true) == 1 // this must be the only edge connecting these node ends
+                    // and their path sets are contiguous across the edge
                     && nodes_are_perfect_path_neighbors(graph, from, to)) {
                     //std::cerr << "would merge " << graph.get_id(from)
                     //          << " with " << graph.get_id(to) << std::endl;
+                    // get indexes in union-find structure
                     uint64_t from_i = bphf.lookup(as_integer(from));
                     uint64_t to_i = bphf.lookup(as_integer(to));
                     //std::cerr << "indexes " << from_i << " and " << to_i << std::endl;
@@ -69,6 +70,7 @@ std::vector<std::vector<handle_t>> simple_components(
     for (auto& c : simple_components) {
         //std::cerr << "on component " << i++ << std::endl;
         auto& comp = c.second;
+        // sorting to get the highest id as our starting handle
         std::sort(
             comp.begin(), comp.end(),
             [&](const handle_t& a, const handle_t& b) {

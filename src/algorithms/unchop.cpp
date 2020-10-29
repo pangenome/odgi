@@ -333,6 +333,8 @@ void unchop(handlegraph::MutablePathDeletableHandleGraph& graph,
         }
     }
 
+    // todo try sorting again
+    
     if (show_info){
         std::cerr << "[odgi::unchop] unchopped " << num_node_unchopped << " nodes into " << num_new_nodes << " new nodes." << std::endl;
     }
