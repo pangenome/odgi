@@ -73,6 +73,7 @@ std::vector<std::vector<handle_t>> simple_components(
             ska::flat_hash_set<uint64_t> comp_set;
             for (auto& h : comp) comp_set.insert(as_integer(h));
             handle_t h = comp.front();
+            handle_t base = h; // so we don't loop endlessly in self-linking components
             bool has_prev = false;
             do {
                 has_prev = graph.get_degree(h, true) == 1;
@@ -80,7 +81,9 @@ std::vector<std::vector<handle_t>> simple_components(
                 if (has_prev) {
                     graph.follow_edges(h, true, [&](const handle_t& p) { prev = p; });
                 }
-                if (comp_set.count(as_integer(prev))) {
+                if (h != prev
+                    && prev != base
+                    && comp_set.count(as_integer(prev))) {
                     h = prev;
                 } else {
                     has_prev = false;
@@ -98,7 +101,9 @@ std::vector<std::vector<handle_t>> simple_components(
                 if (has_next) {
                     graph.follow_edges(h, false, [&](const handle_t& n) { next = n; });
                 }
-                if (comp_set.count(as_integer(next))) {
+                if (h != next
+                    && next != base
+                    && comp_set.count(as_integer(next))) {
                     h = next;
                 } else {
                     has_next = false;
