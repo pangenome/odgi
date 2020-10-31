@@ -260,11 +260,11 @@ handle_t combine_handles(handlegraph::MutablePathDeletableHandleGraph& graph,
     return combined;
 }
 
-void unchop(handlegraph::MutablePathDeletableHandleGraph& graph) {
-    unchop(graph, 1, false);
+bool unchop(handlegraph::MutablePathDeletableHandleGraph& graph) {
+    return unchop(graph, 1, false);
 }
 
-void unchop(handlegraph::MutablePathDeletableHandleGraph& graph,
+bool unchop(handlegraph::MutablePathDeletableHandleGraph& graph,
             const uint64_t& nthreads,
             const bool& show_info) {
 
@@ -349,6 +349,7 @@ void unchop(handlegraph::MutablePathDeletableHandleGraph& graph,
     graph.apply_ordering(handle_order, true);
 
     // validate the paths
+    bool ok = true;
     graph.for_each_path_handle(
         [&](const path_handle_t& p) {
             std::string seq;
@@ -357,10 +358,15 @@ void unchop(handlegraph::MutablePathDeletableHandleGraph& graph,
                 [&](const step_handle_t& s) {
                     seq.append(graph.get_sequence(graph.get_handle_of_step(s)));
                 });
-            assert(seq == path_seqs[graph.get_path_name(p)]);
-            //std::cerr << "is seq " << graph.get_path_name(p) << " ok? " << (seq == path_seqs[graph.get_path_name(p)]) << std::endl;
+            if (seq != path_seqs[graph.get_path_name(p)]) {
+                std::cerr << "[odgi::algorithms::unchop] failure in unchop" << std::endl;
+                std::cerr << ">expected_" << graph.get_path_name(p) << std::endl << path_seqs[graph.get_path_name(p)] << std::endl
+                          << ">got_" << graph.get_path_name(p) << std::endl << seq << std::endl;
+                ok = false;
+            }
         });
 
+    return ok;
 }
 
 

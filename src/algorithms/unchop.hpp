@@ -18,7 +18,7 @@ using namespace handlegraph;
  * compatible path steps together.
  * @param graph
  */
-void unchop(handlegraph::MutablePathDeletableHandleGraph& graph);
+bool unchop(handlegraph::MutablePathDeletableHandleGraph& graph);
 
 /**
  * Unchop by gluing abutting handles with just a single edge between them and
@@ -27,7 +27,7 @@ void unchop(handlegraph::MutablePathDeletableHandleGraph& graph);
  * @param show_info
  */
 
-void unchop(handlegraph::MutablePathDeletableHandleGraph& graph,
+bool unchop(handlegraph::MutablePathDeletableHandleGraph& graph,
             const uint64_t& nthreads,
             const bool& show_info);
 
