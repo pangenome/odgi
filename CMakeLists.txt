@@ -318,7 +318,6 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/odgi.cpp
   ${CMAKE_SOURCE_DIR}/src/position.cpp
   ${CMAKE_SOURCE_DIR}/src/gfa_to_handle.cpp
-  ${CMAKE_SOURCE_DIR}/src/threads.cpp
   ${CMAKE_SOURCE_DIR}/src/split.cpp
   ${CMAKE_SOURCE_DIR}/src/node.cpp
   ${CMAKE_SOURCE_DIR}/src/subgraph.cpp
@@ -483,7 +482,6 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/varint.hpp
   ${CMAKE_SOURCE_DIR}/src/dna.hpp
   ${CMAKE_SOURCE_DIR}/src/phf.hpp
-  ${CMAKE_SOURCE_DIR}/src/threads.hpp
   ${CMAKE_SOURCE_DIR}/src/bgraph.hpp
   ${CMAKE_SOURCE_DIR}/src/gfa_to_handle.hpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/subcommand.hpp
