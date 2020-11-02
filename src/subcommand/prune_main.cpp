@@ -1,7 +1,7 @@
 #include "subcommand.hpp"
 #include "odgi.hpp"
 #include "args.hxx"
-#include "threads.hpp"
+#include <omp.h>
 #include "algorithms/prune.hpp"
 #include "algorithms/coverage.hpp"
 #include "algorithms/remove_high_degree.hpp"
@@ -84,15 +84,15 @@ int main_prune(int argc, char** argv) {
         }
     }
 
-    if (args::get(threads)) {
-        omp_set_num_threads(args::get(threads));
-    }
+    int n_threads = threads ? args::get(threads) : 1;
+    omp_set_num_threads(n_threads);
+
     if (args::get(max_degree)) {
         graph.clear_paths();
         algorithms::remove_high_degree_nodes(graph, args::get(max_degree));
     }
     if (args::get(max_furcations)) {
-        std::vector<edge_t> to_prune = algorithms::find_edges_to_prune(graph, args::get(kmer_length), args::get(max_furcations));
+        std::vector<edge_t> to_prune = algorithms::find_edges_to_prune(graph, args::get(kmer_length), args::get(max_furcations), n_threads);
         //std::cerr << "edges to prune: " << to_prune.size() << std::endl;
         for (auto& edge : to_prune) {
             graph.destroy_edge(edge);

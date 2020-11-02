@@ -6,7 +6,7 @@
 #include "split.hpp"
 //#include "io_helper.hpp"
 #include "position.hpp"
-#include "threads.hpp"
+#include <omp.h>
 
 namespace odgi {
 

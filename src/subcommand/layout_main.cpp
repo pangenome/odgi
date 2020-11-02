@@ -2,7 +2,7 @@
 #include <iostream>
 #include "odgi.hpp"
 #include "args.hxx"
-#include "threads.hpp"
+#include <omp.h>
 #include "algorithms/xp.hpp"
 #include "algorithms/sgd_layout.hpp"
 #include "algorithms/path_sgd_layout.hpp"

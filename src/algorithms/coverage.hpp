@@ -4,7 +4,7 @@
 #include <vector>
 #include <map>
 #include <algorithm>
-#include "threads.hpp"
+#include <omp.h>
 #include "hash_map.hpp"
 #include <handlegraph/types.hpp>
 #include <handlegraph/iteratee.hpp>

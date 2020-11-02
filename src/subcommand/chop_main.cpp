@@ -1,7 +1,7 @@
 #include "subcommand.hpp"
 #include "odgi.hpp"
 #include "args.hxx"
-#include "threads.hpp"
+#include <omp.h>
 #include "algorithms/chop.hpp"
 
 namespace odgi {

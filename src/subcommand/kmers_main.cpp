@@ -2,7 +2,7 @@
 #include "odgi.hpp"
 #include "algorithms/kmer.hpp"
 #include "args.hxx"
-#include "threads.hpp"
+#include <omp.h>
 #include "algorithms/hash.hpp"
 #include "phf.hpp"
 #include "algorithms/prune.hpp"
@@ -70,9 +70,10 @@ int main_kmers(int argc, char** argv) {
             f.close();
         }
     }
-    if (args::get(threads)) {
-        omp_set_num_threads(args::get(threads));
-    }
+
+    int n_threads = threads ? args::get(threads) : 1;
+    omp_set_num_threads(n_threads);
+
     if (args::get(max_degree)) {
         algorithms::remove_high_degree_nodes(graph, args::get(max_degree));
     }
@@ -86,7 +87,7 @@ int main_kmers(int argc, char** argv) {
         std::cerr << "done prune" << std::endl;
     }
     */
-    std::vector<std::vector<kmer_t>> buffers(get_thread_count());
+    std::vector<std::vector<kmer_t>> buffers(n_threads);
     if (args::get(kmers_stdout)) {
         algorithms::for_each_kmer(graph, args::get(kmer_length), args::get(max_furcations), [&](const kmer_t& kmer) {
                 int tid = omp_get_thread_num();
@@ -133,7 +134,7 @@ int main_kmers(int argc, char** argv) {
         std::cerr << std::endl;
         std::sort(kmers.begin(), kmers.end());
         kmers.erase(std::unique(kmers.begin(), kmers.end()), kmers.end());
-        boophf_t * bphf = new boomphf::mphf<uint64_t,hasher_t>(kmers.size(),kmers,get_thread_count());
+        boophf_t * bphf = new boomphf::mphf<uint64_t,hasher_t>(kmers.size(),kmers,n_threads);
         //kmers.clear();
         std::cerr << "querying kmers" << std::endl;
         chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();

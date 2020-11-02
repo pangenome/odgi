@@ -4,7 +4,7 @@
 #include <vector>
 #include <set>
 #include <unordered_set>
-#include "threads.hpp"
+#include <omp.h>
 #include <handlegraph/types.hpp>
 #include <handlegraph/util.hpp>
 #include <handlegraph/path_handle_graph.hpp>

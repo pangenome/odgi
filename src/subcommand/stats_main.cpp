@@ -5,7 +5,7 @@
 #include "args.hxx"
 #include "split.hpp"
 //#include "io_helper.hpp"
-#include "threads.hpp"
+#include <omp.h>
 #include "algorithms/layout.hpp"
 
 //#define debug_odgi_stats

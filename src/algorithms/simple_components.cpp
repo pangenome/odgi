@@ -24,8 +24,6 @@ std::vector<std::vector<handle_t>> simple_components(
     auto simple_dset = DisjointSets(simple_data.data(), simple_data.size());
 
     bool in_parallel = nthreads > 1;
-    uint64_t curr_threads = get_thread_count();
-    if (in_parallel) omp_set_num_threads(nthreads);
 
     graph.for_each_handle(
         [&](const handle_t& h) {
@@ -54,7 +52,6 @@ std::vector<std::vector<handle_t>> simple_components(
                 }
             }
         }, in_parallel);
-    if (in_parallel) omp_set_num_threads(curr_threads);
 
     ska::flat_hash_map<uint64_t, std::vector<handle_t>> simple_components;
     graph.for_each_handle(
