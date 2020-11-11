@@ -308,7 +308,7 @@ namespace odgi {
         image.resize(width * (height + path_space) * 4, 255);
 
         std::vector<uint8_t> image_path_names;
-        if (!args::get(hide_path_names) && pix_per_path >= 8) {
+        if (!args::get(hide_path_names) && !args::get(pack_paths) && pix_per_path >= 8) {
             uint64_t _max_num_of_chars = std::numeric_limits<uint64_t>::min();
             graph.for_each_path_handle([&](const path_handle_t &path) {
                 uint64_t path_rank = as_integer(path) - 1;
