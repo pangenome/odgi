@@ -54,7 +54,7 @@ namespace odgi {
         args::Flag show_strands(parser, "bool","use reds and blues to show forward and reverse alignments",{'S', "show-strand"});
         args::Flag color_by_mean_inversion_rate(parser, "color-by-mean-inversion-rate", "change the color respect to the node strandness (black for forward, red for reverse); in binned mode, change the color respect to the mean inversion rate of the path for each bin, from black (no inversions) to red (bin mean inversion rate equals to 1)", {'z', "color-by-mean-inversion-rate"});
 
-        args::ValueFlag<char> _color_by_prefix_before_separator(parser, "STRING", "colors paths by their names looking at the prefix before the specified separator",{'s', "separator-before-prefix"});
+        args::ValueFlag<char> _color_by_prefix(parser, "C", "colors paths by their names looking at the prefix before the given character C",{'s', "color-by-prefix"});
 
         /// Horizontal selection
         args::ValueFlag<std::string> path_names_file(parser, "FILE", "list of paths to display in the specified order; the file must contain one path name per line and a subset of all paths can be specified.", {'p', "paths-to-display"});
@@ -347,8 +347,8 @@ namespace odgi {
         }
 
         char path_name_prefix_separator = '\0';
-        if (_color_by_prefix_before_separator) {
-            path_name_prefix_separator = args::get(_color_by_prefix_before_separator);
+        if (_color_by_prefix) {
+            path_name_prefix_separator = args::get(_color_by_prefix);
         }
 
         auto add_point = [&](const uint64_t &_x, const uint64_t &_y,
@@ -561,7 +561,7 @@ namespace odgi {
                 }
                 // use a sha256 to get a few bytes that we'll use for a color
                 picosha2::byte_t hashed[picosha2::k_digest_size];
-                if (_color_by_prefix_before_separator) {
+                if (_color_by_prefix) {
                     std::string path_name_prefix = prefix(path_name, path_name_prefix_separator);
                     picosha2::hash256(path_name_prefix.begin(), path_name_prefix.end(), hashed, hashed + picosha2::k_digest_size);
                 } else {
