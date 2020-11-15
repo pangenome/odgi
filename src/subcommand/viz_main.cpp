@@ -56,7 +56,7 @@ namespace odgi {
 
         args::ValueFlag<char> _color_by_prefix(parser, "C", "colors paths by their names looking at the prefix before the given character C",{'s', "color-by-prefix"});
 
-        /// Horizontal selection
+        /// Paths selection
         args::ValueFlag<std::string> path_names_file(parser, "FILE", "list of paths to display in the specified order; the file must contain one path name per line and a subset of all paths can be specified.", {'p', "paths-to-display"});
 
         /// Path names
