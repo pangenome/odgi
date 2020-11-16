@@ -124,10 +124,10 @@ namespace odgi {
             return 1;
         }
 
-        if (args::get(show_strands) + args::get(white_to_black) + args::get(color_by_mean_coverage)  + args::get(color_by_mean_inversion_rate) > 1) {
+        if ((args::get(_color_by_prefix) != 0) + args::get(show_strands) + args::get(white_to_black) + args::get(color_by_mean_coverage) + args::get(color_by_mean_inversion_rate) > 1) {
             std::cerr
                     << "[odgi viz] error: Please specify only one of the following options: "
-                       "-S/--show-strand, -u/--white-to-black, "
+                       "-s/--color-by-prefix, -S/--show-strand, -u/--white-to-black, "
                        "-m/--color-by-mean-coverage, and -z/--color-by-mean-inversion."
                     << std::endl;
             return 1;
