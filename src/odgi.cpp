@@ -736,15 +736,20 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
         order = &order_in;
     }
     // nodes
-    std::vector<nid_t> ids;
+
     uint64_t max_handle_rank = 0;
     uint64_t min_handle_rank = std::numeric_limits<uint64_t>::max();
-    for_each_handle([&](const handle_t& handle) {
-        max_handle_rank = std::max(max_handle_rank,
-                                   number_bool_packing::unpack_number(handle));
-        min_handle_rank = std::min(min_handle_rank,
-                                   number_bool_packing::unpack_number(handle));
-    });
+    {
+        uint64_t tmp;
+        for_each_handle([&](const handle_t& handle) {
+            tmp = number_bool_packing::unpack_number(handle);
+
+            max_handle_rank = std::max(max_handle_rank, tmp);
+            min_handle_rank = std::min(min_handle_rank, tmp);
+        });
+    }
+
+    std::vector<nid_t> ids;
     ids.resize(max_handle_rank - min_handle_rank + 1);
     // establish id mapping
     if (compact_ids) {
@@ -752,24 +757,31 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
             ids[number_bool_packing::unpack_number(order->at(i)) - min_handle_rank] = i+1;
         }
     } else {
-        for (uint64_t i = 0; i < order->size(); ++i) {
-            auto& handle = order->at(i);
+        for (auto handle : *order) {
             ids[number_bool_packing::unpack_number(handle) - min_handle_rank] = get_id(handle);
         }
     }
     // nodes
     for (auto& handle : *order) {
-        ordered.create_handle(get_sequence(handle),
-                              ids[number_bool_packing::unpack_number(handle) - min_handle_rank]);
+        ordered.create_handle(
+                get_sequence(handle),
+                ids[number_bool_packing::unpack_number(handle) - min_handle_rank]
+        );
     }
     // edges
     for (auto& handle : *order) {
         node_t& node = node_v.at(number_bool_packing::unpack_number(handle));        
         follow_edges(handle, false, [&](const handle_t& h) {
-                ordered.create_edge(ordered.get_handle(ids[number_bool_packing::unpack_number(handle) - min_handle_rank],
-                                                       get_is_reverse(handle)),
-                                    ordered.get_handle(ids[number_bool_packing::unpack_number(h) - min_handle_rank],
-                                                       get_is_reverse(h)));
+                ordered.create_edge(
+                        ordered.get_handle(
+                                ids[number_bool_packing::unpack_number(handle) - min_handle_rank],
+                                get_is_reverse(handle)
+                                ),
+                                ordered.get_handle(
+                                        ids[number_bool_packing::unpack_number(h) - min_handle_rank],
+                                        get_is_reverse(h)
+                                )
+                        );
             });
         follow_edges(handle, true, [&](const handle_t& h) {
                 ordered.create_edge(ordered.get_handle(ids[number_bool_packing::unpack_number(h) - min_handle_rank],
