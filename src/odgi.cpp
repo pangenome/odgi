@@ -791,14 +791,81 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
             });
     }
     // paths
-    for_each_path_handle([&](const path_handle_t& old_path) {
+    /*for_each_path_handle([&](const path_handle_t& old_path) {
             path_handle_t new_path = ordered.create_path_handle(get_path_name(old_path));
             for_each_step_in_path(old_path, [&](const step_handle_t& step) {
                     handle_t old_handle = get_handle_of_step(step);
-                    handle_t new_handle = ordered.get_handle(ids[number_bool_packing::unpack_number(old_handle) - min_handle_rank],
-                                                             get_is_reverse(old_handle));
+                    handle_t new_handle = ordered.get_handle(
+                            ids[number_bool_packing::unpack_number(old_handle) - min_handle_rank],
+                            get_is_reverse(old_handle)
+                    );
+
                     ordered.append_step(new_path, new_handle);
                 });
+        });*/
+
+    std::mutex node_unavailable_mutex;
+    atomicbitvector::atomic_bv_t node_unavailable(ids.size());
+
+    paryfor::parallel_for<uint64_t>(
+        0, path_metadata_v.size(), 2,
+        [&](uint64_t idx, int tid) {
+            if (path_metadata_v[idx].length > 0) {
+                auto& p = path_metadata_v.at(idx);
+                path_handle_t new_path = ordered.create_path_handle(p.name);
+
+                step_handle_t step = p.first;
+                step_handle_t end_step = p.last;
+
+                do {
+                    // do stuff
+                    handle_t old_handle = get_handle_of_step(step);
+                    uint64_t xxx_handle_num = number_bool_packing::unpack_number(old_handle) - min_handle_rank;
+
+                    // -----------------------
+                    // TODO better LOCK HANDLE
+                    do{
+                        if (node_unavailable_mutex.try_lock()) {
+                            if (!node_unavailable.test(xxx_handle_num)){
+                                node_unavailable.set(xxx_handle_num);
+                                node_unavailable_mutex.unlock();
+                                break;
+                            }
+
+                            node_unavailable_mutex.unlock();
+                        }
+
+                        std::this_thread::sleep_for(1ns);
+                    } while (true);
+                    // -----------------------
+
+                    handle_t new_handle = ordered.get_handle(
+                            ids[xxx_handle_num],
+                            get_is_reverse(old_handle)
+                    );
+                    ordered.append_step(new_path, new_handle);
+
+                    // -----------------------
+                    // TODO better UNLOCK HANDLE
+                    do{
+                        if (node_unavailable_mutex.try_lock()) {
+                            node_unavailable.reset(xxx_handle_num);
+                            node_unavailable_mutex.unlock();
+                            break;
+                        }
+
+                        std::this_thread::sleep_for(1ns);
+                    } while (true);
+                    // -----------------------
+                    
+                    // in circular paths, we'll always have a next step, so we always check if we're at our path's last step
+                    if (step != end_step && has_next_step(step)) {
+                        step = get_next_step(step);
+                    } else {
+                        break;
+                    }
+                } while (true);
+            }
         });
     *this = ordered;
 }
