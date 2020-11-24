@@ -806,11 +806,13 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
 
     // Create paths first to avoid race conditions later
     for (auto &p : path_metadata_v) {
-        ordered.create_path_handle(p.name);
+        if (p.length > 0) {
+            ordered.create_path_handle(p.name);
+        }
     }
 
     std::mutex node_unavailable_mutex;
-    std::vector<atomic<bool>> node_unavailable(ids.size());
+    atomicbitvector::atomic_bv_t node_unavailable(ids.size());
 
     paryfor::parallel_for<uint64_t>(
         0, path_metadata_v.size(), 16,
@@ -825,20 +827,22 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
                 int64_t prec_xxx_handle_num = - 1;
 
                 do {
-                    // do stuff
-                    handle_t old_handle = get_handle_of_step(step);
+                    handle_t old_handle =  as_handle(as_integers(step)[0]);
                     uint64_t xxx_handle_num = number_bool_packing::unpack_number(old_handle) - min_handle_rank;
 
+                    // Lock the current step and the previous one (if present or different from the current one)
                     do {
                         {
                             std::lock_guard<std::mutex> guard(node_unavailable_mutex);
 
-                            if ((prec_xxx_handle_num < 0 || !node_unavailable[prec_xxx_handle_num].load()) &&
-                                (!node_unavailable[xxx_handle_num].load())) {
+                            if (
+                                    (prec_xxx_handle_num < 0 || !node_unavailable.test(prec_xxx_handle_num)) &&
+                                    (!node_unavailable.test(xxx_handle_num))
+                            ) {
                                 if (prec_xxx_handle_num >= 0){
-                                    node_unavailable[prec_xxx_handle_num].store(true);
+                                    node_unavailable.set(prec_xxx_handle_num);
                                 }
-                                node_unavailable[xxx_handle_num].store(true);
+                                node_unavailable.set(xxx_handle_num);
 
                                 break;
                             }
@@ -847,20 +851,19 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
                         std::this_thread::sleep_for(std::chrono::nanoseconds(1));
                     } while (true);
 
-                    handle_t new_handle = ordered.get_handle(
-                            ids[xxx_handle_num],
-                            get_is_reverse(old_handle)
+                    ordered.append_step(
+                            new_path,
+                            // new_handle
+                            ordered.get_handle(
+                                    ids[xxx_handle_num],
+                                    number_bool_packing::unpack_bit(old_handle)
+                            )
                     );
-                    ordered.append_step(new_path, new_handle);
 
-                    //{
-                    //    std::lock_guard<std::mutex> guard(node_unavailable_mutex);
-
-                        if (prec_xxx_handle_num >= 0){
-                            node_unavailable[prec_xxx_handle_num].store(false);
-                        }
-                        node_unavailable[xxx_handle_num].store(false);
-                    //}
+                    if (prec_xxx_handle_num >= 0){
+                        node_unavailable.reset(prec_xxx_handle_num);
+                    }
+                    node_unavailable.reset(xxx_handle_num);
 
                     // in circular paths, we'll always have a next step, so we always check if we're at our path's last step
                     if (step != end_step && has_next_step(step)) {
