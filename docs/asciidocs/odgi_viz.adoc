@@ -91,7 +91,7 @@ paths can be specified.
 
 *-c, --max-num-of-characters*::
   Maximum number of characters to display for each path name (max 128 characters). The default value is
-  _the length of the longest path name_ (up to 128 characters).
+  _the length of the longest path name_ (up to 32 characters).
 
 
 === Binned Mode Options
