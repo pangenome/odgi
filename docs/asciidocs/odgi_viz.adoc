@@ -84,13 +84,14 @@ paths can be specified.
 === Path names visualization Options
 
 *-H, --hide-path-names*::
-Hide the path names on the left of the generated image.
+  Hide the path names on the left of the generated image.
 
 *-C, --color-path-names-background*::
-Color path names background with the same color as paths
+  Color path names background with the same color as paths
 
 *-c, --max-num-of-characters*::
-Maximum number of characters to display for each path name. The default value is _20_.
+  Maximum number of characters to display for each path name (max 128 characters). The default value is
+  _the length of the longest path name_ (up to 128 characters).
 
 
 === Binned Mode Options
