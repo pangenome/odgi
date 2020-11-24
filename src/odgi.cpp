@@ -804,6 +804,11 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
                 });
         });*/
 
+    // Create paths first to avoid race conditions later
+    for (auto &p : path_metadata_v) {
+        ordered.create_path_handle(p.name);
+    }
+
     std::mutex node_unavailable_mutex;
     atomicbitvector::atomic_bv_t node_unavailable(ids.size());
 
@@ -812,7 +817,7 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
         [&](uint64_t idx, int tid) {
             if (path_metadata_v[idx].length > 0) {
                 auto& p = path_metadata_v.at(idx);
-                path_handle_t new_path = ordered.create_path_handle(p.name);
+                path_handle_t new_path = ordered.get_path_handle(p.name);
 
                 step_handle_t step = p.first;
                 step_handle_t end_step = p.last;
