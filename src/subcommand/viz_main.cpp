@@ -198,7 +198,7 @@ namespace odgi {
         });
         position_map[position_map.size() - 1] = len;
 
-        uint64_t max_num_of_characters = args::get(_max_num_of_characters) > 1 ? min(args::get(_max_num_of_characters), (uint64_t) PATH_NAMES_MAX_NUM_OF_CHARACTERS) : 20;
+        uint64_t max_num_of_characters = args::get(_max_num_of_characters) > 1 ? min(args::get(_max_num_of_characters), (uint64_t) PATH_NAMES_MAX_NUM_OF_CHARACTERS) : PATH_NAMES_MAX_NUM_OF_CHARACTERS;
         uint64_t path_count = graph.get_path_count();
         uint64_t pix_per_path = args::get(path_height) ? args::get(path_height) : 10;
         uint64_t pix_per_link = std::max((uint64_t) 1, (uint64_t) std::round(args::get(link_path_pieces) * pix_per_path));
