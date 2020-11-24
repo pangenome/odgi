@@ -827,8 +827,13 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
                 int64_t prec_xxx_handle_num = - 1;
 
                 do {
-                    handle_t old_handle =  as_handle(as_integers(step)[0]);
+                    handle_t old_handle = as_handle(as_integers(step)[0]);
                     uint64_t xxx_handle_num = number_bool_packing::unpack_number(old_handle) - min_handle_rank;
+
+                    handle_t new_handle = ordered.get_handle(
+                            ids[xxx_handle_num],
+                            number_bool_packing::unpack_bit(old_handle)
+                    );
 
                     // Lock the current step and the previous one (if present or different from the current one)
                     do {
@@ -851,14 +856,7 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
                         std::this_thread::sleep_for(std::chrono::nanoseconds(1));
                     } while (true);
 
-                    ordered.append_step(
-                            new_path,
-                            // new_handle
-                            ordered.get_handle(
-                                    ids[xxx_handle_num],
-                                    number_bool_packing::unpack_bit(old_handle)
-                            )
-                    );
+                    ordered.append_step(new_path, new_handle);
 
                     if (prec_xxx_handle_num >= 0){
                         node_unavailable.reset(prec_xxx_handle_num);
