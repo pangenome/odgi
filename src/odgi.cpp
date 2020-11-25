@@ -723,10 +723,6 @@ void graph_t::reassign_node_ids(const std::function<nid_t(const nid_t&)>& get_ne
 /// Reorder the graph's internal structure to match that given.
 /// Optionally compact the id space of the graph to match the ordering, from 1->|ordering|.
 void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact_ids) {
-    apply_ordering(order_in, compact_ids, 1);
-}
-
-void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact_ids, uint64_t num_threads) {
     graph_t ordered;
 
     // if we're given an empty order, just compact the ids based on our ordering
@@ -796,8 +792,13 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
                                                        get_is_reverse(handle)));
             });
     }
+
+    std::cerr << "num_threads: " << _num_threads << std::endl;
+
     // paths
-    if (num_threads <= 1) {
+    if (_num_threads <= 1) {
+        // With a single thread, this implementation is faster
+
         for_each_path_handle([&](const path_handle_t& old_path) {
             path_handle_t new_path = ordered.create_path_handle(get_path_name(old_path));
             for_each_step_in_path(old_path, [&](const step_handle_t& step) {
@@ -823,7 +824,7 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
 
         uint64_t path_metadata_v_size = path_metadata_v.size();
 
-#pragma omp parallel for schedule(static,1) num_threads(num_threads)
+#pragma omp parallel for schedule(static, 1) num_threads(_num_threads)
         for (uint64_t idx = 0; idx < path_metadata_v_size; ++idx) {
             if (path_metadata_v[idx].length > 0) {
                 bool from_left_else_right = (idx & 1);
@@ -1710,6 +1711,11 @@ void graph_t::deserialize_members(std::istream& in) {
         in.read((char*)&v,sizeof(uint64_t));
         path_name_map[string(k)] = v;
     }
+}
+
+
+void graph_t::set_number_of_threads(uint64_t num_threads) {
+    _num_threads = num_threads;
 }
 
 }

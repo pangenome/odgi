@@ -85,7 +85,7 @@ int main_sort(int argc, char** argv) {
     args::ValueFlag<std::string> path_delim(parser, "path-delim", "sort paths in bins by their prefix up to this delimiter", {'D', "path-delim"});
     args::Flag progress(parser, "progress", "display progress of the sort", {'P', "progress"});
     args::Flag optimize(parser, "optimize", "use the MutableHandleGraph::optimize method", {'O', "optimize"});
-    args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel sorters (currently only SGD is supported)", {'t', "threads"});
+    args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel operations", {'t', "threads"});
 
     try {
         parser.ParseCLI(argc, argv);
@@ -141,7 +141,10 @@ int main_sort(int argc, char** argv) {
     double sgd_iter_max = args::get(lsgd_iter_max) ? args::get(lsgd_iter_max) : 30;
     double sgd_eps = args::get(lsgd_eps) ? args::get(lsgd_eps) : 0.01;
     double sgd_delta = args::get(lsgd_delta) ? args::get(lsgd_delta) : 0;
-    uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+
+    const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+    graph.set_number_of_threads(num_threads);
+
     bool sgd_use_paths = args::get(lsgd_use_paths);
     /// path guided linear 1D SGD sort helpers
     // TODO beautify this, maybe put into its own file
@@ -163,6 +166,7 @@ int main_sort(int argc, char** argv) {
                 }
                 return max_path_step_count;
               };
+
     // default parameters
     std::string path_sgd_seed;
     if (p_sgd_seed) {

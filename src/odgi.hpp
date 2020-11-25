@@ -299,8 +299,6 @@ public:
     /// Optionally compact the id space of the graph to match the ordering, from 1->|ordering|.
     void apply_ordering(const std::vector<handle_t>& order, bool compact_ids = false);
 
-    void apply_ordering(const vector<handle_t> &order_in, bool compact_ids, uint64_t num_threads);
-
     /// Organize the graph for better performance and memory use
     void optimize(bool allow_id_reassignment = true);
 
@@ -403,6 +401,8 @@ public:
     /// Load
     void deserialize_members(std::istream& in);
 
+    void set_number_of_threads(uint64_t num_threads);
+
 /// These are the backing data structures that we use to fulfill the above functions
 
 private:
@@ -420,6 +420,8 @@ private:
     nid_t _id_increment = 0;
     /// records nodes that are hidden, but used to compactly store path sequence that has been removed from the node space
     hash_set<uint64_t> graph_id_hidden_set;
+
+    uint64_t _num_threads = 1;
 
     /// edge type conversion
     /// 1 = fwd->fwd, 2 = fwd->rev, 3 = rev->fwd, 4 = rev->rev
