@@ -30,7 +30,7 @@
 #include "hash_map.hpp"
 #include "node.hpp"
 
-#include "paryfor.hpp"
+#include <omp.h>
 #include "atomic_bitvector.hpp"
 #include <mutex>
 

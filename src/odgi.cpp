@@ -2,6 +2,7 @@
 //  graph.cpp
 //  
 
+#include <thread>
 #include "odgi.hpp"
 
 namespace odgi {
@@ -814,13 +815,14 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
     std::mutex node_unavailable_mutex;
     atomicbitvector::atomic_bv_t node_unavailable(ids.size());
 
-    paryfor::parallel_for<uint64_t>(
-        0, path_metadata_v.size(), 16,
-        [&](uint64_t idx, int tid) {
-            if (path_metadata_v[idx].length > 0) {
-                bool from_left_else_right = (tid % 2 == 0);
+    uint64_t path_metadata_v_size = path_metadata_v.size();
 
-                auto& p = path_metadata_v.at(idx);
+#pragma omp parallel for schedule(static,1) num_threads(16)
+   for (uint64_t idx = 0; idx < path_metadata_v_size; ++idx) {
+            if (path_metadata_v[idx].length > 0) {
+                bool from_left_else_right = (idx & 1);
+
+                auto& p = path_metadata_v[idx];
                 step_handle_t step = from_left_else_right ? p.first : p.last;
                 step_handle_t xxx_step = from_left_else_right ? p.last : p.first;
 
@@ -920,8 +922,9 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
                     }
                 } while (true);
             }
-        });
-    *this = ordered;
+        };
+
+   *this = ordered;
 }
 
 void graph_t::apply_path_ordering(const std::vector<path_handle_t>& order) {

@@ -298,16 +298,6 @@ ExternalProject_Add(xoshiro
 ExternalProject_Get_property(xoshiro SOURCE_DIR)
 set(xoshiro_INCLUDE "${SOURCE_DIR}")
 
-# paryfor parallel_for
-ExternalProject_Add(paryfor
-  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/paryfor"
-  UPDATE_COMMAND ""
-  INSTALL_COMMAND ""
-  BUILD_COMMAND ""
-  CONFIGURE_COMMAND "")
-ExternalProject_Get_property(paryfor SOURCE_DIR)
-set(paryfor_INCLUDE "${SOURCE_DIR}")
-
 ExternalProject_Add(atomicbitvector
         SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/atomicbitvector/include"
         UPDATE_COMMAND ""
@@ -446,8 +436,7 @@ set(odgi_DEPS
     mmmulti
     ips4o
     xoshiro
-    atomicqueue
-    paryfor)
+    atomicqueue)
 add_dependencies(odgi_objs ${odgi_DEPS})
 
 set(odgi_INCLUDES
@@ -479,7 +468,6 @@ set(odgi_INCLUDES
   "${random_distributions_INCLUDE}"
   "${dirtyzipf_INCLUDE}"
   "${xoshiro_INCLUDE}"
-  "${paryfor_INCLUDE}"
   "${atomicbitvector_INCLUDE}")
 
 set(odgi_LIBS
