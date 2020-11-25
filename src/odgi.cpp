@@ -723,7 +723,12 @@ void graph_t::reassign_node_ids(const std::function<nid_t(const nid_t&)>& get_ne
 /// Reorder the graph's internal structure to match that given.
 /// Optionally compact the id space of the graph to match the ordering, from 1->|ordering|.
 void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact_ids) {
+    apply_ordering(order_in, compact_ids, 1);
+}
+
+void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact_ids, uint64_t num_threads) {
     graph_t ordered;
+
     // if we're given an empty order, just compact the ids based on our ordering
     const std::vector<handle_t>* order;
     std::vector<handle_t> base_order;
@@ -792,33 +797,34 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
             });
     }
     // paths
-    /*for_each_path_handle([&](const path_handle_t& old_path) {
+    if (num_threads <= 1) {
+        for_each_path_handle([&](const path_handle_t& old_path) {
             path_handle_t new_path = ordered.create_path_handle(get_path_name(old_path));
             for_each_step_in_path(old_path, [&](const step_handle_t& step) {
-                    handle_t old_handle = get_handle_of_step(step);
-                    handle_t new_handle = ordered.get_handle(
-                            ids[number_bool_packing::unpack_number(old_handle) - min_handle_rank],
-                            get_is_reverse(old_handle)
-                    );
+                handle_t old_handle = get_handle_of_step(step);
+                handle_t new_handle = ordered.get_handle(
+                        ids[number_bool_packing::unpack_number(old_handle) - min_handle_rank],
+                        get_is_reverse(old_handle)
+                );
 
-                    ordered.append_step(new_path, new_handle);
-                });
-        });*/
-
-    // Create paths first to avoid race conditions later
-    for (auto &p : path_metadata_v) {
-        if (p.length > 0) {
-            ordered.create_path_handle(p.name);
+                ordered.append_step(new_path, new_handle);
+            });
+        });
+    } else {
+        // Create paths first to avoid race conditions later
+        for (auto &p : path_metadata_v) {
+            if (p.length > 0) {
+                ordered.create_path_handle(p.name);
+            }
         }
-    }
 
-    std::mutex node_unavailable_mutex;
-    atomicbitvector::atomic_bv_t node_unavailable(ids.size());
+        std::mutex node_unavailable_mutex;
+        atomicbitvector::atomic_bv_t node_unavailable(ids.size());
 
-    uint64_t path_metadata_v_size = path_metadata_v.size();
+        uint64_t path_metadata_v_size = path_metadata_v.size();
 
-#pragma omp parallel for schedule(static,1) num_threads(16)
-   for (uint64_t idx = 0; idx < path_metadata_v_size; ++idx) {
+#pragma omp parallel for schedule(static,1) num_threads(num_threads)
+        for (uint64_t idx = 0; idx < path_metadata_v_size; ++idx) {
             if (path_metadata_v[idx].length > 0) {
                 bool from_left_else_right = (idx & 1);
 
@@ -848,7 +854,7 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
                             if (
                                     (prec_xxx_handle_num < 0 || !node_unavailable.test(prec_xxx_handle_num)) &&
                                     (!node_unavailable.test(xxx_handle_num))
-                            ) {
+                                    ) {
                                 if (prec_xxx_handle_num >= 0){
                                     node_unavailable.set(prec_xxx_handle_num);
                                 }
@@ -861,9 +867,7 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
                         std::this_thread::sleep_for(std::chrono::nanoseconds(1));
                     } while (true);
 
-                    //////
-                    //ordered.append_step(new_path, new_handle);
-
+                    //===========================
                     // create the new step
                     step_handle_t new_step = ordered.create_step(new_path, new_handle);
                     if (from_left_else_right) {
@@ -894,7 +898,7 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
 
                     // update our step count
                     ++p_ordered.length;
-                    //////
+                    //===========================
 
                     // Unlock
                     if (prec_xxx_handle_num >= 0){
@@ -923,6 +927,7 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
                 } while (true);
             }
         };
+    }
 
    *this = ordered;
 }

@@ -299,6 +299,8 @@ public:
     /// Optionally compact the id space of the graph to match the ordering, from 1->|ordering|.
     void apply_ordering(const std::vector<handle_t>& order, bool compact_ids = false);
 
+    void apply_ordering(const vector<handle_t> &order_in, bool compact_ids, uint64_t num_threads);
+
     /// Organize the graph for better performance and memory use
     void optimize(bool allow_id_reassignment = true);
 
@@ -503,7 +505,7 @@ private:
     /// get the backing node rank for a given node id
     uint64_t get_node_rank(const nid_t& node_id) const;
 
-};
+    };
 
 const static uint64_t path_begin_marker = 1;
 const static uint64_t path_end_marker = 2;
