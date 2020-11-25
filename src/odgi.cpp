@@ -725,6 +725,8 @@ void graph_t::reassign_node_ids(const std::function<nid_t(const nid_t&)>& get_ne
 void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact_ids) {
     graph_t ordered;
 
+    ordered.set_number_of_threads(_num_threads);
+
     // if we're given an empty order, just compact the ids based on our ordering
     const std::vector<handle_t>* order;
     std::vector<handle_t> base_order;
@@ -737,8 +739,8 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
     } else {
         order = &order_in;
     }
-    // nodes
 
+    // establish id mapping
     uint64_t max_handle_rank = 0;
     uint64_t min_handle_rank = std::numeric_limits<uint64_t>::max();
     {
@@ -753,7 +755,7 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
 
     std::vector<nid_t> ids;
     ids.resize(max_handle_rank - min_handle_rank + 1);
-    // establish id mapping
+
     if (compact_ids) {
         for (uint64_t i = 0; i < order->size(); ++i) {
             ids[number_bool_packing::unpack_number(order->at(i)) - min_handle_rank] = i+1;
@@ -763,6 +765,7 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
             ids[number_bool_packing::unpack_number(handle) - min_handle_rank] = get_id(handle);
         }
     }
+
     // nodes
     for (auto& handle : *order) {
         ordered.create_handle(
@@ -770,6 +773,7 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
                 ids[number_bool_packing::unpack_number(handle) - min_handle_rank]
         );
     }
+
     // edges
     for (auto& handle : *order) {
         node_t& node = node_v.at(number_bool_packing::unpack_number(handle));
@@ -792,8 +796,6 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
                                                        get_is_reverse(handle)));
             });
     }
-
-    std::cerr << "num_threads: " << _num_threads << std::endl;
 
     // paths
     if (_num_threads <= 1) {
@@ -1716,6 +1718,10 @@ void graph_t::deserialize_members(std::istream& in) {
 
 void graph_t::set_number_of_threads(uint64_t num_threads) {
     _num_threads = num_threads;
+}
+
+uint64_t graph_t::get_number_of_threads() {
+    return _num_threads;
 }
 
 }

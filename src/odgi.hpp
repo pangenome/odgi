@@ -403,6 +403,8 @@ public:
 
     void set_number_of_threads(uint64_t num_threads);
 
+    uint64_t get_number_of_threads();
+
 /// These are the backing data structures that we use to fulfill the above functions
 
 private:

@@ -407,6 +407,7 @@ int main_sort(int argc, char** argv) {
                 case 'g': {
                     graph_t groomed;
                     algorithms::groom(graph, groomed, progress);
+                    groomed.set_number_of_threads(graph.get_number_of_threads());
                     graph = groomed;
                     was_groomed = true;
                     break;
