@@ -373,6 +373,8 @@ bool unchop(handlegraph::MutablePathDeletableHandleGraph& graph,
                       << ">got_" << graph.get_path_name(path_handles[rank]) << std::endl << seq << std::endl;
             ok.store(false);
         }
+
+        std::string().swap(path_sequences[rank]);
     }
 
     return ok.load();
