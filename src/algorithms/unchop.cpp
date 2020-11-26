@@ -11,6 +11,7 @@
 #include <set>
 #include <iostream>
 #include <sstream>
+#include <atomic>
 
 namespace odgi {
 namespace algorithms {
@@ -280,16 +281,24 @@ bool unchop(handlegraph::MutablePathDeletableHandleGraph& graph,
         });
 
     // if possible, don't hold these in memory
-    ska::flat_hash_map<std::string, std::string> path_seqs;
-    graph.for_each_path_handle(
-        [&](const path_handle_t& p) {
-            auto& seq = path_seqs[graph.get_path_name(p)];
-            graph.for_each_step_in_path(
-                p,
-                [&](const step_handle_t& s) {
-                    seq.append(graph.get_sequence(graph.get_handle_of_step(s)));
-                });
+    // meanwhile exploit the path handles for parallelizing the paths' validation
+    std::vector<path_handle_t> path_handles;
+    path_handles.resize(graph.get_path_count());
+
+    std::vector<std::string> path_sequences;
+    path_sequences.resize(graph.get_path_count());
+
+    uint64_t rank = 0;
+    graph.for_each_path_handle([&](const path_handle_t& p) {
+        path_handles[rank] = p;
+
+        auto& seq = path_sequences[rank];
+        graph.for_each_step_in_path(p, [&](const step_handle_t& s) {
+                seq.append(graph.get_sequence(graph.get_handle_of_step(s)));
         });
+
+        ++rank;
+    });
 
     auto components = simple_components(graph, 2, true, nthreads);
     ska::flat_hash_set<nid_t> to_merge;
@@ -348,25 +357,25 @@ bool unchop(handlegraph::MutablePathDeletableHandleGraph& graph,
 
     graph.apply_ordering(handle_order, true);
 
-    // validate the paths
-    bool ok = true;
-    graph.for_each_path_handle(
-        [&](const path_handle_t& p) {
-            std::string seq;
-            graph.for_each_step_in_path(
-                p,
+    std::atomic<bool> ok(true);
+
+    #pragma omp parallel for schedule(static,1) num_threads(nthreads)
+    for(rank = 0; rank < path_handles.size(); ++rank) {
+        std::string seq;
+        graph.for_each_step_in_path(
+                path_handles[rank],
                 [&](const step_handle_t& s) {
                     seq.append(graph.get_sequence(graph.get_handle_of_step(s)));
                 });
-            if (seq != path_seqs[graph.get_path_name(p)]) {
-                std::cerr << "[odgi::algorithms::unchop] failure in unchop" << std::endl;
-                std::cerr << ">expected_" << graph.get_path_name(p) << std::endl << path_seqs[graph.get_path_name(p)] << std::endl
-                          << ">got_" << graph.get_path_name(p) << std::endl << seq << std::endl;
-                ok = false;
-            }
-        });
+        if (seq != path_sequences[rank]) {
+            std::cerr << "[odgi::algorithms::unchop] failure in unchop" << std::endl;
+            std::cerr << ">expected_" << graph.get_path_name(path_handles[rank]) << std::endl << path_sequences[rank] << std::endl
+                      << ">got_" << graph.get_path_name(path_handles[rank]) << std::endl << seq << std::endl;
+            ok.store(false);
+        }
+    }
 
-    return ok;
+    return ok.load();
 }
 
 
