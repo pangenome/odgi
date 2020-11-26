@@ -832,8 +832,8 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
                 bool from_left_else_right = (idx & 1);
 
                 auto& p = path_metadata_v[idx];
-                step_handle_t step = from_left_else_right ? p.first : p.last;
-                step_handle_t xxx_step = from_left_else_right ? p.last : p.first;
+                step_handle_t* step = from_left_else_right ? &p.first : &p.last;
+                step_handle_t* xxx_step = from_left_else_right ? &p.last : &p.first;
 
                 path_handle_t new_path = ordered.get_path_handle(p.name);
                 auto& p_ordered = ordered.path_metadata_v[as_integer(new_path)-1];
@@ -841,7 +841,7 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
                 int64_t prec_xxx_handle_num = -1;
 
                 do {
-                    handle_t old_handle = as_handle(as_integers(step)[0]);
+                    handle_t old_handle = as_handle(as_integers(*step)[0]);
                     uint64_t xxx_handle_num = number_bool_packing::unpack_number(old_handle) - min_handle_rank;
 
                     handle_t new_handle = ordered.get_handle(
@@ -911,16 +911,16 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
 
                     if (from_left_else_right) {
                         // in circular paths, we'll always have a next step, so we always check if we're at our path's last step
-                        if (step != xxx_step && has_next_step(step)) {
-                            step = get_next_step(step);
+                        if (step != xxx_step && has_next_step(*step)) {
+                            *step = get_next_step(*step);
 
                             prec_xxx_handle_num = xxx_handle_num;
                         } else {
                             break;
                         }
                     } else {
-                        if (step != xxx_step && has_previous_step(step)) {
-                            step = get_previous_step(step);
+                        if (step != xxx_step && has_previous_step(*step)) {
+                            *step = get_previous_step(*step);
 
                             prec_xxx_handle_num = xxx_handle_num;
                         } else {
