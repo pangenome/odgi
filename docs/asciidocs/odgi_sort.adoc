@@ -207,7 +207,7 @@ pipeline of sorts within one parameter.
 === Threading
 
 *-t, --threads*=_N_::
-  Number of threads to use for parallel sorting in SGD. Only specify this argument in combination with *-S, --linear-sgd*. No multi-threading support for any other sorting algorithm.
+  Number of threads to use for the parallel operations.
 
 === Processing Information
 

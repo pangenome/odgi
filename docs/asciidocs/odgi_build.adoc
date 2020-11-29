@@ -52,8 +52,8 @@ The odgi build(1) command constructs a succinct variation graph from a GFA. Curr
 *-w, --warnings*::
   Turn on script warnings (applies to executed code).
 
-*-t, --timings*::
-  Print timings report to stderr (time to read, parse, and convert).
+*-t, --threads*=_N_::
+  Number of threads to use for the parallel operations.
 
 === Program Information
 

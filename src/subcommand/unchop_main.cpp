@@ -22,7 +22,7 @@ int main_unchop(int argc, char** argv) {
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> og_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> og_out_file(parser, "FILE", "store the graph self index in this file", {'o', "out"});
-    args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use", {'t', "threads"});
+    args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel operations", {'t', "threads"});
     args::Flag debug(parser, "debug", "print information about the process to stderr.", {'d', "debug"});
 
     try {
@@ -50,8 +50,6 @@ int main_unchop(int argc, char** argv) {
         return 1;
     }
 
-    const uint64_t num_threads = nthreads ? args::get(nthreads) : 1;
-
     graph_t graph;
     assert(argc > 0);
     std::string infile = args::get(og_in_file);
@@ -64,6 +62,9 @@ int main_unchop(int argc, char** argv) {
             f.close();
         }
     }
+
+    const uint64_t num_threads = nthreads ? args::get(nthreads) : 1;
+    graph.set_number_of_threads(num_threads);
 
     algorithms::unchop(graph, num_threads, args::get(debug));
     

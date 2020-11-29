@@ -30,6 +30,10 @@
 #include "hash_map.hpp"
 #include "node.hpp"
 
+#include <omp.h>
+#include "atomic_bitvector.hpp"
+#include <mutex>
+
 namespace odgi {
 
 using namespace handlegraph;
@@ -397,6 +401,10 @@ public:
     /// Load
     void deserialize_members(std::istream& in);
 
+    void set_number_of_threads(uint64_t num_threads);
+
+    uint64_t get_number_of_threads();
+
 /// These are the backing data structures that we use to fulfill the above functions
 
 private:
@@ -414,6 +422,8 @@ private:
     nid_t _id_increment = 0;
     /// records nodes that are hidden, but used to compactly store path sequence that has been removed from the node space
     hash_set<uint64_t> graph_id_hidden_set;
+
+    uint64_t _num_threads = 1;
 
     /// edge type conversion
     /// 1 = fwd->fwd, 2 = fwd->rev, 3 = rev->fwd, 4 = rev->rev
@@ -499,7 +509,7 @@ private:
     /// get the backing node rank for a given node id
     uint64_t get_node_rank(const nid_t& node_id) const;
 
-};
+    };
 
 const static uint64_t path_begin_marker = 1;
 const static uint64_t path_end_marker = 2;
