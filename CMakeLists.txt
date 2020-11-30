@@ -487,6 +487,7 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/hash_map.hpp
   ${CMAKE_SOURCE_DIR}/src/odgi.hpp
   ${CMAKE_SOURCE_DIR}/src/node.hpp
+  ${CMAKE_SOURCE_DIR}/src/bmap.hpp
   ${CMAKE_SOURCE_DIR}/src/subgraph.hpp
   ${CMAKE_SOURCE_DIR}/src/split.hpp
   ${CMAKE_SOURCE_DIR}/src/varint.hpp
