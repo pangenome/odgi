@@ -415,23 +415,6 @@ private:
     /// records nodes that are hidden, but used to compactly store path sequence that has been removed from the node space
     hash_set<uint64_t> graph_id_hidden_set;
 
-    /// edge type conversion
-    /// 1 = fwd->fwd, 2 = fwd->rev, 3 = rev->fwd, 4 = rev->rev
-    struct edge_helper {
-        inline static uint8_t pack(bool on_rev, bool other_rev, bool to_curr) {
-            return on_rev | (other_rev << 1) | (to_curr << 2);
-        }
-        inline static uint8_t unpack_on_rev(uint8_t edge) {
-            return edge & 1;
-        }
-        inline static uint8_t unpack_other_rev(uint8_t edge) {
-            return edge & (1 << 1);
-        }
-        inline static uint8_t unpack_to_curr(uint8_t edge) {
-            return edge & (1 << 2);
-        }
-    };
-
     inline void canonicalize_edge(handle_t& left, handle_t& right) const {
         if (number_bool_packing::unpack_bit(left) && number_bool_packing::unpack_bit(right)
             || ((number_bool_packing::unpack_bit(left) || number_bool_packing::unpack_bit(right)) && as_integer(left) > as_integer(right))) {
@@ -470,10 +453,10 @@ private:
     uint64_t _path_handle_next = 0;
 
     /// Helper to convert between edge storage and actual id
-    uint64_t edge_delta_to_id(uint64_t left, uint64_t delta) const;
+    //uint64_t edge_delta_to_id(uint64_t left, uint64_t delta) const;
 
     /// Helper to convert between ids and stored edge
-    uint64_t edge_to_delta(const handle_t& left, const handle_t& right) const;
+    //uint64_t edge_to_delta(const handle_t& left, const handle_t& right) const;
 
     /// Helper to simplify removal of path handle records
     void destroy_path_handle_records(uint64_t i);
@@ -501,7 +484,7 @@ private:
 
 };
 
-const static uint64_t path_begin_marker = 1;
-const static uint64_t path_end_marker = 2;
+//const static uint64_t path_begin_marker = std::numeric_limits<uint64_t>::max();
+//const static uint64_t path_end_marker = 2;
 
 } // end dankness
