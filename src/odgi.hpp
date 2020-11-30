@@ -422,6 +422,7 @@ private:
     nid_t _id_increment = 0;
     /// records nodes that are hidden, but used to compactly store path sequence that has been removed from the node space
     hash_set<uint64_t> graph_id_hidden_set;
+    uint64_t _num_threads = 1;
 
     inline void canonicalize_edge(handle_t& left, handle_t& right) const {
         if (number_bool_packing::unpack_bit(left) && number_bool_packing::unpack_bit(right)
