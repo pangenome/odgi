@@ -64,9 +64,6 @@ std::string graph_t::get_sequence(const handle_t& handle) const {
 /// continue. Returns true if we finished and false if we stopped early.
 bool graph_t::follow_edges_impl(const handle_t& handle, bool go_left, const std::function<bool(const handle_t&)>& iteratee) const {
     const node_t& node = node_v.at(number_bool_packing::unpack_number(handle));
-    std::cerr << "in follow edges " << get_id(handle) << ":" << get_is_reverse(handle) << ":" << go_left << " ";
-    //std::cerr << "going_left " << go_left << std::endl;
-    node.display();
     nid_t node_id = get_id(handle);
     bool is_rev = get_is_reverse(handle);
     node.for_each_edge(
@@ -74,25 +71,17 @@ bool graph_t::follow_edges_impl(const handle_t& handle, bool go_left, const std:
             bool other_rev,
             bool to_curr,
             bool on_rev) {
-            std::cerr << "seeing edge "
-                      << other_id << ":"
-                      << other_rev << ":"
-                      << to_curr << ":"
-                      << on_rev << std::endl;
             if (other_id == node_id && on_rev == other_rev) {
                 // non-inverting self loop
                 // we can go either direction
                 to_curr = go_left;
                 other_rev = is_rev;
-                std::cerr << "case A" << std::endl;
             } else if (is_rev != on_rev) {
                 other_rev ^= 1;
                 to_curr ^= 1;
-                std::cerr << "case B" << std::endl;
             }
             if (!go_left && !to_curr
                 || go_left && to_curr) {
-                std::cerr << "iterin" << std::endl;
                 if (!iteratee(get_handle(other_id, other_rev))) {
                     return false;
                 }
@@ -319,8 +308,6 @@ bool graph_t::has_next_step(const step_handle_t& step_handle) const {
 /// Returns true if the step is not the first step on the path, else false
 bool graph_t::has_previous_step(const step_handle_t& step_handle) const {
     const node_t& node = node_v.at(number_bool_packing::unpack_number(get_handle_of_step(step_handle)));
-    std::cerr << "in has_previous_step " << std::endl;
-    display();
     return !node.step_is_start(as_integers(step_handle)[1]);
 }
 
@@ -486,8 +473,6 @@ handle_t graph_t::create_handle(const std::string& sequence, const nid_t& id) {
 void graph_t::destroy_handle(const handle_t& handle) {
     handle_t fwd_handle = get_is_reverse(handle) ? flip(handle) : handle;
     uint64_t id = get_id(handle);
-    std::cerr << "destroying " << id << std::endl;
-    display();
     // remove steps in edge lists
     // enumerate the edges
     std::vector<edge_t> edges_to_destroy;
@@ -506,8 +491,6 @@ void graph_t::destroy_handle(const handle_t& handle) {
     deleted_node_bv[number_bool_packing::unpack_number(handle)] = 1;
     //--_node_count;
     ++_deleted_node_count;
-    // check if we should compact our deleted nodes storage
-    display();
 }
 
 /*
@@ -536,9 +519,6 @@ void graph_t::rebuild_id_handle_mapping(void) {
 /// Ignores existing edges.
 void graph_t::create_edge(const handle_t& left_h, const handle_t& right_h) {
     //if (has_edge(left, right)) return; // do nothing if edge exists
-    std::cerr << "create_edge " << get_id(left_h) << ":" << get_is_reverse(left_h)
-              << " -> "
-              << get_id(right_h) << ":" << get_is_reverse(right_h) << std::endl;
     if (has_edge(left_h, right_h)) return; // do nothing if edge exists
 
     uint64_t left_rank = number_bool_packing::unpack_number(left_h);
@@ -551,8 +531,7 @@ void graph_t::create_edge(const handle_t& left_h, const handle_t& right_h) {
                        get_is_reverse(left_h));
 
     ++_edge_count;
-    std::cerr << "left node ";
-    left_node.display();
+
     // only insert the second side if it's on a different node
     if (left_rank == right_rank) return;
 
@@ -561,8 +540,6 @@ void graph_t::create_edge(const handle_t& left_h, const handle_t& right_h) {
                         get_is_reverse(left_h),
                         true,
                         get_is_reverse(right_h));
-    std::cerr << "right node ";
-    left_node.display();
 
 }
 
@@ -599,11 +576,6 @@ void graph_t::destroy_edge(const handle_t& left_h, const handle_t& right_h) {
     auto& right_node = node_v.at(right_rank);
     bool left_rev = get_is_reverse(left_h);
     bool right_rev = get_is_reverse(right_h);
-    std::cerr << "destroy_edge "
-              << get_id(left_h) << ":" << get_is_reverse(left_h)
-              << " -> "
-              << get_id(right_h) << ":" << get_is_reverse(right_h)
-              << std::endl;
     _edge_count -=
         left_node.remove_edge(get_id(right_h), right_rev, false, left_rev)
         && right_node.remove_edge(get_id(left_h), left_rev, true, right_rev);

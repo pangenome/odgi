@@ -64,11 +64,8 @@ bool node_t::remove_edge(const uint64_t& target_id,
                          const bool& target_rev,
                          const bool& ends_here,
                          const bool& is_rev) {
-    std::cerr << "removing edge " << target_id << ":" << target_rev << ":" << ends_here << ":" << is_rev << std::endl;
-    display();
     for (uint64_t i = 0; i < edges.size(); i+=EDGE_RECORD_LENGTH) {
         uint64_t other_id = edges.at(i);
-        std::cerr << "other_id = " << other_id << std::endl;
         if (other_id == target_id) {
             uint8_t packed_edge = edges.at(i+1);
             bool on_rev = edge_helper::unpack_on_rev(packed_edge);
@@ -86,7 +83,6 @@ bool node_t::remove_edge(const uint64_t& target_id,
             }
         }
     }
-    std::cerr << "did NOT REMOVE!?" << std::endl;
     return false;
 }
 
@@ -187,7 +183,6 @@ void node_t::set_path_step(const uint64_t& rank, const step_t& step) {
 }
 
 bool node_t::step_is_start(const uint64_t& rank) const {
-    display();
     return step_type_helper::unpack_is_start(paths.at(PATH_RECORD_LENGTH*rank+1));
 }
 
