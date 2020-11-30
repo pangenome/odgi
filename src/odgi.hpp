@@ -30,6 +30,10 @@
 #include "hash_map.hpp"
 #include "node.hpp"
 
+#include <omp.h>
+#include "atomic_bitvector.hpp"
+#include <mutex>
+
 namespace odgi {
 
 using namespace handlegraph;
@@ -397,6 +401,10 @@ public:
     /// Load
     void deserialize_members(std::istream& in);
 
+    void set_number_of_threads(uint64_t num_threads);
+
+    uint64_t get_number_of_threads();
+
 /// These are the backing data structures that we use to fulfill the above functions
 
 private:
@@ -482,7 +490,7 @@ private:
     /// get the backing node rank for a given node id
     uint64_t get_node_rank(const nid_t& node_id) const;
 
-};
+    };
 
 //const static uint64_t path_begin_marker = std::numeric_limits<uint64_t>::max();
 //const static uint64_t path_end_marker = 2;

@@ -298,6 +298,15 @@ ExternalProject_Add(xoshiro
 ExternalProject_Get_property(xoshiro SOURCE_DIR)
 set(xoshiro_INCLUDE "${SOURCE_DIR}")
 
+ExternalProject_Add(atomicbitvector
+        SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/atomicbitvector/include"
+        UPDATE_COMMAND ""
+        INSTALL_COMMAND ""
+        BUILD_COMMAND ""
+        CONFIGURE_COMMAND "")
+ExternalProject_Get_property(atomicbitvector SOURCE_DIR)
+set(atomicbitvector_INCLUDE "${SOURCE_DIR}")
+
 # pybind11
 #ExternalProject_Add(pybind11
 #    GIT_REPOSITORY https://github.com/pybind/pybind11.git 
@@ -458,7 +467,8 @@ set(odgi_INCLUDES
   "${httplib_INCLUDE}"
   "${random_distributions_INCLUDE}"
   "${dirtyzipf_INCLUDE}"
-  "${xoshiro_INCLUDE}")
+  "${xoshiro_INCLUDE}"
+  "${atomicbitvector_INCLUDE}")
 
 set(odgi_LIBS
   "${sdsl-lite_LIB}/libsdsl.a"
