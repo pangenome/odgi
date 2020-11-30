@@ -439,15 +439,6 @@ handle_t graph_t::create_handle(const std::string& sequence) {
     }
 }
 
-handle_t graph_t::create_hidden_handle(const std::string& sequence) {
-    // get node id as max+1
-    handle_t handle = create_handle(sequence);
-    nid_t id = get_id(handle);
-    graph_id_hidden_set.insert(id);
-    ++_hidden_count;
-    return handle;
-}
-
 /// Create a new node with the given id and sequence, then return the handle.
 handle_t graph_t::create_handle(const std::string& sequence, const nid_t& id) {
     assert(sequence.size());
@@ -511,11 +502,6 @@ void graph_t::destroy_handle(const handle_t& handle) {
     node.clear();
     // remove from the graph by hiding it (compaction later)
     deleted_node_bv[number_bool_packing::unpack_number(handle)] = 1;
-    // and from the set of hidden nodes, if it's a member
-    if (graph_id_hidden_set.count(id)) {
-        graph_id_hidden_set.erase(id);
-        --_hidden_count;
-    }
     //--_node_count;
     ++_deleted_node_count;
     // check if we should compact our deleted nodes storage

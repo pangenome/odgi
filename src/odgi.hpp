@@ -247,9 +247,6 @@ public:
     /// Create a new node with the given id and sequence, then return the handle.
     handle_t create_handle(const std::string& sequence, const nid_t& id);
 
-    /// Create a "hidden" node which might carry parts of paths that traversed deleted portions of the graph
-    handle_t create_hidden_handle(const std::string& sequence);
-
     /// Remove the node belonging to the given handle and all of its edges.
     /// Does not update any stored paths.
     /// Invalidates the destroyed handle.
@@ -420,8 +417,6 @@ private:
     nid_t _max_node_id = 0;
     nid_t _min_node_id = 0;
     nid_t _id_increment = 0;
-    /// records nodes that are hidden, but used to compactly store path sequence that has been removed from the node space
-    hash_set<uint64_t> graph_id_hidden_set;
     uint64_t _num_threads = 1;
 
     inline void canonicalize_edge(handle_t& left, handle_t& right) const {
@@ -448,9 +443,6 @@ private:
 
     /// A helper to record the number of live nodes
     uint64_t _node_count = 0;
-
-    /// A counter that records the number of hidden nodes
-    uint64_t _hidden_count = 0;
 
     /// A helper to record the number of live edges
     uint64_t _edge_count = 0;
