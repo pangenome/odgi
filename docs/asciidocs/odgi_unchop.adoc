@@ -37,6 +37,12 @@ The odgi unchop(1) command merges each unitig into a single node preserving the 
 Print information about the process to stderr.
 
 
+=== Threading
+
+*-t, --threads*=_N_::
+Number of threads to use for the parallel operations.
+
+
 === Program Information
 
 *-h, --help*::
