@@ -319,6 +319,8 @@ bool graph_t::has_next_step(const step_handle_t& step_handle) const {
 /// Returns true if the step is not the first step on the path, else false
 bool graph_t::has_previous_step(const step_handle_t& step_handle) const {
     const node_t& node = node_v.at(number_bool_packing::unpack_number(get_handle_of_step(step_handle)));
+    std::cerr << "in has_previous_step " << std::endl;
+    display();
     return !node.step_is_start(as_integers(step_handle)[1]);
 }
 
@@ -1247,7 +1249,7 @@ void graph_t::link_steps(const step_handle_t& from, const step_handle_t& to) {
     node_t::step_t to_step = to_node.get_path_step(to_rank);
     to_step.prev_id = get_id(from_handle);
     to_step.prev_rank = from_rank;
-    from_step.is_start = false;
+    to_step.is_start = false;
     to_node.set_path_step(to_rank, to_step);
 }
 
@@ -1506,9 +1508,11 @@ void graph_t::display(void) const {
         for (auto& step : steps) {
             std::cerr << step.path_id << ":"
                       << step.is_rev << ":"
-                      << (step.is_start ? "#" : std::to_string(step.prev_id)) << ":"
+                      << step.is_start << ":"
+                      << step.is_end << ":"
+                      << step.prev_id << ":"
                       << step.prev_rank << ":"
-                      << (step.is_end ? "$" : std::to_string(step.next_id)) << ":"
+                      << step.next_id << ":"
                       << step.next_rank << " ";
         }
         std::cerr << " | ";

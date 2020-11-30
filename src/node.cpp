@@ -187,6 +187,7 @@ void node_t::set_path_step(const uint64_t& rank, const step_t& step) {
 }
 
 bool node_t::step_is_start(const uint64_t& rank) const {
+    display();
     return step_type_helper::unpack_is_start(paths.at(PATH_RECORD_LENGTH*rank+1));
 }
 
