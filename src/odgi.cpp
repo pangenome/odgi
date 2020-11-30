@@ -216,18 +216,20 @@ bool graph_t::for_each_path_handle_impl(const std::function<bool(const path_hand
 bool graph_t::for_each_step_on_handle_impl(const handle_t& handle, const std::function<bool(const step_handle_t&)>& iteratee) const {
     uint64_t handle_n = number_bool_packing::unpack_number(handle);
     const node_t& node = node_v.at(handle_n);
-    const std::vector<node_t::step_t> steps = node.get_path_steps();
-    bool is_rev = get_is_reverse(handle);
     bool flag = true;
-    uint64_t i = 0;
-    for (auto& step : steps) {
-        step_handle_t step_handle;
-        as_integers(step_handle)[0] = as_integer(number_bool_packing::pack(handle_n, step.is_rev));
-        as_integers(step_handle)[1] = i++;
-        if (step.path_id) { // skip deleted steps
-            flag &= iteratee(step_handle);
-        }
-    }
+    node.for_each_path_step(
+        [&](uint64_t rank,
+            uint64_t path_id,
+            bool is_rev) {
+            if (path_id) { // skip deleted steps
+                step_handle_t step_handle;
+                as_integers(step_handle)[0] = as_integer(number_bool_packing::pack(handle_n, is_rev));
+                as_integers(step_handle)[1] = rank;
+                flag &= iteratee(step_handle);
+            }
+            return flag;
+            //return true;
+        });
     return flag;
 }
 
@@ -1210,19 +1212,13 @@ void graph_t::link_steps(const step_handle_t& from, const step_handle_t& to) {
     const uint64_t& from_rank = as_integers(from)[1];
     const uint64_t& to_rank = as_integers(to)[1];
     node_t& from_node = node_v.at(number_bool_packing::unpack_number(from_handle));
-    //from_node.set_step_next_id(from_rank,
-    // TODO do this without setting _all_ the values in each step
-    node_t::step_t from_step = from_node.get_path_step(from_rank);
-    from_step.next_id = get_id(to_handle);
-    from_step.next_rank = to_rank;
-    from_step.is_end = false;
-    from_node.set_path_step(from_rank, from_step);
+    from_node.set_step_next_id(from_rank, get_id(to_handle));
+    from_node.set_step_next_rank(from_rank, to_rank);
+    from_node.set_step_is_end(from_rank, false);
     node_t& to_node = node_v.at(number_bool_packing::unpack_number(to_handle));
-    node_t::step_t to_step = to_node.get_path_step(to_rank);
-    to_step.prev_id = get_id(from_handle);
-    to_step.prev_rank = from_rank;
-    to_step.is_start = false;
-    to_node.set_path_step(to_rank, to_step);
+    to_node.set_step_prev_id(to_rank, get_id(from_handle));
+    to_node.set_step_prev_rank(to_rank, from_rank);
+    to_node.set_step_is_start(to_rank, false);
 }
 
 void graph_t::destroy_step(const step_handle_t& step_handle) {

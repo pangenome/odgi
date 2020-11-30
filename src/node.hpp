@@ -101,8 +101,20 @@ public:
                        const uint64_t& prev_id, const uint64_t& prev_rank,
                        const uint64_t& next_id, const uint64_t& next_rank);
     void set_path_step(const uint64_t& rank, const step_t& step);
+    //void set_step_path_id(const uint64_t& rank, const bool& is_start);
+    void set_step_prev_id(const uint64_t& rank, const uint64_t& prev_id);
+    void set_step_prev_rank(const uint64_t& rank, const uint64_t& prev_rank);
+    void set_step_next_id(const uint64_t& rank, const uint64_t& next_id);
+    void set_step_next_rank(const uint64_t& rank, const uint64_t& next_rank);
+    void set_step_is_rev(const uint64_t& rank, const bool& is_rev);
+    void set_step_is_start(const uint64_t& rank, const bool& is_start);
+    void set_step_is_end(const uint64_t& rank, const bool& is_end);
+    bool step_is_rev(const uint64_t& rank) const;
     bool step_is_start(const uint64_t& rank) const;
     bool step_is_end(const uint64_t& rank) const;
+    void for_each_path_step(const std::function<bool(uint64_t rank,
+                                                     uint64_t path_id,
+                                                     bool is_rev)>& func) const;
     void for_each_path_step(const std::function<bool(step_t step)>& func) const;
     std::pair<std::map<uint64_t, std::pair<uint64_t, bool>>, // path fronts and backs
           std::map<uint64_t, std::pair<uint64_t, bool>>> flip_paths(void);

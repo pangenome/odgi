@@ -32,13 +32,12 @@ uint64_t node_t::decode(const uint64_t& id) const {
     return decoding.at(id);
 }
 
-
 void node_t::for_each_edge(const std::function<bool(nid_t other_id,
                                                     bool other_rev,
                                                     bool to_curr,
                                                     bool on_rev)>& func) const {
     for (uint64_t i = 0; i < edges.size(); ) {
-        uint64_t other_id = decode(edges.at(i++));
+        uint64_t other_id = edges.at(i++);
         uint8_t packed_edge = edges.at(i++);
         if (!func(other_id,
                   edge_helper::unpack_other_rev(packed_edge),
@@ -55,7 +54,7 @@ void node_t::add_edge(const uint64_t& other_id,
                       const bool& on_rev) {
     //std::cerr << "add edge " << "relative_id " << relative_id << " edge_type " << edge_type << std::endl;
     auto edge_type = edge_helper::pack(other_rev, to_curr, on_rev);
-    edges.push_back(encode(other_id));
+    edges.push_back(other_id);
     edges.push_back(edge_type);
 }
 
@@ -64,7 +63,7 @@ bool node_t::remove_edge(const uint64_t& target_id,
                          const bool& ends_here,
                          const bool& is_rev) {
     for (uint64_t i = 0; i < edges.size(); i+=EDGE_RECORD_LENGTH) {
-        uint64_t other_id = decode(edges.at(i));
+        uint64_t other_id = edges.at(i);
         if (other_id == target_id) {
             uint8_t packed_edge = edges.at(i+1);
             bool on_rev = edge_helper::unpack_on_rev(packed_edge);
@@ -135,10 +134,24 @@ const node_t::step_t node_t::get_path_step(const uint64_t& rank) const {
     };
 }
 
+void node_t::for_each_path_step(
+    const std::function<bool(uint64_t rank,
+                             uint64_t path_id,
+                             bool is_rev)>& func) const {
+    uint64_t n_paths = path_count();
+    for (uint64_t i = 0; i < n_paths; ++i) {
+        if (!func(i, decode(paths.at(i)), step_is_rev(i))) {
+            break;
+        }
+    }
+}
+
 void node_t::for_each_path_step(const std::function<bool(step_t step)>& func) const {
     uint64_t n_paths = path_count();
     for (uint64_t i = 0; i < n_paths; ++i) {
-        func(get_path_step(i));
+        if (!func(get_path_step(i))) {
+            break;
+        }
     }
 }
 
@@ -153,6 +166,41 @@ void node_t::set_path_step(const uint64_t& rank, const step_t& step) {
     paths[i+3] = step.prev_rank;
     paths[i+4] = encode(step.next_id);
     paths[i+5] = step.next_rank;
+}
+
+void node_t::set_step_prev_id(const uint64_t& rank, const uint64_t& prev_id) {
+    paths[PATH_RECORD_LENGTH*rank+2] = encode(prev_id);
+}
+
+void node_t::set_step_prev_rank(const uint64_t& rank, const uint64_t& prev_rank) {
+    paths[PATH_RECORD_LENGTH*rank+3] = prev_rank;
+}
+
+void node_t::set_step_next_id(const uint64_t& rank, const uint64_t& next_id) {
+    paths[PATH_RECORD_LENGTH*rank+4] = encode(next_id);
+}
+
+void node_t::set_step_next_rank(const uint64_t& rank, const uint64_t& next_rank) {
+    paths[PATH_RECORD_LENGTH*rank+5] = next_rank;
+}
+
+void node_t::set_step_is_rev(const uint64_t& rank, const bool& is_rev) {
+    uint64_t idx = PATH_RECORD_LENGTH*rank+1;
+    paths[idx] = paths[idx] & ~(1UL) | is_rev;
+}
+
+void node_t::set_step_is_start(const uint64_t& rank, const bool& is_start) {
+    uint64_t idx = PATH_RECORD_LENGTH*rank+1;
+    paths[idx] = paths[idx] & ~(1UL << 1) | is_start;
+}
+
+void node_t::set_step_is_end(const uint64_t& rank, const bool& is_end) {
+    uint64_t idx = PATH_RECORD_LENGTH*rank+1;
+    paths[idx] = paths[idx] & ~(1UL << 2) | is_end;
+}
+
+bool node_t::step_is_rev(const uint64_t& rank) const {
+    return step_type_helper::unpack_is_rev(paths.at(PATH_RECORD_LENGTH*rank+1));
 }
 
 bool node_t::step_is_start(const uint64_t& rank) const {
@@ -242,7 +290,7 @@ void node_t::load(std::istream& in) {
     sequence.resize(len);
     in.read((char*)sequence.c_str(), len*sizeof(uint8_t));
     encoding.load(in);
-    decoding.load(in);
+    decoding.load(in); 
     edges.load(in);
     paths.load(in);
     //display();
