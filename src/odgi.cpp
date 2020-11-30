@@ -911,7 +911,7 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
 
                     if (from_left_else_right) {
                         // in circular paths, we'll always have a next step, so we always check if we're at our path's last step
-                        if (step != xxx_step && has_next_step(*step)) {
+                        if (*step != *xxx_step && has_next_step(*step)) {
                             *step = get_next_step(*step);
 
                             prec_xxx_handle_num = xxx_handle_num;
@@ -919,7 +919,7 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
                             break;
                         }
                     } else {
-                        if (step != xxx_step && has_previous_step(*step)) {
+                        if (*step != *xxx_step && has_previous_step(*step)) {
                             *step = get_previous_step(*step);
 
                             prec_xxx_handle_num = xxx_handle_num;
