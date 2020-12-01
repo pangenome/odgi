@@ -22,12 +22,31 @@ const uint8_t PATH_RECORD_LENGTH = 6;
 
 /// A node object with the sequence, its edge lists, and paths
 class node_t {
+    uint64_t id = 0;
     std::string sequence;
     dyn::hacked_vector edges;
     dyn::hacked_vector decoding;
     dyn::hacked_vector paths;
 public:
     node_t(void); // constructor
+    inline uint64_t to_delta(const uint64_t& other_id) const {
+        if (other_id > id) {
+            return ((other_id - id) << 1) | 1;
+        } else if (other_id < id) {
+            return ((id - other_id) << 1) | 0;
+        } else {
+            return 0;
+        }
+    }
+    inline uint64_t from_delta(const uint64_t& delta) const {
+        if (delta == 0) {
+            return id;
+        } else if (delta & 1) {
+            return id + (delta >> 1);
+        } else {
+            return id - (delta >> 1);
+        }
+    }
     /// edge type conversion
     /// 1 = fwd->fwd, 2 = fwd->rev, 3 = rev->fwd, 4 = rev->rev
     struct edge_helper {
@@ -74,12 +93,13 @@ public:
         uint64_t next_rank;
     };
 
-    uint64_t encode(const uint64_t& id);
-    uint64_t decode(const uint64_t& id) const;
+    uint64_t encode(const uint64_t& other_id);
+    uint64_t decode(const uint64_t& idx) const;
 
     uint64_t sequence_size(void) const;
     const std::string& get_sequence(void) const;
     void set_sequence(const std::string& seq);
+    void set_id(const nid_t& new_id);
     void for_each_edge(const std::function<bool(nid_t other_id,
                                                 bool on_rev,
                                                 bool other_rev,

@@ -10,26 +10,31 @@ void node_t::set_sequence(const std::string& seq) {
     sequence = seq;
 }
 
+void node_t::set_id(const nid_t& new_id) {
+    id = new_id;
+}
+
 const std::string& node_t::get_sequence(void) const {
     return sequence;
 }
 
 // encode an internal representation of an external id (adding if none exists)
-uint64_t node_t::encode(const uint64_t& id) {
+uint64_t node_t::encode(const uint64_t& other_id) {
+    uint64_t delta = to_delta(other_id);
     uint64_t i = 0;
     uint64_t s = decoding.size();
-    while (i < s && decoding.at(i) != id) {
+    while (i < s && decoding.at(i) != delta) {
         ++i;
     }
     if (i == s) {
-        decoding.push_back(id);
+        decoding.push_back(delta);
     }
     return i;
 }
 
 // decode an internal representation of an external id
-uint64_t node_t::decode(const uint64_t& id) const {
-    return decoding.at(id);
+uint64_t node_t::decode(const uint64_t& idx) const {
+    return from_delta(decoding.at(idx));
 }
 
 void node_t::for_each_edge(const std::function<bool(nid_t other_id,

@@ -455,6 +455,7 @@ handle_t graph_t::create_handle(const std::string& sequence, const nid_t& id) {
     uint64_t handle_rank = (uint64_t)id-1;
     // set its values
     auto& node = node_v[handle_rank];
+    node.set_id(id);
     node.set_sequence(sequence);
     // it's not deleted
     deleted_node_bv[handle_rank] = 0;
