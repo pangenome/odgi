@@ -16,15 +16,15 @@ const std::string& node_t::get_sequence(void) const {
 
 // encode an internal representation of an external id (adding if none exists)
 uint64_t node_t::encode(const uint64_t& id) {
-    uint64_t v;
-    if (encoding.find(id, v)) {
-        return v;
-    } else {
-        v = decoding.size();
-        encoding.add(id, v);
-        decoding.push_back(id);
-        return v;
+    uint64_t i = 0;
+    uint64_t s = decoding.size();
+    while (i < s && decoding.at(i) != id) {
+        ++i;
     }
+    if (i == s) {
+        decoding.push_back(id);
+    }
+    return i;
 }
 
 // decode an internal representation of an external id
@@ -140,7 +140,7 @@ void node_t::for_each_path_step(
                              bool is_rev)>& func) const {
     uint64_t n_paths = path_count();
     for (uint64_t i = 0; i < n_paths; ++i) {
-        if (!func(i, decode(paths.at(i)), step_is_rev(i))) {
+        if (!step_is_del(i) && !func(i, decode(paths.at(i)), step_is_rev(i))) {
             break;
         }
     }
@@ -149,7 +149,7 @@ void node_t::for_each_path_step(
 void node_t::for_each_path_step(const std::function<bool(step_t step)>& func) const {
     uint64_t n_paths = path_count();
     for (uint64_t i = 0; i < n_paths; ++i) {
-        if (!func(get_path_step(i))) {
+        if (!step_is_del(i) && !func(get_path_step(i))) {
             break;
         }
     }
@@ -199,6 +199,11 @@ void node_t::set_step_is_end(const uint64_t& rank, const bool& is_end) {
     paths[idx] = paths[idx] & ~(1UL << 2) | is_end;
 }
 
+void node_t::set_step_is_del(const uint64_t& rank, const bool& is_del) {
+    uint64_t idx = PATH_RECORD_LENGTH*rank+1;
+    paths[idx] = paths[idx] & ~(1UL << 3) | is_del;
+}
+
 bool node_t::step_is_rev(const uint64_t& rank) const {
     return step_type_helper::unpack_is_rev(paths.at(PATH_RECORD_LENGTH*rank+1));
 }
@@ -209,6 +214,10 @@ bool node_t::step_is_start(const uint64_t& rank) const {
 
 bool node_t::step_is_end(const uint64_t& rank) const {
     return step_type_helper::unpack_is_end(paths.at(PATH_RECORD_LENGTH*rank+1));
+}
+
+bool node_t::step_is_del(const uint64_t& rank) const {
+    return step_type_helper::unpack_is_del(paths.at(PATH_RECORD_LENGTH*rank+1));
 }
 
 std::pair<std::map<uint64_t, std::pair<uint64_t, bool>>, // path fronts
@@ -247,8 +256,14 @@ void node_t::remove_path_step(const uint64_t& rank) {
     }
 }
 
+node_t::node_t(void) {
+    //edges = dyn::hacked_vector(0,8);
+    //decoding = dyn::hacked_vector(0,8);
+    //paths = dyn::hacked_vector(0,4);
+}
+
 void node_t::clear(void) {
-    sequence.clear();
+    sequence.clear(); // not sure this works
     clear_encoding();
     clear_edges();
     clear_paths();
@@ -265,7 +280,6 @@ void node_t::clear_paths(void) {
 }
 
 void node_t::clear_encoding(void) {
-    encoding.clear();
     dyn::hacked_vector null_iv;
     decoding = null_iv;
 }
@@ -277,9 +291,8 @@ uint64_t node_t::serialize(std::ostream& out) const {
     written += sizeof(size_t);
     out.write((char*)sequence.c_str(), seq_size*sizeof(char));
     written += seq_size*sizeof(char);
-    written += encoding.serialize(out);
-    written += decoding.serialize(out);
     written += edges.serialize(out);
+    written += decoding.serialize(out);
     written += paths.serialize(out);
     return written;
 }
@@ -289,9 +302,8 @@ void node_t::load(std::istream& in) {
     in.read((char*)&len, sizeof(size_t));
     sequence.resize(len);
     in.read((char*)sequence.c_str(), len*sizeof(uint8_t));
-    encoding.load(in);
-    decoding.load(in); 
     edges.load(in);
+    decoding.load(in); 
     paths.load(in);
     //display();
 }

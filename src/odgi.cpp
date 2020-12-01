@@ -221,14 +221,11 @@ bool graph_t::for_each_step_on_handle_impl(const handle_t& handle, const std::fu
         [&](uint64_t rank,
             uint64_t path_id,
             bool is_rev) {
-            if (path_id) { // skip deleted steps
-                step_handle_t step_handle;
-                as_integers(step_handle)[0] = as_integer(number_bool_packing::pack(handle_n, is_rev));
-                as_integers(step_handle)[1] = rank;
-                flag &= iteratee(step_handle);
-            }
+            step_handle_t step_handle;
+            as_integers(step_handle)[0] = as_integer(number_bool_packing::pack(handle_n, is_rev));
+            as_integers(step_handle)[1] = rank;
+            flag &= iteratee(step_handle);
             return flag;
-            //return true;
         });
     return flag;
 }

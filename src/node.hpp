@@ -23,11 +23,11 @@ const uint8_t PATH_RECORD_LENGTH = 6;
 /// A node object with the sequence, its edge lists, and paths
 class node_t {
     std::string sequence;
-    bmap::bmap<uint64_t, uint64_t> encoding;
-    dyn::hacked_vector decoding;
     dyn::hacked_vector edges;
+    dyn::hacked_vector decoding;
     dyn::hacked_vector paths;
 public:
+    node_t(void); // constructor
     /// edge type conversion
     /// 1 = fwd->fwd, 2 = fwd->rev, 3 = rev->fwd, 4 = rev->rev
     struct edge_helper {
@@ -56,6 +56,9 @@ public:
         }
         inline static bool unpack_is_end(const uint8_t& type) {
             return type & (1 << 2);
+        }
+        inline static bool unpack_is_del(const uint8_t& type) {
+            return type & (1 << 3);
         }
     };
     inline const uint64_t edge_count(void) const { return edges.size()/EDGE_RECORD_LENGTH; }
@@ -109,9 +112,11 @@ public:
     void set_step_is_rev(const uint64_t& rank, const bool& is_rev);
     void set_step_is_start(const uint64_t& rank, const bool& is_start);
     void set_step_is_end(const uint64_t& rank, const bool& is_end);
+    void set_step_is_del(const uint64_t& rank, const bool& is_del);
     bool step_is_rev(const uint64_t& rank) const;
     bool step_is_start(const uint64_t& rank) const;
     bool step_is_end(const uint64_t& rank) const;
+    bool step_is_del(const uint64_t& rank) const;
     void for_each_path_step(const std::function<bool(uint64_t rank,
                                                      uint64_t path_id,
                                                      bool is_rev)>& func) const;
