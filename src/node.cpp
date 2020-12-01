@@ -94,7 +94,7 @@ void node_t::add_path_step(const uint64_t& path_id, const bool& is_rev,
                            const uint64_t& prev_id, const uint64_t& prev_rank,
                            const uint64_t& next_id, const uint64_t& next_rank) {
     //std::cerr << "packing " << path_id << " " << is_rev << " " << is_start << " " << is_end << std::endl;
-    paths.push_back(encode(path_id));
+    paths.push_back(path_id);
     paths.push_back(step_type_helper::pack(is_rev, is_start, is_end));
     paths.push_back(encode(prev_id));
     paths.push_back(prev_rank);
@@ -128,7 +128,7 @@ const node_t::step_t node_t::get_path_step(const uint64_t& rank) const {
     uint64_t i = PATH_RECORD_LENGTH*rank;
     uint64_t t = paths.at(i+1);
     return {
-        decode(paths.at(i)),
+        paths.at(i),
         step_type_helper::unpack_is_rev(t),
         step_type_helper::unpack_is_start(t),
         step_type_helper::unpack_is_end(t),
@@ -145,7 +145,7 @@ void node_t::for_each_path_step(
                              bool is_rev)>& func) const {
     uint64_t n_paths = path_count();
     for (uint64_t i = 0; i < n_paths; ++i) {
-        if (!step_is_del(i) && !func(i, decode(paths.at(i)), step_is_rev(i))) {
+        if (!step_is_del(i) && !func(i, paths.at(PATH_RECORD_LENGTH*i), step_is_rev(i))) {
             break;
         }
     }
@@ -163,7 +163,7 @@ void node_t::for_each_path_step(const std::function<bool(step_t step)>& func) co
 void node_t::set_path_step(const uint64_t& rank, const step_t& step) {
     if (rank >= path_count()) assert(false);
     uint64_t i = PATH_RECORD_LENGTH*rank;
-    paths[i] = encode(step.path_id);
+    paths[i] = step.path_id;
     paths[i+1] = step_type_helper::pack(step.is_rev,
                                         step.is_start,
                                         step.is_end);
