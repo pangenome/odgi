@@ -2,10 +2,17 @@
 //  graph.cpp
 //  
 
-#include <thread>
 #include "odgi.hpp"
 
 namespace odgi {
+
+node_t& graph_t::get_node_ref(const handle_t& handle) const {
+    return *node_v[number_bool_packing::unpack_number(handle)];
+}
+
+const node_t& graph_t::get_node_cref(const handle_t& handle) const {
+    return *node_v[number_bool_packing::unpack_number(handle)];
+}
 
 /// Method to check if a node exists by ID
 bool graph_t::has_node(nid_t node_id) const {
@@ -50,12 +57,12 @@ handle_t graph_t::flip(const handle_t& handle) const {
 
 /// Get the length of a node
 size_t graph_t::get_length(const handle_t& handle) const {
-    return node_v.at(number_bool_packing::unpack_number(handle)).sequence_size();
+    return get_node_cref(handle).sequence_size();
 }
 
 /// Get the sequence of a node, presented in the handle's local forward orientation.
 std::string graph_t::get_sequence(const handle_t& handle) const {
-    auto& seq = node_v.at(number_bool_packing::unpack_number(handle)).get_sequence();
+    auto& seq = get_node_cref(handle).get_sequence();
     return (get_is_reverse(handle) ? reverse_complement(seq) : seq);
 }
 
@@ -63,7 +70,7 @@ std::string graph_t::get_sequence(const handle_t& handle) const {
 /// them to a callback which returns false to stop iterating and true to
 /// continue. Returns true if we finished and false if we stopped early.
 bool graph_t::follow_edges_impl(const handle_t& handle, bool go_left, const std::function<bool(const handle_t&)>& iteratee) const {
-    const node_t& node = node_v.at(number_bool_packing::unpack_number(handle));
+    const node_t& node = get_node_cref(handle);
     nid_t node_id = get_id(handle);
     bool is_rev = get_is_reverse(handle);
     node.for_each_edge(
@@ -215,7 +222,7 @@ bool graph_t::for_each_path_handle_impl(const std::function<bool(const path_hand
 
 bool graph_t::for_each_step_on_handle_impl(const handle_t& handle, const std::function<bool(const step_handle_t&)>& iteratee) const {
     uint64_t handle_n = number_bool_packing::unpack_number(handle);
-    const node_t& node = node_v.at(handle_n);
+    const node_t& node = get_node_cref(handle);
     bool flag = true;
     node.for_each_path_step(
         [&](uint64_t rank,
@@ -245,8 +252,7 @@ std::vector<step_handle_t> graph_t::steps_of_handle(const handle_t& handle,
 }
 
 size_t graph_t::get_step_count(const handle_t& handle) const {
-    const node_t& node = node_v.at(number_bool_packing::unpack_number(handle));
-    return node.path_count();
+    return get_node_cref(handle).path_count();
 }
 
 /// Get a node handle (node ID and orientation) from a handle to an step on a path
@@ -256,8 +262,9 @@ handle_t graph_t::get_handle_of_step(const step_handle_t& step_handle) const {
 
 /// Get a path handle (path ID) from a handle to an step on a path
 path_handle_t graph_t::get_path(const step_handle_t& step_handle) const {
-    const node_t& node = node_v.at(number_bool_packing::unpack_number(get_handle_of_step(step_handle)));
-    return as_path_handle(node.get_path_step(as_integers(step_handle)[1]).path_id);
+    return as_path_handle(
+        get_node_cref(get_handle_of_step(step_handle))
+        .get_path_step(as_integers(step_handle)[1]).path_id);
 }
 
 /// Get a handle to the first step in a path.
@@ -300,14 +307,14 @@ void graph_t::set_circularity(const path_handle_t& path_handle, bool circular) {
 
 /// Returns true if the step is not the last step on the path, else false
 bool graph_t::has_next_step(const step_handle_t& step_handle) const {
-    const node_t& node = node_v.at(number_bool_packing::unpack_number(get_handle_of_step(step_handle)));
-    return !node.step_is_end(as_integers(step_handle)[1]);
+    return !get_node_cref(get_handle_of_step(step_handle))
+        .step_is_end(as_integers(step_handle)[1]);
 }
 
 /// Returns true if the step is not the first step on the path, else false
 bool graph_t::has_previous_step(const step_handle_t& step_handle) const {
-    const node_t& node = node_v.at(number_bool_packing::unpack_number(get_handle_of_step(step_handle)));
-    return !node.step_is_start(as_integers(step_handle)[1]);
+    return !get_node_cref(get_handle_of_step(step_handle))
+        .step_is_start(as_integers(step_handle)[1]);
 }
 
 bool graph_t::is_path_front_end(const step_handle_t& step_handle) const {
@@ -331,14 +338,14 @@ step_handle_t graph_t::get_next_step(const step_handle_t& step_handle) const {
         curr_handle = get_handle_of_step(step_handle);
     }
     nid_t curr_id = get_id(curr_handle);
-    const node_t& node = node_v.at(number_bool_packing::unpack_number(curr_handle));
+    const node_t& node = get_node_cref(curr_handle);
     auto& step = node.get_path_step(as_integers(step_handle)[1]);
     if (step.is_end) {
         return path_end(get_path_handle_of_step(step_handle));
     }
     nid_t next_id = step.next_id;
     handle_t next_handle = get_handle(next_id);
-    bool next_rev = node_v.at(number_bool_packing::unpack_number(next_handle)).get_path_step(step.next_rank).is_rev;
+    bool next_rev = get_node_cref(next_handle).get_path_step(step.next_rank).is_rev;
     step_handle_t next_step;
     as_integers(next_step)[0] = as_integer(get_handle(next_id, next_rev));
     as_integers(next_step)[1] = step.next_rank;
@@ -358,14 +365,15 @@ step_handle_t graph_t::get_previous_step(const step_handle_t& step_handle) const
     }
     //handle_t curr_handle = get_handle_of_step(step_handle);
     nid_t curr_id = get_id(curr_handle);
-    const node_t& node = node_v.at(number_bool_packing::unpack_number(curr_handle));
+    const node_t& node = get_node_cref(curr_handle);
     auto& step = node.get_path_step(as_integers(step_handle)[1]);
     if (step.is_start) { //prev_id() == path_begin_marker) {
         return path_front_end(get_path_handle_of_step(step_handle));
     }
     nid_t prev_id = step.prev_id;
     handle_t prev_handle = get_handle(prev_id);
-    bool prev_rev = node_v.at(number_bool_packing::unpack_number(prev_handle)).get_path_step(step.prev_rank).is_rev;
+    // TODO fixme! don't unpack the whole step!!
+    bool prev_rev = get_node_cref(prev_handle).get_path_step(step.prev_rank).is_rev;
     step_handle_t prev_step;
     as_integers(prev_step)[0] = as_integer(get_handle(prev_id, prev_rev));
     as_integers(prev_step)[1] = step.prev_rank;
@@ -373,7 +381,7 @@ step_handle_t graph_t::get_previous_step(const step_handle_t& step_handle) const
 }
 
 path_handle_t graph_t::get_path_handle_of_step(const step_handle_t& step_handle) const {
-    const node_t& node = node_v.at(number_bool_packing::unpack_number(get_handle_of_step(step_handle)));
+    const node_t& node = get_node_cref(get_handle_of_step(step_handle));
     auto& step = node.get_path_step(as_integers(step_handle)[1]);
     return as_path_handle(step.path_id);
 }
@@ -454,7 +462,9 @@ handle_t graph_t::create_handle(const std::string& sequence, const nid_t& id) {
     // add to node vector
     uint64_t handle_rank = (uint64_t)id-1;
     // set its values
-    auto& node = node_v[handle_rank];
+    //auto& node = //get_node_ref(handle_rank);
+    node_v[handle_rank] = new node_t();
+    auto& node = *node_v[handle_rank];
     node.set_id(id);
     node.set_sequence(sequence);
     // it's not deleted
@@ -485,7 +495,7 @@ void graph_t::destroy_handle(const handle_t& handle) {
         destroy_edge(edge);
     }
     // clear the node storage
-    auto& node = node_v[number_bool_packing::unpack_number(handle)];
+    auto& node = get_node_ref(handle);
     node.clear();
     // remove from the graph by hiding it (compaction later)
     deleted_node_bv[number_bool_packing::unpack_number(handle)] = 1;
@@ -524,7 +534,7 @@ void graph_t::create_edge(const handle_t& left_h, const handle_t& right_h) {
     uint64_t left_rank = number_bool_packing::unpack_number(left_h);
     uint64_t right_rank = number_bool_packing::unpack_number(right_h);
     // insert the edge for each side
-    auto& left_node = node_v.at(left_rank);
+    auto& left_node = get_node_ref(left_h);
     left_node.add_edge(get_id(right_h),
                        get_is_reverse(right_h),
                        false,
@@ -535,7 +545,7 @@ void graph_t::create_edge(const handle_t& left_h, const handle_t& right_h) {
     // only insert the second side if it's on a different node
     if (left_rank == right_rank) return;
 
-    auto& right_node = node_v.at(right_rank);
+    auto& right_node = get_node_ref(right_h);
     right_node.add_edge(get_id(left_h),
                         get_is_reverse(left_h),
                         true,
@@ -570,10 +580,8 @@ bool graph_t::has_edge(const handle_t& left, const handle_t& right) const {
 /// Ignores nonexistent edges.
 /// Does not update any stored paths.
 void graph_t::destroy_edge(const handle_t& left_h, const handle_t& right_h) {
-    uint64_t left_rank = number_bool_packing::unpack_number(left_h);
-    uint64_t right_rank = number_bool_packing::unpack_number(right_h);
-    auto& left_node = node_v.at(left_rank);
-    auto& right_node = node_v.at(right_rank);
+    auto& left_node = get_node_ref(left_h);
+    auto& right_node =  get_node_ref(right_h);
     bool left_rev = get_is_reverse(left_h);
     bool right_rev = get_is_reverse(right_h);
     _edge_count -=
@@ -597,8 +605,9 @@ void graph_t::clear(void) {
 }
 
 void graph_t::clear_paths(void) {
-    for_each_handle([&](const handle_t& handle) {
-            node_t& node = node_v.at(number_bool_packing::unpack_number(handle));
+    for_each_handle(
+        [&](const handle_t& handle) {
+            node_t& node = get_node_ref(handle);
             node.clear_paths();
         });
     _path_count = 0;
@@ -707,7 +716,7 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
 
     // edges
     for (auto& handle : *order) {
-        node_t& node = node_v.at(number_bool_packing::unpack_number(handle));
+        node_t& node = get_node_ref(handle);
         follow_edges(handle, false, [&](const handle_t& h) {
                 ordered.create_edge(
                         ordered.get_handle(
@@ -934,7 +943,7 @@ handle_t graph_t::apply_orientation(const handle_t& handle) {
     // we have the technology. we can rebuild it.
     // replace the handle sequence
     //set_handle_sequence(handle, seq);
-    auto& node = node_v.at(number_bool_packing::unpack_number(handle));
+    auto& node = get_node_ref(handle);
 
     // flip the node sequence
     node.set_sequence(get_sequence(handle));
@@ -979,7 +988,8 @@ handle_t graph_t::apply_orientation(const handle_t& handle) {
 
 void graph_t::set_handle_sequence(const handle_t& handle, const std::string& seq) {
     assert(seq.size());
-    node_v[number_bool_packing::unpack_number(handle)].set_sequence(seq);
+    //node_v[number_bool_packing::unpack_number(handle)].set_sequence(seq);
+    get_node_ref(handle).set_sequence(seq);
 }
 
 /// Split a handle's underlying node at the given offsets in the handle's
@@ -1056,7 +1066,7 @@ std::vector<handle_t> graph_t::divide_handle(const handle_t& handle, const std::
             rewrite_segment(step, step, handles);
         }
     }
-    node_v.at(number_bool_packing::unpack_number(handle)).clear_paths();
+    get_node_ref(handle).clear_paths();
     // collect the context of the handle
     vector<handle_t> edges_fwd_fwd;
     vector<handle_t> edges_fwd_rev;
@@ -1195,7 +1205,7 @@ step_handle_t graph_t::create_step(const path_handle_t& path, const handle_t& ha
     step_handle_t step;
     as_integers(step)[0] = as_integer(handle);
     as_integers(step)[1] = rank_on_handle;
-    auto& node = node_v.at(number_bool_packing::unpack_number(handle));
+    auto& node = get_node_ref(handle);
     node.add_path_step(as_integer(path), get_is_reverse(handle),
                        true, true,
                        0, 0, 0, 0);
@@ -1209,11 +1219,11 @@ void graph_t::link_steps(const step_handle_t& from, const step_handle_t& to) {
     const handle_t& to_handle = get_handle_of_step(to);
     const uint64_t& from_rank = as_integers(from)[1];
     const uint64_t& to_rank = as_integers(to)[1];
-    node_t& from_node = node_v.at(number_bool_packing::unpack_number(from_handle));
+    node_t& from_node = get_node_ref(from_handle);
     from_node.set_step_next_id(from_rank, get_id(to_handle));
     from_node.set_step_next_rank(from_rank, to_rank);
     from_node.set_step_is_end(from_rank, false);
-    node_t& to_node = node_v.at(number_bool_packing::unpack_number(to_handle));
+    node_t& to_node = get_node_ref(to_handle);
     to_node.set_step_prev_id(to_rank, get_id(from_handle));
     to_node.set_step_prev_rank(to_rank, from_rank);
     to_node.set_step_is_start(to_rank, false);
@@ -1269,7 +1279,7 @@ void graph_t::destroy_step(const step_handle_t& step_handle) {
         path_meta.last = step;
     }
     --path_meta.length;
-    node_t& curr_node = node_v.at(number_bool_packing::unpack_number(get_handle_of_step(step_handle)));
+    node_t& curr_node = get_node_ref(get_handle_of_step(step_handle));
     curr_node.set_path_step(as_integers(step_handle)[1], node_t::step_t());
     // reduce the step count in the path
 }
@@ -1321,7 +1331,7 @@ void graph_t::decrement_rank(const step_handle_t& step_handle) {
     if (has_previous_step(step_handle)) {
         auto step = get_previous_step(step_handle);
         // decrement the rank information
-        node_t& step_node = node_v.at(number_bool_packing::unpack_number(get_handle_of_step(step)));
+        node_t& step_node = get_node_ref(get_handle_of_step(step));
         uint64_t step_rank = as_integers(step)[1];
         node_t::step_t node_step = step_node.get_path_step(step_rank);
         // TODO this does a ton of unnecessary work
@@ -1334,7 +1344,7 @@ void graph_t::decrement_rank(const step_handle_t& step_handle) {
     }
     if (has_next_step(step_handle)) {
         auto step = get_next_step(step_handle);
-        node_t& step_node = node_v.at(number_bool_packing::unpack_number(get_handle_of_step(step)));
+        node_t& step_node = get_node_ref(get_handle_of_step(step));
         uint64_t step_rank = as_integers(step)[1];
         // TODO this does a ton of unnecessary work
         node_t::step_t node_step = step_node.get_path_step(step_rank);
@@ -1453,7 +1463,7 @@ void graph_t::display(void) const {
     //for (auto& k : graph_id_map) std::cerr << k.first << "->" << k.second << " "; std::cerr << std::endl;
     std::cerr << "node_v" << "\t";
     for (uint64_t i = 0; i < node_v.size(); ++i) {
-        auto& node = node_v.at(i);
+        auto& node = *node_v.at(i);
         nid_t node_id = i+1;
         std::cerr << node_id << ":" << node.get_sequence() << " ";
         //const auto& node_edges = node.edges;
@@ -1515,7 +1525,7 @@ void graph_t::to_gfa(std::ostream& out) const {
             {
                 // use this direct iteration to avoid double counting edges
                 // we only consider write the edges relative to their start
-                const node_t& node = node_v.at(number_bool_packing::unpack_number(h));
+                const node_t& node = get_node_cref(h);
                 bool is_rev = get_is_reverse(h);
                 nid_t node_id = get_id(h);
                 node.for_each_edge(
@@ -1579,7 +1589,7 @@ void graph_t::serialize_members(std::ostream& out) const {
     written += sizeof(_id_increment);
     assert(_node_count == node_v.size());
     for (auto& node : node_v) {
-        written += node.serialize(out);
+        written += node->serialize(out);
     }
     written += deleted_node_bv.serialize(out);
     size_t i = path_metadata_v.size();
@@ -1624,8 +1634,9 @@ void graph_t::deserialize_members(std::istream& in) {
     in.read((char*)&_id_increment,sizeof(_id_increment));
     node_v.resize(_node_count);
     for (size_t i = 0; i < _node_count; ++i) {
+        node_v[i] = new node_t;
         auto& node = node_v[i];
-        node.load(in);
+        node->load(in);
     }
     deleted_node_bv.load(in);
     size_t i = 0;

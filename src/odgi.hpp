@@ -13,6 +13,7 @@
 #include <vector>
 #include <utility>
 #include <functional>
+#include <thread>
 #include <handlegraph/types.hpp>
 #include <handlegraph/iteratee.hpp>
 #include <handlegraph/util.hpp>
@@ -409,7 +410,9 @@ private:
     /// Records the handle to node_id mapping
     /// Use the special value "0" to indicate deleted nodes so that
     /// handle references in the id_map and elsewhere are not immediately destroyed
-    std::vector<node_t> node_v;
+    std::vector<node_t*> node_v;
+    node_t& get_node_ref(const handle_t& handle) const;
+    const node_t& get_node_cref(const handle_t& handle) const;
     /// Mark deleted nodes here for translating graph ids into internal ranks
     suc_bv deleted_node_bv;
     uint64_t _deleted_node_count = 0;

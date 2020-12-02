@@ -62,7 +62,7 @@ int main_build(int argc, char** argv) {
     }
     std::string gfa_filename = args::get(gfa_file);
     if (gfa_filename.size()) {
-        gfa_to_handle(gfa_filename, &graph, args::get(progress));
+        gfa_to_handle(gfa_filename, &graph, args::get(nthreads), args::get(progress));
     }
 
     const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;

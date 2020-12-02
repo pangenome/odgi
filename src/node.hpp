@@ -9,6 +9,7 @@
 #include <utility>
 #include <cstring>
 #include <cassert>
+#include <atomic>
 #include "bmap.hpp"
 #include "dynamic.hpp"
 #include "varint.hpp"
@@ -23,12 +24,12 @@ const uint8_t PATH_RECORD_LENGTH = 6;
 /// A node object with the sequence, its edge lists, and paths
 class node_t {
     uint64_t id = 0;
+    std::atomic_flag lock = ATOMIC_FLAG_INIT;
     std::string sequence;
     dyn::hacked_vector edges;
     dyn::hacked_vector decoding;
     dyn::hacked_vector paths;
-public:
-    node_t(void); // constructor
+    // relativistic conversions
     inline uint64_t to_delta(const uint64_t& other_id) const {
         if (other_id > id) {
             return ((other_id - id) << 1) | 1;
@@ -80,6 +81,17 @@ public:
             return type & (1 << 3);
         }
     };
+    
+public:
+    node_t(void); // constructor
+    // locking methods
+    inline void get_lock(void) {
+        while (lock.test_and_set(std::memory_order_acquire))  // acquire lock
+            ; // spin
+    }
+    inline void clear_lock(void) {
+        lock.clear(std::memory_order_release);
+    }
     inline const uint64_t edge_count(void) const { return edges.size()/EDGE_RECORD_LENGTH; }
     inline const uint64_t path_count(void) const { return paths.size()/PATH_RECORD_LENGTH; }
     struct step_t {

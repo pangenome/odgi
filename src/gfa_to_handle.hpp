@@ -1,5 +1,4 @@
-#ifndef DG_GFA_TO_HANDLE_HPP_INCLUDED
-#define DG_GFA_TO_HANDLE_HPP_INCLUDED
+#pragma once
 
 /**
  * \file gfa_to_handle.hpp
@@ -12,14 +11,20 @@
 #include <iostream>
 #include <limits>
 #include <handlegraph/mutable_path_mutable_handle_graph.hpp>
+#include <atomic>
+#include <thread>
+#include <functional>
+#include "atomic_queue.h"
 
 namespace odgi {
 
-    /// Fills a handle graph with an instantiation of a sequence graph from a GFA file.
-    /// Handle graph must be empty when passed into function.
-    void gfa_to_handle(const string& gfa_filename,
-                       handlegraph::MutablePathMutableHandleGraph* graph,
-                       bool show_progress = false);
+typedef atomic_queue::AtomicQueue<gfak::path_elem*, 2 << 16> gfa_path_queue_t;
+
+/// Fills a handle graph with an instantiation of a sequence graph from a GFA file.
+/// Handle graph must be empty when passed into function.
+void gfa_to_handle(const string& gfa_filename,
+                   handlegraph::MutablePathMutableHandleGraph* graph,
+                   uint64_t n_threads = 1,
+                   bool show_progress = false);
 
 }
-#endif
