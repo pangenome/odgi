@@ -599,6 +599,9 @@ void graph_t::clear(void) {
     _path_count = 0;
     _path_handle_next = 0;
     deleted_node_bv = null_bv;
+    for (auto& n : node_v) {
+        delete n;
+    }
     node_v.clear();
     path_metadata_v.clear();
     path_name_map.clear();
