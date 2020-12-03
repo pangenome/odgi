@@ -13,12 +13,18 @@
 #include <handlegraph/mutable_path_mutable_handle_graph.hpp>
 #include <atomic>
 #include <thread>
+#include <mutex>
 #include <functional>
 #include "atomic_queue.h"
 
 namespace odgi {
 
-typedef atomic_queue::AtomicQueue<gfak::path_elem*, 2 << 16> gfa_path_queue_t;
+struct path_elem_t {
+    handlegraph::path_handle_t path;
+    gfak::path_elem gfak;
+};
+
+typedef atomic_queue::AtomicQueue<path_elem_t*, 2 << 10> gfa_path_queue_t;
 
 /// Fills a handle graph with an instantiation of a sequence graph from a GFA file.
 /// Handle graph must be empty when passed into function.

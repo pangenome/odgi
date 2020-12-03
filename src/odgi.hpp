@@ -27,6 +27,7 @@
 #include <handlegraph/serializable_handle_graph.hpp>
 #include "dynamic.hpp"
 #include "dynamic_types.hpp"
+#include "lockfree_hashtable.h"
 #include "dna.hpp"
 #include "hash_map.hpp"
 #include "node.hpp"
@@ -49,6 +50,14 @@ public:
     graph_t(void) {
         // set up initial delimiters
         deleted_node_bv.push_back(1);
+        path_metadata_h = std::make_unique<lockfree::LockFreeHashTable<uint64_t,
+                                                                       path_metadata_t*>>();
+        path_name_h = std::make_unique<lockfree::LockFreeHashTable<std::string,
+                                                                   path_metadata_t*>>();
+        _node_count = 0;
+        _edge_count = 0;
+        _path_count = 0;
+        _path_handle_next = 0;
     }
 
     ~graph_t(void) { clear(); }
@@ -410,7 +419,10 @@ private:
     /// Records the handle to node_id mapping
     /// Use the special value "0" to indicate deleted nodes so that
     /// handle references in the id_map and elsewhere are not immediately destroyed
-    std::vector<node_t*> node_v;
+
+    // lock for the node vector and the following variables
+    std::atomic_flag node_lock = ATOMIC_FLAG_INIT;
+    std::vector<node_t*> node_v; // not threadsafe
     node_t& get_node_ref(const handle_t& handle) const;
     const node_t& get_node_cref(const handle_t& handle) const;
     /// Mark deleted nodes here for translating graph ids into internal ranks
@@ -432,35 +444,42 @@ private:
     }
     
     struct path_metadata_t {
+        path_handle_t handle = as_path_handle(0);
         uint64_t length = 0;
         step_handle_t first = {0, 0};
         step_handle_t last = {0, 0};
         std::string name;
-        bool is_circular = false;
+        std::atomic<bool> is_circular;
+        std::atomic_flag lock = ATOMIC_FLAG_INIT;
+        inline void get_lock(void) {
+            while (lock.test_and_set(std::memory_order_acquire))  // acquire lock
+                ; // spin
+        }
+        inline void clear_lock(void) {
+            lock.clear(std::memory_order_release);
+        }
     };
-    /// maps between path identifier and the start, end, and length of the path
-    std::vector<path_metadata_t> path_metadata_v;
 
-    /// Links path names to handles
-    string_hash_map<std::string, uint64_t> path_name_map;
+    /// maps between path identifier and the start, end, and length of the path
+    std::unique_ptr<lockfree::LockFreeHashTable<uint64_t, path_metadata_t*>> path_metadata_h;
+    std::unique_ptr<lockfree::LockFreeHashTable<std::string, path_metadata_t*>> path_name_h;
+    path_metadata_t& get_path_metadata(const path_handle_t& path) const;
+    const path_metadata_t& path_metadata(const path_handle_t& path) const;
 
     /// A helper to record the number of live nodes
-    uint64_t _node_count = 0;
+    std::atomic<uint64_t> _node_count; // = 0;
 
     /// A helper to record the number of live edges
-    uint64_t _edge_count = 0;
+    std::atomic<uint64_t> _edge_count;// = 0;
 
     /// A helper to record the number of live paths
-    uint64_t _path_count = 0;
+    std::atomic<uint64_t> _path_count; // = 0;
 
-    /// A helper to record the next path handle (path deletions are hard because of our path FM-index)
-    uint64_t _path_handle_next = 0;
+    /// A helper to record the next path handle id
+    std::atomic<uint64_t> _path_handle_next; // = 0;
 
-    /// Helper to convert between edge storage and actual id
-    //uint64_t edge_delta_to_id(uint64_t left, uint64_t delta) const;
-
-    /// Helper to convert between ids and stored edge
-    //uint64_t edge_to_delta(const handle_t& left, const handle_t& right) const;
+    /// A helper to record the number of live paths
+    //std::atomic<uint64_t> _step_count; // = 0; // TODO
 
     /// Helper to simplify removal of path handle records
     void destroy_path_handle_records(uint64_t i);

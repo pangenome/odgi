@@ -53,37 +53,50 @@ void gfa_to_handle(const string& gfa_filename,
     }
 
     gfa_path_queue_t path_queue;
+    std::mutex logging_mutex;
     std::atomic<bool> work_todo;
+    uint64_t idx = 0;
     auto worker =
         [&](uint64_t tid) {
             while (work_todo.load()) {
-                gfak::path_elem* p;
+                path_elem_t * p;
                 if (path_queue.try_pop(p)) {
-                    handlegraph::path_handle_t path = graph->create_path_handle(p->name);
                     uint64_t i = 0;
-                    //std::cerr << "adding path " << p->name << std::endl;
-                    for (auto& s : p->segment_names) {
-                        graph->append_step(path,
+                    //std::cerr << "adding path " << graph->get_path_name(p->path) << std::endl;
+                    for (auto& s : p->gfak.segment_names) {
+                        graph->append_step(p->path,
                                            graph->get_handle(std::stoi(s),
-                                                             p->orientations[i++]));
+                                                             p->gfak.orientations[i++]));
                     }
                     delete p;
+                    {
+                        std::lock_guard<std::mutex> guard(logging_mutex);
+                        std::cerr << "path " << ++idx << "\r";
+                    }
                 } else {
                     std::this_thread::sleep_for(std::chrono::nanoseconds(1));
                 }
             }
         };
+
+    gg.for_each_path_line_in_file(
+        filename,
+        [&](const gfak::path_elem& path) {
+            graph->create_path_handle(path.name);
+        });
+
     std::vector<std::thread> workers;
     workers.reserve(n_threads);
     work_todo.store(true);
     for (uint64_t t = 0; t < n_threads; ++t) {
         workers.emplace_back(worker, t);
     }
-    
+
     gg.for_each_path_line_in_file(
         filename,
         [&](const gfak::path_elem& path) {
-            gfak::path_elem* p = new gfak::path_elem(path);
+            handlegraph::path_handle_t p_h = graph->get_path_handle(path.name);
+            path_elem_t* p = new path_elem_t({p_h, path});
             path_queue.push(p);
         });
 
