@@ -446,10 +446,10 @@ public:
     }
     
     struct path_metadata_t {
-        path_handle_t handle = as_path_handle(0);
-        uint64_t length = 0;
-        step_handle_t first = {0, 0};
-        step_handle_t last = {0, 0};
+        std::atomic<path_handle_t> handle = as_path_handle(0);
+        std::atomic<uint64_t> length;
+        std::atomic<step_handle_t> first;
+        std::atomic<step_handle_t> last;
         std::string name;
         std::atomic<bool> is_circular;
         std::atomic_flag lock = ATOMIC_FLAG_INIT;
@@ -461,10 +461,10 @@ public:
             lock.clear(std::memory_order_release);
         }
         void copy(const path_metadata_t& other) {
-            handle = other.handle;
-            length = other.length;
-            first = other.first;
-            last = other.last;
+            handle.store(other.handle);
+            length.store(other.length);
+            first.store(other.first);
+            last.store(other.last);
             name = other.name;
             is_circular.store(other.is_circular);
         }

@@ -79,12 +79,6 @@ void gfa_to_handle(const string& gfa_filename,
             }
         };
 
-    gg.for_each_path_line_in_file(
-        filename,
-        [&](const gfak::path_elem& path) {
-            graph->create_path_handle(path.name);
-        });
-
     std::vector<std::thread> workers;
     workers.reserve(n_threads);
     work_todo.store(true);
@@ -95,7 +89,7 @@ void gfa_to_handle(const string& gfa_filename,
     gg.for_each_path_line_in_file(
         filename,
         [&](const gfak::path_elem& path) {
-            handlegraph::path_handle_t p_h = graph->get_path_handle(path.name);
+            handlegraph::path_handle_t p_h = graph->create_path_handle(path.name);
             path_elem_t* p = new path_elem_t({p_h, path});
             path_queue.push(p);
         });
