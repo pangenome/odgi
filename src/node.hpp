@@ -164,6 +164,7 @@ public:
     uint64_t serialize(std::ostream& out) const;
     void load(std::istream& in);
     void display(void) const;
+    void copy(const node_t& other);
 
 };
 

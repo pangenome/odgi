@@ -325,6 +325,7 @@ set(CMAKE_BUILD_TYPE Debug)
 # set up our target executable and specify its dependencies and includes
 add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/odgi.cpp
+  ${CMAKE_SOURCE_DIR}/src/reclaimer.cpp
   ${CMAKE_SOURCE_DIR}/src/position.cpp
   ${CMAKE_SOURCE_DIR}/src/gfa_to_handle.cpp
   ${CMAKE_SOURCE_DIR}/src/split.cpp
@@ -504,8 +505,8 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/position.hpp
   ${CMAKE_SOURCE_DIR}/src/dset64.hpp
   ${CMAKE_SOURCE_DIR}/src/dset64-gccAtomic.hpp
-  ${CMAKE_SOURCE_DIR}/src/lockfree_hashtable.h
-  ${CMAKE_SOURCE_DIR}/src/reclaimer.h
+  ${CMAKE_SOURCE_DIR}/src/lockfree_hashtable.hpp
+  ${CMAKE_SOURCE_DIR}/src/reclaimer.hpp
   ${CMAKE_SOURCE_DIR}/src/unittest/driver.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/linear_index.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/random_order.hpp

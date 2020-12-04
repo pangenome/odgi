@@ -27,7 +27,7 @@
 #include <handlegraph/serializable_handle_graph.hpp>
 #include "dynamic.hpp"
 #include "dynamic_types.hpp"
-#include "lockfree_hashtable.h"
+#include "lockfree_hashtable.hpp"
 #include "dna.hpp"
 #include "hash_map.hpp"
 #include "node.hpp"
@@ -412,27 +412,29 @@ public:
 
     uint64_t get_number_of_threads();
 
-/// These are the backing data structures that we use to fulfill the above functions
+    /// copy the other graph into this one
+    void copy(const graph_t& other);
 
-private:
+/// These are the backing data structures that we use to fulfill the above functions
 
     /// Records the handle to node_id mapping
     /// Use the special value "0" to indicate deleted nodes so that
     /// handle references in the id_map and elsewhere are not immediately destroyed
 
     // lock for the node vector and the following variables
+    // TODO use it in create_handle and friends
     std::atomic_flag node_lock = ATOMIC_FLAG_INIT;
     std::vector<node_t*> node_v; // not threadsafe
     node_t& get_node_ref(const handle_t& handle) const;
     const node_t& get_node_cref(const handle_t& handle) const;
     /// Mark deleted nodes here for translating graph ids into internal ranks
     suc_bv deleted_node_bv;
-    uint64_t _deleted_node_count = 0;
+    std::atomic<uint64_t> _deleted_node_count = 0;
     /// efficient id to handle/sequence conversion
-    nid_t _max_node_id = 0;
-    nid_t _min_node_id = 0;
-    nid_t _id_increment = 0;
-    uint64_t _num_threads = 1;
+    std::atomic<nid_t> _max_node_id = 0;
+    std::atomic<nid_t> _min_node_id = 0;
+    std::atomic<nid_t> _id_increment = 0;
+    std::atomic<uint64_t> _num_threads = 1;
 
     inline void canonicalize_edge(handle_t& left, handle_t& right) const {
         if (number_bool_packing::unpack_bit(left) && number_bool_packing::unpack_bit(right)
@@ -457,6 +459,14 @@ private:
         }
         inline void clear_lock(void) {
             lock.clear(std::memory_order_release);
+        }
+        void copy(const path_metadata_t& other) {
+            handle = other.handle;
+            length = other.length;
+            first = other.first;
+            last = other.last;
+            name = other.name;
+            is_circular.store(other.is_circular);
         }
     };
 
@@ -505,7 +515,7 @@ private:
     /// get the backing node rank for a given node id
     uint64_t get_node_rank(const nid_t& node_id) const;
 
-    };
+};
 
 //const static uint64_t path_begin_marker = std::numeric_limits<uint64_t>::max();
 //const static uint64_t path_end_marker = 2;

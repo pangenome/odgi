@@ -408,7 +408,7 @@ int main_sort(int argc, char** argv) {
                     graph_t groomed;
                     algorithms::groom(graph, groomed, progress);
                     groomed.set_number_of_threads(graph.get_number_of_threads());
-                    graph = groomed;
+                    graph.copy(groomed);
                     was_groomed = true;
                     break;
                 }

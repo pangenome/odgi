@@ -289,6 +289,15 @@ void node_t::clear_encoding(void) {
     decoding = null_iv;
 }
 
+void node_t::copy(const node_t& other) {
+    clear();
+    id = other.id;
+    sequence = other.sequence;
+    edges = other.edges;
+    decoding = other.decoding;
+    paths = other.paths;
+}
+
 uint64_t node_t::serialize(std::ostream& out) const {
     uint64_t written = 0;
     size_t seq_size = sequence.size();

@@ -483,9 +483,9 @@ handle_t graph_t::create_handle(const std::string& sequence, const nid_t& id) {
         }
     }
     // update min/max node ids
-    _max_node_id = max(id, _max_node_id);
+    _max_node_id = std::max(id, _max_node_id.load());
     if (_min_node_id) {
-        _min_node_id = (uint64_t)min(id, _min_node_id);
+        _min_node_id = (uint64_t)min(id, _min_node_id.load());
     } else {
         _min_node_id = id;
     }
@@ -1657,8 +1657,8 @@ void graph_t::serialize_members(std::ostream& out) const {
             out.write((char*)&m.last,sizeof(m.last));
             written += sizeof(m.last);
             size_t k = m.name.size();
-            out.write((char*)&k,sizeof(size_t));
-            written += sizeof(size_t);
+            out.write((char*)&k,sizeof(k));
+            written += sizeof(k);
             out.write((char*)m.name.c_str(),m.name.size());
             written += k;
             ++j;
@@ -1690,7 +1690,7 @@ void graph_t::deserialize_members(std::istream& in) {
         in.read((char*)&m.first,sizeof(m.first));
         in.read((char*)&m.last,sizeof(m.last));
         uint64_t s;
-        in.read((char*)&s,sizeof(size_t));
+        in.read((char*)&s,sizeof(s));
         char n[s+1]; n[s] = '\0';
         in.read(n,s);
         m.name = string(n);
@@ -1706,6 +1706,49 @@ void graph_t::set_number_of_threads(uint64_t num_threads) {
 
 uint64_t graph_t::get_number_of_threads() {
     return _num_threads;
+}
+
+void graph_t::copy(const graph_t& other) {
+    clear();
+    _max_node_id.store(other._max_node_id);
+    _min_node_id.store(other._min_node_id);
+    _node_count.store(other._node_count);
+    _edge_count.store(other._edge_count);
+    _path_count.store(other._path_count);
+    _path_handle_next.store(other._path_handle_next);
+    _deleted_node_count.store(other._deleted_node_count);
+    _id_increment.store(other._id_increment);
+    node_v.resize(_node_count);
+    for (size_t i = 0; i < _node_count; ++i) {
+        node_v[i] = new node_t;
+        auto* node = node_v[i];
+        node->copy(other.get_node_cref(as_handle(i)));
+    }
+    deleted_node_bv = other.deleted_node_bv;
+    // copy the path metadata
+    // the paths themselves should have been copied
+    other.for_each_path_handle(
+        [&](const path_handle_t& p) {
+            auto& path_meta = path_metadata(p);
+            // XXXXXXX todo
+        });
+    /*
+    for (size_t j = 0; j < _path_count; ++j) {
+        path_metadata_t* _p = new path_metadata_t();
+        auto& m = *_p;
+        m.handle = as_path_handle(j+1);
+        in.read((char*)&m.length,sizeof(m.length));
+        in.read((char*)&m.first,sizeof(m.first));
+        in.read((char*)&m.last,sizeof(m.last));
+        uint64_t s;
+        in.read((char*)&s,sizeof(s));
+        char n[s+1]; n[s] = '\0';
+        in.read(n,s);
+        m.name = string(n);
+        path_metadata_h->Insert(as_integer(m.handle), _p);
+        path_name_h->Insert(m.name, _p);
+    }
+    */
 }
 
 }

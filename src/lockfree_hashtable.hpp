@@ -4,7 +4,7 @@
 #include <cassert>
 #include <cmath>
 
-#include "reclaimer.h"
+#include "reclaimer.hpp"
 
 namespace lockfree {
 
