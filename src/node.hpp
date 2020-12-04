@@ -13,11 +13,12 @@
 #include "bmap.hpp"
 #include "dynamic.hpp"
 #include "varint.hpp"
+#include "dna.hpp"
 
 namespace odgi {
 
 using namespace handlegraph;
-using nid_t = handlegraph::nid_t;
+//using nid_t = handlegraph::nid_t;
 const uint8_t EDGE_RECORD_LENGTH = 2;
 const uint8_t PATH_RECORD_LENGTH = 6;
 
@@ -111,8 +112,8 @@ public:
     uint64_t sequence_size(void) const;
     const std::string& get_sequence(void) const;
     void set_sequence(const std::string& seq);
-    void set_id(const nid_t& new_id);
-    void for_each_edge(const std::function<bool(nid_t other_id,
+    void set_id(const uint64_t& new_id);
+    void for_each_edge(const std::function<bool(uint64_t other_id,
                                                 bool on_rev,
                                                 bool other_rev,
                                                 bool to_curr)>& func) const;
@@ -165,6 +166,9 @@ public:
     void load(std::istream& in);
     void display(void) const;
     void copy(const node_t& other);
+    void apply_ordering(
+        const std::function<uint64_t(uint64_t)>& get_new_id,
+        const std::function<bool(uint64_t)>& to_flip);
 
 };
 

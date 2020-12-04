@@ -10,7 +10,7 @@ void node_t::set_sequence(const std::string& seq) {
     sequence = seq;
 }
 
-void node_t::set_id(const nid_t& new_id) {
+void node_t::set_id(const uint64_t& new_id) {
     id = new_id;
 }
 
@@ -37,7 +37,7 @@ uint64_t node_t::decode(const uint64_t& idx) const {
     return from_delta(decoding.at(idx));
 }
 
-void node_t::for_each_edge(const std::function<bool(nid_t other_id,
+void node_t::for_each_edge(const std::function<bool(uint64_t other_id,
                                                     bool other_rev,
                                                     bool to_curr,
                                                     bool on_rev)>& func) const {
@@ -296,6 +296,49 @@ void node_t::copy(const node_t& other) {
     edges = other.edges;
     decoding = other.decoding;
     paths = other.paths;
+}
+
+void node_t::apply_ordering(
+    const std::function<uint64_t(uint64_t)>& get_new_id,
+    const std::function<bool(uint64_t)>& to_flip) {
+    bool flip = to_flip(id);
+    if (flip) {
+        reverse_complement_in_place(sequence);
+    }
+    // rewrite the encoding (affects path storage)
+    std::vector<uint64_t> dec_v;
+    for (uint64_t i = 0; i < decoding.size(); ++i) {
+        dec_v.push_back(decode(i));
+    }
+    // update our own id before re-encoding (affects to_delta computation)
+    id = get_new_id(id);
+    clear_encoding();
+    for (auto& other_id : dec_v) {
+        decoding.push_back(to_delta(other_id));
+    }
+    // flip path steps if needed
+    if (flip) {
+        uint64_t n_paths = path_count();
+        for (uint64_t i = 0; i < n_paths; ++i) {
+            set_step_is_rev(i, !step_is_rev(i));
+        }
+    }
+    // rewrite the edges, reflecting the orientation information we're given
+    dyn::hacked_vector new_edges;
+    for_each_edge(
+        [&](uint64_t other_id,
+            bool other_rev,
+            bool to_curr,
+            bool on_rev) {
+            //new_edges.
+            auto edge_type = edge_helper::pack(to_flip(other_id)^other_rev,
+                                               to_curr,
+                                               flip^on_rev);
+            new_edges.push_back(get_new_id(other_id));
+            new_edges.push_back(edge_type);
+            return true;
+        });
+    edges = new_edges;
 }
 
 uint64_t node_t::serialize(std::ostream& out) const {

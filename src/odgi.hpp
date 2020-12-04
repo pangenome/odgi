@@ -434,7 +434,7 @@ public:
     std::atomic<nid_t> _max_node_id = 0;
     std::atomic<nid_t> _min_node_id = 0;
     std::atomic<nid_t> _id_increment = 0;
-    std::atomic<uint64_t> _num_threads = 1;
+    uint64_t _num_threads = 1;
 
     inline void canonicalize_edge(handle_t& left, handle_t& right) const {
         if (number_bool_packing::unpack_bit(left) && number_bool_packing::unpack_bit(right)
