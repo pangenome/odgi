@@ -1727,28 +1727,14 @@ void graph_t::copy(const graph_t& other) {
     deleted_node_bv = other.deleted_node_bv;
     // copy the path metadata
     // the paths themselves should have been copied
+    // XXX SLOW
     other.for_each_path_handle(
         [&](const path_handle_t& p) {
-            auto& path_meta = path_metadata(p);
-            // XXXXXXX todo
+            auto new_path = create_path_handle(other.get_path_name(p),
+                                               other.get_is_circular(p));
+            auto& new_path_meta = get_path_metadata(new_path);
+            new_path_meta.copy(other.path_metadata(p));
         });
-    /*
-    for (size_t j = 0; j < _path_count; ++j) {
-        path_metadata_t* _p = new path_metadata_t();
-        auto& m = *_p;
-        m.handle = as_path_handle(j+1);
-        in.read((char*)&m.length,sizeof(m.length));
-        in.read((char*)&m.first,sizeof(m.first));
-        in.read((char*)&m.last,sizeof(m.last));
-        uint64_t s;
-        in.read((char*)&s,sizeof(s));
-        char n[s+1]; n[s] = '\0';
-        in.read(n,s);
-        m.name = string(n);
-        path_metadata_h->Insert(as_integer(m.handle), _p);
-        path_name_h->Insert(m.name, _p);
-    }
-    */
 }
 
 }
