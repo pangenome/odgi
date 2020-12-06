@@ -16,6 +16,7 @@
 #include <mutex>
 #include <functional>
 #include "atomic_queue.h"
+#include "progress.hpp"
 
 namespace odgi {
 
@@ -25,6 +26,8 @@ struct path_elem_t {
 };
 
 typedef atomic_queue::AtomicQueue<path_elem_t*, 2 << 10> gfa_path_queue_t;
+
+std::map<char, uint64_t> gfa_line_counts(const char* filename);
 
 /// Fills a handle graph with an instantiation of a sequence graph from a GFA file.
 /// Handle graph must be empty when passed into function.

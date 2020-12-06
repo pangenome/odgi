@@ -68,9 +68,6 @@ int main_build(int argc, char** argv) {
     const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
     graph.set_number_of_threads(num_threads);
 
-    if (args::get(progress)) {
-        std::cerr << std::endl;
-    }
     if (args::get(toposort)) {
         graph.apply_ordering(algorithms::topological_order(&graph, true, args::get(progress)), true);
     }

@@ -5,6 +5,7 @@
 #include <atomic>
 #include <thread>
 #include <chrono>
+#include <cmath>
 #include <iomanip>
 
 namespace odgi {
