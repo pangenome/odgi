@@ -857,45 +857,46 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
 }
 
 void graph_t::apply_path_ordering(const std::vector<path_handle_t>& order) {
-    assert(false);
-    //std::vector<path_metadata_t*> metadata
-    //std::vector<path_handle_t> mapping;
-    //for (auto& o
-    //_path_handle_next;
-    /*
+    std::vector<path_handle_t> curr_to_new(order.size());
+    {
+        uint64_t i = 0;
+        for (auto& p : order) {
+            curr_to_new[as_integer(p)-1] = as_path_handle(++i);
+        }
+    }
+    auto get_new_path_handle =
+        [&](const path_handle_t& p) {
+            return curr_to_new[as_integer(p)-1];
+        };
+    // now we save our metadata
+    std::vector<path_metadata_t*> metadata;
+    metadata.reserve(_path_count.load());
+    // then we'll apply this to our metadata map in parallel
     for_each_path_handle(
         [&](const path_handle_t& path) {
-            metadata.push_back(&get_path_metadata(path));
+            auto& p_m = get_path_metadata(path);
+            assert(p_m.handle == path);
+            // update our internal handle
+            p_m.handle.store(get_new_path_handle(path));
+            metadata.push_back(&p_m);
+            path_metadata_h->Delete(as_integer(path));
         });
-    */
-    /*
-    graph_t ordered;
-    // copy nodes
-    for_each_handle([&](const handle_t& handle) {
-            ordered.create_handle(get_sequence(handle), get_id(handle));
-        });
-    // copy edges
-    for_each_handle([&](const handle_t& handle) {
-            follow_edges(handle, false, [&](const handle_t& h) {
-                    ordered.create_edge(ordered.get_handle(get_id(handle), get_is_reverse(handle)),
-                                        ordered.get_handle(get_id(h), get_is_reverse(h)));
-                });
-            follow_edges(flip(handle), false, [&](const handle_t& h) {
-                    ordered.create_edge(ordered.get_handle(get_id(handle), get_is_reverse(flip(handle))),
-                                        ordered.get_handle(get_id(h), get_is_reverse(h)));
-                });
-        });
-    // add the paths in order
-    for (auto& path_handle : order) {
-        path_handle_t new_path = ordered.create_path_handle(get_path_name(path_handle));
-        for_each_step_in_path(path_handle, [&](const step_handle_t& step) {
-                handle_t old_handle = get_handle_of_step(step);
-                handle_t new_handle = ordered.get_handle(get_id(old_handle), get_is_reverse(old_handle));
-                ordered.append_step(new_path, new_handle);
-            });
+    for (auto* m : metadata) {
+        path_metadata_h->Insert(as_integer(m->handle), m);
     }
-    *this = ordered;
-    */
+    // and to the nodes in parallel
+    auto get_new_path_id =
+        [&](const uint64_t& id) {
+            return as_integer(curr_to_new[id-1]);
+        };
+#pragma omp parallel for schedule(static, 1) num_threads(_num_threads)
+    for (uint64_t i = 0; i < node_v.size(); ++i) {
+        handle_t h = number_bool_packing::pack(i,false);
+        if (!is_deleted(h)) {
+            auto& node = get_node_ref(h);
+            node.apply_path_ordering(get_new_path_id);
+        }
+    }
 }
 
 /// Alter the node that the given handle corresponds to so the orientation
