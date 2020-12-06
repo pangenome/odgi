@@ -62,12 +62,19 @@ handle_t graph_t::flip(const handle_t& handle) const {
 
 /// Get the length of a node
 size_t graph_t::get_length(const handle_t& handle) const {
-    return get_node_cref(handle).sequence_size();
+    auto& node = get_node_ref(handle);
+    node.get_lock();
+    auto l = node.sequence_size();
+    node.clear_lock();
+    return l;
 }
 
 /// Get the sequence of a node, presented in the handle's local forward orientation.
 std::string graph_t::get_sequence(const handle_t& handle) const {
-    auto& seq = get_node_cref(handle).get_sequence();
+    auto& node = get_node_ref(handle);
+    node.get_lock();
+    auto seq = node.get_sequence();
+    node.clear_lock();
     return (get_is_reverse(handle) ? reverse_complement(seq) : seq);
 }
 
@@ -280,7 +287,11 @@ std::vector<step_handle_t> graph_t::steps_of_handle(const handle_t& handle,
 }
 
 size_t graph_t::get_step_count(const handle_t& handle) const {
-    return get_node_cref(handle).path_count();
+    auto& node = get_node_ref(handle);
+    node.get_lock();
+    auto count = node.path_count();
+    node.clear_lock();
+    return count;
 }
 
 /// Get a node handle (node ID and orientation) from a handle to an step on a path
@@ -290,9 +301,11 @@ handle_t graph_t::get_handle_of_step(const step_handle_t& step_handle) const {
 
 /// Get a path handle (path ID) from a handle to an step on a path
 path_handle_t graph_t::get_path(const step_handle_t& step_handle) const {
-    return as_path_handle(
-        get_node_cref(get_handle_of_step(step_handle))
-        .get_path_step(as_integers(step_handle)[1]).path_id);
+    auto& node = get_node_ref(get_handle_of_step(step_handle));
+    node.get_lock();
+    auto p = node.get_path_step(as_integers(step_handle)[1]).path_id;
+    node.clear_lock();
+    return as_path_handle(p);
 }
 
 /// Get a handle to the first step in a path.
@@ -335,14 +348,20 @@ void graph_t::set_circularity(const path_handle_t& path_handle, bool circular) {
 
 /// Returns true if the step is not the last step on the path, else false
 bool graph_t::has_next_step(const step_handle_t& step_handle) const {
-    return !get_node_cref(get_handle_of_step(step_handle))
-        .step_is_end(as_integers(step_handle)[1]);
+    auto& node = get_node_ref(get_handle_of_step(step_handle));
+    node.get_lock();
+    auto b = !node.step_is_end(as_integers(step_handle)[1]);
+    node.clear_lock();
+    return b;
 }
 
 /// Returns true if the step is not the first step on the path, else false
 bool graph_t::has_previous_step(const step_handle_t& step_handle) const {
-    return !get_node_cref(get_handle_of_step(step_handle))
-        .step_is_start(as_integers(step_handle)[1]);
+    auto& node = get_node_ref(get_handle_of_step(step_handle));
+    node.get_lock();
+    auto b = !node.step_is_start(as_integers(step_handle)[1]);
+    node.clear_lock();
+    return b;
 }
 
 bool graph_t::is_path_front_end(const step_handle_t& step_handle) const {
@@ -366,14 +385,19 @@ step_handle_t graph_t::get_next_step(const step_handle_t& step_handle) const {
         curr_handle = get_handle_of_step(step_handle);
     }
     nid_t curr_id = get_id(curr_handle);
-    const node_t& node = get_node_cref(curr_handle);
-    auto& step = node.get_path_step(as_integers(step_handle)[1]);
+    node_t& node = get_node_ref(curr_handle);
+    node.get_lock();
+    auto step = node.get_path_step(as_integers(step_handle)[1]);
+    node.clear_lock();
     if (step.is_end) {
         return path_end(get_path_handle_of_step(step_handle));
     }
     nid_t next_id = step.next_id;
     handle_t next_handle = get_handle(next_id);
-    bool next_rev = get_node_cref(next_handle).get_path_step(step.next_rank).is_rev;
+    node_t& next = get_node_ref(next_handle);
+    next.get_lock();
+    bool next_rev = next.step_is_rev(step.next_rank);
+    next.clear_lock();
     step_handle_t next_step;
     as_integers(next_step)[0] = as_integer(get_handle(next_id, next_rev));
     as_integers(next_step)[1] = step.next_rank;
@@ -393,15 +417,20 @@ step_handle_t graph_t::get_previous_step(const step_handle_t& step_handle) const
     }
     //handle_t curr_handle = get_handle_of_step(step_handle);
     nid_t curr_id = get_id(curr_handle);
-    const node_t& node = get_node_cref(curr_handle);
-    auto& step = node.get_path_step(as_integers(step_handle)[1]);
-    if (step.is_start) { //prev_id() == path_begin_marker) {
+    node_t& node = get_node_ref(curr_handle);
+    node.get_lock();
+    // TODO fixme! don't unpack the whole step!!
+    auto step = node.get_path_step(as_integers(step_handle)[1]);
+    node.clear_lock();
+    if (step.is_start) {
         return path_front_end(get_path_handle_of_step(step_handle));
     }
     nid_t prev_id = step.prev_id;
     handle_t prev_handle = get_handle(prev_id);
-    // TODO fixme! don't unpack the whole step!!
-    bool prev_rev = get_node_cref(prev_handle).get_path_step(step.prev_rank).is_rev;
+    node_t& prev = get_node_ref(prev_handle);
+    prev.get_lock();
+    bool prev_rev = prev.step_is_rev(step.prev_rank);
+    prev.clear_lock();
     step_handle_t prev_step;
     as_integers(prev_step)[0] = as_integer(get_handle(prev_id, prev_rev));
     as_integers(prev_step)[1] = step.prev_rank;
@@ -409,8 +438,10 @@ step_handle_t graph_t::get_previous_step(const step_handle_t& step_handle) const
 }
 
 path_handle_t graph_t::get_path_handle_of_step(const step_handle_t& step_handle) const {
-    const node_t& node = get_node_cref(get_handle_of_step(step_handle));
-    auto& step = node.get_path_step(as_integers(step_handle)[1]);
+    node_t& node = get_node_ref(get_handle_of_step(step_handle));
+    node.get_lock();
+    auto step = node.get_path_step(as_integers(step_handle)[1]);
+    node.clear_lock();
     return as_path_handle(step.path_id);
 }
 
@@ -949,8 +980,10 @@ handle_t graph_t::apply_orientation(const handle_t& handle) {
 
 void graph_t::set_handle_sequence(const handle_t& handle, const std::string& seq) {
     assert(seq.size());
-    //node_v[number_bool_packing::unpack_number(handle)].set_sequence(seq);
-    get_node_ref(handle).set_sequence(seq);
+    auto& node = get_node_ref(handle);
+    node.get_lock();
+    node.set_sequence(seq);
+    node.clear_lock();
 }
 
 /// Split a handle's underlying node at the given offsets in the handle's
@@ -1165,7 +1198,7 @@ step_handle_t graph_t::create_step(const path_handle_t& path, const handle_t& ha
     // where are we going to insert?
     auto& node = get_node_ref(handle);
     node.get_lock();
-    uint64_t rank_on_handle = get_step_count(handle);
+    uint64_t rank_on_handle = node.path_count();
     // build our step
     step_handle_t step;
     as_integers(step)[0] = as_integer(handle);
