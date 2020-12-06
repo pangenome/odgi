@@ -130,8 +130,8 @@ int main_stats(int argc, char** argv) {
         graph.for_each_path_handle([&](const path_handle_t& p) {
                 ++path_count;
             });
-        std::cerr << "#length\tnodes\tedges\tpaths" << std::endl;
-        std::cerr << length_in_bp << "\t" << node_count << "\t" << edge_count << "\t" << path_count << std::endl;
+        std::cout << "#length\tnodes\tedges\tpaths" << std::endl;
+        std::cout << length_in_bp << "\t" << node_count << "\t" << edge_count << "\t" << path_count << std::endl;
     }
     if (args::get(base_content)) {
         std::vector<uint64_t> chars(256);
