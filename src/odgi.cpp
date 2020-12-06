@@ -17,7 +17,12 @@ const node_t& graph_t::get_node_cref(const handle_t& handle) const {
 /// Method to check if a node exists by ID
 bool graph_t::has_node(nid_t node_id) const {
     uint64_t rank = get_node_rank(node_id);
-    return (rank >= node_v.size() ? false : !deleted_node_bv.at(rank));
+    return (rank >= node_v.size() ? false : node_v[rank] != nullptr);
+}
+
+/// If the handle has been deleted internally (these are removed in optimize())
+bool graph_t::is_deleted(const handle_t& handle) const {
+    return node_v[number_bool_packing::unpack_number(handle)] == nullptr;
 }
 
 /// Look up the handle for the node with the given ID in the given orientation
@@ -108,17 +113,19 @@ bool graph_t::for_each_handle_impl(const std::function<bool(const handle_t&)>& i
         volatile bool flag=true;
 #pragma omp parallel for
         for (uint64_t i = 0; i < node_v.size(); ++i) {
-            if (deleted_node_bv.at(i) == 1) continue;
+            handle_t h = number_bool_packing::pack(i,false);
+            if (is_deleted(h)) continue;
             if (!flag) continue;
-            bool result = iteratee(number_bool_packing::pack(i,false));
+            bool result = iteratee(h);
 #pragma omp atomic
             flag &= result;
         }
         return flag;
     } else {
         for (uint64_t i = 0; i < node_v.size(); ++i) {
-            if (deleted_node_bv.at(i) == 1) continue;
-            if (!iteratee(number_bool_packing::pack(i,false))) return false;
+            handle_t h = number_bool_packing::pack(i,false);
+            if (is_deleted(h)) continue;
+            if (!iteratee(h)) return false;
         }
         return true;
     }
@@ -127,7 +134,7 @@ bool graph_t::for_each_handle_impl(const std::function<bool(const handle_t&)>& i
 /// Return the number of nodes in the graph
 /// TODO: can't be node_count because XG has a field named node_count.
 size_t graph_t::get_node_count(void) const {
-    return node_v.size()-_deleted_node_count;
+    return node_v.size()-deleted_nodes.size();
 }
 
 /// Return the smallest ID in the graph, or some smaller number if the
@@ -449,8 +456,9 @@ void graph_t::for_each_step_in_path(const path_handle_t& path, const std::functi
 /// Create a new node with the given sequence and return the handle.
 handle_t graph_t::create_handle(const std::string& sequence) {
     // get first deleted node to recycle
-    if (_deleted_node_count) {
-        return create_handle(sequence, deleted_node_bv.select1(0)+1);
+    if (deleted_nodes.size()) {
+        uint64_t id = *deleted_nodes.begin();
+        return create_handle(sequence, id);
     } else {
         return create_handle(sequence, node_v.size()+1);
     }
@@ -460,17 +468,16 @@ handle_t graph_t::create_handle(const std::string& sequence) {
 handle_t graph_t::create_handle(const std::string& sequence, const nid_t& id) {
     assert(sequence.size());
     assert(id > 0);
+    assert(!has_node(id));
     if (id > node_v.size()) {
         uint64_t to_add = id - node_v.size();
         uint64_t old_size = node_v.size();
         // realloc
-        node_v.resize((uint64_t)id);
-        _node_count = node_v.size();
+        node_v.resize((uint64_t)id, nullptr);
         // mark empty nodes
-        for (uint64_t i = 0; i < to_add; ++i) {
-            // insert before final delimiter
-            deleted_node_bv.insert(old_size, 1);
-            ++_deleted_node_count;
+        // we'll use the last one for our new node
+        for (uint64_t i = old_size+1; i <= id; ++i) {
+            deleted_nodes.insert(i);
         }
     }
     // update min/max node ids
@@ -483,15 +490,15 @@ handle_t graph_t::create_handle(const std::string& sequence, const nid_t& id) {
     // add to node vector
     uint64_t handle_rank = (uint64_t)id-1;
     // set its values
-    //auto& node = //get_node_ref(handle_rank);
-    node_v[handle_rank] = new node_t();
-    auto& node = *node_v[handle_rank];
+    auto& n = node_v[handle_rank];
+    if (n == nullptr) {
+        assert(deleted_nodes.count(id));
+        deleted_nodes.erase(id);
+    }
+    n = new node_t();
+    auto& node = *n;
     node.set_id(id);
     node.set_sequence(sequence);
-    // it's not deleted
-    deleted_node_bv[handle_rank] = 0;
-    --_deleted_node_count;
-    // return handle
     return number_bool_packing::pack(handle_rank, 0);
 }
 
@@ -522,13 +529,11 @@ void graph_t::destroy_handle(const handle_t& handle) {
     }
     // clear the node storage
     auto& node = node_v[number_bool_packing::unpack_number(handle)];
-    //node->clear();
     delete node;
+    // remove from the graph
     node = nullptr;
-    // remove from the graph by hiding it (compaction later)
-    deleted_node_bv[number_bool_packing::unpack_number(handle)] = 1;
-    //--_node_count;
-    ++_deleted_node_count;
+    // add the index to our list of open node slots
+    deleted_nodes.insert(id);
 }
 
 /*
@@ -622,11 +627,10 @@ void graph_t::clear(void) {
     suc_bv null_bv;
     _max_node_id = 0;
     _min_node_id = 0;
-    _node_count = 0;
     _edge_count = 0;
     _path_count = 0;
     _path_handle_next = 0;
-    deleted_node_bv = null_bv;
+    deleted_nodes.clear();
     for (auto& n : node_v) {
         delete n;
     }
@@ -764,8 +768,9 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
     // nodes, edges, and path steps
 #pragma omp parallel for schedule(static, 1) num_threads(_num_threads)
     for (uint64_t i = 0; i < node_v.size(); ++i) {
-        if (deleted_node_bv.at(i) != 1) {
-            auto& node = get_node_ref(number_bool_packing::pack(i,false));
+        handle_t h = number_bool_packing::pack(i,false);
+        if (!is_deleted(h)) {
+            auto& node = get_node_ref(h);
             node.apply_ordering(get_new_id, to_flip);
         }
     }
@@ -811,6 +816,8 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
         }
     }
     node_v = new_node_v;
+    deleted_nodes.clear();
+
 }
 
 void graph_t::apply_path_ordering(const std::vector<path_handle_t>& order) {
@@ -1401,6 +1408,10 @@ void graph_t::display(void) const {
     //for (auto& k : graph_id_map) std::cerr << k.first << "->" << k.second << " "; std::cerr << std::endl;
     std::cerr << "node_v" << "\t";
     for (uint64_t i = 0; i < node_v.size(); ++i) {
+        if (node_v.at(i) == nullptr) {
+            std::cerr << "null | ";
+            continue;
+        }
         auto& node = *node_v.at(i);
         nid_t node_id = i+1;
         std::cerr << node_id << ":" << node.get_sequence() << " ";
@@ -1432,8 +1443,8 @@ void graph_t::display(void) const {
         std::cerr << " | ";
     }
     std::cerr << std::endl;
-    std::cerr << "deleted_node_bv" << "\t";
-    for (uint64_t i = 0; i < deleted_node_bv.size(); ++i) std::cerr << deleted_node_bv.at(i) << " "; std::cerr << std::endl;
+    std::cerr << "deleted_nodes" << "\t";
+    for (auto& idx : deleted_nodes) std::cerr << idx << " "; std::cerr << std::endl;
     /// Ordered across the nodes in graph_id_iv, stores the path ids (1-based) at each
     /// segment in seq_wt, delimited by 0, one for each path step (node traversal).
     std::cerr << "path_metadata" << "\t";
@@ -1505,7 +1516,7 @@ void graph_t::to_gfa(std::ostream& out) const {
 }
 
 uint32_t graph_t::get_magic_number(void) const {
-    return 1988148666ul;
+    return 1988148666ul; // TODO update me
 }
 
 void graph_t::serialize_members(std::ostream& out) const {
@@ -1515,23 +1526,29 @@ void graph_t::serialize_members(std::ostream& out) const {
     written += sizeof(_max_node_id);
     out.write((char*)&_min_node_id,sizeof(_min_node_id));
     written += sizeof(_min_node_id);
-    out.write((char*)&_node_count,sizeof(_node_count));
-    written += sizeof(_node_count);
+    uint64_t node_count = node_v.size();
+    out.write((char*)&node_count,sizeof(node_count));
+    written += sizeof(node_count);
     out.write((char*)&_edge_count,sizeof(_edge_count));
     written += sizeof(_edge_count);
     out.write((char*)&_path_count,sizeof(_path_count));
     written += sizeof(_path_count);
     out.write((char*)&_path_handle_next,sizeof(_path_handle_next));
     written += sizeof(_path_handle_next);
-    out.write((char*)&_deleted_node_count,sizeof(_deleted_node_count));
-    written += sizeof(_deleted_node_count);
     out.write((char*)&_id_increment,sizeof(_id_increment));
     written += sizeof(_id_increment);
-    assert(_node_count == node_v.size());
+    //assert(node_count == node_v.size());
+    // hack
+    // todo big mess, middle of removal of deleted node bv
+    node_t empty_node;
     for (auto& node : node_v) {
-        written += node->serialize(out);
+        // check if node is null
+        if (node == nullptr) {
+            written += empty_node.serialize(out);
+        } else {
+            written += node->serialize(out);
+        }
     }
-    written += deleted_node_bv.serialize(out);
     // there are _path_count of these to write
     uint64_t j = 0;
     for_each_path_handle(
@@ -1556,19 +1573,26 @@ void graph_t::serialize_members(std::ostream& out) const {
 void graph_t::deserialize_members(std::istream& in) {
     in.read((char*)&_max_node_id,sizeof(_max_node_id));
     in.read((char*)&_min_node_id,sizeof(_min_node_id));
-    in.read((char*)&_node_count,sizeof(_node_count));
+    uint64_t node_count = node_v.size();
+    in.read((char*)&node_count,sizeof(node_count));
     in.read((char*)&_edge_count,sizeof(_edge_count));
     in.read((char*)&_path_count,sizeof(_path_count));
     in.read((char*)&_path_handle_next,sizeof(_path_handle_next));
-    in.read((char*)&_deleted_node_count,sizeof(_deleted_node_count));
     in.read((char*)&_id_increment,sizeof(_id_increment));
-    node_v.resize(_node_count);
-    for (size_t i = 0; i < _node_count; ++i) {
+    node_v.resize(node_count,nullptr);
+    for (size_t i = 0; i < node_count; ++i) {
         node_v[i] = new node_t;
         auto& node = node_v[i];
         node->load(in);
+        if (node->get_id() == 0) {
+            // detect which nodes are deleted
+            // these must be the only ones with id == 0
+            // they have been stored as empty node records
+            delete node;
+            node = nullptr;
+            deleted_nodes.insert(i+1);
+        }
     }
-    deleted_node_bv.load(in);
     for (size_t j = 0; j < _path_count; ++j) {
         path_metadata_t* _p = new path_metadata_t();
         auto& m = *_p;
@@ -1599,19 +1623,17 @@ void graph_t::copy(const graph_t& other) {
     clear();
     _max_node_id.store(other._max_node_id);
     _min_node_id.store(other._min_node_id);
-    _node_count.store(other._node_count);
     _edge_count.store(other._edge_count);
     _path_count.store(other._path_count);
     _path_handle_next.store(other._path_handle_next);
-    _deleted_node_count.store(other._deleted_node_count);
     _id_increment.store(other._id_increment);
-    node_v.resize(_node_count);
-    for (size_t i = 0; i < _node_count; ++i) {
+    node_v.resize(other.node_v.size());
+    for (size_t i = 0; i < other.node_v.size(); ++i) {
         node_v[i] = new node_t;
         auto* node = node_v[i];
         node->copy(other.get_node_cref(as_handle(i)));
     }
-    deleted_node_bv = other.deleted_node_bv;
+    deleted_nodes = other.deleted_nodes;
     // copy the path metadata
     // the paths themselves should have been copied
     // XXX SLOW

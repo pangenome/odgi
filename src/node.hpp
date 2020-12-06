@@ -112,6 +112,7 @@ public:
     uint64_t sequence_size(void) const;
     const std::string& get_sequence(void) const;
     void set_sequence(const std::string& seq);
+    const uint64_t& get_id(void) const;
     void set_id(const uint64_t& new_id);
     void for_each_edge(const std::function<bool(uint64_t other_id,
                                                 bool on_rev,

@@ -14,6 +14,10 @@ void node_t::set_id(const uint64_t& new_id) {
     id = new_id;
 }
 
+const uint64_t& node_t::get_id(void) const {
+    return id;
+}
+
 const std::string& node_t::get_sequence(void) const {
     return sequence;
 }
@@ -348,6 +352,8 @@ uint64_t node_t::serialize(std::ostream& out) const {
     written += sizeof(size_t);
     out.write((char*)sequence.c_str(), seq_size*sizeof(char));
     written += seq_size*sizeof(char);
+    out.write((char*)&id, sizeof(id));
+    written += sizeof(id);
     written += edges.serialize(out);
     written += decoding.serialize(out);
     written += paths.serialize(out);
@@ -359,6 +365,7 @@ void node_t::load(std::istream& in) {
     in.read((char*)&len, sizeof(size_t));
     sequence.resize(len);
     in.read((char*)sequence.c_str(), len*sizeof(uint8_t));
+    in.read((char*)&id, sizeof(id));
     edges.load(in);
     decoding.load(in); 
     paths.load(in);

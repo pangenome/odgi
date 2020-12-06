@@ -49,12 +49,10 @@ public:
 
     graph_t(void) {
         // set up initial delimiters
-        deleted_node_bv.push_back(1);
         path_metadata_h = std::make_unique<lockfree::LockFreeHashTable<uint64_t,
                                                                        path_metadata_t*>>();
         path_name_h = std::make_unique<lockfree::LockFreeHashTable<std::string,
                                                                    path_metadata_t*>>();
-        _node_count = 0;
         _edge_count = 0;
         _path_count = 0;
         _path_handle_next = 0;
@@ -64,6 +62,9 @@ public:
 
     /// Method to check if a node exists by ID
     bool has_node(nid_t node_id) const;
+
+    /// If the handle has been deleted internally (these are removed in optimize())
+    bool is_deleted(const handle_t& handle) const;
     
     /// Look up the handle for the node with the given ID in the given orientation
     handle_t get_handle(const nid_t& node_id, bool is_reverse = false) const;
@@ -428,8 +429,8 @@ public:
     node_t& get_node_ref(const handle_t& handle) const;
     const node_t& get_node_cref(const handle_t& handle) const;
     /// Mark deleted nodes here for translating graph ids into internal ranks
-    suc_bv deleted_node_bv;
-    std::atomic<uint64_t> _deleted_node_count = 0;
+    //dyn::hacked_vector deleted_nodes;
+    hash_set<uint64_t> deleted_nodes;
     /// efficient id to handle/sequence conversion
     std::atomic<nid_t> _max_node_id = 0;
     std::atomic<nid_t> _min_node_id = 0;
@@ -477,7 +478,7 @@ public:
     const path_metadata_t& path_metadata(const path_handle_t& path) const;
 
     /// A helper to record the number of live nodes
-    std::atomic<uint64_t> _node_count; // = 0;
+    //std::atomic<uint64_t> _node_count; // = 0;
 
     /// A helper to record the number of live edges
     std::atomic<uint64_t> _edge_count;// = 0;
