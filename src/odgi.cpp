@@ -387,20 +387,22 @@ step_handle_t graph_t::get_next_step(const step_handle_t& step_handle) const {
     nid_t curr_id = get_id(curr_handle);
     node_t& node = get_node_ref(curr_handle);
     node.get_lock();
-    auto step = node.get_path_step(as_integers(step_handle)[1]);
-    node.clear_lock();
-    if (step.is_end) {
-        return path_end(get_path_handle_of_step(step_handle));
+    auto step_rank = as_integers(step_handle)[1];
+    if (node.step_is_end(step_rank)) {
+        node.clear_lock();
+        return path_front_end(get_path_handle_of_step(step_handle));
     }
-    nid_t next_id = step.next_id;
+    nid_t next_id = node.step_next_id(step_rank);
+    auto next_rank = node.step_next_rank(step_rank);
+    node.clear_lock();
     handle_t next_handle = get_handle(next_id);
     node_t& next = get_node_ref(next_handle);
     next.get_lock();
-    bool next_rev = next.step_is_rev(step.next_rank);
+    bool next_rev = next.step_is_rev(next_rank);
     next.clear_lock();
     step_handle_t next_step;
     as_integers(next_step)[0] = as_integer(get_handle(next_id, next_rev));
-    as_integers(next_step)[1] = step.next_rank;
+    as_integers(next_step)[1] = next_rank;
     return next_step;
 }
 
@@ -415,25 +417,25 @@ step_handle_t graph_t::get_previous_step(const step_handle_t& step_handle) const
     } else {
         curr_handle = get_handle_of_step(step_handle);
     }
-    //handle_t curr_handle = get_handle_of_step(step_handle);
     nid_t curr_id = get_id(curr_handle);
     node_t& node = get_node_ref(curr_handle);
     node.get_lock();
-    // TODO fixme! don't unpack the whole step!!
-    auto step = node.get_path_step(as_integers(step_handle)[1]);
-    node.clear_lock();
-    if (step.is_start) {
+    auto step_rank = as_integers(step_handle)[1];
+    if (node.step_is_start(step_rank)) {
+        node.clear_lock();
         return path_front_end(get_path_handle_of_step(step_handle));
     }
-    nid_t prev_id = step.prev_id;
+    nid_t prev_id = node.step_prev_id(step_rank);
+    auto prev_rank = node.step_prev_rank(step_rank);
+    node.clear_lock();
     handle_t prev_handle = get_handle(prev_id);
     node_t& prev = get_node_ref(prev_handle);
     prev.get_lock();
-    bool prev_rev = prev.step_is_rev(step.prev_rank);
+    bool prev_rev = prev.step_is_rev(prev_rank);
     prev.clear_lock();
     step_handle_t prev_step;
     as_integers(prev_step)[0] = as_integer(get_handle(prev_id, prev_rev));
-    as_integers(prev_step)[1] = step.prev_rank;
+    as_integers(prev_step)[1] = prev_rank;
     return prev_step;
 }
 
@@ -1307,10 +1309,8 @@ void graph_t::decrement_rank(const step_handle_t& step_handle) {
         node_t& step_node = get_node_ref(get_handle_of_step(step));
         step_node.get_lock();
         uint64_t step_rank = as_integers(step)[1];
-        node_t::step_t node_step = step_node.get_path_step(step_rank);
-        // TODO this does a ton of unnecessary work
-        node_step.next_rank = node_step.next_rank-1;
-        step_node.set_path_step(step_rank, node_step);
+        step_node.set_step_next_rank(step_rank,
+                                     step_node.step_next_rank(step_rank)-1);
         step_node.clear_lock();
     } else {
         // update path metadata
@@ -1324,10 +1324,8 @@ void graph_t::decrement_rank(const step_handle_t& step_handle) {
         node_t& step_node = get_node_ref(get_handle_of_step(step));
         step_node.get_lock();
         uint64_t step_rank = as_integers(step)[1];
-        // TODO this does a ton of unnecessary work
-        node_t::step_t node_step = step_node.get_path_step(step_rank);
-        node_step.prev_rank = node_step.prev_rank-1;
-        step_node.set_path_step(step_rank, node_step);
+        step_node.set_step_prev_rank(step_rank,
+                                     step_node.step_prev_rank(step_rank)-1);
         step_node.clear_lock();
     } else {
         // update path metadata
