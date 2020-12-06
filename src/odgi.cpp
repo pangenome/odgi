@@ -715,7 +715,6 @@ void graph_t::reassign_node_ids(const std::function<nid_t(const nid_t&)>& get_ne
 /// Optionally compact the id space of the graph to match the ordering, from 1->|ordering|.
 void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact_ids) {
     // get mapping from old to new id
-
     // if we're given an empty order, just compact the ids based on our ordering
     const std::vector<handle_t>* order;
     std::vector<handle_t> base_order;
@@ -742,27 +741,31 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
     }
 
     std::vector<std::pair<nid_t, bool>> ids;
-    ids.resize(max_handle_rank - min_handle_rank + 1);
+    // fill even for deleted nodes
+    ids.resize(node_v.size(), std::make_pair(0, false));
 
     if (compact_ids) {
         for (uint64_t i = 0; i < order->size(); ++i) {
             ids[number_bool_packing::unpack_number(order->at(i)) - min_handle_rank] =
-                std::make_pair(i+1, get_is_reverse(order->at(i)));
+                std::make_pair(i+1,
+                               get_is_reverse(order->at(i)));
         }
     } else {
         for (auto handle : *order) {
             ids[number_bool_packing::unpack_number(handle) - min_handle_rank] =
-                std::make_pair(get_id(handle), get_is_reverse(handle));
+                std::make_pair(get_id(handle),
+                               get_is_reverse(handle));
         }
     }
 
+    // helpers to map from current to new id and orientation
     auto get_new_id =
         [&](uint64_t id) {
-            return ids[id - min_handle_rank].first;
+            return ids[id - 1 - min_handle_rank].first;
         };
     auto to_flip =
         [&](uint64_t id) {
-            return ids[id - min_handle_rank].second;
+            return ids[id - 1 - min_handle_rank].second;
         };
 
     // nodes, edges, and path steps

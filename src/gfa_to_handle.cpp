@@ -70,6 +70,7 @@ void gfa_to_handle(const string& gfa_filename,
                     }
                     delete p;
                     {
+                        // todo use progress.hpp
                         std::lock_guard<std::mutex> guard(logging_mutex);
                         std::cerr << "path " << ++idx << "\r";
                     }

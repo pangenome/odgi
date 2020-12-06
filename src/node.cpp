@@ -305,6 +305,7 @@ void node_t::copy(const node_t& other) {
 void node_t::apply_ordering(
     const std::function<uint64_t(uint64_t)>& get_new_id,
     const std::function<bool(uint64_t)>& to_flip) {
+    // flip the node sequence if needed
     bool flip = to_flip(id);
     if (flip) {
         reverse_complement_in_place(sequence);
