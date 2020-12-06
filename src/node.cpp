@@ -177,6 +177,10 @@ void node_t::set_path_step(const uint64_t& rank, const step_t& step) {
     paths[i+5] = step.next_rank;
 }
 
+void node_t::set_step_path_id(const uint64_t& rank, const uint64_t& path_id) {
+    paths[PATH_RECORD_LENGTH*rank] = path_id;
+}
+
 void node_t::set_step_prev_id(const uint64_t& rank, const uint64_t& prev_id) {
     paths[PATH_RECORD_LENGTH*rank+2] = encode(prev_id);
 }
@@ -211,6 +215,26 @@ void node_t::set_step_is_end(const uint64_t& rank, const bool& is_end) {
 void node_t::set_step_is_del(const uint64_t& rank, const bool& is_del) {
     uint64_t idx = PATH_RECORD_LENGTH*rank+1;
     paths[idx] = paths[idx] & ~(1UL << 3) | is_del;
+}
+
+uint64_t node_t::step_path_id(const uint64_t& rank) const {
+    return paths.at(PATH_RECORD_LENGTH*rank);
+}
+
+uint64_t node_t::step_prev_id(const uint64_t& rank) const {
+    return decode(paths.at(PATH_RECORD_LENGTH*rank+2));
+}
+
+uint64_t node_t::step_prev_rank(const uint64_t& rank) const {
+    return paths.at(PATH_RECORD_LENGTH*rank+3);
+}
+
+uint64_t node_t::step_next_id(const uint64_t& rank) const {
+    return decode(paths.at(PATH_RECORD_LENGTH*rank+4));
+}
+
+uint64_t node_t::step_next_rank(const uint64_t& rank) const {
+    return paths.at(PATH_RECORD_LENGTH*rank+5);
 }
 
 bool node_t::step_is_rev(const uint64_t& rank) const {
@@ -344,6 +368,18 @@ void node_t::apply_ordering(
             return true;
         });
     edges = new_edges;
+}
+
+void node_t::apply_path_ordering(
+    const std::function<uint64_t(uint64_t)>& get_new_path_id) {
+    uint64_t n_paths = path_count();
+    for (uint64_t i = 0; i < n_paths; ++i) {
+        if (!step_is_del(i)) {
+            set_step_path_id(
+                i,
+                get_new_path_id(step_path_id(i)));
+        }
+    }
 }
 
 uint64_t node_t::serialize(std::ostream& out) const {

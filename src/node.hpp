@@ -138,7 +138,7 @@ public:
                        const uint64_t& prev_id, const uint64_t& prev_rank,
                        const uint64_t& next_id, const uint64_t& next_rank);
     void set_path_step(const uint64_t& rank, const step_t& step);
-    //void set_step_path_id(const uint64_t& rank, const bool& is_start);
+    void set_step_path_id(const uint64_t& rank, const uint64_t& path_id);
     void set_step_prev_id(const uint64_t& rank, const uint64_t& prev_id);
     void set_step_prev_rank(const uint64_t& rank, const uint64_t& prev_rank);
     void set_step_next_id(const uint64_t& rank, const uint64_t& next_id);
@@ -147,6 +147,11 @@ public:
     void set_step_is_start(const uint64_t& rank, const bool& is_start);
     void set_step_is_end(const uint64_t& rank, const bool& is_end);
     void set_step_is_del(const uint64_t& rank, const bool& is_del);
+    uint64_t step_path_id(const uint64_t& rank) const;
+    uint64_t step_prev_id(const uint64_t& rank) const;
+    uint64_t step_prev_rank(const uint64_t& rank) const;
+    uint64_t step_next_id(const uint64_t& rank) const;
+    uint64_t step_next_rank(const uint64_t& rank) const;
     bool step_is_rev(const uint64_t& rank) const;
     bool step_is_start(const uint64_t& rank) const;
     bool step_is_end(const uint64_t& rank) const;
@@ -170,6 +175,8 @@ public:
     void apply_ordering(
         const std::function<uint64_t(uint64_t)>& get_new_id,
         const std::function<bool(uint64_t)>& to_flip);
+    void apply_path_ordering(
+        const std::function<uint64_t(uint64_t)>& get_new_path_id);
 
 };
 
