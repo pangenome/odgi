@@ -96,7 +96,7 @@ void gfa_to_handle(const string& gfa_filename,
         }
     }
 
-    {
+    if (path_count > 0) {
         std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress_meter;
         if (progress) {
             progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
