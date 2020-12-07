@@ -442,9 +442,9 @@ step_handle_t graph_t::get_previous_step(const step_handle_t& step_handle) const
 path_handle_t graph_t::get_path_handle_of_step(const step_handle_t& step_handle) const {
     node_t& node = get_node_ref(get_handle_of_step(step_handle));
     node.get_lock();
-    auto step = node.get_path_step(as_integers(step_handle)[1]);
+    auto path = as_path_handle(node.step_path_id(as_integers(step_handle)[1]));
     node.clear_lock();
-    return as_path_handle(step.path_id);
+    return path;
 }
 
 ////////////////////////////////////////////////////////////////////////////
