@@ -28,7 +28,8 @@ void gfa_to_handle(const string& gfa_filename,
                    handlegraph::MutablePathMutableHandleGraph* graph,
                    uint64_t n_threads,
                    bool progress) {
-        
+
+    n_threads = (n_threads == 0 ? 1 : n_threads);
     char* filename = (char*) gfa_filename.c_str();
     //std::cerr << "filename is " << filename << std::endl;
     gfak::GFAKluge gg;
@@ -112,11 +113,11 @@ void gfa_to_handle(const string& gfa_filename,
                     path_elem_t * p;
                     if (path_queue.try_pop(p)) {
                         uint64_t i = 0;
-                        //std::cerr << "adding path " << graph->get_path_name(p->path) << std::endl;
                         for (auto& s : p->gfak.segment_names) {
                             graph->append_step(p->path,
                                                graph->get_handle(std::stoi(s),
-                                                                 p->gfak.orientations[i++]));
+                                                                 // in gfak, true == +
+                                                                 !p->gfak.orientations[i++]));
                         }
                         delete p;
                         if (progress) progress_meter->increment(1);
