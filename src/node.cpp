@@ -100,9 +100,10 @@ void node_t::add_path_step(const uint64_t& path_id, const bool& is_rev,
     //std::cerr << "packing " << path_id << " " << is_rev << " " << is_start << " " << is_end << std::endl;
     paths.push_back(path_id);
     paths.push_back(step_type_helper::pack(is_rev, is_start, is_end));
-    paths.push_back(encode(prev_id));
+    // we store the smallest possible delta for path starts and ends
+    paths.push_back(encode(!is_start ? prev_id : id));
     paths.push_back(prev_rank);
-    paths.push_back(encode(next_id));
+    paths.push_back(encode(!is_end ? next_id : id));
     paths.push_back(next_rank);
 }
 
@@ -131,6 +132,7 @@ const node_t::step_t node_t::get_path_step(const uint64_t& rank) const {
     if (rank >= path_count()) assert(false);
     uint64_t i = PATH_RECORD_LENGTH*rank;
     uint64_t t = paths.at(i+1);
+    //std::cerr << "got paths at i+2 " << paths.at(i+2) << std::endl;
     return {
         paths.at(i),
         step_type_helper::unpack_is_rev(t),
@@ -171,9 +173,9 @@ void node_t::set_path_step(const uint64_t& rank, const step_t& step) {
     paths[i+1] = step_type_helper::pack(step.is_rev,
                                         step.is_start,
                                         step.is_end);
-    paths[i+2] = encode(step.prev_id);
+    paths[i+2] = encode(!step.is_start ? step.prev_id : id);
     paths[i+3] = step.prev_rank;
-    paths[i+4] = encode(step.next_id);
+    paths[i+4] = encode(!step.is_end ? step.next_id : id);
     paths[i+5] = step.next_rank;
 }
 
@@ -337,7 +339,7 @@ void node_t::apply_ordering(
     // rewrite the encoding (affects path storage)
     std::vector<uint64_t> dec_v;
     for (uint64_t i = 0; i < decoding.size(); ++i) {
-        dec_v.push_back(decode(i));
+        dec_v.push_back(get_new_id(decode(i)));
     }
     // update our own id before re-encoding (affects to_delta computation)
     id = get_new_id(id);

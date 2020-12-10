@@ -813,12 +813,14 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
 
     // path metadata
 #pragma omp parallel for schedule(static, 1) num_threads(_num_threads)
-    for (uint64_t i = 1; i < _path_handle_next; ++i) {
+    for (uint64_t i = 1; i <= _path_handle_next; ++i) {
         path_metadata_t* p;
         if (path_metadata_h->Find(i, p)) {
             const auto& path = as_path_handle(i);
             auto& old_meta = path_metadata(as_path_handle(i));
-            auto* p = new path_metadata_t();
+            path_metadata_h->Delete(as_integer(path));
+            path_name_h->Delete(p->name);
+            p = new path_metadata_t();
             p->handle.store(old_meta.handle); // same by def
             p->length.store(old_meta.length); // same
             // reassign the handle ids
@@ -828,7 +830,7 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
             f_h = number_bool_packing::pack(get_new_id(f_id)-1, // note -1
                                             get_is_reverse(f_h)^to_flip(f_id));
             p->first.store(f);
-            step_handle_t l = old_meta.first.load();
+            step_handle_t l = old_meta.last.load();
             handle_t& l_h = as_handle((uint64_t&)as_integers(l)[0]);
             uint64_t l_id = get_id(l_h);
             l_h = number_bool_packing::pack(get_new_id(l_id)-1, // note -1
@@ -853,7 +855,6 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
     }
     node_v = new_node_v;
     deleted_nodes.clear();
-
 }
 
 void graph_t::apply_path_ordering(const std::vector<path_handle_t>& order) {
@@ -1487,8 +1488,8 @@ void graph_t::display(void) const {
         [&](const path_handle_t& path) {
             auto& p = path_metadata(path);
             std::cerr << as_integer(path) << ":" << p.name << ":"
-                      << as_integers(p.first)[0] << "/" << as_integers(p.first)[1] << "->"
-                      << as_integers(p.last)[0] << "/" << as_integers(p.last)[1] << " ";
+                      << get_id(as_handle(as_integers(p.first)[0])) << "/" << as_integers(p.first)[1] << "->"
+                      << get_id(as_handle(as_integers(p.last)[0])) << "/" << as_integers(p.last)[1] << " ";
         });
     std::cerr << std::endl;
 

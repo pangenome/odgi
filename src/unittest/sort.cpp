@@ -74,10 +74,24 @@ TEST_CASE("Sorting a graph with paths", "[sort]") {
         graph.append_step(path, n6);
         paths.push_back(path);
     }
-    //graph.to_gfa(std::cerr);
+
+    auto test_path =
+        [&](const path_handle_t& p) {
+            auto& path_meta = graph.path_metadata(p);
+            uint64_t i = 0;
+            graph.for_each_step_in_path(p, [&](const step_handle_t& step) {
+                                               handle_t h = graph.get_handle_of_step(step);
+                                               ++i;
+                                           });
+            REQUIRE(i == path_meta.length);
+        };
+
+    graph.for_each_path_handle(test_path);
+
     // sort the graph
     auto order = algorithms::topological_order(&graph);
     graph.apply_ordering(order, true);
+    graph.for_each_path_handle(test_path);
 
     graph.for_each_path_handle(
         [&](const path_handle_t& p) {
@@ -90,7 +104,6 @@ TEST_CASE("Sorting a graph with paths", "[sort]") {
             REQUIRE(i == path_meta.length);
         });
     
-    //graph.to_gfa(std::cerr);
     SECTION("The graph is as expected when sorted") {
         REQUIRE(graph.get_sequence(graph.get_handle(1)) == "CAAATAAG");
         REQUIRE(graph.get_sequence(graph.get_handle(6)) == "TTG");
@@ -108,6 +121,9 @@ TEST_CASE("Sorting a graph with paths", "[sort]") {
     }
     std::reverse(order.begin(), order.end());
     graph.apply_ordering(order, true);
+
+    graph.for_each_path_handle(test_path);
+
     SECTION("The graph is as expected when reversed") {
         REQUIRE(graph.get_sequence(graph.get_handle(1)) == "TTG");
         REQUIRE(graph.get_sequence(graph.get_handle(6)) == "CAAATAAG");
