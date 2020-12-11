@@ -255,7 +255,6 @@ int main_sort(int argc, char** argv) {
     // make a dagified copy, get its sort, and apply the order to our graph
 
     // did we groom the graph?
-    bool was_groomed = false;
     std::string outfile = args::get(dg_out_file);
     if (outfile.size()) {
         if (args::get(eades)) {
@@ -405,27 +404,19 @@ int main_sort(int argc, char** argv) {
                                                        args::get(mondriaan_path_weight), false);
                     break;
                 case 'g': {
-                    graph_t groomed;
-                    algorithms::groom(graph, groomed, progress);
-                    groomed.set_number_of_threads(graph.get_number_of_threads());
-                    graph.copy(groomed);
-                    was_groomed = true;
+                    order = algorithms::groom(graph, progress);
                     break;
                 }
                 default:
                     break;
                 }
-                if (!was_groomed) {
-                    if (order.size() != graph.get_node_count()) {
-                        std::cerr << "[odgi sort] Error: expected " << graph.get_node_count()
-                                  << " handles in the order "
-                                  << "but got " << order.size() << std::endl;
-                        assert(false);
-                    }
-                    graph.apply_ordering(order, true);
-                } else {
-                    was_groomed = false;
+                if (order.size() != graph.get_node_count()) {
+                    std::cerr << "[odgi sort] Error: expected " << graph.get_node_count()
+                              << " handles in the order "
+                              << "but got " << order.size() << std::endl;
+                    assert(false);
                 }
+                graph.apply_ordering(order, true);
                 fresh_path_index = false;
             }
         } else {
