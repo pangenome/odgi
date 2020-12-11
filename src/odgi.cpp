@@ -904,10 +904,13 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
                     //===========================
 
                     // Unlock
-                    if (prec_xxx_handle_num >= 0){
-                        node_unavailable.reset(prec_xxx_handle_num);
+                    {
+                        std::lock_guard<std::mutex> guard(node_unavailable_mutex);
+                        if (prec_xxx_handle_num >= 0){
+                            node_unavailable.reset(prec_xxx_handle_num);
+                        }
+                        node_unavailable.reset(xxx_handle_num);
                     }
-                    node_unavailable.reset(xxx_handle_num);
 
                     if (from_left_else_right) {
                         // in circular paths, we'll always have a next step, so we always check if we're at our path's last step
