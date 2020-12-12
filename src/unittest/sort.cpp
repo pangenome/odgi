@@ -192,7 +192,6 @@ TEST_CASE("Sorting a graph with paths 1 node long", "[sort]") {
                 return max_path_step_count;
             };
 
-    std::cerr << "[smoothxg::prep] building path index" << std::endl;
     xp::XP path_index;
     path_index.from_handle_graph(graph);
 
@@ -207,7 +206,6 @@ TEST_CASE("Sorting a graph with paths 1 node long", "[sort]") {
 
     uint64_t path_sgd_iter_max_learning_rate = 0; // don't use this max iter stuff
 
-    std::cerr << "[smoothxg::prep] sorting graph" << std::endl;
     auto order = odgi::algorithms::path_linear_sgd_order(
             graph,
             path_index,
