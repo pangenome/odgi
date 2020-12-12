@@ -251,5 +251,73 @@ TEST_CASE("Sorting a graph with paths 1 node long", "[sort]") {
     }
 }
 
+TEST_CASE("Sorting the paths in a graph", "[sort]") {
+    graph_t graph;
+    handle_t n1 = graph.create_handle("CAAATAAG");
+    handle_t n2 = graph.create_handle("A");
+    handle_t n3 = graph.create_handle("G");
+    handle_t n4 = graph.create_handle("T");
+    handle_t n5 = graph.create_handle("C");
+    handle_t n6 = graph.create_handle("TTG");
+    graph.create_edge(n1, n2);
+    graph.create_edge(n2, n3);
+    graph.create_edge(n3, n4);
+    graph.create_edge(n4, n5);
+    graph.create_edge(n5, n6);
+    std::vector<path_handle_t> paths;
+    for (uint64_t i = 0; i < 10; ++i) {
+        auto path = graph.create_path_handle("x" + std::to_string(i));
+        graph.append_step(path, n1);
+        graph.append_step(path, n2);
+        graph.append_step(path, n3);
+        graph.append_step(path, n4);
+        graph.append_step(path, n5);
+        graph.append_step(path, n6);
+        paths.push_back(path);
+    }
+
+    auto test_path =
+            [&](const path_handle_t& p) {
+                auto& path_meta = graph.path_metadata(p);
+                uint64_t i = 0;
+                graph.for_each_step_in_path(p, [&](const step_handle_t& step) {
+                    handle_t h = graph.get_handle_of_step(step);
+                    ++i;
+                });
+                REQUIRE(i == path_meta.length);
+            };
+
+    graph.for_each_path_handle(test_path);
+
+    std::reverse(paths.begin(), paths.end());
+    graph.apply_path_ordering(paths);
+
+    graph.for_each_path_handle(test_path);
+
+    SECTION("The graph is as expected when the path order is reversed") {
+        REQUIRE(graph.get_path_count() == 10);
+
+        REQUIRE(graph.get_sequence(graph.get_handle(1)) == "CAAATAAG");
+        REQUIRE(graph.get_sequence(graph.get_handle(6)) == "TTG");
+        REQUIRE(graph.get_node_count() == 6);
+        for (auto& path : paths) {
+            REQUIRE(graph.get_handle_of_step(graph.path_begin(path)) == n1);
+            std::string x;
+            graph.for_each_step_in_path(
+                    path,
+                    [&](const step_handle_t& step) {
+                        x.append(graph.get_sequence(graph.get_handle_of_step(step)));
+                    });
+            REQUIRE(x == "CAAATAAGAGTCTTG");
+        }
+
+        uint64_t i = 10;
+        graph.for_each_path_handle([&](const path_handle_t& p) {
+            i--;
+            REQUIRE(graph.get_path_name(p)== "x" + std::to_string(i));
+        });
+        REQUIRE(i == 0);
+    }
+}
 }
 }
