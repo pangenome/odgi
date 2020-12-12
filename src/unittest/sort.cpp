@@ -82,9 +82,9 @@ TEST_CASE("Sorting a graph with paths", "[sort]") {
             auto& path_meta = graph.path_metadata(p);
             uint64_t i = 0;
             graph.for_each_step_in_path(p, [&](const step_handle_t& step) {
-                                               handle_t h = graph.get_handle_of_step(step);
-                                               ++i;
-                                           });
+                handle_t h = graph.get_handle_of_step(step);
+                ++i;
+            });
             REQUIRE(i == path_meta.length);
         };
 
@@ -93,20 +93,12 @@ TEST_CASE("Sorting a graph with paths", "[sort]") {
     // sort the graph
     auto order = algorithms::topological_order(&graph);
     graph.apply_ordering(order, true);
+
     graph.for_each_path_handle(test_path);
 
-    graph.for_each_path_handle(
-        [&](const path_handle_t& p) {
-            auto& path_meta = graph.path_metadata(p);
-            uint64_t i = 0;
-            graph.for_each_step_in_path(p, [&](const step_handle_t& step) {
-                                         handle_t h = graph.get_handle_of_step(step);
-                                         ++i;
-                                     });
-            REQUIRE(i == path_meta.length);
-        });
-    
     SECTION("The graph is as expected when sorted") {
+        REQUIRE(graph.get_path_count() == 10);
+
         REQUIRE(graph.get_sequence(graph.get_handle(1)) == "CAAATAAG");
         REQUIRE(graph.get_sequence(graph.get_handle(6)) == "TTG");
         REQUIRE(graph.get_node_count() == 6);
@@ -127,6 +119,8 @@ TEST_CASE("Sorting a graph with paths", "[sort]") {
     graph.for_each_path_handle(test_path);
 
     SECTION("The graph is as expected when reversed") {
+        REQUIRE(graph.get_path_count() == 10);
+
         REQUIRE(graph.get_sequence(graph.get_handle(1)) == "TTG");
         REQUIRE(graph.get_sequence(graph.get_handle(6)) == "CAAATAAG");
         REQUIRE(graph.get_node_count() == 6);
@@ -231,6 +225,8 @@ TEST_CASE("Sorting a graph with paths 1 node long", "[sort]") {
     graph.for_each_path_handle(test_path);
 
     SECTION("The graph is as expected when sorted") {
+        REQUIRE(graph.get_path_count() == 10);
+
         REQUIRE(graph.get_sequence(graph.get_handle(1)) == "C");
         REQUIRE(graph.get_sequence(graph.get_handle(10)) == "C");
         REQUIRE(graph.get_node_count() == 10);
@@ -314,7 +310,7 @@ TEST_CASE("Sorting the paths in a graph", "[sort]") {
         uint64_t i = 10;
         graph.for_each_path_handle([&](const path_handle_t& p) {
             i--;
-            REQUIRE(graph.get_path_name(p)== "x" + std::to_string(i));
+            REQUIRE(graph.get_path_name(p) == "x" + std::to_string(i));
         });
         REQUIRE(i == 0);
     }
