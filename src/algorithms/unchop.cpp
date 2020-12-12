@@ -378,6 +378,7 @@ namespace odgi {
                     ok.store(false);
                 }
 
+                std::string().swap(path_names[rank]);
                 std::string().swap(path_sequences[rank]);
             }
 
