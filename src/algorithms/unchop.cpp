@@ -281,16 +281,16 @@ namespace odgi {
             });
 
             // if possible, don't hold these in memory
-            // meanwhile, we exploit the path handles for parallelizing the paths' validation
-            std::vector<path_handle_t> path_handles;
-            path_handles.resize(graph.get_path_count());
+            // meanwhile, we exploit the it for parallelizing the paths' validation
+            std::vector<std::string> path_names;
+            path_names.resize(graph.get_path_count());
 
             std::vector<std::string> path_sequences;
             path_sequences.resize(graph.get_path_count());
 
             rank = 0;
             graph.for_each_path_handle([&](const path_handle_t &p) {
-                path_handles[rank] = p;
+                path_names[rank] = graph.get_path_name(p);
 
                 auto &seq = path_sequences[rank];
                 graph.for_each_step_in_path(p, [&](const step_handle_t &s) {
@@ -361,19 +361,19 @@ namespace odgi {
             std::atomic<bool> ok(true);
 
 #pragma omp parallel for schedule(static, 1) num_threads(nthreads)
-            for (rank = 0; rank < path_handles.size(); ++rank) {
+            for (rank = 0; rank < path_names.size(); ++rank) {
                 std::string seq;
                 graph.for_each_step_in_path(
-                        path_handles[rank],
+                        graph.get_path_handle(path_names[rank]),
                         [&](const step_handle_t &s) {
                             seq.append(graph.get_sequence(graph.get_handle_of_step(s)));
                         });
 
                 if (seq != path_sequences[rank]) {
                     std::cerr << "[odgi::algorithms::unchop] failure in unchop" << std::endl;
-                    std::cerr << ">expected_" << graph.get_path_name(path_handles[rank]) << std::endl
+                    std::cerr << ">expected_" << path_names[rank] << std::endl
                               << path_sequences[rank] << std::endl
-                              << ">got_" << graph.get_path_name(path_handles[rank]) << std::endl << seq << std::endl;
+                              << ">got_" << path_names[rank] << std::endl << seq << std::endl;
 
                     ok.store(false);
                 }
@@ -385,4 +385,3 @@ namespace odgi {
         }
     }
 }
-
