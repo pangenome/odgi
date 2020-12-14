@@ -57,7 +57,7 @@ int main_sort(int argc, char** argv) {
     args::ValueFlag<double> p_sgd_zipf_theta(parser, "N", "the theta value for the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: 0.99)", {'a', "path-sgd-zipf-theta"});
     args::ValueFlag<uint64_t> p_sgd_iter_max(parser, "N", "max number of iterations for path guided linear 1D SGD model (default: 30)", {'x', "path-sgd-iter-max"});
     args::ValueFlag<uint64_t> p_sgd_iter_with_max_learning_rate(parser, "N", "iteration where the learning rate is max for path guided linear 1D SGD model (default: 0)", {'F', "iteration-max-learning-rate"});
-    args::ValueFlag<uint64_t> p_sgd_zipf_space(parser, "N", "the maximum space size of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: min(max path lengths, 10000))", {'k', "path-sgd-zipf-space"});
+    args::ValueFlag<uint64_t> p_sgd_zipf_space(parser, "N", "the maximum space size of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: longest path length)", {'k', "path-sgd-zipf-space"});
     args::ValueFlag<uint64_t> p_sgd_zipf_space_max(parser, "N", "the maximum space size of the Zipfian distribution beyond which quantization occurs (default: 1000)", {'I', "path-sgd-zipf-space-max"});
     args::ValueFlag<uint64_t> p_sgd_zipf_space_quantization_step(parser, "N", "quantization step when the maximum space size of the Zipfian distribution is exceeded (default: 100)", {'l', "path-sgd-zipf-space-quantization-step"});
     args::ValueFlag<std::string> p_sgd_seed(parser, "STRING", "set the base seed for the 1-threaded path guided linear 1D SGD model (default: pangenomic!)", {'q', "path-sgd-seed"});
@@ -112,14 +112,6 @@ int main_sort(int argc, char** argv) {
             f.close();
         }
     }
-    /*
-    if (args::get(show_sort)) {
-        std::vector<handle_t> order = (args::get(lazy) ? algorithms::lazy_topological_order(&graph) : algorithms::topological_order(&graph));
-        for (auto& handle : order) {
-            std::cout << graph.get_id(handle) << std::endl;
-        }
-    }
-    */
 
     // default settings
     uint64_t df_chunk_size = args::get(depth_first_chunk) ? args::get(depth_first_chunk) : 1000;
@@ -147,7 +139,16 @@ int main_sort(int argc, char** argv) {
                     max_path_step_count = std::max(max_path_step_count, path_index.get_path_step_count(path));
                 }
                 return max_path_step_count;
-              };
+            };
+    std::function<uint64_t(const std::vector<path_handle_t> &,
+                           const xp::XP &)> get_max_path_length
+            = [&](const std::vector<path_handle_t> &path_sgd_use_paths, const xp::XP &path_index) {
+                uint64_t max_path_length = std::numeric_limits<uint64_t>::min();
+                for (auto &path : path_sgd_use_paths) {
+                    max_path_length = std::max(max_path_length, path_index.get_path_length(path));
+                }
+                return max_path_length;
+            };
 
     // default parameters
     std::string path_sgd_seed;
@@ -227,7 +228,7 @@ int main_sort(int argc, char** argv) {
             }
         }
         uint64_t max_path_step_count = get_max_path_step_count(path_sgd_use_paths, path_index);
-        path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? std::min(args::get(p_sgd_zipf_space), max_path_step_count) : std::min((uint64_t)10000, max_path_step_count);
+        path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? args::get(p_sgd_zipf_space) : get_max_path_length(path_sgd_use_paths, path_index);
         path_sgd_max_eta = args::get(p_sgd_eta_max) ? args::get(p_sgd_eta_max) : max_path_step_count * max_path_step_count;
         path_sgd_zipf_space_max = args::get(p_sgd_zipf_space_max) ? args::get(p_sgd_zipf_space_max) : 1000;
         path_sgd_zipf_space_quantization_step = args::get(p_sgd_zipf_space_quantization_step) ? std::max((uint64_t)2, args::get(p_sgd_zipf_space_quantization_step)) : 100;
