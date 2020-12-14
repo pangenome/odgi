@@ -134,13 +134,19 @@ int main_prune(int argc, char** argv) {
                 }
             };
         if (args::get(expand_steps)) {
-            graph_t source = graph; do_destroy();
+            graph_t source;
+            source.copy(graph);
+            do_destroy();
             algorithms::expand_context(&source, &graph, args::get(expand_steps), true);
         } else if (args::get(expand_length)) {
-            graph_t source = graph; do_destroy();
+            graph_t source;
+            source.copy(graph);
+            do_destroy();
             algorithms::expand_context(&source, &graph, args::get(expand_length), false);
         } else if (args::get(expand_path_length)) {
-            graph_t source = graph; do_destroy();
+            graph_t source;
+            source.copy(graph);
+            do_destroy();
             algorithms::expand_context_with_paths(&source, &graph, args::get(expand_length), false);
         } else {
             do_destroy();

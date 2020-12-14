@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.1)
 
 # Project's name
 project(odgi)
-# We build using c++14
+# We build using c++17
 set(CMAKE_CXX_STANDARD 17)
 
 # Use all standard-compliant optimizations
@@ -325,6 +325,7 @@ set(CMAKE_BUILD_TYPE Debug)
 # set up our target executable and specify its dependencies and includes
 add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/odgi.cpp
+  ${CMAKE_SOURCE_DIR}/src/reclaimer.cpp
   ${CMAKE_SOURCE_DIR}/src/position.cpp
   ${CMAKE_SOURCE_DIR}/src/gfa_to_handle.cpp
   ${CMAKE_SOURCE_DIR}/src/split.cpp
@@ -336,6 +337,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/unittest/handle.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/fuzz.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/simplify.cpp
+  ${CMAKE_SOURCE_DIR}/src/unittest/sort.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/pathindex.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/edge.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/subcommand.cpp
@@ -487,6 +489,7 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/hash_map.hpp
   ${CMAKE_SOURCE_DIR}/src/odgi.hpp
   ${CMAKE_SOURCE_DIR}/src/node.hpp
+  ${CMAKE_SOURCE_DIR}/src/bmap.hpp
   ${CMAKE_SOURCE_DIR}/src/subgraph.hpp
   ${CMAKE_SOURCE_DIR}/src/split.hpp
   ${CMAKE_SOURCE_DIR}/src/varint.hpp
@@ -503,6 +506,8 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/position.hpp
   ${CMAKE_SOURCE_DIR}/src/dset64.hpp
   ${CMAKE_SOURCE_DIR}/src/dset64-gccAtomic.hpp
+  ${CMAKE_SOURCE_DIR}/src/lockfree_hashtable.hpp
+  ${CMAKE_SOURCE_DIR}/src/reclaimer.hpp
   ${CMAKE_SOURCE_DIR}/src/unittest/driver.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/linear_index.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/random_order.hpp

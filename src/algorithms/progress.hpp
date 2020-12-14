@@ -5,6 +5,7 @@
 #include <atomic>
 #include <thread>
 #include <chrono>
+#include <cmath>
 #include <iomanip>
 
 namespace odgi {
@@ -24,13 +25,19 @@ public:
         : total(_total), banner(_banner) {
         start_time = std::chrono::steady_clock::now();
         completed = 0;
+        bool has_ever_printed = false;
         logger = std::thread(
             [&](void) {
                 while (completed < total) {
                     if (completed > 0) {
                         do_print();
+                        has_ever_printed = true;
                     }
-                    std::this_thread::sleep_for(std::chrono::milliseconds(250));
+                    if (has_ever_printed && completed < total) {
+                        std::this_thread::sleep_for(std::chrono::milliseconds(250));
+                    } else {
+                        std::this_thread::sleep_for(std::chrono::nanoseconds(100));
+                    }
                 }
             });
     };

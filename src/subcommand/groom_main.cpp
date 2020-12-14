@@ -66,16 +66,15 @@ int main_groom(int argc, char** argv) {
         omp_set_num_threads(args::get(threads));
     }
     */
-    graph_t groomed;
-    algorithms::groom(graph, groomed, progress);
+    graph.apply_ordering(algorithms::groom(graph, progress));
     
     std::string outfile = args::get(og_out_file);
     if (outfile.size()) {
         if (outfile == "-") {
-            groomed.serialize(std::cout);
+            graph.serialize(std::cout);
         } else {
             ofstream f(outfile.c_str());
-            groomed.serialize(f);
+            graph.serialize(f);
             f.close();
         }
     }

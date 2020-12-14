@@ -13,6 +13,7 @@
 #include <vector>
 #include <utility>
 #include <functional>
+#include <thread>
 #include <handlegraph/types.hpp>
 #include <handlegraph/iteratee.hpp>
 #include <handlegraph/util.hpp>
@@ -26,6 +27,7 @@
 #include <handlegraph/serializable_handle_graph.hpp>
 #include "dynamic.hpp"
 #include "dynamic_types.hpp"
+#include "lockfree_hashtable.hpp"
 #include "dna.hpp"
 #include "hash_map.hpp"
 #include "node.hpp"
@@ -47,13 +49,22 @@ public:
 
     graph_t(void) {
         // set up initial delimiters
-        deleted_node_bv.push_back(1);
+        path_metadata_h = std::make_unique<lockfree::LockFreeHashTable<uint64_t,
+                                                                       path_metadata_t*>>();
+        path_name_h = std::make_unique<lockfree::LockFreeHashTable<std::string,
+                                                                   path_metadata_t*>>();
+        _edge_count = 0;
+        _path_count = 0;
+        _path_handle_next = 0;
     }
 
     ~graph_t(void) { clear(); }
 
     /// Method to check if a node exists by ID
     bool has_node(nid_t node_id) const;
+
+    /// If the handle has been deleted internally (these are removed in optimize())
+    bool is_deleted(const handle_t& handle) const;
     
     /// Look up the handle for the node with the given ID in the given orientation
     handle_t get_handle(const nid_t& node_id, bool is_reverse = false) const;
@@ -247,9 +258,6 @@ public:
     /// Create a new node with the given id and sequence, then return the handle.
     handle_t create_handle(const std::string& sequence, const nid_t& id);
 
-    /// Create a "hidden" node which might carry parts of paths that traversed deleted portions of the graph
-    handle_t create_hidden_handle(const std::string& sequence);
-
     /// Remove the node belonging to the given handle and all of its edges.
     /// Does not update any stored paths.
     /// Invalidates the destroyed handle.
@@ -405,42 +413,29 @@ public:
 
     uint64_t get_number_of_threads();
 
-/// These are the backing data structures that we use to fulfill the above functions
+    /// copy the other graph into this one
+    void copy(const graph_t& other);
 
-private:
+/// These are the backing data structures that we use to fulfill the above functions
 
     /// Records the handle to node_id mapping
     /// Use the special value "0" to indicate deleted nodes so that
     /// handle references in the id_map and elsewhere are not immediately destroyed
-    std::vector<node_t> node_v;
+
+    // lock for the node vector and the following variables
+    // TODO use it in create_handle and friends
+    std::atomic_flag node_lock = ATOMIC_FLAG_INIT;
+    std::vector<node_t*> node_v; // not threadsafe
+    node_t& get_node_ref(const handle_t& handle) const;
+    const node_t& get_node_cref(const handle_t& handle) const;
     /// Mark deleted nodes here for translating graph ids into internal ranks
-    suc_bv deleted_node_bv;
-    uint64_t _deleted_node_count = 0;
+    //dyn::hacked_vector deleted_nodes;
+    hash_set<uint64_t> deleted_nodes;
     /// efficient id to handle/sequence conversion
-    nid_t _max_node_id = 0;
-    nid_t _min_node_id = 0;
-    nid_t _id_increment = 0;
-    /// records nodes that are hidden, but used to compactly store path sequence that has been removed from the node space
-    hash_set<uint64_t> graph_id_hidden_set;
-
+    std::atomic<nid_t> _max_node_id = 0;
+    std::atomic<nid_t> _min_node_id = 0;
+    std::atomic<nid_t> _id_increment = 0;
     uint64_t _num_threads = 1;
-
-    /// edge type conversion
-    /// 1 = fwd->fwd, 2 = fwd->rev, 3 = rev->fwd, 4 = rev->rev
-    struct edge_helper {
-        inline static uint8_t pack(bool on_rev, bool other_rev, bool to_curr) {
-            return on_rev | (other_rev << 1) | (to_curr << 2);
-        }
-        inline static uint8_t unpack_on_rev(uint8_t edge) {
-            return edge & 1;
-        }
-        inline static uint8_t unpack_other_rev(uint8_t edge) {
-            return edge & (1 << 1);
-        }
-        inline static uint8_t unpack_to_curr(uint8_t edge) {
-            return edge & (1 << 2);
-        }
-    };
 
     inline void canonicalize_edge(handle_t& left, handle_t& right) const {
         if (number_bool_packing::unpack_bit(left) && number_bool_packing::unpack_bit(right)
@@ -452,38 +447,50 @@ private:
     }
     
     struct path_metadata_t {
-        uint64_t length = 0;
-        step_handle_t first = {0, 0};
-        step_handle_t last = {0, 0};
+        std::atomic<path_handle_t> handle = as_path_handle(0);
+        std::atomic<uint64_t> length;
+        std::atomic<step_handle_t> first;
+        std::atomic<step_handle_t> last;
         std::string name;
-        bool is_circular = false;
+        std::atomic<bool> is_circular;
+        std::atomic_flag lock = ATOMIC_FLAG_INIT;
+        inline void get_lock(void) {
+            while (lock.test_and_set(std::memory_order_acquire))  // acquire lock
+                ; // spin
+        }
+        inline void clear_lock(void) {
+            lock.clear(std::memory_order_release);
+        }
+        void copy(const path_metadata_t& other) {
+            handle.store(other.handle);
+            length.store(other.length);
+            first.store(other.first);
+            last.store(other.last);
+            name = other.name;
+            is_circular.store(other.is_circular);
+        }
     };
-    /// maps between path identifier and the start, end, and length of the path
-    std::vector<path_metadata_t> path_metadata_v;
 
-    /// Links path names to handles
-    string_hash_map<std::string, uint64_t> path_name_map;
+    /// maps between path identifier and the start, end, and length of the path
+    std::unique_ptr<lockfree::LockFreeHashTable<uint64_t, path_metadata_t*>> path_metadata_h;
+    std::unique_ptr<lockfree::LockFreeHashTable<std::string, path_metadata_t*>> path_name_h;
+    path_metadata_t& get_path_metadata(const path_handle_t& path) const;
+    const path_metadata_t& path_metadata(const path_handle_t& path) const;
 
     /// A helper to record the number of live nodes
-    uint64_t _node_count = 0;
-
-    /// A counter that records the number of hidden nodes
-    uint64_t _hidden_count = 0;
+    //std::atomic<uint64_t> _node_count; // = 0;
 
     /// A helper to record the number of live edges
-    uint64_t _edge_count = 0;
+    std::atomic<uint64_t> _edge_count;// = 0;
 
     /// A helper to record the number of live paths
-    uint64_t _path_count = 0;
+    std::atomic<uint64_t> _path_count; // = 0;
 
-    /// A helper to record the next path handle (path deletions are hard because of our path FM-index)
-    uint64_t _path_handle_next = 0;
+    /// A helper to record the next path handle id
+    std::atomic<uint64_t> _path_handle_next; // = 0;
 
-    /// Helper to convert between edge storage and actual id
-    uint64_t edge_delta_to_id(uint64_t left, uint64_t delta) const;
-
-    /// Helper to convert between ids and stored edge
-    uint64_t edge_to_delta(const handle_t& left, const handle_t& right) const;
+    /// A helper to record the number of live paths
+    //std::atomic<uint64_t> _step_count; // = 0; // TODO
 
     /// Helper to simplify removal of path handle records
     void destroy_path_handle_records(uint64_t i);
@@ -509,9 +516,9 @@ private:
     /// get the backing node rank for a given node id
     uint64_t get_node_rank(const nid_t& node_id) const;
 
-    };
+};
 
-const static uint64_t path_begin_marker = 1;
-const static uint64_t path_end_marker = 2;
+//const static uint64_t path_begin_marker = std::numeric_limits<uint64_t>::max();
+//const static uint64_t path_end_marker = 2;
 
 } // end dankness

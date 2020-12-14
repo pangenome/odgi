@@ -115,6 +115,7 @@ int main_stats(int argc, char** argv) {
             f.close();
         }
     }
+    ///graph.display();
 
     if (args::get(summarize)) {
         uint64_t length_in_bp = 0, node_count = 0, edge_count = 0, path_count = 0;
