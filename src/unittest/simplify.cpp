@@ -44,6 +44,44 @@ TEST_CASE("Graph simplification reduces a simple graph to a single node", "[simp
     }
 }
 
+TEST_CASE("Graph simplification reduces a simple graph with paths", "[simplify]") {
+    graph_t graph;
+    handle_t n6 = graph.create_handle("TTG");
+    handle_t n4 = graph.create_handle("T");
+    handle_t n3 = graph.create_handle("G");
+    handle_t n5 = graph.create_handle("C");
+    handle_t n1 = graph.create_handle("CAAATAAG");
+    handle_t n2 = graph.create_handle("A");
+    graph.create_edge(n1, n2);
+    graph.create_edge(n2, n3);
+    graph.create_edge(n3, n4);
+    graph.create_edge(n3, n5);
+    graph.create_edge(n4, n5);
+    graph.create_edge(n5, n6);
+    path_handle_t p_x = graph.create_path_handle("x");
+    path_handle_t p_y = graph.create_path_handle("y");
+    for (auto& p : { p_x, p_y }) {
+        for (auto& h : { n1, n2, n3, n4, n5, n6 }) {
+            graph.append_step(p, h);
+        }
+    }
+    algorithms::unchop(graph);
+    // sort the graph
+    graph.apply_ordering(algorithms::topological_order(&graph), true);
+    graph.apply_ordering(algorithms::topological_order(&graph), true);
+    graph.apply_ordering(algorithms::topological_order(&graph), true);
+    SECTION("The graph is as expected") {
+        REQUIRE(graph.get_sequence(graph.get_handle(1)) == "CAAATAAGAG");
+        REQUIRE(graph.get_node_count() == 3);
+        step_handle_t s = graph.path_begin(p_x);
+        REQUIRE(graph.get_handle_of_step(s) == graph.get_handle(1));
+        s = graph.get_next_step(s);
+        REQUIRE(graph.get_handle_of_step(s) == graph.get_handle(2));
+        s = graph.get_next_step(s);
+        REQUIRE(graph.get_handle_of_step(s) == graph.get_handle(3));
+    }
+}
+
 TEST_CASE("Graph simplification reduces a graph with a self loop", "[simplify]") {
     graph_t graph;
     handle_t n1 = graph.create_handle("CAAATAAG");
