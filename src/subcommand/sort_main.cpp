@@ -19,6 +19,8 @@ namespace odgi {
 
 using namespace odgi::subcommand;
 
+#define MAX_NUMBER_OF_ZIPF_DISTRIBUTIONS 4000
+
 int main_sort(int argc, char** argv) {
 
     // trick argumentparser to do the right thing with the subcommand
@@ -229,9 +231,24 @@ int main_sort(int argc, char** argv) {
         }
         uint64_t max_path_step_count = get_max_path_step_count(path_sgd_use_paths, path_index);
         path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? args::get(p_sgd_zipf_space) : get_max_path_length(path_sgd_use_paths, path_index);
-        path_sgd_max_eta = args::get(p_sgd_eta_max) ? args::get(p_sgd_eta_max) : max_path_step_count * max_path_step_count;
         path_sgd_zipf_space_max = args::get(p_sgd_zipf_space_max) ? args::get(p_sgd_zipf_space_max) : 1000;
-        path_sgd_zipf_space_quantization_step = args::get(p_sgd_zipf_space_quantization_step) ? std::max((uint64_t)2, args::get(p_sgd_zipf_space_quantization_step)) : 100;
+
+
+
+        if (args::get(p_sgd_zipf_space_quantization_step)) {
+            path_sgd_zipf_space_quantization_step = std::max((uint64_t) 2, args::get(p_sgd_zipf_space_quantization_step));
+        } else {
+            if (path_sgd_zipf_space > path_sgd_zipf_space_max && MAX_NUMBER_OF_ZIPF_DISTRIBUTIONS > path_sgd_zipf_space_max) {
+                path_sgd_zipf_space_quantization_step = std::max(
+                        (uint64_t) 2,
+                        (uint64_t) ceil( (double) (path_sgd_zipf_space - path_sgd_zipf_space_max) / (double) (MAX_NUMBER_OF_ZIPF_DISTRIBUTIONS - path_sgd_zipf_space_max))
+                );
+            } else {
+                path_sgd_zipf_space_quantization_step = 100;
+            }
+        }
+
+        path_sgd_max_eta = args::get(p_sgd_eta_max) ? args::get(p_sgd_eta_max) : max_path_step_count * max_path_step_count;
     }
 
     // helper, TODO: move into its own file
