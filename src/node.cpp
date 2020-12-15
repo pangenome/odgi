@@ -349,14 +349,19 @@ void node_t::apply_ordering(
     }
     // rewrite the encoding (affects path storage)
     std::vector<uint64_t> dec_v;
+    std::vector<uint64_t> encoding_map; // to compress away deleted nodes
+    bool compress_encoding = false;
+    uint64_t j = 0;
     for (uint64_t i = 0; i < decoding.size(); ++i) {
         uint64_t old_id = decode(i);
         if (old_id) {
             dec_v.push_back(get_new_id(old_id));
+            encoding_map.push_back(j++);
         } else {
             // this means that the node referred to by this entry has been deleted
-            // keep 0 as 0 to avoid out-of-bounds id lookups from get_new_id
-            dec_v.push_back(old_id);
+            // we'll need to rewrite our references to it
+            compress_encoding = true;
+            encoding_map.push_back(j);
         }
     }
     // update our own id before re-encoding (affects to_delta computation)
@@ -364,6 +369,15 @@ void node_t::apply_ordering(
     clear_encoding();
     for (auto& other_id : dec_v) {
         decoding.push_back(to_delta(other_id));
+    }
+    // compress our encoding if requested
+    if (compress_encoding) {
+        uint64_t n_paths = path_count();
+        for (uint64_t i = 0; i < n_paths; ++i) {
+            uint64_t q = PATH_RECORD_LENGTH*i;
+            paths[q+2] = encoding_map[paths[q+2]];
+            paths[q+4] = encoding_map[paths[q+4]];
+        }
     }
     // flip path steps if needed
     if (flip) {
