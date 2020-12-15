@@ -62,7 +62,7 @@ int main_sort(int argc, char** argv) {
     args::ValueFlag<uint64_t> p_sgd_zipf_space(parser, "N", "the maximum space size of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: longest path length)", {'k', "path-sgd-zipf-space"});
     args::ValueFlag<uint64_t> p_sgd_zipf_space_max(parser, "N", "the maximum space size of the Zipfian distribution beyond which quantization occurs (default: 1000)", {'I', "path-sgd-zipf-space-max"});
     args::ValueFlag<uint64_t> p_sgd_zipf_space_quantization_step(parser, "N", "quantization step when the maximum space size of the Zipfian distribution is exceeded (default: 100)", {'l', "path-sgd-zipf-space-quantization-step"});
-    args::ValueFlag<uint64_t> p_sgd_zipf_max_number_of_distributions(parser, "N", "maximum number of Zipfian distributions to calculate (default: 4000)", {'y', "path-sgd-zipf-max-num-distributions"});
+    args::ValueFlag<uint64_t> p_sgd_zipf_max_number_of_distributions(parser, "N", "approximate maximum number of Zipfian distributions to calculate (default: 4000)", {'y', "path-sgd-zipf-max-num-distributions"});
     args::ValueFlag<std::string> p_sgd_seed(parser, "STRING", "set the base seed for the 1-threaded path guided linear 1D SGD model (default: pangenomic!)", {'q', "path-sgd-seed"});
     args::ValueFlag<std::string> p_sgd_snapshot(parser, "STRING", "set the prefix to which each snapshot graph of a path guided 1D SGD iteration should be written to, no default", {'u', "path-sgd-snapshot"});
     /// pipeline
@@ -241,7 +241,10 @@ int main_sort(int argc, char** argv) {
         path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? args::get(p_sgd_zipf_space) : get_max_path_length(path_sgd_use_paths, path_index);
         path_sgd_zipf_space_max = args::get(p_sgd_zipf_space_max) ? args::get(p_sgd_zipf_space_max) : 1000;
 
-        path_sgd_zipf_max_number_of_distributions = args::get(p_sgd_zipf_max_number_of_distributions) ? args::get(p_sgd_zipf_max_number_of_distributions) : MAX_NUMBER_OF_ZIPF_DISTRIBUTIONS;
+        path_sgd_zipf_max_number_of_distributions = args::get(p_sgd_zipf_max_number_of_distributions) ? std::max(
+                (uint64_t) path_sgd_zipf_space_max + 1,
+                (uint64_t) args::get(p_sgd_zipf_max_number_of_distributions)
+        ) : MAX_NUMBER_OF_ZIPF_DISTRIBUTIONS;
 
         if (args::get(p_sgd_zipf_space_quantization_step)) {
             path_sgd_zipf_space_quantization_step = std::max((uint64_t) 2, args::get(p_sgd_zipf_space_quantization_step));
