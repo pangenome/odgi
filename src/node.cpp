@@ -179,6 +179,17 @@ void node_t::set_path_step(const uint64_t& rank, const step_t& step) {
     paths[i+5] = step.next_rank;
 }
 
+void node_t::clear_path_step(const uint64_t& rank) {
+    if (rank >= path_count()) assert(false);
+    uint64_t i = PATH_RECORD_LENGTH*rank;
+    paths[i] = 0;
+    paths[i+1] = step_type_helper::pack(false, false, false);
+    paths[i+2] = encode(id);
+    paths[i+3] = 0;
+    paths[i+4] = encode(id);
+    paths[i+5] = 0;
+}
+
 void node_t::set_step_path_id(const uint64_t& rank, const uint64_t& path_id) {
     paths[PATH_RECORD_LENGTH*rank] = path_id;
 }
@@ -339,7 +350,14 @@ void node_t::apply_ordering(
     // rewrite the encoding (affects path storage)
     std::vector<uint64_t> dec_v;
     for (uint64_t i = 0; i < decoding.size(); ++i) {
-        dec_v.push_back(get_new_id(decode(i)));
+        uint64_t old_id = decode(i);
+        if (old_id) {
+            dec_v.push_back(get_new_id(old_id));
+        } else {
+            // this means that the node referred to by this entry has been deleted
+            // keep 0 as 0 to avoid out-of-bounds id lookups from get_new_id
+            dec_v.push_back(old_id);
+        }
     }
     // update our own id before re-encoding (affects to_delta computation)
     id = get_new_id(id);

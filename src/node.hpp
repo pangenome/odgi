@@ -138,6 +138,7 @@ public:
                        const uint64_t& prev_id, const uint64_t& prev_rank,
                        const uint64_t& next_id, const uint64_t& next_rank);
     void set_path_step(const uint64_t& rank, const step_t& step);
+    void clear_path_step(const uint64_t& rank);
     void set_step_path_id(const uint64_t& rank, const uint64_t& path_id);
     void set_step_prev_id(const uint64_t& rank, const uint64_t& prev_id);
     void set_step_prev_rank(const uint64_t& rank, const uint64_t& prev_rank);

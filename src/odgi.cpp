@@ -1257,7 +1257,7 @@ void graph_t::destroy_step(const step_handle_t& step_handle) {
     --path_meta.length;
     node_t& curr_node = get_node_ref(get_handle_of_step(step_handle));
     curr_node.get_lock();
-    curr_node.set_path_step(as_integers(step_handle)[1], node_t::step_t());
+    curr_node.clear_path_step(as_integers(step_handle)[1]);
     curr_node.clear_lock();
 }
 
