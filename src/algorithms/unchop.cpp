@@ -6,14 +6,6 @@
 
 #include "unchop.hpp"
 
-#include <unordered_set>
-#include <list>
-#include <set>
-#include <iostream>
-#include <sstream>
-#include <atomic>
-#include "ips4o.hpp"
-
 namespace odgi {
     namespace algorithms {
 
