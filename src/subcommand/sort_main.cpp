@@ -19,6 +19,8 @@ namespace odgi {
 
 using namespace odgi::subcommand;
 
+#define MAX_NUMBER_OF_ZIPF_DISTRIBUTIONS 100
+
 int main_sort(int argc, char** argv) {
 
     // trick argumentparser to do the right thing with the subcommand
@@ -42,23 +44,10 @@ int main_sort(int argc, char** argv) {
     args::ValueFlag<uint64_t> breadth_first_chunk(parser, "N", "chunk size for breadth first topological sort", {'B', "breadth-first-chunk"});
     args::ValueFlag<uint64_t> depth_first_chunk(parser, "N", "chunk size for depth first topological sort", {'Z', "depth-first-chunk"});
     args::Flag dagify(parser, "dagify", "sort on the basis of the DAGified graph", {'d', "dagify-sort"});
-    args::Flag eades(parser, "eades", "use eades algorithm", {'e', "eades"});
-    /// linear SGD
-    args::Flag lsgd(parser, "linear-sgd", "apply 1D (linear) SGD algorithm to organize graph", {'S', "linear-sgd"});
-    args::ValueFlag<uint64_t> lsgd_bandwidth(parser, "sgd-bandwidth", "bandwidth of linear SGD model (default: 1000)", {'H', "sgd-bandwidth"});
-    args::ValueFlag<double> lsgd_sampling_rate(parser, "sgd-sampling-rate", "sample pairs of nodes with probability distance between them divided by the sampling rate (default: 20)", {'Q', "sgd-sampling-rate"});
-    args::Flag lsgd_use_paths(parser, "sgd-use-paths", "use paths to structure internode distances in SGD", {'K', "sgd-use-paths"});
-    args::ValueFlag<uint64_t> lsgd_iter_max(parser, "sgd-iter-max", "max number of iterations for linear SGD model (default: 30)", {'T', "sgd-iter-max"});
-    args::ValueFlag<double> lsgd_eps(parser, "sgd-eps", "final learning rate for linear SGD model (default: 0.01)", {'V', "sgd-eps"});
-    args::ValueFlag<double> lsgd_delta(parser, "sgd-delta", "threshold of maximum node displacement (approximately in bp) at which to stop SGD (default: 0)", {'C', "sgd-delta"});
     // other sorts
     args::Flag two(parser, "two", "use two-way (max of head-first and tail-first) topological algorithm", {'w', "two-way"});
     args::Flag randomize(parser, "random", "randomly sort the graph", {'r', "random"});
     args::Flag no_seeds(parser, "no-seeds", "don't use heads or tails to seed topological sort", {'n', "no-seeds"});
-    args::Flag mondriaan(parser, "mondriaan", "use sparse matrix diagonalization to sort the graph", {'m', "mondriaan"});
-    args::ValueFlag<uint64_t> mondriaan_n_parts(parser, "N", "number of partitions for mondriaan", {'N', "mondriaan-n-parts"});
-    args::ValueFlag<double> mondriaan_epsilon(parser, "N", "epsilon parameter to mondriaan", {'E', "mondriaan-epsilon"});
-    args::Flag mondriaan_path_weight(parser, "path-weight", "weight mondriaan input matrix by path coverage of edges", {'W', "mondriaan-path-weight"});
     /// path guided linear 1D SGD
     args::Flag p_sgd(parser, "path-sgd", "apply path guided linear 1D SGD algorithm to organize graph", {'Y', "path-sgd"});
     args::ValueFlag<std::string> p_sgd_in_file(parser, "FILE", "specify a line separated list of paths to sample from for the on the fly term generation process in the path guided linear 1D SGD (default: sample from all paths)", {'f', "path-sgd-use-paths"});
@@ -66,13 +55,14 @@ int main_sort(int argc, char** argv) {
     args::ValueFlag<double> p_sgd_min_term_updates_num_nodes(parser, "N", "minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of the number of nodes (default: argument is not set, the default of -G=[N], path-sgd-min-term-updates-paths=[N] is used)", {'U', "path-sgd-min-term-updates-nodes"});
     args::ValueFlag<double> p_sgd_delta(parser, "N", "threshold of maximum displacement approximately in bp at which to stop path guided linear 1D SGD (default: 0)", {'j', "path-sgd-delta"});
     args::ValueFlag<double> p_sgd_eps(parser, "N", "final learning rate for path guided linear 1D SGD model (default: 0.01)", {'g', "path-sgd-eps"});
-    args::ValueFlag<double> p_sgd_eta_max(parser, "N", "first and maximum learning rate for path guided linear 1D SGD model (default: squared longest path in the graph)", {'v', "path-sgd-eta-max"});
+    args::ValueFlag<double> p_sgd_eta_max(parser, "N", "first and maximum learning rate for path guided linear 1D SGD model (default: squared steps of longest path in the graph)", {'v', "path-sgd-eta-max"});
     args::ValueFlag<double> p_sgd_zipf_theta(parser, "N", "the theta value for the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: 0.99)", {'a', "path-sgd-zipf-theta"});
     args::ValueFlag<uint64_t> p_sgd_iter_max(parser, "N", "max number of iterations for path guided linear 1D SGD model (default: 30)", {'x', "path-sgd-iter-max"});
     args::ValueFlag<uint64_t> p_sgd_iter_with_max_learning_rate(parser, "N", "iteration where the learning rate is max for path guided linear 1D SGD model (default: 0)", {'F', "iteration-max-learning-rate"});
-    args::ValueFlag<uint64_t> p_sgd_zipf_space(parser, "N", "the maximum space size of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: min(max path lengths, 10000))", {'k', "path-sgd-zipf-space"});
-    args::ValueFlag<uint64_t> p_sgd_zipf_space_max(parser, "N", "the maximum space size of the Zipfian distribution beyond which quantization occurs (default: 1000)", {'I', "path-sgd-zipf-space-max"});
+    args::ValueFlag<uint64_t> p_sgd_zipf_space(parser, "N", "the maximum space size of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: longest path length)", {'k', "path-sgd-zipf-space"});
+    args::ValueFlag<uint64_t> p_sgd_zipf_space_max(parser, "N", "the maximum space size of the Zipfian distribution beyond which quantization occurs (default: 100)", {'I', "path-sgd-zipf-space-max"});
     args::ValueFlag<uint64_t> p_sgd_zipf_space_quantization_step(parser, "N", "quantization step when the maximum space size of the Zipfian distribution is exceeded (default: 100)", {'l', "path-sgd-zipf-space-quantization-step"});
+    args::ValueFlag<uint64_t> p_sgd_zipf_max_number_of_distributions(parser, "N", "approximate maximum number of Zipfian distributions to calculate (default: 100)", {'y', "path-sgd-zipf-max-num-distributions"});
     args::ValueFlag<std::string> p_sgd_seed(parser, "STRING", "set the base seed for the 1-threaded path guided linear 1D SGD model (default: pangenomic!)", {'q', "path-sgd-seed"});
     args::ValueFlag<std::string> p_sgd_snapshot(parser, "STRING", "set the prefix to which each snapshot graph of a path guided 1D SGD iteration should be written to, no default", {'u', "path-sgd-snapshot"});
     /// pipeline
@@ -83,6 +73,7 @@ int main_sort(int argc, char** argv) {
     args::Flag paths_by_avg_node_id(parser, "paths-avg", "sort paths by their average contained node id", {'A', "paths-avg"});
     args::Flag paths_by_avg_node_id_rev(parser, "paths-avg-rev", "sort paths in reverse by their average contained node id", {'R', "paths-avg-rev"});
     args::ValueFlag<std::string> path_delim(parser, "path-delim", "sort paths in bins by their prefix up to this delimiter", {'D', "path-delim"});
+    /// misc
     args::Flag progress(parser, "progress", "display progress of the sort", {'P', "progress"});
     args::Flag optimize(parser, "optimize", "use the MutableHandleGraph::optimize method", {'O', "optimize"});
     args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel operations", {'t', "threads"});
@@ -112,6 +103,13 @@ int main_sort(int argc, char** argv) {
         return 1;
     }
 
+    if (args::get(p_sgd_zipf_space_quantization_step) && args::get(p_sgd_zipf_max_number_of_distributions)){
+        std::cerr
+                << "[odgi sort] error: Please specify -l/--path-sgd-zipf-space-quantization-step or -y/--path-sgd-zipf-max-num-distributions, not both."
+                << std::endl;
+        return 1;
+    }
+
     graph_t graph;
     assert(argc > 0);
     std::string infile = args::get(dg_in_file);
@@ -124,28 +122,14 @@ int main_sort(int argc, char** argv) {
             f.close();
         }
     }
-    /*
-    if (args::get(show_sort)) {
-        std::vector<handle_t> order = (args::get(lazy) ? algorithms::lazy_topological_order(&graph) : algorithms::topological_order(&graph));
-        for (auto& handle : order) {
-            std::cout << graph.get_id(handle) << std::endl;
-        }
-    }
-    */
 
     // default settings
     uint64_t df_chunk_size = args::get(depth_first_chunk) ? args::get(depth_first_chunk) : 1000;
     uint64_t bf_chunk_size = args::get(breadth_first_chunk) ? args::get(breadth_first_chunk) : std::numeric_limits<uint64_t>::max();
-    uint64_t sgd_bandwidth = args::get(lsgd_bandwidth) ? args::get(lsgd_bandwidth) : 1000;
-    double sgd_sampling_rate = args::get(lsgd_sampling_rate) ? args::get(lsgd_sampling_rate) : 20;
-    double sgd_iter_max = args::get(lsgd_iter_max) ? args::get(lsgd_iter_max) : 30;
-    double sgd_eps = args::get(lsgd_eps) ? args::get(lsgd_eps) : 0.01;
-    double sgd_delta = args::get(lsgd_delta) ? args::get(lsgd_delta) : 0;
 
     const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
     graph.set_number_of_threads(num_threads);
 
-    bool sgd_use_paths = args::get(lsgd_use_paths);
     /// path guided linear 1D SGD sort helpers
     // TODO beautify this, maybe put into its own file
     std::function<uint64_t(const std::vector<path_handle_t> &,
@@ -165,7 +149,16 @@ int main_sort(int argc, char** argv) {
                     max_path_step_count = std::max(max_path_step_count, path_index.get_path_step_count(path));
                 }
                 return max_path_step_count;
-              };
+            };
+    std::function<uint64_t(const std::vector<path_handle_t> &,
+                           const xp::XP &)> get_max_path_length
+            = [&](const std::vector<path_handle_t> &path_sgd_use_paths, const xp::XP &path_index) {
+                uint64_t max_path_length = std::numeric_limits<uint64_t>::min();
+                for (auto &path : path_sgd_use_paths) {
+                    max_path_length = std::max(max_path_length, path_index.get_path_length(path));
+                }
+                return max_path_length;
+            };
 
     // default parameters
     std::string path_sgd_seed;
@@ -194,7 +187,7 @@ int main_sort(int argc, char** argv) {
     const bool snapshot = p_sgd_snapshot;
     // default parameters that need a path index to be present
     uint64_t path_sgd_min_term_updates;
-    uint64_t path_sgd_zipf_space, path_sgd_zipf_space_max, path_sgd_zipf_space_quantization_step;
+    uint64_t path_sgd_zipf_space, path_sgd_zipf_space_max, path_sgd_zipf_space_quantization_step, path_sgd_zipf_max_number_of_distributions;
     std::vector<path_handle_t> path_sgd_use_paths;
     xp::XP path_index;
     bool fresh_path_index = false;
@@ -245,21 +238,39 @@ int main_sort(int argc, char** argv) {
             }
         }
         uint64_t max_path_step_count = get_max_path_step_count(path_sgd_use_paths, path_index);
-        path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? std::min(args::get(p_sgd_zipf_space), max_path_step_count) : std::min((uint64_t)10000, max_path_step_count);
+        path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? args::get(p_sgd_zipf_space) : get_max_path_length(path_sgd_use_paths, path_index);
+        path_sgd_zipf_space_max = args::get(p_sgd_zipf_space_max) ? args::get(p_sgd_zipf_space_max) : 100;
+        std::cerr << "path_sgd_zipf_space_max: " << path_sgd_zipf_space_max << std::endl;
+
+        path_sgd_zipf_max_number_of_distributions = args::get(p_sgd_zipf_max_number_of_distributions) ? std::max(
+                (uint64_t) path_sgd_zipf_space_max + 1,
+                (uint64_t) args::get(p_sgd_zipf_max_number_of_distributions)
+        ) : std::max((uint64_t) path_sgd_zipf_space_max + 1,
+                     (uint64_t) MAX_NUMBER_OF_ZIPF_DISTRIBUTIONS);
+        std::cerr << "path_sgd_zipf_max_number_of_distributions: " << path_sgd_zipf_max_number_of_distributions << std::endl;
+
+        if (args::get(p_sgd_zipf_space_quantization_step)) {
+            path_sgd_zipf_space_quantization_step = std::max((uint64_t) 2, args::get(p_sgd_zipf_space_quantization_step));
+        } else {
+            if (path_sgd_zipf_space > path_sgd_zipf_space_max && path_sgd_zipf_max_number_of_distributions > path_sgd_zipf_space_max) {
+                path_sgd_zipf_space_quantization_step = std::max(
+                        (uint64_t) 2,
+                        (uint64_t) ceil( (double) (path_sgd_zipf_space - path_sgd_zipf_space_max) / (double) (path_sgd_zipf_max_number_of_distributions - path_sgd_zipf_space_max))
+                );
+            } else {
+                path_sgd_zipf_space_quantization_step = 100;
+            }
+        }
+
         path_sgd_max_eta = args::get(p_sgd_eta_max) ? args::get(p_sgd_eta_max) : max_path_step_count * max_path_step_count;
-        path_sgd_zipf_space_max = args::get(p_sgd_zipf_space_max) ? args::get(p_sgd_zipf_space_max) : 1000;
-        path_sgd_zipf_space_quantization_step = args::get(p_sgd_zipf_space_quantization_step) ? std::max((uint64_t)2, args::get(p_sgd_zipf_space_quantization_step)) : 100;
     }
 
     // helper, TODO: move into its own file
-    // make a dagified copy, get its sort, and apply the order to our graph
 
     // did we groom the graph?
     std::string outfile = args::get(dg_out_file);
     if (outfile.size()) {
-        if (args::get(eades)) {
-            graph.apply_ordering(algorithms::eades_algorithm(&graph), true);
-        } else if (args::get(two)) {
+        if (args::get(two)) {
             graph.apply_ordering(algorithms::two_way_topological_order(&graph), true);
         } else if (args::get(optimize)) {
             graph.optimize();
@@ -278,41 +289,26 @@ int main_sort(int argc, char** argv) {
             graph.apply_ordering(algorithms::cycle_breaking_sort(graph), true);
         } else if (args::get(no_seeds)) {
             graph.apply_ordering(algorithms::topological_order(&graph, false, false, args::get(progress)), true);
-        } else if (args::get(mondriaan)) {
-            graph.apply_ordering(algorithms::mondriaan_sort(graph,
-                                                            args::get(mondriaan_n_parts),
-                                                            args::get(mondriaan_epsilon),
-                                                            args::get(mondriaan_path_weight), false), true);
-        } else if (args::get(lsgd)) {
-            graph.apply_ordering(
-                algorithms::linear_sgd_order(graph,
-                                             sgd_bandwidth,
-                                             sgd_sampling_rate,
-                                             sgd_use_paths,
-                                             sgd_iter_max,
-                                             sgd_eps,
-                                             sgd_delta,
-                                             num_threads), true);
         } else if (args::get(p_sgd)) {
             std::vector<handle_t> order =
-                algorithms::path_linear_sgd_order(graph,
-                                                  path_index,
-                                                  path_sgd_use_paths,
-                                                  path_sgd_iter_max,
-                                                  path_sgd_iter_max_learning_rate,
-                                                  path_sgd_min_term_updates,
-                                                  path_sgd_delta,
-                                                  path_sgd_eps,
-                                                  path_sgd_max_eta,
-                                                  path_sgd_zipf_theta,
-                                                  path_sgd_zipf_space,
-                                                  path_sgd_zipf_space_max,
-                                                  path_sgd_zipf_space_quantization_step,
-                                                  num_threads,
-                                                  progress,
-                                                  path_sgd_seed,
-                                                  snapshot,
-                                                  snapshot_prefix);
+                    algorithms::path_linear_sgd_order(graph,
+                                                      path_index,
+                                                      path_sgd_use_paths,
+                                                      path_sgd_iter_max,
+                                                      path_sgd_iter_max_learning_rate,
+                                                      path_sgd_min_term_updates,
+                                                      path_sgd_delta,
+                                                      path_sgd_eps,
+                                                      path_sgd_max_eta,
+                                                      path_sgd_zipf_theta,
+                                                      path_sgd_zipf_space,
+                                                      path_sgd_zipf_space_max,
+                                                      path_sgd_zipf_space_quantization_step,
+                                                      num_threads,
+                                                      progress,
+                                                      path_sgd_seed,
+                                                      snapshot,
+                                                      snapshot_prefix);
             graph.apply_ordering(order, true);
         } else if (args::get(breadth_first)) {
             graph.apply_ordering(algorithms::breadth_first_topological_order(graph, bf_chunk_size), true);
@@ -325,90 +321,73 @@ int main_sort(int argc, char** argv) {
             std::vector<handle_t> order;
             for (auto c : args::get(pipeline)) {
                 switch (c) {
-                case 's':
-                    order = algorithms::topological_order(&graph, true, false, args::get(progress));
-                    break;
-                case 'n':
-                    order = algorithms::topological_order(&graph, false, false, args::get(progress));
-                    break;
-                case 'e':
-                    order = algorithms::eades_algorithm(&graph);
-                    break;
-                case 'd':
-                {
-                    graph_t split, into;
-                    order = algorithms::dagify_sort(graph, split, into);
-                }
-                    break;
-                case 'c':
-                    order = algorithms::cycle_breaking_sort(graph);
-                    break;
-                case 'b':
-                    order = algorithms::breadth_first_topological_order(graph, bf_chunk_size);
-                    break;
-                case 'z':
-                    order = algorithms::depth_first_topological_order(graph, df_chunk_size);
-                    break;
-                case 'w':
-                    order = algorithms::two_way_topological_order(&graph);
-                    break;
-                case 'r':
-                    order = algorithms::random_order(graph);
-                    break;
-                case 'S':
-                    order = algorithms::linear_sgd_order(graph,
-                                                         sgd_bandwidth,
-                                                         sgd_sampling_rate,
-                                                         sgd_use_paths,
-                                                         sgd_iter_max,
-                                                         sgd_eps,
-                                                         sgd_delta,
-                                                         num_threads);
-                    break;
-                case 'Y': {
-                    if (!fresh_path_index) {
-                        path_index.clean();
-                        path_index.from_handle_graph(graph);
+                    case 's':
+                        order = algorithms::topological_order(&graph, true, false, args::get(progress));
+                        break;
+                    case 'n':
+                        order = algorithms::topological_order(&graph, false, false, args::get(progress));
+                        break;
+                    case 'e':
+                        order = algorithms::eades_algorithm(&graph);
+                        break;
+                    case 'd': {
+                        graph_t split, into;
+                        order = algorithms::dagify_sort(graph, split, into);
                     }
-                    order = algorithms::path_linear_sgd_order(graph,
-                                                              path_index,
-                                                              path_sgd_use_paths,
-                                                              path_sgd_iter_max,
-                                                              path_sgd_iter_max_learning_rate,
-                                                              path_sgd_min_term_updates,
-                                                              path_sgd_delta,
-                                                              path_sgd_eps,
-                                                              path_sgd_max_eta,
-                                                              path_sgd_zipf_theta,
-                                                              path_sgd_zipf_space,
-                                                              path_sgd_zipf_space_max,
-                                                              path_sgd_zipf_space_quantization_step,
-                                                              num_threads,
-                                                              progress,
-                                                              path_sgd_seed,
-                                                              snapshot,
-                                                              snapshot_prefix);
-                    break;
-                }
-                case 'f':
-                    order.clear();
-                    graph.for_each_handle([&order](const handle_t& handle) {
+                        break;
+                    case 'c':
+                        order = algorithms::cycle_breaking_sort(graph);
+                        break;
+                    case 'b':
+                        order = algorithms::breadth_first_topological_order(graph, bf_chunk_size);
+                        break;
+                    case 'z':
+                        order = algorithms::depth_first_topological_order(graph, df_chunk_size);
+                        break;
+                    case 'w':
+                        order = algorithms::two_way_topological_order(&graph);
+                        break;
+                    case 'r':
+                        order = algorithms::random_order(graph);
+                        break;
+                    case 'Y': {
+                        if (!fresh_path_index) {
+                            path_index.clean();
+                            path_index.from_handle_graph(graph);
+                        }
+                        order = algorithms::path_linear_sgd_order(graph,
+                                                                  path_index,
+                                                                  path_sgd_use_paths,
+                                                                  path_sgd_iter_max,
+                                                                  path_sgd_iter_max_learning_rate,
+                                                                  path_sgd_min_term_updates,
+                                                                  path_sgd_delta,
+                                                                  path_sgd_eps,
+                                                                  path_sgd_max_eta,
+                                                                  path_sgd_zipf_theta,
+                                                                  path_sgd_zipf_space,
+                                                                  path_sgd_zipf_space_max,
+                                                                  path_sgd_zipf_space_quantization_step,
+                                                                  num_threads,
+                                                                  progress,
+                                                                  path_sgd_seed,
+                                                                  snapshot,
+                                                                  snapshot_prefix);
+                        break;
+                    }
+                    case 'f':
+                        order.clear();
+                        graph.for_each_handle([&order](const handle_t &handle) {
                             order.push_back(handle);
                         });
-                    std::reverse(order.begin(), order.end());
-                    break;
-                case 'm':
-                    order = algorithms::mondriaan_sort(graph,
-                                                       args::get(mondriaan_n_parts),
-                                                       args::get(mondriaan_epsilon),
-                                                       args::get(mondriaan_path_weight), false);
-                    break;
-                case 'g': {
-                    order = algorithms::groom(graph, progress);
-                    break;
-                }
-                default:
-                    break;
+                        std::reverse(order.begin(), order.end());
+                        break;
+                    case 'g': {
+                        order = algorithms::groom(graph, progress);
+                        break;
+                    }
+                    default:
+                        break;
                 }
                 if (order.size() != graph.get_node_count()) {
                     std::cerr << "[odgi sort] Error: expected " << graph.get_node_count()
@@ -423,16 +402,20 @@ int main_sort(int argc, char** argv) {
             graph.apply_ordering(algorithms::topological_order(&graph, true, false, args::get(progress)), true);
         }
         if (args::get(paths_by_min_node_id)) {
-            graph.apply_path_ordering(algorithms::prefix_and_id_ordered_paths(graph, args::get(path_delim), false, false));
+            graph.apply_path_ordering(
+                    algorithms::prefix_and_id_ordered_paths(graph, args::get(path_delim), false, false));
         }
         if (args::get(paths_by_max_node_id)) {
-            graph.apply_path_ordering(algorithms::prefix_and_id_ordered_paths(graph, args::get(path_delim), false, true));
+            graph.apply_path_ordering(
+                    algorithms::prefix_and_id_ordered_paths(graph, args::get(path_delim), false, true));
         }
         if (args::get(paths_by_avg_node_id)) {
-            graph.apply_path_ordering(algorithms::prefix_and_id_ordered_paths(graph, args::get(path_delim), true, false));
+            graph.apply_path_ordering(
+                    algorithms::prefix_and_id_ordered_paths(graph, args::get(path_delim), true, false));
         }
         if (args::get(paths_by_avg_node_id_rev)) {
-            graph.apply_path_ordering(algorithms::prefix_and_id_ordered_paths(graph, args::get(path_delim), true, true));
+            graph.apply_path_ordering(
+                    algorithms::prefix_and_id_ordered_paths(graph, args::get(path_delim), true, true));
         }
         if (outfile == "-") {
             graph.serialize(std::cout);

@@ -26,15 +26,13 @@ determine the node order:
    next node in the prior graph order that has not been sorted, yet. The cycle breaking algorithm applies a DFS sort until
    a cycle is found. We break and start a new DFS sort phase from where we stopped.
  - A random sort: The graph is randomly sorted. The node order is randomly shuffled from http://www.cplusplus.com/reference/random/mt19937/[Mersenne Twister pseudo-random] generated numbers.
- - A sparse matrix mondriaan sort: We can partition a hypergraph with integer weights and uniform hyperedge costs using the http://www.staff.science.uu.nl/~bisse101/Mondriaan/[Mondriaan] partitioner.
  - A 1D linear SGD sort: Odgi implements a 1D linear, variation graph adjusted, multi-threaded version of the https://arxiv.org/abs/1710.04626[Graph Drawing
    by Stochastic Gradient Descent] algorithm. The force-directed graph drawing algorithm minimizes the graph's energy function
    or stress level. It applies stochastic gradient descent (SGD) to move a single pair of nodes at a time.
- - A path guided, 1D linear SGD sort: The major bottleneck of the 1D linear SGD sort is that the memory allocation is quadratic
-  in number of nodes. So it does not scale for large graphs. This issue is tackled by the path guided, 1D linear SGD sort.
-  Instead of precalculating all terms, it can use a path index to pick the terms to move stochastically. If ran with 1 thread only,
-  the resulting order of the graph is deterministic. Ony can vary the seed.
- - An eades algorithmic sort: Use http://www.it.usyd.edu.au/~pead6616/old_spring_paper.pdf[Peter Eades' heuristic for graph drawing].
+ - A path guided, 1D linear SGD sort: Odgi implements a 1D linear, variation graph adjusted, multi-threaded version of the https://arxiv.org/abs/1710.04626[Graph Drawing
+   by Stochastic Gradient Descent] algorithm. The force-directed graph drawing algorithm minimizes the graph's energy function
+   or stress level. It applies stochastic gradient descent (SGD) to move a single pair of nodes at a time. The path index is used to pick the terms to move stochastically. If ran with 1 thread only,
+  the resulting order of the graph is deterministic. The seed is adjustable.
 
 Sorting the paths in a graph my refine the sorting process. For the users' convenience, it is possible to specify a whole
 pipeline of sorts within one parameter.
@@ -80,62 +78,19 @@ pipeline of sorts within one parameter.
 *-r, --random*::
   Randomly sort the graph.
 
-=== Mondriaan Sort
-
-*-m, --mondriaan*::
-  Use the sparse matrix diagonalization to sort the graph.
-
-*-N, --mondriaan-n-parts*=_N_::
-  Number of partitions for the mondriaan sort.
-
-*-E, --mondriaan-epsilon*=_N_::
-  Set the epsilon parameter for the mondriaan sort.
-
-*-W, --mondriaan-path-weight*::
-  Weight the mondriaan input matrix by the path coverage of edges.
-
-=== 1D Linear SGD Sort
-
-*-S, --linear-sgd*::
-  Apply 1D linear SGD algorithm to sort the graph.
-
-*-O, --sgd-bandwidth*=_sgd-bandwidth_::
-  Bandwidth of linear SGD model. The default value is _1000_.
-
-*-Q, --sgd-sampling-rate*=_sgd-sampling-rate_::
-  Sample pairs of nodes with probability distance between them divided by the sampling rate. The default value is _20_.
-
-*-K, --sgd-use-paths*::
-  Use the paths to structure the distances between nodes in SGD.
-
-*-T, --sgd-iter-max*=_sgd_iter-max_::
-  The maximum number of iterations for the linear SGD model. The default value is _30_.
-
-*-V, --sgd-eps*=_sgd-eps_::
-  The final learning rate for the linear SGD model. The default value is _0.01_.
-
-*-C, --sgd-delta*=_sgd-delta_::
-  The threshold of the maximum node displacement, approximately in base pairs, at which to stop SGD.
-
 === Path Guided 1D Linear SGD Sort
 
 *-Y, --path-sgd*::
   Apply path guided 1D linear SGD algorithm to organize the graph.
 
-*-J, --path-sgd-sample-from-paths*::
-  Instead of sampling the first node from all nodes we sample from all nucleotide positions of the paths. Default value is _FALSE_.
-
-*-l, --path-sgd-sample-from-path-steps*::
-  Instead of sampling the first node from all nodes we sample from all path steps of the paths. Default value is _FALSE_.
-
-*-I, --path-sgd-deterministic*::
-  Run the path guided 1D linear SGD in deterministic mode. Will automatically set the number of threads to 1, multithreading is not supported in this mode. Default value is _FALSE_.
+*-X, --path-index*=_FILE_::
+  Load the path index from this _FILE_.
 
 *-f, --path-sgd-use-paths*=FILE::
   Specify a line separated list of paths to sample from for the on the fly term generation process in the path guided linear 1D SGD. The default value are _all paths_.
 
 *-G, --path-sgd-min-term-updates-paths*=_N_::
-  The minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of total path length. The default value is _0.1_. Can be overwritten by _-U, -path-sgd-min-term-updates-nodes=N_.
+  The minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of total path steps. The default value is _1.0_. Can be overwritten by _-U, -path-sgd-min-term-updates-nodes=N_.
 
 *-U, --path-sgd-min-term-updates-nodes*=_N_::
   The minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of the number of nodes. Per default, the argument is not set. The default of _-G, path-sgd-min-term-updates-paths=N_ is used).
@@ -147,19 +102,28 @@ pipeline of sorts within one parameter.
   The final learning rate for path guided linear 1D SGD model. The default value is _0.01_.
 
 *-v, --path-sgd-eta-max*=_N_::
-  The first and maximum learning rate for path guided linear 1D SGD model. The default value is _number of nodes in the graph_.
+  The first and maximum learning rate for path guided linear 1D SGD model. The default value is _squared steps of longest path in graph_.
 
 *-a, --path-sgd-zipf-theta*=_N_::
   The theta value for the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model. The default value is _0.99_.
 
 *-x, --path-sgd-iter-max*=_N_::
-  The maximum number of iterations for path guided linear 1D SGD model. The default value is 30.
+  The maximum number of iterations for path guided linear 1D SGD model. The default value is _30_.
 
-*-F, --iteration-max-learning-rate::
-  The iteration where the learning rate is max for path guided linear 1D SGD model. The default value is 0.
+*-F, --iteration-max-learning-rate*=_N_::
+  The iteration where the learning rate is max for path guided linear 1D SGD model. The default value is _0_.
 
 *-k, --path-sgd-zipf-space*=_N_::
-  The maximum space size of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model. The default value is the _maximum path lengths_.
+  The maximum space size of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model. The default value is the _longest path length_.
+
+*-I, --path-sgd-zipf-space-max*=_N_::
+  The maximum space size of the Zipfian distribution beyond which quantization occurs. Default value is _100_.
+
+*-l, --path-sgd-zipf-space-quantization-step*=_N_::
+  Quantization step size when the maximum space size of the Zipfian distribution is exceeded. Default value is _100_.
+
+*-y, --path-sgd-zipf-max-num-distributions*=_N_::
+  Approximate maximum number of Zipfian distributions to calculate. The default value is _100_.
 
 *-q, --path-sgd-seed*=_N_::
   Set the seed for the deterministic 1-threaded path guided linear 1D SGD model. The default value is _pangenomic!_.
@@ -167,11 +131,6 @@ pipeline of sorts within one parameter.
 *-u, --path-sgd-snapshot*=_STRING_::
   Set the prefix to which each snapshot graph of a path guided 1D SGD iteration should be written to. This is turned off per default.
   This argument only works when _-Y, --path-sgd_ was specified. Not applicable in a pipeline of sorts.
-
-=== Eades Sort
-
-*-e, --eades*::
-  Use eades algorithm.
 
 === Path Sorting Options
 
