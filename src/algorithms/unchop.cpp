@@ -12,6 +12,7 @@
 #include <iostream>
 #include <sstream>
 #include <atomic>
+#include "ips4o.hpp"
 
 namespace odgi {
     namespace algorithms {
@@ -350,6 +351,8 @@ namespace odgi {
             }
 
             assert(graph.get_node_count() == ordered_handles.size());
+
+            ips4o::parallel::sort(ordered_handles.begin(), ordered_handles.end(), std::less<>(), nthreads);
 
             std::vector<handle_t> handle_order;
             for (auto &h : ordered_handles) {
