@@ -390,7 +390,7 @@ step_handle_t graph_t::get_next_step(const step_handle_t& step_handle) const {
     auto step_rank = as_integers(step_handle)[1];
     if (node.step_is_end(step_rank)) {
         node.clear_lock();
-        return path_front_end(get_path_handle_of_step(step_handle));
+        return path_end(get_path_handle_of_step(step_handle));
     }
     nid_t next_id = node.step_next_id(step_rank);
     auto next_rank = node.step_next_rank(step_rank);
@@ -762,30 +762,19 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
     }
 
     // establish id mapping
-    uint64_t max_handle_rank = 0;
-    uint64_t min_handle_rank = std::numeric_limits<uint64_t>::max();
-    {
-        uint64_t tmp;
-        for_each_handle([&](const handle_t& handle) {
-            tmp = number_bool_packing::unpack_number(handle);
-            max_handle_rank = std::max(max_handle_rank, tmp);
-            min_handle_rank = std::min(min_handle_rank, tmp);
-        });
-    }
-
     std::vector<std::pair<nid_t, bool>> ids;
-    // fill even for deleted nodes
+    // fill even for deleted nodes, which we map to 0
     ids.resize(node_v.size(), std::make_pair(0, false));
 
     if (compact_ids) {
         for (uint64_t i = 0; i < order->size(); ++i) {
-            ids[number_bool_packing::unpack_number(order->at(i)) - min_handle_rank] =
+            ids[number_bool_packing::unpack_number(order->at(i))] =
                 std::make_pair(i+1,
                                get_is_reverse(order->at(i)));
         }
     } else {
         for (auto handle : *order) {
-            ids[number_bool_packing::unpack_number(handle) - min_handle_rank] =
+            ids[number_bool_packing::unpack_number(handle)] =
                 std::make_pair(get_id(handle),
                                get_is_reverse(handle));
         }
@@ -794,11 +783,11 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
     // helpers to map from current to new id and orientation
     auto get_new_id =
         [&](uint64_t id) {
-            return ids[id - 1 - min_handle_rank].first;
+            return ids[id - 1].first;
         };
     auto to_flip =
         [&](uint64_t id) {
-            return ids[id - 1 - min_handle_rank].second;
+            return ids[id - 1].second;
         };
 
     // nodes, edges, and path steps
@@ -845,13 +834,27 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
     }
 
     // now we actually apply the ordering to our node_v, while removing deleted slots
-    std::vector<node_t*> new_node_v(order->size());
-    uint64_t j = 0;
-    for (uint64_t i = 0; i < node_v.size(); ++i) {
-        if (node_v[i] != nullptr) {
-            auto h = (*order)[j];
-            new_node_v[j++] = &get_node_ref(h);
+    std::vector<node_t*> new_node_v; //(order->size());
+    if (compact_ids) {
+        uint64_t j = 0;
+        for (uint64_t i = 0; i < node_v.size(); ++i) {
+            if (node_v[i] != nullptr) {
+                auto h = (*order)[j++];
+                new_node_v.push_back(&get_node_ref(h));
+            }
         }
+        _max_node_id = new_node_v.size();
+    } else {
+        uint64_t j = 0;
+        for (uint64_t i = 0; i < node_v.size(); ++i) {
+            if (node_v[i] != nullptr) {
+                auto h = (*order)[j++];
+                new_node_v.push_back(&get_node_ref(h));
+            } else {
+                new_node_v.push_back(nullptr);
+            }
+        }
+        _max_node_id = new_node_v.size();
     }
     node_v = new_node_v;
     deleted_nodes.clear();

@@ -4,7 +4,14 @@
 #include <handlegraph/util.hpp>
 #include <handlegraph/mutable_path_deletable_handle_graph.hpp>
 #include <vector>
+#include <unordered_set>
+#include <list>
+#include <set>
+#include <iostream>
+#include <sstream>
+#include <atomic>
 
+#include "ips4o.hpp"
 #include "simple_components.hpp"
 
 namespace odgi {

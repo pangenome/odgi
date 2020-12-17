@@ -102,7 +102,7 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads, bo
             max_handle_rank = std::max(max_handle_rank,
                                        number_bool_packing::unpack_number(found));
         });
-    for (uint64_t i = 0; i <= max_handle_rank; ++i) {
+    for (uint64_t i = 0; i <= max_handle_rank+1; ++i) {
         s.push_back(0);
         masked_edges_bv.push_back(1);
         masked_edges_bv.push_back(1);

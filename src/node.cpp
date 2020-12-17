@@ -354,8 +354,9 @@ void node_t::apply_ordering(
     uint64_t j = 0;
     for (uint64_t i = 0; i < decoding.size(); ++i) {
         uint64_t old_id = decode(i);
-        if (old_id) {
-            dec_v.push_back(get_new_id(old_id));
+        uint64_t new_id = old_id ? get_new_id(old_id) : 0;
+        if (new_id) {
+            dec_v.push_back(new_id);
             encoding_map.push_back(j++);
         } else {
             // this means that the node referred to by this entry has been deleted
