@@ -762,30 +762,19 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
     }
 
     // establish id mapping
-    uint64_t max_handle_rank = 0;
-    uint64_t min_handle_rank = std::numeric_limits<uint64_t>::max();
-    {
-        uint64_t tmp;
-        for_each_handle([&](const handle_t& handle) {
-            tmp = number_bool_packing::unpack_number(handle);
-            max_handle_rank = std::max(max_handle_rank, tmp);
-            min_handle_rank = std::min(min_handle_rank, tmp);
-        });
-    }
-
     std::vector<std::pair<nid_t, bool>> ids;
-    // fill even for deleted nodes
+    // fill even for deleted nodes, which we map to 0
     ids.resize(node_v.size(), std::make_pair(0, false));
 
     if (compact_ids) {
         for (uint64_t i = 0; i < order->size(); ++i) {
-            ids[number_bool_packing::unpack_number(order->at(i)) - min_handle_rank] =
+            ids[number_bool_packing::unpack_number(order->at(i))] =
                 std::make_pair(i+1,
                                get_is_reverse(order->at(i)));
         }
     } else {
         for (auto handle : *order) {
-            ids[number_bool_packing::unpack_number(handle) - min_handle_rank] =
+            ids[number_bool_packing::unpack_number(handle)] =
                 std::make_pair(get_id(handle),
                                get_is_reverse(handle));
         }
@@ -794,11 +783,11 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
     // helpers to map from current to new id and orientation
     auto get_new_id =
         [&](uint64_t id) {
-            return ids[id - 1 - min_handle_rank].first;
+            return ids[id - 1].first;
         };
     auto to_flip =
         [&](uint64_t id) {
-            return ids[id - 1 - min_handle_rank].second;
+            return ids[id - 1].second;
         };
 
     // nodes, edges, and path steps
