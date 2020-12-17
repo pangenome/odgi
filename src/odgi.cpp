@@ -390,7 +390,7 @@ step_handle_t graph_t::get_next_step(const step_handle_t& step_handle) const {
     auto step_rank = as_integers(step_handle)[1];
     if (node.step_is_end(step_rank)) {
         node.clear_lock();
-        return path_front_end(get_path_handle_of_step(step_handle));
+        return path_end(get_path_handle_of_step(step_handle));
     }
     nid_t next_id = node.step_next_id(step_rank);
     auto next_rank = node.step_next_rank(step_rank);
@@ -845,13 +845,27 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
     }
 
     // now we actually apply the ordering to our node_v, while removing deleted slots
-    std::vector<node_t*> new_node_v(order->size());
-    uint64_t j = 0;
-    for (uint64_t i = 0; i < node_v.size(); ++i) {
-        if (node_v[i] != nullptr) {
-            auto h = (*order)[j];
-            new_node_v[j++] = &get_node_ref(h);
+    std::vector<node_t*> new_node_v; //(order->size());
+    if (compact_ids) {
+        uint64_t j = 0;
+        for (uint64_t i = 0; i < node_v.size(); ++i) {
+            if (node_v[i] != nullptr) {
+                auto h = (*order)[j++];
+                new_node_v.push_back(&get_node_ref(h));
+            }
         }
+        _max_node_id = new_node_v.size();
+    } else {
+        uint64_t j = 0;
+        for (uint64_t i = 0; i < node_v.size(); ++i) {
+            if (node_v[i] != nullptr) {
+                auto h = (*order)[j++];
+                new_node_v.push_back(&get_node_ref(h));
+            } else {
+                new_node_v.push_back(nullptr);
+            }
+        }
+        _max_node_id = new_node_v.size();
     }
     node_v = new_node_v;
     deleted_nodes.clear();

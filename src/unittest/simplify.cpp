@@ -214,30 +214,69 @@ TEST_CASE("Graph simplification reduces a graph with a self inverting -/+ loop w
     }
 
     algorithms::unchop(graph);
-    graph.to_gfa(std::cerr);
 
+    uint64_t seen_steps = 0;
     for (auto& p : { p_x, p_y, q_y }) {
         step_handle_t begin = graph.path_begin(p);
-        //std::cerr << "begin is " << graph.get_id(graph.get_handle_of_step(begin)) << std::endl;
         step_handle_t end = graph.path_end(p);
-        //std::cerr << "end is " << graph.get_id(graph.get_handle_of_step(end)) << std::endl;
         for (step_handle_t step = begin;
              step != end;
              step = graph.get_next_step(step)) {
             handle_t h = graph.get_handle_of_step(step);
-            //std::cerr << "on step " << graph.get_id(h) << std::endl;
-            //internal_nodes.insert(consensus->get_id(h));
+            ++seen_steps;
         }
     }
 
     // sort the graph
     graph.apply_ordering(algorithms::topological_order(&graph), true);
+
+    // check that iteration still works
+    uint64_t seen_steps_after_sort = 0;
+    for (auto& p : { p_x, p_y, q_y }) {
+        step_handle_t begin = graph.path_begin(p);
+        step_handle_t end = graph.path_end(p);
+        for (step_handle_t step = begin;
+             step != end;
+             step = graph.get_next_step(step)) {
+            handle_t h = graph.get_handle_of_step(step);
+            ++seen_steps_after_sort;
+        }
+    }
+
     SECTION("The graph is as expected") {
+        REQUIRE(seen_steps == 6);
+        REQUIRE(seen_steps == seen_steps_after_sort);
         REQUIRE(graph.get_sequence(graph.get_handle(1)) == "CAAATAAGA");
         REQUIRE(graph.get_sequence(graph.get_handle(2)) == "GTCTTG");
         REQUIRE(graph.has_edge(graph.get_handle(1), graph.get_handle(2)));
         REQUIRE(graph.has_edge(graph.flip(graph.get_handle(2)), graph.get_handle(2)));
     }
+
+    // sort the graph
+    auto order = algorithms::topological_order(&graph);
+    std::reverse(order.begin(), order.end());
+    graph.apply_ordering(order, true);
+    //graph.optimize(); // breaks!!
+
+    // check that iteration still works
+    uint64_t seen_steps_after_rev = 0;
+    for (auto& p : { p_x, p_y, q_y }) {
+        step_handle_t begin = graph.path_begin(p);
+        step_handle_t end = graph.path_end(p);
+        for (step_handle_t step = begin;
+             step != end;
+             step = graph.get_next_step(step)) {
+            handle_t h = graph.get_handle_of_step(step);
+            ++seen_steps_after_rev;
+        }
+    }
+
+    SECTION("The graph is as expected after reverse sorting") {
+        REQUIRE(seen_steps == seen_steps_after_rev);
+        REQUIRE(graph.get_sequence(graph.get_handle(2)) == "CAAATAAGA");
+        REQUIRE(graph.get_sequence(graph.get_handle(1)) == "GTCTTG");
+    }
+
 }
 
 }
