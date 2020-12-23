@@ -470,7 +470,9 @@ namespace odgi {
                                                     const bool &progress,
                                                     const std::string &seed,
                                                     const bool &snapshot,
-                                                    const std::string &snapshot_prefix) {
+                                                    const std::string &snapshot_prefix,
+                                                    const bool &write_layout,
+                                                    const std::string &layout_out) {
             std::vector<string> snapshots;
             std::vector<double> layout = path_linear_sgd(graph,
                                                          path_index,
@@ -601,6 +603,18 @@ namespace odgi {
                                      || (a.pos == b.pos
                                          && as_integer(a.handle) < as_integer(b.handle)));
                       });
+            if (write_layout) {
+                std::vector<double> dummy_vec(handle_layout.size(), 0.0);
+                std::vector<double> sorted_layout(handle_layout.size());
+                for (uint64_t i = 0; i < handle_layout.size(); i++) {
+                    double layout_pos = handle_layout[i].pos;
+                    sorted_layout[i] = layout_pos;
+                }
+                algorithms::layout::Layout lay(sorted_layout, dummy_vec);
+                ofstream f(layout_out.c_str());
+                lay.serialize(f);
+                f.close();
+            }
             std::vector<handle_t> order;
             order.reserve(graph.get_node_count());
             for (auto &layout_handle : handle_layout) {
