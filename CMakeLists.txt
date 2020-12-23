@@ -481,8 +481,9 @@ set(odgi_LIBS
   "${mondriaan_LIB}/libmondriaan.a"
   "${libbf_LIB}/libbf.a"
   "-ldl"
-  "-latomic")
-#"-ltcmalloc") # for heap profiling
+  "-latomic"
+  #"-lefence") # for malloc error checking
+  #"-ltcmalloc") # for heap profiling
 
 set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/include/odgi_git_version.hpp
