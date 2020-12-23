@@ -481,7 +481,7 @@ set(odgi_LIBS
   "${mondriaan_LIB}/libmondriaan.a"
   "${libbf_LIB}/libbf.a"
   "-ldl"
-  "-latomic"
+  "-latomic")
   #"-lefence") # for malloc error checking
   #"-ltcmalloc") # for heap profiling
 
