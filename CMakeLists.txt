@@ -8,8 +8,10 @@ project(odgi)
 set(CMAKE_CXX_STANDARD 17)
 
 # Use all standard-compliant optimizations
-set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -O3 -mcx16 -g")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -O3 -mcx16 -g")
+#set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -O3 -mcx16 -g")
+#set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -O3 -mcx16 -g")
+set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O -mcx16 -g -fsanitize=address")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O -mcx16 -g -fsanitize=address")
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   # assumes clang build
@@ -307,6 +309,16 @@ ExternalProject_Add(atomicbitvector
 ExternalProject_Get_property(atomicbitvector SOURCE_DIR)
 set(atomicbitvector_INCLUDE "${SOURCE_DIR}")
 
+#add_subdirectory(deps/mmmulti/deps/mio)
+ExternalProject_Add(mio
+        SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/mmmulti/deps/mio"
+        UPDATE_COMMAND ""
+        INSTALL_COMMAND ""
+        BUILD_COMMAND ""
+        CONFIGURE_COMMAND "")
+ExternalProject_Get_property(mio SOURCE_DIR)
+set(mio_INCLUDE "${SOURCE_DIR}/include")
+
 # pybind11
 #ExternalProject_Add(pybind11
 #    GIT_REPOSITORY https://github.com/pybind/pybind11.git 
@@ -438,7 +450,8 @@ set(odgi_DEPS
     mmmulti
     ips4o
     xoshiro
-    atomicqueue)
+    atomicqueue
+    mio)
 add_dependencies(odgi_objs ${odgi_DEPS})
 
 set(odgi_INCLUDES
@@ -470,7 +483,8 @@ set(odgi_INCLUDES
   "${random_distributions_INCLUDE}"
   "${dirtyzipf_INCLUDE}"
   "${xoshiro_INCLUDE}"
-  "${atomicbitvector_INCLUDE}")
+  "${atomicbitvector_INCLUDE}"
+  "${mio_INCLUDE}")
 
 set(odgi_LIBS
   "${sdsl-lite_LIB}/libsdsl.a"
