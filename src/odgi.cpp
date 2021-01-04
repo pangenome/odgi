@@ -661,8 +661,6 @@ void graph_t::clear(void) {
     _max_node_id = 0;
     _min_node_id = 0;
     _edge_count = 0;
-    _path_count = 0;
-    _path_handle_next = 0;
     deleted_nodes.clear();
     for (auto& n : node_v) {
         delete n;
@@ -676,6 +674,8 @@ void graph_t::clear(void) {
             path_metadata_h->Delete(as_integer(p));
             path_name_h->Delete(s);
         });
+    _path_count = 0;
+    _path_handle_next = 0;
 }
 
 void graph_t::clear_paths(void) {
