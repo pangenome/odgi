@@ -199,6 +199,7 @@ graph_t::path_metadata_t& graph_t::get_path_metadata(const path_handle_t& path) 
         return *p;
     } else {
         assert(false);
+        return *p; // won't reach unless assert is disabled
     }
 }
 
@@ -208,6 +209,7 @@ const graph_t::path_metadata_t& graph_t::path_metadata(const path_handle_t& path
         return *p;
     } else {
         assert(false);
+        return *p; // won't reach unless assert is disabled
     }
 }
 
@@ -225,6 +227,7 @@ path_handle_t graph_t::get_path_handle(const std::string& path_name) const {
         return p->handle;
     } else {
         assert(false);
+        return as_path_handle(0); // won't reach unless assert is disabled
     }
 }
 
