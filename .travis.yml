@@ -14,4 +14,5 @@ before_install:
 script:
   - sed -i 's/CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -O3 -mcx16 -g/CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O -mcx16 -g -fsanitize=address/g' CMakeLists.txt
   - sed -i 's/CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -O3 -mcx16 -g/CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O -mcx16 -g -fsanitize=address/g' CMakeLists.txt
-  - cmake -H. -Bbuild && cmake --build build -- -j 4 && echo Testing && ASAN_OPTIONS=detect_leaks=1:symbolize=1 LSAN_OPTIONS=verbosity=1:log_threads=1 bin/odgi test && cd lib && ls -l && python3.8 -c 'import odgi; g = odgi.graph()'
+  - cmake -H. -Bbuild && cmake --build build -- -j 4 && echo Testing && ASAN_OPTIONS=detect_leaks=1:symbolize=1 LSAN_OPTIONS=verbosity=1:log_threads=1 bin/odgi test
+  - cd lib && ls -l && python3.8 -c 'import odgi; g = odgi.graph()'
