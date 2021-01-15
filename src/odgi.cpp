@@ -199,6 +199,7 @@ graph_t::path_metadata_t& graph_t::get_path_metadata(const path_handle_t& path) 
         return *p;
     } else {
         assert(false);
+        return *p; // won't reach unless assert is disabled
     }
 }
 
@@ -208,6 +209,7 @@ const graph_t::path_metadata_t& graph_t::path_metadata(const path_handle_t& path
         return *p;
     } else {
         assert(false);
+        return *p; // won't reach unless assert is disabled
     }
 }
 
@@ -225,6 +227,7 @@ path_handle_t graph_t::get_path_handle(const std::string& path_name) const {
         return p->handle;
     } else {
         assert(false);
+        return as_path_handle(0); // won't reach unless assert is disabled
     }
 }
 
@@ -661,8 +664,6 @@ void graph_t::clear(void) {
     _max_node_id = 0;
     _min_node_id = 0;
     _edge_count = 0;
-    _path_count = 0;
-    _path_handle_next = 0;
     deleted_nodes.clear();
     for (auto& n : node_v) {
         delete n;
@@ -676,6 +677,8 @@ void graph_t::clear(void) {
             path_metadata_h->Delete(as_integer(p));
             path_name_h->Delete(s);
         });
+    _path_count = 0;
+    _path_handle_next = 0;
 }
 
 void graph_t::clear_paths(void) {
