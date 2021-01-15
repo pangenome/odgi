@@ -92,9 +92,7 @@ int main_tension(int argc, char **argv) {
         }
     }
 
-    std::cout << "path_name\tlayout_distance\tnucleotide_distance" << std::endl;
-
-    uint64_t window_size_ = args::get(window_size) * 1000;
+    double window_size_ = args::get(window_size) * 1000;
 
     graph.for_each_path_handle([&](const path_handle_t &p) {
         std::string path_name = graph.get_path_name(p);
