@@ -26,7 +26,6 @@ int main_cut(int argc, char **argv) {
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> layout_in_file(parser, "FILE", "read the layout coordinates from this .lay format file produced by odgi sort or odgi layout", {'c', "coords-in"});
     args::ValueFlag<std::string> tsv_out_file(parser, "FILE", "write the TSV layout to this file", {'T', "tsv"});
-    args::ValueFlag<std::string> mean_dists_out_file(parser, "FILE", "write the mean distances of adjacent nodes for each node to this file", {'M', "mean-dists-adj-nodes"});
     args::Flag progress(parser, "progress", "display progress of the sort", {'P', "progress"});
     args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel phases", {'t', "threads"});
     args::Flag debug(parser, "debug", "print information about the layout", {'d', "debug"});
@@ -91,67 +90,76 @@ int main_cut(int argc, char **argv) {
         }
     }
 
-    if (mean_dists_out_file) {
-        std::string distance_out = args::get(mean_dists_out_file);
+    std::cout << "path_name\tlayout_distance\tnucleotide_distance" << std::endl;
 
-        /// distances of consecutive nodes, will work for both 1D and 2D!
-        vector<double> consecutive_node_dists;
-        uint64_t handle_pos = 0;
-
-        /// average distances to all adjacent nodes for each node
-        vector<double> mean_dists_adj_nodes(graph.get_node_count(), 0.0);
-
-        graph.for_each_handle(
-                [&](const handle_t &h) {
-                    vector<double> adj_node_dists;
-                    // we didn't hit the last node, yet
-                    if (handle_pos < graph.max_node_id() - 1) {
-                        double dx = layout.get_x(handle_pos) - layout.get_x(handle_pos + 1);
-                        double dy = layout.get_y(handle_pos) - layout.get_y(handle_pos + 1);
-                        double handle_dist = sqrt(dx * dx + dy * dy);
-                        consecutive_node_dists.push_back(handle_dist);
+    graph.for_each_path_handle([&](const path_handle_t &p) {
+        std::string path_name = graph.get_path_name(p);
+        double path_layout_dist = 0;
+        uint64_t path_nuc_dist = 0;
+        graph.for_each_step_in_path(p, [&](const step_handle_t &s) {
+            handle_t h = graph.get_handle_of_step(s);
+            algorithms::xy_d_t h_coords_start;
+            algorithms::xy_d_t h_coords_end;
+            if (graph.get_is_reverse(h)) {
+                h_coords_start = layout.coords(graph.flip(h));
+                h_coords_end = layout.coords(h);
+            } else {
+                h_coords_start = layout.coords(h);
+                h_coords_end = layout.coords(graph.flip(h));
+            }
+            // did we hit the last step?
+            if (graph.has_next_step(s)) {
+                step_handle_t next_s = graph.get_next_step(s);
+                handle_t next_h = graph.get_handle_of_step(next_s);
+                algorithms::xy_d_t next_h_coords_start;
+                algorithms::xy_d_t next_h_coords_end;
+                if (graph.get_is_reverse(next_h)) {
+                    next_h_coords_start = layout.coords(graph.flip(next_h));
+                    next_h_coords_end = layout.coords(next_h);
+                } else {
+                    next_h_coords_start = layout.coords(next_h);
+                    next_h_coords_end = layout.coords(graph.flip(next_h));
+                }
+                double within_node_dist = 0;
+                double from_node_to_node_dist = 0;
+                if (!graph.get_is_reverse(h)) {
+                    /// f + f
+                    if (!graph.get_is_reverse(next_h)) {
+                        within_node_dist = algorithms::layout::coord_dist(h_coords_start, h_coords_end);
+                        from_node_to_node_dist = algorithms::layout::coord_dist(h_coords_end, next_h_coords_start);
+                    } else {
+                        /// f + r
+                        within_node_dist = algorithms::layout::coord_dist(h_coords_start, h_coords_end);
+                        from_node_to_node_dist = algorithms::layout::coord_dist(h_coords_end, next_h_coords_end);
                     }
-                    // collect distances to the left
-                    graph.follow_edges(h, true, [&](const handle_t &o) {
-                        nid_t o_id = graph.get_id(o);
-                        double dx = layout.get_x(handle_pos) - layout.get_x(o_id - 1);
-                        double dy = layout.get_y(handle_pos) - layout.get_y(o_id - 1);
-                        double handle_dist = sqrt(dx * dx + dy * dy);
-                        adj_node_dists.push_back(handle_dist);
-                    });
-                    // collect distances to the right
-                    graph.follow_edges(h, false, [&](const handle_t &o) {
-                        nid_t o_id = graph.get_id(o);
-                        double dx = layout.get_x(handle_pos) - layout.get_x(o_id - 1);
-                        double dy = layout.get_y(handle_pos) - layout.get_y(o_id - 1);
-                        double handle_dist = sqrt(dx * dx + dy * dy);
-                        adj_node_dists.push_back(handle_dist);
-                    });
-                    // calculate mean distance and add it to the overall distances
-                    double sum = std::accumulate(adj_node_dists.begin(), adj_node_dists.end(), 0.0);
-                    double mean = sum / adj_node_dists.size();
-                    mean_dists_adj_nodes[handle_pos] = mean;
-                    handle_pos++;
-                });
-
-        /// calculate average and median distances of consecutive nodes and print
-        double sum = std::accumulate(consecutive_node_dists.begin(), consecutive_node_dists.end(), 0.0);
-        double mean = sum / consecutive_node_dists.size();
-        std::cerr << "[odgi cut]: average distance of consecutive nodes: " << mean << std::endl;
-        const auto median_it = consecutive_node_dists.begin() + consecutive_node_dists.size() / 2;
-        std::nth_element(consecutive_node_dists.begin(), median_it, consecutive_node_dists.end());
-        auto median = *median_it;
-        std::cerr << "[odgi cut]: median distance of consecutive nodes: " << median << std::endl;
-
-        ofstream f(distance_out.c_str());
-        uint64_t index = 0;
-        f << "idx" << "\t" << "mean_dist_adj_nodes" << std::endl;
-        for (auto &dist : mean_dists_adj_nodes) {
-            f << index << "\t" << dist << std::endl;
-            index++;
-        }
-        f.close();
-    }
+                } else {
+                    /// r + r
+                    if (graph.get_is_reverse(next_h)) {
+                        within_node_dist = algorithms::layout::coord_dist(h_coords_end, h_coords_start);
+                        from_node_to_node_dist = algorithms::layout::coord_dist(h_coords_start, next_h_coords_start);
+                    } else {
+                        /// r + f
+                        within_node_dist = algorithms::layout::coord_dist(h_coords_end, h_coords_start);
+                        from_node_to_node_dist = algorithms::layout::coord_dist(h_coords_start, next_h_coords_end);
+                    }
+                }
+                path_layout_dist += within_node_dist;
+                path_layout_dist += from_node_to_node_dist;
+                path_nuc_dist += graph.get_length(h);
+            } else {
+                // we only take a look at the current node
+                /// f
+                if (!graph.get_is_reverse(h)) {
+                    path_layout_dist += algorithms::layout::coord_dist(h_coords_start, h_coords_end);
+                } else {
+                    /// r
+                    path_layout_dist += algorithms::layout::coord_dist(h_coords_end, h_coords_start);
+                }
+                path_nuc_dist += graph.get_length(h);
+            }
+        });
+        std::cout << path_name << "\t" << path_layout_dist << "\t" << path_nuc_dist << std::endl;
+    });
 
     if (tsv_out_file) {
         auto& outfile = args::get(tsv_out_file);

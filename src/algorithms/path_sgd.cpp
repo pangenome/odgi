@@ -604,11 +604,14 @@ namespace odgi {
                                          && as_integer(a.handle) < as_integer(b.handle)));
                       });
             if (write_layout) {
-                std::vector<double> dummy_vec(handle_layout.size(), 0.0);
-                std::vector<double> sorted_layout(handle_layout.size());
-                for (uint64_t i = 0; i < handle_layout.size(); i++) {
-                    double layout_pos = handle_layout[i].pos;
-                    sorted_layout[i] = layout_pos;
+                std::vector<double> dummy_vec(handle_layout.size() * 2, 0.0);
+                std::vector<double> sorted_layout(handle_layout.size() * 2);
+                for (uint64_t i = 0; i < handle_layout.size(); i = i + 2) {
+                    double layout_start_pos = handle_layout[i].pos;
+                    // we set the start position in 1D
+                    sorted_layout[i] = layout_start_pos;
+                    // we assume that in 1D we can just travel the length of the node in nucleotides also in 1D
+                    sorted_layout[i + 1] = (double) layout_start_pos + (double) graph.get_length(handle_layout[i].handle);
                 }
                 algorithms::layout::Layout lay(sorted_layout, dummy_vec);
                 ofstream f(layout_out.c_str());
