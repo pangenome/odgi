@@ -10,22 +10,24 @@ namespace odgi {
 
 using namespace odgi::subcommand;
 
-int main_cut(int argc, char **argv) {
+int main_tension(int argc, char **argv) {
 
     // trick argumentparser to do the right thing with the subcommand
     for (uint64_t i = 1; i < argc - 1; ++i) {
         argv[i] = argv[i + 1];
     }
-    std::string prog_name = "odgi cut";
+    std::string prog_name = "odgi tension";
     argv[0] = (char *) prog_name.c_str();
     --argc;
 
     args::ArgumentParser parser(
-        "cut out structural variants by given distance threshold");
+        "evaluate the tension of a graph helping to locate structural variants and abnormalities");
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> layout_in_file(parser, "FILE", "read the layout coordinates from this .lay format file produced by odgi sort or odgi layout", {'c', "coords-in"});
+    args::ValueFlag<uint64_t> window_size(parser, "N", "window size in kb in which each tension is calculated", {'w', "window-size"});
     args::ValueFlag<std::string> tsv_out_file(parser, "FILE", "write the TSV layout to this file", {'T', "tsv"});
+    // args::ValueFlag<std::string> bed_out_file(parser, "FILE", "write the BED intervals to this file", {'B', "bed"}); we write to stdout
     args::Flag progress(parser, "progress", "display progress of the sort", {'P', "progress"});
     args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel phases", {'t', "threads"});
     args::Flag debug(parser, "debug", "print information about the layout", {'d', "debug"});
@@ -51,15 +53,15 @@ int main_cut(int argc, char **argv) {
 
     if (!dg_in_file) {
         std::cerr
-            << "[odgi cut] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
-            << std::endl;
+                << "[odgi tension] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
+                << std::endl;
         return 1;
     }
 
-    if (!tsv_out_file) {
+    if (!window_size) {
         std::cerr
-            << "[odgi cut] error: Please specify an output file to where to store the layout via -p/--png=[FILE], -s/--svg=[FILE], -T/--tsv=[FILE]"
-            << std::endl;
+                << "[odgi tension] error: Please specify a window size for the detection of the tension level of the graph via -w=[N], --window-size=[N]."
+                << std::endl;
         return 1;
     }
 
@@ -92,8 +94,12 @@ int main_cut(int argc, char **argv) {
 
     std::cout << "path_name\tlayout_distance\tnucleotide_distance" << std::endl;
 
+    uint64_t window_size_ = args::get(window_size) * 1000;
+
     graph.for_each_path_handle([&](const path_handle_t &p) {
         std::string path_name = graph.get_path_name(p);
+        uint64_t cur_window_start = 1;
+        uint64_t cur_window_end = 0;
         double path_layout_dist = 0;
         uint64_t path_nuc_dist = 0;
         graph.for_each_step_in_path(p, [&](const step_handle_t &s) {
@@ -145,7 +151,25 @@ int main_cut(int argc, char **argv) {
                 }
                 path_layout_dist += within_node_dist;
                 path_layout_dist += from_node_to_node_dist;
-                path_nuc_dist += graph.get_length(h);
+                uint64_t nuc_dist = graph.get_length(h);
+                path_nuc_dist += nuc_dist;
+                cur_window_end += nuc_dist;
+                if ((cur_window_end - cur_window_start + 1) >= window_size_) {
+                    // BED files are 0-based http://genome.ucsc.edu/FAQ/FAQformat#format1
+                    std::cout << path_name << "\t" // chrom
+                              << (cur_window_start - 1) << "\t" // chromStart
+                              << (cur_window_end) << "\t" // chromEnd
+                              // << path_name << ":" << path_layout_dist << "-" << path_nuc_dist << "\t" // name
+                              // << 1000 << "\t" // score
+                              //<< "+" << "\t" // strand
+                              << path_layout_dist << "\t"
+                              << path_nuc_dist
+                              << std::endl;
+                    cur_window_start = cur_window_end + 1;
+                    cur_window_end = cur_window_start - 1;
+                    path_layout_dist = 0;
+                    path_nuc_dist = 0;
+                }
             } else {
                 // we only take a look at the current node
                 /// f
@@ -156,9 +180,18 @@ int main_cut(int argc, char **argv) {
                     path_layout_dist += algorithms::layout::coord_dist(h_coords_end, h_coords_start);
                 }
                 path_nuc_dist += graph.get_length(h);
+                // BED files are 0-based http://genome.ucsc.edu/FAQ/FAQformat#format1
+                std::cout << path_name << "\t" // chrom
+                          << (cur_window_start - 1) << "\t" // chromStart
+                          << (cur_window_end) << "\t" // chromEnd
+                          // << path_name << ":" << path_layout_dist << "-" << path_nuc_dist << "\t" // name
+                          // << 1000 << "\t" // score
+                          //<< "+" << "\t" // strand
+                          << path_layout_dist << "\t"
+                          << path_nuc_dist
+                          << std::endl;
             }
         });
-        std::cout << path_name << "\t" << path_layout_dist << "\t" << path_nuc_dist << std::endl;
     });
 
     if (tsv_out_file) {
@@ -177,8 +210,8 @@ int main_cut(int argc, char **argv) {
     return 0;
 }
 
-static Subcommand odgi_draw("cut", "cut out structural variants by given distance threshold",
-                            PIPELINE, 3, main_cut);
+static Subcommand odgi_tension("tension", "evaluate the tension of a graph helping to locate structural variants and abnormalities",
+                            PIPELINE, 3, main_tension);
 
 
 }
