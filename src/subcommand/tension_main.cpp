@@ -25,7 +25,7 @@ int main_tension(int argc, char **argv) {
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> layout_in_file(parser, "FILE", "read the layout coordinates from this .lay format file produced by odgi sort or odgi layout", {'c', "coords-in"});
-    args::ValueFlag<uint64_t> window_size(parser, "N", "window size in kb in which each tension is calculated", {'w', "window-size"});
+    args::ValueFlag<double> window_size(parser, "N", "window size in kb in which each tension is calculated", {'w', "window-size"});
     args::ValueFlag<std::string> tsv_out_file(parser, "FILE", "write the TSV layout to this file", {'T', "tsv"});
     // args::ValueFlag<std::string> bed_out_file(parser, "FILE", "write the BED intervals to this file", {'B', "bed"}); we write to stdout
     args::Flag progress(parser, "progress", "display progress of the sort", {'P', "progress"});
@@ -177,7 +177,9 @@ int main_tension(int argc, char **argv) {
                     /// r
                     path_layout_dist += algorithms::layout::coord_dist(h_coords_end, h_coords_start);
                 }
-                path_nuc_dist += graph.get_length(h);
+                uint64_t nuc_dist = graph.get_length(h);
+                path_nuc_dist += nuc_dist;
+                cur_window_end += nuc_dist;
                 // BED files are 0-based http://genome.ucsc.edu/FAQ/FAQformat#format1
                 std::cout << path_name << "\t" // chrom
                           << (cur_window_start - 1) << "\t" // chromStart
