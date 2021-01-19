@@ -4,6 +4,7 @@
 #include "args.hxx"
 #include <omp.h>
 #include "algorithms/layout.hpp"
+#include "algorithms/bed_records.hpp"
 #include <numeric>
 
 namespace odgi {
@@ -47,8 +48,10 @@ int main_tension(int argc, char **argv) {
         return 1;
     }
 
+    uint64_t thread_count = 1;
     if (args::get(nthreads)) {
         omp_set_num_threads(args::get(nthreads));
+        thread_count = args::get(nthreads);
     }
 
     if (!dg_in_file) {
@@ -94,7 +97,17 @@ int main_tension(int argc, char **argv) {
 
     double window_size_ = args::get(window_size) * 1000;
 
-    graph.for_each_path_handle([&](const path_handle_t &p) {
+    vector<path_handle_t> p_handles;
+    graph.for_each_path_handle([&] (const path_handle_t &p) {
+       p_handles.push_back(p);
+    });
+
+    auto bed = algorithms::bed_records();
+
+    // bed.open_writer();
+// #pragma omp parallel for schedule(static, 1) num_threads(thread_count)
+    for (uint64_t idx = 0; idx < p_handles.size(); idx++) {
+        path_handle_t p = p_handles[idx];
         std::string path_name = graph.get_path_name(p);
         uint64_t cur_window_start = 1;
         uint64_t cur_window_end = 0;
@@ -192,7 +205,8 @@ int main_tension(int argc, char **argv) {
                           << std::endl;
             }
         });
-    });
+    }
+    // bed.close_writer();
 
     if (tsv_out_file) {
         auto& outfile = args::get(tsv_out_file);
