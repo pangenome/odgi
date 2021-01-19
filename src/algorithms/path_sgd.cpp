@@ -612,6 +612,9 @@ namespace odgi {
                     sorted_layout[i] = layout_start_pos;
                     // we assume that in 1D we can just travel the length of the node in nucleotides also in 1D
                     sorted_layout[i + 1] = (double) layout_start_pos + (double) graph.get_length(handle_layout[i].handle);
+                    // std::cerr << std::fixed;
+                    // std::cerr << std::setprecision(3);
+                    // std::cerr << "start_pos-end_pos: " << "\t" << sorted_layout[i] << "-" << sorted_layout[i + 1] << std::endl;
                 }
                 algorithms::layout::Layout lay(sorted_layout, dummy_vec);
                 ofstream f(layout_out.c_str());
