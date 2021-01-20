@@ -102,7 +102,7 @@ int main_tension(int argc, char **argv) {
        p_handles.push_back(p);
     });
 
-    auto bed = algorithms::bed_records();
+    algorithms::bed_records_class bed;
 
     // bed.open_writer();
 // #pragma omp parallel for schedule(static, 1) num_threads(thread_count)
