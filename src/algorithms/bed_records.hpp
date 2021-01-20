@@ -22,7 +22,7 @@ private:
     };
 
     std::thread writer_thread;
-    atomic_queue::AtomicQueue2<bed_record_t, 2 << 16> bed_record_queue;
+    atomic_queue::AtomicQueue2<bed_record_t*, 2 << 16> bed_record_queue;
     std::atomic<bool> work_todo;
 
 public:
@@ -42,17 +42,17 @@ public:
             throw std::ios_base::failure(std::strerror(errno));
         }
         */
-        bed_record_t bed_record;
+        auto* bed_record = new bed_record_t();
         while (work_todo.load() || !bed_record_queue.was_empty()) {
             if (bed_record_queue.try_pop(bed_record)) {
                 do {
                     // writer.write((char*)&ival, sizeof(Interval));
                     // BED files are 0-based http://genome.ucsc.edu/FAQ/FAQformat#format1
-                    std::cout << bed_record.chrom << "\t" // chrom
-                              << bed_record.chromStart << "\t" // chromStart
-                              << bed_record.chromEnd << "\t" // chromEnd
-                              << bed_record.path_layout_dist << "\t"
-                              << bed_record.path_nuc_dist
+                    std::cout << bed_record->chrom << "\t" // chrom
+                              << bed_record->chromStart << "\t" // chromStart
+                              << bed_record->chromEnd << "\t" // chromEnd
+                              << bed_record->path_layout_dist << "\t"
+                              << bed_record->path_nuc_dist
                               << std::endl;
                 } while (bed_record_queue.try_pop(bed_record));
             } else {
@@ -87,7 +87,7 @@ public:
 	void append(const std::string &chrom, const uint64_t &chromStart, const uint64_t &chromEnd,
           const double &path_layout_dist, const uint64_t &path_nuc_dist) {
         bed_record_t bed_record = {chrom, chromStart, chromEnd, path_layout_dist, path_nuc_dist};
-        bed_record_queue.push(bed_record);
+        bed_record_queue.push(&bed_record);
     }
 };
 
