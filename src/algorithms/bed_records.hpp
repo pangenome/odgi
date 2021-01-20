@@ -19,6 +19,7 @@ private:
         uint64_t chromEnd;
         double path_layout_dist;
         uint64_t path_nuc_dist;
+        double path_layout_nuc_dist_ratio;
     };
 
     std::thread writer_thread;
@@ -52,7 +53,8 @@ public:
                               << bed_record->chromStart << "\t" // chromStart
                               << bed_record->chromEnd << "\t" // chromEnd
                               << bed_record->path_layout_dist << "\t"
-                              << bed_record->path_nuc_dist
+                              << bed_record->path_nuc_dist << "\t"
+                              << bed_record->path_layout_nuc_dist_ratio
                               << std::endl;
                 } while (bed_record_queue.try_pop(bed_record));
             } else {
@@ -64,7 +66,6 @@ public:
 
     // open backing file and start writer_thread
     void open_writer(void) {
-        std::cerr << "PENEN" << std::endl;
         if (!work_todo.load()) {
             work_todo.store(true);
             writer_thread = std::thread(&bed_records_class::writer_func, this);
@@ -86,8 +87,8 @@ public:
     /// write into our write buffer
     /// open_writer() must be called first to set up our buffer and writer
 	void append(const std::string &chrom, const uint64_t &chromStart, const uint64_t &chromEnd,
-          const double &path_layout_dist, const uint64_t &path_nuc_dist) {
-        bed_record_queue.push(new bed_record_t{chrom, chromStart, chromEnd, path_layout_dist, path_nuc_dist});
+          const double &path_layout_dist, const uint64_t &path_nuc_dist, const double &path_layout_nuc_dist_ratio) {
+        bed_record_queue.push(new bed_record_t{chrom, chromStart, chromEnd, path_layout_dist, path_nuc_dist, path_layout_nuc_dist_ratio});
     }
 };
 

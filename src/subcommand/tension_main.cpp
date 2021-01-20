@@ -6,6 +6,7 @@
 #include "algorithms/layout.hpp"
 #include "algorithms/bed_records.hpp"
 #include <numeric>
+#include "progress.hpp"
 
 namespace odgi {
 
@@ -26,7 +27,7 @@ int main_tension(int argc, char **argv) {
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> layout_in_file(parser, "FILE", "read the layout coordinates from this .lay format file produced by odgi sort or odgi layout", {'c', "coords-in"});
-    args::ValueFlag<double> window_size(parser, "N", "window size in kb in which each tension is calculated", {'w', "window-size"});
+    args::ValueFlag<double> window_size(parser, "N", "window size in kb in which each tension is calculated, DEFAULT: 1kb", {'w', "window-size"});
     args::ValueFlag<std::string> tsv_out_file(parser, "FILE", "write the TSV layout to this file", {'T', "tsv"});
     // args::ValueFlag<std::string> bed_out_file(parser, "FILE", "write the BED intervals to this file", {'B', "bed"}); we write to stdout
     args::Flag progress(parser, "progress", "display progress of the sort", {'P', "progress"});
@@ -61,13 +62,6 @@ int main_tension(int argc, char **argv) {
         return 1;
     }
 
-    if (!window_size) {
-        std::cerr
-                << "[odgi tension] error: Please specify a window size for the detection of the tension level of the graph via -w=[N], --window-size=[N]."
-                << std::endl;
-        return 1;
-    }
-
     graph_t graph;
     assert(argc > 0);
     std::string infile = args::get(dg_in_file);
@@ -95,15 +89,23 @@ int main_tension(int argc, char **argv) {
         }
     }
 
-    double window_size_ = args::get(window_size) * 1000;
+    double window_size_ = 1000;
+    if (window_size) {
+        window_size_ = args::get(window_size) * 1000;
+    }
 
     vector<path_handle_t> p_handles;
     graph.for_each_path_handle([&] (const path_handle_t &p) {
        p_handles.push_back(p);
     });
 
-    algorithms::bed_records_class bed;
+    std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress_meter;
+    if (progress) {
+        progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+                p_handles.size(), "[odgi::tension::main] BED Progress:");
+    }
 
+    algorithms::bed_records_class bed;
     bed.open_writer();
 #pragma omp parallel for schedule(static, 1) num_threads(thread_count)
     for (uint64_t idx = 0; idx < p_handles.size(); idx++) {
@@ -178,11 +180,13 @@ int main_tension(int argc, char **argv) {
                               << path_nuc_dist
                               << std::endl;
                               */
+                    double path_layout_nuc_dist_ratio = (double) path_layout_dist / (double) path_nuc_dist;
                     bed.append(path_name,
                                (cur_window_start - 1),
                                cur_window_end,
                                path_layout_dist,
-                               path_nuc_dist);
+                               path_nuc_dist,
+                               path_layout_nuc_dist_ratio);
                     cur_window_start = cur_window_end + 1;
                     cur_window_end = cur_window_start - 1;
                     path_layout_dist = 0;
@@ -212,15 +216,23 @@ int main_tension(int argc, char **argv) {
                           << path_nuc_dist
                           << std::endl;
                 */
+                double path_layout_nuc_dist_ratio = (double) path_layout_dist / (double) path_nuc_dist;
                 bed.append(path_name,
                            (cur_window_start - 1),
                            cur_window_end,
                            path_layout_dist,
-                           path_nuc_dist);
+                           path_nuc_dist,
+                           path_layout_nuc_dist_ratio);
             }
         });
+        if (progress) {
+            progress_meter->increment(1);
+        }
     }
     bed.close_writer();
+    if (progress) {
+        progress_meter->finish();
+    }
 
     if (tsv_out_file) {
         auto& outfile = args::get(tsv_out_file);
