@@ -87,9 +87,7 @@ public:
     /// open_writer() must be called first to set up our buffer and writer
 	void append(const std::string &chrom, const uint64_t &chromStart, const uint64_t &chromEnd,
           const double &path_layout_dist, const uint64_t &path_nuc_dist) {
-        std::cerr << "sdfa" << std::endl;
-        bed_record_t bed_record = {chrom, chromStart, chromEnd, path_layout_dist, path_nuc_dist};
-        bed_record_queue.push(&bed_record);
+        bed_record_queue.push(new bed_record_t{chrom, chromStart, chromEnd, path_layout_dist, path_nuc_dist});
     }
 };
 
