@@ -102,10 +102,10 @@ int main_tension(int argc, char **argv) {
        p_handles.push_back(p);
     });
 
-    // algorithms::bed_records_class bed;
+    algorithms::bed_records_class bed;
 
-    // bed.open_writer();
-// #pragma omp parallel for schedule(static, 1) num_threads(thread_count)
+    bed.open_writer();
+#pragma omp parallel for schedule(static, 1) num_threads(thread_count)
     for (uint64_t idx = 0; idx < p_handles.size(); idx++) {
         path_handle_t p = p_handles[idx];
         std::string path_name = graph.get_path_name(p);
@@ -167,6 +167,7 @@ int main_tension(int argc, char **argv) {
                 cur_window_end += nuc_dist;
                 if ((cur_window_end - cur_window_start + 1) >= window_size_) {
                     // BED files are 0-based http://genome.ucsc.edu/FAQ/FAQformat#format1
+                    /*
                     std::cout << path_name << "\t" // chrom
                               << (cur_window_start - 1) << "\t" // chromStart
                               << (cur_window_end) << "\t" // chromEnd
@@ -176,6 +177,12 @@ int main_tension(int argc, char **argv) {
                               << path_layout_dist << "\t"
                               << path_nuc_dist
                               << std::endl;
+                              */
+                    bed.append(path_name,
+                               (cur_window_start - 1),
+                               cur_window_end,
+                               path_layout_dist,
+                               path_nuc_dist);
                     cur_window_start = cur_window_end + 1;
                     cur_window_end = cur_window_start - 1;
                     path_layout_dist = 0;
@@ -193,6 +200,7 @@ int main_tension(int argc, char **argv) {
                 uint64_t nuc_dist = graph.get_length(h);
                 path_nuc_dist += nuc_dist;
                 cur_window_end += nuc_dist;
+                /*
                 // BED files are 0-based http://genome.ucsc.edu/FAQ/FAQformat#format1
                 std::cout << path_name << "\t" // chrom
                           << (cur_window_start - 1) << "\t" // chromStart
@@ -203,10 +211,16 @@ int main_tension(int argc, char **argv) {
                           << path_layout_dist << "\t"
                           << path_nuc_dist
                           << std::endl;
+                */
+                bed.append(path_name,
+                           (cur_window_start - 1),
+                           cur_window_end,
+                           path_layout_dist,
+                           path_nuc_dist);
             }
         });
     }
-    // bed.close_writer();
+    bed.close_writer();
 
     if (tsv_out_file) {
         auto& outfile = args::get(tsv_out_file);

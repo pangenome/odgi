@@ -64,6 +64,7 @@ public:
 
     // open backing file and start writer_thread
     void open_writer(void) {
+        std::cerr << "PENEN" << std::endl;
         if (!work_todo.load()) {
             work_todo.store(true);
             writer_thread = std::thread(&bed_records_class::writer_func, this);
@@ -86,6 +87,7 @@ public:
     /// open_writer() must be called first to set up our buffer and writer
 	void append(const std::string &chrom, const uint64_t &chromStart, const uint64_t &chromEnd,
           const double &path_layout_dist, const uint64_t &path_nuc_dist) {
+        std::cerr << "sdfa" << std::endl;
         bed_record_t bed_record = {chrom, chromStart, chromEnd, path_layout_dist, path_nuc_dist};
         bed_record_queue.push(&bed_record);
     }
