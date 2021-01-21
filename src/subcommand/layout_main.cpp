@@ -42,7 +42,7 @@ int main_layout(int argc, char **argv) {
     args::ValueFlag<std::string> p_sgd_in_file(parser, "FILE",
                                                "specify a line separated list of paths to sample from for the on the fly term generation process in the path guided linear 1D SGD default: sample from all paths)",
                                                {'f', "path-sgd-use-paths"});
-    args::ValueFlag<char> p_sgd_layout_initialization(parser, "C", "specify the layout initialization mode: d) node rank in X and gaussian noise in Y\nu) node rank in X and uniform noise in Y\ng) gaussian noise in X and Y\nh) hilbert curve in X and Y (default: d)", {'N', "layout-initialization"});
+    args::ValueFlag<char> p_sgd_layout_initialization(parser, "C", "specify the layout initialization mode: d) node rank in X and gaussian noise in Y (default)\nu) node rank in X and uniform noise in Y\ng) gaussian noise in X and Y\nh) hilbert curve in X and Y", {'N', "layout-initialization"});
     args::ValueFlag<double> p_sgd_min_term_updates_paths(parser, "N",
                                                          "minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of total path length (default: 10)",
                                                          {'G', "path-sgd-min-term-updates-paths"});
@@ -68,7 +68,7 @@ int main_layout(int argc, char **argv) {
                                                                 "iteration where the learning rate is max for path guided linear 1D SGD model (default: 0)",
                                                                 {'F', "iteration-max-learning-rate"});
     args::ValueFlag<uint64_t> p_sgd_zipf_space(parser, "N",
-                                               "the maximum space size of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: min(max path lengths, 10000)))",
+                                               "the maximum space size of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: min(max path lengths, 10000))",
                                                {'k', "path-sgd-zipf-space"});
     args::ValueFlag<uint64_t> p_sgd_zipf_space_max(parser, "N", "the maximum space size of the Zipfian distribution beyond which quantization occurs (default: 1000)", {'I', "path-sgd-zipf-space-max"});
     args::ValueFlag<uint64_t> p_sgd_zipf_space_quantization_step(parser, "N", "quantization step when the maximum space size of the Zipfian distribution is exceeded (default: 100)", {'l', "path-sgd-zipf-space-quantization-step"});
