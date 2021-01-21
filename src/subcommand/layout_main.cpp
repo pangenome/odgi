@@ -2,7 +2,7 @@
 #include <iostream>
 #include "odgi.hpp"
 #include "args.hxx"
-#include "threads.hpp"
+#include <omp.h>
 #include "algorithms/xp.hpp"
 #include "algorithms/sgd_layout.hpp"
 #include "algorithms/path_sgd_layout.hpp"
@@ -74,6 +74,7 @@ int main_layout(int argc, char **argv) {
     args::ValueFlag<std::string> png_out_file(parser, "FILE", "write a rasterized PNG rendering to this file", {'p', "png"});
     args::ValueFlag<uint64_t> png_height(parser, "FILE", "height of PNG rendering (default: 1000)", {'H', "png-height"});
     args::ValueFlag<uint64_t> png_border(parser, "FILE", "size of PNG border in bp (default: 10)", {'E', "png-border"});
+    args::Flag color_paths(parser, "color-paths", "color paths (in PNG output)", {'C', "color-paths"});
     args::ValueFlag<double> render_scale(parser, "N", "image scaling (default 1.0)", {'R', "scale"});
     args::ValueFlag<double> render_border(parser, "N", "image border (in approximate bp) (default 100.0)", {'B', "border"});
     args::ValueFlag<std::string> xp_in_file(parser, "FILE", "load the path index from this file", {'X', "path-index"});
@@ -420,7 +421,8 @@ int main_layout(int argc, char **argv) {
     if (png_out_file) {
         auto& outfile = args::get(png_out_file);
         uint64_t _png_height = png_height ? args::get(png_height) : 1000;
-        algorithms::draw_png(outfile, X_final, Y_final, graph, 1.0, border_bp, 0, _png_height, 0.0);
+        bool _color_paths = args::get(color_paths);
+        algorithms::draw_png(outfile, X_final, Y_final, graph, 1.0, border_bp, 0, _png_height, 0.0, 1.0, _color_paths);
     }
     
     return 0;

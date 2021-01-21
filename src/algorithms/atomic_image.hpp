@@ -10,6 +10,7 @@
 #include <cmath>
 #include <memory>
 #include <iostream>
+#include "picosha2.h"
 
 namespace odgi {
 
@@ -32,6 +33,39 @@ struct xy_d_t {
     }
 };
 
+struct line_t {
+    xy_d_t s = { 0, 0 };
+    xy_d_t e = { 0, 0 };
+    double d_x = 0;
+    double d_y = 0;
+    double a = 0;
+    double b = 0;
+    bool vert = false;
+    line_t(const xy_d_t& _s, const xy_d_t& _e)
+        : s(_s), e(_e) {
+        d_y = (s.y - e.y); // delta y
+        d_x = (s.x - e.x); // delta x
+        a = d_y / d_x; // slope
+        if (d_x == 0) {
+            vert = true;
+        } else {
+            b = s.y - a * s.x; // use one of the points to solve for the intercept
+        }
+    }
+    // if the point occurs above the line
+    bool gt(const xy_d_t& p) {
+        if (vert) {
+            return p.x < s.x;
+        } else {
+            return p.y < a * p.x + b;
+        }
+    }
+    // if the point occurs on or below the line
+    bool lte(const xy_d_t& p) {
+        return !gt(p);
+    }
+};
+
 struct xy_u_t {
     uint64_t x = 0;
     uint64_t y = 0;
@@ -49,9 +83,14 @@ typedef union rgb_t {
 	RGB c;
 } color_t;
 
+std::ostream& operator<<(std::ostream& out, const color_t& c);
+
+color_t hash_color(const std::string& s);
 color_t lighten(const color_t& c, const double& f);
 color_t brighten(const color_t& a, const color_t& b, const double& f);
-color_t layer(const color_t& a, const color_t& b);
+color_t darkest(const color_t& a, const color_t& b);
+color_t layer(const color_t& a, const color_t& b, const double& f);
+color_t mix(const color_t& a, const color_t& b, const double& f);
 
 const color_t COLOR_BLACK = { 0xff000000 };
 const color_t COLOR_WHITE = { 0xffffffff };
@@ -120,8 +159,7 @@ struct atomic_image_buf_t {
     // layering
     void layer_pixel(const uint64_t& x,
                      const uint64_t& y,
-                     const color_t& c,
-                     const double& f) {
+                     const color_t& c) {
         if (x >= width || y >= height) {
             return; // bail out
         }
@@ -131,8 +169,8 @@ struct atomic_image_buf_t {
         v.hex = (*image)[i].load();
         //std::cerr << "got " << v.hex << " " << (int)v.c.r << "," << (int)v.c.g << "," << (int)v.c.b << std::endl;
         //std::cerr << "layer " << c.hex << " " << (int)c.c.r << "," << (int)c.c.g << "," << (int)c.c.b << std::endl;
-        //v = layer(v, c);
-        v = brighten(c, v, f);
+        v = mix(c, v, 0.5);
+        //v = layer(c, v, f);
         //std::cerr << "assigned " << v.hex << " " << (int)v.c.r << "," << (int)v.c.g << "," << (int)v.c.b << std::endl;
         // there is the possibility of a race decreasing how bright pixels get
         // but, at least we won't overflow
@@ -151,15 +189,33 @@ double u_rfpart(double x);
 
 void wu_draw_line(const bool steep, const double_t gradient, double_t intery,
                   const xy_d_t pxl1, const xy_d_t pxl2,
-                  atomic_image_buf_t& image);
+                  const color_t& color,
+                  atomic_image_buf_t& image,
+                  bool top, bool bottom);
 
 xy_d_t wu_calc_endpoint(xy_d_t xy, const double_t gradient, const bool steep,
+                        const color_t& color,
                         atomic_image_buf_t& image);
 
-void wu_calc_line(xy_d_t xy0, xy_d_t xy1, atomic_image_buf_t& image);
+void wu_calc_line(xy_d_t xy0, xy_d_t xy1,
+                  const color_t& color,
+                  atomic_image_buf_t& image,
+                  bool top, bool bottom);
 
-void wu_calc_multiline(xy_d_t xy0, xy_d_t xy1, atomic_image_buf_t& image,
-                       const double& width = 0, const double& overlay = 10);
+void wu_rekt(xy_d_t xy0, xy_d_t xy1,
+             xy_d_t xy2, xy_d_t xy3,
+             const color_t& color,
+             atomic_image_buf_t& image);
+
+void wu_calc_wide_line(xy_d_t xy0, xy_d_t xy1,
+                       const color_t& color,
+                       atomic_image_buf_t& image,
+                       const double& width = 0);
+
+void wu_calc_rainbow(xy_d_t xy0, xy_d_t xy1, atomic_image_buf_t& image,
+                     const std::vector<color_t>& colors,
+                     const double& spacing = 1,
+                     const double& width = 0);
 
 }
 

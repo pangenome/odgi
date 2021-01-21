@@ -5,7 +5,7 @@
 #include "args.hxx"
 #include "split.hpp"
 //#include "io_helper.hpp"
-#include "threads.hpp"
+#include <omp.h>
 #include "algorithms/layout.hpp"
 
 //#define debug_odgi_stats
@@ -115,6 +115,7 @@ int main_stats(int argc, char** argv) {
             f.close();
         }
     }
+    ///graph.display();
 
     if (args::get(summarize)) {
         uint64_t length_in_bp = 0, node_count = 0, edge_count = 0, path_count = 0;
@@ -129,10 +130,8 @@ int main_stats(int argc, char** argv) {
         graph.for_each_path_handle([&](const path_handle_t& p) {
                 ++path_count;
             });
-        std::cerr << "length:\t" << length_in_bp << std::endl;
-        std::cerr << "nodes:\t" << node_count << std::endl;
-        std::cerr << "edges:\t" << edge_count << std::endl;
-        std::cerr << "paths:\t" << path_count << std::endl;
+        std::cout << "#length\tnodes\tedges\tpaths" << std::endl;
+        std::cout << length_in_bp << "\t" << node_count << "\t" << edge_count << "\t" << path_count << std::endl;
     }
     if (args::get(base_content)) {
         std::vector<uint64_t> chars(256);

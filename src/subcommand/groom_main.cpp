@@ -1,7 +1,7 @@
 #include "subcommand.hpp"
 #include "odgi.hpp"
 #include "args.hxx"
-#include "threads.hpp"
+#include <omp.h>
 #include "algorithms/groom.hpp"
 
 namespace odgi {
@@ -22,6 +22,7 @@ int main_groom(int argc, char** argv) {
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> og_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> og_out_file(parser, "FILE", "store the graph self index in this file", {'o', "out"});
+    args::Flag progress(parser, "progress", "display progress of the grooming", {'P', "progress"});
 
     try {
         parser.ParseCLI(argc, argv);
@@ -65,16 +66,15 @@ int main_groom(int argc, char** argv) {
         omp_set_num_threads(args::get(threads));
     }
     */
-    graph_t groomed;
-    algorithms::groom(graph, groomed);
+    graph.apply_ordering(algorithms::groom(graph, progress));
     
     std::string outfile = args::get(og_out_file);
     if (outfile.size()) {
         if (outfile == "-") {
-            groomed.serialize(std::cout);
+            graph.serialize(std::cout);
         } else {
             ofstream f(outfile.c_str());
-            groomed.serialize(f);
+            graph.serialize(f);
             f.close();
         }
     }

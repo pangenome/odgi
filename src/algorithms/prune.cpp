@@ -4,11 +4,13 @@ namespace odgi {
 
 namespace algorithms {
 
-std::vector<edge_t> find_edges_to_prune(const HandleGraph& graph, size_t k, size_t edge_max) {
+std::vector<edge_t> find_edges_to_prune(const HandleGraph& graph,
+                                        size_t k, size_t edge_max,
+                                        int n_threads) {
     // for each position on the forward and reverse of the graph
     //unordered_set<edge_t> edges_to_prune;
     std::vector<std::vector<edge_t> > edges_to_prune;
-    edges_to_prune.resize(get_thread_count());
+    edges_to_prune.resize(n_threads);
     graph.for_each_handle([&](const handle_t& h) {
             // for the forward and reverse of this handle
             // walk k bases from the end, so that any kmer starting on the node will be represented in the tree we build

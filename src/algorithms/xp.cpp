@@ -26,6 +26,11 @@ namespace xp {
         if (basename.empty()) {
             basename = temp_file::create();
         }
+        from_handle_graph_impl(graph, basename);
+        temp_file::cleanup(); // clean up our temporary files
+    }
+
+    void XP::from_handle_graph_impl(const PathHandleGraph &graph, const std::string& basename) {
         std::string path_names;
         // the graph must be compacted for this to work
         sdsl::int_vector<> position_map;
@@ -56,8 +61,9 @@ namespace xp {
         uint64_t np_size = 0;
         std::string node_path_idx = basename + ".node_path.mm";
         // we fill the multiset with a tuple[handle id, step_rank, path_id, rank_of_handle_in_path]
-        auto node_path_ms = std::make_unique<mmmulti::map<uint64_t , std::tuple<uint64_t, uint64_t, uint64_t, uint64_t>>> (node_path_idx);
-        node_path_ms->open_writer();
+        mmmulti::map<uint64_t , std::tuple<uint64_t, uint64_t, uint64_t, uint64_t>>
+            node_path_ms(node_path_idx, std::make_tuple(0, 0, 0, 0));
+        node_path_ms.open_writer();
         graph.for_each_path_handle([&](const path_handle_t &path) {
             std::vector<handle_t> p;
             uint64_t handle_rank_in_path = 0;
@@ -68,7 +74,7 @@ namespace xp {
                 uint64_t hl = graph.get_length(h);
                 ++handle_rank_in_path; // handle ranks in path are 1-based
                 size_t node_id = graph.get_id(h);
-                node_path_ms->append(node_id, std::make_tuple(node_id, step_rank, as_integer(path), handle_rank_in_path));
+                node_path_ms.append(node_id, std::make_tuple(node_id, step_rank, as_integer(path), handle_rank_in_path));
                 np_size++;
             });
             std::string path_name = graph.get_path_name(path);
@@ -104,7 +110,7 @@ namespace xp {
         // read file and construct compressed suffix array
         sdsl::construct(pn_csa, path_name_file, 1);
         // we need to take care of the node->path vectors
-        node_path_ms->index(get_thread_count(), graph.get_node_count() + 1);
+        node_path_ms.index(get_thread_count(), graph.get_node_count() + 1);
         sdsl::util::assign(nr_iv, sdsl::int_vector<>(np_size));
         sdsl::util::assign(np_bv, sdsl::bit_vector(np_size));
         sdsl::util::assign(npi_iv, sdsl::int_vector<>(np_size));
@@ -113,7 +119,7 @@ namespace xp {
         for (int64_t i = 0; i < graph.get_node_count(); i++) {
             np_bv[np_offset] = 1; // mark node start
             uint64_t has_steps = false;
-            node_path_ms->for_values_of(i+1, [&](const std::tuple<uint64_t, uint64_t, uint64_t, uint64_t>& v) {
+            node_path_ms.for_values_of(i+1, [&](const std::tuple<uint64_t, uint64_t, uint64_t, uint64_t>& v) {
                 nr_iv[np_offset] = std::get<3>(v); // handle_rank_of_path
                 npi_iv[np_offset] = std::get<2>(v); // path id
                 has_steps = true;
@@ -142,10 +148,10 @@ namespace xp {
         */
         std::cerr << std::endl;
 #endif
-        node_path_ms.reset(); // free the mmmultimap
+        //node_path_ms.reset(); // free the mmmultimap
         //std::remove(node_path_idx.c_str());
         //std::remove(path_name_file.c_str());
-        temp_file::cleanup(); // clean up our temporary files
+        //delete node_path_ms;
     }
 
     std::vector<XPPath *> XP::get_paths() const {
@@ -715,10 +721,8 @@ namespace xp {
 
             if (handler.parent_directory.empty()) {
                 // Make a parent directory for our temp files
-                std::string tmpdirname_cpp = get_dir() + "/xp-XXXXXX";
-                char *tmpdirname = new char[tmpdirname_cpp.length() + 1];
-                std::strcpy(tmpdirname, tmpdirname_cpp.c_str());
-                auto got = mkdtemp(tmpdirname);
+                std::string tmpdirname = get_dir() + "/xp-XXXXXX";
+                auto got = mkdtemp((char*)tmpdirname.c_str());
                 if (got != nullptr) {
                     // Save the directory we got
                     handler.parent_directory = got;
@@ -726,7 +730,6 @@ namespace xp {
                     std::cerr << "[xp::temp_file]: couldn't create temp directory: " << tmpdirname << std::endl;
                     exit(1);
                 }
-                delete[] tmpdirname;
             }
 
             std::string tmpname = handler.parent_directory + "/" + base + "XXXXXX";

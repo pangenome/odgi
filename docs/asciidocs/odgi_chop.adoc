@@ -38,7 +38,7 @@ The odgi chop(1) command chops long nodes into short ones while preserving the g
 === Threading
 
 *-t, --threads*=_N_::
-Number of threads to use for the parallel sorter.
+  Number of threads to use for the parallel operations.
 
 === Processing Information
 

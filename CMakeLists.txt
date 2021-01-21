@@ -4,12 +4,14 @@ cmake_minimum_required(VERSION 3.1)
 
 # Project's name
 project(odgi)
-# We build using c++14
+# We build using c++17
 set(CMAKE_CXX_STANDARD 17)
 
 # Use all standard-compliant optimizations
 set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -O3 -mcx16 -g")
 set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -O3 -mcx16 -g")
+#set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O -mcx16 -g -fsanitize=address")
+#set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O -mcx16 -g -fsanitize=address")
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   # assumes clang build
@@ -298,6 +300,25 @@ ExternalProject_Add(xoshiro
 ExternalProject_Get_property(xoshiro SOURCE_DIR)
 set(xoshiro_INCLUDE "${SOURCE_DIR}")
 
+ExternalProject_Add(atomicbitvector
+        SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/atomicbitvector/include"
+        UPDATE_COMMAND ""
+        INSTALL_COMMAND ""
+        BUILD_COMMAND ""
+        CONFIGURE_COMMAND "")
+ExternalProject_Get_property(atomicbitvector SOURCE_DIR)
+set(atomicbitvector_INCLUDE "${SOURCE_DIR}")
+
+#add_subdirectory(deps/mmmulti/deps/mio)
+ExternalProject_Add(mio
+        SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/mmmulti/deps/mio"
+        UPDATE_COMMAND ""
+        INSTALL_COMMAND ""
+        BUILD_COMMAND ""
+        CONFIGURE_COMMAND "")
+ExternalProject_Get_property(mio SOURCE_DIR)
+set(mio_INCLUDE "${SOURCE_DIR}/include")
+
 # pybind11
 #ExternalProject_Add(pybind11
 #    GIT_REPOSITORY https://github.com/pybind/pybind11.git 
@@ -316,9 +337,9 @@ set(CMAKE_BUILD_TYPE Debug)
 # set up our target executable and specify its dependencies and includes
 add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/odgi.cpp
+  ${CMAKE_SOURCE_DIR}/src/reclaimer.cpp
   ${CMAKE_SOURCE_DIR}/src/position.cpp
   ${CMAKE_SOURCE_DIR}/src/gfa_to_handle.cpp
-  ${CMAKE_SOURCE_DIR}/src/threads.cpp
   ${CMAKE_SOURCE_DIR}/src/split.cpp
   ${CMAKE_SOURCE_DIR}/src/node.cpp
   ${CMAKE_SOURCE_DIR}/src/subgraph.cpp
@@ -328,7 +349,9 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/unittest/handle.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/fuzz.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/simplify.cpp
+  ${CMAKE_SOURCE_DIR}/src/unittest/sort.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/pathindex.cpp
+  ${CMAKE_SOURCE_DIR}/src/unittest/edge.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/subcommand.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/build_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/test_main.cpp
@@ -401,7 +424,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/atomic_image.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/remove_isolated.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/expand_context.cpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/groom.cpp)
+  ${CMAKE_SOURCE_DIR}/src/algorithms/groom.cpp src/unittest/edge.cpp)
 
 set(odgi_DEPS
     sdsl-lite
@@ -427,7 +450,8 @@ set(odgi_DEPS
     mmmulti
     ips4o
     xoshiro
-    atomicqueue)
+    atomicqueue
+    mio)
 add_dependencies(odgi_objs ${odgi_DEPS})
 
 set(odgi_INCLUDES
@@ -458,7 +482,9 @@ set(odgi_INCLUDES
   "${httplib_INCLUDE}"
   "${random_distributions_INCLUDE}"
   "${dirtyzipf_INCLUDE}"
-  "${xoshiro_INCLUDE}")
+  "${xoshiro_INCLUDE}"
+  "${atomicbitvector_INCLUDE}"
+  "${mio_INCLUDE}")
 
 set(odgi_LIBS
   "${sdsl-lite_LIB}/libsdsl.a"
@@ -470,19 +496,20 @@ set(odgi_LIBS
   "${libbf_LIB}/libbf.a"
   "-ldl"
   "-latomic")
-#"-ltcmalloc") # for heap profiling
+  #"-lefence") # for malloc error checking
+  #"-ltcmalloc") # for heap profiling
 
 set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/include/odgi_git_version.hpp
   ${CMAKE_SOURCE_DIR}/src/hash_map.hpp
   ${CMAKE_SOURCE_DIR}/src/odgi.hpp
   ${CMAKE_SOURCE_DIR}/src/node.hpp
+  ${CMAKE_SOURCE_DIR}/src/bmap.hpp
   ${CMAKE_SOURCE_DIR}/src/subgraph.hpp
   ${CMAKE_SOURCE_DIR}/src/split.hpp
   ${CMAKE_SOURCE_DIR}/src/varint.hpp
   ${CMAKE_SOURCE_DIR}/src/dna.hpp
   ${CMAKE_SOURCE_DIR}/src/phf.hpp
-  ${CMAKE_SOURCE_DIR}/src/threads.hpp
   ${CMAKE_SOURCE_DIR}/src/bgraph.hpp
   ${CMAKE_SOURCE_DIR}/src/gfa_to_handle.hpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/subcommand.hpp
@@ -492,6 +519,10 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/dynamic_types.hpp
   ${CMAKE_SOURCE_DIR}/src/dynamic_structs.hpp
   ${CMAKE_SOURCE_DIR}/src/position.hpp
+  ${CMAKE_SOURCE_DIR}/src/dset64.hpp
+  ${CMAKE_SOURCE_DIR}/src/dset64-gccAtomic.hpp
+  ${CMAKE_SOURCE_DIR}/src/lockfree_hashtable.hpp
+  ${CMAKE_SOURCE_DIR}/src/reclaimer.hpp
   ${CMAKE_SOURCE_DIR}/src/unittest/driver.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/linear_index.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/random_order.hpp
@@ -549,7 +580,8 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/algorithms/groom.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/distance_to_head.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/is_single_stranded.hpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/shortest_cycle.hpp)
+  ${CMAKE_SOURCE_DIR}/src/algorithms/shortest_cycle.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/progress.hpp)
 
 target_include_directories(odgi_objs PUBLIC ${odgi_INCLUDES})
 set_target_properties(odgi_objs PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
@@ -557,7 +589,7 @@ set_target_properties(odgi_objs PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 add_library(libodgi_static STATIC $<TARGET_OBJECTS:odgi_objs>)
 set_target_properties(libodgi_static PROPERTIES OUTPUT_NAME "odgi")
 set_target_properties(libodgi_static PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
-add_library(libodgi_shared SHARED $<TARGET_OBJECTS:odgi_objs>)
+add_library(libodgi_shared SHARED $<TARGET_OBJECTS:odgi_objs> src/algorithms/fonts/field8.h src/algorithms/fonts/font5x8.h)
 set_target_properties(libodgi_shared PROPERTIES OUTPUT_NAME "odgi")
 set_target_properties(libodgi_shared PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 

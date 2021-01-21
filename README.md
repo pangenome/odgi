@@ -2,7 +2,7 @@
 
 [![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat)](http://bioconda.github.io/recipes/odgi/README.html)
 
-## optimized dynamic genome/graph implemenation
+## optimized dynamic genome/graph implementation
 
 Representing large genomic [variation graphs](https://github.com/vgteam/vg) with minimal memory overhead requires a careful encoding of the graph entities.
 It is possible to build succinct, _static_ data structures to store queryable graphs, as in [xg](https://github.com/vgteam/xg), but dynamic data structures are more tricky to implement.

@@ -102,7 +102,7 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads, bo
             max_handle_rank = std::max(max_handle_rank,
                                        number_bool_packing::unpack_number(found));
         });
-    for (uint64_t i = 0; i <= max_handle_rank; ++i) {
+    for (uint64_t i = 0; i <= max_handle_rank+1; ++i) {
         s.push_back(0);
         masked_edges_bv.push_back(1);
         masked_edges_bv.push_back(1);
@@ -148,6 +148,12 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads, bo
             uint64_t rank = number_bool_packing::unpack_number(found);
             unvisited.set(rank, !s.at(rank));
     });
+
+    std::unique_ptr<progress_meter::ProgressMeter> progress;
+    if (progress_reporting) {
+        std::string banner = "[odgi::topological_order] sorting nodes:";
+        progress = std::make_unique<progress_meter::ProgressMeter>(g->get_node_count(), banner);
+    }
 
     while(unvisited.rank1(unvisited.size())!=0 || s.rank1(s.size())!=0) {
 
@@ -196,10 +202,8 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads, bo
             handle_t n = number_bool_packing::pack(i, false);
             // Emit it
             sorted.push_back(n);
-            if (progress_reporting && sorted.size() % 1000 == 0) {
-                uint64_t i = sorted.size();
-                uint64_t c = g->get_node_count();
-                std::cerr << "topological sort " << i << " of " << c << " ~ " << (float)i/(float)c * 100 << "%" << "\r";
+            if (progress_reporting) {
+                progress->increment(1);
             }
 #ifdef debug
 #pragma omp critical (cerr)
@@ -325,10 +329,9 @@ std::vector<handle_t> topological_order(const HandleGraph* g, bool use_heads, bo
                 });
         }
     }
-    if (progress_reporting && sorted.size()) {
-        uint64_t i = sorted.size();
-        uint64_t c = g->get_node_count();
-        std::cerr << "topological sort " << i << " of " << c << " ~ " << "100.0000%" << std::endl;
+
+    if (progress_reporting) {
+        progress->finish();
     }
 
     assert(sorted.size() == g->get_node_count());

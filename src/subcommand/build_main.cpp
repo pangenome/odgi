@@ -26,6 +26,7 @@ int main_build(int argc, char** argv) {
     args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store the graph self index in this file", {'o', "out"});
     args::Flag to_gfa(parser, "to_gfa", "write the graph to stdout in GFA format", {'G', "to-gfa"});
     args::Flag toposort(parser, "sort", "apply generalized topological sort to the graph and set node ids to order", {'s', "sort"});
+    args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel operations", {'t', "threads"});
     args::Flag debug(parser, "debug", "enable debugging", {'d', "debug"});
     args::Flag progress(parser, "progress", "show progress updates", {'p', "progress"});
     try {
@@ -61,11 +62,12 @@ int main_build(int argc, char** argv) {
     }
     std::string gfa_filename = args::get(gfa_file);
     if (gfa_filename.size()) {
-        gfa_to_handle(gfa_filename, &graph, args::get(progress));
+        gfa_to_handle(gfa_filename, &graph, args::get(nthreads), args::get(progress));
     }
-    if (args::get(progress)) {
-        std::cerr << std::endl;
-    }
+
+    const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+    graph.set_number_of_threads(num_threads);
+
     if (args::get(toposort)) {
         graph.apply_ordering(algorithms::topological_order(&graph, true, args::get(progress)), true);
     }

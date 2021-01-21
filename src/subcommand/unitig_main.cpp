@@ -1,7 +1,7 @@
 #include "subcommand.hpp"
 #include "odgi.hpp"
 #include "args.hxx"
-#include "threads.hpp"
+#include <omp.h>
 #include "algorithms/simple_components.hpp"
 #include <random>
 #include <deque>

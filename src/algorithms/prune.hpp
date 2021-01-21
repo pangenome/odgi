@@ -4,7 +4,7 @@
 #include <iostream>
 #include <vector>
 #include <list>
-#include "threads.hpp"
+#include <omp.h>
 #include <handlegraph/util.hpp>
 #include <handlegraph/handle_graph.hpp>
 #include "position.hpp"
@@ -36,7 +36,7 @@ struct walk_t {
 };
 
 /// Iterate over all the walks up to length k, adding edges which 
-std::vector<edge_t> find_edges_to_prune(const HandleGraph& graph, size_t k, size_t edge_max);
+std::vector<edge_t> find_edges_to_prune(const HandleGraph& graph, size_t k, size_t edge_max, int n_threads);
 
 }
 
