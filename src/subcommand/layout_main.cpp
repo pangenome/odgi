@@ -8,51 +8,11 @@
 #include "algorithms/path_sgd_layout.hpp"
 #include "algorithms/draw.hpp"
 #include "algorithms/layout.hpp"
+#include "hilbert.hpp"
 
 namespace odgi {
 
 using namespace odgi::subcommand;
-
-    // From https://en.wikipedia.org/wiki/Hilbert_curve
-    //rotate/flip a quadrant appropriately
-    void rot(uint64_t n, uint64_t *x, uint64_t *y, uint64_t rx, uint64_t ry) {
-        if (ry == 0) {
-            if (rx == 1) {
-                *x = n-1 - *x;
-                *y = n-1 - *y;
-            }
-
-            //Swap x and y
-            int t  = *x;
-            *x = *y;
-            *y = t;
-        }
-    }
-    //convert (x,y) to d
-    int xy2d (uint64_t n, uint64_t x, uint64_t y) {
-        int rx, ry, s, d=0;
-        for (s=n/2; s>0; s/=2) {
-            rx = (x & s) > 0;
-            ry = (y & s) > 0;
-            d += s * s * ((3 * rx) ^ ry);
-            rot(n, &x, &y, rx, ry);
-        }
-        return d;
-    }
-    //convert d to (x,y)
-    void d2xy(uint64_t n, uint64_t d, uint64_t *x, uint64_t *y) {
-        int rx, ry, s, t=d;
-        *x = *y = 0;
-        for (s=1; s<n; s*=2) {
-            rx = 1 & (t/2);
-            ry = 1 & (t ^ rx);
-            rot(s, x, y, rx, ry);
-            *x += s * rx;
-            *y += s * ry;
-            t /= 4;
-        }
-    }
-
 
 int main_layout(int argc, char **argv) {
 
@@ -82,7 +42,7 @@ int main_layout(int argc, char **argv) {
     args::ValueFlag<std::string> p_sgd_in_file(parser, "FILE",
                                                "specify a line separated list of paths to sample from for the on the fly term generation process in the path guided linear 1D SGD (default: sample from all paths)",
                                                {'f', "path-sgd-use-paths"});
-    args::ValueFlag<char> p_sgd_layout_initialization(parser, "L", "specify the layout initialization mode: d) node rank in X and gaussian in Y\ng) gaussian in X and Y\nhilber in X and Y)", {'N', "layout-initialization"});
+    args::ValueFlag<char> p_sgd_layout_initialization(parser, "L", "specify the layout initialization mode: d) node rank in X and gaussian in Y\ng) gaussian in X and Y\nh) hilbert in X and Y)", {'N', "layout-initialization"});
     args::ValueFlag<double> p_sgd_min_term_updates_paths(parser, "N",
                                                          "minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of total path length (default: 10)",
                                                          {'G', "path-sgd-min-term-updates-paths"});
@@ -316,6 +276,8 @@ int main_layout(int argc, char **argv) {
     uint64_t len = 0;
     nid_t last_node_id = graph.min_node_id();
     char layout_initialization = p_sgd_layout_initialization ? args::get(p_sgd_layout_initialization) : 'd';
+
+    std::cerr << "layout_initialization " << layout_initialization << std::endl;
     uint64_t sqrt_graph_node_count = sqrt(graph.get_node_count());
     uint64_t x, y;
     graph.for_each_handle([&](const handle_t &h) {
@@ -334,6 +296,7 @@ int main_layout(int argc, char **argv) {
                   len += graph.get_length(h);
                   graph_X[pos + 1].store(len);
                   graph_Y[pos + 1].store(dist(rng));
+                  break;
               }
               case 'h': {
                   for (uint64_t i = pos; i <= pos + 1; ++i){
@@ -341,6 +304,7 @@ int main_layout(int argc, char **argv) {
                       graph_X[i].store(x);
                       graph_Y[i].store(y);
                   }
+                  break;
               }
               default: {
                   graph_X[pos].store(dist(rng));
