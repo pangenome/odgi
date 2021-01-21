@@ -282,7 +282,7 @@ int main_layout(int argc, char **argv) {
     }
     uint64_t max_path_step_count = get_max_path_step_count(path_sgd_use_paths, path_index);
     path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? std::min(args::get(p_sgd_zipf_space), max_path_step_count) : std::min((uint64_t)10000, max_path_step_count);
-    double path_sgd_max_eta = args::get(p_sgd_eta_max) ? args::get(p_sgd_eta_max) : max_path_step_count * max_path_step_count;
+    double path_sgd_max_eta = args::get(p_sgd_eta_max) ? args::get(p_sgd_eta_max) : (double) max_path_step_count * max_path_step_count;
 
     path_sgd_zipf_space_max = args::get(p_sgd_zipf_space_max) ? std::min(path_sgd_zipf_space, args::get(p_sgd_zipf_space_max)) : 1000;
     path_sgd_zipf_space_quantization_step = args::get(p_sgd_zipf_space_quantization_step) ? std::max((uint64_t)2, args::get(p_sgd_zipf_space_quantization_step)) : 100;
@@ -316,6 +316,7 @@ int main_layout(int argc, char **argv) {
     uint64_t len = 0;
     nid_t last_node_id = graph.min_node_id();
     char layout_initialization = p_sgd_layout_initialization ? args::get(p_sgd_layout_initialization) : 'd';
+    uint64_t sqrt_graph_node_count = sqrt(graph.get_node_count());
     uint64_t x, y;
     graph.for_each_handle([&](const handle_t &h) {
           nid_t node_id = graph.get_id(h);
@@ -335,10 +336,8 @@ int main_layout(int argc, char **argv) {
                   graph_Y[pos + 1].store(dist(rng));
               }
               case 'h': {
-                  uint64_t graph_node_count = graph.get_node_count();
-
-                  for (uint64_t i = pos; i <= pos + 1; i++){
-                      d2xy(sqrt(graph_node_count), i, &x, &y);
+                  for (uint64_t i = pos; i <= pos + 1; ++i){
+                      d2xy(sqrt_graph_node_count, i, &x, &y);
                       graph_X[i].store(x);
                       graph_Y[i].store(y);
                   }
