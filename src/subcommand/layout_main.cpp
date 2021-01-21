@@ -82,7 +82,7 @@ int main_layout(int argc, char **argv) {
     args::ValueFlag<std::string> p_sgd_in_file(parser, "FILE",
                                                "specify a line separated list of paths to sample from for the on the fly term generation process in the path guided linear 1D SGD (default: sample from all paths)",
                                                {'f', "path-sgd-use-paths"});
-    args::Flag p_sgd_gaussian_layout(parser, "N", "use a gaussian layout of nodes in 2D rather than node rank in X and gaussian in Y", {'N', "gaussian-initial-layout"});
+    args::ValueFlag<char> p_sgd_layout_initialization(parser, "L", "specify the layout initialization mode: d) node rank in X and gaussian in Y\ng) gaussian in X and Y\nhilber in X and Y)", {'N', "layout-initialization"});
     args::ValueFlag<double> p_sgd_min_term_updates_paths(parser, "N",
                                                          "minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of total path length (default: 10)",
                                                          {'G', "path-sgd-min-term-updates-paths"});
@@ -315,38 +315,44 @@ int main_layout(int argc, char **argv) {
 
     uint64_t len = 0;
     nid_t last_node_id = graph.min_node_id();
-    bool gaussian_layout = args::get(p_sgd_gaussian_layout);
+    char layout_initialization = p_sgd_layout_initialization ? args::get(p_sgd_layout_initialization) : 'd';
     uint64_t x, y;
     graph.for_each_handle([&](const handle_t &h) {
-                              nid_t node_id = graph.get_id(h);
-                              if (node_id - last_node_id > 1) {
-                                  std::cerr << "[odgi layout] error: The graph is not optimized. Please run 'odgi sort' using -O, --optimize" << std::endl;
-                                  exit(1);
-                              }
-                              last_node_id = node_id;
+          nid_t node_id = graph.get_id(h);
+          if (node_id - last_node_id > 1) {
+              std::cerr << "[odgi layout] error: The graph is not optimized. Please run 'odgi sort' using -O, --optimize" << std::endl;
+              exit(1);
+          }
+          last_node_id = node_id;
 
-                              uint64_t pos = 2 * number_bool_packing::unpack_number(h);
-                              if (gaussian_layout) {
-                                  /*graph_X[pos].store(dist(rng));
-                                  graph_Y[pos].store(dist(rng));
-                                  graph_X[pos + 1].store(dist(rng));
-                                  graph_Y[pos + 1].store(dist(rng));*/
-                                  uint64_t graph_node_count = graph.get_node_count();
+          uint64_t pos = 2 * number_bool_packing::unpack_number(h);
+          switch (layout_initialization) {
+              case 'g': {
+                  graph_X[pos].store(len);
+                  graph_Y[pos].store(dist(rng));
+                  len += graph.get_length(h);
+                  graph_X[pos + 1].store(len);
+                  graph_Y[pos + 1].store(dist(rng));
+              }
+              case 'h': {
+                  uint64_t graph_node_count = graph.get_node_count();
 
-                                  for (uint64_t i = pos; i <= pos + 1; i++){
-                                      d2xy(sqrt(graph_node_count), i, &x, &y);
-                                      graph_X[i].store(x);
-                                      graph_Y[i].store(y);
-                                  }
-                              } else {
-                                  graph_X[pos].store(len);
-                                  graph_Y[pos].store(dist(rng));
-                                  len += graph.get_length(h);
-                                  graph_X[pos + 1].store(len);
-                                  graph_Y[pos + 1].store(dist(rng));
-                              }
-                              //std::cerr << pos << ": " << graph_X[pos] << "," << graph_Y[pos] << " ------ " << graph_X[pos + 1] << "," << graph_Y[pos + 1] << std::endl;
-                          });
+                  for (uint64_t i = pos; i <= pos + 1; i++){
+                      d2xy(sqrt(graph_node_count), i, &x, &y);
+                      graph_X[i].store(x);
+                      graph_Y[i].store(y);
+                  }
+              }
+              default: {
+                  graph_X[pos].store(dist(rng));
+                  graph_Y[pos].store(dist(rng));
+                  graph_X[pos + 1].store(dist(rng));
+                  graph_Y[pos + 1].store(dist(rng));
+              }
+          }
+
+          //std::cerr << pos << ": " << graph_X[pos] << "," << graph_Y[pos] << " ------ " << graph_X[pos + 1] << "," << graph_Y[pos + 1] << std::endl;
+      });
 
     //double max_x = 0;
     algorithms::path_linear_sgd_layout(
