@@ -277,9 +277,9 @@ int main_layout(int argc, char **argv) {
     nid_t last_node_id = graph.min_node_id();
     char layout_initialization = p_sgd_layout_initialization ? args::get(p_sgd_layout_initialization) : 'd';
 
-    std::cerr << "layout_initialization " << layout_initialization << std::endl;
-    uint64_t sqrt_graph_node_count = sqrt(graph.get_node_count());
+    uint64_t square_space = sqrt(graph.get_node_count() * 2);
     uint64_t x, y;
+    uint64_t rank = 0;
     graph.for_each_handle([&](const handle_t &h) {
           nid_t node_id = graph.get_id(h);
           if (node_id - last_node_id > 1) {
@@ -292,25 +292,27 @@ int main_layout(int argc, char **argv) {
           switch (layout_initialization) {
               case 'g': {
                   graph_X[pos].store(len);
-                  graph_Y[pos].store(dist(rng));
+                  graph_Y[pos].store(gaussian_noise(rng));
                   len += graph.get_length(h);
                   graph_X[pos + 1].store(len);
-                  graph_Y[pos + 1].store(dist(rng));
+                  graph_Y[pos + 1].store(gaussian_noise(rng));
                   break;
               }
               case 'h': {
-                  for (uint64_t i = pos; i <= pos + 1; ++i){
-                      d2xy(sqrt_graph_node_count, i, &x, &y);
-                      graph_X[i].store(x);
-                      graph_Y[i].store(y);
-                  }
+                  d2xy(square_space, rank, &x, &y);
+                  graph_X[pos].store(x);
+                  graph_Y[pos].store(y);
+                  ++rank;
+                  d2xy(square_space, rank, &x, &y);
+                  graph_X[pos + 1].store(x);
+                  graph_Y[pos + 1].store(y);
                   break;
               }
               default: {
-                  graph_X[pos].store(dist(rng));
-                  graph_Y[pos].store(dist(rng));
-                  graph_X[pos + 1].store(dist(rng));
-                  graph_Y[pos + 1].store(dist(rng));
+                  graph_X[pos].store(gaussian_noise(rng));
+                  graph_Y[pos].store(gaussian_noise(rng));
+                  graph_X[pos + 1].store(gaussian_noise(rng));
+                  graph_Y[pos + 1].store(gaussian_noise(rng));
               }
           }
 
