@@ -577,6 +577,7 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/algorithms/strongly_connected_components.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/mondriaan_sort.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/hash.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/hilbert.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/groom.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/distance_to_head.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/is_single_stranded.hpp
