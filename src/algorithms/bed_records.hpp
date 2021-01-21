@@ -5,6 +5,9 @@
 #include <fstream>
 #include <thread>
 #include "atomic_queue.h"
+#include <limits>
+
+typedef std::numeric_limits< double > dbl;
 
 namespace odgi {
 namespace algorithms {
@@ -49,7 +52,9 @@ public:
                 do {
                     // writer.write((char*)&ival, sizeof(Interval));
                     // BED files are 0-based http://genome.ucsc.edu/FAQ/FAQformat#format1
-                    std::cout << bed_record->chrom << "\t" // chrom
+                    std::cout.precision(dbl::max_digits10);
+                    std::cout << std::fixed
+                              << bed_record->chrom << "\t" // chrom
                               << bed_record->chromStart << "\t" // chromStart
                               << bed_record->chromEnd << "\t" // chromEnd
                               << bed_record->path_layout_dist << "\t"
