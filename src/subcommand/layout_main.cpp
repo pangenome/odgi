@@ -40,9 +40,9 @@ int main_layout(int argc, char **argv) {
     args::ValueFlag<std::string> xp_in_file(parser, "FILE", "load the path index from this file", {'X', "path-index"});
     /// Path-guided-2D-SGD parameters
     args::ValueFlag<std::string> p_sgd_in_file(parser, "FILE",
-                                               "specify a line separated list of paths to sample from for the on the fly term generation process in the path guided linear 1D SGD (default: sample from all paths)",
+                                               "specify a line separated list of paths to sample from for the on the fly term generation process in the path guided linear 1D SGD default: sample from all paths)",
                                                {'f', "path-sgd-use-paths"});
-    args::ValueFlag<char> p_sgd_layout_initialization(parser, "L", "specify the layout initialization mode: d) node rank in X and gaussian in Y\ng) gaussian in X and Y\nh) hilbert in X and Y)", {'N', "layout-initialization"});
+    args::ValueFlag<char> p_sgd_layout_initialization(parser, "C", "specify the layout initialization mode: d) node rank in X and gaussian noise in Y\nu) node rank in X and uniform noise in Y\ng) gaussian noise in X and Y\nh) hilbert curve in X and Y (default: d)", {'N', "layout-initialization"});
     args::ValueFlag<double> p_sgd_min_term_updates_paths(parser, "N",
                                                          "minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of total path length (default: 10)",
                                                          {'G', "path-sgd-min-term-updates-paths"});
@@ -270,16 +270,15 @@ int main_layout(int argc, char **argv) {
 
     std::random_device dev;
     std::mt19937 rng(dev());
-    // std::uniform_int_distribution<uint64_t> dist(1, graph.get_node_count());
-    std::normal_distribution<double> dist(0,1); //graph.get_node_count());
+    std::uniform_real_distribution<double> uniform_noise(0, sqrt(graph.get_node_count() * 2));
+    std::normal_distribution<double> gaussian_noise(0,  sqrt(graph.get_node_count() * 2));
 
     uint64_t len = 0;
     nid_t last_node_id = graph.min_node_id();
     char layout_initialization = p_sgd_layout_initialization ? args::get(p_sgd_layout_initialization) : 'd';
 
-    uint64_t square_space = sqrt(graph.get_node_count() * 2);
+    uint64_t square_space = graph.get_node_count() * 2;
     uint64_t x, y;
-    uint64_t rank = 0;
     graph.for_each_handle([&](const handle_t &h) {
           nid_t node_id = graph.get_id(h);
           if (node_id - last_node_id > 1) {
@@ -291,27 +290,34 @@ int main_layout(int argc, char **argv) {
           uint64_t pos = 2 * number_bool_packing::unpack_number(h);
           switch (layout_initialization) {
               case 'g': {
-                  graph_X[pos].store(len);
+                  graph_X[pos].store(gaussian_noise(rng));
                   graph_Y[pos].store(gaussian_noise(rng));
-                  len += graph.get_length(h);
-                  graph_X[pos + 1].store(len);
+                  graph_X[pos + 1].store(gaussian_noise(rng));
                   graph_Y[pos + 1].store(gaussian_noise(rng));
                   break;
               }
+              case 'u': {
+                  graph_X[pos].store(len);
+                  graph_Y[pos].store(uniform_noise(rng));
+                  len += graph.get_length(h);
+                  graph_X[pos + 1].store(len);
+                  graph_Y[pos + 1].store(uniform_noise(rng));
+                  break;
+              }
               case 'h': {
-                  d2xy(square_space, rank, &x, &y);
+                  d2xy(square_space, pos, &x, &y);
                   graph_X[pos].store(x);
                   graph_Y[pos].store(y);
-                  ++rank;
-                  d2xy(square_space, rank, &x, &y);
+                  d2xy(square_space, pos + 1, &x, &y);
                   graph_X[pos + 1].store(x);
                   graph_Y[pos + 1].store(y);
                   break;
               }
               default: {
-                  graph_X[pos].store(gaussian_noise(rng));
+                  graph_X[pos].store(len);
                   graph_Y[pos].store(gaussian_noise(rng));
-                  graph_X[pos + 1].store(gaussian_noise(rng));
+                  len += graph.get_length(h);
+                  graph_X[pos + 1].store(len);
                   graph_Y[pos + 1].store(gaussian_noise(rng));
               }
           }
