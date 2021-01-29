@@ -112,6 +112,29 @@ TEST_CASE("Graph simplification reduces a graph with a self loop", "[simplify]")
     }
 }
 
+TEST_CASE("Unchop reduces a graph with decreasing node ids in the topological sort", "[simplify]") {
+    graph_t graph;
+    handle_t n1 = graph.create_handle("TTG");
+    handle_t n2 = graph.create_handle("C");
+    handle_t n3 = graph.create_handle("T");
+    handle_t n4 = graph.create_handle("G");
+    handle_t n5 = graph.create_handle("A");
+    handle_t n6 = graph.create_handle("CAAATAAG");
+    //handle_t n0 = graph.create_handle("TTTTTTTT");
+    graph.create_edge(n2, n1);
+    graph.create_edge(n3, n2);
+    graph.create_edge(n4, n3);
+    graph.create_edge(n5, n4);
+    graph.create_edge(n6, n5);
+    //graph.create_edge(n0, n4);
+    algorithms::unchop(graph);
+    // sort the graph
+    graph.apply_ordering(algorithms::topological_order(&graph), true);
+    SECTION("The graph is as expected") {
+        REQUIRE(graph.get_sequence(graph.get_handle(1)) == "CAAATAAGAGTCTTG");
+    }
+}
+
 TEST_CASE("Unchop reduces a graph with a self inverting +/- loop", "[simplify]") {
     graph_t graph;
     handle_t n1 = graph.create_handle("CAAATAAG");
