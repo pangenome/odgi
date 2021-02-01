@@ -29,13 +29,13 @@ std::vector<std::vector<handle_t>> simple_components(
         [&](const handle_t& h) {
             uint64_t h_i = bphf.lookup(as_integer(h));
             uint64_t h_j = bphf.lookup(as_integer(graph.flip(h)));
-            simple_dset.unite(h_i, h_j);
             if (graph.get_degree(h, true) == 1) {
                 // go backward
                 graph.follow_edges(
                     h, true,
                     [&](const handle_t& prev) {
-                        if (graph.get_degree(prev, false) == 1
+                        if (graph.get_id(h) != graph.get_id(prev)
+                            && graph.get_degree(prev, false) == 1
                             && nodes_are_perfect_path_neighbors(graph, prev, h)) {
                             uint64_t from_i = bphf.lookup(as_integer(prev));
                             uint64_t to_i = bphf.lookup(as_integer(h));
@@ -48,7 +48,8 @@ std::vector<std::vector<handle_t>> simple_components(
                 graph.follow_edges(
                     h, false,
                     [&](const handle_t& next) {
-                        if (graph.get_degree(next, true) == 1
+                        if (graph.get_id(h) != graph.get_id(next)
+                            && graph.get_degree(next, true) == 1
                             && nodes_are_perfect_path_neighbors(graph, h, next)) {
                             uint64_t from_i = bphf.lookup(as_integer(h));
                             uint64_t to_i = bphf.lookup(as_integer(next));
@@ -74,14 +75,22 @@ std::vector<std::vector<handle_t>> simple_components(
                             bool in = true;
                             graph.follow_edges(h, true, [&](const handle_t& prev) {
                                                             in &= comp.count(graph.get_id(prev));
+                                                            //in &= graph.get_id(h) != graph.get_id(prev);
                                                         });
                             return in;
                         };
 
     for (auto& c : simple_components) {
-        //std::cerr << "on component " << i++ << std::endl;
         auto& comp = c.second;
         assert(comp.size());
+        /*
+        std::cerr << "on component " << i++ << std::endl;
+        for (auto& h : comp) {
+            std::cerr << graph.get_id(h) << (graph.get_is_reverse(h) ? "-" : "+") << ",";
+        }
+        std::cerr << std::endl;
+        */
+
         if (comp.size() >= min_size) {
             // start somewhere
             ska::flat_hash_set<uint64_t> comp_set;
@@ -103,17 +112,25 @@ std::vector<std::vector<handle_t>> simple_components(
             handle_components.emplace_back();
             // walk from our start node through the component
             auto& sorted_comp = handle_components.back();
+            bool fail = false;
             do {
                 sorted_comp.push_back(h);
                 graph.follow_edges(h, false, [&](const handle_t& next) {
                                                  if (comp_set.count(graph.get_id(next))) {
                                                      h = next;
+                                                 } else {
+                                                     // previous ordering assumptions are violated
+                                                     // this can be caused by self-looping head or tail nodes
+                                                     // in the component
+                                                     fail = true;
                                                  }
                                              });
-            } while (sorted_comp.size() < comp.size());
-            assert(sorted_comp.size() == comp.size());
-            if (sorted_comp.size() < min_size) {
+            } while (sorted_comp.size() < comp.size() && !fail);
+            if (sorted_comp.size() < min_size
+                || sorted_comp.size() < comp.size()) {
                 handle_components.pop_back();
+            } else {
+                assert(sorted_comp.front() != sorted_comp.back());
             }
         }
     }
