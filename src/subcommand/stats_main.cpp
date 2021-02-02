@@ -7,6 +7,8 @@
 //#include "io_helper.hpp"
 #include <omp.h>
 #include "algorithms/layout.hpp"
+#include "algorithms/weakly_connected_components.hpp"
+#include "cover.hpp"
 
 //#define debug_odgi_stats
 
@@ -28,7 +30,11 @@ int main_stats(int argc, char** argv) {
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the variation graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> layout_in_file(parser, "FILE", "read the layout coordinates from this file", {'c', "coords-in"});
+
     args::Flag summarize(parser, "summarize", "summarize the graph properties and dimensions", {'S', "summarize"});
+
+    args::Flag weakly_connected_components(parser, "show", "shows the properties of the weakly connected components", {'W', "weak-connected-components"});
+
     args::Flag base_content(parser, "base-content", "describe the base content of the graph", {'b', "base-content"});
     args::Flag path_coverage(parser, "coverage", "provide a histogram of path coverage over bases in the graph", {'C', "coverage"});
     args::Flag path_setcov(parser, "setcov", "provide a histogram of coverage over unique sets of paths", {'V', "set-coverage"});
@@ -133,6 +139,22 @@ int main_stats(int argc, char** argv) {
         std::cout << "#length\tnodes\tedges\tpaths" << std::endl;
         std::cout << length_in_bp << "\t" << node_count << "\t" << edge_count << "\t" << path_count << std::endl;
     }
+
+    if (args::get(weakly_connected_components)) {
+        std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components = algorithms::weakly_connected_components(&graph);
+
+        std::cout << "##num_weakly_connected_components: " << weak_components.size() << std::endl;
+        std::cout << "#component\tnodes\tis_acyclic" << std::endl;
+        for(uint64_t i = 0; i < weak_components.size(); ++i) {
+            auto& weak_component = weak_components[i];
+
+            ska::flat_hash_set<handlegraph::nid_t> head_nodes = algorithms::is_nice_and_acyclic(graph, weak_components[i]);
+            bool acyclic = !(head_nodes.empty());
+
+            std::cout << i << "\t" << weak_components[i].size() << "\t" << (acyclic ? "yes" : "no") << std::endl;
+        }
+    }
+
     if (args::get(base_content)) {
         std::vector<uint64_t> chars(256);
         graph.for_each_handle([&](const handle_t& h) {

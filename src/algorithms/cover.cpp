@@ -5,8 +5,7 @@
 namespace odgi {
     namespace algorithms {
 
-        ska::flat_hash_set<handlegraph::nid_t>
-        is_nice_and_acyclic(const HandleGraph &graph, const ska::flat_hash_set<handlegraph::nid_t> &component, const bool& ignore_paths) {
+        ska::flat_hash_set<handlegraph::nid_t> is_nice_and_acyclic(const HandleGraph &graph, const ska::flat_hash_set<handlegraph::nid_t> &component) {
             ska::flat_hash_set<handlegraph::nid_t> head_nodes;
             if (component.empty()) { return head_nodes; }
 
@@ -251,7 +250,7 @@ namespace odgi {
 
             ska::flat_hash_set<handlegraph::nid_t> &component = components[component_id];
             size_t component_size = component.size();
-            ska::flat_hash_set<handlegraph::nid_t> head_nodes = is_nice_and_acyclic(graph, component, ignore_paths);
+            ska::flat_hash_set<handlegraph::nid_t> head_nodes = is_nice_and_acyclic(graph, component);
             bool acyclic = !(head_nodes.empty());
             if (show_progress) {
                 std::cerr << Coverage::name() << ": processing component " << (component_id + 1) << " / "
