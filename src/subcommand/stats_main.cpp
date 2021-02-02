@@ -143,7 +143,7 @@ int main_stats(int argc, char** argv) {
     if (args::get(weakly_connected_components)) {
         std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components = algorithms::weakly_connected_components(&graph);
 
-        std::cout << "##weakly_connected_components: " << weak_components.size() << std::endl;
+        std::cout << "##num_weakly_connected_components: " << weak_components.size() << std::endl;
         std::cout << "#component\tnodes\tis_acyclic" << std::endl;
         for(uint64_t i = 0; i < weak_components.size(); ++i) {
             auto& weak_component = weak_components[i];
