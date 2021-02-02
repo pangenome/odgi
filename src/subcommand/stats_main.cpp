@@ -8,6 +8,7 @@
 #include <omp.h>
 #include "algorithms/layout.hpp"
 #include "algorithms/weakly_connected_components.hpp"
+#include "cover.hpp"
 
 //#define debug_odgi_stats
 
@@ -142,11 +143,15 @@ int main_stats(int argc, char** argv) {
     if (args::get(weakly_connected_components)) {
         std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components = algorithms::weakly_connected_components(&graph);
 
-        std::cout << "##weak_components: " << weak_components.size() << std::endl;
-        std::cout << "#component\tnodes" << std::endl;
+        std::cout << "##weakly_connected_components: " << weak_components.size() << std::endl;
+        std::cout << "#component\tnodes\tis_acyclic" << std::endl;
         for(uint64_t i = 0; i < weak_components.size(); ++i) {
             auto& weak_component = weak_components[i];
-            std::cout << i << "\t" << weak_components[i].size() << std::endl;
+
+            ska::flat_hash_set<handlegraph::nid_t> head_nodes = algorithms::is_nice_and_acyclic(graph, weak_components[i]);
+            bool acyclic = !(head_nodes.empty());
+
+            std::cout << i << "\t" << weak_components[i].size() << "\t" << (acyclic ? "yes" : "no") << std::endl;
         }
     }
 
