@@ -33,6 +33,9 @@ The odgi stats(1) command produces statistics of a variation graph. Among other 
 *-S, --summarize*::
   Summarize the graph properties and dimensions. Print to stdout the #nucleotides, #nodes, #edges and #paths of the graph.
 
+*-W, --weak-connected-components*::
+  Shows the properties of the weakly connected components.
+
 *-b, --base-content*::
   Describe the base content of the graph. Print to stdout the #A, #C, #G and #T of the graph.
 
