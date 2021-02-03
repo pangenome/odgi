@@ -12,24 +12,23 @@ namespace odgi {
 
 using namespace odgi::subcommand;
 
-int main_tension(int argc, char **argv) {
+int main_relax(int argc, char **argv) {
 
     // trick argumentparser to do the right thing with the subcommand
     for (uint64_t i = 1; i < argc - 1; ++i) {
         argv[i] = argv[i + 1];
     }
-    std::string prog_name = "odgi tension";
+    std::string prog_name = "odgi relax";
     argv[0] = (char *) prog_name.c_str();
     --argc;
 
     args::ArgumentParser parser(
-        "evaluate the tension of a graph helping to locate structural variants and abnormalities");
+        "relax a graph by converting global large structural variants into large local bubbles");
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> layout_in_file(parser, "FILE", "read the layout coordinates from this .lay format file produced by odgi sort or odgi layout", {'c', "coords-in"});
+    args::ValueFlag<std::string> bed_in_file(parser, "FILE", "read the (bgzip) BED file from this file", {'B', "bed-in"});
     args::ValueFlag<double> window_size(parser, "N", "window size in kb in which each tension is calculated, DEFAULT: 1kb", {'w', "window-size"});
-    args::ValueFlag<std::string> tsv_out_file(parser, "FILE", "write the TSV layout to this file", {'T', "tsv"});
-    // args::ValueFlag<std::string> bed_out_file(parser, "FILE", "write the BED intervals to this file", {'B', "bed"}); we write to stdout
     args::Flag progress(parser, "progress", "display progress of the sort", {'P', "progress"});
     args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel phases", {'t', "threads"});
     args::Flag debug(parser, "debug", "print information about the layout", {'d', "debug"});
@@ -102,7 +101,7 @@ int main_tension(int argc, char **argv) {
     std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress_meter;
     if (progress) {
         progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
-                p_handles.size(), "[odgi::tension::main] BED Progress:");
+                p_handles.size(), "[odgi::relax::main] BED Progress:");
     }
 
     algorithms::bed_records_class bed;
@@ -210,24 +209,11 @@ int main_tension(int argc, char **argv) {
         progress_meter->finish();
     }
 
-    if (tsv_out_file) {
-        auto& outfile = args::get(tsv_out_file);
-        if (outfile.size()) {
-            if (outfile == "-") {
-                layout.to_tsv(std::cout);
-            } else {
-                ofstream f(outfile.c_str());
-                layout.to_tsv(f);
-                f.close();
-            }
-        }
-    }
-
     return 0;
 }
 
-static Subcommand odgi_tension("tension", "evaluate the tension of a graph helping to locate structural variants and abnormalities",
-                            PIPELINE, 3, main_tension);
+static Subcommand odgi_relax("relax", "relax a graph by converting global large structural variants into large local bubbles",
+                            PIPELINE, 3, main_relax);
 
 
 }
