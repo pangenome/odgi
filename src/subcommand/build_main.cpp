@@ -28,7 +28,7 @@ int main_build(int argc, char** argv) {
     args::Flag toposort(parser, "sort", "apply generalized topological sort to the graph and set node ids to order", {'s', "sort"});
     args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel operations", {'t', "threads"});
     args::Flag debug(parser, "debug", "enable debugging", {'d', "debug"});
-    args::Flag progress(parser, "progress", "show progress updates", {'p', "progress"});
+    args::Flag progress(parser, "progress", "show progress updates", {'P', "progress"});
     try {
         parser.ParseCLI(argc, argv);
     } catch (args::Help) {
