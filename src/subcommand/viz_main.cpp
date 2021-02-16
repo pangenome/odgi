@@ -202,8 +202,8 @@ namespace odgi {
         });
         position_map[position_map.size() - 1] = len;
 
-        uint64_t pangenomic_start_pos = 0;
-        uint64_t pangenomic_end_pos = len - 1;
+        double pangenomic_start_pos = 0.0;
+        double pangenomic_end_pos = (double) (len - 1);
 
         {
             std::string nucleotide_pangenomic_range = args::get(_nucleotide_pangenomic_range);
@@ -226,8 +226,8 @@ namespace odgi {
 
                 //todo checks that they are numbers
 
-                pangenomic_start_pos = stoi(splitted[0]);
-                pangenomic_end_pos = stoi(splitted[1]);
+                pangenomic_start_pos = (double) stoi(splitted[0]);
+                pangenomic_end_pos = (double) stoi(splitted[1]);
 
                 if (pangenomic_start_pos >= pangenomic_end_pos) {
                     std::cerr
@@ -236,7 +236,7 @@ namespace odgi {
                     return 1;
                 }
 
-                pangenomic_end_pos = std::min((uint64_t)len - 1, pangenomic_end_pos);
+                pangenomic_end_pos = std::min((double)len - 1, pangenomic_end_pos);
             }
         }
 
@@ -254,6 +254,9 @@ namespace odgi {
         uint64_t width = std::min(len_to_visualize, (args::get(image_width) ? args::get(image_width) : 1000));
         uint64_t height = std::min(len_to_visualize, (args::get(image_height) ? args::get(image_height) : 1000) + bottom_padding);
 
+        /*std::cerr << "real len: " << len << std::endl;
+        std::cerr << "pangenomic_start_pos: " << pangenomic_start_pos << "\npangenomic_end_pos: " << pangenomic_end_pos << std::endl;
+        std::cerr << "len_to_visualize: " << len_to_visualize << std::endl;*/
 
         float scale_x = (float) width / (float) len_to_visualize;
         float scale_y = (float) height / (float) len_to_visualize;
@@ -420,19 +423,19 @@ namespace odgi {
 
             if (a >= pangenomic_start_pos && a <= pangenomic_end_pos) {
                 for (; i < dist; i += 1 / scale_y) {
-                    add_point(a, i, rgb, rgb, rgb);
+                    add_point(a - pangenomic_start_pos, i, rgb, rgb, rgb);
                 }
             }
 
             while (a <= b) {
                 if (a >= pangenomic_start_pos && a <= pangenomic_end_pos) {
-                    add_point(a, i, rgb, rgb, rgb);
+                    add_point(a - pangenomic_start_pos, i, rgb, rgb, rgb);
                 }
                 a += 1 / scale_x;
             }
             if (b >= pangenomic_start_pos && b <= pangenomic_end_pos) {
                 for (uint64_t j = 0; j < dist; j += 1 / scale_y) {
-                    add_point(b, j, rgb, rgb, rgb);
+                    add_point(b - pangenomic_start_pos, j, rgb, rgb, rgb);
                 }
             }
         };
@@ -484,7 +487,7 @@ namespace odgi {
                                 std::cerr << "position in map (" << p  << ") - curr_bin: " << curr_bin << std::endl;
 #endif
                                 if (p + k >= pangenomic_start_pos && p + k <= pangenomic_end_pos) {
-                                    add_point(curr_bin - 1, 0, RGB_BIN_LINKS, RGB_BIN_LINKS, RGB_BIN_LINKS);
+                                    add_point(curr_bin - 1 - ((p + k - pangenomic_start_pos) / _bin_width + 1), 0, RGB_BIN_LINKS, RGB_BIN_LINKS, RGB_BIN_LINKS);
                                 }
                             }
 
@@ -501,8 +504,8 @@ namespace odgi {
                         uint64_t hl = graph.get_length(h);
                         // make contents for the bases in the node
                         for (uint64_t i = 0; i < hl; i += 1 / scale_x) {
-                            if (p + i >= pangenomic_start_pos && p + i <= pangenomic_end_pos) {
-                                add_point(p + i, 0, 0, 0, 0);
+                            if ((p + i) >= pangenomic_start_pos && (p + i) <= pangenomic_end_pos) {
+                                add_point(p + i - pangenomic_start_pos, 0, 0, 0, 0);
                             }
                         }
 
@@ -802,8 +805,8 @@ namespace odgi {
                                     }
                                 }
 
-                                if (p + k >= pangenomic_start_pos && p + k <= pangenomic_end_pos) {
-                                    add_path_step(image, width, curr_bin - 1, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
+                                if ((p + k) >= pangenomic_start_pos && (p + k) <= pangenomic_end_pos) {
+                                    add_path_step(image, width, curr_bin - 1 - ((p + k - pangenomic_start_pos) / _bin_width + 1), path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
                                 }
 
                                 if (std::abs(curr_bin - last_bin) > 1 || last_bin == 0) {
@@ -888,8 +891,8 @@ namespace odgi {
                                 };
                             }
 
-                            if (p + i >= pangenomic_start_pos && p + i <= pangenomic_end_pos) {
-                                add_path_step(image, width, p+i, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
+                            if ((p + i) >= pangenomic_start_pos && (p + i) <= pangenomic_end_pos) {
+                                add_path_step(image, width, p+i - pangenomic_start_pos, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
                             }
                         }
 
