@@ -99,14 +99,14 @@ namespace odgi {
 
         if (!dg_in_file) {
             std::cerr
-                    << "[odgi viz] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
+                    << "[odgi::viz] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
                     << std::endl;
             return 1;
         }
 
         if (!png_out_file) {
             std::cerr
-                    << "[odgi viz] error: Please specify an output file to where to store the PNG via -o=[FILE], --out=[FILE]."
+                    << "[odgi::viz] error: Please specify an output file to where to store the PNG via -o=[FILE], --out=[FILE]."
                     << std::endl;
             return 1;
         }
@@ -117,7 +117,7 @@ namespace odgi {
                 args::get(color_by_mean_coverage))
                 ){
             std::cerr
-                    << "[odgi viz] error: Please specify the -b/--binned-mode option to use the "
+                    << "[odgi::viz] error: Please specify the -b/--binned-mode option to use the "
                        "-w/--bin_width, -g/--no-gap-links, and -m/--color-by-mean-coverage "
                        "options."
                     << std::endl;
@@ -126,14 +126,14 @@ namespace odgi {
 
         if (!args::get(change_darkness) && (args::get(longest_path) || args::get(white_to_black))){
             std::cerr
-                    << "[odgi viz] error: Please specify the -d/--change-darkness option to use the -l/--longest-path and -u/--white-to-black options."
+                    << "[odgi::viz] error: Please specify the -d/--change-darkness option to use the -l/--longest-path and -u/--white-to-black options."
                     << std::endl;
             return 1;
         }
 
         if ((args::get(_color_by_prefix) != 0) + args::get(show_strands) + args::get(white_to_black) + args::get(color_by_mean_coverage) + args::get(color_by_mean_inversion_rate) > 1) {
             std::cerr
-                    << "[odgi viz] error: Please specify only one of the following options: "
+                    << "[odgi::viz] error: Please specify only one of the following options: "
                        "-s/--color-by-prefix, -S/--show-strand, -u/--white-to-black, "
                        "-m/--color-by-mean-coverage, and -z/--color-by-mean-inversion."
                     << std::endl;
@@ -142,7 +142,7 @@ namespace odgi {
 
         if (args::get(change_darkness) && (args::get(color_by_mean_coverage) || args::get(color_by_mean_inversion_rate))) {
             std::cerr
-                    << "[odgi viz] error: Please specify the -d/--change-darkness option without specifying "
+                    << "[odgi::viz] error: Please specify the -d/--change-darkness option without specifying "
                        "-m/--color-by-mean-coverage or -z/--color-by-mean-inversion."
                     << std::endl;
             return 1;
@@ -150,14 +150,14 @@ namespace odgi {
 
         if (args::get(pack_paths) && !args::get(path_names_file).empty()){
             std::cerr
-                    << "[odgi viz] error: Please specify -R/--pack-paths or -p/--paths-to-display, not both."
+                    << "[odgi::viz] error: Please specify -R/--pack-paths or -p/--paths-to-display, not both."
                     << std::endl;
             return 1;
         }
 
         if (args::get(hide_path_names) && (args::get(color_path_names_background) || args::get(_max_num_of_characters))){
             std::cerr
-                    << "[odgi viz] error: Please specify the -C/--color-path-names-background and -c/--max-num-of-characters "
+                    << "[odgi::viz] error: Please specify the -C/--color-path-names-background and -c/--max-num-of-characters "
                        "options without specifying -H/--hide-path-names." << std::endl;
             return 1;
         }
@@ -179,7 +179,7 @@ namespace odgi {
         //NOTE: this sample will overwrite the file or test.png without warning!
         //const char* filename = argc > 1 ? argv[1] : "test.png";
         if (args::get(png_out_file).empty()) {
-            std::cerr << "[odgi viz] error: output image required" << std::endl;
+            std::cerr << "[odgi::viz] error: output image required" << std::endl;
             return 1;
         }
         const char *filename = args::get(png_out_file).c_str();
@@ -190,7 +190,7 @@ namespace odgi {
         graph.for_each_handle([&](const handle_t &h) {
             nid_t node_id = graph.get_id(h);
             if (node_id - last_node_id > 1) {
-                std::cerr << "[odgi viz] error: The graph is not optimized. Please run 'odgi sort' using -O, --optimize" << std::endl;
+                std::cerr << "[odgi::viz] error: The graph is not optimized. Please run 'odgi sort' using -O, --optimize" << std::endl;
                 exit(1);
             }
             last_node_id = node_id;
@@ -220,14 +220,14 @@ namespace odgi {
 
                 if (splitted.size() != 2) {
                     std::cerr
-                            << "[odgi viz] error: Please specify a valid nucleotide pangenomic range: STRING=start-end."
+                            << "[odgi::viz] error: Please specify a valid nucleotide pangenomic range: STRING=start-end."
                             << std::endl;
                     return 1;
                 }
 
                 if ((splitted[0] != "*" && !is_number(splitted[0])) || (splitted[1] != "*" && !is_number(splitted[1]))) {
                     std::cerr
-                            << "[odgi viz] error: Please specify valid numbers for the nucleotide pangenomic range."
+                            << "[odgi::viz] error: Please specify valid numbers for the nucleotide pangenomic range."
                             << std::endl;
                     return 1;
                 }
@@ -246,7 +246,7 @@ namespace odgi {
 
                 if (pangenomic_start_pos >= pangenomic_end_pos) {
                     std::cerr
-                            << "[odgi viz] error: Please specify a start position less than the end position."
+                            << "[odgi::viz] error: Please specify a start position less than the end position."
                             << std::endl;
                     return 1;
                 }
@@ -285,9 +285,9 @@ namespace odgi {
             // Each pixel corresponds to a bin
             scale_x = 1; //scale_x*bin_width;
 
-            std::cerr << "[odgi viz] Binned mode" << std::endl;
-            std::cerr << "[odgi viz] bin width: " << _bin_width << std::endl;
-            std::cerr << "[odgi viz] image width: " << width << std::endl;
+            std::cerr << "[odgi::viz] Binned mode" << std::endl;
+            std::cerr << "[odgi::viz] bin width: " << _bin_width << std::endl;
+            std::cerr << "[odgi::viz] image width: " << width << std::endl;
         }else{
             _bin_width = 1;
         }
@@ -321,7 +321,7 @@ namespace odgi {
                             if (path_layout_y[path_rank] < 0){
                                 path_layout_y[path_rank] = rank_for_visualization;
                             }else{
-                                std::cerr << "[odgi viz] error: In the path list there are duplicated path names." << std::endl;
+                                std::cerr << "[odgi::viz] error: In the path list there are duplicated path names." << std::endl;
                                 exit(1);
                             }
 
@@ -332,10 +332,10 @@ namespace odgi {
                     }
                 }
 
-                std::cerr << "[odgi viz] Found " << rank_for_visualization << "/" << num_of_paths_in_file << " paths to display." << std::endl;
+                std::cerr << "[odgi::viz] Found " << rank_for_visualization << "/" << num_of_paths_in_file << " paths to display." << std::endl;
 
                 if (rank_for_visualization == 0){
-                    std::cerr << "[odgi viz] error: No path to display." << std::endl;
+                    std::cerr << "[odgi::viz] error: No path to display." << std::endl;
                     exit(1);
                 }
 
@@ -402,7 +402,7 @@ namespace odgi {
 
         if (width_path_names + width > 50000){
             std::cerr
-                    << "[odgi viz] warning: you are going to create a big image (width > 50000 pixels)."
+                    << "[odgi::viz] warning: you are going to create a big image (width > 50000 pixels)."
                     << std::endl;
         }
 
@@ -940,7 +940,7 @@ namespace odgi {
         });
 
         if (args::get(drop_gap_links)) {
-            std::cerr << std::setprecision(4) << "[odgi viz] Gap links removed: " << (100.0 *  ((double)gap_links_removed / (double)total_links))
+            std::cerr << std::setprecision(4) << "[odgi::viz] Gap links removed: " << (100.0 *  ((double)gap_links_removed / (double)total_links))
             << "%, that is " << gap_links_removed << " gap links (" << path_count << " path start links + "
             << path_count << " path end links + " << (gap_links_removed - path_count * 2) << " inner gap links) of "
             << total_links << " total links" << std::endl;
