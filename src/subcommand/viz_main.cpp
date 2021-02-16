@@ -277,9 +277,9 @@ namespace odgi {
             _bin_width = 1;
         }
 
-        std::cerr << "real len: " << len << std::endl;
+        /*std::cerr << "real len: " << len << std::endl;
         std::cerr << "pangenomic_start_pos: " << pangenomic_start_pos << "\npangenomic_end_pos: " << pangenomic_end_pos << std::endl;
-        std::cerr << "len_to_visualize: " << len_to_visualize << std::endl;
+        std::cerr << "len_to_visualize: " << len_to_visualize << std::endl;*/
 
         // After the bin_width and scale_xy calculations
         uint16_t width_path_names = 0;
@@ -422,8 +422,8 @@ namespace odgi {
 
             uint64_t i = 0;
 
-            if (a >= pangenomic_start_pos && a <= pangenomic_end_pos) {
-                for (; i < dist; i += 1 / scale_y) {
+            for (; i < dist; i += 1 / scale_y) {
+                if (a >= pangenomic_start_pos && a <= pangenomic_end_pos) {
                     add_point(a - pangenomic_start_pos, i, rgb, rgb, rgb);
                 }
             }
@@ -487,7 +487,7 @@ namespace odgi {
 #ifdef debug_odgi_viz
                                 std::cerr << "position in map (" << p  << ") - curr_bin: " << curr_bin << std::endl;
 #endif
-                                if (curr_bin >= pangenomic_start_pos && curr_bin <= pangenomic_end_pos) {
+                                if (curr_bin - 1 >= pangenomic_start_pos && curr_bin - 1 <= pangenomic_end_pos) {
                                     add_point(curr_bin - 1 - pangenomic_start_pos, 0, RGB_BIN_LINKS, RGB_BIN_LINKS, RGB_BIN_LINKS);
                                 }
                             }
@@ -806,7 +806,7 @@ namespace odgi {
                                     }
                                 }
 
-                                if (curr_bin >= pangenomic_start_pos && curr_bin <= pangenomic_end_pos) {
+                                if (curr_bin - 1 >= pangenomic_start_pos && curr_bin - 1 <= pangenomic_end_pos) {
                                     add_path_step(image, width, curr_bin - 1 - pangenomic_start_pos, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
                                 }
 
