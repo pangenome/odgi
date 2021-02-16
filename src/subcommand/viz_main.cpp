@@ -61,7 +61,7 @@ namespace odgi {
         args::ValueFlag<char> _color_by_prefix(parser, "C", "colors paths by their names looking at the prefix before the given character C",{'s', "color-by-prefix"});
 
         /// Range selection
-        args::ValueFlag<std::string> _nucleotide_pangenomic_range(parser, "STRING","nucleotide pangenomic range to visualize: STRING=start-end. The nucleotide positions refer to the pangenome's sequence (i.e., the sequence obtained arranging all the graph's node from left to right).",{'r', "pangenomic-range"});
+        args::ValueFlag<std::string> _nucleotide_pangenomic_range(parser, "STRING","nucleotide pangenomic range to visualize: STRING=start-end. `*-end` for `[0,end]`; `start-*` for `[start,pangenome_length]`. The nucleotide positions refer to the pangenome's sequence (i.e., the sequence obtained arranging all the graph's node from left to right).",{'r', "pangenomic-range"});
 
         /// Paths selection
         args::ValueFlag<std::string> path_names_file(parser, "FILE", "list of paths to display in the specified order; the file must contain one path name per line and a subset of all paths can be specified.", {'p', "paths-to-display"});
@@ -225,15 +225,24 @@ namespace odgi {
                     return 1;
                 }
 
-                if (!is_number(splitted[0]) || !is_number(splitted[1])) {
+                if ((splitted[0] != "*" && !is_number(splitted[0])) || (splitted[1] != "*" && !is_number(splitted[1]))) {
                     std::cerr
                             << "[odgi viz] error: Please specify valid numbers for the nucleotide pangenomic range."
                             << std::endl;
                     return 1;
                 }
 
-                pangenomic_start_pos = std::min((double)len - 1, (double)stoi(splitted[0]));
-                pangenomic_end_pos = std::min((double)len - 1, (double)stoi(splitted[1]));
+                if (splitted[0] == "*") {
+                    pangenomic_start_pos = 0;
+                } else {
+                    pangenomic_start_pos = std::min((double)len - 1, (double)stoi(splitted[0]));
+                }
+
+                if (splitted[1] == "*") {
+                    pangenomic_end_pos = (double)len - 1;
+                } else {
+                    pangenomic_end_pos = std::min((double)len - 1, (double)stoi(splitted[1]));
+                }
 
                 if (pangenomic_start_pos >= pangenomic_end_pos) {
                     std::cerr
