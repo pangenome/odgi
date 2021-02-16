@@ -270,9 +270,9 @@ namespace odgi {
             // Each pixel corresponds to a bin
             scale_x = 1; //scale_x*bin_width;
 
-            std::cerr << "Binned mode" << std::endl;
-            std::cerr << "bin width: " << _bin_width << std::endl;
-            std::cerr << "image width: " << width << std::endl;
+            std::cerr << "[odgi viz] Binned mode" << std::endl;
+            std::cerr << "[odgi viz] bin width: " << _bin_width << std::endl;
+            std::cerr << "[odgi viz] image width: " << width << std::endl;
         }else{
             _bin_width = 1;
         }
@@ -317,7 +317,7 @@ namespace odgi {
                     }
                 }
 
-                std::cerr << "Found " << rank_for_visualization << "/" << num_of_paths_in_file << " paths to display." << std::endl;
+                std::cerr << "[odgi viz] Found " << rank_for_visualization << "/" << num_of_paths_in_file << " paths to display." << std::endl;
 
                 if (rank_for_visualization == 0){
                     std::cerr << "[odgi viz] error: No path to display." << std::endl;
@@ -925,7 +925,7 @@ namespace odgi {
         });
 
         if (args::get(drop_gap_links)) {
-            std::cerr << std::setprecision(4) << "Gap links removed: " << (100.0 *  ((double)gap_links_removed / (double)total_links))
+            std::cerr << std::setprecision(4) << "[odgi viz] Gap links removed: " << (100.0 *  ((double)gap_links_removed / (double)total_links))
             << "%, that is " << gap_links_removed << " gap links (" << path_count << " path start links + "
             << path_count << " path end links + " << (gap_links_removed - path_count * 2) << " inner gap links) of "
             << total_links << " total links" << std::endl;
