@@ -226,8 +226,8 @@ namespace odgi {
 
                 //todo checks that they are numbers
 
-                pangenomic_start_pos = (double) stoi(splitted[0]);
-                pangenomic_end_pos = (double) stoi(splitted[1]);
+                pangenomic_start_pos = std::min((double)len - 1, (double)stoi(splitted[0]));
+                pangenomic_end_pos = std::min((double)len - 1, (double)stoi(splitted[1]));
 
                 if (pangenomic_start_pos >= pangenomic_end_pos) {
                     std::cerr
@@ -235,8 +235,6 @@ namespace odgi {
                             << std::endl;
                     return 1;
                 }
-
-                pangenomic_end_pos = std::min((double)len - 1, pangenomic_end_pos);
             }
         }
 
@@ -254,10 +252,6 @@ namespace odgi {
         uint64_t width = std::min(len_to_visualize, (args::get(image_width) ? args::get(image_width) : 1000));
         uint64_t height = std::min(len_to_visualize, (args::get(image_height) ? args::get(image_height) : 1000) + bottom_padding);
 
-        /*std::cerr << "real len: " << len << std::endl;
-        std::cerr << "pangenomic_start_pos: " << pangenomic_start_pos << "\npangenomic_end_pos: " << pangenomic_end_pos << std::endl;
-        std::cerr << "len_to_visualize: " << len_to_visualize << std::endl;*/
-
         float scale_x = (float) width / (float) len_to_visualize;
         float scale_y = (float) height / (float) len_to_visualize;
 
@@ -270,6 +264,9 @@ namespace odgi {
                 width = len_to_visualize / _bin_width;// + (len_to_visualize % bin_width ? 1 : 0);
             }
 
+            pangenomic_start_pos /= _bin_width;
+            pangenomic_end_pos /= _bin_width;
+
             // Each pixel corresponds to a bin
             scale_x = 1; //scale_x*bin_width;
 
@@ -279,6 +276,10 @@ namespace odgi {
         }else{
             _bin_width = 1;
         }
+
+        std::cerr << "real len: " << len << std::endl;
+        std::cerr << "pangenomic_start_pos: " << pangenomic_start_pos << "\npangenomic_end_pos: " << pangenomic_end_pos << std::endl;
+        std::cerr << "len_to_visualize: " << len_to_visualize << std::endl;
 
         // After the bin_width and scale_xy calculations
         uint16_t width_path_names = 0;
@@ -486,8 +487,8 @@ namespace odgi {
 #ifdef debug_odgi_viz
                                 std::cerr << "position in map (" << p  << ") - curr_bin: " << curr_bin << std::endl;
 #endif
-                                if (p + k >= pangenomic_start_pos && p + k <= pangenomic_end_pos) {
-                                    add_point(curr_bin - 1 - ((p + k - pangenomic_start_pos) / _bin_width + 1), 0, RGB_BIN_LINKS, RGB_BIN_LINKS, RGB_BIN_LINKS);
+                                if (curr_bin >= pangenomic_start_pos && curr_bin <= pangenomic_end_pos) {
+                                    add_point(curr_bin - 1 - pangenomic_start_pos, 0, RGB_BIN_LINKS, RGB_BIN_LINKS, RGB_BIN_LINKS);
                                 }
                             }
 
@@ -805,8 +806,8 @@ namespace odgi {
                                     }
                                 }
 
-                                if ((p + k) >= pangenomic_start_pos && (p + k) <= pangenomic_end_pos) {
-                                    add_path_step(image, width, curr_bin - 1 - ((p + k - pangenomic_start_pos) / _bin_width + 1), path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
+                                if (curr_bin >= pangenomic_start_pos && curr_bin <= pangenomic_end_pos) {
+                                    add_path_step(image, width, curr_bin - 1 - pangenomic_start_pos, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
                                 }
 
                                 if (std::abs(curr_bin - last_bin) > 1 || last_bin == 0) {
