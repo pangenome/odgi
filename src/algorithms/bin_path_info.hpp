@@ -13,6 +13,7 @@
 #include <handlegraph/handle_graph.hpp>
 #include <handlegraph/util.hpp>
 #include <handlegraph/path_handle_graph.hpp>
+#include "progress.hpp"
 
 namespace odgi {
     namespace algorithms {
@@ -40,6 +41,7 @@ namespace odgi {
                            uint64_t num_bins = 0,
                            uint64_t bin_width = 0,
                            bool drop_gap_links = false,
-                           bool haplo_blocker = false);
+                           bool haplo_blocker = false,
+                           bool progress = false);
     }
 }

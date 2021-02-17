@@ -30,6 +30,7 @@ int main_bin(int argc, char** argv) {
     args::Flag write_seqs_not(parser, "write-seqs-not", "don't write out the sequences for each bin", {'s', "no-seqs"});
     args::Flag drop_gap_links(parser, "drop-gap-links", "don't include gap links in the output", {'g', "no-gap-links"});
     args::Flag haplo_blocker(parser, "haplo-blocker", "only write the bin identifiers to JSON", {'b', "haplo-blocker"});
+    args::Flag progress(parser, "progress", "write current progress to stderr", {'P', "progress"});
     try {
         parser.ParseCLI(argc, argv);
     } catch (args::Help) {
@@ -234,7 +235,8 @@ int main_bin(int argc, char** argv) {
     if (args::get(output_json)) {
         algorithms::bin_path_info(graph, (args::get(aggregate_delim) ? args::get(path_delim) : ""),
                                   write_header_json,write_json, write_seq_json, write_fasta,
-                                  args::get(num_bins), args::get(bin_width), args::get(drop_gap_links), args::get(haplo_blocker));
+                                  args::get(num_bins), args::get(bin_width), args::get(drop_gap_links), args::get(haplo_blocker),
+                                  args::get(progress));
     } else {
         std::cout << "path.name" << "\t"
                   << "path.prefix" << "\t"
@@ -247,7 +249,8 @@ int main_bin(int argc, char** argv) {
                   << "last.nucl" << std::endl;
         algorithms::bin_path_info(graph, (args::get(aggregate_delim) ? args::get(path_delim) : ""),
                                   write_header_tsv,write_tsv, write_seq_noop, write_fasta,
-                                  args::get(num_bins), args::get(bin_width), args::get(drop_gap_links));
+                                  args::get(num_bins), args::get(bin_width), args::get(drop_gap_links),
+                                  args::get(progress));
     }
     return 0;
 }
