@@ -61,7 +61,7 @@ namespace odgi {
         args::ValueFlag<char> _color_by_prefix(parser, "C", "colors paths by their names looking at the prefix before the given character C",{'s', "color-by-prefix"});
 
         /// Range selection
-        args::ValueFlag<std::string> _nucleotide_pangenomic_range(parser, "STRING","nucleotide pangenomic range to visualize: STRING=start-end. `*-end` for `[0,end]`; `start-*` for `[start,pangenome_length]`. The nucleotide positions refer to the pangenome's sequence (i.e., the sequence obtained arranging all the graph's node from left to right).",{'r', "pangenomic-range"});
+        args::ValueFlag<std::string> _nucleotide_range(parser, "STRING","nucleotide range to visualize: STRING=[PATH:]start-end. `*-end` for `[0,end]`; `start-*` for `[start,pangenome_length]`. If no PATH is specified, the nucleotide positions refer to the pangenome's sequence (i.e., the sequence obtained arranging all the graph's node from left to right).",{'r', "pangenomic-range"});
 
         /// Paths selection
         args::ValueFlag<std::string> path_names_file(parser, "FILE", "list of paths to display in the specified order; the file must contain one path name per line and a subset of all paths can be specified.", {'p', "paths-to-display"});
@@ -209,25 +209,39 @@ namespace odgi {
         double pangenomic_end_pos = (double) (len - 1);
 
         {
-            std::string nucleotide_pangenomic_range = args::get(_nucleotide_pangenomic_range);
-            if (!nucleotide_pangenomic_range.empty()) {
+            std::string nucleotide_range = args::get(_nucleotide_range);
+            if (!nucleotide_range.empty()) {
+                size_t foundFirstColon = nucleotide_range.find(':');
+                std::string path_name;
+                if (foundFirstColon != string::npos) {
+                    path_name = nucleotide_range.substr(0, foundFirstColon);
+
+                    if (!graph.has_path(path_name)) {
+                        std::cerr
+                                << "[odgi::viz] error: Please specify a valid path name."
+                                << std::endl;
+                        return 1;
+                    }
+
+                    nucleotide_range = nucleotide_range.substr(foundFirstColon + 1);
+                }
+
                 std::regex regex("-");
                 std::vector<std::string> splitted(
-                        std::sregex_token_iterator(args::get(_nucleotide_pangenomic_range).begin(), args::get(_nucleotide_pangenomic_range).end(), regex, -1),
+                        std::sregex_token_iterator(nucleotide_range.begin(), nucleotide_range.end(), regex, -1),
                         std::sregex_token_iterator()
                 );
 
-
                 if (splitted.size() != 2) {
                     std::cerr
-                            << "[odgi::viz] error: Please specify a valid nucleotide pangenomic range: STRING=start-end."
+                            << "[odgi::viz] error: Please specify a valid nucleotide range: STRING=[PATH:]start-end."
                             << std::endl;
                     return 1;
                 }
 
                 if ((splitted[0] != "*" && !is_number(splitted[0])) || (splitted[1] != "*" && !is_number(splitted[1]))) {
                     std::cerr
-                            << "[odgi::viz] error: Please specify valid numbers for the nucleotide pangenomic range."
+                            << "[odgi::viz] error: Please specify valid numbers for the nucleotide range."
                             << std::endl;
                     return 1;
                 }
@@ -242,6 +256,43 @@ namespace odgi {
                     pangenomic_end_pos = (double)len - 1;
                 } else {
                     pangenomic_end_pos = std::min((double)len - 1, (double)stoi(splitted[1]));
+                }
+
+                //std::cerr << "input A: " << pangenomic_start_pos << std::endl;
+                //std::cerr << "input B: " << pangenomic_end_pos << std::endl;
+
+                if (!path_name.empty()) {
+                    // Convert the nucleotide path range in a nucleotide pangenomic range
+
+                    double new_pangenomic_start_pos = (double) (len - 1);
+                    double new_pangenomic_end_pos = 0;
+
+                    path_handle_t path_handle = graph.get_path_handle(path_name);
+
+                    uint64_t nt_position_in_path = 0;
+
+                    graph.for_each_step_in_path(path_handle, [&](const step_handle_t &occ) {
+                        handle_t h = graph.get_handle_of_step(occ);
+                        uint64_t h_pan_pos = position_map[number_bool_packing::unpack_number(h)];
+                        uint64_t h_len = graph.get_length(h);
+
+                        //Todo dumb implementation: improve with the math later
+                        do {
+                            if (nt_position_in_path >= pangenomic_start_pos && nt_position_in_path <= pangenomic_end_pos) {
+                                new_pangenomic_start_pos = std::min(new_pangenomic_start_pos, (double) h_pan_pos);
+                                new_pangenomic_end_pos = std::max(new_pangenomic_end_pos, (double) h_pan_pos);
+                            }
+
+                            ++nt_position_in_path;
+                            ++h_pan_pos;
+                        } while(--h_len != 0);
+                    });
+
+                    //std::cerr << "A: " << new_pangenomic_start_pos << std::endl;
+                    //std::cerr << "B: " << new_pangenomic_end_pos << std::endl;
+
+                    pangenomic_start_pos = new_pangenomic_start_pos;
+                    pangenomic_end_pos = new_pangenomic_end_pos;
                 }
 
                 if (pangenomic_start_pos >= pangenomic_end_pos) {
