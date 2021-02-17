@@ -488,21 +488,24 @@ namespace odgi {
 
             uint64_t i = 0;
 
-            for (; i < dist; i += 1 / scale_y) {
-                if (a >= pangenomic_start_pos && a <= pangenomic_end_pos) {
-                    add_point(a - pangenomic_start_pos, i, rgb, rgb, rgb);
+            // Show the link if at least one of its 2 extremes is visible
+            if (a >= pangenomic_start_pos && a <= pangenomic_end_pos || b >= pangenomic_start_pos && b <= pangenomic_end_pos) {
+                for (; i < dist; i += 1 / scale_y) {
+                    if (a >= pangenomic_start_pos && a <= pangenomic_end_pos) {
+                        add_point(a - pangenomic_start_pos, i, rgb, rgb, rgb);
+                    }
                 }
-            }
 
-            while (a <= b) {
-                if (a >= pangenomic_start_pos && a <= pangenomic_end_pos) {
-                    add_point(a - pangenomic_start_pos, i, rgb, rgb, rgb);
+                while (a <= b) {
+                    if (a >= pangenomic_start_pos && a <= pangenomic_end_pos) {
+                        add_point(a - pangenomic_start_pos, i, rgb, rgb, rgb);
+                    }
+                    a += 1 / scale_x;
                 }
-                a += 1 / scale_x;
-            }
-            if (b >= pangenomic_start_pos && b <= pangenomic_end_pos) {
-                for (uint64_t j = 0; j < dist; j += 1 / scale_y) {
-                    add_point(b - pangenomic_start_pos, j, rgb, rgb, rgb);
+                if (b >= pangenomic_start_pos && b <= pangenomic_end_pos) {
+                    for (uint64_t j = 0; j < dist; j += 1 / scale_y) {
+                        add_point(b - pangenomic_start_pos, j, rgb, rgb, rgb);
+                    }
                 }
             }
         };
