@@ -32,7 +32,8 @@ namespace odgi {
                            const std::function<void(const string &)> &handle_fasta,
                            uint64_t num_bins,
                            uint64_t bin_width,
-                           bool drop_gap_links) {
+                           bool drop_gap_links,
+                           bool haplo_blocker) {
             // the graph must be compacted for this to work
             std::vector<uint64_t> position_map(graph.get_node_count() + 1);
             uint64_t len = 0;
@@ -53,8 +54,10 @@ namespace odgi {
             // write header
             handle_header(len, bin_width);
             // collect bin sequences
-            for (uint64_t i = 0; i < num_bins; ++i) {
-                handle_sequence(i + 1, graph_seq.substr(i * bin_width, bin_width));
+            if (!haplo_blocker) {
+                for (uint64_t i = 0; i < num_bins; ++i) {
+                    handle_sequence(i + 1, graph_seq.substr(i * bin_width, bin_width));
+                }
             }
             // write out pangenome sequence if wished so
             handle_fasta(graph_seq);

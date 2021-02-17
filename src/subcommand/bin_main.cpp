@@ -29,6 +29,7 @@ int main_bin(int argc, char** argv) {
     args::ValueFlag<uint64_t> bin_width(parser, "bp", "width of each bin in basepairs along the graph vector", {'w', "bin-width"});
     args::Flag write_seqs_not(parser, "write-seqs-not", "don't write out the sequences for each bin", {'s', "no-seqs"});
     args::Flag drop_gap_links(parser, "drop-gap-links", "don't include gap links in the output", {'g', "no-gap-links"});
+    args::Flag haplo_blocker(parser, "haplo-blocker", "only write the bin identifiers to JSON", {'b', "haplo-blocker"});
     try {
         parser.ParseCLI(argc, argv);
     } catch (args::Help) {
@@ -166,25 +167,34 @@ int main_bin(int argc, char** argv) {
         for (uint64_t i = 0; i < bins.size(); ++i) {
             auto& bin_id = entry_it->first;
             auto& info = entry_it->second;
-            std::cout << "[" << bin_id << ","
-                      << info.mean_cov << ","
-                      << info.mean_inv << ","
-                      << info.mean_pos << ",";
-            write_ranges_json(info.ranges);
-			std::cout  << "]";
+            if (!args::get(haplo_blocker)) {
+                std::cout << "[" << bin_id << ","
+                          << info.mean_cov << ","
+                          << info.mean_inv << ","
+                          << info.mean_pos << ",";
+                write_ranges_json(info.ranges);
+                std::cout  << "]";
+            } else {
+                std::cout << bin_id;
+            }
             if (i+1 != bins.size()) {
                 std::cout << ",";
             }
             ++entry_it;
         }
-        std::cout << "],";
-        std::cout << "\"links\":[";
-        for (uint64_t i = 0; i < links.size(); ++i) {
-            auto& link = links[i];
-            std::cout << "[" << link.first << "," << link.second << "]";
-            if (i+1 < links.size()) std::cout << ",";
+        std::cout << "]";
+        if (!haplo_blocker) {
+            std::cout << ",\"links\":[";
+            for (uint64_t i = 0; i < links.size(); ++i) {
+                auto& link = links[i];
+                std::cout << "[" << link.first << "," << link.second << "]";
+                if (i+1 < links.size()) std::cout << ",";
+            }
+            std::cout << "]}" << std::endl;
+        } else {
+            std::cout << "}" << std::endl;
         }
-        std::cout << "]}" << std::endl;
+
     };
 
     std::function<void(const uint64_t&,
@@ -224,7 +234,7 @@ int main_bin(int argc, char** argv) {
     if (args::get(output_json)) {
         algorithms::bin_path_info(graph, (args::get(aggregate_delim) ? args::get(path_delim) : ""),
                                   write_header_json,write_json, write_seq_json, write_fasta,
-                                  args::get(num_bins), args::get(bin_width), args::get(drop_gap_links));
+                                  args::get(num_bins), args::get(bin_width), args::get(drop_gap_links), args::get(haplo_blocker));
     } else {
         std::cout << "path.name" << "\t"
                   << "path.prefix" << "\t"
