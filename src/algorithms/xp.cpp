@@ -21,8 +21,12 @@ namespace xp {
 
     /// build the graph from a graph handle
     void XP::from_handle_graph(const PathHandleGraph &graph) {
-        // create temporary file for path names
         std::string basename;
+        from_handle_graph(graph, basename);
+    }
+
+    void XP::from_handle_graph(const PathHandleGraph &graph, std::string basename) {
+        // create temporary file for path names
         if (basename.empty()) {
             basename = temp_file::create();
         }
