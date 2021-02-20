@@ -301,6 +301,10 @@ namespace odgi {
                             << std::endl;
                     return 1;
                 }
+
+                std::cerr
+                        << "[odgi::viz]: visualizing pangenomic range [" << pangenomic_start_pos << ", " << pangenomic_end_pos << "]"
+                        << std::endl;
             }
         }
 
@@ -408,8 +412,11 @@ namespace odgi {
                 graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
                     handle_t h = graph.get_handle_of_step(occ);
                     uint64_t p = position_map[number_bool_packing::unpack_number(h)];
-                    min_x = std::min(min_x, p);
-                    max_x = std::max(max_x, p + graph.get_length(h));
+
+                    if (p >= pangenomic_start_pos && p <= pangenomic_end_pos) {
+                        min_x = std::min(min_x, (uint64_t) (p - pangenomic_start_pos));
+                        max_x = std::max(max_x, (uint64_t) (p + graph.get_length(h) - pangenomic_start_pos));
+                    }
                 });
                 //std::cerr << "min and max x " << min_x << " " << max_x << " vs " << len_to_visualize << std::endl;
                 // now find where this would fit and mark the layout buffer
