@@ -46,14 +46,14 @@ namespace odgi {
 
         if (!dg_in_file) {
             std::cerr
-                    << "[odgi cover] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
+                    << "[odgi::cover] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
                     << std::endl;
             return 1;
         }
 
         if (!dg_out_file) {
             std::cerr
-                    << "[odgi cover] error: please specify an output file to where to store the graph via -o=[FILE], --out=[FILE]."
+                    << "[odgi::cover] error: please specify an output file to where to store the graph via -o=[FILE], --out=[FILE]."
                     << std::endl;
             return 1;
         }
@@ -62,7 +62,7 @@ namespace odgi {
         uint64_t _min_node_coverage = args::get(min_node_coverage);
         if (_num_paths_per_component && _min_node_coverage) {
             std::cerr
-                    << "[odgi cover] error: please specify -n/--num-paths-per-component or -c/--min-node-coverage, not both."
+                    << "[odgi::cover] error: please specify -n/--num-paths-per-component or -c/--min-node-coverage, not both."
                     << std::endl;
             return 1;
         } else if (!_num_paths_per_component && !_min_node_coverage) {
@@ -73,7 +73,7 @@ namespace odgi {
                                                                  : algorithms::PATH_COVER_DEFAULT_K;
         if (_node_window_size < 2) {
             std::cerr
-                    << "[odgi cover] error: please specify a node window size greater than or equal to 2 via -k=[N], --node-window-size=[N]."
+                    << "[odgi::cover] error: please specify a node window size greater than or equal to 2 via -k=[N], --node-window-size=[N]."
                     << std::endl;
             return 1;
         }
