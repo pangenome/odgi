@@ -263,6 +263,9 @@ namespace odgi {
 
                 if (!path_name.empty()) {
                     // Convert the nucleotide path range in a nucleotide pangenomic range
+                    std::cerr
+                            << "[odgi::viz]: path range to pangenomic range conversion."
+                            << std::endl;
 
                     double new_pangenomic_start_pos = (double) (len - 1);
                     double new_pangenomic_end_pos = 0;
@@ -303,7 +306,7 @@ namespace odgi {
                 }
 
                 std::cerr
-                        << "[odgi::viz]: visualizing pangenomic range [" << pangenomic_start_pos << ", " << pangenomic_end_pos << "]"
+                        << "[odgi::viz]: visualizing the graph in the pangenomic range [" << pangenomic_start_pos << ", " << pangenomic_end_pos << "]"
                         << std::endl;
             }
         }
