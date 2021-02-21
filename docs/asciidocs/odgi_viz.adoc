@@ -77,7 +77,7 @@ please refer to <<odgi_bin.adoc#_odgi_bin1, odgi bin>>.
 === Intervals selection
 
 *-r, --pangenomic-range*::
-  Nucleotide pangenomic range to visualize: `STRING=[PATH:]start-end`. `\*-end` for `[0,end]`; `start-*` for `[start,pangenome_length]`.
+  Nucleotide range to visualize: `STRING=[PATH:]start-end`. `\*-end` for `[0,end]`; `start-*` for `[start,pangenome_length]`.
   If no PATH is specified, the nucleotide positions refer to the pangenome's sequence (i.e., the sequence obtained arranging all the graph's node
   from left to right).
 

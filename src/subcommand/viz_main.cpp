@@ -99,14 +99,14 @@ namespace odgi {
 
         if (!dg_in_file) {
             std::cerr
-                    << "[odgi::viz] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
+                    << "[odgi::viz] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
                     << std::endl;
             return 1;
         }
 
         if (!png_out_file) {
             std::cerr
-                    << "[odgi::viz] error: Please specify an output file to where to store the PNG via -o=[FILE], --out=[FILE]."
+                    << "[odgi::viz] error: please specify an output file to where to store the PNG via -o=[FILE], --out=[FILE]."
                     << std::endl;
             return 1;
         }
@@ -117,7 +117,7 @@ namespace odgi {
                 args::get(color_by_mean_coverage))
                 ){
             std::cerr
-                    << "[odgi::viz] error: Please specify the -b/--binned-mode option to use the "
+                    << "[odgi::viz] error: please specify the -b/--binned-mode option to use the "
                        "-w/--bin_width, -g/--no-gap-links, and -m/--color-by-mean-coverage "
                        "options."
                     << std::endl;
@@ -126,14 +126,14 @@ namespace odgi {
 
         if (!args::get(change_darkness) && (args::get(longest_path) || args::get(white_to_black))){
             std::cerr
-                    << "[odgi::viz] error: Please specify the -d/--change-darkness option to use the -l/--longest-path and -u/--white-to-black options."
+                    << "[odgi::viz] error: please specify the -d/--change-darkness option to use the -l/--longest-path and -u/--white-to-black options."
                     << std::endl;
             return 1;
         }
 
         if ((args::get(_color_by_prefix) != 0) + args::get(show_strands) + args::get(white_to_black) + args::get(color_by_mean_coverage) + args::get(color_by_mean_inversion_rate) > 1) {
             std::cerr
-                    << "[odgi::viz] error: Please specify only one of the following options: "
+                    << "[odgi::viz] error: please specify only one of the following options: "
                        "-s/--color-by-prefix, -S/--show-strand, -u/--white-to-black, "
                        "-m/--color-by-mean-coverage, and -z/--color-by-mean-inversion."
                     << std::endl;
@@ -142,7 +142,7 @@ namespace odgi {
 
         if (args::get(change_darkness) && (args::get(color_by_mean_coverage) || args::get(color_by_mean_inversion_rate))) {
             std::cerr
-                    << "[odgi::viz] error: Please specify the -d/--change-darkness option without specifying "
+                    << "[odgi::viz] error: please specify the -d/--change-darkness option without specifying "
                        "-m/--color-by-mean-coverage or -z/--color-by-mean-inversion."
                     << std::endl;
             return 1;
@@ -150,14 +150,14 @@ namespace odgi {
 
         if (args::get(pack_paths) && !args::get(path_names_file).empty()){
             std::cerr
-                    << "[odgi::viz] error: Please specify -R/--pack-paths or -p/--paths-to-display, not both."
+                    << "[odgi::viz] error: please specify -R/--pack-paths or -p/--paths-to-display, not both."
                     << std::endl;
             return 1;
         }
 
         if (args::get(hide_path_names) && (args::get(color_path_names_background) || args::get(_max_num_of_characters))){
             std::cerr
-                    << "[odgi::viz] error: Please specify the -C/--color-path-names-background and -c/--max-num-of-characters "
+                    << "[odgi::viz] error: please specify the -C/--color-path-names-background and -c/--max-num-of-characters "
                        "options without specifying -H/--hide-path-names." << std::endl;
             return 1;
         }
@@ -190,7 +190,7 @@ namespace odgi {
         graph.for_each_handle([&](const handle_t &h) {
             nid_t node_id = graph.get_id(h);
             if (node_id - last_node_id > 1) {
-                std::cerr << "[odgi::viz] error: The graph is not optimized. Please run 'odgi sort' using -O, --optimize" << std::endl;
+                std::cerr << "[odgi::viz] error: the graph is not optimized. Please run 'odgi sort' using -O, --optimize" << std::endl;
                 exit(1);
             }
             last_node_id = node_id;
@@ -218,7 +218,7 @@ namespace odgi {
 
                     if (!graph.has_path(path_name)) {
                         std::cerr
-                                << "[odgi::viz] error: Please specify a valid path name."
+                                << "[odgi::viz] error: please specify a valid path name."
                                 << std::endl;
                         return 1;
                     }
@@ -234,14 +234,14 @@ namespace odgi {
 
                 if (splitted.size() != 2) {
                     std::cerr
-                            << "[odgi::viz] error: Please specify a valid nucleotide range: STRING=[PATH:]start-end."
+                            << "[odgi::viz] error: please specify a valid nucleotide range: STRING=[PATH:]start-end."
                             << std::endl;
                     return 1;
                 }
 
                 if ((splitted[0] != "*" && !is_number(splitted[0])) || (splitted[1] != "*" && !is_number(splitted[1]))) {
                     std::cerr
-                            << "[odgi::viz] error: Please specify valid numbers for the nucleotide range."
+                            << "[odgi::viz] error: please specify valid numbers for the nucleotide range."
                             << std::endl;
                     return 1;
                 }
@@ -300,7 +300,7 @@ namespace odgi {
 
                 if (pangenomic_start_pos >= pangenomic_end_pos) {
                     std::cerr
-                            << "[odgi::viz] error: Please specify a start position less than the end position."
+                            << "[odgi::viz] error: please specify a start position less than the end position."
                             << std::endl;
                     return 1;
                 }

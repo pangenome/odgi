@@ -39,14 +39,14 @@ namespace odgi {
 
         if (!dg_in_file) {
             std::cerr
-                    << "[odgi pathindex] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
+                    << "[odgi::pathindex] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
                     << std::endl;
             return 1;
         }
 
         if (!idx_out_file) {
             std::cerr
-                    << "[odgi pathindex] error: Please specify an output file to where to store the path index via -o=[FILE], --out=[FILE]."
+                    << "[odgi::pathindex] error: please specify an output file to where to store the path index via -o=[FILE], --out=[FILE]."
                     << std::endl;
             return 1;
         }

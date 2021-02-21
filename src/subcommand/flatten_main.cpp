@@ -41,7 +41,7 @@ int main_flatten(int argc, char** argv) {
     }
 
     if (!odgi_in_file) {
-        std::cerr << "[odgi flatten] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
+        std::cerr << "[odgi::flatten] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
         return 1;
     }
 
@@ -59,7 +59,7 @@ int main_flatten(int argc, char** argv) {
     }
 
     if (args::get(fasta_out_file).empty() && args::get(bed_out_file).empty()) {
-        std::cerr << "[odgi flatten] Error: a FASTA or BED output must be specified" << std::endl;
+        std::cerr << "[odgi::flatten] error: a FASTA or BED output must be specified" << std::endl;
         return 2;
     }
 
