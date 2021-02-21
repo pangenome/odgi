@@ -249,13 +249,13 @@ namespace odgi {
                 if (splitted[0] == "*") {
                     pangenomic_start_pos = 0;
                 } else {
-                    pangenomic_start_pos = std::min((double)len - 1, (double)stoi(splitted[0]));
+                    pangenomic_start_pos = std::min((double)len - 1, stod(splitted[0]));
                 }
 
                 if (splitted[1] == "*") {
                     pangenomic_end_pos = (double)len - 1;
                 } else {
-                    pangenomic_end_pos = std::min((double)len - 1, (double)stoi(splitted[1]));
+                    pangenomic_end_pos = std::min((double)len - 1, stod(splitted[1]));
                 }
 
                 //std::cerr << "input A: " << pangenomic_start_pos << std::endl;
@@ -264,7 +264,7 @@ namespace odgi {
                 if (!path_name.empty()) {
                     // Convert the nucleotide path range in a nucleotide pangenomic range
                     std::cerr
-                            << "[odgi::viz]: path range to pangenomic range conversion."
+                            << "[odgi::viz] Path range to pangenomic range conversion."
                             << std::endl;
 
                     double new_pangenomic_start_pos = (double) (len - 1);
@@ -306,7 +306,7 @@ namespace odgi {
                 }
 
                 std::cerr
-                        << "[odgi::viz]: visualizing the graph in the pangenomic range [" << pangenomic_start_pos << ", " << pangenomic_end_pos << "]"
+                        << "[odgi::viz] Visualizing the graph in the pangenomic range [" << pangenomic_start_pos << ", " << pangenomic_end_pos << "]"
                         << std::endl;
             }
         }
@@ -379,7 +379,7 @@ namespace odgi {
                             if (path_layout_y[path_rank] < 0){
                                 path_layout_y[path_rank] = rank_for_visualization;
                             }else{
-                                std::cerr << "[odgi::viz] error: In the path list there are duplicated path names." << std::endl;
+                                std::cerr << "[odgi::viz] error: in the path list there are duplicated path names." << std::endl;
                                 exit(1);
                             }
 
@@ -393,7 +393,7 @@ namespace odgi {
                 std::cerr << "[odgi::viz] Found " << rank_for_visualization << "/" << num_of_paths_in_file << " paths to display." << std::endl;
 
                 if (rank_for_visualization == 0){
-                    std::cerr << "[odgi::viz] error: No path to display." << std::endl;
+                    std::cerr << "[odgi::viz] error: no path to display." << std::endl;
                     exit(1);
                 }
 
