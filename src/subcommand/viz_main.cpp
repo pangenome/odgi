@@ -410,7 +410,7 @@ namespace odgi {
             std::vector<path_handle_t> path_order = algorithms::id_ordered_paths(graph);
             for (auto &path : path_order) {
                 // get the block which this path covers
-                uint64_t min_x = std::numeric_limits<uint64_t>::max();
+                uint64_t min_x = len_to_visualize;
                 uint64_t max_x = std::numeric_limits<uint64_t>::min(); // 0
                 graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
                     handle_t h = graph.get_handle_of_step(occ);
@@ -421,6 +421,7 @@ namespace odgi {
                         max_x = std::max(max_x, (uint64_t) (p + graph.get_length(h) - pangenomic_start_pos));
                     }
                 });
+
                 //std::cerr << "min and max x " << min_x << " " << max_x << " vs " << len_to_visualize << std::endl;
                 // now find where this would fit and mark the layout buffer
                 // due to our sorted paths, we are able to drop to the lowest available layout position
@@ -1011,9 +1012,9 @@ namespace odgi {
         }
 
         // trim horizontal and vertical spaces to fit
-        uint64_t min_x = std::numeric_limits<uint64_t>::max();
+        uint64_t min_x = width;
         uint64_t max_x = std::numeric_limits<uint64_t>::min(); // 0
-        uint64_t min_y = std::numeric_limits<uint64_t>::max();
+        uint64_t min_y = height + path_space;
         uint64_t max_y = std::numeric_limits<uint64_t>::min(); // 0
         for (uint64_t y = 0; y < height + path_space; ++y) {
             for (uint64_t x = 0; x < width; ++x) {
