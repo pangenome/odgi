@@ -40,12 +40,12 @@ int main_groom(int argc, char** argv) {
     }
 
     if (!og_in_file) {
-        std::cerr << "[odgi groom] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
+        std::cerr << "[odgi::groom] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
         return 1;
     }
 
     if (!og_out_file) {
-        std::cerr << "[odgi groom] error: Please specify an output file to where to store the groomped graph via -o=[FILE], --out=[FILE]." << std::endl;
+        std::cerr << "[odgi::groom] error: please specify an output file to where to store the groomped graph via -o=[FILE], --out=[FILE]." << std::endl;
         return 1;
     }
 

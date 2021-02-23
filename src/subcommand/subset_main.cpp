@@ -42,12 +42,12 @@ int main_subset(int argc, char** argv) {
     }
 
     if (!dg_in_file) {
-        std::cerr << "[odgi subset] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
+        std::cerr << "[odgi::subset] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
         return 1;
     }
 
     if (!dg_out_file) {
-        std::cerr << "[odgi subset] error: Please specify an output file to where to store the unchopped graph via -o=[FILE], --out=[FILE]." << std::endl;
+        std::cerr << "[odgi::subset] error: please specify an output file to where to store the unchopped graph via -o=[FILE], --out=[FILE]." << std::endl;
         return 1;
     }
 
@@ -83,7 +83,7 @@ int main_subset(int argc, char** argv) {
                 handle_t h = graph.get_handle(id);
                 subset.create_handle(graph.get_sequence(h), id);
             } else {
-                std::cerr << "[odgi subset] Warning, cannot find node " << id << std::endl;
+                std::cerr << "[odgi::subset] warning: cannot find node " << id << std::endl;
             }
         }
     }

@@ -55,7 +55,7 @@ int main_paths(int argc, char** argv) {
     }
 
     if (!dg_in_file) {
-        std::cerr << "[odgi paths] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
+        std::cerr << "[odgi::paths] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
         return 1;
     }
 

@@ -105,14 +105,14 @@ int main_layout(int argc, char **argv) {
 
     if (!dg_in_file) {
         std::cerr
-            << "[odgi layout] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
+            << "[odgi::layout] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
             << std::endl;
         return 1;
     }
 
     if (!layout_out_file && !svg_out_file && !png_out_file && !tsv_out_file) {
         std::cerr
-            << "[odgi layout] error: Please specify an output file to where to store the layout via -o/--out=[FILE], -p/--png=[FILE], -s/--svg=[FILE], -T/--tsv=[FILE]"
+            << "[odgi::layout] error: please specify an output file to where to store the layout via -o/--out=[FILE], -p/--png=[FILE], -s/--svg=[FILE], -T/--tsv=[FILE]"
             << std::endl;
         return 1;
     }
@@ -163,7 +163,7 @@ int main_layout(int argc, char **argv) {
     if (p_sgd_seed) {
         if (num_threads > 1) {
             std::cerr
-                << "[odgi layout] Error: Please only specify a seed for the path guided 2D linear SGD when using 1 thread."
+                << "[odgi::layout] error: please only specify a seed for the path guided 2D linear SGD when using 1 thread."
                 << std::endl;
             return 1;
         }
@@ -173,7 +173,7 @@ int main_layout(int argc, char **argv) {
     }
     if (p_sgd_min_term_updates_paths && p_sgd_min_term_updates_num_nodes) {
         std::cerr
-            << "[odgi layout] Error: There can only be one argument provided for the minimum number of term updates in the path guided 1D SGD."
+            << "[odgi::layout] error: there can only be one argument provided for the minimum number of term updates in the path guided 1D SGD."
             "Please either use -G=[N], path-sgd-min-term-updates-paths=[N] or -U=[N], path-sgd-min-term-updates-nodes=[N]."
             << std::endl;
         return 1;
@@ -216,7 +216,7 @@ int main_layout(int argc, char **argv) {
             if (graph.has_path(buf)) {
                 path_sgd_use_paths.push_back(graph.get_path_handle(buf));
             } else {
-                std::cerr << "[odgi layout] Error: Path '" << buf
+                std::cerr << "[odgi::layout] error: path '" << buf
                           << "' as was given by -f=[FILE], --path-sgd-use-paths=[FILE]"
                     " is not present in the graph. Please remove this path from the file and restart 'odgi sort'.";
             }
@@ -282,7 +282,7 @@ int main_layout(int argc, char **argv) {
     graph.for_each_handle([&](const handle_t &h) {
           nid_t node_id = graph.get_id(h);
           if (node_id - last_node_id > 1) {
-              std::cerr << "[odgi layout] error: The graph is not optimized. Please run 'odgi sort' using -O, --optimize" << std::endl;
+              std::cerr << "[odgi::layout] error: the graph is not optimized. Please run 'odgi sort' using -O, --optimize" << std::endl;
               exit(1);
           }
           last_node_id = node_id;
