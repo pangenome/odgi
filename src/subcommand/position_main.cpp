@@ -3,6 +3,7 @@
 #include "position.hpp"
 #include "args.hxx"
 #include "split.hpp"
+#include "algorithms/bfs.hpp"
 #include <omp.h>
 
 namespace odgi {
@@ -103,9 +104,11 @@ int main_position(int argc, char** argv) {
     std::vector<odgi::pos_t> graph_positions;
     std::vector<odgi::path_pos_t> path_positions;
 
+    // TODO the parsers here should find the last 2 , delimiters and split on them
+    
     auto add_graph_pos =
         [&](const std::string& buffer) {
-            auto vals = split(buffer, ':');
+            auto vals = split(buffer, ',');
             if (vals.size() != 3) {
                 std::cerr << "[odgi position] error: graph position record is incomplete" << std::endl;
                 std::cerr << "[odgi position] error: got '" << buffer << "'" << std::endl;
@@ -123,12 +126,12 @@ int main_position(int argc, char** argv) {
                 std::cerr << "[odgi position] error: offset of " << offset << " lies beyond the end of node " << id << std::endl;
                 exit(1);
             }
-            graph_positions.push_back(make_pos_t(id, offset, is_rev));
+            graph_positions.push_back(make_pos_t(id, is_rev, offset));
         };
 
     auto add_path_pos =
         [&](const std::string& buffer) {
-            auto vals = split(buffer, ':');
+            auto vals = split(buffer, ',');
             if (vals.size() != 3) {
                 std::cerr << "[odgi position] error: path position record is incomplete" << std::endl;
                 std::cerr << "[odgi position] error: got '" << buffer << "'" << std::endl;
@@ -171,15 +174,131 @@ int main_position(int argc, char** argv) {
 
     uint64_t search_radius = _search_radius ? args::get(_search_radius) : 10000;
 
+    // make an hash set of our ref path ids for quicker lookup
+    hash_set<uint64_t> ref_path_set;
+    for (auto& path : ref_paths) {
+        ref_path_set.insert(as_integer(path));
+    }
+
+    auto get_graph_pos =
+        [&](const path_pos_t& pos) {
+            auto path_end = graph.path_end(pos.path);
+            uint64_t walked = 0;
+            for (step_handle_t s = graph.path_begin(pos.path);
+                 s != path_end; s = graph.get_next_step(s)) {
+                handle_t h = graph.get_handle_of_step(s);
+                walked += graph.get_length(h);
+                if (walked > pos.offset) {
+                    return make_pos_t(graph.get_id(h), graph.get_is_reverse(h), walked - pos.offset);
+                }
+            }
+            assert(false);
+            return make_pos_t(0, false, 0);
+        };
+
+    auto get_offset_in_path =
+        [&](const path_handle_t& path, const step_handle_t& target) {
+            auto path_end = graph.path_end(path);
+            uint64_t walked = 0;
+            step_handle_t s = graph.path_begin(path);
+            for ( ;  s != target; s = graph.get_next_step(s)) {
+                handle_t h = graph.get_handle_of_step(s);
+                walked += graph.get_length(h);
+            }
+            assert(s != path_end);
+            return walked;
+        };
+
+    // TODO this part needs to include adjustments for in-node offsets vs. where we find the ref path
+    // TODO should we always look "backwards" when seeking the ref pos?
+    
     // for each position that we want to look up
 #pragma omp parallel for
     for (auto& pos : graph_positions) {
         // go to the graph
         // do a little BFS, bounded by our limit
+        handle_t start_handle = graph.get_handle(id(pos), is_rev(pos));
+        uint64_t max_dist = 0;
+        bool found_hit = false;
+        step_handle_t ref_hit;
+        odgi::algorithms::bfs(graph,
+            [&](const handle_t& h, const uint64_t& r, const uint64_t& l, const uint64_t& d) {
+                max_dist = std::max(max_dist, l);
+                bool got_hit = false;
+                step_handle_t hit;
+                graph.for_each_step_on_handle(
+                    h, [&](const step_handle_t& s) {
+                           auto p = graph.get_path_handle_of_step(s);
+                           if (!got_hit && ref_path_set.count(as_integer(p))) {
+                               got_hit = true;
+                               hit = s;
+                           }
+                       });
+                if (got_hit) {
+                    ref_hit = hit;
+                    found_hit = true;
+                }
+            },
+            [](const handle_t& h) { return false; },
+            [](const handle_t& l, const handle_t& h) { return false; },
+            [&max_dist,&search_radius,&found_hit](void) {
+                return max_dist > search_radius || found_hit;
+            },
+            { start_handle },
+            { },
+            true); // use bidirectional search
+        // now, if we found our hit, print
+        if (found_hit) {
+            path_handle_t p = graph.get_path_handle_of_step(ref_hit);
+            uint64_t path_offset = get_offset_in_path(p, ref_hit);
+            bool ref_is_rev = false;
+            std::cout << id(pos) << "," << offset(pos) << "," << (is_rev(pos) ? "-" : "+") << "\t"
+                      << graph.get_path_name(p) << "," << path_offset << "," << (ref_is_rev ? "-" : "+") << std::endl;
+        }
     }
 #pragma omp parallel for
-    for (auto& pos : path_positions) {
+    for (auto& path_pos : path_positions) {
+        auto pos = get_graph_pos(path_pos);
+        handle_t start_handle = graph.get_handle(id(pos), is_rev(pos));
+        uint64_t max_dist = 0;
+        bool found_hit = false;
+        step_handle_t ref_hit;
+        odgi::algorithms::bfs(graph,
+            [&](const handle_t& h, const uint64_t& r, const uint64_t& l, const uint64_t& d) {
+                max_dist = std::max(max_dist, l);
+                bool got_hit = false;
+                step_handle_t hit;
+                graph.for_each_step_on_handle(
+                    h, [&](const step_handle_t& s) {
+                           auto p = graph.get_path_handle_of_step(s);
+                           if (!got_hit && ref_path_set.count(as_integer(p))) {
+                               got_hit = true;
+                               hit = s;
+                           }
+                       });
+                if (got_hit) {
+                    ref_hit = hit;
+                    found_hit = true;
+                }
+            },
+            [](const handle_t& h) { return false; },
+            [](const handle_t& l, const handle_t& h) { return false; },
+            [&max_dist,&search_radius,&found_hit](void) {
+                return max_dist > search_radius || found_hit;
+            },
+            { start_handle },
+            { },
+            true); // use bidirectional search
+        // now, if we found our hit, print
+        if (found_hit) {
+            path_handle_t p = graph.get_path_handle_of_step(ref_hit);
+            uint64_t path_offset = get_offset_in_path(p, ref_hit);
+            bool ref_is_rev = false;
+            std::cout << graph.get_path_name(path_pos.path) << "," << path_pos.offset << "," << (path_pos.is_rev ? "-" : "+") << "\t"
+                      << graph.get_path_name(p) << "," << path_offset << "," << (ref_is_rev ? "-" : "+") << std::endl;
+        }
     }
+
     // go to the graph
     // run a bfs forward and backwards until we hit a reference path
     // if we hit multiple, choose the one that's first in our path list
