@@ -42,17 +42,17 @@ int main_chop(int argc, char** argv) {
     }
 
     if (!dg_in_file) {
-        std::cerr << "[odgi chop] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
+        std::cerr << "[odgi::chop] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
         return 1;
     }
 
     if (!dg_out_file) {
-        std::cerr << "[odgi chop] error: Please specify an output file to where to store the graph via -o=[FILE], --out=[FILE]." << std::endl;
+        std::cerr << "[odgi::chop] error: please specify an output file to where to store the graph via -o=[FILE], --out=[FILE]." << std::endl;
         return 1;
     }
 
     if (!chop_to) {
-        std::cerr << "[odgi chop] error: Please specify a node chop length via -c=[N], --chop-to=[N]." << std::endl;
+        std::cerr << "[odgi::chop] error: please specify a node chop length via -c=[N], --chop-to=[N]." << std::endl;
         return 1;
     }
 

@@ -6,6 +6,7 @@
 #include "algorithms/id_ordered_paths.hpp"
 #include "lodepng.h"
 #include <limits>
+#include <regex>
 #include "picosha2.h"
 #include "algorithms/draw.hpp"
 
@@ -19,6 +20,9 @@
 #define PATH_NAMES_MAX_NUM_OF_CHARACTERS 128
 #define PATH_NAMES_MAX_CHARACTER_SIZE 64
 
+bool is_number(const std::string &s) {
+    return !s.empty() && std::all_of(s.begin(), s.end(), ::isdigit);
+}
 
 namespace odgi {
 
@@ -56,6 +60,9 @@ namespace odgi {
 
         args::ValueFlag<char> _color_by_prefix(parser, "C", "colors paths by their names looking at the prefix before the given character C",{'s', "color-by-prefix"});
 
+        /// Range selection
+        args::ValueFlag<std::string> _nucleotide_range(parser, "STRING","nucleotide range to visualize: STRING=[PATH:]start-end. `*-end` for `[0,end]`; `start-*` for `[start,pangenome_length]`. If no PATH is specified, the nucleotide positions refer to the pangenome's sequence (i.e., the sequence obtained arranging all the graph's node from left to right).",{'r', "pangenomic-range"});
+
         /// Paths selection
         args::ValueFlag<std::string> path_names_file(parser, "FILE", "list of paths to display in the specified order; the file must contain one path name per line and a subset of all paths can be specified.", {'p', "paths-to-display"});
 
@@ -92,14 +99,14 @@ namespace odgi {
 
         if (!dg_in_file) {
             std::cerr
-                    << "[odgi viz] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
+                    << "[odgi::viz] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
                     << std::endl;
             return 1;
         }
 
         if (!png_out_file) {
             std::cerr
-                    << "[odgi viz] error: Please specify an output file to where to store the PNG via -o=[FILE], --out=[FILE]."
+                    << "[odgi::viz] error: please specify an output file to where to store the PNG via -o=[FILE], --out=[FILE]."
                     << std::endl;
             return 1;
         }
@@ -110,7 +117,7 @@ namespace odgi {
                 args::get(color_by_mean_coverage))
                 ){
             std::cerr
-                    << "[odgi viz] error: Please specify the -b/--binned-mode option to use the "
+                    << "[odgi::viz] error: please specify the -b/--binned-mode option to use the "
                        "-w/--bin_width, -g/--no-gap-links, and -m/--color-by-mean-coverage "
                        "options."
                     << std::endl;
@@ -119,14 +126,14 @@ namespace odgi {
 
         if (!args::get(change_darkness) && (args::get(longest_path) || args::get(white_to_black))){
             std::cerr
-                    << "[odgi viz] error: Please specify the -d/--change-darkness option to use the -l/--longest-path and -u/--white-to-black options."
+                    << "[odgi::viz] error: please specify the -d/--change-darkness option to use the -l/--longest-path and -u/--white-to-black options."
                     << std::endl;
             return 1;
         }
 
         if ((args::get(_color_by_prefix) != 0) + args::get(show_strands) + args::get(white_to_black) + args::get(color_by_mean_coverage) + args::get(color_by_mean_inversion_rate) > 1) {
             std::cerr
-                    << "[odgi viz] error: Please specify only one of the following options: "
+                    << "[odgi::viz] error: please specify only one of the following options: "
                        "-s/--color-by-prefix, -S/--show-strand, -u/--white-to-black, "
                        "-m/--color-by-mean-coverage, and -z/--color-by-mean-inversion."
                     << std::endl;
@@ -135,7 +142,7 @@ namespace odgi {
 
         if (args::get(change_darkness) && (args::get(color_by_mean_coverage) || args::get(color_by_mean_inversion_rate))) {
             std::cerr
-                    << "[odgi viz] error: Please specify the -d/--change-darkness option without specifying "
+                    << "[odgi::viz] error: please specify the -d/--change-darkness option without specifying "
                        "-m/--color-by-mean-coverage or -z/--color-by-mean-inversion."
                     << std::endl;
             return 1;
@@ -143,14 +150,14 @@ namespace odgi {
 
         if (args::get(pack_paths) && !args::get(path_names_file).empty()){
             std::cerr
-                    << "[odgi viz] error: Please specify -R/--pack-paths or -p/--paths-to-display, not both."
+                    << "[odgi::viz] error: please specify -R/--pack-paths or -p/--paths-to-display, not both."
                     << std::endl;
             return 1;
         }
 
         if (args::get(hide_path_names) && (args::get(color_path_names_background) || args::get(_max_num_of_characters))){
             std::cerr
-                    << "[odgi viz] error: Please specify the -C/--color-path-names-background and -c/--max-num-of-characters "
+                    << "[odgi::viz] error: please specify the -C/--color-path-names-background and -c/--max-num-of-characters "
                        "options without specifying -H/--hide-path-names." << std::endl;
             return 1;
         }
@@ -172,7 +179,7 @@ namespace odgi {
         //NOTE: this sample will overwrite the file or test.png without warning!
         //const char* filename = argc > 1 ? argv[1] : "test.png";
         if (args::get(png_out_file).empty()) {
-            std::cerr << "[odgi viz] error: output image required" << std::endl;
+            std::cerr << "[odgi::viz] error: output image required" << std::endl;
             return 1;
         }
         const char *filename = args::get(png_out_file).c_str();
@@ -183,7 +190,7 @@ namespace odgi {
         graph.for_each_handle([&](const handle_t &h) {
             nid_t node_id = graph.get_id(h);
             if (node_id - last_node_id > 1) {
-                std::cerr << "[odgi viz] error: The graph is not optimized. Please run 'odgi sort' using -O, --optimize" << std::endl;
+                std::cerr << "[odgi::viz] error: the graph is not optimized. Please run 'odgi sort' using -O, --optimize" << std::endl;
                 exit(1);
             }
             last_node_id = node_id;
@@ -198,6 +205,112 @@ namespace odgi {
         });
         position_map[position_map.size() - 1] = len;
 
+        double pangenomic_start_pos = 0.0;
+        double pangenomic_end_pos = (double) (len - 1);
+
+        {
+            std::string nucleotide_range = args::get(_nucleotide_range);
+            if (!nucleotide_range.empty()) {
+                size_t foundFirstColon = nucleotide_range.find(':');
+                std::string path_name;
+                if (foundFirstColon != string::npos) {
+                    path_name = nucleotide_range.substr(0, foundFirstColon);
+
+                    if (!graph.has_path(path_name)) {
+                        std::cerr
+                                << "[odgi::viz] error: please specify a valid path name."
+                                << std::endl;
+                        return 1;
+                    }
+
+                    nucleotide_range = nucleotide_range.substr(foundFirstColon + 1);
+                }
+
+                std::regex regex("-");
+                std::vector<std::string> splitted(
+                        std::sregex_token_iterator(nucleotide_range.begin(), nucleotide_range.end(), regex, -1),
+                        std::sregex_token_iterator()
+                );
+
+                if (splitted.size() != 2) {
+                    std::cerr
+                            << "[odgi::viz] error: please specify a valid nucleotide range: STRING=[PATH:]start-end."
+                            << std::endl;
+                    return 1;
+                }
+
+                if ((splitted[0] != "*" && !is_number(splitted[0])) || (splitted[1] != "*" && !is_number(splitted[1]))) {
+                    std::cerr
+                            << "[odgi::viz] error: please specify valid numbers for the nucleotide range."
+                            << std::endl;
+                    return 1;
+                }
+
+                if (splitted[0] == "*") {
+                    pangenomic_start_pos = 0;
+                } else {
+                    pangenomic_start_pos = std::min((double)len - 1, stod(splitted[0]));
+                }
+
+                if (splitted[1] == "*") {
+                    pangenomic_end_pos = (double)len - 1;
+                } else {
+                    pangenomic_end_pos = std::min((double)len - 1, stod(splitted[1]));
+                }
+
+                //std::cerr << "input A: " << pangenomic_start_pos << std::endl;
+                //std::cerr << "input B: " << pangenomic_end_pos << std::endl;
+
+                if (!path_name.empty()) {
+                    // Convert the nucleotide path range in a nucleotide pangenomic range
+                    std::cerr
+                            << "[odgi::viz] Path range to pangenomic range conversion."
+                            << std::endl;
+
+                    double new_pangenomic_start_pos = (double) (len - 1);
+                    double new_pangenomic_end_pos = 0;
+
+                    path_handle_t path_handle = graph.get_path_handle(path_name);
+
+                    uint64_t nt_position_in_path = 0;
+
+                    graph.for_each_step_in_path(path_handle, [&](const step_handle_t &occ) {
+                        handle_t h = graph.get_handle_of_step(occ);
+                        uint64_t h_pan_pos = position_map[number_bool_packing::unpack_number(h)];
+                        uint64_t h_len = graph.get_length(h);
+
+                        //Todo dumb implementation: improve with the math later
+                        do {
+                            if (nt_position_in_path >= pangenomic_start_pos && nt_position_in_path <= pangenomic_end_pos) {
+                                new_pangenomic_start_pos = std::min(new_pangenomic_start_pos, (double) h_pan_pos);
+                                new_pangenomic_end_pos = std::max(new_pangenomic_end_pos, (double) h_pan_pos);
+                            }
+
+                            ++nt_position_in_path;
+                            ++h_pan_pos;
+                        } while(--h_len != 0);
+                    });
+
+                    //std::cerr << "A: " << new_pangenomic_start_pos << std::endl;
+                    //std::cerr << "B: " << new_pangenomic_end_pos << std::endl;
+
+                    pangenomic_start_pos = new_pangenomic_start_pos;
+                    pangenomic_end_pos = new_pangenomic_end_pos;
+                }
+
+                if (pangenomic_start_pos >= pangenomic_end_pos) {
+                    std::cerr
+                            << "[odgi::viz] error: please specify a start position less than the end position."
+                            << std::endl;
+                    return 1;
+                }
+
+                std::cerr
+                        << "[odgi::viz] Visualizing the graph in the pangenomic range [" << pangenomic_start_pos << ", " << pangenomic_end_pos << "]"
+                        << std::endl;
+            }
+        }
+
         uint64_t max_num_of_characters = args::get(_max_num_of_characters) > 1 ? min(args::get(_max_num_of_characters), (uint64_t) PATH_NAMES_MAX_NUM_OF_CHARACTERS) : 32;
         uint64_t path_count = graph.get_path_count();
         uint64_t pix_per_path = args::get(path_height) ? args::get(path_height) : 10;
@@ -205,11 +318,15 @@ namespace odgi {
         uint64_t link_pix_y = pix_per_path / 2 - pix_per_link / 2;
         uint64_t path_padding = args::get(path_x_pad);
         uint64_t bottom_padding = 5;
+
+        uint64_t len_to_visualize = pangenomic_end_pos - pangenomic_start_pos + 1;
+
         // the math here only works if the image size is greater than or equal to the graph length
-        uint64_t width = std::min(len, (args::get(image_width) ? args::get(image_width) : 1000));
-        uint64_t height = std::min(len, (args::get(image_height) ? args::get(image_height) : 1000) + bottom_padding);
-        float scale_x = (float) width / (float) len;
-        float scale_y = (float) height / (float) len;
+        uint64_t width = std::min(len_to_visualize, (args::get(image_width) ? args::get(image_width) : 1000));
+        uint64_t height = std::min(len_to_visualize, (args::get(image_height) ? args::get(image_height) : 1000) + bottom_padding);
+
+        float scale_x = (float) width / (float) len_to_visualize;
+        float scale_y = (float) height / (float) len_to_visualize;
 
         float _bin_width = args::get(bin_width);
         bool _binned_mode = args::get(binned_mode);
@@ -217,18 +334,25 @@ namespace odgi {
             if (_bin_width == 0){
                 _bin_width = 1 / scale_x; // It can be a float value.
             }else{
-                width = len / _bin_width;// + (len % bin_width ? 1 : 0);
+                width = len_to_visualize / _bin_width;// + (len_to_visualize % bin_width ? 1 : 0);
             }
+
+            pangenomic_start_pos /= _bin_width;
+            pangenomic_end_pos /= _bin_width;
 
             // Each pixel corresponds to a bin
             scale_x = 1; //scale_x*bin_width;
 
-            std::cerr << "Binned mode" << std::endl;
-            std::cerr << "bin width: " << _bin_width << std::endl;
-            std::cerr << "image width: " << width << std::endl;
+            std::cerr << "[odgi::viz] Binned mode" << std::endl;
+            std::cerr << "[odgi::viz] bin width: " << _bin_width << std::endl;
+            std::cerr << "[odgi::viz] image width: " << width << std::endl;
         }else{
             _bin_width = 1;
         }
+
+        /*std::cerr << "real len: " << len << std::endl;
+        std::cerr << "pangenomic_start_pos: " << pangenomic_start_pos << "\npangenomic_end_pos: " << pangenomic_end_pos << std::endl;
+        std::cerr << "len_to_visualize: " << len_to_visualize << std::endl;*/
 
         // After the bin_width and scale_xy calculations
         uint16_t width_path_names = 0;
@@ -255,7 +379,7 @@ namespace odgi {
                             if (path_layout_y[path_rank] < 0){
                                 path_layout_y[path_rank] = rank_for_visualization;
                             }else{
-                                std::cerr << "[odgi viz] error: In the path list there are duplicated path names." << std::endl;
+                                std::cerr << "[odgi::viz] error: in the path list there are duplicated path names." << std::endl;
                                 exit(1);
                             }
 
@@ -266,10 +390,10 @@ namespace odgi {
                     }
                 }
 
-                std::cerr << "Found " << rank_for_visualization << "/" << num_of_paths_in_file << " paths to display." << std::endl;
+                std::cerr << "[odgi::viz] Found " << rank_for_visualization << "/" << num_of_paths_in_file << " paths to display." << std::endl;
 
                 if (rank_for_visualization == 0){
-                    std::cerr << "[odgi viz] error: No path to display." << std::endl;
+                    std::cerr << "[odgi::viz] error: no path to display." << std::endl;
                     exit(1);
                 }
 
@@ -286,15 +410,19 @@ namespace odgi {
             std::vector<path_handle_t> path_order = algorithms::id_ordered_paths(graph);
             for (auto &path : path_order) {
                 // get the block which this path covers
-                uint64_t min_x = std::numeric_limits<uint64_t>::max();
+                uint64_t min_x = len_to_visualize;
                 uint64_t max_x = std::numeric_limits<uint64_t>::min(); // 0
                 graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
                     handle_t h = graph.get_handle_of_step(occ);
                     uint64_t p = position_map[number_bool_packing::unpack_number(h)];
-                    min_x = std::min(min_x, p);
-                    max_x = std::max(max_x, p + graph.get_length(h));
+
+                    if (p >= pangenomic_start_pos && p <= pangenomic_end_pos) {
+                        min_x = std::min(min_x, (uint64_t) (p - pangenomic_start_pos));
+                        max_x = std::max(max_x, (uint64_t) (p + graph.get_length(h) - pangenomic_start_pos));
+                    }
                 });
-                //std::cerr << "min and max x " << min_x << " " << max_x << " vs " << len << std::endl;
+
+                //std::cerr << "min and max x " << min_x << " " << max_x << " vs " << len_to_visualize << std::endl;
                 // now find where this would fit and mark the layout buffer
                 // due to our sorted paths, we are able to drop to the lowest available layout position
                 uint64_t path_y = 0;
@@ -336,7 +464,7 @@ namespace odgi {
 
         if (width_path_names + width > 50000){
             std::cerr
-                    << "[odgi viz] warning: you are going to create a big image (width > 50000 pixels)."
+                    << "[odgi::viz] warning: you are going to create a big image (width > 50000 pixels)."
                     << std::endl;
         }
 
@@ -371,15 +499,25 @@ namespace odgi {
 
             uint64_t i = 0;
 
-            for (; i < dist; i += 1 / scale_y) {
-                add_point(a, i, rgb, rgb, rgb);
-            }
-            while (a <= b) {
-                add_point(a, i, rgb, rgb, rgb);
-                a += 1 / scale_x;
-            }
-            for (uint64_t j = 0; j < dist; j += 1 / scale_y) {
-                add_point(b, j, rgb, rgb, rgb);
+            // Show the link if at least one of its 2 extremes is visible
+            if (a >= pangenomic_start_pos && a <= pangenomic_end_pos || b >= pangenomic_start_pos && b <= pangenomic_end_pos) {
+                for (; i < dist; i += 1 / scale_y) {
+                    if (a >= pangenomic_start_pos && a <= pangenomic_end_pos) {
+                        add_point(a - pangenomic_start_pos, i, rgb, rgb, rgb);
+                    }
+                }
+
+                while (a <= b) {
+                    if (a >= pangenomic_start_pos && a <= pangenomic_end_pos) {
+                        add_point(a - pangenomic_start_pos, i, rgb, rgb, rgb);
+                    }
+                    a += 1 / scale_x;
+                }
+                if (b >= pangenomic_start_pos && b <= pangenomic_end_pos) {
+                    for (uint64_t j = 0; j < dist; j += 1 / scale_y) {
+                        add_point(b - pangenomic_start_pos, j, rgb, rgb, rgb);
+                    }
+                }
             }
         };
 
@@ -429,7 +567,9 @@ namespace odgi {
 #ifdef debug_odgi_viz
                                 std::cerr << "position in map (" << p  << ") - curr_bin: " << curr_bin << std::endl;
 #endif
-                                add_point(curr_bin - 1, 0, RGB_BIN_LINKS, RGB_BIN_LINKS, RGB_BIN_LINKS);
+                                if (curr_bin - 1 >= pangenomic_start_pos && curr_bin - 1 <= pangenomic_end_pos) {
+                                    add_point(curr_bin - 1 - pangenomic_start_pos, 0, RGB_BIN_LINKS, RGB_BIN_LINKS, RGB_BIN_LINKS);
+                                }
                             }
 
                             last_bin = curr_bin;
@@ -445,7 +585,9 @@ namespace odgi {
                         uint64_t hl = graph.get_length(h);
                         // make contents for the bases in the node
                         for (uint64_t i = 0; i < hl; i += 1 / scale_x) {
-                            add_point(p + i, 0, 0, 0, 0);
+                            if ((p + i) >= pangenomic_start_pos && (p + i) <= pangenomic_end_pos) {
+                                add_point(p + i - pangenomic_start_pos, 0, 0, 0, 0);
+                            }
                         }
 
                         // add contacts for the edges
@@ -744,7 +886,9 @@ namespace odgi {
                                     }
                                 }
 
-                                add_path_step(image, width, curr_bin - 1, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
+                                if (curr_bin - 1 >= pangenomic_start_pos && curr_bin - 1 <= pangenomic_end_pos) {
+                                    add_path_step(image, width, curr_bin - 1 - pangenomic_start_pos, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
+                                }
 
                                 if (std::abs(curr_bin - last_bin) > 1 || last_bin == 0) {
                                     // bin cross!
@@ -828,7 +972,9 @@ namespace odgi {
                                 };
                             }
 
-                            add_path_step(image, width, p+i, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
+                            if ((p + i) >= pangenomic_start_pos && (p + i) <= pangenomic_end_pos) {
+                                add_path_step(image, width, p+i - pangenomic_start_pos, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
+                            }
                         }
 
                         curr_len += hl;
@@ -859,16 +1005,16 @@ namespace odgi {
         });
 
         if (args::get(drop_gap_links)) {
-            std::cerr << std::setprecision(4) << "Gap links removed: " << (100.0 *  ((double)gap_links_removed / (double)total_links))
+            std::cerr << std::setprecision(4) << "[odgi::viz] Gap links removed: " << (100.0 *  ((double)gap_links_removed / (double)total_links))
             << "%, that is " << gap_links_removed << " gap links (" << path_count << " path start links + "
             << path_count << " path end links + " << (gap_links_removed - path_count * 2) << " inner gap links) of "
             << total_links << " total links" << std::endl;
         }
 
         // trim horizontal and vertical spaces to fit
-        uint64_t min_x = std::numeric_limits<uint64_t>::max();
+        uint64_t min_x = width;
         uint64_t max_x = std::numeric_limits<uint64_t>::min(); // 0
-        uint64_t min_y = std::numeric_limits<uint64_t>::max();
+        uint64_t min_y = height + path_space;
         uint64_t max_y = std::numeric_limits<uint64_t>::min(); // 0
         for (uint64_t y = 0; y < height + path_space; ++y) {
             for (uint64_t x = 0; x < width; ++x) {

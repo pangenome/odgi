@@ -38,15 +38,15 @@ namespace odgi {
         }
 
         if (!dg_in_file) {
-            std::cerr << "[odgi panpos] error: Please enter a file to read the index from via -i=[FILE], --idx=[FILE]." << std::endl;
+            std::cerr << "[odgi::panpos] error: please enter a file to read the index from via -i=[FILE], --idx=[FILE]." << std::endl;
             exit(1);
         }
         if (!path_name) {
-            std::cerr << "[odgi panpos] error: Please enter a valid path name to extract the pangenome position from via -p=[STRING], --path=[STRING]." << std::endl;
+            std::cerr << "[odgi::panpos] error: please enter a valid path name to extract the pangenome position from via -p=[STRING], --path=[STRING]." << std::endl;
             exit(1);
         }
         if (!nuc_pos) {
-            std::cerr << "[odgi panpos] error: Please enter a valid nucleotide position to extract the corresponding pangenome position from -n=[N], --nuc-pos=[N]." << std::endl;
+            std::cerr << "[odgi::panpos] error: please enter a valid nucleotide position to extract the corresponding pangenome position from -n=[N], --nuc-pos=[N]." << std::endl;
             exit(1);
         }
 

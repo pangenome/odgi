@@ -42,13 +42,13 @@ int main_extract(int argc, char** argv) {
     }
 
     if (!og_in_file) {
-        std::cerr << "[odgi extract] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
+        std::cerr << "[odgi extract] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
         return 1;
     }
 
     // todo... for explode
     if (!og_out_file) {
-        std::cerr << "[odgi extract] error: Please specify an output file to where to store the extracted graph via -o=[FILE], --out=[FILE]." << std::endl;
+        std::cerr << "[odgi extract] error: please specify an output file to where to store the extracted graph via -o=[FILE], --out=[FILE]." << std::endl;
         return 1;
     }
 
@@ -84,7 +84,7 @@ int main_extract(int argc, char** argv) {
                 handle_t h = graph.get_handle(id);
                 extract.create_handle(graph.get_sequence(h), id);
             } else {
-                std::cerr << "[odgi extract] Warning, cannot find node " << id << std::endl;
+                std::cerr << "[odgi extract] warning, cannot find node " << id << std::endl;
             }
         }
     }

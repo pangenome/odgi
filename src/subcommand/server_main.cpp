@@ -40,12 +40,12 @@ namespace odgi {
         }
 
         if (!dg_in_file) {
-            std::cerr << "[odgi server]: Please enter a file to read the index from via -i=[FILE], --idx=[FILE]." << std::endl;
+            std::cerr << "[odgi::server]: please enter a file to read the index from via -i=[FILE], --idx=[FILE]." << std::endl;
             exit(1);
         }
 
         if (!port) {
-            std::cerr << "[odgi server]: Please enter a port for the server via -p=[N], --port=[N]." << std::endl;
+            std::cerr << "[odgi::server]: please enter a port for the server via -p=[N], --port=[N]." << std::endl;
             exit(1);
         }
 

@@ -64,14 +64,14 @@ int main_draw(int argc, char **argv) {
 
     if (!dg_in_file) {
         std::cerr
-            << "[odgi draw] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
+            << "[odgi::draw] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
             << std::endl;
         return 1;
     }
 
     if (!tsv_out_file && !svg_out_file && !png_out_file) {
         std::cerr
-            << "[odgi draw] error: Please specify an output file to where to store the layout via -p/--png=[FILE], -s/--svg=[FILE], -T/--tsv=[FILE]"
+            << "[odgi::draw] error: please specify an output file to where to store the layout via -p/--png=[FILE], -s/--svg=[FILE], -T/--tsv=[FILE]"
             << std::endl;
         return 1;
     }
