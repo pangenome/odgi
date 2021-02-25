@@ -247,24 +247,6 @@ int main_layout(int argc, char **argv) {
     path_sgd_zipf_space_max = args::get(p_sgd_zipf_space_max) ? std::min(path_sgd_zipf_space, args::get(p_sgd_zipf_space_max)) : 1000;
     path_sgd_zipf_space_quantization_step = args::get(p_sgd_zipf_space_quantization_step) ? std::max((uint64_t)2, args::get(p_sgd_zipf_space_quantization_step)) : 100;
 
-    /*// refine order by weakly connected components
-      std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components = algorithms::weakly_connected_components(
-      &graph);
-      #ifdef debug_components
-      std::cerr << "components count: " << weak_components.size() << std::endl;
-      #endif
-      std::vector<std::pair<double, uint64_t>> weak_component_order;
-      for (int i = 0; i < weak_components.size(); i++) {
-      auto &weak_component = weak_components[i];
-      uint64_t id_sum = 0;
-      for (auto node_id : weak_component) {
-      id_sum += node_id;
-      }
-      double avg_id = id_sum / (double) weak_component.size();
-      weak_component_order.push_back(std::make_pair(avg_id, i));
-      }
-      std::sort(weak_component_order.begin(), weak_component_order.end());*/
-
     std::vector<std::atomic<double>> graph_X(graph.get_node_count() * 2);  // Graph's X coordinates for node+ and node-
     std::vector<std::atomic<double>> graph_Y(graph.get_node_count() * 2);  // Graph's Y coordinates for node+ and node-
 
