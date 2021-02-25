@@ -17,7 +17,7 @@ groom(const handlegraph::MutablePathDeletableHandleGraph& graph,
 
     // This (s) is our set of oriented nodes.
     //dyn::succinct_bitvector<dyn::spsi<dyn::packed_vector,256,16> > s;
-    uint64_t min_handle_rank = 0;
+    uint64_t min_handle_rank = std::numeric_limits<uint64_t>::max();
     uint64_t max_handle_rank = 0;
     graph.for_each_handle(
         [&](const handle_t& found) {
