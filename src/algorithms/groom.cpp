@@ -17,7 +17,7 @@ groom(const handlegraph::MutablePathDeletableHandleGraph& graph,
 
     // This (s) is our set of oriented nodes.
     //dyn::succinct_bitvector<dyn::spsi<dyn::packed_vector,256,16> > s;
-    uint64_t min_handle_rank = 0;
+    uint64_t min_handle_rank = std::numeric_limits<uint64_t>::max();
     uint64_t max_handle_rank = 0;
     graph.for_each_handle(
         [&](const handle_t& found) {
@@ -60,7 +60,6 @@ groom(const handlegraph::MutablePathDeletableHandleGraph& graph,
     uint64_t edge_count = 0;
     
     while (unvisited.rank1(unvisited.size())!=0) {
-
         bfs(graph,
             [&graph,&unvisited,&flipped,&progress_reporting,&bfs_progress]
             (const handle_t& h, const uint64_t& r, const uint64_t& l, const uint64_t& d) {
@@ -102,19 +101,27 @@ groom(const handlegraph::MutablePathDeletableHandleGraph& graph,
     }
 
     std::vector<handle_t> order;
-    //
+    uint64_t num_flipped_handles = 0;
+
     graph.for_each_handle(
-        [&graph,&order,&flipped](const handle_t& h) {
+        [&graph,&order,&flipped,&num_flipped_handles,&progress_reporting,&handle_progress](const handle_t& h) {
             bool to_flip = flipped[number_bool_packing::unpack_number(h)];
             if (!to_flip) {
                 order.push_back(h);
             } else {
                 order.push_back(graph.flip(h));
+                ++num_flipped_handles;
+            }
+
+            if (progress_reporting) {
+                handle_progress->increment(1);
             }
         });
     
     if (progress_reporting) {
         handle_progress->finish();
+
+        std::cerr << "[odgi::groom] flipped " << num_flipped_handles << " handles" << std::endl;
     }
 
     return order;
