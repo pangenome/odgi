@@ -60,7 +60,6 @@ groom(const handlegraph::MutablePathDeletableHandleGraph& graph,
     uint64_t edge_count = 0;
     
     while (unvisited.rank1(unvisited.size())!=0) {
-
         bfs(graph,
             [&graph,&unvisited,&flipped,&progress_reporting,&bfs_progress]
             (const handle_t& h, const uint64_t& r, const uint64_t& l, const uint64_t& d) {
@@ -102,19 +101,23 @@ groom(const handlegraph::MutablePathDeletableHandleGraph& graph,
     }
 
     std::vector<handle_t> order;
-    //
+    uint64_t num_flipped_handles = 0;
+
     graph.for_each_handle(
-        [&graph,&order,&flipped](const handle_t& h) {
+        [&graph,&order,&flipped,&num_flipped_handles](const handle_t& h) {
             bool to_flip = flipped[number_bool_packing::unpack_number(h)];
             if (!to_flip) {
                 order.push_back(h);
             } else {
                 order.push_back(graph.flip(h));
+                ++num_flipped_handles;
             }
         });
     
     if (progress_reporting) {
         handle_progress->finish();
+
+        std::cerr << "[odgi::groom] filpped " << num_flipped_handles << " handles" << std::endl;
     }
 
     return order;
