@@ -109,22 +109,30 @@ int main_position(int argc, char** argv) {
     auto add_graph_pos =
         [&](const std::string& buffer) {
             auto vals = split(buffer, ',');
+            /*
             if (vals.size() != 3) {
                 std::cerr << "[odgi position] error: graph position record is incomplete" << std::endl;
                 std::cerr << "[odgi position] error: got '" << buffer << "'" << std::endl;
                 exit(1); // bail
             }
+            */
             uint64_t id = std::stoi(vals[0]);
-            uint64_t offset = std::stoi(vals[1]);
-            bool is_rev = vals[2] == "-";
             if (!graph.has_node(id)) {
                 std::cerr << "[odgi position] error: no node " << id << " in graph" << std::endl;
                 exit(1);
             }
-            handle_t h = graph.get_handle(id);
-            if (graph.get_length(h) < offset) {
-                std::cerr << "[odgi position] error: offset of " << offset << " lies beyond the end of node " << id << std::endl;
-                exit(1);
+            uint64_t offset = 0;
+            if (vals.size() >= 2) {
+                offset = std::stoi(vals[1]);
+                handle_t h = graph.get_handle(id);
+                if (graph.get_length(h) < offset) {
+                    std::cerr << "[odgi position] error: offset of " << offset << " lies beyond the end of node " << id << std::endl;
+                    exit(1);
+                }
+            }
+            bool is_rev = false;
+            if (vals.size() == 3) {
+                vals[2] == "-";
             }
             graph_positions.push_back(make_pos_t(id, is_rev, offset));
         };
@@ -164,7 +172,7 @@ int main_position(int argc, char** argv) {
         add_path_pos(args::get(path_pos));
     } else if (path_pos_file) {
         // if we're given a file of path positions, we'll convert them all
-        std::ifstream refs(args::get(ref_path_file).c_str());
+        std::ifstream refs(args::get(path_pos_file).c_str());
         std::string buffer;
         while (std::getline(refs, buffer)) {
             add_path_pos(buffer);
@@ -192,7 +200,8 @@ int main_position(int argc, char** argv) {
                     return make_pos_t(graph.get_id(h), graph.get_is_reverse(h), walked - pos.offset);
                 }
             }
-            assert(false);
+#pragma omp critical (cout)
+            std::cerr << "[odgi position] warning: position " << graph.get_path_name(pos.path) << ":" << pos.offset << " outside of path" << std::endl;
             return make_pos_t(0, false, 0);
         };
 
@@ -211,91 +220,99 @@ int main_position(int argc, char** argv) {
 
     // TODO this part needs to include adjustments for in-node offsets vs. where we find the ref path
     // TODO should we always look "backwards" when seeking the ref pos?
+
+    auto get_position =
+        [&](const pos_t& pos, int64_t& path_offset, step_handle_t& ref_hit, uint64_t& walked_to_hit_ref) {
+            handle_t start_handle = graph.get_handle(id(pos), is_rev(pos));
+            uint64_t max_dist = 0;
+            bool found_hit = false;
+            uint64_t adj_last_node = 0;
+            odgi::algorithms::bfs(
+                graph,
+                [&](const handle_t& h, const uint64_t& r, const uint64_t& l, const uint64_t& d) {
+                    max_dist = std::max(max_dist, l);
+                    bool got_hit = false;
+                    step_handle_t hit;
+                    graph.for_each_step_on_handle(
+                        h, [&](const step_handle_t& s) {
+                               auto p = graph.get_path_handle_of_step(s);
+                               if (!got_hit && ref_path_set.count(as_integer(p))) {
+                                   got_hit = true;
+                                   hit = s;
+                                   walked_to_hit_ref = l;
+                                   if (d != 0) {
+                                       adj_last_node = graph.get_length(h);
+                                       // todo... relative orientation to path step
+                                       // should adjust our adjustment
+                                   }
+                               }
+                           });
+                    if (got_hit) {
+                        ref_hit = hit;
+                        found_hit = true;
+                    }
+                },
+                [](const handle_t& h) { return false; },
+                [](const handle_t& l, const handle_t& h) { return false; },
+                [&max_dist,&search_radius,&found_hit](void) {
+                    return max_dist > search_radius || found_hit;
+                },
+                { graph.flip(start_handle) },
+                { },
+                false);
+            if (found_hit) {
+                path_handle_t p = graph.get_path_handle_of_step(ref_hit);
+                path_offset = get_offset_in_path(p, ref_hit) + adj_last_node;
+                return true;
+            } else {
+                path_offset = -1;
+                return false;
+            }
+        };
     
     // for each position that we want to look up
 #pragma omp parallel for
     for (auto& pos : graph_positions) {
         // go to the graph
         // do a little BFS, bounded by our limit
-        handle_t start_handle = graph.get_handle(id(pos), is_rev(pos));
-        uint64_t max_dist = 0;
-        bool found_hit = false;
-        step_handle_t ref_hit;
-        odgi::algorithms::bfs(graph,
-            [&](const handle_t& h, const uint64_t& r, const uint64_t& l, const uint64_t& d) {
-                max_dist = std::max(max_dist, l);
-                bool got_hit = false;
-                step_handle_t hit;
-                graph.for_each_step_on_handle(
-                    h, [&](const step_handle_t& s) {
-                           auto p = graph.get_path_handle_of_step(s);
-                           if (!got_hit && ref_path_set.count(as_integer(p))) {
-                               got_hit = true;
-                               hit = s;
-                           }
-                       });
-                if (got_hit) {
-                    ref_hit = hit;
-                    found_hit = true;
-                }
-            },
-            [](const handle_t& h) { return false; },
-            [](const handle_t& l, const handle_t& h) { return false; },
-            [&max_dist,&search_radius,&found_hit](void) {
-                return max_dist > search_radius || found_hit;
-            },
-            { start_handle },
-            { },
-            true); // use bidirectional search
         // now, if we found our hit, print
-        if (found_hit) {
-            path_handle_t p = graph.get_path_handle_of_step(ref_hit);
-            uint64_t path_offset = get_offset_in_path(p, ref_hit);
+        int64_t path_offset = 0;
+        step_handle_t ref_hit;
+        uint64_t walked_to_hit_ref = 0;
+        // TODO XXX THIS DOESN'T HANDLE NODE OFFSETS
+        if (get_position(pos, path_offset, ref_hit, walked_to_hit_ref)) {
+            // refactor here above into a single function that takes a graph position
+            // but outside we need to remember if we're returning information about a graph position
+            // or a position in a path
             bool ref_is_rev = false;
+            path_handle_t p = graph.get_path_handle_of_step(ref_hit);
+#pragma omp critical (cout)
             std::cout << id(pos) << "," << offset(pos) << "," << (is_rev(pos) ? "-" : "+") << "\t"
-                      << graph.get_path_name(p) << "," << path_offset << "," << (ref_is_rev ? "-" : "+") << std::endl;
+                      << graph.get_path_name(p) << "," << path_offset << "," << (ref_is_rev ? "-" : "+") << "\t"
+                      << walked_to_hit_ref << "\t" << std::endl;
         }
     }
+
 #pragma omp parallel for
     for (auto& path_pos : path_positions) {
+        // TODO we need a better input format
+        // TODO XXX THIS DOESN'T HANDLE NODE OFFSETS
         auto pos = get_graph_pos(path_pos);
-        handle_t start_handle = graph.get_handle(id(pos), is_rev(pos));
-        uint64_t max_dist = 0;
-        bool found_hit = false;
-        step_handle_t ref_hit;
-        odgi::algorithms::bfs(graph,
-            [&](const handle_t& h, const uint64_t& r, const uint64_t& l, const uint64_t& d) {
-                max_dist = std::max(max_dist, l);
-                bool got_hit = false;
-                step_handle_t hit;
-                graph.for_each_step_on_handle(
-                    h, [&](const step_handle_t& s) {
-                           auto p = graph.get_path_handle_of_step(s);
-                           if (!got_hit && ref_path_set.count(as_integer(p))) {
-                               got_hit = true;
-                               hit = s;
-                           }
-                       });
-                if (got_hit) {
-                    ref_hit = hit;
-                    found_hit = true;
-                }
-            },
-            [](const handle_t& h) { return false; },
-            [](const handle_t& l, const handle_t& h) { return false; },
-            [&max_dist,&search_radius,&found_hit](void) {
-                return max_dist > search_radius || found_hit;
-            },
-            { start_handle },
-            { },
-            true); // use bidirectional search
-        // now, if we found our hit, print
-        if (found_hit) {
-            path_handle_t p = graph.get_path_handle_of_step(ref_hit);
-            uint64_t path_offset = get_offset_in_path(p, ref_hit);
-            bool ref_is_rev = false;
-            std::cout << graph.get_path_name(path_pos.path) << "," << path_pos.offset << "," << (path_pos.is_rev ? "-" : "+") << "\t"
-                      << graph.get_path_name(p) << "," << path_offset << "," << (ref_is_rev ? "-" : "+") << std::endl;
+        if (id(pos)) {
+            int64_t path_offset = 0;
+            step_handle_t ref_hit;
+            uint64_t walked_to_hit_ref = 0;
+            if (get_position(pos, path_offset, ref_hit, walked_to_hit_ref)) {
+                // refactor here above into a single function that takes a graph position
+                // but outside we need to remember if we're returning information about a graph position
+                // or a position in a path
+                bool ref_is_rev = false;
+                path_handle_t p = graph.get_path_handle_of_step(ref_hit);
+#pragma omp critical (cout)
+                std::cout << graph.get_path_name(path_pos.path) << "," << path_pos.offset << "," << (path_pos.is_rev ? "-" : "+") << "\t"
+                          << graph.get_path_name(p) << "," << path_offset << "," << (ref_is_rev ? "-" : "+") << "\t"
+                          << walked_to_hit_ref << std::endl;
+            }
         }
     }
 
