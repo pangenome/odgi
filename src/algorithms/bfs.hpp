@@ -31,7 +31,9 @@ void bfs(
     // when hitting a sink, don't keep walking
     const std::vector<handle_t>& sinks,
     // do we use a bidirectional search
-    bool bidirectional = false
+    bool bidirectional = false,
+    uint64_t step_limit = 0,
+    uint64_t bp_limit = 0
     );
 
 struct bfs_state_t {

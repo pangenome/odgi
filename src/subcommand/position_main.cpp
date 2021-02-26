@@ -132,7 +132,7 @@ int main_position(int argc, char** argv) {
             }
             bool is_rev = false;
             if (vals.size() == 3) {
-                vals[2] == "-";
+                is_rev = vals[2] == "-";
             }
             graph_positions.push_back(make_pos_t(id, is_rev, offset));
         };
@@ -195,10 +195,11 @@ int main_position(int argc, char** argv) {
             for (step_handle_t s = graph.path_begin(pos.path);
                  s != path_end; s = graph.get_next_step(s)) {
                 handle_t h = graph.get_handle_of_step(s);
-                walked += graph.get_length(h);
-                if (walked > pos.offset) {
-                    return make_pos_t(graph.get_id(h), graph.get_is_reverse(h), walked - pos.offset);
+                uint64_t node_length = graph.get_length(h);
+                if (walked + node_length > pos.offset) {
+                    return make_pos_t(graph.get_id(h), graph.get_is_reverse(h), pos.offset - walked);
                 }
+                walked += node_length;
             }
 #pragma omp critical (cout)
             std::cerr << "[odgi position] warning: position " << graph.get_path_name(pos.path) << ":" << pos.offset << " outside of path" << std::endl;
@@ -239,11 +240,30 @@ int main_position(int argc, char** argv) {
                                if (!got_hit && ref_path_set.count(as_integer(p))) {
                                    got_hit = true;
                                    hit = s;
-                                   walked_to_hit_ref = l;
-                                   if (d != 0) {
-                                       adj_last_node = graph.get_length(h);
-                                       // todo... relative orientation to path step
-                                       // should adjust our adjustment
+                                   // did we get here in the same orientation?
+                                   // if so, we need to subtract the length of the node from our result
+                                   if (d == 0) {
+                                       if (!graph.get_is_reverse(start_handle)) {
+                                           walked_to_hit_ref = offset(pos);
+                                       } else {
+                                           walked_to_hit_ref = graph.get_length(start_handle) - offset(pos);
+                                       }
+                                       if (graph.get_is_reverse(graph.get_handle_of_step(s)) == graph.get_is_reverse(h)) {
+                                           adj_last_node = 0;
+                                       } else {
+                                           adj_last_node = offset(pos);
+                                       }
+                                   } else {
+                                       if (!graph.get_is_reverse(start_handle)) {
+                                           walked_to_hit_ref = l + offset(pos) - graph.get_length(start_handle);
+                                       } else {
+                                           walked_to_hit_ref = l + offset(pos);
+                                       }
+                                       if (graph.get_is_reverse(graph.get_handle_of_step(s)) == graph.get_is_reverse(h)) {
+                                           adj_last_node = 0;// graph.get_length(h);
+                                       } else {
+                                           adj_last_node = graph.get_length(h);
+                                       }
                                    }
                                }
                            });
@@ -262,6 +282,7 @@ int main_position(int argc, char** argv) {
                 false);
             if (found_hit) {
                 path_handle_t p = graph.get_path_handle_of_step(ref_hit);
+                // TODO ORIENTATION
                 path_offset = get_offset_in_path(p, ref_hit) + adj_last_node;
                 return true;
             } else {
