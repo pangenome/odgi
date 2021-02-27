@@ -3,6 +3,7 @@
 #include <handlegraph/handle_graph.hpp>
 #include <handlegraph/util.hpp>
 #include "atomic_image.hpp"
+#include "weakly_connected_components.hpp"
 
 namespace odgi {
 
@@ -15,7 +16,7 @@ using namespace handlegraph;
 void to_tsv(std::ostream &out,
             const std::vector<double> &X,
             const std::vector<double> &Y,
-            const HandleGraph &graph);
+            const std::vector<std::vector<handlegraph::handle_t>> weak_components);
 
 union conv_t { uint64_t i; double d; };
 

@@ -1,5 +1,5 @@
 #include "layout.hpp"
-#include "weakly_connected_components.hpp"
+#include "draw.hpp"
 
 namespace odgi {
 namespace algorithms {
@@ -7,14 +7,8 @@ namespace layout {
 
 using namespace handlegraph;
 
-void to_tsv(std::ostream &out, const std::vector<double> &X, const std::vector<double> &Y, const HandleGraph &graph) {
-    uint64_t n = graph.get_node_count() * 2;
-    out << std::setprecision(std::numeric_limits<double>::digits10 + 1);
-    out << "idx" << "\t" << "X" << "\t" << "Y" << "\t" << "component" << std::endl;
-
-    // refine order by weakly connected components
-    std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components = algorithms::weakly_connected_components(&graph);
-    std::vector<std::pair<double, uint64_t>> weak_component_order;
+void to_tsv(std::ostream &out, const std::vector<double> &X, const std::vector<double> &Y, const std::vector<std::vector<handlegraph::handle_t>> weak_components) {
+    /*std::vector<std::pair<double, uint64_t>> weak_component_order;
     for (uint64_t i = 0; i < weak_components.size(); ++i) {
         auto& weak_component = weak_components[i];
         uint64_t id_sum = 0;
@@ -24,19 +18,19 @@ void to_tsv(std::ostream &out, const std::vector<double> &X, const std::vector<d
         double avg_id = id_sum / (double) weak_component.size();
         weak_component_order.push_back(std::make_pair(avg_id, i));
     }
-    std::sort(weak_component_order.begin(), weak_component_order.end());
+    std::sort(weak_component_order.begin(), weak_component_order.end());*/
+
+    out << std::setprecision(std::numeric_limits<double>::digits10 + 1);
+    out << "idx" << "\t" << "X" << "\t" << "Y" << "\t" << "component" << std::endl;
 
     uint64_t idx = 0;
-    for (auto& avg_and_rank : weak_component_order) {
-        auto& weak_component = weak_components[avg_and_rank.second];
+    for (uint64_t num_component = 0; num_component < weak_components.size(); ++num_component) {
+        for (auto& handle :  weak_components[num_component]) {
+            uint64_t pos = 2 * number_bool_packing::unpack_number(handle);
 
-        for (auto& id : weak_component) {
-            uint64_t pos = 2 * number_bool_packing::unpack_number(graph.get_handle(id));
-
-            out << idx++ << "\t" << X[pos] << "\t" << Y[pos] << "\t" << avg_and_rank.second <<std::endl;
-            out << idx++ << "\t" << X[pos + 1] << "\t" << Y[pos + 1] << "\t" << avg_and_rank.second << std::endl;
+            out << idx++ << "\t" << X[pos] << "\t" << Y[pos] << "\t" << num_component <<std::endl;
+            out << idx++ << "\t" << X[pos + 1] << "\t" << Y[pos + 1] << "\t" << num_component<< std::endl;
         }
-
     }
 
 }

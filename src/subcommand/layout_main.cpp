@@ -343,14 +343,52 @@ int main_layout(int argc, char **argv) {
         Y_final[i++] = y.load();
     }
 
+    // refine order by weakly connected components
+    std::vector<std::vector<handlegraph::handle_t>> weak_components = algorithms::weakly_connected_component_vectors(&graph);
+
+    uint64_t num_components_on_each_dimension = std::ceil(sqrt(weak_components.size()));
+
+    std::cerr << " num_components_on_each_dimension " << num_components_on_each_dimension << std::endl;
+
+    double border = 1000.0;
+    double curr_y_offset = border;
+    std::vector<algorithms::coord_range_2d_t> component_ranges;
+    for (auto& component : weak_components) {
+        component_ranges.emplace_back();
+        auto& component_range = component_ranges.back();
+        for (auto& handle : component) {
+            uint64_t pos = 2 * number_bool_packing::unpack_number(handle);
+            for (uint64_t j = pos; j <= pos+1; ++j) {
+                component_range.include(X_final[j], Y_final[j]);
+            }
+        }
+        component_range.x_offset = component_range.min_x - border;
+        component_range.y_offset = curr_y_offset - component_range.min_y;
+        curr_y_offset += component_range.height() + border;
+    }
+
+    for (uint64_t num_component = 0; num_component < weak_components.size(); ++num_component) {
+        auto& component_range = component_ranges[num_component];
+
+        for (auto& handle :  weak_components[num_component]) {
+            uint64_t pos = 2 * number_bool_packing::unpack_number(handle);
+
+            for (uint64_t j = pos; j <= pos+1; ++j) {
+                X_final[j] -= component_range.x_offset;
+                Y_final[j] += component_range.y_offset;
+            }
+        }
+    }
+
+
     if (tsv_out_file) {
         auto& outfile = args::get(tsv_out_file);
         if (outfile.size()) {
             if (outfile == "-") {
-                algorithms::layout::to_tsv(std::cout, X_final, Y_final, graph);
+                algorithms::layout::to_tsv(std::cout, X_final, Y_final, weak_components);
             } else {
                 ofstream f(outfile.c_str());
-                algorithms::layout::to_tsv(f, X_final, Y_final, graph);
+                algorithms::layout::to_tsv(f, X_final, Y_final, weak_components);
                 f.close();
             }
         }
