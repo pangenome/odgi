@@ -68,7 +68,7 @@ int main_layout(int argc, char **argv) {
                                                                 "iteration where the learning rate is max for path guided linear 1D SGD model (default: 0)",
                                                                 {'F', "iteration-max-learning-rate"});
     args::ValueFlag<uint64_t> p_sgd_zipf_space(parser, "N",
-                                               "the maximum space size of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: min(max path lengths, 10000))",
+                                               "the maximum space size of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: max path lengths))",
                                                {'k', "path-sgd-zipf-space"});
     args::ValueFlag<uint64_t> p_sgd_zipf_space_max(parser, "N", "the maximum space size of the Zipfian distribution beyond which quantization occurs (default: 1000)", {'I', "path-sgd-zipf-space-max"});
     args::ValueFlag<uint64_t> p_sgd_zipf_space_quantization_step(parser, "N", "quantization step when the maximum space size of the Zipfian distribution is exceeded (default: 100)", {'l', "path-sgd-zipf-space-quantization-step"});
@@ -241,7 +241,7 @@ int main_layout(int argc, char **argv) {
         }
     }
     uint64_t max_path_step_count = get_max_path_step_count(path_sgd_use_paths, path_index);
-    path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? std::min(args::get(p_sgd_zipf_space), max_path_step_count) : std::min((uint64_t)10000, max_path_step_count);
+    path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? std::min(args::get(p_sgd_zipf_space), max_path_step_count) : max_path_step_count;
     double path_sgd_max_eta = args::get(p_sgd_eta_max) ? args::get(p_sgd_eta_max) : (double) max_path_step_count * max_path_step_count;
 
     path_sgd_zipf_space_max = args::get(p_sgd_zipf_space_max) ? std::min(path_sgd_zipf_space, args::get(p_sgd_zipf_space_max)) : 1000;
@@ -346,9 +346,8 @@ int main_layout(int argc, char **argv) {
     // refine order by weakly connected components
     std::vector<std::vector<handlegraph::handle_t>> weak_components = algorithms::weakly_connected_component_vectors(&graph);
 
-    uint64_t num_components_on_each_dimension = std::ceil(sqrt(weak_components.size()));
-
-    std::cerr << " num_components_on_each_dimension " << num_components_on_each_dimension << std::endl;
+    //uint64_t num_components_on_each_dimension = std::ceil(sqrt(weak_components.size()));
+    //std::cerr << " num_components_on_each_dimension " << num_components_on_each_dimension << std::endl;
 
     double border = 1000.0;
     double curr_y_offset = border;
