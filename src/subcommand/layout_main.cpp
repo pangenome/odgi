@@ -254,6 +254,11 @@ int main_layout(int argc, char **argv) {
     std::mt19937 rng(dev());
     std::uniform_real_distribution<double> uniform_noise(0, sqrt(graph.get_node_count() * 2));
     std::normal_distribution<double> gaussian_noise(0,  sqrt(graph.get_node_count() * 2));
+    uint64_t total_length = 0;
+    graph.for_each_handle([&](const handle_t &h) {
+                              total_length += graph.get_length(h);
+                          });
+    std::uniform_real_distribution<double> uniform_noise_in_length(0, total_length);
 
     uint64_t len = 0;
     nid_t last_node_id = graph.min_node_id();
@@ -271,39 +276,46 @@ int main_layout(int argc, char **argv) {
 
           uint64_t pos = 2 * number_bool_packing::unpack_number(h);
           switch (layout_initialization) {
-              case 'g': {
-                  graph_X[pos].store(gaussian_noise(rng));
-                  graph_Y[pos].store(gaussian_noise(rng));
-                  graph_X[pos + 1].store(gaussian_noise(rng));
-                  graph_Y[pos + 1].store(gaussian_noise(rng));
-                  break;
-              }
-              case 'u': {
-                  graph_X[pos].store(len);
-                  graph_Y[pos].store(uniform_noise(rng));
-                  len += graph.get_length(h);
-                  graph_X[pos + 1].store(len);
-                  graph_Y[pos + 1].store(uniform_noise(rng));
-                  break;
-              }
-              case 'h': {
-                  d2xy(square_space, pos, &x, &y);
-                  graph_X[pos].store(x);
-                  graph_Y[pos].store(y);
-                  d2xy(square_space, pos + 1, &x, &y);
-                  graph_X[pos + 1].store(x);
-                  graph_Y[pos + 1].store(y);
-                  break;
-              }
-              default: {
-                  graph_X[pos].store(len);
-                  graph_Y[pos].store(gaussian_noise(rng));
-                  len += graph.get_length(h);
-                  graph_X[pos + 1].store(len);
-                  graph_Y[pos + 1].store(gaussian_noise(rng));
-              }
+          case 'g': {
+              graph_X[pos].store(gaussian_noise(rng));
+              graph_Y[pos].store(gaussian_noise(rng));
+              graph_X[pos + 1].store(gaussian_noise(rng));
+              graph_Y[pos + 1].store(gaussian_noise(rng));
+              break;
           }
-
+          case 'u': {
+              graph_X[pos].store(len);
+              graph_Y[pos].store(uniform_noise(rng));
+              len += graph.get_length(h);
+              graph_X[pos + 1].store(len);
+              graph_Y[pos + 1].store(uniform_noise(rng));
+              break;
+          }
+          case 'r': {
+              graph_X[pos].store(uniform_noise_in_length(rng));
+              graph_Y[pos].store(uniform_noise_in_length(rng));
+              len += graph.get_length(h);
+              graph_X[pos + 1].store(uniform_noise_in_length(rng));
+              graph_Y[pos + 1].store(uniform_noise_in_length(rng));
+              break;
+          }
+          case 'h': {
+              d2xy(square_space, pos, &x, &y);
+              graph_X[pos].store(x);
+              graph_Y[pos].store(y);
+              d2xy(square_space, pos + 1, &x, &y);
+              graph_X[pos + 1].store(x);
+              graph_Y[pos + 1].store(y);
+              break;
+          }
+          default: {
+              graph_X[pos].store(len);
+              graph_Y[pos].store(gaussian_noise(rng));
+              len += graph.get_length(h);
+              graph_X[pos + 1].store(len);
+              graph_Y[pos + 1].store(gaussian_noise(rng));
+          }
+          }
           //std::cerr << pos << ": " << graph_X[pos] << "," << graph_Y[pos] << " ------ " << graph_X[pos + 1] << "," << graph_Y[pos + 1] << std::endl;
       });
 
