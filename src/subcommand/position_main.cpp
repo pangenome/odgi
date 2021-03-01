@@ -228,7 +228,6 @@ int main_position(int argc, char** argv) {
             uint64_t max_dist = 0;
             bool found_hit = false;
             uint64_t adj_last_node = 0;
-            walked_to_hit_ref = is_rev(pos) ? graph.get_length(start_handle) - offset(pos) : offset(pos);
             odgi::algorithms::bfs(
                 graph,
                 [&](const handle_t& h, const uint64_t& r, const uint64_t& l, const uint64_t& d) {
