@@ -68,7 +68,7 @@ int main_layout(int argc, char **argv) {
                                                                 "iteration where the learning rate is max for path guided linear 1D SGD model (default: 0)",
                                                                 {'F', "iteration-max-learning-rate"});
     args::ValueFlag<uint64_t> p_sgd_zipf_space(parser, "N",
-                                               "the maximum space size of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: min(max path lengths, 10000))",
+                                               "the maximum space size of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: max path lengths))",
                                                {'k', "path-sgd-zipf-space"});
     args::ValueFlag<uint64_t> p_sgd_zipf_space_max(parser, "N", "the maximum space size of the Zipfian distribution beyond which quantization occurs (default: 1000)", {'I', "path-sgd-zipf-space-max"});
     args::ValueFlag<uint64_t> p_sgd_zipf_space_quantization_step(parser, "N", "quantization step when the maximum space size of the Zipfian distribution is exceeded (default: 100)", {'l', "path-sgd-zipf-space-quantization-step"});
@@ -241,29 +241,11 @@ int main_layout(int argc, char **argv) {
         }
     }
     uint64_t max_path_step_count = get_max_path_step_count(path_sgd_use_paths, path_index);
-    path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? std::min(args::get(p_sgd_zipf_space), max_path_step_count) : std::min((uint64_t)10000, max_path_step_count);
+    path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? std::min(args::get(p_sgd_zipf_space), max_path_step_count) : max_path_step_count;
     double path_sgd_max_eta = args::get(p_sgd_eta_max) ? args::get(p_sgd_eta_max) : (double) max_path_step_count * max_path_step_count;
 
     path_sgd_zipf_space_max = args::get(p_sgd_zipf_space_max) ? std::min(path_sgd_zipf_space, args::get(p_sgd_zipf_space_max)) : 1000;
     path_sgd_zipf_space_quantization_step = args::get(p_sgd_zipf_space_quantization_step) ? std::max((uint64_t)2, args::get(p_sgd_zipf_space_quantization_step)) : 100;
-
-    /*// refine order by weakly connected components
-      std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components = algorithms::weakly_connected_components(
-      &graph);
-      #ifdef debug_components
-      std::cerr << "components count: " << weak_components.size() << std::endl;
-      #endif
-      std::vector<std::pair<double, uint64_t>> weak_component_order;
-      for (int i = 0; i < weak_components.size(); i++) {
-      auto &weak_component = weak_components[i];
-      uint64_t id_sum = 0;
-      for (auto node_id : weak_component) {
-      id_sum += node_id;
-      }
-      double avg_id = id_sum / (double) weak_component.size();
-      weak_component_order.push_back(std::make_pair(avg_id, i));
-      }
-      std::sort(weak_component_order.begin(), weak_component_order.end());*/
 
     std::vector<std::atomic<double>> graph_X(graph.get_node_count() * 2);  // Graph's X coordinates for node+ and node-
     std::vector<std::atomic<double>> graph_Y(graph.get_node_count() * 2);  // Graph's Y coordinates for node+ and node-
@@ -361,14 +343,51 @@ int main_layout(int argc, char **argv) {
         Y_final[i++] = y.load();
     }
 
+    // refine order by weakly connected components
+    std::vector<std::vector<handlegraph::handle_t>> weak_components = algorithms::weakly_connected_component_vectors(&graph);
+
+    //uint64_t num_components_on_each_dimension = std::ceil(sqrt(weak_components.size()));
+    //std::cerr << " num_components_on_each_dimension " << num_components_on_each_dimension << std::endl;
+
+    double border = 1000.0;
+    double curr_y_offset = border;
+    std::vector<algorithms::coord_range_2d_t> component_ranges;
+    for (auto& component : weak_components) {
+        component_ranges.emplace_back();
+        auto& component_range = component_ranges.back();
+        for (auto& handle : component) {
+            uint64_t pos = 2 * number_bool_packing::unpack_number(handle);
+            for (uint64_t j = pos; j <= pos+1; ++j) {
+                component_range.include(X_final[j], Y_final[j]);
+            }
+        }
+        component_range.x_offset = component_range.min_x - border;
+        component_range.y_offset = curr_y_offset - component_range.min_y;
+        curr_y_offset += component_range.height() + border;
+    }
+
+    for (uint64_t num_component = 0; num_component < weak_components.size(); ++num_component) {
+        auto& component_range = component_ranges[num_component];
+
+        for (auto& handle :  weak_components[num_component]) {
+            uint64_t pos = 2 * number_bool_packing::unpack_number(handle);
+
+            for (uint64_t j = pos; j <= pos+1; ++j) {
+                X_final[j] -= component_range.x_offset;
+                Y_final[j] += component_range.y_offset;
+            }
+        }
+    }
+
+
     if (tsv_out_file) {
         auto& outfile = args::get(tsv_out_file);
         if (outfile.size()) {
             if (outfile == "-") {
-                algorithms::layout::to_tsv(std::cout, X_final, Y_final, graph);
+                algorithms::layout::to_tsv(std::cout, X_final, Y_final, weak_components);
             } else {
                 ofstream f(outfile.c_str());
-                algorithms::layout::to_tsv(f, X_final, Y_final, graph);
+                algorithms::layout::to_tsv(f, X_final, Y_final, weak_components);
                 f.close();
             }
         }

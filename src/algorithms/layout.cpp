@@ -1,4 +1,5 @@
 #include "layout.hpp"
+#include "draw.hpp"
 
 namespace odgi {
 namespace algorithms {
@@ -6,13 +7,32 @@ namespace layout {
 
 using namespace handlegraph;
 
-void to_tsv(std::ostream &out, const std::vector<double> &X, const std::vector<double> &Y, const HandleGraph &graph) {
-    uint64_t n = graph.get_node_count() * 2;
-    out << std::setprecision(std::numeric_limits<double>::digits10 + 1);
-    out << "idx" << "\t" << "X" << "\t" << "Y" << std::endl;
-    for (uint64_t i = 0; i < n; ++i) {
-        out << i << "\t" << X[i] << "\t" << Y[i] << std::endl;
+void to_tsv(std::ostream &out, const std::vector<double> &X, const std::vector<double> &Y, const std::vector<std::vector<handlegraph::handle_t>> weak_components) {
+    /*std::vector<std::pair<double, uint64_t>> weak_component_order;
+    for (uint64_t i = 0; i < weak_components.size(); ++i) {
+        auto& weak_component = weak_components[i];
+        uint64_t id_sum = 0;
+        for (auto node_id : weak_component) {
+            id_sum += node_id;
+        }
+        double avg_id = id_sum / (double) weak_component.size();
+        weak_component_order.push_back(std::make_pair(avg_id, i));
     }
+    std::sort(weak_component_order.begin(), weak_component_order.end());*/
+
+    out << std::setprecision(std::numeric_limits<double>::digits10 + 1);
+    out << "idx" << "\t" << "X" << "\t" << "Y" << "\t" << "component" << std::endl;
+
+    uint64_t idx = 0;
+    for (uint64_t num_component = 0; num_component < weak_components.size(); ++num_component) {
+        for (auto& handle :  weak_components[num_component]) {
+            uint64_t pos = 2 * number_bool_packing::unpack_number(handle);
+
+            out << idx++ << "\t" << X[pos] << "\t" << Y[pos] << "\t" << num_component <<std::endl;
+            out << idx++ << "\t" << X[pos + 1] << "\t" << Y[pos + 1] << "\t" << num_component<< std::endl;
+        }
+    }
+
 }
 
 Layout::Layout(const std::vector<double> &X, const std::vector<double> &Y) {

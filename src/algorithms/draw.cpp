@@ -77,7 +77,7 @@ void get_layout(const std::vector<double> &X,
             }
         }
         component_range.x_offset = component_range.min_x - border;
-        component_range.y_offset = curr_y_offset -component_range.min_y;
+        component_range.y_offset = curr_y_offset - component_range.min_y;
         curr_y_offset += component_range.height() + border;
     }
 
