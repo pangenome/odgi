@@ -74,6 +74,14 @@ please refer to <<odgi_bin.adoc#_odgi_bin1, odgi bin>>.
   Colors paths by their names looking at the prefix before the given character C.
 
 
+=== Intervals selection
+
+*-r, --pangenomic-range*::
+  Nucleotide range to visualize: `STRING=[PATH:]start-end`. `\*-end` for `[0,end]`; `start-*` for `[start,pangenome_length]`.
+  If no PATH is specified, the nucleotide positions refer to the pangenome's sequence (i.e., the sequence obtained arranging all the graph's node
+  from left to right).
+
+
 === Paths selection
 
 *-p, --paths-to-display*::

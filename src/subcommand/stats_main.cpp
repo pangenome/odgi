@@ -70,14 +70,14 @@ int main_stats(int argc, char** argv) {
     if (!args::get(mean_links_length) && !args::get(sum_of_path_node_distances)){
         if (args::get(path_statistics)){
             std::cerr
-                    << "[odgi stats] error: Please specify the -l/--mean-links-length and/or the -s/--sum-path-nodes-distances options to use the -P/--path-statistics option."
+                    << "[odgi::stats] error: please specify the -l/--mean-links-length and/or the -s/--sum-path-nodes-distances options to use the -P/--path-statistics option."
                     << std::endl;
             return 1;
         }
 
         if (layout_in_file){
             std::cerr
-                    << "[odgi stats] error: Please specify the -l/--mean-links-length and/or the -s/--sum-path-nodes-distances options to specify the layout coordinates (-c/--coords-in option)."
+                    << "[odgi::stats] error: please specify the -l/--mean-links-length and/or the -s/--sum-path-nodes-distances options to specify the layout coordinates (-c/--coords-in option)."
                     << std::endl;
             return 1;
         }
@@ -85,19 +85,19 @@ int main_stats(int argc, char** argv) {
 
     if (args::get(penalize_diff_orientation) && !args::get(sum_of_path_node_distances)){
         std::cerr
-                << "[odgi stats] error: Please specify the -s/--sum-path-nodes-distances option to use the -d/--penalize-different-orientation option."
+                << "[odgi::stats] error: please specify the -s/--sum-path-nodes-distances option to use the -d/--penalize-different-orientation option."
                 << std::endl;
         return 1;
     }
     if (args::get(dont_penalize_gap_links)){
         if (!args::get(mean_links_length)) {
             std::cerr
-                    << "[odgi stats] error: Please specify the -l/--mean-links-length option to use the -g/--no-gap-links option."
+                    << "[odgi::stats] error: please specify the -l/--mean-links-length option to use the -g/--no-gap-links option."
                     << std::endl;
             return 1;
         } else if (layout_in_file){
             std::cerr
-                    << "[odgi stats] error: The -g/--no-gap-links option can be specified together with the layout coordinates (-c/--coords-in option)."
+                    << "[odgi::stats] error: The -g/--no-gap-links option can be specified together with the layout coordinates (-c/--coords-in option)."
                     << std::endl;
             return 1;
         }
@@ -222,7 +222,7 @@ int main_stats(int argc, char** argv) {
         graph.for_each_handle([&](const handle_t &h) {
             nid_t node_id = graph.get_id(h);
             if (node_id - last_node_id > 1) {
-                std::cerr << "[odgi stats] error: The graph is not optimized. Please run 'odgi sort' using -O, --optimize" << std::endl;
+                std::cerr << "[odgi::stats] error: The graph is not optimized. Please run 'odgi sort' using -O, --optimize" << std::endl;
                 exit(1);
             }
             last_node_id = node_id;

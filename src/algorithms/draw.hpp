@@ -39,10 +39,10 @@ struct coord_range_2d_t {
     double max_y = std::numeric_limits<double>::min();
     double x_offset = 0;
     double y_offset = 0;
-    double width(void) {
+    double width() {
         return max_x - min_x;
     }
-    double height(void) {
+    double height() {
         return max_y - min_y;
     }
     void include(const double& x,

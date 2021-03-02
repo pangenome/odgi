@@ -47,7 +47,7 @@ int main_bin(int argc, char** argv) {
     }
 
     if (!dg_in_file) {
-        std::cerr << "[odgi bin] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
+        std::cerr << "[odgi::bin] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
         return 1;
     }
 
@@ -84,7 +84,7 @@ int main_bin(int argc, char** argv) {
     // our aggregation matrix
     std::vector<std::pair<std::string, std::vector<algorithms::path_info_t>>> table;
     if (args::get(num_bins) + args::get(bin_width) == 0) {
-        std::cerr << "[odgi bin] error: a bin width or a bin count is required" << std::endl;
+        std::cerr << "[odgi::bin] error: a bin width or a bin count is required" << std::endl;
         return 1;
     }
 

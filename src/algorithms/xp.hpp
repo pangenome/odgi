@@ -68,6 +68,7 @@ namespace xp {
 
         /// Build the path index from a simple graph.
         void from_handle_graph(const handlegraph::PathHandleGraph &graph);
+        void from_handle_graph(const handlegraph::PathHandleGraph &graph, std::string basename);
 
         /// helper to builder
         void from_handle_graph_impl(const handlegraph::PathHandleGraph &graph, const std::string& basename);

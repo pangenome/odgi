@@ -21,8 +21,12 @@ namespace xp {
 
     /// build the graph from a graph handle
     void XP::from_handle_graph(const PathHandleGraph &graph) {
-        // create temporary file for path names
         std::string basename;
+        from_handle_graph(graph, basename);
+    }
+
+    void XP::from_handle_graph(const PathHandleGraph &graph, std::string basename) {
+        // create temporary file for path names
         if (basename.empty()) {
             basename = temp_file::create();
         }
@@ -770,7 +774,10 @@ namespace xp {
 
             // Get the default temp dir from environment variables.
             if (temp_dir.empty()) {
-                const char *system_temp_dir = nullptr;
+                char* cwd = get_current_dir_name();
+                temp_dir = std::string(cwd);
+                free(cwd);
+                /*const char *system_temp_dir = nullptr;
                 for (const char *var_name : {"TMPDIR", "TMP", "TEMP", "TEMPDIR", "USERPROFILE"}) {
                     if (system_temp_dir == nullptr) {
                         system_temp_dir = getenv(var_name);
@@ -782,7 +789,7 @@ namespace xp {
                     free(cwd);
                 } else {
                     temp_dir = system_temp_dir;
-                }
+                }*/
             }
 
             return temp_dir;
