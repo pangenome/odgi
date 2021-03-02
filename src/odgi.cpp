@@ -17,6 +17,9 @@ const node_t& graph_t::get_node_cref(const handle_t& handle) const {
 /// Method to check if a node exists by ID
 bool graph_t::has_node(nid_t node_id) const {
     uint64_t rank = get_node_rank(node_id);
+
+    //std::cerr << node_id << " has_node: " << rank << " ----- " << node_v.size() << ": " << (rank >= node_v.size() ? false : node_v[rank] != nullptr) << std::endl;
+
     return (rank >= node_v.size() ? false : node_v[rank] != nullptr);
 }
 
@@ -504,7 +507,9 @@ handle_t graph_t::create_handle(const std::string& sequence) {
 handle_t graph_t::create_handle(const std::string& sequence, const nid_t& id) {
     assert(sequence.size());
     assert(id > 0);
+    //std::cerr << "odgi_::create_handle: id " << id << std::endl;
     assert(!has_node(id));
+
     if (id > node_v.size()) {
         uint64_t to_add = id - node_v.size();
         uint64_t old_size = node_v.size();
