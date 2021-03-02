@@ -176,7 +176,8 @@ int main_bin(int argc, char** argv) {
                 write_ranges_json(info.ranges);
                 std::cout  << "]";
             } else {
-                std::cout << bin_id;
+                std::cout << "[" << bin_id << ","
+                          << info.mean_cov << "]";
             }
             if (i+1 != bins.size()) {
                 std::cout << ",";
