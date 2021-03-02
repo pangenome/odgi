@@ -23,8 +23,10 @@ namespace odgi {
                 "breaks a graph into connected components in their own files in the given directory");
         args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
         args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-        args::ValueFlag<std::string> dg_out_file(parser, "FILE",
-                                                 "store the graph with the generated paths in this file", {'o', "out"});
+        args::ValueFlag<std::string> _prefix(parser, "STRING",
+                                             "write output connected components files with the given prefix. "
+                                             "Files for component i will be named chunk `i` will be named: `STRING.i.og` "
+                                             "(default: `component`)\"", {'p', "prefix"});
         args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use", {'t', "threads"});
         args::Flag _debug(parser, "debug", "print information about the components and the progress to stderr",
                           {'d', "debug"});
@@ -51,17 +53,10 @@ namespace odgi {
             return 1;
         }
 
-        if (!dg_out_file) {
-            std::cerr
-                    << "[odgi::explode] error: please specify an output file to where to store the graph via -o=[FILE], --out=[FILE]."
-                    << std::endl;
-            return 1;
-        }
-
         graph_t graph;
         assert(argc > 0);
         std::string infile = args::get(dg_in_file);
-        if (infile.size()) {
+        if (!infile.empty()) {
             if (infile == "-") {
                 graph.deserialize(std::cin);
             } else {
@@ -75,12 +70,18 @@ namespace odgi {
 
         uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
 
-        std::string output_dir = ".";
+        std::string output_dir_plus_prefix = "./";
+        if (!args::get(_prefix).empty()) {
+            output_dir_plus_prefix += args::get(_prefix);
+        } else {
+            output_dir_plus_prefix += "component";
+        }
 
-        std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components = algorithms::weakly_connected_components(
-                &graph);
+        std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components =
+                algorithms::weakly_connected_components(&graph);
 
-        for (uint64_t component_index; component_index < weak_components.size(); ++component_index) {
+#pragma omp parallel for schedule(static, 1) num_threads(num_threads)
+        for (uint64_t component_index = 0; component_index < weak_components.size(); ++component_index) {
             auto &weak_component = weak_components[component_index];
 
             graph_t subgraph;
@@ -93,9 +94,8 @@ namespace odgi {
             algorithms::add_subpaths_to_subgraph(graph, subgraph, false);
 
             // Save the component
-            string filename = output_dir + "/component" + to_string(component_index) + ".og";
-
-            //todo Now report what paths went into the component in parseable TSV
+            string filename = output_dir_plus_prefix + "." + to_string(component_index) + ".og";
+            std::cerr << filename << std::endl;
 
             ofstream f(filename);
             subgraph.serialize(f);
