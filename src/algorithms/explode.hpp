@@ -6,6 +6,7 @@
 #include "odgi.hpp"
 #include "handlegraph/path_position_handle_graph.hpp"
 #include "weakly_connected_components.hpp"
+#include "progress.hpp"
 
 namespace odgi {
     namespace algorithms {

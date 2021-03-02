@@ -79,6 +79,9 @@ namespace odgi {
 
         std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components =
                 algorithms::weakly_connected_components(&graph);
+        algorithms::progress_meter::ProgressMeter component_progress(weak_components.size(), "[odgi::explode] exploding components");
+
+        std::mutex debug_mutex;
 
 #pragma omp parallel for schedule(static, 1) num_threads(num_threads)
         for (uint64_t component_index = 0; component_index < weak_components.size(); ++component_index) {
@@ -95,131 +98,31 @@ namespace odgi {
 
             // Save the component
             string filename = output_dir_plus_prefix + "." + to_string(component_index) + ".og";
-            std::cerr << filename << std::endl;
 
             ofstream f(filename);
             subgraph.serialize(f);
             f.close();
 
-            if (debug) {
-                std::cerr << "Written component num. " << component_index
-                          << " - num. of nodes " << subgraph.get_node_count()
-                          << " - num. of paths: " << subgraph.get_path_count()
-                          << std::endl;
-            }
+            /*if (debug) {
+                {
+                    std::lock_guard<std::mutex> guard(debug_mutex);
 
+                    std::cerr << "Written component num. " << component_index
+                              << " - num. of nodes " << subgraph.get_node_count()
+                              << " - num. of paths: " << subgraph.get_path_count()
+                              << std::endl;
+                }
+            }*/
+
+            if (debug) {
+                component_progress.increment(1);
+            }
         }
 
+        if (debug) {
+            component_progress.finish();
+        }
 
-
-
-
-
-        /*
-        // Count through the components we build
-        size_t component_index = 0;
-
-        // Track all the nodes we've already assigned to subgraphs
-        unordered_set<handle_t> node_assigned;
-
-        graph.for_each_handle([&](const handle_t &start) {
-            if (!node_assigned.count(start)) {
-                std::cerr << "component_index " << component_index << std::endl;
-
-                // It's a new connected component!
-                graph_t component;
-
-                // We want to track the path names in each component
-                set<path_handle_t> paths;
-
-                deque<handle_t> queue{start};
-
-                // Mark this connected node as used in a component.
-                node_assigned.insert(start);
-
-                while (!queue.empty()) {
-                    handle_t handle = queue.front();
-                    queue.pop_front();
-
-                    // Copy node over
-                    handle_t new_handle = component.create_handle(graph.get_sequence(handle), graph.get_id(handle));
-
-                    //std::cerr << "A " << graph.get_id(handle) << std::endl;
-                    //std::cerr << "B " << component.get_id(new_handle) << std::endl;
-
-                    // Copy over its edges and queue the next handles
-                    graph.follow_edges(handle, false, [&](const handle_t &next) {
-                        //std::cerr << "next " << component.get_id(next) << std::endl;
-
-                        if (component.has_node(graph.get_id(next))) {
-                            component.create_edge(new_handle,
-                                                  component.get_handle(graph.get_id(next), graph.get_is_reverse(next)));
-                        }
-                        if (!node_assigned.count(next)) {
-                            queue.push_back(next);
-                            node_assigned.insert(next);
-                        }
-                    });
-                    graph.follow_edges(handle, true, [&](const handle_t &prev) {
-                        //std::cerr << "prev " << component.get_id(prev) << std::endl;
-
-                        if (component.has_node(graph.get_id(prev))) {
-                            component.create_edge(component.get_handle(graph.get_id(prev),
-                                                                       graph.get_is_reverse(prev)), new_handle);
-                        }
-                        if (!node_assigned.count(prev)) {
-                            queue.push_back(prev);
-                            node_assigned.insert(prev);
-                        }
-                    });
-
-                    // Record paths
-                    graph.for_each_step_on_handle(handle, [&](const step_handle_t &step) {
-                        paths.insert(graph.get_path_handle_of_step(step));
-                    });
-                }
-
-                //std::cerr << "C" << std::endl;
-
-                // Copy the paths over
-                for (path_handle_t path_handle : paths) {
-                    path_handle_t new_path_handle = component.create_path_handle(graph.get_path_name(path_handle),
-                                                                                 graph.get_is_circular(path_handle));
-                    for (handle_t handle : graph.scan_path(path_handle)) {
-                        component.append_step(new_path_handle, component.get_handle(graph.get_id(handle),
-                                                                                    graph.get_is_reverse(handle)));
-                    }
-                }
-
-                // Save the component
-                string filename = output_dir + "/component" + to_string(component_index) + ".og";
-
-                // Now report what paths went into the component in parseable TSV
-                cout << filename;
-                for (auto &path_handle : paths) {
-                    cout << "\t" << graph.get_path_name(path_handle);
-                }
-                cout << endl;
-
-                ofstream f(filename);
-                component.serialize(f);
-                f.close();
-
-                component_index++;
-            }
-        });
-*/
-
-//        std::string outfile = args::get(dg_out_file);
-//        if (outfile.size()) {
-//            if (outfile == "-") {
-//                graph.serialize(std::cout);
-//            } else {
-//                ofstream f(outfile.c_str());
-//                graph.serialize(f);
-//                f.close();
-//            }
-//        }
         return 0;
     }
 
