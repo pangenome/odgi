@@ -27,6 +27,7 @@ namespace odgi {
                                              "write output connected components files with the given prefix. "
                                              "Files for component i will be named chunk `i` will be named: `STRING.i.og` "
                                              "(default: `component`)\"", {'p', "prefix"});
+        args::Flag _optimize(parser, "optimize", "compact the node ID space in each connected component", {'O', "optimize"});
         args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use", {'t', "threads"});
         args::Flag _debug(parser, "debug", "print information about the components and the progress to stderr",
                           {'d', "debug"});
@@ -67,6 +68,7 @@ namespace odgi {
         }
 
         bool debug = args::get(_debug);
+        bool optimize = args::get(_optimize);
 
         uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
 
@@ -96,9 +98,13 @@ namespace odgi {
             algorithms::expand_subgraph_by_steps(graph, subgraph, numeric_limits<uint64_t>::max(), false);
             algorithms::add_subpaths_to_subgraph(graph, subgraph, false);
 
-            // Save the component
+            if (optimize) {
+                subgraph.optimize();
+            }
+
             string filename = output_dir_plus_prefix + "." + to_string(component_index) + ".og";
 
+            // Save the component
             ofstream f(filename);
             subgraph.serialize(f);
             f.close();
