@@ -245,6 +245,15 @@ namespace odgi {
             algorithms_expand_subgraph_by_steps(graph, subgraph, numeric_limits<uint64_t>::max(), false);
             algorithms_add_subpaths_to_subgraph(graph, subgraph, false);
 
+            // Save the component
+            string filename = output_dir + "/component" + to_string(component_index) + ".og";
+
+            //todo Now report what paths went into the component in parseable TSV
+
+            ofstream f(filename);
+            subgraph.serialize(f);
+            f.close();
+
             std::cerr << component_index << ": " << subgraph.get_node_count() << " - " << subgraph.get_path_count() << std::endl;
         }
 
