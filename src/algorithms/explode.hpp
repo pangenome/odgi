@@ -18,7 +18,6 @@ namespace odgi {
         void expand_subgraph_by_steps(const graph_t &source, graph_t &subgraph, const uint64_t &steps,
                                       bool forward_only);
 
-        void add_subpaths_to_subgraph(const graph_t &source, graph_t &subgraph,
-                                      bool subpath_naming);
+        void add_full_paths_to_component(const graph_t &source, graph_t &component);
     }
 }
