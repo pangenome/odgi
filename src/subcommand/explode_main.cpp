@@ -20,16 +20,16 @@ namespace odgi {
         --argc;
 
         args::ArgumentParser parser(
-                "breaks a graph into connected components in their own files in the given directory");
+                "breaks a graph into connected components in their own files");
         args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
         args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
         args::ValueFlag<std::string> _prefix(parser, "STRING",
-                                             "write output connected components files with the given prefix. "
-                                             "Files for component i will be named chunk `i` will be named: `STRING.i.og` "
+                                             "write each connected component in a file with the given prefix. "
+                                             "The file for the component `i` will be named `STRING.i.og` "
                                              "(default: `component`)\"", {'p', "prefix"});
         args::Flag _optimize(parser, "optimize", "compact the node ID space in each connected component",
                              {'O', "optimize"});
-        args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use", {'t', "threads"});
+        args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use (to write the components in parallel)", {'t', "threads"});
         args::Flag _debug(parser, "debug", "print information about the components and the progress to stderr",
                           {'d', "debug"});
 

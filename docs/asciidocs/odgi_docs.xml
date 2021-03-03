@@ -3,11 +3,11 @@
 <?asciidoc-numbered?>
 <article xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" version="5.0" xml:lang="en">
 <info>
-<title>Reference Documentation for ODGI v0.4.1</title>
+<title>Reference Documentation for ODGI v0.6.0</title>
 <date>2020-06-23</date>
 <author>
 <personname>
-<firstname>Simon Heumos, Erik Garrison</firstname>
+<firstname>Simon Heumos, Andrea Guarracino, Erik Garrison</firstname>
 </personname>
 </author>
 <authorinitials>S</authorinitials>

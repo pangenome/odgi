@@ -2,9 +2,9 @@
 ifdef::backend-manpage[]
 Andrea Guarracino
 :doctype: manpage
-:release-version: v0.4.1 
+:release-version: v0.6.0
 :man manual: odgi cover
-:man source: odgi v0.4.1 
+:man source: odgi v0.6.0
 :page-layout: base
 endif::[]
 
@@ -83,7 +83,7 @@ Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
 
 == AUTHORS
 
-*odgi cover* was written by Erik Garrison.
+*odgi cover* was written by Andrea Guarracino.
 
 ifdef::backend-manpage[]
 == RESOURCES
