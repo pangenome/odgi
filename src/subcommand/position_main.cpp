@@ -395,7 +395,7 @@ int main_position(int argc, char** argv) {
 #pragma omp parallel for schedule(dynamic,1)
     for (auto& path_range : path_ranges) {
         auto pos_start = get_graph_pos(path_range.begin);
-        auto pos_end = get_graph_pos(path_range.begin);
+        auto pos_end = get_graph_pos(path_range.end);
         if (id(pos_start) && id(pos_end)) {
             lift_result_t lift_begin;
             lift_result_t lift_end;
@@ -404,18 +404,20 @@ int main_position(int argc, char** argv) {
                 std::cout << id(pos_start) << "," << offset(pos_start) << "," << is_rev(pos_start) << "\t"
                           << id(pos_end) << "," << offset(pos_end) << "," << (is_rev(pos_end)?"-":"+") << "\t"
                           << path_range.data << std::endl;
-            } else if (get_position(pos_start, lift_begin) && get_position(pos_end, lift_end)) {
+            } else if (get_position(pos_start, lift_begin)
+                       && get_position(pos_end, lift_end)) {
                 bool ref_is_rev = false;
                 path_handle_t p_begin = graph.get_path_handle_of_step(lift_begin.ref_hit);
                 path_handle_t p_end = graph.get_path_handle_of_step(lift_end.ref_hit);
-                // assert these to be equal......
+                // XXX TODO assert these to be equal......
                 // TODO update to make sure they're the same
 #pragma omp critical (cout)
-                std::cout << graph.get_path_name(p_begin)
-                          << "\t" << lift_begin.path_offset
-                          << "\t" << lift_end.path_offset
-                          << "\t" << (lift_begin.is_rev_vs_ref ^ path_range.is_rev ? "-" : "+")
-                          << "\t" << path_range.data << std::endl;
+                std::cout << graph.get_path_name(p_begin) << "\t"
+                          << lift_begin.path_offset << "\t"
+                          << graph.get_path_name(p_end) << "\t"
+                          << lift_end.path_offset << "\t"
+                          << (lift_begin.is_rev_vs_ref ^ path_range.is_rev ? "-" : "+") << "\t"
+                          << path_range.data << std::endl;
                     //<< walked_to_hit_ref << "\t" << (is_rev_vs_ref ? "-" : "+") << std::endl;
             }
         }
