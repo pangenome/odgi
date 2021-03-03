@@ -27,7 +27,8 @@ namespace odgi {
                                              "write output connected components files with the given prefix. "
                                              "Files for component i will be named chunk `i` will be named: `STRING.i.og` "
                                              "(default: `component`)\"", {'p', "prefix"});
-        args::Flag _optimize(parser, "optimize", "compact the node ID space in each connected component", {'O', "optimize"});
+        args::Flag _optimize(parser, "optimize", "compact the node ID space in each connected component",
+                             {'O', "optimize"});
         args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use", {'t', "threads"});
         args::Flag _debug(parser, "debug", "print information about the components and the progress to stderr",
                           {'d', "debug"});
@@ -81,7 +82,14 @@ namespace odgi {
 
         std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components =
                 algorithms::weakly_connected_components(&graph);
-        algorithms::progress_meter::ProgressMeter component_progress(weak_components.size(), "[odgi::explode] exploding components");
+
+        std::unique_ptr<algorithms::progress_meter::ProgressMeter> component_progress;
+        if (debug) {
+            component_progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+                    weak_components.size(), "[odgi::explode] exploding components");
+
+            std::cerr << "[odgi::explode] detected " << weak_components.size() << " connected components" << std::endl;
+        }
 
         std::mutex debug_mutex;
 
@@ -121,12 +129,12 @@ namespace odgi {
             }*/
 
             if (debug) {
-                component_progress.increment(1);
+                component_progress->increment(1);
             }
         }
 
         if (debug) {
-            component_progress.finish();
+            component_progress->finish();
         }
 
         return 0;
