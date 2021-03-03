@@ -288,10 +288,10 @@ namespace odgi {
             for (i = 0; i < num_paths_per_component; i++) {
                 // Choose a starting node with minimum coverage and then sort the nodes by id.
                 std::deque<handle_t> path;
-                ips4o::parallel::sort(node_coverage.begin(), node_coverage.end(),
+                std::sort(node_coverage.begin(), node_coverage.end(),
                           [](const node_coverage_t &a, const node_coverage_t &b) -> bool {
                               return (a.second < b.second);
-                          }, nthreads);
+                          });
 
 #ifdef debug_cover
                 std::cerr << node_coverage.front().first << " --- " << node_coverage.front().second << std::endl;
@@ -307,10 +307,10 @@ namespace odgi {
 
                 path.push_back(graph.get_handle(node_coverage.front().first, false));
                 Coverage::increase_coverage(node_coverage.front());
-                ips4o::parallel::sort(node_coverage.begin(), node_coverage.end(),
+                std::sort(node_coverage.begin(), node_coverage.end(),
                           [](const node_coverage_t &a, const node_coverage_t &b) -> bool {
                               return (a.first < b.first);
-                          }, nthreads);
+                          });
 
                 // Extend the path forward if acyclic or in both directions otherwise.
                 bool success = true;
