@@ -561,10 +561,12 @@ int main_position(int argc, char** argv) {
                 // XXX TODO assert these to be equal......
                 // TODO update to make sure they're the same
 #pragma omp critical (cout)
-                std::cout << target_graph.get_path_name(p_begin) << "\t"
-                          << lift_begin.path_offset << "\t"
-                          << target_graph.get_path_name(p_end) << "\t"
-                          << lift_end.path_offset << "\t"
+                std::cout << target_graph.get_path_name(p_begin) << ","
+                          << lift_begin.path_offset << ","
+                          << (lift_begin.is_rev_vs_ref ? "-" : "+") << "\t"
+                          << target_graph.get_path_name(p_end) << ","
+                          << lift_end.path_offset << ","
+                          << (lift_end.is_rev_vs_ref ? "-" : "+") << "\t"
                           << (lift_begin.is_rev_vs_ref ^ path_range.is_rev ? "-" : "+") << "\t"
                           << path_range.data << std::endl;
                     //<< walked_to_hit_ref << "\t" << (is_rev_vs_ref ? "-" : "+") << std::endl;
