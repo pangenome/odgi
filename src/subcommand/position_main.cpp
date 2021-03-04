@@ -307,7 +307,11 @@ int main_position(int argc, char** argv) {
         std::ifstream bed_in(args::get(bed_input).c_str());
         std::string buffer;
         while (std::getline(bed_in, buffer)) {
-            add_bed_range(source_graph, buffer);
+            if (lifting) {
+                add_bed_range(source_graph, buffer);
+            } else {
+                add_bed_range(target_graph, buffer);
+            }
         }
     }
     // todo: bed files
@@ -501,9 +505,9 @@ int main_position(int argc, char** argv) {
     for (auto& path_pos : path_positions) {
         // TODO we need a better input format
         pos_t pos;
-        lift_result_t source_result;
         // handle the lift into the target graph
         if (lifting) {
+            lift_result_t source_result;
             pos_t _pos = get_graph_pos(source_graph, path_pos);
             if (id(_pos) && get_position(source_graph, lift_path_set_source, _pos, source_result)) {
                 pos = get_graph_pos(target_graph,
@@ -543,23 +547,53 @@ int main_position(int argc, char** argv) {
 
 #pragma omp parallel for schedule(dynamic,1)
     for (auto& path_range : path_ranges) {
-        auto pos_start = get_graph_pos(target_graph, path_range.begin);
-        auto pos_end = get_graph_pos(target_graph, path_range.end);
-        if (id(pos_start) && id(pos_end)) {
+        pos_t pos_begin, pos_end;
+        // handle the lift into the target graph
+        if (lifting) {
+            lift_result_t source_begin_result, source_end_result;
+            pos_t _pos_begin = get_graph_pos(source_graph, path_range.begin);
+            pos_t _pos_end = get_graph_pos(source_graph, path_range.end);
+            if (id(_pos_begin) && get_position(source_graph, lift_path_set_source, _pos_begin, source_begin_result)
+                && id(_pos_end) && get_position(source_graph, lift_path_set_source, _pos_end, source_end_result)) {
+                pos_begin = get_graph_pos(target_graph,
+                                          { target_graph.get_path_handle(
+                                                  source_graph.get_path_name(
+                                                      source_graph.get_path_handle_of_step(
+                                                          source_begin_result.ref_hit))),
+                                            (uint64_t)source_begin_result.path_offset,
+                                            source_begin_result.is_rev_vs_ref });
+                pos_end = get_graph_pos(target_graph,
+                                        { target_graph.get_path_handle(
+                                                source_graph.get_path_name(
+                                                    source_graph.get_path_handle_of_step(
+                                                        source_end_result.ref_hit))),
+                                          (uint64_t)source_end_result.path_offset,
+                                          source_end_result.is_rev_vs_ref });
+            } else {
+                pos_begin = make_pos_t(0,false,0); // couldn't lift
+                pos_end = make_pos_t(0,false,0); // couldn't lift
+            }
+        } else {
+            //path_pos = _path_pos;
+            pos_begin = get_graph_pos(target_graph, path_range.begin);
+            pos_end = get_graph_pos(target_graph, path_range.end);
+        }
+        if (id(pos_begin) && id(pos_end)) {
             lift_result_t lift_begin;
             lift_result_t lift_end;
+            // TODO add a GAF-style path to the record to say where the BED range walks in the graph
+            // TODO optionally list out the nodes in this particular range (e.g. those within it in our sort order)
             if (give_graph_pos) {
 #pragma omp critical (cout)
-                std::cout << id(pos_start) << "," << offset(pos_start) << "," << is_rev(pos_start) << "\t"
+                std::cout << id(pos_begin) << "," << offset(pos_begin) << "," << (is_rev(pos_begin)?"-":"+") << "\t"
                           << id(pos_end) << "," << offset(pos_end) << "," << (is_rev(pos_end)?"-":"+") << "\t"
                           << path_range.data << std::endl;
-            } else if (get_position(target_graph, ref_path_set, pos_start, lift_begin)
+            } else if (get_position(target_graph, ref_path_set, pos_begin, lift_begin)
                        && get_position(target_graph, ref_path_set, pos_end, lift_end)) {
                 bool ref_is_rev = false;
                 path_handle_t p_begin = target_graph.get_path_handle_of_step(lift_begin.ref_hit);
                 path_handle_t p_end = target_graph.get_path_handle_of_step(lift_end.ref_hit);
                 // XXX TODO assert these to be equal......
-                // TODO update to make sure they're the same
 #pragma omp critical (cout)
                 std::cout << target_graph.get_path_name(p_begin) << ","
                           << lift_begin.path_offset << ","
