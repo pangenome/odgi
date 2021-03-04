@@ -22,7 +22,7 @@ int main_position(int argc, char** argv) {
     
     args::ArgumentParser parser("position parts of the graph as defined by query criteria");
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-    args::ValueFlag<std::string> og_in_file(parser, "FILE", "describe positions in this graph", {'i', "target"});
+    args::ValueFlag<std::string> og_target_file(parser, "FILE", "describe positions in this graph", {'i', "target"});
     args::ValueFlag<std::string> og_source_file(parser, "FILE", "translate positions from this graph into the target graph using common --lift-paths shared between both graphs [default: use the same source/target graph]", {'x', "source"});
     //args::ValueFlag<std::string> og_out_file(parser, "FILE", "store the graph self index in this file", {'o', "out"});
     args::ValueFlag<std::string> ref_path_name(parser, "PATH_NAME", "translate the given positions into positions relative to this reference path", {'r', "ref-path"});
@@ -53,23 +53,40 @@ int main_position(int argc, char** argv) {
         return 1;
     }
 
-    if (!og_in_file) {
-        std::cerr << "[odgi position] error: please specify an input file via -i=[FILE], --idx=[FILE]." << std::endl;
+    if (!og_target_file) {
+        std::cerr << "[odgi position] error: please specify a target graph via -i=[FILE], --idx=[FILE]." << std::endl;
         return 1;
     }
 
-    graph_t graph;
+    odgi::graph_t target_graph;
     assert(argc > 0);
-    std::string infile = args::get(og_in_file);
+    std::string infile = args::get(og_target_file);
     if (infile.size()) {
         if (infile == "-") {
-            graph.deserialize(std::cin);
+            target_graph.deserialize(std::cin);
         } else {
             ifstream f(infile.c_str());
-            graph.deserialize(f);
+            target_graph.deserialize(f);
             f.close();
         }
     }
+
+    bool lifting = false;
+    odgi::graph_t source_graph; // will be empty if we don't have different source and target
+    if (og_source_file) {
+        lifting = true;
+        std::string infile = args::get(og_source_file);
+        if (infile.size()) {
+            if (infile == "-") {
+                source_graph.deserialize(std::cin);
+            } else {
+                ifstream f(infile.c_str());
+                source_graph.deserialize(f);
+                f.close();
+            }
+        }
+    }
+
     if (args::get(threads)) {
         omp_set_num_threads(args::get(threads));
     }
@@ -82,27 +99,79 @@ int main_position(int argc, char** argv) {
     std::vector<path_handle_t> ref_paths;
     if (ref_path_name) {
         std::string path_name = args::get(ref_path_name);
-        if (!graph.has_path(path_name)) {
+        if (!target_graph.has_path(path_name)) {
             std::cerr << "[odgi position] error: ref path " << path_name << " not found in graph" << std::endl;
             return 1;
         } else {
-            ref_paths.push_back(graph.get_path_handle(path_name));
+            ref_paths.push_back(target_graph.get_path_handle(path_name));
         }
     } else if (ref_path_file) {
         // for thing in things
         std::ifstream refs(args::get(ref_path_file).c_str());
         std::string path_name;
         while (std::getline(refs, path_name)) {
-            if (!graph.has_path(path_name)) {
+            if (!target_graph.has_path(path_name)) {
                 std::cerr << "[odgi position] error: ref path " << path_name << " not found in graph" << std::endl;
                 return 1;
             } else {
-                ref_paths.push_back(graph.get_path_handle(path_name));
+                ref_paths.push_back(target_graph.get_path_handle(path_name));
             }
         }
     } else {
         // using all the paths in the graph
-        graph.for_each_path_handle([&](const path_handle_t& path) { ref_paths.push_back(path); });
+        target_graph.for_each_path_handle([&](const path_handle_t& path) { ref_paths.push_back(path); });
+    }
+
+    // for translating source to target
+    std::vector<path_handle_t> lift_paths_source;
+    std::vector<path_handle_t> lift_paths_target;
+    if ((lift_path_name || lift_path_file) && !lifting) {
+        std::cerr << "[odgi position] error: lifting requires a separate source and target graph, specify --source" << std::endl;
+        return 1;
+    }
+    if (lift_path_name) {
+        std::string path_name = args::get(lift_path_name);
+        if (!target_graph.has_path(path_name)
+            || !source_graph.has_path(path_name)) {
+            std::cerr << "[odgi position] error: lift path " << path_name << " not found in both source and target graph" << std::endl;
+            return 1;
+        } else {
+            lift_paths_source.push_back(source_graph.get_path_handle(path_name));
+            lift_paths_target.push_back(target_graph.get_path_handle(path_name));
+        }
+    } else if (lift_path_file) {
+        // for thing in things
+        std::ifstream refs(args::get(lift_path_file).c_str());
+        std::string path_name;
+        while (std::getline(refs, path_name)) {
+            if (!target_graph.has_path(path_name)
+                || !source_graph.has_path(path_name)) {
+                std::cerr << "[odgi position] error: lift path " << path_name << " not found in both source and target graph" << std::endl;
+                return 1;
+            } else {
+                lift_paths_source.push_back(source_graph.get_path_handle(path_name));
+                lift_paths_target.push_back(target_graph.get_path_handle(path_name));
+            }
+        }
+    } else {
+        // using the common set of paths between the two graphs
+        // make a set intersection
+        std::vector<std::string> lift_names_source, lift_names_target, lift_names_common;
+        source_graph.for_each_path_handle([&](const path_handle_t& path) {
+                                              lift_names_source.push_back(source_graph.get_path_name(path)); });
+        target_graph.for_each_path_handle([&](const path_handle_t& path) {
+                                              lift_names_target.push_back(target_graph.get_path_name(path)); });
+        std::sort(lift_names_source.begin(), lift_names_source.end());
+        std::sort(lift_names_target.begin(), lift_names_target.end());
+        std::set_intersection(lift_names_source.begin(), lift_names_source.end(),
+                              lift_names_target.begin(), lift_names_target.end(),
+                              std::back_inserter(lift_names_common));
+        for (auto& path_name : lift_names_common) {
+            lift_paths_source.push_back(source_graph.get_path_handle(path_name));
+            lift_paths_target.push_back(target_graph.get_path_handle(path_name));
+        }
+        //target_graph.
+        //lift_paths
     }
 
     // these options are exclusive (probably we should say with a warning)
@@ -113,7 +182,8 @@ int main_position(int argc, char** argv) {
     // TODO the parsers here should find the last 2 , delimiters and split on them
     
     auto add_graph_pos =
-        [&](const std::string& buffer) {
+        [&graph_positions](const odgi::graph_t& graph,
+                           const std::string& buffer) {
             auto vals = split(buffer, ',');
             /*
             if (vals.size() != 3) {
@@ -144,7 +214,8 @@ int main_position(int argc, char** argv) {
         };
 
     auto add_path_pos =
-        [&](const std::string& buffer) {
+        [&path_positions](const odgi::graph_t& graph,
+                          const std::string& buffer) {
             auto vals = split(buffer, ',');
             if (vals.size() != 3) {
                 std::cerr << "[odgi position] error: path position record is incomplete" << std::endl;
@@ -165,7 +236,8 @@ int main_position(int argc, char** argv) {
         };
 
     auto add_bed_range =
-        [&](const std::string& buffer) {
+        [&path_ranges](const odgi::graph_t& graph,
+                       const std::string& buffer) {
             auto vals = split(buffer, '\t');
             /*
             if (vals.size() != 3) {
@@ -199,28 +271,28 @@ int main_position(int argc, char** argv) {
     
     if (graph_pos) {
         // if we're given a graph_pos, we'll convert it into a path pos
-        add_graph_pos(args::get(graph_pos));
+        add_graph_pos(source_graph, args::get(graph_pos));
     } else if (graph_pos_file) {
         std::ifstream gpos(args::get(graph_pos_file).c_str());
         std::string buffer;
         while (std::getline(gpos, buffer)) {
-            add_graph_pos(buffer);
+            add_graph_pos(source_graph, buffer);
         }
     } else if (path_pos) {
         // if given a path pos, we convert it into a path pos in our reference set
-        add_path_pos(args::get(path_pos));
+        add_path_pos(source_graph, args::get(path_pos));
     } else if (path_pos_file) {
         // if we're given a file of path positions, we'll convert them all
         std::ifstream refs(args::get(path_pos_file).c_str());
         std::string buffer;
         while (std::getline(refs, buffer)) {
-            add_path_pos(buffer);
+            add_path_pos(source_graph, buffer);
         }
     } else if (bed_input) {
         std::ifstream bed_in(args::get(bed_input).c_str());
         std::string buffer;
         while (std::getline(bed_in, buffer)) {
-            add_bed_range(buffer);
+            add_bed_range(source_graph, buffer);
         }
     }
     // todo: bed files
@@ -367,12 +439,12 @@ int main_position(int argc, char** argv) {
         // do a little BFS, bounded by our limit
         // now, if we found our hit, print
         lift_result_t result;
-        if (get_position(graph, ref_path_set, pos, result)) {
+        if (get_position(target_graph, ref_path_set, pos, result)) {
             bool ref_is_rev = false;
-            path_handle_t p = graph.get_path_handle_of_step(result.ref_hit);
+            path_handle_t p = target_graph.get_path_handle_of_step(result.ref_hit);
 #pragma omp critical (cout)
             std::cout << id(pos) << "," << offset(pos) << "," << (is_rev(pos) ? "-" : "+") << "\t"
-                      << graph.get_path_name(p) << "," << result.path_offset << "," << (ref_is_rev ? "-" : "+") << "\t"
+                      << target_graph.get_path_name(p) << "," << result.path_offset << "," << (ref_is_rev ? "-" : "+") << "\t"
                       << result.walked_to_hit_ref << "\t" << (result.is_rev_vs_ref ? "-" : "+") << std::endl;
         }
     }
@@ -380,20 +452,20 @@ int main_position(int argc, char** argv) {
 #pragma omp parallel for schedule(dynamic,1)
     for (auto& path_pos : path_positions) {
         // TODO we need a better input format
-        auto pos = get_graph_pos(graph, path_pos);
+        auto pos = get_graph_pos(target_graph, path_pos);
         lift_result_t result;
         //std::cerr << "Got graph pos " << id(pos) << std::endl;
         if (id(pos)) {
             if (give_graph_pos) {
 #pragma omp critical (cout)
-                std::cout << graph.get_path_name(path_pos.path) << "," << path_pos.offset << "," << (path_pos.is_rev ? "-" : "+")
+                std::cout << target_graph.get_path_name(path_pos.path) << "," << path_pos.offset << "," << (path_pos.is_rev ? "-" : "+")
                           << "\t" << id(pos) << "," << offset(pos) << "," << (is_rev(pos) ? "-" : "+") << std::endl;
-            } else if (get_position(graph, ref_path_set, pos, result)) {
+            } else if (get_position(target_graph, ref_path_set, pos, result)) {
                 bool ref_is_rev = false;
-                path_handle_t p = graph.get_path_handle_of_step(result.ref_hit);
+                path_handle_t p = target_graph.get_path_handle_of_step(result.ref_hit);
 #pragma omp critical (cout)
-                std::cout << graph.get_path_name(path_pos.path) << "," << path_pos.offset << "," << (path_pos.is_rev ? "-" : "+") << "\t"
-                          << graph.get_path_name(p) << "," << result.path_offset << "," << (ref_is_rev ? "-" : "+") << "\t"
+                std::cout << target_graph.get_path_name(path_pos.path) << "," << path_pos.offset << "," << (path_pos.is_rev ? "-" : "+") << "\t"
+                          << target_graph.get_path_name(p) << "," << result.path_offset << "," << (ref_is_rev ? "-" : "+") << "\t"
                           << result.walked_to_hit_ref << "\t" << (result.is_rev_vs_ref ? "-" : "+") << std::endl;
             }
         }
@@ -401,8 +473,8 @@ int main_position(int argc, char** argv) {
 
 #pragma omp parallel for schedule(dynamic,1)
     for (auto& path_range : path_ranges) {
-        auto pos_start = get_graph_pos(graph, path_range.begin);
-        auto pos_end = get_graph_pos(graph, path_range.end);
+        auto pos_start = get_graph_pos(target_graph, path_range.begin);
+        auto pos_end = get_graph_pos(target_graph, path_range.end);
         if (id(pos_start) && id(pos_end)) {
             lift_result_t lift_begin;
             lift_result_t lift_end;
@@ -411,17 +483,17 @@ int main_position(int argc, char** argv) {
                 std::cout << id(pos_start) << "," << offset(pos_start) << "," << is_rev(pos_start) << "\t"
                           << id(pos_end) << "," << offset(pos_end) << "," << (is_rev(pos_end)?"-":"+") << "\t"
                           << path_range.data << std::endl;
-            } else if (get_position(graph, ref_path_set, pos_start, lift_begin)
-                       && get_position(graph, ref_path_set, pos_end, lift_end)) {
+            } else if (get_position(target_graph, ref_path_set, pos_start, lift_begin)
+                       && get_position(target_graph, ref_path_set, pos_end, lift_end)) {
                 bool ref_is_rev = false;
-                path_handle_t p_begin = graph.get_path_handle_of_step(lift_begin.ref_hit);
-                path_handle_t p_end = graph.get_path_handle_of_step(lift_end.ref_hit);
+                path_handle_t p_begin = target_graph.get_path_handle_of_step(lift_begin.ref_hit);
+                path_handle_t p_end = target_graph.get_path_handle_of_step(lift_end.ref_hit);
                 // XXX TODO assert these to be equal......
                 // TODO update to make sure they're the same
 #pragma omp critical (cout)
-                std::cout << graph.get_path_name(p_begin) << "\t"
+                std::cout << target_graph.get_path_name(p_begin) << "\t"
                           << lift_begin.path_offset << "\t"
-                          << graph.get_path_name(p_end) << "\t"
+                          << target_graph.get_path_name(p_end) << "\t"
                           << lift_end.path_offset << "\t"
                           << (lift_begin.is_rev_vs_ref ^ path_range.is_rev ? "-" : "+") << "\t"
                           << path_range.data << std::endl;
