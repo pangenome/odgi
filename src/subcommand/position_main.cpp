@@ -304,6 +304,14 @@ int main_position(int argc, char** argv) {
     for (auto& path : ref_paths) {
         ref_path_set.insert(as_integer(path));
     }
+    hash_set<uint64_t> lift_path_set_source;
+    hash_set<uint64_t> lift_path_set_target;
+    for (auto& path : lift_paths_source) {
+        lift_path_set_source.insert(as_integer(path));
+    }
+    for (auto& path : lift_paths_target) {
+        lift_path_set_target.insert(as_integer(path));
+    }
 
     auto get_graph_pos =
         [](const odgi::graph_t& graph,
@@ -351,8 +359,8 @@ int main_position(int argc, char** argv) {
 
     auto get_position =
         [&search_radius,&get_offset_in_path](const odgi::graph_t& graph,
-           const hash_set<uint64_t>& path_set,
-           const pos_t& pos, lift_result_t& lift) {
+                                             const hash_set<uint64_t>& path_set,
+                                             const pos_t& pos, lift_result_t& lift) {
             // unpacking our args
             int64_t& path_offset = lift.path_offset;
             step_handle_t& ref_hit = lift.ref_hit;
@@ -434,12 +442,37 @@ int main_position(int argc, char** argv) {
 
     // for each position that we want to look up
 #pragma omp parallel for schedule(dynamic,1)
-    for (auto& pos : graph_positions) {
+    for (auto& _pos : graph_positions) {
         // go to the graph
         // do a little BFS, bounded by our limit
         // now, if we found our hit, print
+        // optionally, we will translate from a source graph into a target graph
+        lift_result_t source_result;
+        bool ok = false;
+        pos_t pos;
+        if (lifting) {
+            if (get_position(source_graph, lift_path_set_source, _pos, source_result)) {
+                pos = get_graph_pos(target_graph,
+                                    { target_graph.get_path_handle(
+                                            source_graph.get_path_name(
+                                                source_graph.get_path_handle_of_step(
+                                                    source_result.ref_hit))),
+                                      (uint64_t)source_result.path_offset,
+                                      source_result.is_rev_vs_ref });
+            } else {
+                pos = make_pos_t(0,false,0); // couldn't lift
+            }
+        } else {
+            pos = _pos;
+        }
+        //= (lifting ? ok = get_position(source_graph, lay_path_set
         lift_result_t result;
-        if (get_position(target_graph, ref_path_set, pos, result)) {
+        if (id(pos) && give_graph_pos) {
+            // force graph position in target
+#pragma omp critical (cout)
+            std::cout << id(_pos) << "," << offset(_pos) << "," << (is_rev(_pos) ? "-" : "+") << "\t"
+                      << "\t" << id(pos) << "," << offset(pos) << "," << (is_rev(pos) ? "-" : "+") << std::endl;
+        } else if (get_position(target_graph, ref_path_set, pos, result)) {
             bool ref_is_rev = false;
             path_handle_t p = target_graph.get_path_handle_of_step(result.ref_hit);
 #pragma omp critical (cout)
