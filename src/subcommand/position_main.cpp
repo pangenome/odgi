@@ -272,7 +272,11 @@ int main_position(int argc, char** argv) {
     
     if (graph_pos) {
         // if we're given a graph_pos, we'll convert it into a path pos
-        add_graph_pos(source_graph, args::get(graph_pos));
+        if (lifting) {
+            add_graph_pos(source_graph, args::get(graph_pos));
+        } else {
+            add_graph_pos(target_graph, args::get(graph_pos));
+        }
     } else if (graph_pos_file) {
         std::ifstream gpos(args::get(graph_pos_file).c_str());
         std::string buffer;
@@ -520,13 +524,15 @@ int main_position(int argc, char** argv) {
         if (id(pos)) {
             if (give_graph_pos) {
 #pragma omp critical (cout)
-                std::cout << source_graph.get_path_name(path_pos.path) << "," << path_pos.offset << "," << (path_pos.is_rev ? "-" : "+")
+                std::cout << (lifting ? source_graph.get_path_name(path_pos.path) : target_graph.get_path_name(path_pos.path))
+                          << "," << path_pos.offset << "," << (path_pos.is_rev ? "-" : "+")
                           << "\t" << id(pos) << "," << offset(pos) << "," << (is_rev(pos) ? "-" : "+") << std::endl;
             } else if (get_position(target_graph, ref_path_set, pos, result)) {
                 bool ref_is_rev = false;
                 path_handle_t p = target_graph.get_path_handle_of_step(result.ref_hit);
 #pragma omp critical (cout)
-                std::cout << source_graph.get_path_name(path_pos.path) << "," << path_pos.offset << "," << (path_pos.is_rev ? "-" : "+") << "\t"
+                std::cout << (lifting ? source_graph.get_path_name(path_pos.path) : target_graph.get_path_name(path_pos.path)) << ","
+                          << path_pos.offset << "," << (path_pos.is_rev ? "-" : "+") << "\t"
                           << target_graph.get_path_name(p) << "," << result.path_offset << "," << (ref_is_rev ? "-" : "+") << "\t"
                           << result.walked_to_hit_ref << "\t" << (result.is_rev_vs_ref ? "-" : "+") << std::endl;
             }
