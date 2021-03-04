@@ -173,6 +173,15 @@ int main_position(int argc, char** argv) {
             //target_graph.
             //lift_paths
         }
+        if (lift_paths_source.size() != lift_paths_target.size()) {
+            std::cerr << "[odgi paths] error: differing number of lift paths in target and source, suggests error" << std::endl;
+            return 1;
+        }
+        if (lift_paths_source.empty() || lift_paths_target.empty()) {
+            std::cerr << "[odgi paths] error: no lift paths common to both target and source, cannot proceed" << std::endl;
+            std::cerr << "[odgi paths] select a set of common paths as lift paths or ensure that there are paths in common" << std::endl;
+            return 1;
+        }
     }
 
     // these options are exclusive (probably we should say with a warning)
