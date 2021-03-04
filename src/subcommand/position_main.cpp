@@ -218,11 +218,13 @@ int main_position(int argc, char** argv) {
         [&path_positions](const odgi::graph_t& graph,
                           const std::string& buffer) {
             auto vals = split(buffer, ',');
+            /*
             if (vals.size() != 3) {
                 std::cerr << "[odgi position] error: path position record is incomplete" << std::endl;
                 std::cerr << "[odgi position] error: got '" << buffer << "'" << std::endl;
                 exit(1); // bail
             }
+            */
             auto& path_name = vals[0];
             if (!graph.has_path(path_name)) {
                 std::cerr << "[odgi position] error: ref path " << path_name << " not found in graph" << std::endl;
@@ -230,8 +232,8 @@ int main_position(int argc, char** argv) {
             } else {
                 path_positions.push_back({
                         graph.get_path_handle(path_name),
-                        (uint64_t)std::stoi(vals[1]),
-                        vals[2] == "-"
+                        (vals.size() > 1 ? (uint64_t)std::stoi(vals[1]) : 0),
+                        (vals.size() == 3 ? vals[2] == "-" : false)
                     });
             }
         };
