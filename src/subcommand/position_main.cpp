@@ -22,10 +22,13 @@ int main_position(int argc, char** argv) {
     
     args::ArgumentParser parser("position parts of the graph as defined by query criteria");
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-    args::ValueFlag<std::string> og_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-    args::ValueFlag<std::string> og_out_file(parser, "FILE", "store the graph self index in this file", {'o', "out"});
+    args::ValueFlag<std::string> og_in_file(parser, "FILE", "describe positions in this graph", {'i', "target"});
+    args::ValueFlag<std::string> og_source_file(parser, "FILE", "translate positions from this graph into the target graph using common --lift-paths shared between both graphs [default: use the same source/target graph]", {'x', "source"});
+    //args::ValueFlag<std::string> og_out_file(parser, "FILE", "store the graph self index in this file", {'o', "out"});
     args::ValueFlag<std::string> ref_path_name(parser, "PATH_NAME", "translate the given positions into positions relative to this reference path", {'r', "ref-path"});
-    args::ValueFlag<std::string> ref_path_file(parser, "FILE", "translate the given positions into the positions in paths named in this file", {'R', "ref-paths"});
+    args::ValueFlag<std::string> ref_path_file(parser, "FILE", "use the ref-paths in FILE", {'R', "ref-paths"});
+    args::ValueFlag<std::string> lift_path_name(parser, "PATH_NAME", "lift positions from --source to --target via coordinates in this path common to both graphs [default: all common paths between --source and --target]", {'l', "lift-path"});
+    args::ValueFlag<std::string> lift_path_file(parser, "FILE", "use the lift-paths in FILE", {'L', "lift-paths"});
     args::ValueFlag<std::string> graph_pos(parser, "[node_id],[offset],[+|-]", "a graph position, e.g. 42,10,+ or 302,0,-", {'g', "graph-pos"});
     args::ValueFlag<std::string> graph_pos_file(parser, "FILE", "a file with one graph position per line", {'G', "graph-pos-file"});
     args::ValueFlag<std::string> path_pos(parser, "[path_name],[offset],[+|-]", "a path position, e.g. chr8,1337,+ or chrZ,3929,-", {'p', "path-pos"});
