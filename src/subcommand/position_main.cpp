@@ -29,9 +29,9 @@ int main_position(int argc, char** argv) {
     args::ValueFlag<std::string> ref_path_file(parser, "FILE", "use the ref-paths in FILE", {'R', "ref-paths"});
     args::ValueFlag<std::string> lift_path_name(parser, "PATH_NAME", "lift positions from --source to --target via coordinates in this path common to both graphs [default: all common paths between --source and --target]", {'l', "lift-path"});
     args::ValueFlag<std::string> lift_path_file(parser, "FILE", "use the lift-paths in FILE", {'L', "lift-paths"});
-    args::ValueFlag<std::string> graph_pos(parser, "[node_id],[offset],[+|-]", "a graph position, e.g. 42,10,+ or 302,0,-", {'g', "graph-pos"});
+    args::ValueFlag<std::string> graph_pos(parser, "[node_id][,offset[,(+|-)]*]*", "a graph position, e.g. 42,10,+ or 302,0,-", {'g', "graph-pos"});
     args::ValueFlag<std::string> graph_pos_file(parser, "FILE", "a file with one graph position per line", {'G', "graph-pos-file"});
-    args::ValueFlag<std::string> path_pos(parser, "[path_name],[offset],[+|-]", "a path position, e.g. chr8,1337,+ or chrZ,3929,-", {'p', "path-pos"});
+    args::ValueFlag<std::string> path_pos(parser, "[path_name][,offset[,(+|-)]*]*", "a path position, e.g. chr8,1337,+ or chrZ,3929,-", {'p', "path-pos"});
     args::ValueFlag<std::string> path_pos_file(parser, "FILE", "a file with one path position per line", {'F', "path-pos-file"});
     args::ValueFlag<std::string> bed_input(parser, "FILE", "a BED file of ranges in paths in the graph to lift into the target graph", {'b', "bed-input"});
     args::Flag give_graph_pos(parser, "give-graph-pos", "emit graph positions (node,offset,strand) rather than path positions", {'v', "give-graph-pos"});
