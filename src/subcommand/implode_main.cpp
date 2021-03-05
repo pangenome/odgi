@@ -25,13 +25,13 @@ namespace odgi {
         args::ValueFlag<std::string> _input_graphs(parser, "FILE",
                                                    "list of graphs to implode into the same file; the file must contain one path per line.",
                                                    {'i', "graphs-to-implode"});
+        args::ValueFlag<char> _add_suffix(parser, "C",
+                                          "add the separator and the input file rank as prefix to the path names (to avoid path name collisions)",
+                                          {'s', "rank-suffix"});
+
         args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store all the input graphs in this file",
                                                  {'o', "out"});
 
-        args::ValueFlag<std::string> _prefix(parser, "STRING",
-                                             "write each connected component in a file with the given prefix. "
-                                             "The file for the component `i` will be named `STRING.i.og` "
-                                             "(default: `component`)\"", {'p', "prefix"});
         args::Flag _optimize(parser, "optimize", "compact the node ID space in each connected component",
                              {'O', "optimize"});
         args::ValueFlag<uint64_t> nthreads(parser, "N",
@@ -75,17 +75,15 @@ namespace odgi {
 
         uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
 
-        std::string output_dir_plus_prefix = "./";
-        if (!args::get(_prefix).empty()) {
-            output_dir_plus_prefix += args::get(_prefix);
-        } else {
-            output_dir_plus_prefix += "component";
+        char separator;
+        if (_add_suffix) {
+            separator = args::get(_add_suffix);
         }
-
 
         uint64_t shift_id = 0;
         graph_t imploded_graph;
 
+        uint64_t input_graph_rank = 0;
         std::ifstream file_input_graphs(input_graphs);
         std::string line;
         while (std::getline(file_input_graphs, line)) {
@@ -128,18 +126,26 @@ namespace odgi {
 
                 // Copy the paths over
                 graph.for_each_path_handle([&](const path_handle_t &p) {
-                    path_handle_t new_path_handle = imploded_graph.create_path_handle(graph.get_path_name(p),
+                    std::string new_path_name = graph.get_path_name(p);
+                    if (_add_suffix) {
+                        new_path_name += separator + std::to_string(input_graph_rank);
+                    }
+
+                    path_handle_t new_path_handle = imploded_graph.create_path_handle(new_path_name,
                                                                                       graph.get_is_circular(p));
 
                     for (handle_t o : graph.scan_path(p)) {
                         new_handle_o = imploded_graph.get_handle(graph.get_id(o) + shift_id);
-                        imploded_graph.append_step(new_path_handle, imploded_graph.get_handle(graph.get_id(new_handle_o),
-                                                                                              imploded_graph.get_is_reverse(new_handle_o)));
+                        imploded_graph.append_step(new_path_handle, imploded_graph.get_handle(
+                                graph.get_id(new_handle_o),
+                                imploded_graph.get_is_reverse(new_handle_o))
+                        );
                     }
                 });
 
 
                 shift_id = max_id;
+                ++input_graph_rank;
             }
         }
         file_input_graphs.close();
@@ -155,55 +161,6 @@ namespace odgi {
             }
         }
 
-        /*
-        std::vector <ska::flat_hash_set<handlegraph::nid_t>> weak_components =
-                algorithms::weakly_connected_components(&graph);
-
-        std::unique_ptr <algorithms::progress_meter::ProgressMeter> component_progress;
-        if (debug) {
-            component_progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
-                    weak_components.size(), "[odgi::explode] exploding components");
-
-            std::cerr << "[odgi::explode] detected " << weak_components.size() << " connected components" << std::endl;
-        }
-
-        std::mutex debug_mutex;
-
-#pragma omp parallel for schedule(static, 1) num_threads(num_threads)
-        for (uint64_t component_index = 0; component_index < weak_components.size(); ++component_index) {
-            auto &weak_component = weak_components[component_index];
-
-            graph_t subgraph;
-
-            for (auto node_id : weak_component) {
-                subgraph.create_handle(graph.get_sequence(graph.get_handle(node_id)), node_id);
-            }
-
-            algorithms::expand_subgraph_by_steps(graph, subgraph, numeric_limits<uint64_t>::max(), false);
-            algorithms::add_full_paths_to_component(graph, subgraph);
-
-            if (optimize) {
-                subgraph.optimize();
-            }
-
-            string filename = output_dir_plus_prefix + "." + to_string(component_index) + ".og";
-
-            // Save the component
-            ofstream f(filename);
-            subgraph.serialize(f);
-            f.close();
-
-
-
-            if (debug) {
-                component_progress->increment(1);
-            }
-        }
-
-        if (debug) {
-            component_progress->finish();
-        }
-        */
         return 0;
     }
 
