@@ -70,15 +70,46 @@ namespace odgi {
             return 1;
         }
 
+        uint64_t num_input_graphs = 0;
+        {
+
+            std::ifstream file_input_graphs(input_graphs);
+            std::string line;
+            while (std::getline(file_input_graphs, line)) {
+                if (!line.empty()) {
+                    ++num_input_graphs;
+                }
+            }
+            file_input_graphs.close();
+        }
+
+        if (num_input_graphs == 0) {
+            std::cerr
+                    << "[odgi::implode] error: the input file contains no input graph paths."
+                    << std::endl;
+            return 1;
+        }
+
         bool debug = args::get(_debug);
         bool optimize = args::get(_optimize);
 
         uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
 
+        std::unique_ptr<algorithms::progress_meter::ProgressMeter> component_progress;
+
         char separator;
         if (_add_suffix) {
             separator = args::get(_add_suffix);
         }
+
+        std::unique_ptr<algorithms::progress_meter::ProgressMeter> implode_progress;
+        if (debug) {
+            implode_progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+                    num_input_graphs, "[odgi::implode] imploding input graphs");
+
+            std::cerr << "[odgi::implode] detected " << num_input_graphs << " input graphs" << std::endl;
+        }
+
 
         uint64_t shift_id = 0;
         graph_t imploded_graph;
@@ -143,12 +174,19 @@ namespace odgi {
                     }
                 });
 
-
                 shift_id = max_id;
                 ++input_graph_rank;
+
+                if (debug) {
+                    implode_progress->increment(1);
+                }
             }
         }
         file_input_graphs.close();
+
+        if (debug) {
+            implode_progress->finish();
+        }
 
         std::string outfile = args::get(dg_out_file);
         if (!outfile.empty()) {
