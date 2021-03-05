@@ -22,20 +22,21 @@ namespace odgi {
         args::ArgumentParser parser(
                 "merges multiple graphs into the same file");
         args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-        args::ValueFlag <std::string> _input_graphs(parser, "FILE",
-                                                    "list of graphs to implode into the same file; the file must contain one path per line.",
-                                                    {'i', "graphs-to-implode"});
-        args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store all the input graphs in this file", {'o', "out"});
+        args::ValueFlag<std::string> _input_graphs(parser, "FILE",
+                                                   "list of graphs to implode into the same file; the file must contain one path per line.",
+                                                   {'i', "graphs-to-implode"});
+        args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store all the input graphs in this file",
+                                                 {'o', "out"});
 
-        args::ValueFlag <std::string> _prefix(parser, "STRING",
-                                              "write each connected component in a file with the given prefix. "
-                                              "The file for the component `i` will be named `STRING.i.og` "
-                                              "(default: `component`)\"", {'p', "prefix"});
+        args::ValueFlag<std::string> _prefix(parser, "STRING",
+                                             "write each connected component in a file with the given prefix. "
+                                             "The file for the component `i` will be named `STRING.i.og` "
+                                             "(default: `component`)\"", {'p', "prefix"});
         args::Flag _optimize(parser, "optimize", "compact the node ID space in each connected component",
                              {'O', "optimize"});
-        args::ValueFlag <uint64_t> nthreads(parser, "N",
-                                            "number of threads to use (to write the components in parallel)",
-                                            {'t', "threads"});
+        args::ValueFlag<uint64_t> nthreads(parser, "N",
+                                           "number of threads to use (to write the components in parallel)",
+                                           {'t', "threads"});
         args::Flag _debug(parser, "debug", "print information about the components and the progress to stderr",
                           {'d', "debug"});
 
@@ -63,7 +64,9 @@ namespace odgi {
         }
 
         if (!dg_out_file) {
-            std::cerr << "[odgi::implode] error: please specify an output file to where to store the graphs via -o=[FILE], --out=[FILE]." << std::endl;
+            std::cerr
+                    << "[odgi::implode] error: please specify an output file to where to store the graphs via -o=[FILE], --out=[FILE]."
+                    << std::endl;
             return 1;
         }
 
@@ -86,7 +89,6 @@ namespace odgi {
         std::ifstream file_input_graphs(input_graphs);
         std::string line;
         while (std::getline(file_input_graphs, line)) {
-            std::cerr << line << std::endl;
             if (!line.empty()) {
                 graph_t graph;
                 assert(argc > 0);
@@ -114,20 +116,31 @@ namespace odgi {
                 graph.for_each_handle([&](const handle_t &h) {
                     new_handle_h = imploded_graph.get_handle(graph.get_id(h) + shift_id);
 
-                    graph.follow_edges(h, false, [&](const handle_t& o) {
+                    graph.follow_edges(h, false, [&](const handle_t &o) {
                         new_handle_o = imploded_graph.get_handle(graph.get_id(o) + shift_id);
                         imploded_graph.create_edge(new_handle_h, new_handle_o);
                     });
-                    graph.follow_edges(h, true, [&](const handle_t& o) {
+                    graph.follow_edges(h, true, [&](const handle_t &o) {
                         new_handle_o = imploded_graph.get_handle(graph.get_id(o) + shift_id);
                         imploded_graph.create_edge(new_handle_o, new_handle_h);
                     });
                 });
 
-                shift_id = max_id + 1;
-            }
+                // Copy the paths over
+                graph.for_each_path_handle([&](const path_handle_t &p) {
+                    path_handle_t new_path_handle = imploded_graph.create_path_handle(graph.get_path_name(p),
+                                                                                      graph.get_is_circular(p));
 
-            std::cerr << "-----------------" << std::endl;
+                    for (handle_t o : graph.scan_path(p)) {
+                        new_handle_o = imploded_graph.get_handle(graph.get_id(o) + shift_id);
+                        imploded_graph.append_step(new_path_handle, imploded_graph.get_handle(graph.get_id(new_handle_o),
+                                                                                              imploded_graph.get_is_reverse(new_handle_o)));
+                    }
+                });
+
+
+                shift_id = max_id;
+            }
         }
         file_input_graphs.close();
 
