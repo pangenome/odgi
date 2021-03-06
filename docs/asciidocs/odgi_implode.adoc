@@ -20,7 +20,7 @@ odgi_implode - merges multiple graphs into the same file
 
 == DESCRIPTION
 
-The odgi implode(1) merges multiple graphs into the same file.
+The odgi implode(1) command merges multiple graphs into the same file.
 
 
 == OPTIONS
@@ -69,7 +69,7 @@ Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
 
 == AUTHORS
 
-*odgi cover* was written by Andrea Guarracino.
+*odgi implode* was written by Andrea Guarracino.
 
 ifdef::backend-manpage[]
 == RESOURCES
