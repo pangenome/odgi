@@ -1,60 +1,58 @@
-= odgi explode(1)
+= odgi implode(1)
 ifdef::backend-manpage[]
 Andrea Guarracino
 :doctype: manpage
 :release-version: v0.6.0
-:man manual: odgi explode
+:man manual: odgi implode
 :man source: odgi v0.6.0
 :page-layout: base
 endif::[]
 
 == NAME
 
-odgi_explode - breaks a graph into connected components in their own files
+odgi_implode - merges multiple graphs into the same file
 
 
 == SYNOPSIS
 
-*odgi explode* [*-i, --idx*=_FILE_] [*-p, --prefix*=_STRING_] [_OPTION_]...
+*odgi implode* [*-f, --input-graphs*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]...
+
 
 == DESCRIPTION
 
-The odgi explode(1) command breaks a graph into connected components, writing each component in its own file.
+The odgi implode(1) command merges multiple graphs into the same file.
 
 
 == OPTIONS
 
 === Graph Files IO
 
-*-i, --idx*=_FILE_::
-  File containing the succinct variation graph to break in its components. The file name usually ends with _.og_.
+*-f, --input-graphs*=_FILE_::
+  Input file containing the list of graphs to implode into the same file. The file must contain one path per line.
+
+*-o, --out*=_FILE_::
+  Store all the input graphs in this file. The file name usually ends with _.og_.
 
 
-=== Explode Options
+=== Implode Options
 
-*-p, --prefix*=_STRING_::
-  Write each connected component in a file with the given prefix. The file for the component `i` will be named
-`STRING.i.og` (default: `component`)
+*-s, --rank-suffix*=_STRING_::
+  Add the separator and the input file rank as suffix to the path names (to avoid path name collisions).
 
 *-O, --optimize*::
-  Compact the node ID space in each connected component.
-
-=== Threading
-
-*-t, --threads*=_N_::
-Number of threads to use (to write the components in parallel).
+  Compact the node ID space in each input file before imploding.
 
 
 === Processing Information
 
 *-d, --debug*::
-  Print information about the components and the progress to stderr.
+  Print information about the progress to stderr.
 
 
 === Program Information
 
 *-h, --help*::
-  Print a help message for *odgi explode*.
+  Print a help message for *odgi implode*.
 
 
 == EXIT STATUS
@@ -71,7 +69,7 @@ Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
 
 == AUTHORS
 
-*odgi explode* was written by Andrea Guarracino.
+*odgi implode* was written by Andrea Guarracino.
 
 ifdef::backend-manpage[]
 == RESOURCES
