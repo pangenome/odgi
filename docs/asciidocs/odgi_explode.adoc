@@ -47,7 +47,7 @@ Number of threads to use (to write the components in parallel).
 
 === Processing Information
 
-*-d, --debug*::
+*-P, --progress*::
   Print information about the components and the progress to stderr.
 
 

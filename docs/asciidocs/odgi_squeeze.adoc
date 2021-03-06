@@ -1,26 +1,26 @@
-= odgi implode(1)
+= odgi squeeze(1)
 ifdef::backend-manpage[]
 Andrea Guarracino
 :doctype: manpage
 :release-version: v0.6.0
-:man manual: odgi implode
+:man manual: odgi squeeze
 :man source: odgi v0.6.0
 :page-layout: base
 endif::[]
 
 == NAME
 
-odgi_implode - merges multiple graphs into the same file
+odgi_squeeze - squeezes multiple graphs into the same file
 
 
 == SYNOPSIS
 
-*odgi implode* [*-f, --input-graphs*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]...
+*odgi squeeze* [*-f, --input-graphs*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]...
 
 
 == DESCRIPTION
 
-The odgi implode(1) command merges multiple graphs into the same file.
+The odgi squeeze(1) command merges multiple graphs into the same file.
 
 
 == OPTIONS
@@ -28,13 +28,13 @@ The odgi implode(1) command merges multiple graphs into the same file.
 === Graph Files IO
 
 *-f, --input-graphs*=_FILE_::
-  Input file containing the list of graphs to implode into the same file. The file must contain one path per line.
+  Input file containing the list of graphs to squeeze into the same file. The file must contain one path per line.
 
 *-o, --out*=_FILE_::
   Store all the input graphs in this file. The file name usually ends with _.og_.
 
 
-=== Implode Options
+=== Squeeze Options
 
 *-s, --rank-suffix*=_STRING_::
   Add the separator and the input file rank as suffix to the path names (to avoid path name collisions).
@@ -45,14 +45,14 @@ The odgi implode(1) command merges multiple graphs into the same file.
 
 === Processing Information
 
-*-d, --debug*::
+*-P, --progress*::
   Print information about the progress to stderr.
 
 
 === Program Information
 
 *-h, --help*::
-  Print a help message for *odgi implode*.
+  Print a help message for *odgi squeeze*.
 
 
 == EXIT STATUS
@@ -69,7 +69,7 @@ Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
 
 == AUTHORS
 
-*odgi implode* was written by Andrea Guarracino.
+*odgi squeeze* was written by Andrea Guarracino.
 
 ifdef::backend-manpage[]
 == RESOURCES

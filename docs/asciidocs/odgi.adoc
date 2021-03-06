@@ -22,7 +22,7 @@ odgi - dynamic succinct variation graph tool
 
 *odgi* <<odgi_cover.adoc#_odgi_explode1, explode>> -i graph.og -p prefix
 
-*odgi* <<odgi_cover.adoc#_odgi_implode1, implode>> -f input_graphs.txt -o graphs.og
+*odgi* <<odgi_cover.adoc#_odgi_squeeze1, squeeze>> -f input_graphs.txt -o graphs.og
 
 *odgi* <<odgi_kmers.adoc#_odgi_position1, position>> -i target_graph.og -g
 
@@ -93,8 +93,8 @@ The odgi cover(1) command find a path cover of a variation graph, with a specifi
 *odgi explode* [*-i, --idx*=_FILE_] [*-p, --prefix*=_STRING_] [_OPTION_]... +
 The odgi explode(1) command breaks a graph into connected components, writing each component in its own file.
 
-*odgi implode* [*-f, --input-graphs*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]...
-The odgi implode(1) command merges multiple graphs into the same file.
+*odgi squeeze* [*-f, --input-graphs*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]...
+The odgi squeeze(1) command squeezes multiple graphs into the same file.
 
 *odgi position* [*-i, --target*=_FILE_] [_OPTION_]...
 The odgi position(1) command position parts of the graph as defined by query criteria.
@@ -220,7 +220,7 @@ Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
 
 == AUTHORS
 
-Erik Garrison from the University of California Santa Cruz wrote the whole *odgi* tool. Simon Heumos from the Quantitative Biology Center Tübingen wrote *odgi pathindex*, *odgi panpos*, *odgi server*, and this documentation. Andrea Guarracino from the University of Rome Tor Vergata wrote *odgi viz*, *odgi cover*, *odgi explode*, *odgi implode*, and this documentation*.
+Erik Garrison from the University of California Santa Cruz wrote the whole *odgi* tool. Simon Heumos from the Quantitative Biology Center Tübingen wrote *odgi pathindex*, *odgi panpos*, *odgi server*, and this documentation. Andrea Guarracino from the University of Rome Tor Vergata wrote *odgi viz*, *odgi cover*, *odgi explode*, *odgi squeeze*, and this documentation*.
 
 == RESOURCES
 
