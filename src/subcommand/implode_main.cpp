@@ -120,7 +120,6 @@ namespace odgi {
         while (std::getline(file_input_graphs, line)) {
             if (!line.empty()) {
                 graph_t graph;
-                assert(argc > 0);
 
                 ifstream f(line.c_str());
                 graph.deserialize(f);
@@ -131,26 +130,30 @@ namespace odgi {
                 }
 
                 uint64_t max_id = 0;
+                uint64_t new_node_id;
+
                 graph.for_each_handle([&](const handle_t &h) {
-                    uint64_t node_id = graph.get_id(h);
-                    uint64_t new_node_id = node_id + shift_id;
-                    max_id = std::max(max_id, new_node_id);
+                    new_node_id = graph.get_id(h) + shift_id;
 
-                    imploded_graph.create_handle(graph.get_sequence(graph.get_handle(node_id)), new_node_id);
+                    imploded_graph.create_handle(graph.get_sequence(h), new_node_id);
+
+                    if (new_node_id > max_id) {
+                        max_id = new_node_id;
+                    }
                 });
-
-                handle_t new_handle_h, new_handle_o;
 
                 // add contacts for the edges
                 graph.for_each_handle([&](const handle_t &h) {
-                    new_handle_h = imploded_graph.get_handle(graph.get_id(h) + shift_id);
+                    handle_t new_handle_h = imploded_graph.get_handle(graph.get_id(h) + shift_id);
 
                     graph.follow_edges(h, false, [&](const handle_t &o) {
-                        new_handle_o = imploded_graph.get_handle(graph.get_id(o) + shift_id);
+                        handle_t new_handle_o = imploded_graph.get_handle(graph.get_id(o) + shift_id);
+
                         imploded_graph.create_edge(new_handle_h, new_handle_o);
                     });
                     graph.follow_edges(h, true, [&](const handle_t &o) {
-                        new_handle_o = imploded_graph.get_handle(graph.get_id(o) + shift_id);
+                        handle_t new_handle_o = imploded_graph.get_handle(graph.get_id(o) + shift_id);
+
                         imploded_graph.create_edge(new_handle_o, new_handle_h);
                     });
                 });
@@ -162,16 +165,17 @@ namespace odgi {
                         new_path_name += separator + std::to_string(input_graph_rank);
                     }
 
-                    path_handle_t new_path_handle = imploded_graph.create_path_handle(new_path_name,
-                                                                                      graph.get_is_circular(p));
+                    path_handle_t new_path_handle = imploded_graph.create_path_handle(
+                            new_path_name, graph.get_is_circular(p));
 
-                    for (handle_t o : graph.scan_path(p)) {
-                        new_handle_o = imploded_graph.get_handle(graph.get_id(o) + shift_id);
-                        imploded_graph.append_step(new_path_handle, imploded_graph.get_handle(
-                                graph.get_id(new_handle_o),
-                                imploded_graph.get_is_reverse(new_handle_o))
-                        );
-                    }
+                    graph.for_each_step_in_path(p, [&](const step_handle_t& step) {
+                        handle_t old_handle = graph.get_handle_of_step(step);
+                        handle_t new_handle = imploded_graph.get_handle(
+                                graph.get_id(old_handle) + shift_id,
+                                graph.get_is_reverse(old_handle));
+
+                        imploded_graph.append_step(new_path_handle, new_handle);
+                    });
                 });
 
                 shift_id = max_id;
