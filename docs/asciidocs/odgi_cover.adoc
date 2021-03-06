@@ -59,7 +59,7 @@ Number of threads to use for the parallel sorter.
 
 === Processing Information
 
-*-d, --debug*::
+*-P, --progress*::
   Print information about the components and the progress to stderr.
 
 

@@ -30,8 +30,8 @@ namespace odgi {
         args::Flag _optimize(parser, "optimize", "compact the node ID space in each connected component",
                              {'O', "optimize"});
         args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use (to write the components in parallel)", {'t', "threads"});
-        args::Flag _debug(parser, "debug", "print information about the components and the progress to stderr",
-                          {'d', "debug"});
+        args::Flag _debug(parser, "progress", "print information about the components and the progress to stderr",
+                          {'P', "progress"});
 
         try {
             parser.ParseCLI(argc, argv);

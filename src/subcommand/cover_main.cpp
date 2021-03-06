@@ -27,7 +27,7 @@ namespace odgi {
         args::Flag ignore_paths(parser, "ignore-paths", "ignore the paths already embedded in the graph during the nodes coverage initialization",{'I', "ignore-paths"});
         args::ValueFlag<std::string> write_node_coverages(parser, "FILE","write the node coverages at the end of the paths generation in this file",{'w', "write-node-coverages"});
         args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for the parallel sorter", {'t', "threads"});
-        args::Flag debug(parser, "debug", "print information about the components and the progress to stderr",{'d', "debug"});
+        args::Flag debug(parser, "progress", "print information about the components and the progress to stderr",{'P', "progress"});
 
         try {
             parser.ParseCLI(argc, argv);
