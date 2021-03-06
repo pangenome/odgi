@@ -35,5 +35,8 @@ asciidoctor -b manpage odgi_panpos.adoc
 asciidoctor -b manpage odgi_server.adoc
 asciidoctor -b manpage odgi_test.adoc
 asciidoctor -b manpage odgi_version.adoc
+asciidoctor -b manpage odgi_cover.adoc
+asciidoctor -b manpage odgi_explode.adoc
+asciidoctor -b manpage odgi_implode.adoc
 
 mv *.1 man/

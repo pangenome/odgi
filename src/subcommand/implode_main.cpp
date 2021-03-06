@@ -23,20 +23,16 @@ namespace odgi {
                 "merges multiple graphs into the same file");
         args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
         args::ValueFlag<std::string> _input_graphs(parser, "FILE",
-                                                   "list of graphs to implode into the same file; the file must contain one path per line.",
-                                                   {'i', "graphs-to-implode"});
-        args::ValueFlag<char> _add_suffix(parser, "C",
-                                          "add the separator and the input file rank as prefix to the path names (to avoid path name collisions)",
-                                          {'s', "rank-suffix"});
-
+                                                   "input file containing the list of graphs to implode into the same file; the file must contain one path per line.",
+                                                   {'f', "input-graphs"});
         args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store all the input graphs in this file",
                                                  {'o', "out"});
-
+        args::ValueFlag<char> _add_suffix(parser, "C",
+                                          "add the separator and the input file rank as suffix to the path names (to avoid path name collisions)",
+                                          {'s', "rank-suffix"});
         args::Flag _optimize(parser, "optimize", "compact the node ID space in each connected component",
                              {'O', "optimize"});
-        args::ValueFlag<uint64_t> nthreads(parser, "N",
-                                           "number of threads to use (to write the components in parallel)",
-                                           {'t', "threads"});
+        //args::ValueFlag<uint64_t> nthreads(parser, "N","number of threads to use (to write the components in parallel)",{'t', "threads"});
         args::Flag _debug(parser, "debug", "print information about the components and the progress to stderr",
                           {'d', "debug"});
 
@@ -93,7 +89,7 @@ namespace odgi {
         bool debug = args::get(_debug);
         bool optimize = args::get(_optimize);
 
-        uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+        //uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
 
         std::unique_ptr<algorithms::progress_meter::ProgressMeter> component_progress;
 
@@ -168,7 +164,7 @@ namespace odgi {
                     path_handle_t new_path_handle = imploded_graph.create_path_handle(
                             new_path_name, graph.get_is_circular(p));
 
-                    graph.for_each_step_in_path(p, [&](const step_handle_t& step) {
+                    graph.for_each_step_in_path(p, [&](const step_handle_t &step) {
                         handle_t old_handle = graph.get_handle_of_step(step);
                         handle_t new_handle = imploded_graph.get_handle(
                                 graph.get_id(old_handle) + shift_id,
