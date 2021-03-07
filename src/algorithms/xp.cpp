@@ -10,7 +10,7 @@ namespace xp {
     // Here is XP
     ////////////////////////////////////////////////////////////////////////////
 
-    XP::~XP(void) {
+    XP::~XP() {
         // Clean up any created XPPaths
         while (!paths.empty()) {
             delete paths.back();
@@ -697,7 +697,7 @@ namespace xp {
             }
         } handler;
 
-        void cleanup(void) {
+        void cleanup() {
             std::lock_guard<std::recursive_mutex> lock(monitor);
             for (auto &filename : handler.filenames) {
                 std::remove(filename.c_str());
@@ -796,7 +796,7 @@ namespace xp {
         }
     }
 
-    int get_thread_count(void) {
+    int get_thread_count() {
         int thread_count = 1;
 #pragma omp parallel
         {

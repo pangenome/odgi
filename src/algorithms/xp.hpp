@@ -48,9 +48,9 @@ namespace xp {
         // Here are the ways we can construct an XP object from a graph
         ////////////////////////////////////////////////////////////////////////////
 
-        XP(void) = default;
+        XP() = default;
 
-        ~XP(void);
+        ~XP();
 
         // We cannot move, assign, or copy until we add code to point sdsl supports
         // at the new addresses for their vectors.
@@ -233,7 +233,7 @@ namespace xp {
     namespace temp_file {
 
 /// Clean up our files and temporary directory
-        void cleanup(void);
+        void cleanup();
 
 /// Create a temporary file starting with the given base name
         std::string create(const std::string &base);
@@ -253,6 +253,6 @@ namespace xp {
     } // namespace temp_file
 
     /// Uses OMP to get the count of threads
-    int get_thread_count(void);
+    int get_thread_count();
 
 }
