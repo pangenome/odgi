@@ -25,9 +25,11 @@ public:
         : total(_total), banner(_banner) {
         start_time = std::chrono::steady_clock::now();
         completed = 0;
-        bool has_ever_printed = false;
+
         logger = std::thread(
             [&]() {
+                bool has_ever_printed = false;
+
                 while (completed < total) {
                     if (completed > 0) {
                         do_print();
