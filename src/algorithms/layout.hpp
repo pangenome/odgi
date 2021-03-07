@@ -24,17 +24,17 @@ class Layout {
     sdsl::enc_vector<> xy;
     double min_value = std::numeric_limits<double>::max();
 public:
-    Layout(void) { }
+    Layout() { }
     Layout(const std::vector<double> &X, const std::vector<double> &Y);
     void serialize(std::ostream& out);
     void load(std::istream& in);
     void to_tsv(std::ostream &out);
     xy_d_t coords(const handle_t& handle);
-    size_t size(void);
-    double get_x(uint64_t i);
-    double get_y(uint64_t i);
-    std::vector<double> get_X(void);
-    std::vector<double> get_Y(void);
+    size_t size();
+    double get_x(uint64_t i) const;
+    double get_y(uint64_t i) const;
+    std::vector<double> get_X();
+    std::vector<double> get_Y();
 };
 
 }

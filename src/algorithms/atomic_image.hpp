@@ -136,7 +136,7 @@ struct atomic_image_buf_t {
         source_per_px_x = source_width / width;
         source_per_px_y = source_height / height;
     }
-    std::vector<uint8_t> to_bytes(void) {
+    std::vector<uint8_t> to_bytes() {
         std::vector<uint8_t> bytes(4 * height * width);
         for (uint64_t i = 0; i < image->size(); ++i) {
             color_t c = {(*image)[i].load()};

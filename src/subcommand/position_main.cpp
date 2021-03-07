@@ -54,7 +54,7 @@ int main_position(int argc, char** argv) {
     }
 
     if (!og_target_file) {
-        std::cerr << "[odgi position] error: please specify a target graph via -i=[FILE], --idx=[FILE]." << std::endl;
+        std::cerr << "[odgi::position] error: please specify a target graph via -i=[FILE], --idx=[FILE]." << std::endl;
         return 1;
     }
 
@@ -100,7 +100,7 @@ int main_position(int argc, char** argv) {
     if (ref_path_name) {
         std::string path_name = args::get(ref_path_name);
         if (!target_graph.has_path(path_name)) {
-            std::cerr << "[odgi position] error: ref path " << path_name << " not found in graph" << std::endl;
+            std::cerr << "[odgi::position] error: ref path " << path_name << " not found in graph" << std::endl;
             return 1;
         } else {
             ref_paths.push_back(target_graph.get_path_handle(path_name));
@@ -111,7 +111,7 @@ int main_position(int argc, char** argv) {
         std::string path_name;
         while (std::getline(refs, path_name)) {
             if (!target_graph.has_path(path_name)) {
-                std::cerr << "[odgi position] error: ref path " << path_name << " not found in graph" << std::endl;
+                std::cerr << "[odgi::position] error: ref path " << path_name << " not found in graph" << std::endl;
                 return 1;
             } else {
                 ref_paths.push_back(target_graph.get_path_handle(path_name));
@@ -126,14 +126,14 @@ int main_position(int argc, char** argv) {
     std::vector<path_handle_t> lift_paths_source;
     std::vector<path_handle_t> lift_paths_target;
     if ((lift_path_name || lift_path_file) && !lifting) {
-        std::cerr << "[odgi position] error: lifting requires a separate source and target graph, specify --source" << std::endl;
+        std::cerr << "[odgi::position] error: lifting requires a separate source and target graph, specify --source" << std::endl;
         return 1;
     } else if (lifting) {
         if (lift_path_name) {
             std::string path_name = args::get(lift_path_name);
             if (!target_graph.has_path(path_name)
                 || !source_graph.has_path(path_name)) {
-                std::cerr << "[odgi position] error: lift path " << path_name << " not found in both source and target graph" << std::endl;
+                std::cerr << "[odgi::position] error: lift path " << path_name << " not found in both source and target graph" << std::endl;
                 return 1;
             } else {
                 lift_paths_source.push_back(source_graph.get_path_handle(path_name));
@@ -146,7 +146,7 @@ int main_position(int argc, char** argv) {
             while (std::getline(refs, path_name)) {
                 if (!target_graph.has_path(path_name)
                     || !source_graph.has_path(path_name)) {
-                    std::cerr << "[odgi position] error: lift path " << path_name << " not found in both source and target graph" << std::endl;
+                    std::cerr << "[odgi::position] error: lift path " << path_name << " not found in both source and target graph" << std::endl;
                     return 1;
                 } else {
                     lift_paths_source.push_back(source_graph.get_path_handle(path_name));
@@ -174,12 +174,12 @@ int main_position(int argc, char** argv) {
             //lift_paths
         }
         if (lift_paths_source.size() != lift_paths_target.size()) {
-            std::cerr << "[odgi paths] error: differing number of lift paths in target and source, suggests error" << std::endl;
+            std::cerr << "[odgi::position] error: differing number of lift paths in target and source, suggests error" << std::endl;
             return 1;
         }
         if (lift_paths_source.empty() || lift_paths_target.empty()) {
-            std::cerr << "[odgi paths] error: no lift paths common to both target and source, cannot proceed" << std::endl;
-            std::cerr << "[odgi paths] select a set of common paths as lift paths or ensure that there are paths in common" << std::endl;
+            std::cerr << "[odgi::position] error: no lift paths common to both target and source, cannot proceed" << std::endl;
+            std::cerr << "[odgi::position] select a set of common paths as lift paths or ensure that there are paths in common" << std::endl;
             return 1;
         }
     }
@@ -197,14 +197,14 @@ int main_position(int argc, char** argv) {
             auto vals = split(buffer, ',');
             /*
             if (vals.size() != 3) {
-                std::cerr << "[odgi position] error: graph position record is incomplete" << std::endl;
-                std::cerr << "[odgi position] error: got '" << buffer << "'" << std::endl;
+                std::cerr << "[odgi::position] error: graph position record is incomplete" << std::endl;
+                std::cerr << "[odgi::position] error: got '" << buffer << "'" << std::endl;
                 exit(1); // bail
             }
             */
             uint64_t id = std::stoi(vals[0]);
             if (!graph.has_node(id)) {
-                std::cerr << "[odgi position] error: no node " << id << " in graph" << std::endl;
+                std::cerr << "[odgi::position] error: no node " << id << " in graph" << std::endl;
                 exit(1);
             }
             uint64_t offset = 0;
@@ -212,7 +212,7 @@ int main_position(int argc, char** argv) {
                 offset = std::stoi(vals[1]);
                 handle_t h = graph.get_handle(id);
                 if (graph.get_length(h) < offset) {
-                    std::cerr << "[odgi position] error: offset of " << offset << " lies beyond the end of node " << id << std::endl;
+                    std::cerr << "[odgi::position] error: offset of " << offset << " lies beyond the end of node " << id << std::endl;
                     exit(1);
                 }
             }
@@ -229,14 +229,14 @@ int main_position(int argc, char** argv) {
             auto vals = split(buffer, ',');
             /*
             if (vals.size() != 3) {
-                std::cerr << "[odgi position] error: path position record is incomplete" << std::endl;
-                std::cerr << "[odgi position] error: got '" << buffer << "'" << std::endl;
+                std::cerr << "[odgi::position] error: path position record is incomplete" << std::endl;
+                std::cerr << "[odgi::position] error: got '" << buffer << "'" << std::endl;
                 exit(1); // bail
             }
             */
             auto& path_name = vals[0];
             if (!graph.has_path(path_name)) {
-                std::cerr << "[odgi position] error: ref path " << path_name << " not found in graph" << std::endl;
+                std::cerr << "[odgi::position] error: ref path " << path_name << " not found in graph" << std::endl;
                 exit(1);
             } else {
                 path_positions.push_back({
@@ -253,14 +253,14 @@ int main_position(int argc, char** argv) {
             auto vals = split(buffer, '\t');
             /*
             if (vals.size() != 3) {
-                std::cerr << "[odgi position] error: path position record is incomplete" << std::endl;
-                std::cerr << "[odgi position] error: got '" << buffer << "'" << std::endl;
+                std::cerr << "[odgi::position] error: path position record is incomplete" << std::endl;
+                std::cerr << "[odgi::position] error: got '" << buffer << "'" << std::endl;
                 exit(1); // bail
             }
             */
             auto& path_name = vals[0];
             if (!graph.has_path(path_name)) {
-                std::cerr << "[odgi position] error: ref path " << path_name << " not found in graph" << std::endl;
+                std::cerr << "[odgi::position] error: ref path " << path_name << " not found in graph" << std::endl;
                 exit(1);
             } else {
                 path_ranges.push_back(
@@ -356,7 +356,7 @@ int main_position(int argc, char** argv) {
                 walked += node_length;
             }
 #pragma omp critical (cout)
-            std::cerr << "[odgi position] warning: position " << graph.get_path_name(pos.path) << ":" << pos.offset << " outside of path" << std::endl;
+            std::cerr << "[odgi::position] warning: position " << graph.get_path_name(pos.path) << ":" << pos.offset << " outside of path" << std::endl;
             return make_pos_t(0, false, 0);
         };
 

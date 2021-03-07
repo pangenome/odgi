@@ -62,15 +62,15 @@ namespace betagraph{
         }
     }
     
-    size_t BGraph::node_size(void) const{
+    size_t BGraph::node_size() const{
         return graph.backer.size();
     }
     
-    handlegraph::nid_t BGraph::min_node_id(void) const{
+    handlegraph::nid_t BGraph::min_node_id() const{
         return graph.min_node_id;
     }
 
-    handlegraph::nid_t BGraph::max_node_id(void) const{
+    handlegraph::nid_t BGraph::max_node_id() const{
         return graph.max_node_id;
     }
   
@@ -234,7 +234,7 @@ namespace betagraph{
 //     }
     
 //     /// Remove all nodes and edges. Does not update any stored paths.
-//     void clear(void);
+//     void clear();
     
 //     /// Swap the nodes corresponding to the given handles, in the ordering used
 //     /// by for_each_handle when looping over the graph. Other handles to the
