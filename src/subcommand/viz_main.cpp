@@ -390,6 +390,8 @@ namespace odgi {
                     }
                 }
 
+                path_names_in.close();
+
                 std::cerr << "[odgi::viz] Found " << rank_for_visualization << "/" << num_of_paths_in_file << " paths to display." << std::endl;
 
                 if (rank_for_visualization == 0){
