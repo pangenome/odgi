@@ -2,7 +2,7 @@
 
 namespace odgi {
 
-uint64_t node_t::sequence_size(void) const {
+uint64_t node_t::sequence_size() const {
     return sequence.size();
 }
 
@@ -14,11 +14,11 @@ void node_t::set_id(const uint64_t& new_id) {
     id = new_id;
 }
 
-const uint64_t& node_t::get_id(void) const {
+const uint64_t& node_t::get_id() const {
     return id;
 }
 
-const std::string& node_t::get_sequence(void) const {
+const std::string& node_t::get_sequence() const {
     return sequence;
 }
 
@@ -118,7 +118,7 @@ void node_t::add_path_step(const node_t::step_t& step) {
                   step.next_rank);
 }
 
-const std::vector<node_t::step_t> node_t::get_path_steps(void) const {
+const std::vector<node_t::step_t> node_t::get_path_steps() const {
     uint64_t n_paths = path_count();
     if (n_paths == 0) return {};
     std::vector<node_t::step_t> steps(n_paths);
@@ -268,7 +268,7 @@ bool node_t::step_is_del(const uint64_t& rank) const {
 
 std::pair<std::map<uint64_t, std::pair<uint64_t, bool>>, // path fronts
           std::map<uint64_t, std::pair<uint64_t, bool>>> // path backs
-node_t::flip_paths(void) {
+node_t::flip_paths() {
     const std::vector<node_t::step_t> steps = get_path_steps();
     // remove all path steps
     clear_paths();
@@ -302,30 +302,30 @@ void node_t::remove_path_step(const uint64_t& rank) {
     }
 }
 
-node_t::node_t(void) {
+node_t::node_t() {
     //edges = dyn::hacked_vector(0,8);
     //decoding = dyn::hacked_vector(0,8);
     //paths = dyn::hacked_vector(0,4);
 }
 
-void node_t::clear(void) {
+void node_t::clear() {
     sequence.clear(); // not sure this works
     clear_encoding();
     clear_edges();
     clear_paths();
 }
 
-void node_t::clear_edges(void) {
+void node_t::clear_edges() {
     dyn::hacked_vector null_iv;
     edges = null_iv;
 }
 
-void node_t::clear_paths(void) {
+void node_t::clear_paths() {
     dyn::hacked_vector null_iv;
     paths = null_iv;
 }
 
-void node_t::clear_encoding(void) {
+void node_t::clear_encoding() {
     dyn::hacked_vector null_iv;
     decoding = null_iv;
 }
@@ -444,7 +444,7 @@ void node_t::load(std::istream& in) {
     //display();
 }
 
-void node_t::display(void) const {
+void node_t::display() const {
     std::cerr << "seq " << sequence << " "
               << "edge_count " << edge_count() << " "
               << "path_count " << path_count();

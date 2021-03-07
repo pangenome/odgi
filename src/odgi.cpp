@@ -507,7 +507,6 @@ handle_t graph_t::create_handle(const std::string& sequence, const nid_t& id) {
     assert(!has_node(id));
 
     if (id > node_v.size()) {
-        uint64_t to_add = id - node_v.size();
         uint64_t old_size = node_v.size();
         // realloc
         node_v.resize((uint64_t)id, nullptr);

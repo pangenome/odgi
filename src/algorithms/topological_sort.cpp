@@ -529,7 +529,7 @@ std::vector<handle_t> breadth_first_topological_order(const HandleGraph& g, cons
                 return unvisited.at(i)==0;
             },
             [](const handle_t& l, const handle_t& h) { return false; },
-            [&seen_bp,&chunk_size](void) { return seen_bp > chunk_size; },
+            [&seen_bp,&chunk_size]() { return seen_bp > chunk_size; },
             seeds,
             { },
             false); // don't use bidirectional search
@@ -614,7 +614,7 @@ std::vector<handle_t> depth_first_topological_order(const HandleGraph& g, const 
                 uint64_t i = number_bool_packing::unpack_number(h);
                 return unvisited.at(i)==0;
             },
-            [&bp_count,&chunk_size](void) {
+            [&bp_count,&chunk_size]() {
                 //std::cerr << "bp_count " << bp_count << std::endl;
                 return bp_count > chunk_size;
             },

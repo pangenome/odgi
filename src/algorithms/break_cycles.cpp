@@ -68,7 +68,7 @@ std::vector<edge_t> edges_inducing_cycles(
                             return false;
                         }
                     },
-                    [&last_min_length_bp,&max_cycle_size,&seen_bp,&max_search_bp](void) {
+                    [&last_min_length_bp,&max_cycle_size,&seen_bp,&max_search_bp]() {
                         //std::cerr << "min_length_bp " << last_min_length_bp << " seen_bp " << seen_bp << std::endl;
                         return last_min_length_bp > max_cycle_size
                             || seen_bp > max_search_bp;
