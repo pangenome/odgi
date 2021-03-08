@@ -9,6 +9,7 @@
 #include <regex>
 #include "picosha2.h"
 #include "algorithms/draw.hpp"
+#include "utils.hpp"
 
 //#define debug_odgi_viz
 
@@ -19,10 +20,6 @@
 
 #define PATH_NAMES_MAX_NUM_OF_CHARACTERS 128
 #define PATH_NAMES_MAX_CHARACTER_SIZE 64
-
-bool is_number(const std::string &s) {
-    return !s.empty() && std::all_of(s.begin(), s.end(), ::isdigit);
-}
 
 namespace odgi {
 
@@ -239,7 +236,7 @@ namespace odgi {
                     return 1;
                 }
 
-                if ((splitted[0] != "*" && !is_number(splitted[0])) || (splitted[1] != "*" && !is_number(splitted[1]))) {
+                if ((splitted[0] != "*" && !utils::is_number(splitted[0])) || (splitted[1] != "*" && !utils::is_number(splitted[1]))) {
                     std::cerr
                             << "[odgi::viz] error: please specify valid numbers for the nucleotide range."
                             << std::endl;
