@@ -83,16 +83,6 @@ namespace odgi {
             add_connecting_edges_to_subgraph(source, subgraph);
         }
 
-        // Create a subpath name
-        string Paths_make_subpath_name(const string &path_name, size_t offset, size_t end_offset) {
-            string out_name = path_name + "[" + std::to_string(offset);
-            if (end_offset > 0) {
-                out_name += "-" + std::to_string(end_offset);
-            }
-            out_name += "]";
-            return out_name;
-        }
-
         void add_full_paths_to_component(const graph_t &source, graph_t &component) {
 
             // We want to track the path names in each component
