@@ -357,6 +357,8 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/test_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/stats_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/cover_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/explode_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/squeeze_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/sort_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/view_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/kmers_main.cpp
@@ -366,7 +368,8 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/prune_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/unchop_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/normalize_main.cpp
-  ${CMAKE_SOURCE_DIR}/src/subcommand/subset_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/extract_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/position_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/bin_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/matrix_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/chop_main.cpp
@@ -417,6 +420,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/unchop.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/perfect_neighbors.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/cover.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/explode.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/path_sgd.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/path_sgd_layout.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/draw.cpp

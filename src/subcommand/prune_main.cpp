@@ -116,7 +116,7 @@ int main_prune(int argc, char** argv) {
         // remove the paths, because it's likely we have damaged some
         // and at present, we have no mechanism to reconstruct them
         auto do_destroy =
-            [&](void) {
+            [&]() {
                 if (args::get(min_coverage) == 1 && args::get(max_coverage) == 0) {
                     // we could not have damaged any paths
                 } else {

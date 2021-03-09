@@ -15,7 +15,9 @@ void bfs(
     const std::function<bool(void)>& break_fn,
     const std::vector<handle_t>& sources,
     const std::vector<handle_t>& sinks,
-    bool bidirectional
+    bool bidirectional,
+    uint64_t step_limit,
+    uint64_t bp_limit
     ) {
 
     ska::flat_hash_set<handle_t> stops; // sinks
@@ -46,7 +48,10 @@ void bfs(
             // check if we've hit our break condition
             if (break_fn()) { return; }
             // check if we should stop here
-            if (!stops.count(handle)) {
+            if (!stops.count(handle)
+                && (!step_limit || curr_depth < step_limit)
+                && (!bp_limit || curr_length < bp_limit)
+                ) {
                 // add the next nodes to our queue
                 auto enqueue =
                     [&todo,&handle,&seen_edge_fn,&root,&curr_length,&curr_depth]

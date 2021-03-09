@@ -42,7 +42,7 @@ int main_layout(int argc, char **argv) {
     args::ValueFlag<std::string> p_sgd_in_file(parser, "FILE",
                                                "specify a line separated list of paths to sample from for the on the fly term generation process in the path guided linear 1D SGD default: sample from all paths)",
                                                {'f', "path-sgd-use-paths"});
-    args::ValueFlag<char> p_sgd_layout_initialization(parser, "C", "specify the layout initialization mode: d) node rank in X and gaussian noise in Y (default)\nu) node rank in X and uniform noise in Y\ng) gaussian noise in X and Y\nh) hilbert curve in X and Y", {'N', "layout-initialization"});
+    args::ValueFlag<char> p_sgd_layout_initialization(parser, "C", "specify the layout initialization mode: d) node rank in X and gaussian noise in Y (default)\nr) uniform noise in X and Y in the order of the graph length\nu) node rank in X and uniform noise in Y\ng) gaussian noise in X and Y\nh) hilbert curve in X and Y", {'N', "layout-initialization"});
     args::ValueFlag<double> p_sgd_min_term_updates_paths(parser, "N",
                                                          "minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of total path length (default: 10)",
                                                          {'G', "path-sgd-min-term-updates-paths"});

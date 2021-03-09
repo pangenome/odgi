@@ -153,7 +153,7 @@ namespace odgi {
                 uint64_t iteration = 0;
                 // launch a thread to update the learning rate, count iterations, and decide when to stop
                 auto checker_lambda =
-                        [&](void) {
+                        [&]() {
                             while (work_todo.load()) {
                                 if (term_updates.load() > min_term_updates) {
                                     if (snapshot) {

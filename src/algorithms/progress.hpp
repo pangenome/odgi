@@ -25,9 +25,11 @@ public:
         : total(_total), banner(_banner) {
         start_time = std::chrono::steady_clock::now();
         completed = 0;
-        bool has_ever_printed = false;
+
         logger = std::thread(
-            [&](void) {
+            [&]() {
+                bool has_ever_printed = false;
+
                 while (completed < total) {
                     if (completed > 0) {
                         do_print();
@@ -41,7 +43,7 @@ public:
                 }
             });
     };
-    void do_print(void) {
+    void do_print() {
         auto curr = std::chrono::steady_clock::now();
         std::chrono::duration<double> elapsed_seconds = curr-start_time;
         double rate = completed / elapsed_seconds.count();
@@ -58,7 +60,7 @@ public:
                   << "elapsed: " << print_time(elapsed_seconds.count()) << " "
                   << "remain: " << print_time(seconds_to_completion);
     }
-    void finish(void) {
+    void finish() {
         completed.store(total);
         logger.join();
         do_print();

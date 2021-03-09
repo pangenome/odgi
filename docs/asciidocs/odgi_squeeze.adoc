@@ -1,56 +1,59 @@
-= odgi subset(1)
+= odgi squeeze(1)
 ifdef::backend-manpage[]
-Erik Garrison
+Andrea Guarracino
 :doctype: manpage
 :release-version: v0.6.0
-:man manual: odgi subset
+:man manual: odgi squeeze
 :man source: odgi v0.6.0
 :page-layout: base
 endif::[]
 
 == NAME
 
-odgi_subset - extract subsets of the graph as defined by query criteria
+odgi_squeeze - squeezes multiple graphs into the same file
+
 
 == SYNOPSIS
 
-*odgi subset* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]...
+*odgi squeeze* [*-f, --input-graphs*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]...
+
 
 == DESCRIPTION
 
-Extracting a node subset of a variation graph is the task of the odgi subset(1) command. Users can specify a node, a list of nodes
-or a context of which to generate a subset from.
+The odgi squeeze(1) command merges multiple graphs into the same file.
+
 
 == OPTIONS
 
 === Graph Files IO
 
-*-i, --idx*=_FILE_::
-  File containing the succinct variation graph to subset. The file name usually ends with _.og_.
+*-f, --input-graphs*=_FILE_::
+  Input file containing the list of graphs to squeeze into the same file. The file must contain one path per line.
 
 *-o, --out*=_FILE_::
-  Write the subset to this file.
+  Store all the input graphs in this file. The file name usually ends with _.og_.
 
-=== Traversal Options
 
-*-l, --node-list*=_FILE_::
-  A file with one node identifier per line. All nodes specified here will be extract as a subset.
+=== Squeeze Options
 
-*-n, --node*=_N_::
-  Specify the node identifier from which our traversal should begin.
+*-s, --rank-suffix*=_STRING_::
+  Add the separator and the input file rank as suffix to the path names (to avoid path name collisions).
 
-*-c, --context*=_N_::
-  The number of steps away from which to begin our traversal.
+*-O, --optimize*::
+  Compact the node ID space in each input file before imploding.
 
-=== Threading
 
-*-t, --threads*=_N_::
-  Number of threads to use.
+=== Processing Information
+
+*-P, --progress*::
+  Print information about the progress to stderr.
+
 
 === Program Information
 
 *-h, --help*::
-  Print a help message for *odgi subset*.
+  Print a help message for *odgi squeeze*.
+
 
 == EXIT STATUS
 
@@ -66,7 +69,7 @@ Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
 
 == AUTHORS
 
-*odgi subset* was written by Erik Garrison.
+*odgi squeeze* was written by Andrea Guarracino.
 
 ifdef::backend-manpage[]
 == RESOURCES

@@ -24,14 +24,16 @@ void bfs(
     const std::function<bool(const handle_t&)>& seen_handle_fn,
     // the edge we will traverse to get to a new handle, returns false if we should continue across the edge
     const std::function<bool(const handle_t&, const handle_t&)>& seen_edge_fn,
-    // called to check if we should stop the DFS; we stop when true is returned.
+    // called to check if we should stop the BFS; we stop when true is returned.
     const std::function<bool(void)>& break_fn,
     // start only at these node traversals
     const std::vector<handle_t>& sources,
     // when hitting a sink, don't keep walking
     const std::vector<handle_t>& sinks,
     // do we use a bidirectional search
-    bool bidirectional = false
+    bool bidirectional = false,
+    uint64_t step_limit = 0,
+    uint64_t bp_limit = 0
     );
 
 struct bfs_state_t {

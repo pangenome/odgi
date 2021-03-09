@@ -51,7 +51,7 @@ std::vector<double> linear_sgd(const PathHandleGraph& graph,
     uint64_t iteration = 0;
     // launch a thread to update the learning rate, count iterations, and decide when to stop
     auto checker_lambda =
-        [&](void) {
+        [&]() {
             while (work_todo.load()) {
                 if (term_updates.load() > terms.size()) {
                     if (++iteration > t_max) {
@@ -196,7 +196,7 @@ std::vector<sgd_term_t> linear_sgd_search(const HandleGraph& graph,
                 },
                 [&](const handle_t& n) { return seen.count(n) > 0; },
                 [](const handle_t& l, const handle_t& n) { return false; },
-                [&](void) { return seen_bp > bandwidth; },
+                [&]() { return seen_bp > bandwidth; },
                 { h },
                 { },
                 false);

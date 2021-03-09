@@ -2,9 +2,9 @@
 ifdef::backend-manpage[]
 Erik Garrison
 :doctype: manpage
-:release-version: v0.4.1 
+:release-version: v0.6.0
 :man manual: odgi
-:man source: odgi v0.4.1 
+:man source: odgi v0.6.0
 :page-layout: base
 endif::[]
 
@@ -19,6 +19,12 @@ odgi - dynamic succinct variation graph tool
 *odgi* <<odgi_stats.adoc#_odgi_stats1, stats>> -i graph.og -S
 
 *odgi* <<odgi_cover.adoc#_odgi_cover1, cover>> -i graph.og -o graph.paths.og
+
+*odgi* <<odgi_cover.adoc#_odgi_explode1, explode>> -i graph.og -p prefix
+
+*odgi* <<odgi_cover.adoc#_odgi_squeeze1, squeeze>> -f input_graphs.txt -o graphs.og
+
+*odgi* <<odgi_kmers.adoc#_odgi_position1, position>> -i target_graph.og -g
 
 *odgi* <<odgi_sort.adoc#_odgi_sort1, sort>> -i graph.og -o graph.sorted.og -p bSnSnS
 
@@ -83,6 +89,15 @@ The odgi stats(1) command produces statistics of a variation graph. Among other 
 
 *odgi cover* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]... +
 The odgi cover(1) command find a path cover of a variation graph, with a specified number of paths per component.
+
+*odgi explode* [*-i, --idx*=_FILE_] [*-p, --prefix*=_STRING_] [_OPTION_]... +
+The odgi explode(1) command breaks a graph into connected components, writing each component in its own file.
+
+*odgi squeeze* [*-f, --input-graphs*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]...
+The odgi squeeze(1) command squeezes multiple graphs into the same file.
+
+*odgi position* [*-i, --target*=_FILE_] [_OPTION_]...
+The odgi position(1) command position parts of the graph as defined by query criteria.
 
 *odgi sort* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]... +
 The odgi sort(1) command sorts a succinct variation graph. Odgi sort offers a diverse palette of sorting algorithms to
@@ -205,7 +220,7 @@ Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
 
 == AUTHORS
 
-Erik Garrison from the University of California Santa Cruz wrote the whole *odgi* tool. Simon Heumos from the Quantitative Biology Center Tübingen wrote *odgi pathindex*, *odgi panpos*, *odgi server*, and this documentation. Andrea Guarracino from the University of Rome Tor Vergata wrote *odgi cover, and this documentation*.
+Erik Garrison from the University of California Santa Cruz wrote the whole *odgi* tool. Simon Heumos from the Quantitative Biology Center Tübingen wrote *odgi pathindex*, *odgi panpos*, *odgi server*, and this documentation. Andrea Guarracino from the University of Rome Tor Vergata wrote *odgi viz*, *odgi cover*, *odgi explode*, *odgi squeeze*, and this documentation*.
 
 == RESOURCES
 
