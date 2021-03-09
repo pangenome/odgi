@@ -340,6 +340,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/reclaimer.cpp
   ${CMAKE_SOURCE_DIR}/src/utils.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/subgraph/region.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/subgraph/extract.cpp
   ${CMAKE_SOURCE_DIR}/src/position.cpp
   ${CMAKE_SOURCE_DIR}/src/gfa_to_handle.cpp
   ${CMAKE_SOURCE_DIR}/src/split.cpp
@@ -354,6 +355,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/unittest/sort.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/pathindex.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/edge.cpp
+  ${CMAKE_SOURCE_DIR}/src/unittest/extract.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/subcommand.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/build_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/test_main.cpp
@@ -422,7 +424,6 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/unchop.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/perfect_neighbors.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/cover.cpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/explode.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/path_sgd.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/path_sgd_layout.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/draw.cpp

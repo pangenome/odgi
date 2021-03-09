@@ -3,7 +3,7 @@
 #include "args.hxx"
 #include <queue>
 
-#include "src/algorithms/explode.hpp"
+#include "src/algorithms/subgraph/extract.hpp"
 
 namespace odgi {
 
