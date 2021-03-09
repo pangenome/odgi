@@ -19,5 +19,6 @@ namespace odgi {
                                       bool forward_only);
 
         void add_full_paths_to_component(const graph_t &source, graph_t &component);
+
     }
 }

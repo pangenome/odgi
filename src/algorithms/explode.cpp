@@ -33,12 +33,12 @@ namespace odgi {
 
         void expand_subgraph_by_steps(const graph_t &source, graph_t &subgraph, const uint64_t &steps,
                                       bool forward_only) {
-            std::vector <handle_t> curr_handles;
+            std::vector<handle_t> curr_handles;
             subgraph.for_each_handle([&](const handle_t &h) {
                 curr_handles.push_back(h);
             });
             for (uint64_t i = 0; i < steps && !curr_handles.empty(); ++i) {
-                std::vector <handle_t> next_handles;
+                std::vector<handle_t> next_handles;
                 for (auto &h : curr_handles) {
                     handle_t old_h = source.get_handle(subgraph.get_id(h));
                     source.follow_edges(old_h, false, [&](const handle_t &c) {
@@ -121,6 +121,7 @@ namespace odgi {
                 }
             }
         }
+
     }
 
 }

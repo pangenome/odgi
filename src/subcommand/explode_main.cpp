@@ -3,7 +3,7 @@
 #include "args.hxx"
 #include <queue>
 
-#include "algorithms/explode.hpp"
+#include "src/algorithms/explode.hpp"
 
 namespace odgi {
 
