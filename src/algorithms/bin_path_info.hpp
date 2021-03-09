@@ -41,7 +41,6 @@ namespace odgi {
                            uint64_t num_bins = 0,
                            uint64_t bin_width = 0,
                            bool drop_gap_links = false,
-                           bool haplo_blocker = false,
                            bool progress = false);
     }
 }

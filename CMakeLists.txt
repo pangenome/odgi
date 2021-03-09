@@ -404,6 +404,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/id_ordered_paths.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/simple_components.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_info.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_coverage.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/sgd_layout.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/mondriaan_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/matrix_writer.cpp
@@ -534,6 +535,7 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/algorithms/prune.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/reverse_complement.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_info.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_coverage.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/dfs.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/chop.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/unchop.hpp
