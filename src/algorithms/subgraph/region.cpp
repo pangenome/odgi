@@ -31,7 +31,7 @@ namespace odgi {
         out_regions.clear();
         std::ifstream bedstream(bed_path);
         if (!bedstream) {
-            std::cerr << "Unable to open bed file: " << bed_path << std::endl;
+            std::cerr << "[odgi::parse_bed_regions] unable to open bed file: " << bed_path << std::endl;
             return;
         }
         std::string row;
@@ -48,7 +48,7 @@ namespace odgi {
                 !getline(ss, sbuf, '\t') ||
                 !getline(ss, ebuf, '\t') ||
                 (out_names != nullptr && !getline(ss, nbuf, '\t'))) {
-                std::cerr << "Error parsing bed line " << line << ": " << row << std::endl;
+                std::cerr << "[odgi::parse_bed_regions] error parsing bed line " << line << ": " << row << std::endl;
             } else {
                 region.start = std::stoi(sbuf);
                 region.end = std::stoi(ebuf);
