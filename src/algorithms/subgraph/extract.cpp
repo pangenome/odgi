@@ -47,13 +47,6 @@ namespace odgi {
                                                    ? subgraph.flip(h) : h;
 
                     });
-                    /*//return iteratee(step, get_is_reverse(get_handle_of_step(step)) != get_is_reverse(handle), get_position_of_step(step));
-                    source.for_each_step_position_on_handle(handle, [&](const step_handle_t& step, const bool& is_rev, const uint64_t& pos) {
-                        path_handle_t path = source.get_path_handle_of_step(step);
-                        std::string path_name = source.get_path_name(path);
-                        subpaths[path_name][pos] = is_rev ? subgraph.flip(h) : h;
-                        return true;
-                    });*/
                 }
             });
 
@@ -73,16 +66,6 @@ namespace odgi {
                 if (subgraph.has_path(path_name)) {
                     subgraph.destroy_path(subgraph.get_path_handle(path_name));
                 }
-
-                // create a new path: give it a subpath name if the flag's on and its smaller than original
-                /*path_handle_t path;
-                if (subpath.second.size() == source.get_step_count(source_path_handle) ||
-                    subpath.second.empty()) {
-                    path = subgraph.create_path_handle(path_name, source.get_is_circular(source_path_handle));
-                } else {
-                    path = new_subpath(path_name, source.get_is_circular(source_path_handle),
-                                       subpath.second.begin()->first);
-                }*/
 
                 uint64_t start, end;
                 std::vector<handle_t> handles_to_embed;

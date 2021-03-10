@@ -51,7 +51,8 @@ namespace odgi {
                                                     "find the node(s) in the path range(s) specified in the given BED FILE",
                                                     {'b', "bed-file"});
         args::Flag _full_range(parser, "use_length",
-                               "gets all nodes from each path range (from pos1 to pos2). Be careful to use it with very complex graphs",
+                               "collects all nodes in the sorted order of the graph in the min and max position touched by the given path ranges. "
+                               "Be careful to use it with very complex graphs",
                                {'E', "full-range"});
 
         args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
@@ -144,10 +145,9 @@ namespace odgi {
                     algorithms::add_connecting_edges_to_subgraph(source, subgraph);
                 }
                 algorithms::add_subpaths_to_subgraph(source, subgraph);
-                //TODO TODO graph.remove_orphan_edges();
-                // Order the mappings by rank. TODO: how do we handle breaks between
-                // different sections of a path with a single name?
-                //TODO TODO graph.paths.sort_by_mapping_rank();
+
+                // This should not be necessary, if the extraction works correctly
+                // graph.remove_orphan_edges();
             };
 
             for (auto &target : targets) {
