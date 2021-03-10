@@ -142,7 +142,7 @@ namespace odgi {
                 } else {
                     algorithms::add_connecting_edges_to_subgraph(source, subgraph);
                 }
-                algorithms::add_subpaths_to_subgraph(source, subgraph, true);
+                algorithms::add_subpaths_to_subgraph(source, subgraph);
                 //TODO TODO graph.remove_orphan_edges();
                 // Order the mappings by rank. TODO: how do we handle breaks between
                 // different sections of a path with a single name?

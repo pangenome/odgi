@@ -18,9 +18,9 @@ namespace odgi {
         /// add subpaths to the subgraph, providing a concatenation of subpaths that are discontiguous over the subgraph
         /// based on their order in the path position index provided by the source graph
         /// will clear any path found in both graphs before writing the new steps into it
-        /// if subpath_naming is true, a suffix will be added to each path in the subgraph denoting its offset
+        /// a suffix will be added to each path in the subgraph denoting its offset
         /// in the source graph (unless the subpath was not cut up at all)
-        void add_subpaths_to_subgraph(const graph_t &source, graph_t &subgraph, bool subpath_naming);
+        void add_subpaths_to_subgraph(const graph_t &source, graph_t &subgraph);
 
         void extract_path_range(const graph_t &source, path_handle_t path_handle, int64_t start, int64_t end,
                                 graph_t &subgraph);
