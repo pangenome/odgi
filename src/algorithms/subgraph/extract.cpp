@@ -127,7 +127,11 @@ namespace odgi {
                 handle_t cur_handle = source.get_handle_of_step(cur_step);
                 walked += source.get_length(cur_handle);
                 if (walked > start) {
-                    subgraph.create_handle(source.get_sequence(cur_handle), source.get_id(cur_handle));
+                    nid_t id = source.get_id(cur_handle);
+                    if (!subgraph.has_node(id)) {
+                        subgraph.create_handle(source.get_sequence(cur_handle), id);
+                    }
+
                     if (!first_step) {
                         handle_t prev_handle = source.get_handle_of_step(source.get_previous_step(cur_step));
                         subgraph.create_edge(
