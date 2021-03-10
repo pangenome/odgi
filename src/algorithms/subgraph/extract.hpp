@@ -13,7 +13,7 @@
 
 namespace odgi {
     namespace algorithms {
-        /* Implementation inspired by https://github.com/vgteam/vg */
+        /* Several functions were inspired by https://github.com/vgteam/vg */
 
         void add_full_paths_to_component(const graph_t &source, graph_t &component);
 
@@ -22,7 +22,7 @@ namespace odgi {
         /// will clear any path found in both graphs before writing the new steps into it
         /// a suffix will be added to each path in the subgraph denoting its offset
         /// in the source graph (unless the subpath was not cut up at all)
-        void add_subpaths_to_subgraph(const graph_t &source, graph_t &subgraph);
+        void add_subpaths_to_subgraph(const graph_t &source, graph_t &subgraph, uint64_t num_threads);
 
         void extract_path_range(const graph_t &source, path_handle_t path_handle, int64_t start, int64_t end,
                                 graph_t &subgraph);

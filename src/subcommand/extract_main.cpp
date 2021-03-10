@@ -55,7 +55,7 @@ namespace odgi {
                                "Be careful to use it with very complex graphs",
                                {'E', "full-range"});
 
-        args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
+        args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use (to embed the subpaths in parallel)", {'t', "threads"});
 
         args::Flag _debug(parser, "progress", "print information to stderr",
                           {'P', "progress"});
@@ -120,6 +120,7 @@ namespace odgi {
         }
 
         bool debug = args::get(_debug);
+        uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
 
         // handle targets from command line
         if (_path_range) {
@@ -163,7 +164,7 @@ namespace odgi {
                 if (debug) {
                     std::cerr << "[odgi::extract] adding subpaths" << std::endl;
                 }
-                algorithms::add_subpaths_to_subgraph(source, subgraph);
+                algorithms::add_subpaths_to_subgraph(source, subgraph, num_threads);
 
                 // This should not be necessary, if the extraction works correctly
                 // graph.remove_orphan_edges();
@@ -180,15 +181,14 @@ namespace odgi {
                 path_handle_t path_handle = graph.get_path_handle(target.seq);
 
                 if (debug) {
-                    std::cerr << "[odgi::extract] extracting path range" << target.seq << ":" << target.start << "-"
+                    std::cerr << "[odgi::extract] extracting path range " << target.seq << ":" << target.start << "-"
                               << target.end << std::endl;
                 }
                 algorithms::extract_path_range(graph, path_handle, target.start, target.end, subgraph);
 
                 if (_full_range) {
                     if (debug) {
-                        std::cerr << "[odgi::extract] collecting all nodes in the path range"
-                                  << target.seq << ":" << target.start << "-" << target.end << std::endl;
+                        std::cerr << "[odgi::extract] collecting all nodes in the path range" << std::endl;
                     }
 
                     // find the start and end node of this and fill things in
