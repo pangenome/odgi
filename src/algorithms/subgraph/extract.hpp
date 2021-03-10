@@ -36,6 +36,8 @@ namespace odgi {
 
         void add_full_paths_to_component(const graph_t &source, graph_t &component);
 
+        void extract_id_range(const graph_t& source, const nid_t& id1, const nid_t& id2, graph_t& subgraph);
+
     }
 }
 #endif //ODGI_EXTRACT_H

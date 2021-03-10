@@ -291,7 +291,6 @@ namespace odgi {
             add_connecting_edges_to_subgraph(source, subgraph);
         }
 
-
         void add_full_paths_to_component(const graph_t &source, graph_t &component) {
 
             // We want to track the path names in each component
@@ -321,5 +320,12 @@ namespace odgi {
             }
         }
 
+        void extract_id_range(const graph_t& source, const nid_t& id1, const nid_t& id2, graph_t& subgraph) {
+            for (nid_t i = id1; i <= id2; ++i) {
+                if (!subgraph.has_node(i)) {
+                    subgraph.create_handle(source.get_sequence(source.get_handle(i)), i);
+                }
+            }
+        }
     }
 }

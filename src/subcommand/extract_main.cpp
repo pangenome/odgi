@@ -22,20 +22,6 @@ namespace odgi {
         argv[0] = (char *) prog_name.c_str();
         --argc;
 
-        //////////////////////////////////////////////////////////////////////////////
-        /*
-        1) various ways of collecting a subgraph...  either a node list (-l/--node-list), a set of path ranges, a range
-         in the sorted graph, or path ranges projected into the sorted graph (what you're doing)
-        2) expand this by some context in terms of bp, steps, etc., if desired, or (achieving your goal) get everything
-         in the sort order before the beginning and ending node you've collected
-        3) collect the path steps on all nodes in the subgraph, then walk them as far as you can go while staying inside
-         the subgraph
-        4) remove duplicates
-        5) rewrite these subpaths as new paths in the output graph, with the "samtools" or "bedtools" range syntax, we
-         add a suffix like :n-m where n= the start and m = the end in 0-based half-open format (bedtools numbers)
-        */
-        //////////////////////////////////////////////////////////////////////////////
-
         args::ArgumentParser parser("extract parts of the graph as defined by query criteria");
         args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
 
@@ -56,6 +42,7 @@ namespace odgi {
         args::Flag _use_length(parser, "use_length",
                                "treat the context size as a length in bases (and not as a number of steps)",
                                {'L', "use-length"});
+
         /// Range selection
         args::ValueFlag<std::string> _path_range(parser, "STRING",
                                                  "find the node(s) in the specified path range TARGET=path[:pos1[-pos2]]",
@@ -63,6 +50,9 @@ namespace odgi {
         args::ValueFlag<std::string> _path_bed_file(parser, "FILE",
                                                     "find the node(s) in the path range(s) specified in the given BED FILE",
                                                     {'b', "bed-file"});
+        args::Flag _full_range(parser, "use_length",
+                               "gets all nodes from each path range (from pos1 to pos2). Be careful to use it with very complex graphs",
+                               {'E', "full-range"});
 
         args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
@@ -111,6 +101,18 @@ namespace odgi {
             parse_bed_regions(args::get(_path_bed_file), targets);
         }
 
+        if (_full_range) {
+            nid_t last_node_id = graph.min_node_id();
+            graph.for_each_handle([&](const handle_t &h) {
+                nid_t node_id = graph.get_id(h);
+                if (node_id - last_node_id > 1) {
+                    std::cerr << "[odgi::extract] error: the graph is not optimized. To extract the full ranges, please run 'odgi sort' using -O/--optimize first" << std::endl;
+                    exit(1);
+                }
+                last_node_id = node_id;
+            });
+        }
+
         // handle targets from command line
         if (_path_range) {
             targets_str.push_back(args::get(_path_range));
@@ -126,7 +128,6 @@ namespace odgi {
                         << std::endl;
                 return 1;
             }
-            //std::cerr << region.seq << ": " << region.start << "-" << region.end << std::endl;
 
             targets.push_back(region);
         }
@@ -159,7 +160,19 @@ namespace odgi {
 
                 path_handle_t path_handle = graph.get_path_handle(target.seq);
                 algorithms::extract_path_range(graph, path_handle, target.start, target.end, subgraph);
+                if (_full_range) {
+                    // find the start and end node of this
+                    // and fill things in
+                    nid_t id_start = std::numeric_limits<nid_t>::max();
+                    nid_t id_end = 1;
+                    subgraph.for_each_handle([&](handle_t handle) {
+                        nid_t id = subgraph.get_id(handle);
+                        id_start = std::min(id_start, id);
+                        id_end = std::max(id_end, id);
+                    });
 
+                    algorithms::extract_id_range(graph, id_start, id_end, subgraph);
+                }
                 prep_graph(graph, subgraph, context_size, _use_length);
 
                 if (_prefix) {
@@ -173,130 +186,6 @@ namespace odgi {
                 }
             }
         } else {
-            /*
-         std::string nucleotide_range = args::get(_path_range);
-            if (nucleotide_range.empty()) {
-                std::cerr
-                        << "[odgi::extract] error: please specify a path nucleotide range: STRING=PATH:start-end."
-                        << std::endl;
-                return 1;
-            }
-
-            size_t foundFirstColon = nucleotide_range.find(':');
-            if (foundFirstColon == string::npos) {
-                std::cerr
-                        << "[odgi::extract] error: please specify a path name."
-                        << std::endl;
-                return 1;
-            }
-
-
-             std::string path_name = nucleotide_range.substr(0, foundFirstColon);
-            nucleotide_range = nucleotide_range.substr(foundFirstColon + 1);
-
-            std::regex regex("-");
-            std::vector<std::string> splitted(
-                    std::sregex_token_iterator(nucleotide_range.begin(), nucleotide_range.end(), regex, -1),
-                    std::sregex_token_iterator()
-            );
-            if (splitted.size() != 2) {
-                std::cerr
-                        << "[odgi::extract] error: please specify a valid nucleotide range: STRING=PATH:start-end."
-                        << std::endl;
-                return 1;
-            }
-
-            if ((splitted[0] != "*" && !utils::is_number(splitted[0])) ||
-                (splitted[1] != "*" && !utils::is_number(splitted[1]))) {
-                std::cerr
-                        << "[odgi::extract] error: please specify valid numbers for the nucleotide range."
-                        << std::endl;
-                return 1;
-            }
-            if (!graph.has_path(path_name)) {
-                std::cerr
-                        << "[odgi::extract] error: please specify a valid path name."
-                        << std::endl;
-                return 1;
-            }
-
-            uint64_t pangenomic_start_pos;
-            uint64_t pangenomic_end_pos;
-
-            if (splitted[0] == "*") {
-                pangenomic_start_pos = 0;
-            } else {
-                pangenomic_start_pos = stod(splitted[0]);
-            }
-
-            if (splitted[1] == "*") {
-                pangenomic_end_pos = std::numeric_limits<uint64_t>::max();
-            } else {
-                pangenomic_end_pos = stod(splitted[1]);
-            }
-
-            if (pangenomic_start_pos > pangenomic_end_pos) {
-                std::cerr
-                        << "[odgi::extract] error: please specify a start position less than or equal to the end position."
-                        << std::endl;
-                return 1;
-            }
-
-            if (args::get(threads)) {
-                omp_set_num_threads(args::get(threads));
-            }
-
-            graph_t extract;
-
-            uint64_t new_pangenomic_start_pos = std::numeric_limits<uint64_t>::max();
-            uint64_t new_pangenomic_end_pos = 0;
-
-            path_handle_t path_handle = graph.get_path_handle(path_name);
-
-            uint64_t nt_position_in_path = 0;
-
-            graph.for_each_step_in_path(path_handle, [&](const step_handle_t &occ) {
-                handle_t h = graph.get_handle_of_step(occ);
-                uint64_t h_len = graph.get_length(h);
-
-                //Todo dumb implementation: improve with the math later
-                bool take_handle = false;
-                do {
-                    if (nt_position_in_path >= pangenomic_start_pos && nt_position_in_path <= pangenomic_end_pos) {
-                        take_handle = true;
-                    }
-
-                    ++nt_position_in_path;
-                } while (--h_len != 0);
-
-                if (take_handle) {
-                    nid_t node_id = graph.get_id(h);
-                    std::cerr << "node_id: " << node_id << std::endl;
-
-                    if (!extract.has_node(node_id)) {
-                        if (graph.get_is_reverse(h)) {
-                            h = graph.flip(h);
-                        }
-
-                        extract.create_handle(graph.get_sequence(h), node_id);
-                    }
-                }
-            });
-
-            // expand the context and get path information
-            // if forward_only true, then we only go forward.
-    //            if (context > 0) {
-    //                algorithms::expand_subgraph_by_steps(*graph, *vg_subgraph, context, forward_only);
-    //            }
-    //            if (length > 0) {
-    //                algorithms::expand_subgraph_by_length(*graph, *vg_subgraph, context, forward_only);
-    //            } else if (context == 0 && length == 0) {
-            algorithms::add_connecting_edges_to_subgraph(graph, extract);
-    //            }
-
-            algorithms::add_subpaths_to_subgraph(graph, extract);
-            */
-
             graph_t extract;
 
             // collect the new graph
