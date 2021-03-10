@@ -28,6 +28,9 @@ namespace odgi {
 
         void add_connecting_edges_to_subgraph(const graph_t &source, graph_t &subgraph);
 
+        void expand_subgraph_by_length(const graph_t &source, graph_t &subgraph, const uint64_t &length,
+                                       bool forward_only);
+
         void expand_subgraph_by_steps(const graph_t &source, graph_t &subgraph, const uint64_t &steps,
                                       bool forward_only);
 

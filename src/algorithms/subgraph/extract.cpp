@@ -236,6 +236,56 @@ namespace odgi {
             add_connecting_edges_to_subgraph(source, subgraph);
         }
 
+        void expand_subgraph_by_length(const graph_t& source, graph_t& subgraph, const uint64_t& length, bool forward_only) {
+            uint64_t accumulated_length = 0;
+            std::vector<handle_t> curr_handles;
+            subgraph.for_each_handle([&](const handle_t& h) {
+                curr_handles.push_back(h);
+            });
+            while (accumulated_length < length && !curr_handles.empty()) {
+                std::vector<handle_t> next_handles;
+                for (auto& h : curr_handles) {
+                    handle_t old_h = source.get_handle(subgraph.get_id(h));
+                    source.follow_edges(old_h, false, [&](const handle_t& c) {
+                        handle_t x;
+                        if (!subgraph.has_node(source.get_id(c))) {
+                            x = subgraph.create_handle(source.get_sequence(source.get_is_reverse(c)?source.flip(c):c), source.get_id(c));
+                            next_handles.push_back(x);
+                            accumulated_length += subgraph.get_length(x);
+                        } else {
+                            x = subgraph.get_handle(source.get_id(c));
+                        }
+                        if (source.get_is_reverse(c)) {
+                            x = subgraph.flip(x);
+                        }
+                        if (!subgraph.has_edge(h, x)) {
+                            subgraph.create_edge(h, x);
+                        }
+                    });
+                    if (!forward_only) {
+                        source.follow_edges(old_h, true, [&](const handle_t& c) {
+                            handle_t x;
+                            if (!subgraph.has_node(source.get_id(c))) {
+                                x = subgraph.create_handle(source.get_sequence(source.get_is_reverse(c)?source.flip(c):c), source.get_id(c));
+                                next_handles.push_back(x);
+                                accumulated_length += subgraph.get_length(x);
+                            } else {
+                                x = subgraph.get_handle(source.get_id(c));
+                            }
+                            if (source.get_is_reverse(c)) {
+                                x = subgraph.flip(x);
+                            }
+                            if (!subgraph.has_edge(x, h)) {
+                                subgraph.create_edge(x, h);
+                            }
+                        });
+                    }
+                }
+                curr_handles = std::move(next_handles);
+            }
+            add_connecting_edges_to_subgraph(source, subgraph);
+        }
+
 
         void add_full_paths_to_component(const graph_t &source, graph_t &component) {
 

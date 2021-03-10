@@ -48,11 +48,14 @@ namespace odgi {
                            "(default: `component`)\"", {'p', "prefix"});
 
         args::ValueFlag<std::string> _node_list(parser, "FILE", "a file with one node id per line", {'l', "node-list"});
-        args::ValueFlag<uint64_t> _target_node(parser, "ID", "a single node from which to begin our traversal",{'n', "node"});
+        args::ValueFlag<uint64_t> _target_node(parser, "ID", "a single node from which to begin our traversal",
+                                               {'n', "node"});
         args::ValueFlag<uint64_t> _context_size(parser, "N",
                                                 "the number of steps away from our initial subgraph that we should collect",
                                                 {'c', "context"});
-
+        args::Flag _use_length(parser, "use_length",
+                               "treat the context size as a length in bases (and not as a number of steps)",
+                               {'L', "use-length"});
         /// Range selection
         args::ValueFlag<std::string> _path_range(parser, "STRING",
                                                  "find the node(s) in the specified path range TARGET=path[:pos1[-pos2]]",
@@ -129,13 +132,13 @@ namespace odgi {
         }
 
         if (!targets.empty()) {
-            auto prep_graph = [](graph_t &source, graph_t &subgraph, uint64_t context_size) {
+            auto prep_graph = [](graph_t &source, graph_t &subgraph, uint64_t context_size, bool use_length) {
                 if (context_size > 0) {
-                    //if (use_length) {
-                    //    algorithms::expand_subgraph_by_length(source, subgraph, context_size);
-                    //} else {
-                    algorithms::expand_subgraph_by_steps(source, subgraph, context_size, false);
-                    //}
+                    if (use_length) {
+                        algorithms::expand_subgraph_by_length(source, subgraph, context_size, false);
+                    } else {
+                        algorithms::expand_subgraph_by_steps(source, subgraph, context_size, false);
+                    }
                 } else {
                     algorithms::add_connecting_edges_to_subgraph(source, subgraph);
                 }
@@ -157,7 +160,7 @@ namespace odgi {
                 path_handle_t path_handle = graph.get_path_handle(target.seq);
                 algorithms::extract_path_range(graph, path_handle, target.start, target.end, subgraph);
 
-                prep_graph(graph, subgraph, context_size);
+                prep_graph(graph, subgraph, context_size, _use_length);
 
                 if (_prefix) {
                     string filename = target.seq + ":" + to_string(target.start) + "-" + to_string(target.end) + ".og";
