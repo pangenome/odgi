@@ -2,6 +2,34 @@
 
 namespace odgi {
     namespace algorithms {
+        void add_full_paths_to_component(const graph_t &source, graph_t &component) {
+
+            // We want to track the path names in each component
+            set<path_handle_t> paths;
+
+            // Record paths
+            component.for_each_handle([&](const handle_t &h) {
+                handlegraph::nid_t id = component.get_id(h);
+
+                if (source.has_node(id)) {
+                    handle_t source_handle = source.get_handle(id);
+
+                    source.for_each_step_on_handle(source_handle, [&](const step_handle_t &source_step) {
+                        paths.insert(source.get_path_handle_of_step(source_step));
+                    });
+                }
+            });
+
+            // Copy the paths over
+            for (path_handle_t path_handle : paths) {
+                path_handle_t new_path_handle = component.create_path_handle(source.get_path_name(path_handle),
+                                                                             source.get_is_circular(path_handle));
+                for (handle_t handle : source.scan_path(path_handle)) {
+                    component.append_step(new_path_handle, component.get_handle(source.get_id(handle),
+                                                                                source.get_is_reverse(handle)));
+                }
+            }
+        }
 
         // Create a subpath name
         string make_subpath_name(const string &path_name, size_t offset, size_t end_offset) {
@@ -276,35 +304,6 @@ namespace odgi {
                 curr_handles = std::move(next_handles);
             }
             add_connecting_edges_to_subgraph(source, subgraph);
-        }
-
-        void add_full_paths_to_component(const graph_t &source, graph_t &component) {
-
-            // We want to track the path names in each component
-            set<path_handle_t> paths;
-
-            // Record paths
-            component.for_each_handle([&](const handle_t &h) {
-                handlegraph::nid_t id = component.get_id(h);
-
-                if (source.has_node(id)) {
-                    handle_t source_handle = source.get_handle(id);
-
-                    source.for_each_step_on_handle(source_handle, [&](const step_handle_t &source_step) {
-                        paths.insert(source.get_path_handle_of_step(source_step));
-                    });
-                }
-            });
-
-            // Copy the paths over
-            for (path_handle_t path_handle : paths) {
-                path_handle_t new_path_handle = component.create_path_handle(source.get_path_name(path_handle),
-                                                                             source.get_is_circular(path_handle));
-                for (handle_t handle : source.scan_path(path_handle)) {
-                    component.append_step(new_path_handle, component.get_handle(source.get_id(handle),
-                                                                                source.get_is_reverse(handle)));
-                }
-            }
         }
 
         void extract_id_range(const graph_t& source, const nid_t& id1, const nid_t& id2, graph_t& subgraph) {

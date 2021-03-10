@@ -13,7 +13,9 @@
 
 namespace odgi {
     namespace algorithms {
-        /* This implementation has been inspired from by: https://github.com/vgteam/vg */
+        /* Implementation inspired by https://github.com/vgteam/vg */
+
+        void add_full_paths_to_component(const graph_t &source, graph_t &component);
 
         /// add subpaths to the subgraph, providing a concatenation of subpaths that are discontiguous over the subgraph
         /// based on their order in the path position index provided by the source graph
@@ -25,7 +27,6 @@ namespace odgi {
         void extract_path_range(const graph_t &source, path_handle_t path_handle, int64_t start, int64_t end,
                                 graph_t &subgraph);
 
-
         void add_connecting_edges_to_subgraph(const graph_t &source, graph_t &subgraph);
 
         void expand_subgraph_by_length(const graph_t &source, graph_t &subgraph, const uint64_t &length,
@@ -33,8 +34,6 @@ namespace odgi {
 
         void expand_subgraph_by_steps(const graph_t &source, graph_t &subgraph, const uint64_t &steps,
                                       bool forward_only);
-
-        void add_full_paths_to_component(const graph_t &source, graph_t &component);
 
         void extract_id_range(const graph_t& source, const nid_t& id1, const nid_t& id2, graph_t& subgraph);
 
