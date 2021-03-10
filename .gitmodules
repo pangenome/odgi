@@ -76,6 +76,3 @@
 [submodule "deps/atomicbitvector"]
 	path = deps/atomicbitvector
 	url = https://github.com/ekg/atomicbitvector.git
-[submodule "deps/gzstream"]
-	path = deps/gzstream
-	url = https://github.com/kanedo/gzstream.git
