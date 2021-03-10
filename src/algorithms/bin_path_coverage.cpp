@@ -24,6 +24,7 @@ namespace odgi {
                 num_bins = graph_len / bin_width + (graph_len % bin_width ? 1 : 0);
             }
             position_map[position_map.size() - 1] = graph_len;
+            std::cerr <<"[odgi::bin] bin_path_coverage: pangenome length: " << graph_len << std::endl;
             std::vector<uint64_t> paths_per_bin(num_bins);
             // first pass: collect #nucleotides, fill in_all_bins_bv, unique_bins_bv, unique_bins_touched_bv
             graph.for_each_path_handle([&](const path_handle_t &path) {
@@ -48,7 +49,8 @@ namespace odgi {
             }
 #endif
 
-            // write header of table to stdout
+            // write header of table to stdout, collect final bins
+            std::vector<uint64_t> final_bin_ids = std::vector<uint64_t>();
             const uint64_t graph_paths = graph.get_path_count();
             std::cout << "path_name";
             for (uint64_t i = 0; i < num_bins; i++) {
@@ -57,6 +59,7 @@ namespace odgi {
                 // 1-based bin identifiers
                 if (!(paths_in_bin == 1 || paths_in_bin == graph_paths)) {
                     std::cout << "\t" << (i + 1);
+                    final_bin_ids.push_back(i + 1);
                 }
             }
             std::cout << std::endl;
@@ -90,29 +93,23 @@ namespace odgi {
                     bin_coverages[k] = bin_coverages[k] / bin_width;
                 }
 
-                // TODO print out
                 // write to std::cout, only if we have !in_all_bins_bv[idx] && !unique_bins_bv[idx] && auto it = m.find("f"); if (it != m.end()) {/*Use it->second*/}.
-
                 std::cout << graph.get_path_name(path);
-                for (uint64_t i = 0; i < num_bins; i++) {
-                    uint64_t paths_in_bin = paths_per_bin[i];
-                    // filter out bins that are unique (== 1) or that are present in all paths (== graph_paths)
-                    // 1 based bin identifiers as the output goes directly into R
-                    auto it = bin_coverages.find(i + 1);
-                    if (!(paths_in_bin == 1 || paths_in_bin == graph_paths)) {
-                        if (it != bin_coverages.end()) {
-                            uint64_t cov = it->second;
-                            if (cov > 255) {
-                                cov = 255;
-                            }
-                            std::cout << "\t" << cov;
-                        } else {
-                            std::cout << "\t" << 0;
+                // this could be optimized by only iterating over the bins that we want to print, this would require some pre-calculations, might be memory expensive
+                for (auto &bin_id : final_bin_ids) {
+                    auto it = bin_coverages.find(bin_id);
+                    if (it != bin_coverages.end()) {
+                        uint64_t cov = it->second;
+                        // cap coverage by 255
+                        if (cov > 255) {
+                            cov = 255;
                         }
+                        std::cout << "\t" << cov;
+                    } else {
+                        std::cout << "\t" << 0;
                     }
                 }
                 std::cout << std::endl;
-                // cap coverage by 255
                 // write header
                 if (progress) {
                     progress_meter->increment(1);
@@ -122,7 +119,6 @@ namespace odgi {
             if (progress) {
                 progress_meter->finish();
             }
-
         }
     }
 }
