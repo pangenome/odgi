@@ -177,14 +177,21 @@ namespace odgi {
                     target.start = 0;
                 }
 
-                std::cerr << "[odgi::extract] extracting path range" << target.seq << ":" << target.start << "-"
-                          << target.end << std::endl;
-
                 path_handle_t path_handle = graph.get_path_handle(target.seq);
+
+                if (debug) {
+                    std::cerr << "[odgi::extract] extracting path range" << target.seq << ":" << target.start << "-"
+                              << target.end << std::endl;
+                }
                 algorithms::extract_path_range(graph, path_handle, target.start, target.end, subgraph);
+
                 if (_full_range) {
-                    // find the start and end node of this
-                    // and fill things in
+                    if (debug) {
+                        std::cerr << "[odgi::extract] collecting all nodes in the path range"
+                                  << target.seq << ":" << target.start << "-" << target.end << std::endl;
+                    }
+
+                    // find the start and end node of this and fill things in
                     nid_t id_start = std::numeric_limits<nid_t>::max();
                     nid_t id_end = 1;
                     subgraph.for_each_handle([&](handle_t handle) {
