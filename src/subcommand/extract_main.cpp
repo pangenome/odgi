@@ -83,6 +83,17 @@ namespace odgi {
             return 1;
         }
 
+        if (!_split_subgraphs && !og_out_file) {
+            std::cerr << "[odgi::extract] error: please specify an output file to where to store the subgraph via -o=[FILE], --out=[FILE]." << std::endl;
+            return 1;
+        }
+
+        if (_split_subgraphs && og_out_file) {
+            std::cerr << "[odgi::extract] error: please do not specify an output file (with -o/--out) when one subgraph "
+                         "per given target is requested (with -s/--split-subgraphs)." << std::endl;
+            return 1;
+        }
+
         uint64_t context_size = _context_size ? args::get(_context_size) : 0;
 
         graph_t graph;
