@@ -44,21 +44,29 @@ namespace odgi {
         void add_subpaths_to_subgraph(const graph_t &source, graph_t &subgraph, uint64_t num_threads) {
             // Prepare all paths for parallelize the next step (actually, not all paths are always present in the subgraph)
             std::vector<path_handle_t> paths;
+            paths.reserve(source.get_path_count());
             source.for_each_path_handle([&](const path_handle_t path) {
                 paths.push_back(path);
             });
 
-            auto new_subpath = [&subgraph](const string &path_name, bool is_circular, size_t start, size_t end) {
+            auto create_and_fill_subpath = [](graph_t &subgraph, const string &path_name,
+                                              const bool is_circular, const size_t start, const size_t end,
+                                              std::vector<handle_t>& handles_to_embed) {
                 string subpath_name = make_subpath_name(path_name, start, end);
                 if (subgraph.has_path(subpath_name)) {
                     subgraph.destroy_path(subgraph.get_path_handle(subpath_name));
                 }
-                return subgraph.create_path_handle(subpath_name, is_circular);
+                path_handle_t path = subgraph.create_path_handle(subpath_name, is_circular);
+
+                for (auto h_to_embed : handles_to_embed) {
+                    subgraph.append_step(path, h_to_embed);
+                }
+
+                std::vector<handle_t>().swap(handles_to_embed);
             };
 
 #pragma omp parallel for schedule(static, 1) num_threads(num_threads)
-            for (uint64_t i = 0; i < paths.size(); ++i) {
-                path_handle_t source_path_handle = paths[i];
+            for (auto source_path_handle : paths) {
                 std::string path_name = source.get_path_name(source_path_handle);
 
                 uint64_t walked = 0;
@@ -71,21 +79,16 @@ namespace odgi {
                     handlegraph::nid_t source_id = source.get_id(source_handle);
 
                     if (subgraph.has_node(source_id)) {
-                        if (handles_to_embed.empty()){
+                        if (handles_to_embed.empty()) {
                             start = walked;
                         }
 
                         end = walked + source_length;
-                        handles_to_embed.push_back(subgraph.get_handle(source_id, source.get_is_reverse(source_handle)));
+                        handles_to_embed.push_back(
+                                subgraph.get_handle(source_id, source.get_is_reverse(source_handle)));
                     } else if (!handles_to_embed.empty()) {
-                        // we have a discontinuity!  we'll make a new path can continue from there
-                        path_handle_t path = new_subpath(path_name, source.get_is_circular(source_path_handle), start, end);
-
-                        //fill in the path information
-                        for (auto h_to_embed : handles_to_embed) {
-                            subgraph.append_step(path, h_to_embed);
-                        }
-                        std::vector<handle_t>().swap(handles_to_embed);
+                        create_and_fill_subpath(subgraph, path_name, source.get_is_circular(source_path_handle), start,
+                                                end, handles_to_embed);
                     }
 
                     walked += source_length;
@@ -93,14 +96,8 @@ namespace odgi {
 
                 // last subpath
                 if (!handles_to_embed.empty()) {
-                    // we have a discontinuity!  we'll make a new path can continue from there
-                    path_handle_t path = new_subpath(path_name, source.get_is_circular(source_path_handle), start, end);
-
-                    //fill in the path information
-                    for (auto h_to_embed : handles_to_embed) {
-                        subgraph.append_step(path, h_to_embed);
-                    }
-                    std::vector<handle_t>().swap(handles_to_embed);
+                    create_and_fill_subpath(subgraph, path_name, source.get_is_circular(source_path_handle), start, end,
+                                            handles_to_embed);
                 }
             }
         }
@@ -110,7 +107,8 @@ namespace odgi {
             //bool first_step = true;
             uint64_t walked = 0;
             auto path_end = source.path_end(path_handle);
-            for (step_handle_t cur_step = source.path_begin(path_handle); cur_step != path_end && walked <= end; cur_step = source.get_next_step(cur_step)) {
+            for (step_handle_t cur_step = source.path_begin(path_handle);
+                 cur_step != path_end && walked <= end; cur_step = source.get_next_step(cur_step)) {
                 handle_t cur_handle = source.get_handle_of_step(cur_step);
                 walked += source.get_length(cur_handle);
                 if (walked > start) {
