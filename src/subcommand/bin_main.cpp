@@ -93,11 +93,11 @@ int main_bin(int argc, char** argv) {
 
     if (haplo_blocker) {
         std::cerr << "[odgi::bin] main: running in HaploBlocker mode. Ignoring input parameters -f/--fasta, -D/--path-delim, -j/--json, -a/--aggregate-delim, "
-                     "-s/--no-seqs, -g/--no-gap-links." << std::endl;
+                     "-n/--num-bins, -w/--bin-width, -s/--no-seqs, -g/--no-gap-links." << std::endl;
         // first pass: collect #nucleotides, fill in_all_bins_bv, unique_bins_bv
         uint64_t haplo_blocker_min_paths_ = args::get(haplo_blocker_min_paths) ? args::get(haplo_blocker_min_paths) : 1;
         uint64_t haplo_blocker_min_coverage_ = args::get(haplo_blocker_min_coverage) ? args::get(haplo_blocker_min_coverage) : 1.0;
-        algorithms::bin_path_coverage(graph, args::get(num_bins), args::get(bin_width), args::get(progress),
+        algorithms::bin_path_coverage(graph, args::get(progress),
                                       haplo_blocker_min_paths_, haplo_blocker_min_coverage_);
         // write header of table to stdout
 

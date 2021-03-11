@@ -6,8 +6,6 @@ namespace odgi {
     namespace algorithms {
 
         void bin_path_coverage(const PathHandleGraph &graph,
-                           uint64_t num_bins,
-                           uint64_t bin_width,
                            const bool progress,
                            const uint64_t min_paths,
                            const uint64_t min_coverage) {
