@@ -30,7 +30,7 @@ namespace odgi {
                                                  {'o', "out"});
         args::Flag _split_subgraphs(parser, "split_subgraphs",
                                     "instead of writing the target subgraphs into a single graph, "
-                                    "write one subgraph per given target to a separate file named PREFIX[path]:[start]-[end].og",
+                                    "write one subgraph per given target to a separate file named path:start-end.og",
                                     {'s', "split-subgraphs"});
 
         args::ValueFlag<std::string> _node_list(parser, "FILE", "a file with one node id per line", {'l', "node-list"});
@@ -98,14 +98,6 @@ namespace odgi {
             }
         }
 
-        std::vector<string> targets_str;
-        std::vector<Region> targets;
-
-        // handle targets from BED
-        if (_path_bed_file) {
-            parse_bed_regions(args::get(_path_bed_file), targets);
-        }
-
         if (_full_range) {
             nid_t last_node_id = graph.min_node_id();
             graph.for_each_handle([&](const handle_t &h) {
@@ -121,8 +113,13 @@ namespace odgi {
             });
         }
 
-        bool debug = args::get(_debug);
-        uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+        std::vector<string> targets_str;
+        std::vector<Region> targets;
+
+        // handle targets from BED
+        if (_path_bed_file) {
+            parse_bed_regions(args::get(_path_bed_file), targets);
+        }
 
         // handle targets from command line
         if (_path_range) {
@@ -147,6 +144,9 @@ namespace odgi {
 
             targets.push_back(region);
         }
+
+        bool debug = args::get(_debug);
+        uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
 
         if (!targets.empty()) {
             auto prep_graph = [&](graph_t &source, graph_t &subgraph, uint64_t context_size, bool use_length) {
@@ -209,6 +209,10 @@ namespace odgi {
                     prep_graph(graph, subgraph, context_size, _use_length);
 
                     string filename = target.seq + ":" + to_string(target.start) + "-" + to_string(target.end) + ".og";
+
+                    if (debug) {
+                        std::cerr << "[odgi::extract] writing " << filename << std::endl;
+                    }
                     ofstream f(filename);
                     subgraph.serialize(f);
                     f.close();
