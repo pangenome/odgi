@@ -24,6 +24,6 @@ namespace odgi {
                            uint64_t bin_width = 0,
                            const bool progress = false,
                            const uint64_t min_paths = 1,
-                           const double min_coverage = 1.0);
+                           const uint64_t min_coverage = 1);
     }
 }
