@@ -73,7 +73,7 @@ namespace odgi {
 
                 REQUIRE(subgraph.get_node_count() == 2);
                 REQUIRE(subgraph.get_sequence(subgraph.get_handle(2)) == "AT");
-                REQUIRE(subgraph.get_sequence(subgraph.get_handle(3)) == "GGC");
+                REQUIRE(subgraph.get_sequence(subgraph.get_handle(3)) == "GCC");
 
                 REQUIRE(subgraph.has_path("x:4-9"));
                 auto new_path_x = subgraph.get_path_handle("x:4-9");
@@ -82,7 +82,7 @@ namespace odgi {
                 subgraph.for_each_step_in_path(new_path_x, [&](const step_handle_t& step) {
                     x.append(subgraph.get_sequence(subgraph.get_handle_of_step(step)));
                 });
-                REQUIRE(x == "GCCAT");
+                REQUIRE(x == "GGCAT");
 
                 REQUIRE(subgraph.has_path("y:4-6"));
                 auto new_path_y = subgraph.get_path_handle("y:4-6");
@@ -100,7 +100,7 @@ namespace odgi {
                 subgraph.for_each_step_in_path(new_path_z, [&](const step_handle_t& step) {
                     z.append(subgraph.get_sequence(subgraph.get_handle_of_step(step)));
                 });
-                REQUIRE(z == "GGCGCC");
+                REQUIRE(z == "GCCGGC");
             }
 
         }
