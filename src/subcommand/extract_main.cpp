@@ -28,10 +28,10 @@ namespace odgi {
         args::ValueFlag<std::string> og_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
         args::ValueFlag<std::string> og_out_file(parser, "FILE", "store the graph self index in this file",
                                                  {'o', "out"});
-        args::Flag _prefix(parser, "prefix",
-                           "instead of writing the target subgraphs to stdout, "
-                           "write one per given target to a separate file named PREFIX[path]:[start]-[end].og"
-                           "(default: `component`)\"", {'p', "prefix"});
+        args::Flag _split_subgraphs(parser, "split_subgraphs",
+                                    "instead of writing the target subgraphs into a single graph, "
+                                    "write one subgraph per given target to a separate file named PREFIX[path]:[start]-[end].og",
+                                    {'s', "split-subgraphs"});
 
         args::ValueFlag<std::string> _node_list(parser, "FILE", "a file with one node id per line", {'l', "node-list"});
         args::ValueFlag<uint64_t> _target_node(parser, "ID", "a single node from which to begin our traversal",
@@ -55,7 +55,8 @@ namespace odgi {
                                "Be careful to use it with very complex graphs",
                                {'E', "full-range"});
 
-        args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use (to embed the subpaths in parallel)", {'t', "threads"});
+        args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use (to embed the subpaths in parallel)",
+                                           {'t', "threads"});
 
         args::Flag _debug(parser, "progress", "print information to stderr",
                           {'P', "progress"});
@@ -111,7 +112,8 @@ namespace odgi {
                 nid_t node_id = graph.get_id(h);
                 if (node_id - last_node_id > 1) {
                     std::cerr
-                            << "[odgi::extract] error: the graph is not optimized. To extract the full ranges, please run 'odgi sort' using -O/--optimize first"
+                            << "[odgi::extract] error: the graph is not optimized. "
+                               "To extract the full ranges, please run 'odgi sort' using -O/--optimize first"
                             << std::endl;
                     exit(1);
                 }
@@ -136,6 +138,11 @@ namespace odgi {
                         << "[odgi::extract] error: path " << region.seq << " not found in the input graph."
                         << std::endl;
                 return 1;
+            }
+
+            // no coordinates given, we do whole thing (0,-1)
+            if (region.start < 0 && region.end < 0) {
+                region.start = 0;
             }
 
             targets.push_back(region);
@@ -170,21 +177,55 @@ namespace odgi {
                 // graph.remove_orphan_edges();
             };
 
-            for (auto &target : targets) {
-                graph_t subgraph;
+            if (_split_subgraphs) {
+                for (auto &target : targets) {
+                    graph_t subgraph;
 
-                // no coordinates given, we do whole thing (0,-1)
-                if (target.start < 0 && target.end < 0) {
-                    target.start = 0;
+                    path_handle_t path_handle = graph.get_path_handle(target.seq);
+
+                    if (debug) {
+                        std::cerr << "[odgi::extract] extracting path range " << target.seq << ":" << target.start
+                                  << "-"
+                                  << target.end << std::endl;
+                    }
+                    algorithms::extract_path_range(graph, path_handle, target.start, target.end, subgraph);
+
+                    if (_full_range) {
+                        if (debug) {
+                            std::cerr << "[odgi::extract] collecting all nodes in the path range" << std::endl;
+                        }
+
+                        // find the start and end node of this and fill things in
+                        nid_t id_start = std::numeric_limits<nid_t>::max();
+                        nid_t id_end = 1;
+                        subgraph.for_each_handle([&](handle_t handle) {
+                            nid_t id = subgraph.get_id(handle);
+                            id_start = std::min(id_start, id);
+                            id_end = std::max(id_end, id);
+                        });
+
+                        algorithms::extract_id_range(graph, id_start, id_end, subgraph);
+                    }
+                    prep_graph(graph, subgraph, context_size, _use_length);
+
+                    string filename = target.seq + ":" + to_string(target.start) + "-" + to_string(target.end) + ".og";
+                    ofstream f(filename);
+                    subgraph.serialize(f);
+                    f.close();
                 }
+            } else {
+                graph_t subgraphs;
 
-                path_handle_t path_handle = graph.get_path_handle(target.seq);
+                for (auto &target : targets) {
+                    path_handle_t path_handle = graph.get_path_handle(target.seq);
 
-                if (debug) {
-                    std::cerr << "[odgi::extract] extracting path range " << target.seq << ":" << target.start << "-"
-                              << target.end << std::endl;
+                    if (debug) {
+                        std::cerr << "[odgi::extract] extracting path range " << target.seq << ":" << target.start
+                                  << "-"
+                                  << target.end << std::endl;
+                    }
+                    algorithms::extract_path_range(graph, path_handle, target.start, target.end, subgraphs);
                 }
-                algorithms::extract_path_range(graph, path_handle, target.start, target.end, subgraph);
 
                 if (_full_range) {
                     if (debug) {
@@ -194,24 +235,25 @@ namespace odgi {
                     // find the start and end node of this and fill things in
                     nid_t id_start = std::numeric_limits<nid_t>::max();
                     nid_t id_end = 1;
-                    subgraph.for_each_handle([&](handle_t handle) {
-                        nid_t id = subgraph.get_id(handle);
+                    subgraphs.for_each_handle([&](handle_t handle) {
+                        nid_t id = subgraphs.get_id(handle);
                         id_start = std::min(id_start, id);
                         id_end = std::max(id_end, id);
                     });
 
-                    algorithms::extract_id_range(graph, id_start, id_end, subgraph);
+                    algorithms::extract_id_range(graph, id_start, id_end, subgraphs);
                 }
-                prep_graph(graph, subgraph, context_size, _use_length);
+                prep_graph(graph, subgraphs, context_size, _use_length);
 
-                if (_prefix) {
-                    string filename = target.seq + ":" + to_string(target.start) + "-" + to_string(target.end) + ".og";
-
-                    ofstream f(filename);
-                    subgraph.serialize(f);
-                    f.close();
-                } else {
-                    subgraph.serialize(std::cout);
+                std::string outfile = args::get(og_out_file);
+                if (!outfile.empty()) {
+                    if (outfile == "-") {
+                        subgraphs.serialize(std::cout);
+                    } else {
+                        ofstream f(outfile.c_str());
+                        subgraphs.serialize(f);
+                        f.close();
+                    }
                 }
             }
         } else {
