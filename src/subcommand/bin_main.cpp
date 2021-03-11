@@ -31,6 +31,8 @@ int main_bin(int argc, char** argv) {
     args::Flag write_seqs_not(parser, "write-seqs-not", "don't write out the sequences for each bin", {'s', "no-seqs"});
     args::Flag drop_gap_links(parser, "drop-gap-links", "don't include gap links in the output", {'g', "no-gap-links"});
     args::Flag haplo_blocker(parser, "haplo-blocker", "only write the bin identifiers to JSON", {'b', "haplo-blocker"});
+    args::ValueFlag<uint64_t> haplo_blocker_min_paths(parser, "haplo-blocker-min-paths", "the minimum number of paths that are present in the bin to actually report that bin", {'p', "haplo-blocker-min-paths"});
+    args::ValueFlag<double> haplo_blocker_min_coverage(parser, "haplo-blocker-min-coverage", "the minimum coverage a path needs to have in a bin to actually report that bin", {'c', "haplo-blocker-min-coverage"});
     args::Flag progress(parser, "progress", "write current progress to stderr", {'P', "progress"});
     try {
         parser.ParseCLI(argc, argv);
@@ -93,7 +95,10 @@ int main_bin(int argc, char** argv) {
         std::cerr << "[odgi::bin] main: running in HaploBlocker mode. Ignoring input parameters -f/--fasta, -D/--path-delim, -j/--json, -a/--aggregate-delim, "
                      "-s/--no-seqs, -g/--no-gap-links." << std::endl;
         // first pass: collect #nucleotides, fill in_all_bins_bv, unique_bins_bv
-        algorithms::bin_path_coverage(graph, args::get(num_bins), args::get(bin_width), args::get(progress));
+        uint64_t haplo_blocker_min_paths_ = args::get(haplo_blocker_min_paths) ? args::get(haplo_blocker_min_paths) : 1;
+        double haplo_blocker_min_coverage_ = args::get(haplo_blocker_min_coverage) ? args::get(haplo_blocker_min_coverage) : 1.0;
+        algorithms::bin_path_coverage(graph, args::get(num_bins), args::get(bin_width), args::get(progress),
+                                      haplo_blocker_min_paths_, haplo_blocker_min_coverage_);
         // write header of table to stdout
 
         // for all paths, for each node and nucleotide in path --> better unordered_map https://stackoverflow.com/questions/1939953/how-to-find-if-a-given-key-exists-in-a-c-stdmap

@@ -22,6 +22,8 @@ namespace odgi {
         void bin_path_coverage(const PathHandleGraph &graph,
                            uint64_t num_bins = 0,
                            uint64_t bin_width = 0,
-                           bool progress = false);
+                           const bool progress = false,
+                           const uint64_t min_paths = 1,
+                           const double min_coverage = 1.0);
     }
 }

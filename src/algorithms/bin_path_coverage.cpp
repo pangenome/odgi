@@ -8,7 +8,9 @@ namespace odgi {
         void bin_path_coverage(const PathHandleGraph &graph,
                            uint64_t num_bins,
                            uint64_t bin_width,
-                           bool progress) {
+                           const bool progress,
+                           const uint64_t min_paths,
+                           const double min_coverage) {
             // the graph must be compacted for this to work
             std::vector<uint64_t> position_map(graph.get_node_count() + 1);
             uint64_t graph_len = 0;
@@ -25,6 +27,11 @@ namespace odgi {
             }
             position_map[position_map.size() - 1] = graph_len;
             std::vector<uint64_t> paths_per_bin(num_bins);
+            std::unique_ptr<progress_meter::ProgressMeter> progress_meter_1;
+            if (progress) {
+                progress_meter_1 = std::make_unique<progress_meter::ProgressMeter>(
+                        graph.get_path_count(), "[odgi::bin] bin_path_coverage: 1st phase");
+            }
             // first pass: collect #nucleotides, fill in_all_bins_bv, unique_bins_bv, unique_bins_touched_bv
             graph.for_each_path_handle([&](const path_handle_t &path) {
                 std::vector<bool> paths_per_bin_bv(num_bins);
@@ -41,7 +48,16 @@ namespace odgi {
                         }
                     }
                 });
+                if (progress) {
+                    progress_meter_1->increment(1);
+                }
             });
+
+            if (progress) {
+                progress_meter_1->finish();
+            }
+
+
 #ifdef debug_bin_path_coverage
             for (int i = 0; i < paths_per_bin.size(); i++) {
                 std::cerr << paths_per_bin[i] << std::endl;
@@ -57,7 +73,7 @@ namespace odgi {
                 uint64_t paths_in_bin = paths_per_bin[i];
                 // filter out bins that are somewhat unique (< 3) or that are present in all paths (== graph_paths)
                 // 1-based bin identifiers
-                if (!(paths_in_bin < 3 || paths_in_bin == graph_paths)) {
+                if (!(paths_in_bin < min_paths || paths_in_bin == graph_paths)) {
                     // std::cout << "\t" << (i + 1);
                     final_bin_ids.push_back(i + 1);
                 }
@@ -66,10 +82,10 @@ namespace odgi {
             // for all paths, for each node and nucleotide in path --> better unordered_map https://stackoverflow.com/questions/1939953/how-to-find-if-a-given-key-exists-in-a-c-stdmap
             // map<uint64_t, double>: ++ when we cover the bin
             // as it is done so far
-            std::unique_ptr<progress_meter::ProgressMeter> progress_meter;
+            std::unique_ptr<progress_meter::ProgressMeter> progress_meter_2;
             if (progress) {
-                progress_meter = std::make_unique<progress_meter::ProgressMeter>(
-                        graph.get_path_count(), "[odgi::bin] bin_path_coverage:");
+                progress_meter_2 = std::make_unique<progress_meter::ProgressMeter>(
+                        graph.get_path_count(), "[odgi::bin] bin_path_coverage: 2nd phase");
             }
 
             graph.for_each_path_handle([&](const path_handle_t &path) {
@@ -104,23 +120,25 @@ namespace odgi {
                         if (cov > 255) {
                             cov = 255;
                         }
-                        if (!first_time_bin) {
-                            first_time_bin = true;
-                        } else {
-                            std::cout << ",";
+                        if (cov >= min_coverage) {
+                            if (!first_time_bin) {
+                                first_time_bin = true;
+                            } else {
+                                std::cout << ",";
+                            }
+                            std::cout << "[" << bin_id << "," << cov << "]";
                         }
-                        std::cout << "[" << bin_id << "," << cov << "]";
                     }
                 }
                 std::cout << "]}" << std::endl;
                 // write header
                 if (progress) {
-                    progress_meter->increment(1);
+                    progress_meter_2->increment(1);
                 }
             });
 
             if (progress) {
-                progress_meter->finish();
+                progress_meter_2->finish();
             }
         }
     }
