@@ -114,7 +114,7 @@ namespace odgi {
                 if (walked > start) {
                     nid_t id = source.get_id(cur_handle);
                     if (!subgraph.has_node(id)) {
-                        subgraph.create_handle(source.get_sequence(cur_handle), id);
+                        subgraph.create_handle(source.get_sequence(source.get_handle(id)), id);
                     }
 
                     // This code ensures that there are edges connecting the nodes the path crosses.
@@ -155,7 +155,7 @@ namespace odgi {
                         }
                     }
                 });
-            });
+            }, true);
         }
 
         void expand_subgraph_by_steps(const graph_t &source, graph_t &subgraph, const uint64_t &steps,
