@@ -30,8 +30,8 @@ namespace odgi {
                                                  {'o', "out"});
         args::Flag _split_subgraphs(parser, "split_subgraphs",
                                     "instead of writing the target subgraphs into a single graph, "
-                                    "write one subgraph per given target to a separate file named path:start-end.og",
-                                    {'s', "split-subgraphs"});
+                                    "write one subgraph per given target to a separate file named path:start-end.og  "
+                                    "(0-based coordinates)", {'s', "split-subgraphs"});
 
         args::ValueFlag<std::string> _node_list(parser, "FILE", "a file with one node id per line", {'l', "node-list"});
         args::ValueFlag<uint64_t> _target_node(parser, "ID", "a single node from which to begin our traversal",
@@ -43,10 +43,9 @@ namespace odgi {
                                "treat the context size as a length in bases (and not as a number of steps)",
                                {'L', "use-length"});
 
-        /// Range selection
         args::ValueFlag<std::string> _path_range(parser, "STRING",
-                                                 "find the node(s) in the specified path range TARGET=path[:pos1[-pos2]]",
-                                                 {'r', "path-range"});
+                                                 "find the node(s) in the specified path range TARGET=path[:pos1[-pos2]] "
+                                                 "(0-based coordinates)", {'r', "path-range"});
         args::ValueFlag<std::string> _path_bed_file(parser, "FILE",
                                                     "find the node(s) in the path range(s) specified in the given BED FILE",
                                                     {'b', "bed-file"});
@@ -84,13 +83,14 @@ namespace odgi {
         }
 
         if (!_split_subgraphs && !og_out_file) {
-            std::cerr << "[odgi::extract] error: please specify an output file to where to store the subgraph via -o=[FILE], --out=[FILE]." << std::endl;
+            std::cerr << "[odgi::extract] error: please specify an output file to where to store the subgraph via "
+                         "-o=[FILE], --out=[FILE]." << std::endl;
             return 1;
         }
 
         if (_split_subgraphs && og_out_file) {
-            std::cerr << "[odgi::extract] error: please do not specify an output file (with -o/--out) when one subgraph "
-                         "per given target is requested (with -s/--split-subgraphs)." << std::endl;
+            std::cerr << "[odgi::extract] error: please do not specify an output file (with -o/--out) when "
+                         "one subgraph per given target is requested (with -s/--split-subgraphs)." << std::endl;
             return 1;
         }
 

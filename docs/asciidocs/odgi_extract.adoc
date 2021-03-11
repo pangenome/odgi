@@ -37,7 +37,7 @@ The odgi extract(1) command extracts parts of the graph as defined by query crit
 === Extract Options
 
 *-s, --split-subgraphs*=_STRING_::
-    Instead of writing the target subgraphs into a single graph, write one subgraph per given target to a separate file named `path:start-end.og`.
+    Instead of writing the target subgraphs into a single graph, write one subgraph per given target to a separate file named `path:start-end.og` (0-based coordinates).
 
 *-l, --node-list*::_FILE_::
     A file with one node id per line. The node specified will be extracted from the input graph.
@@ -52,7 +52,7 @@ The odgi extract(1) command extracts parts of the graph as defined by query crit
     Treat the context size as a length in bases (and not as a number of steps).
 
 *-r, --path-range*::
-    Find the node(s) in the specified path range TARGET=path[:pos1[-pos2]]
+    Find the node(s) in the specified path range TARGET=path[:pos1[-pos2]] (0-based coordinates)
 
 *-r, --bed-file*::_FILE_::
     Find the node(s) in the path range(s) specified in the given BED FILE
