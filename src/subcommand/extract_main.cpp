@@ -29,7 +29,7 @@ namespace odgi {
         args::ValueFlag<std::string> og_out_file(parser, "FILE", "store the graph self index in this file",
                                                  {'o', "out"});
         args::Flag _prefix(parser, "prefix",
-                           "instead of writing target subgraphs to stdout, "
+                           "instead of writing the target subgraphs to stdout, "
                            "write one per given target to a separate file named PREFIX[path]:[start]-[end].og"
                            "(default: `component`)\"", {'p', "prefix"});
 
