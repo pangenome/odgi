@@ -1,72 +1,81 @@
-= odgi cover(1)
+= odgi extract(1)
 ifdef::backend-manpage[]
 Andrea Guarracino
 :doctype: manpage
 :release-version: v0.6.0
-:man manual: odgi cover
+:man manual: odgi extract
 :man source: odgi v0.6.0
 :page-layout: base
 endif::[]
 
 == NAME
 
-odgi_cover - find a path cover of the variation graph
+odgi_extract - extract parts of the graph as defined by query criteria
 
 
 == SYNOPSIS
 
-*odgi cover* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]...
+*odgi extract* [*-f, --input-graphs*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]...
+
 
 == DESCRIPTION
 
-The odgi cover(1) command finds a path cover of a variation graph, with a specified number of paths per component.
+The odgi extract(1) command extracts parts of the graph as defined by query criteria.
 
 
 == OPTIONS
 
 === Graph Files IO
 
-*-i, --idx*=_FILE_::
-  File containing the succinct variation graph where find a path cover. The file name usually ends with _.og_.
+*-f, --input-graphs*=_FILE_::
+  File containing the succinct variation graph. The file name usually ends with _.og_.
 
 *-o, --out*=_FILE_::
-  Write the succinct variation graph with the generated paths to _FILE_. The file name usually ends with _.og_.
+  Store all  subgraph in this file. The file name usually ends with _.og_.
 
 
-=== Cover Options
+=== Extract Options
 
-*-n, --num-paths-per-component*=_N_::
-  Number of paths to generate per component.
+*-s, --split-subgraphs*=_STRING_::
+    Instead of writing the target subgraphs into a single graph, write one subgraph per given target to a separate file named `path:start-end.og` (0-based coordinates).
 
-*-k, --node-windows-size*=_N_::
-  Size of the node window to check each time a new path is extended (it has to be greater than or equal to 2).
+*-l, --node-list*::_FILE_::
+    A file with one node id per line. The node specified will be extracted from the input graph.
 
-*-c, --min-node-coverage*=_N_::
-  Minimum node coverage to reach (it has to be greater than 0). There will be generated paths until the specified minimum node coverage is reached, or until the maximum number of allowed generated paths is reached (number of nodes in the input variation graph).
+*-n, --node*::_STRING_::
+    A single node from which to begin our traversal.
 
-*-i, --ignore-paths*::
-  Ignore the paths already embedded in the graph during the nodes coverage initialization.
+*-c, --context*::_NUMBER_::
+    The number of steps away from our initial subgraph that we should collect.
 
-*-w, --write-node-coverages*=_FILE_::
-  Write the node coverages at the end of the paths generation to FILE. The file will contain tab-separated values (header included), and have 3 columns: _component_id_, _node_id_, and _coverage_.
+*-L, --use-length*::
+    Treat the context size as a length in bases (and not as a number of steps).
 
+*-r, --path-range*::
+    Find the node(s) in the specified path range TARGET=path[:pos1[-pos2]] (0-based coordinates)
+
+*-r, --bed-file*::_FILE_::
+    Find the node(s) in the path range(s) specified in the given BED FILE
+
+*-E, --full-range*::
+    Collects all nodes in the sorted order of the graph in the min and max position touched by the given path ranges.
+    Be careful to use it with very complex graphs.
 
 === Threading
 
 *-t, --threads*=_N_::
-Number of threads to use for the parallel sorter.
-
+    Number of threads to use (to embed the subpaths in parallel).
 
 === Processing Information
 
 *-P, --progress*::
-  Print information about the components and the progress to stderr.
+  Print information to stderr.
 
 
 === Program Information
 
 *-h, --help*::
-  Print a help message for *odgi cover*.
+  Print a help message for *odgi extract*.
 
 
 == EXIT STATUS
@@ -83,7 +92,7 @@ Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
 
 == AUTHORS
 
-*odgi cover* was written by Andrea Guarracino.
+*odgi extract* was written by Andrea Guarracino.
 
 ifdef::backend-manpage[]
 == RESOURCES

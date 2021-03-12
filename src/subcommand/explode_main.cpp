@@ -3,7 +3,7 @@
 #include "args.hxx"
 #include <queue>
 
-#include "algorithms/explode.hpp"
+#include "src/algorithms/subgraph/extract.hpp"
 
 namespace odgi {
 
@@ -91,7 +91,7 @@ namespace odgi {
             std::cerr << "[odgi::explode] detected " << weak_components.size() << " connected components" << std::endl;
         }
 
-        std::mutex debug_mutex;
+        //std::mutex debug_mutex;
 
 #pragma omp parallel for schedule(static, 1) num_threads(num_threads)
         for (uint64_t component_index = 0; component_index < weak_components.size(); ++component_index) {
