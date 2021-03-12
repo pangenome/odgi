@@ -604,22 +604,24 @@ void graph_t::create_edge(const handle_t& left_h, const handle_t& right_h) {
     uint64_t right_rank = number_bool_packing::unpack_number(right_h);
     // insert the edge for each side
     auto& left_node = get_node_ref(left_h);
+    left_node.get_lock();
     left_node.add_edge(get_id(right_h),
                        get_is_reverse(right_h),
                        false,
                        get_is_reverse(left_h));
-
+    left_node.clear_lock();
     ++_edge_count;
 
     // only insert the second side if it's on a different node
     if (left_rank == right_rank) return;
 
     auto& right_node = get_node_ref(right_h);
+    right_node.get_lock();
     right_node.add_edge(get_id(left_h),
                         get_is_reverse(left_h),
                         true,
                         get_is_reverse(right_h));
-
+    right_node.clear_lock();
 }
 
 /*
