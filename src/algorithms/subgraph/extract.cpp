@@ -176,7 +176,7 @@ namespace odgi {
                 if (show_progress) {
                     progress->increment(1);
                 }
-            }, true);
+            }, false);
 
             if (show_progress) {
                 progress->finish();

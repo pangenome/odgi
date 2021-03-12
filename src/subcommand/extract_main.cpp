@@ -211,6 +211,7 @@ namespace odgi {
 
         bool show_progress = args::get(_show_progress);
         uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+        omp_set_num_threads(num_threads);
 
         if (!targets.empty()) {
             auto prep_graph = [&](graph_t &source, const std::vector<path_handle_t> source_paths, graph_t &subgraph,
