@@ -30,9 +30,9 @@ int main_bin(int argc, char** argv) {
     args::ValueFlag<uint64_t> bin_width(parser, "bp", "width of each bin in basepairs along the graph vector", {'w', "bin-width"});
     args::Flag write_seqs_not(parser, "write-seqs-not", "don't write out the sequences for each bin", {'s', "no-seqs"});
     args::Flag drop_gap_links(parser, "drop-gap-links", "don't include gap links in the output", {'g', "no-gap-links"});
-    args::Flag haplo_blocker(parser, "haplo-blocker", "only write the bin identifiers to JSON", {'b', "haplo-blocker"});
-    args::ValueFlag<uint64_t> haplo_blocker_min_paths(parser, "haplo-blocker-min-paths", "the minimum number of paths that are present in the bin to actually report that bin", {'p', "haplo-blocker-min-paths"});
-    args::ValueFlag<uint64_t> haplo_blocker_min_coverage(parser, "haplo-blocker-min-coverage", "the minimum coverage a path needs to have in a bin to actually report that bin", {'c', "haplo-blocker-min-coverage"});
+    args::Flag haplo_blocker(parser, "haplo-blocker", "write a TSV to stdout for input to HaploBlocker: Each row corresponds to a node. Each column corresponds to a path. Each value is the coverage of a specific node of a specific path.", {'b', "haplo-blocker"});
+    args::ValueFlag<uint64_t> haplo_blocker_min_paths(parser, "N", "the minimum number of paths that are present in the bin to actually report that bin", {'p', "haplo-blocker-min-paths"});
+    args::ValueFlag<uint64_t> haplo_blocker_min_coverage(parser, "N", "the minimum coverage a path needs to have in a bin to actually report that bin", {'c', "haplo-blocker-min-coverage"});
     args::Flag progress(parser, "progress", "write current progress to stderr", {'P', "progress"});
     try {
         parser.ParseCLI(argc, argv);
