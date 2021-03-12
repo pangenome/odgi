@@ -20,13 +20,13 @@ odgi - dynamic succinct variation graph tool
 
 *odgi* <<odgi_cover.adoc#_odgi_cover1, cover>> -i graph.og -o graph.paths.og
 
-*odgi* <<odgi_cover.adoc#_odgi_extract1, extract>> -i graph.og -p prefix -r path_name:0-17
+*odgi* <<odgi_extract.adoc#_odgi_extract1, extract>> -i graph.og -p prefix -r path_name:0-17
 
-*odgi* <<odgi_cover.adoc#_odgi_explode1, explode>> -i graph.og -p prefix
+*odgi* <<odgi_explode.adoc#_odgi_explode1, explode>> -i graph.og -p prefix
 
-*odgi* <<odgi_cover.adoc#_odgi_squeeze1, squeeze>> -f input_graphs.txt -o graphs.og
+*odgi* <<odgi_squeeze.adoc#_odgi_squeeze1, squeeze>> -f input_graphs.txt -o graphs.og
 
-*odgi* <<odgi_kmers.adoc#_odgi_position1, position>> -i target_graph.og -g
+*odgi* <<odgi_position.adoc#_odgi_position1, position>> -i target_graph.og -g
 
 *odgi* <<odgi_sort.adoc#_odgi_sort1, sort>> -i graph.og -o graph.sorted.og -p bSnSnS
 
