@@ -57,7 +57,7 @@ namespace odgi {
         args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use (to embed the subpaths in parallel)",
                                            {'t', "threads"});
 
-        args::Flag _debug(parser, "progress", "print information to stderr",
+        args::Flag _show_progress(parser, "progress", "print information about the operations and the progress to stderr",
                           {'P', "progress"});
 
         try {
@@ -156,33 +156,26 @@ namespace odgi {
             targets.push_back(region);
         }
 
-        bool debug = args::get(_debug);
+        bool show_progress = args::get(_show_progress);
         uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
 
         if (!targets.empty()) {
             auto prep_graph = [&](graph_t &source, graph_t &subgraph, uint64_t context_size, bool use_length) {
                 if (context_size > 0) {
-                    if (debug) {
+                    if (show_progress) {
                         std::cerr << "[odgi::extract] expansion and adding connecting edges" << std::endl;
                     }
 
                     if (use_length) {
-                        algorithms::expand_subgraph_by_length(source, subgraph, context_size, false);
+                        algorithms::expand_subgraph_by_length(source, subgraph, context_size, false, show_progress ? "[odgi::extract] adding connecting edges" : "");
                     } else {
-                        algorithms::expand_subgraph_by_steps(source, subgraph, context_size, false);
+                        algorithms::expand_subgraph_by_steps(source, subgraph, context_size, false, show_progress ? "[odgi::extract] adding connecting edges" : "");
                     }
                 } else {
-                    if (debug) {
-                        std::cerr << "[odgi::extract] adding connecting edges" << std::endl;
-                    }
-
-                    algorithms::add_connecting_edges_to_subgraph(source, subgraph);
+                    algorithms::add_connecting_edges_to_subgraph(source, subgraph, show_progress ? "[odgi::extract] adding connecting edges" : "");
                 }
 
-                if (debug) {
-                    std::cerr << "[odgi::extract] adding subpaths" << std::endl;
-                }
-                algorithms::add_subpaths_to_subgraph(source, subgraph, num_threads);
+                algorithms::add_subpaths_to_subgraph(source, subgraph, num_threads, show_progress ? "[odgi::extract] adding subpaths" : "");
 
                 // This should not be necessary, if the extraction works correctly
                 // graph.remove_orphan_edges();
@@ -194,7 +187,7 @@ namespace odgi {
 
                     path_handle_t path_handle = graph.get_path_handle(target.seq);
 
-                    if (debug) {
+                    if (show_progress) {
                         std::cerr << "[odgi::extract] extracting path range " << target.seq << ":" << target.start
                                   << "-"
                                   << target.end << std::endl;
@@ -202,10 +195,6 @@ namespace odgi {
                     algorithms::extract_path_range(graph, path_handle, target.start, target.end, subgraph);
 
                     if (_full_range) {
-                        if (debug) {
-                            std::cerr << "[odgi::extract] collecting all nodes in the path range" << std::endl;
-                        }
-
                         // find the start and end node of this and fill things in
                         nid_t id_start = std::numeric_limits<nid_t>::max();
                         nid_t id_end = 1;
@@ -215,13 +204,13 @@ namespace odgi {
                             id_end = std::max(id_end, id);
                         });
 
-                        algorithms::extract_id_range(graph, id_start, id_end, subgraph);
+                        algorithms::extract_id_range(graph, id_start, id_end, subgraph, show_progress ? "[odgi::extract] collecting all nodes in the path range" : "");
                     }
                     prep_graph(graph, subgraph, context_size, _use_length);
 
                     string filename = target.seq + ":" + to_string(target.start) + "-" + to_string(target.end) + ".og";
 
-                    if (debug) {
+                    if (show_progress) {
                         std::cerr << "[odgi::extract] writing " << filename << std::endl;
                     }
                     ofstream f(filename);
@@ -234,7 +223,7 @@ namespace odgi {
                 for (auto &target : targets) {
                     path_handle_t path_handle = graph.get_path_handle(target.seq);
 
-                    if (debug) {
+                    if (show_progress) {
                         std::cerr << "[odgi::extract] extracting path range " << target.seq << ":" << target.start
                                   << "-"
                                   << target.end << std::endl;
@@ -243,10 +232,6 @@ namespace odgi {
                 }
 
                 if (_full_range) {
-                    if (debug) {
-                        std::cerr << "[odgi::extract] collecting all nodes in the path range" << std::endl;
-                    }
-
                     // find the start and end node of this and fill things in
                     nid_t id_start = std::numeric_limits<nid_t>::max();
                     nid_t id_end = 1;
@@ -256,7 +241,7 @@ namespace odgi {
                         id_end = std::max(id_end, id);
                     });
 
-                    algorithms::extract_id_range(graph, id_start, id_end, subgraphs);
+                    algorithms::extract_id_range(graph, id_start, id_end, subgraphs, show_progress ? "[odgi::extract] collecting all nodes in the path range" : "");
                 }
                 prep_graph(graph, subgraphs, context_size, _use_length);
 

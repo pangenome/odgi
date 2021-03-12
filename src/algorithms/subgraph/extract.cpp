@@ -41,13 +41,21 @@ namespace odgi {
             return out_name;
         }
 
-        void add_subpaths_to_subgraph(const graph_t &source, graph_t &subgraph, uint64_t num_threads) {
+        void add_subpaths_to_subgraph(const graph_t &source, graph_t &subgraph, uint64_t num_threads, const std::string& progress_message) {
+            bool show_progress = !progress_message.empty();
+
             // Prepare all paths for parallelize the next step (actually, not all paths are always present in the subgraph)
             std::vector<path_handle_t> paths;
             paths.reserve(source.get_path_count());
             source.for_each_path_handle([&](const path_handle_t path) {
                 paths.push_back(path);
             });
+
+            std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress;
+            if (show_progress) {
+                progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+                        paths.size(), progress_message);
+            }
 
             auto create_and_fill_subpath = [](graph_t &subgraph, const string &path_name,
                                               const bool is_circular, const size_t start, const size_t end,
@@ -99,6 +107,14 @@ namespace odgi {
                     create_and_fill_subpath(subgraph, path_name, source.get_is_circular(source_path_handle), start, end,
                                             handles_to_embed);
                 }
+
+                if (show_progress) {
+                    progress->increment(1);
+                }
+            }
+
+            if (show_progress) {
+                progress->finish();
             }
         }
 
@@ -133,7 +149,15 @@ namespace odgi {
 
         /// We can accumulate a subgraph without accumulating all the edges between its nodes
         /// this helper ensures that we get the full set
-        void add_connecting_edges_to_subgraph(const graph_t &source, graph_t &subgraph) {
+        void add_connecting_edges_to_subgraph(const graph_t &source, graph_t &subgraph, const std::string& progress_message) {
+            bool show_progress = !progress_message.empty();
+
+            std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress;
+            if (show_progress) {
+                progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+                        subgraph.get_node_count(), progress_message);
+            }
+
             subgraph.for_each_handle([&](const handle_t &handle) {
                 nid_t id = subgraph.get_id(handle);
                 handle_t source_handle = source.get_handle(id, subgraph.get_is_reverse(handle));
@@ -155,11 +179,21 @@ namespace odgi {
                         }
                     }
                 });
+
+                if (show_progress) {
+                    progress->increment(1);
+                }
             }, true);
+
+            if (show_progress) {
+                progress->finish();
+            }
         }
 
         void expand_subgraph_by_steps(const graph_t &source, graph_t &subgraph, const uint64_t &steps,
-                                      bool forward_only) {
+                                      bool forward_only, const std::string& progress_message) {
+            bool show_progress = !progress_message.empty();
+
             std::vector<handle_t> curr_handles;
             subgraph.for_each_handle([&](const handle_t &h) {
                 curr_handles.push_back(h);
@@ -207,11 +241,13 @@ namespace odgi {
                 }
                 curr_handles = std::move(next_handles);
             }
-            add_connecting_edges_to_subgraph(source, subgraph);
+            add_connecting_edges_to_subgraph(source, subgraph, progress_message);
         }
 
         void expand_subgraph_by_length(const graph_t &source, graph_t &subgraph, const uint64_t &length,
-                                       bool forward_only) {
+                                       bool forward_only, const std::string& progress_message) {
+            bool show_progress = !progress_message.empty();
+
             uint64_t accumulated_length = 0;
             std::vector<handle_t> curr_handles;
             subgraph.for_each_handle([&](const handle_t &h) {
@@ -262,14 +298,29 @@ namespace odgi {
                 }
                 curr_handles = std::move(next_handles);
             }
-            add_connecting_edges_to_subgraph(source, subgraph);
+            add_connecting_edges_to_subgraph(source, subgraph, progress_message);
         }
 
-        void extract_id_range(const graph_t &source, const nid_t &id1, const nid_t &id2, graph_t &subgraph) {
+        void extract_id_range(const graph_t &source, const nid_t &id1, const nid_t &id2, graph_t &subgraph, const std::string& progress_message) {
+            bool show_progress = !progress_message.empty();
+
+            std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress;
+            if (show_progress) {
+                progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(id2 - id1 + 1, progress_message);
+            }
+
             for (nid_t i = id1; i <= id2; ++i) {
                 if (!subgraph.has_node(i)) {
                     subgraph.create_handle(source.get_sequence(source.get_handle(i)), i);
                 }
+
+                if (show_progress) {
+                    progress->increment(1);
+                }
+            }
+
+            if (show_progress) {
+                progress->finish();
             }
         }
     }
