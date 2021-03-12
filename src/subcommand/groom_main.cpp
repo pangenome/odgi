@@ -22,7 +22,7 @@ int main_groom(int argc, char** argv) {
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> og_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> og_out_file(parser, "FILE", "store the graph self index in this file", {'o', "out"});
-    args::Flag progress(parser, "progress", "display progress of the grooming", {'P', "progress"});
+    args::Flag progress(parser, "progress", "display progress of the grooming to stderr", {'P', "progress"});
 
     try {
         parser.ParseCLI(argc, argv);
@@ -52,7 +52,7 @@ int main_groom(int argc, char** argv) {
     graph_t graph;
     assert(argc > 0);
     std::string infile = args::get(og_in_file);
-    if (infile.size()) {
+    if (!infile.empty()) {
         if (infile == "-") {
             graph.deserialize(std::cin);
         } else {
@@ -69,7 +69,7 @@ int main_groom(int argc, char** argv) {
     graph.apply_ordering(algorithms::groom(graph, progress));
     
     std::string outfile = args::get(og_out_file);
-    if (outfile.size()) {
+    if (!outfile.empty()) {
         if (outfile == "-") {
             graph.serialize(std::cout);
         } else {
