@@ -1,6 +1,6 @@
 = odgi layout(1)
 ifdef::backend-manpage[]
-Erik Garrison
+Erik Garrison, Andrea Guarracino, Simon Heumos
 :doctype: manpage
 :release-version: v0.6.0
 :man manual: odgi layout
@@ -76,7 +76,7 @@ Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
 
 == AUTHORS
 
-*odgi layout* was written by Erik Garrison.
+*odgi layout* was written by Erik Garrison, Andrea Guarracino, and Simon Heumos.
 ifdef::backend-manpage[]
 == RESOURCES
 

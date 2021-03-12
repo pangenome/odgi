@@ -161,7 +161,7 @@ paths can be specified.
 
 == AUTHORS
 
-*odgi viz* was written by Erik Garrison.
+*odgi viz* was written by Erik Garrison and Andrea Guarracino.
 
 ifdef::backend-manpage[]
 

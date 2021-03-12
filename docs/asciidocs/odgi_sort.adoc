@@ -1,6 +1,6 @@
 = odgi sort(1)
 ifdef::backend-manpage[]
-Erik Garrison
+Erik Garrison, Simon Heumos, Andrea Guarracino
 :doctype: manpage
 :release-version: v0.6.0
 :man manual: odgi sort
@@ -192,7 +192,7 @@ Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
 
 == AUTHORS
 
-*odgi sort* was written by Erik Garrison.
+*odgi sort* was written by Erik Garrison, Simon Heumos, and Andrea Guarracino.
 
 ifdef::backend-manpage[]
 == RESOURCES

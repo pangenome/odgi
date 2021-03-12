@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: odgi unchop
-.\"    Author: Erik Garrison
+.\"    Author: Erik Garrison, Andrea Guarracino
 .\" Generator: Asciidoctor 2.0.10
-.\"      Date: 2020-06-23
+.\"      Date: 2021-03-12
 .\"    Manual: odgi unchop
-.\"    Source: odgi v0.4.1
+.\"    Source: odgi v0.6.0
 .\"  Language: English
 .\"
-.TH "ODGI_UNCHOP" "1" "2020-06-23" "odgi v0.4.1" "odgi unchop"
+.TH "ODGI_UNCHOP" "1" "2021-03-12" "odgi v0.6.0" "odgi unchop"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -34,7 +34,7 @@ odgi_unchop \- merge unitigs into single nodes
 \fBodgi unchop\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
 .SH "DESCRIPTION"
 .sp
-The odgi unchop(1) command merges each unitig into a single node.
+The odgi unchop(1) command merges each unitig into a single node preserving the node order.
 .SH "OPTIONS"
 .SS "Graph Files IO"
 .sp
@@ -46,6 +46,18 @@ File containing the succinct variation graph to unchop. The file name usually en
 \fB\-o, \-\-out\fP=\fIFILE\fP
 .RS 4
 Write the unchopped dynamic succinct variation graph to this file. A file ending with \fI.og\fP is recommended.
+.RE
+.SS "Processing Information"
+.sp
+\fB\-d, \-\-debug\fP
+.RS 4
+Print information about the process to stderr.
+.RE
+.SS "Threading"
+.sp
+\fB\-t, \-\-threads\fP=\fIN\fP
+.RS 4
+Number of threads to use for the parallel operations.
 .RE
 .SS "Program Information"
 .sp
@@ -70,7 +82,7 @@ Refer to the \fBodgi\fP issue tracker at \c
 .URL "https://github.com/vgteam/odgi/issues" "" "."
 .SH "AUTHORS"
 .sp
-\fBodgi unchop\fP was written by Erik Garrison.
+\fBodgi unchop\fP was written by Erik Garrison and Andrea Guarracino.
 .SH "RESOURCES"
 .sp
 \fBProject web site:\fP \c
@@ -108,4 +120,4 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 .SH "AUTHOR"
 .sp
-Erik Garrison
+Erik Garrison, Andrea Guarracino

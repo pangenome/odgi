@@ -37,7 +37,7 @@ const unordered_map<string, string> Version::codenames = {
     {"v0.4.1", "back to old ABI"},
     {"v0.5.0", "fastify everything"},
     {"v0.5.1", "Phoenix"},
-    {"v0.6.0", "TO_DEFINE"}
+    {"v0.6.0", "Locality"}
     // Add more codenames here
 };
 

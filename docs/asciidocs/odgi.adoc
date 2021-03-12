@@ -46,8 +46,6 @@ odgi - dynamic succinct variation graph tool
 
 *odgi* <<odgi_normalize.adoc#_odgi_normalize1, normalize>> -i graph.og -o graph.normalized.og -I 100 -d
 
-*odgi* <<odgi_subset.adoc#_odgi_subset1, subset>> -i graph.og -o graph.subsetted.og -n 1 -t 28
-
 *odgi* <<odgi_bin.adoc#_odgi_bin1, bin>> -i graph.og -j -w 100 -s -g
 
 *odgi* <<odgi_matrix.adoc#_odgi_matrix1, matrix>> -i graph.og -e -d
@@ -154,10 +152,6 @@ The odgi unchop(1) command merges each unitig into a single node.
 
 *odgi normalize* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]... +
 The odgi normalize(1) command <<odgi_unchop.adoc#_odgi_unchop1, unchops>> a given variation graph and simplifies redundant furcations.
-
-*odgi subset* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]... +
-Extracting a node subset of a variation graph is the task of the odgi subset(1) command. Users can specify a node, a list of nodes
-or a the context of which to generate a subset from.
 
 *odgi matrix* [*-i, --idx*=_FILE_] [_OPTION_]... +
 The odgi matrix(1) command generates a sparse matrix format out of the graph topology of a given variation graph.

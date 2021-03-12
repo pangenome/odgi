@@ -1,6 +1,6 @@
 = odgi test(1)
 ifdef::backend-manpage[]
-Erik Garrison, Simon Heumos
+Erik Garrison, Simon Heumos, Andrea Guarracino
 :doctype: manpage
 :release-version: v0.6.0
 :man manual: odgi test
@@ -119,7 +119,7 @@ Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
 
 == AUTHORS
 
-*odgi test* was written by Erik Garrison and Simon Heumos.
+*odgi test* was written by Erik Garrison, Simon Heumos, and Andrea Guarracino.
 
 ifdef::backend-manpage[]
 == RESOURCES
