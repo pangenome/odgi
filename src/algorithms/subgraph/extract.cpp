@@ -41,20 +41,13 @@ namespace odgi {
             return out_name;
         }
 
-        void add_subpaths_to_subgraph(const graph_t &source, graph_t &subgraph, uint64_t num_threads, const std::string& progress_message) {
+        void add_subpaths_to_subgraph(const graph_t &source, const std::vector<path_handle_t> source_paths, graph_t &subgraph, const uint64_t num_threads, const std::string& progress_message) {
             bool show_progress = !progress_message.empty();
-
-            // Prepare all paths for parallelize the next step (actually, not all paths are always present in the subgraph)
-            std::vector<path_handle_t> paths;
-            paths.reserve(source.get_path_count());
-            source.for_each_path_handle([&](const path_handle_t path) {
-                paths.push_back(path);
-            });
 
             std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress;
             if (show_progress) {
                 progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
-                        paths.size(), progress_message);
+                        source_paths.size(), progress_message);
             }
 
             auto create_and_fill_subpath = [](graph_t &subgraph, const string &path_name,
@@ -74,7 +67,7 @@ namespace odgi {
             };
 
 #pragma omp parallel for schedule(static, 1) num_threads(num_threads)
-            for (auto source_path_handle : paths) {
+            for (auto source_path_handle : source_paths) {
                 std::string path_name = source.get_path_name(source_path_handle);
 
                 uint64_t walked = 0;

@@ -61,7 +61,7 @@ namespace odgi {
         args::ValueFlag<std::string> _nucleotide_range(parser, "STRING","nucleotide range to visualize: STRING=[PATH:]start-end. `*-end` for `[0,end]`; `start-*` for `[start,pangenome_length]`. If no PATH is specified, the nucleotide positions refer to the pangenome's sequence (i.e., the sequence obtained arranging all the graph's node from left to right).",{'r', "pangenomic-range"});
 
         /// Paths selection
-        args::ValueFlag<std::string> path_names_file(parser, "FILE", "list of paths to display in the specified order; the file must contain one path name per line and a subset of all paths can be specified.", {'p', "paths-to-display"});
+        args::ValueFlag<std::string> _path_names_file(parser, "FILE", "list of paths to display in the specified order; the file must contain one path name per line and a subset of all paths can be specified.", {'p', "paths-to-display"});
 
         /// Path names
         args::Flag hide_path_names(parser, "bool", "hide path names on the left",{'H', "hide-path-names"});
@@ -145,7 +145,7 @@ namespace odgi {
             return 1;
         }
 
-        if (args::get(pack_paths) && !args::get(path_names_file).empty()){
+        if (args::get(pack_paths) && !args::get(_path_names_file).empty()){
             std::cerr
                     << "[odgi::viz] error: please specify -R/--pack-paths or -p/--paths-to-display, not both."
                     << std::endl;
@@ -361,9 +361,9 @@ namespace odgi {
         std::vector<int64_t> path_layout_y;
         path_layout_y.resize(path_count, -1);
         if (!args::get(pack_paths)) {
-            std::string _path_names = args::get(path_names_file);
-            if (!_path_names.empty()){
-                std::ifstream path_names_in(_path_names);
+            std::string path_names = args::get(_path_names_file);
+            if (!path_names.empty()){
+                std::ifstream path_names_in(path_names);
 
                 uint64_t rank_for_visualization = 0;
                 uint64_t num_of_paths_in_file = 0;

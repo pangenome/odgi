@@ -54,7 +54,13 @@ namespace odgi {
             algorithms::extract_path_range(graph, path_x, region.start, region.end, subgraph);
             algorithms::expand_subgraph_by_steps(graph, subgraph, context_size, false);
             algorithms::add_connecting_edges_to_subgraph(graph, subgraph);
-            algorithms::add_subpaths_to_subgraph(graph, subgraph, 2);
+
+            std::vector<path_handle_t> paths;
+            paths.reserve(graph.get_path_count());
+            graph.for_each_path_handle([&](const path_handle_t path) {
+                paths.push_back(path);
+            });
+            algorithms::add_subpaths_to_subgraph(graph, paths, subgraph, 2);
 
             auto test_path = [&](const path_handle_t& p) {
                 auto& path_meta = subgraph.path_metadata(p);

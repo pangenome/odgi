@@ -54,11 +54,17 @@ namespace odgi {
                                "Be careful to use it with very complex graphs",
                                {'E', "full-range"});
 
+        args::ValueFlag<std::string> _path_names_file(parser, "FILE",
+                                                      "list of paths to consider in the extraction; the file must "
+                                                      "contain one path name per line and a subset of all paths can be specified.",
+                                                      {'p', "paths-to-extract"});
+
         args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use (to embed the subpaths in parallel)",
                                            {'t', "threads"});
 
-        args::Flag _show_progress(parser, "progress", "print information about the operations and the progress to stderr",
-                          {'P', "progress"});
+        args::Flag _show_progress(parser, "progress",
+                                  "print information about the operations and the progress to stderr",
+                                  {'P', "progress"});
 
         try {
             parser.ParseCLI(argc, argv);
@@ -124,6 +130,53 @@ namespace odgi {
             });
         }
 
+
+        // Prepare all paths for parallelize the next step (actually, not all paths are always present in the subgraph)
+        std::vector<path_handle_t> paths;
+        if (args::get(_path_names_file).empty()) {
+            paths.reserve(graph.get_path_count());
+            graph.for_each_path_handle([&](const path_handle_t path) {
+                paths.push_back(path);
+            });
+        } else {
+            std::ifstream path_names_in(args::get(_path_names_file));
+
+            uint64_t num_of_paths_in_file = 0;
+
+            std::vector<bool> path_already_seen;
+            path_already_seen.resize(graph.get_path_count(), false);
+
+            std::string line;
+            while (std::getline(path_names_in, line)) {
+                if (!line.empty()) {
+                    if (graph.has_path(line)) {
+                        path_handle_t path = graph.get_path_handle(line);
+                        uint64_t path_rank = as_integer(path) - 1;
+                        if (!path_already_seen[path_rank]) {
+                            path_already_seen[path_rank] = true;
+                            paths.push_back(path);
+                        } else {
+                            std::cerr << "[odgi::extract] error: in the path list there are duplicated path names."
+                                      << std::endl;
+                            exit(1);
+                        }
+                    }
+
+                    ++num_of_paths_in_file;
+                }
+            }
+
+            path_names_in.close();
+
+            std::cerr << "[odgi::extract] found " << paths.size() << "/" << num_of_paths_in_file
+                      << " paths to consider." << std::endl;
+
+            if (paths.size() == 0) {
+                std::cerr << "[odgi::extract] error: no path to consider." << std::endl;
+                exit(1);
+            }
+        }
+
         std::vector<string> targets_str;
         std::vector<Region> targets;
 
@@ -160,22 +213,30 @@ namespace odgi {
         uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
 
         if (!targets.empty()) {
-            auto prep_graph = [&](graph_t &source, graph_t &subgraph, uint64_t context_size, bool use_length) {
+            auto prep_graph = [&](graph_t &source, const std::vector<path_handle_t> source_paths, graph_t &subgraph,
+                                  uint64_t context_size, bool use_length) {
                 if (context_size > 0) {
                     if (show_progress) {
                         std::cerr << "[odgi::extract] expansion and adding connecting edges" << std::endl;
                     }
 
                     if (use_length) {
-                        algorithms::expand_subgraph_by_length(source, subgraph, context_size, false, show_progress ? "[odgi::extract] adding connecting edges" : "");
+                        algorithms::expand_subgraph_by_length(source, subgraph, context_size, false,
+                                                              show_progress ? "[odgi::extract] adding connecting edges"
+                                                                            : "");
                     } else {
-                        algorithms::expand_subgraph_by_steps(source, subgraph, context_size, false, show_progress ? "[odgi::extract] adding connecting edges" : "");
+                        algorithms::expand_subgraph_by_steps(source, subgraph, context_size, false,
+                                                             show_progress ? "[odgi::extract] adding connecting edges"
+                                                                           : "");
                     }
                 } else {
-                    algorithms::add_connecting_edges_to_subgraph(source, subgraph, show_progress ? "[odgi::extract] adding connecting edges" : "");
+                    algorithms::add_connecting_edges_to_subgraph(source, subgraph, show_progress
+                                                                                   ? "[odgi::extract] adding connecting edges"
+                                                                                   : "");
                 }
 
-                algorithms::add_subpaths_to_subgraph(source, subgraph, num_threads, show_progress ? "[odgi::extract] adding subpaths" : "");
+                algorithms::add_subpaths_to_subgraph(source, paths, subgraph, num_threads,
+                                                     show_progress ? "[odgi::extract] adding subpaths" : "");
 
                 // This should not be necessary, if the extraction works correctly
                 // graph.remove_orphan_edges();
@@ -204,9 +265,11 @@ namespace odgi {
                             id_end = std::max(id_end, id);
                         });
 
-                        algorithms::extract_id_range(graph, id_start, id_end, subgraph, show_progress ? "[odgi::extract] collecting all nodes in the path range" : "");
+                        algorithms::extract_id_range(graph, id_start, id_end, subgraph, show_progress
+                                                                                        ? "[odgi::extract] collecting all nodes in the path range"
+                                                                                        : "");
                     }
-                    prep_graph(graph, subgraph, context_size, _use_length);
+                    prep_graph(graph, paths, subgraph, context_size, _use_length);
 
                     string filename = target.seq + ":" + to_string(target.start) + "-" + to_string(target.end) + ".og";
 
@@ -241,9 +304,11 @@ namespace odgi {
                         id_end = std::max(id_end, id);
                     });
 
-                    algorithms::extract_id_range(graph, id_start, id_end, subgraphs, show_progress ? "[odgi::extract] collecting all nodes in the path range" : "");
+                    algorithms::extract_id_range(graph, id_start, id_end, subgraphs, show_progress
+                                                                                     ? "[odgi::extract] collecting all nodes in the path range"
+                                                                                     : "");
                 }
-                prep_graph(graph, subgraphs, context_size, _use_length);
+                prep_graph(graph, paths, subgraphs, context_size, _use_length);
 
                 std::string outfile = args::get(og_out_file);
                 if (!outfile.empty()) {
