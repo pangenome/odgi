@@ -280,7 +280,9 @@ namespace odgi {
 
         auto check_and_create_handle = [&](const graph_t &source, graph_t &subgraph, const nid_t node_id) {
             if (graph.has_node(node_id)) {
-                subgraph.create_handle(graph.get_sequence(graph.get_handle(node_id)), node_id);
+                if (!subgraph.has_node(node_id)){
+                    subgraph.create_handle(graph.get_sequence(graph.get_handle(node_id)), node_id);
+                }
             } else {
                 std::cerr << "[odgi::extract] warning, cannot find node " << node_id << std::endl;
             }
