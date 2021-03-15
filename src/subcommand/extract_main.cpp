@@ -214,7 +214,7 @@ namespace odgi {
         omp_set_num_threads(num_threads);
 
         auto prep_graph = [&](graph_t &source, const std::vector<path_handle_t> source_paths, graph_t &subgraph,
-                              uint64_t context_size, bool use_length, bool full_range) {
+                              uint64_t context_size, bool use_length, bool full_range)  {
             if (full_range) {
                 // find the start and end node of this and fill things in
                 nid_t id_start = std::numeric_limits<nid_t>::max();
@@ -255,6 +255,14 @@ namespace odgi {
 
             // This should not be necessary, if the extraction works correctly
             // graph.remove_orphan_edges();
+        };
+
+        auto check_and_create_handle = [&](const graph_t &source, graph_t &subgraph, const nid_t node_id) {
+            if (graph.has_node(node_id)) {
+                subgraph.create_handle(graph.get_sequence(graph.get_handle(node_id)), node_id);
+            } else {
+                std::cerr << "[odgi::extract] warning, cannot find node " << node_id << std::endl;
+            }
         };
 
         if (!targets.empty()) {
@@ -314,22 +322,14 @@ namespace odgi {
 
             // collect the new graph
             if (args::get(_target_node)) {
-                uint64_t node_id = args::get(_target_node);
-                handle_t handle = graph.get_handle(node_id);
-                subgraph.create_handle(graph.get_sequence(handle), node_id);
+                check_and_create_handle(graph, subgraph, args::get(_target_node));
             }
 
             if (!args::get(_node_list).empty()) {
                 ifstream nodes(args::get(_node_list));
                 std::string next;
                 while (std::getline(nodes, next)) {
-                    uint64_t id = std::stol(next);
-                    if (graph.has_node(id)) {
-                        handle_t h = graph.get_handle(id);
-                        subgraph.create_handle(graph.get_sequence(h), id);
-                    } else {
-                        std::cerr << "[odgi::extract] warning, cannot find node " << id << std::endl;
-                    }
+                    check_and_create_handle(graph, subgraph, std::stol(next));
                 }
             }
 
