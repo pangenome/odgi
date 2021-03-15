@@ -213,36 +213,36 @@ namespace odgi {
         uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
         omp_set_num_threads(num_threads);
 
-        if (!targets.empty()) {
-            auto prep_graph = [&](graph_t &source, const std::vector<path_handle_t> source_paths, graph_t &subgraph,
-                                  uint64_t context_size, bool use_length) {
-                if (context_size > 0) {
-                    if (show_progress) {
-                        std::cerr << "[odgi::extract] expansion and adding connecting edges" << std::endl;
-                    }
-
-                    if (use_length) {
-                        algorithms::expand_subgraph_by_length(source, subgraph, context_size, false,
-                                                              show_progress ? "[odgi::extract] adding connecting edges"
-                                                                            : "");
-                    } else {
-                        algorithms::expand_subgraph_by_steps(source, subgraph, context_size, false,
-                                                             show_progress ? "[odgi::extract] adding connecting edges"
-                                                                           : "");
-                    }
-                } else {
-                    algorithms::add_connecting_edges_to_subgraph(source, subgraph, show_progress
-                                                                                   ? "[odgi::extract] adding connecting edges"
-                                                                                   : "");
+        auto prep_graph = [&](graph_t &source, const std::vector<path_handle_t> source_paths, graph_t &subgraph,
+                              uint64_t context_size, bool use_length) {
+            if (context_size > 0) {
+                if (show_progress) {
+                    std::cerr << "[odgi::extract] expansion and adding connecting edges" << std::endl;
                 }
 
-                algorithms::add_subpaths_to_subgraph(source, paths, subgraph, num_threads,
-                                                     show_progress ? "[odgi::extract] adding subpaths" : "");
+                if (use_length) {
+                    algorithms::expand_subgraph_by_length(source, subgraph, context_size, false,
+                                                          show_progress ? "[odgi::extract] adding connecting edges"
+                                                                        : "");
+                } else {
+                    algorithms::expand_subgraph_by_steps(source, subgraph, context_size, false,
+                                                         show_progress ? "[odgi::extract] adding connecting edges"
+                                                                       : "");
+                }
+            } else {
+                algorithms::add_connecting_edges_to_subgraph(source, subgraph, show_progress
+                                                                               ? "[odgi::extract] adding connecting edges"
+                                                                               : "");
+            }
 
-                // This should not be necessary, if the extraction works correctly
-                // graph.remove_orphan_edges();
-            };
+            algorithms::add_subpaths_to_subgraph(source, paths, subgraph, num_threads,
+                                                 show_progress ? "[odgi::extract] adding subpaths" : "");
 
+            // This should not be necessary, if the extraction works correctly
+            // graph.remove_orphan_edges();
+        };
+
+        if (!targets.empty()) {
             if (_split_subgraphs) {
                 for (auto &target : targets) {
                     graph_t subgraph;
@@ -282,7 +282,7 @@ namespace odgi {
                     f.close();
                 }
             } else {
-                graph_t subgraphs;
+                graph_t subgraph;
 
                 for (auto &target : targets) {
                     path_handle_t path_handle = graph.get_path_handle(target.seq);
@@ -292,44 +292,44 @@ namespace odgi {
                                   << "-"
                                   << target.end << std::endl;
                     }
-                    algorithms::extract_path_range(graph, path_handle, target.start, target.end, subgraphs);
+                    algorithms::extract_path_range(graph, path_handle, target.start, target.end, subgraph);
                 }
 
                 if (_full_range) {
                     // find the start and end node of this and fill things in
                     nid_t id_start = std::numeric_limits<nid_t>::max();
                     nid_t id_end = 1;
-                    subgraphs.for_each_handle([&](handle_t handle) {
-                        nid_t id = subgraphs.get_id(handle);
+                    subgraph.for_each_handle([&](handle_t handle) {
+                        nid_t id = subgraph.get_id(handle);
                         id_start = std::min(id_start, id);
                         id_end = std::max(id_end, id);
                     });
 
-                    algorithms::extract_id_range(graph, id_start, id_end, subgraphs, show_progress
+                    algorithms::extract_id_range(graph, id_start, id_end, subgraph, show_progress
                                                                                      ? "[odgi::extract] collecting all nodes in the path range"
                                                                                      : "");
                 }
-                prep_graph(graph, paths, subgraphs, context_size, _use_length);
+                prep_graph(graph, paths, subgraph, context_size, _use_length);
 
                 std::string outfile = args::get(og_out_file);
                 if (!outfile.empty()) {
                     if (outfile == "-") {
-                        subgraphs.serialize(std::cout);
+                        subgraph.serialize(std::cout);
                     } else {
                         ofstream f(outfile.c_str());
-                        subgraphs.serialize(f);
+                        subgraph.serialize(f);
                         f.close();
                     }
                 }
             }
         } else {
-            graph_t extract;
+            graph_t subgraph;
 
             // collect the new graph
             if (args::get(_target_node)) {
                 uint64_t node_id = args::get(_target_node);
                 handle_t handle = graph.get_handle(node_id);
-                extract.create_handle(graph.get_sequence(handle), node_id);
+                subgraph.create_handle(graph.get_sequence(handle), node_id);
             }
 
             if (!args::get(_node_list).empty()) {
@@ -339,45 +339,22 @@ namespace odgi {
                     uint64_t id = std::stol(next);
                     if (graph.has_node(id)) {
                         handle_t h = graph.get_handle(id);
-                        extract.create_handle(graph.get_sequence(h), id);
+                        subgraph.create_handle(graph.get_sequence(h), id);
                     } else {
                         std::cerr << "[odgi::extract] warning, cannot find node " << id << std::endl;
                     }
                 }
             }
 
-            if (args::get(_context_size) > 0) {
-                uint64_t context = args::get(_context_size);
-                for (uint64_t i = 0; i < context; ++i) {
-                    // get the edges and connected nodes from the graph to fill out th subgraph
-                    // for each extract node
-                    // get its component in the old graph
-                    // and add it to the extract
-                    std::vector<handle_t> curr_handles;
-                    extract.for_each_handle([&](const handle_t &h) {
-                        curr_handles.push_back(h);
-                    });
-                    for (auto &h : curr_handles) {
-                        handle_t old_h = graph.get_handle(extract.get_id(h));
-                        graph.follow_edges(old_h, false, [&](const handle_t &c) {
-                            handle_t x = extract.create_handle(graph.get_sequence(c), graph.get_id(c));
-                            extract.create_edge(h, x);
-                        });
-                        graph.follow_edges(old_h, true, [&](const handle_t &c) {
-                            handle_t x = extract.create_handle(graph.get_sequence(c), graph.get_id(c));
-                            extract.create_edge(x, h);
-                        });
-                    }
-                }
-            }
+            prep_graph(graph, paths, subgraph, context_size, _use_length);
 
             std::string outfile = args::get(og_out_file);
             if (!outfile.empty()) {
                 if (outfile == "-") {
-                    extract.serialize(std::cout);
+                    subgraph.serialize(std::cout);
                 } else {
                     ofstream f(outfile.c_str());
-                    extract.serialize(f);
+                    subgraph.serialize(f);
                     f.close();
                 }
             }
