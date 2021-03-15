@@ -214,7 +214,22 @@ namespace odgi {
         omp_set_num_threads(num_threads);
 
         auto prep_graph = [&](graph_t &source, const std::vector<path_handle_t> source_paths, graph_t &subgraph,
-                              uint64_t context_size, bool use_length) {
+                              uint64_t context_size, bool use_length, bool full_range) {
+            if (full_range) {
+                // find the start and end node of this and fill things in
+                nid_t id_start = std::numeric_limits<nid_t>::max();
+                nid_t id_end = 1;
+                subgraph.for_each_handle([&](handle_t handle) {
+                    nid_t id = subgraph.get_id(handle);
+                    id_start = std::min(id_start, id);
+                    id_end = std::max(id_end, id);
+                });
+
+                algorithms::extract_id_range(source, id_start, id_end, subgraph, show_progress
+                                                                                ? "[odgi::extract] collecting all nodes in the path range"
+                                                                                : "");
+            }
+
             if (context_size > 0) {
                 if (show_progress) {
                     std::cerr << "[odgi::extract] expansion and adding connecting edges" << std::endl;
@@ -256,21 +271,7 @@ namespace odgi {
                     }
                     algorithms::extract_path_range(graph, path_handle, target.start, target.end, subgraph);
 
-                    if (_full_range) {
-                        // find the start and end node of this and fill things in
-                        nid_t id_start = std::numeric_limits<nid_t>::max();
-                        nid_t id_end = 1;
-                        subgraph.for_each_handle([&](handle_t handle) {
-                            nid_t id = subgraph.get_id(handle);
-                            id_start = std::min(id_start, id);
-                            id_end = std::max(id_end, id);
-                        });
-
-                        algorithms::extract_id_range(graph, id_start, id_end, subgraph, show_progress
-                                                                                        ? "[odgi::extract] collecting all nodes in the path range"
-                                                                                        : "");
-                    }
-                    prep_graph(graph, paths, subgraph, context_size, _use_length);
+                    prep_graph(graph, paths, subgraph, context_size, _use_length, _full_range);
 
                     string filename = target.seq + ":" + to_string(target.start) + "-" + to_string(target.end) + ".og";
 
@@ -295,21 +296,7 @@ namespace odgi {
                     algorithms::extract_path_range(graph, path_handle, target.start, target.end, subgraph);
                 }
 
-                if (_full_range) {
-                    // find the start and end node of this and fill things in
-                    nid_t id_start = std::numeric_limits<nid_t>::max();
-                    nid_t id_end = 1;
-                    subgraph.for_each_handle([&](handle_t handle) {
-                        nid_t id = subgraph.get_id(handle);
-                        id_start = std::min(id_start, id);
-                        id_end = std::max(id_end, id);
-                    });
-
-                    algorithms::extract_id_range(graph, id_start, id_end, subgraph, show_progress
-                                                                                     ? "[odgi::extract] collecting all nodes in the path range"
-                                                                                     : "");
-                }
-                prep_graph(graph, paths, subgraph, context_size, _use_length);
+                prep_graph(graph, paths, subgraph, context_size, _use_length, _full_range);
 
                 std::string outfile = args::get(og_out_file);
                 if (!outfile.empty()) {
@@ -346,7 +333,7 @@ namespace odgi {
                 }
             }
 
-            prep_graph(graph, paths, subgraph, context_size, _use_length);
+            prep_graph(graph, paths, subgraph, context_size, _use_length, _full_range);
 
             std::string outfile = args::get(og_out_file);
             if (!outfile.empty()) {
