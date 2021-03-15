@@ -33,9 +33,10 @@ namespace odgi {
                                     "write one subgraph per given target to a separate file named path:start-end.og  "
                                     "(0-based coordinates)", {'s', "split-subgraphs"});
 
-        args::ValueFlag<std::string> _node_list(parser, "FILE", "a file with one node id per line", {'l', "node-list"});
         args::ValueFlag<uint64_t> _target_node(parser, "ID", "a single node from which to begin our traversal",
                                                {'n', "node"});
+        args::ValueFlag<std::string> _node_list(parser, "FILE", "a file with one node id per line", {'l', "node-list"});
+
         args::ValueFlag<uint64_t> _context_size(parser, "N",
                                                 "the number of steps away from our initial subgraph that we should collect",
                                                 {'c', "context"});
@@ -88,19 +89,31 @@ namespace odgi {
             return 1;
         }
 
-        if (!_split_subgraphs && !og_out_file) {
-            std::cerr << "[odgi::extract] error: please specify an output file to where to store the subgraph via "
-                         "-o=[FILE], --out=[FILE]." << std::endl;
-            return 1;
-        }
+        if (_split_subgraphs) {
+            if (og_out_file) {
+                std::cerr << "[odgi::extract] error: please do not specify an output file (with -o/--out) when "
+                             "one subgraph per given target is requested (with -s/--split-subgraphs)." << std::endl;
+                return 1;
+            }
 
-        if (_split_subgraphs && og_out_file) {
-            std::cerr << "[odgi::extract] error: please do not specify an output file (with -o/--out) when "
-                         "one subgraph per given target is requested (with -s/--split-subgraphs)." << std::endl;
-            return 1;
-        }
+            if (_target_node) {
+                std::cerr << "[odgi::extract] error: please do not specify a single node (with -n/--node) when "
+                             "one subgraph per given target is requested (with -s/--split-subgraphs)." << std::endl;
+                return 1;
+            }
 
-        uint64_t context_size = _context_size ? args::get(_context_size) : 0;
+            if (_node_list) {
+                std::cerr << "[odgi::extract] error: please do not specify a node list (with -l/--list) when "
+                             "one subgraph per given target is requested (with -s/--split-subgraphs)." << std::endl;
+                return 1;
+            }
+        } else {
+            if (!og_out_file) {
+                std::cerr << "[odgi::extract] error: please specify an output file to where to store the subgraph via "
+                             "-o=[FILE], --out=[FILE]." << std::endl;
+                return 1;
+            }
+        }
 
         graph_t graph;
         assert(argc > 0);
@@ -209,7 +222,15 @@ namespace odgi {
             targets.push_back(region);
         }
 
+        if (_split_subgraphs && targets.empty()) {
+            std::cerr << "[odgi::extract] error: please specify at least one target when "
+                         "one subgraph per given target is requested (with -s/--split-subgraphs)." << std::endl;
+            return 1;
+        }
+
         bool show_progress = args::get(_show_progress);
+        uint64_t context_size = _context_size ? args::get(_context_size) : 0;
+
         uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
         omp_set_num_threads(num_threads);
 
@@ -265,62 +286,44 @@ namespace odgi {
             }
         };
 
-        if (!targets.empty()) {
-            if (_split_subgraphs) {
-                for (auto &target : targets) {
-                    graph_t subgraph;
-
-                    path_handle_t path_handle = graph.get_path_handle(target.seq);
-
-                    if (show_progress) {
-                        std::cerr << "[odgi::extract] extracting path range " << target.seq << ":" << target.start
-                                  << "-"
-                                  << target.end << std::endl;
-                    }
-                    algorithms::extract_path_range(graph, path_handle, target.start, target.end, subgraph);
-
-                    prep_graph(graph, paths, subgraph, context_size, _use_length, _full_range);
-
-                    string filename = target.seq + ":" + to_string(target.start) + "-" + to_string(target.end) + ".og";
-
-                    if (show_progress) {
-                        std::cerr << "[odgi::extract] writing " << filename << std::endl;
-                    }
-                    ofstream f(filename);
-                    subgraph.serialize(f);
-                    f.close();
-                }
-            } else {
+        if (_split_subgraphs) {
+            for (auto &target : targets) {
                 graph_t subgraph;
 
-                for (auto &target : targets) {
-                    path_handle_t path_handle = graph.get_path_handle(target.seq);
+                path_handle_t path_handle = graph.get_path_handle(target.seq);
 
-                    if (show_progress) {
-                        std::cerr << "[odgi::extract] extracting path range " << target.seq << ":" << target.start
-                                  << "-"
-                                  << target.end << std::endl;
-                    }
-                    algorithms::extract_path_range(graph, path_handle, target.start, target.end, subgraph);
+                if (show_progress) {
+                    std::cerr << "[odgi::extract] extracting path range " << target.seq << ":" << target.start
+                              << "-"
+                              << target.end << std::endl;
                 }
+                algorithms::extract_path_range(graph, path_handle, target.start, target.end, subgraph);
 
                 prep_graph(graph, paths, subgraph, context_size, _use_length, _full_range);
 
-                std::string outfile = args::get(og_out_file);
-                if (!outfile.empty()) {
-                    if (outfile == "-") {
-                        subgraph.serialize(std::cout);
-                    } else {
-                        ofstream f(outfile.c_str());
-                        subgraph.serialize(f);
-                        f.close();
-                    }
+                string filename = target.seq + ":" + to_string(target.start) + "-" + to_string(target.end) + ".og";
+
+                if (show_progress) {
+                    std::cerr << "[odgi::extract] writing " << filename << std::endl;
                 }
+                ofstream f(filename);
+                subgraph.serialize(f);
+                f.close();
             }
         } else {
             graph_t subgraph;
 
-            // collect the new graph
+            for (auto &target : targets) {
+                path_handle_t path_handle = graph.get_path_handle(target.seq);
+
+                if (show_progress) {
+                    std::cerr << "[odgi::extract] extracting path range " << target.seq << ":" << target.start
+                              << "-"
+                              << target.end << std::endl;
+                }
+                algorithms::extract_path_range(graph, path_handle, target.start, target.end, subgraph);
+            }
+
             if (args::get(_target_node)) {
                 check_and_create_handle(graph, subgraph, args::get(_target_node));
             }
