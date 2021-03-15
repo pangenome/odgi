@@ -93,7 +93,7 @@ namespace odgi {
 
         //std::mutex debug_mutex;
 
-#pragma omp parallel for schedule(static, 1) num_threads(num_threads)
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
         for (uint64_t component_index = 0; component_index < weak_components.size(); ++component_index) {
             auto &weak_component = weak_components[component_index];
 

@@ -66,7 +66,7 @@ namespace odgi {
                 std::vector<handle_t>().swap(handles_to_embed);
             };
 
-#pragma omp parallel for schedule(static, 1) num_threads(num_threads)
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
             for (auto source_path_handle : source_paths) {
                 std::string path_name = source.get_path_name(source_path_handle);
 
