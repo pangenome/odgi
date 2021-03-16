@@ -28,11 +28,9 @@ namespace odgi {
         void add_connecting_edges_to_subgraph(const graph_t &source, graph_t &subgraph,
                                               const std::string &progress_message = "");
 
-        void expand_subgraph_by_length(const graph_t &source, graph_t &subgraph, const uint64_t &length,
-                                       bool forward_only, const std::string &progress_message = "");
+        void expand_subgraph_by_length(const graph_t &source, graph_t &subgraph, const uint64_t &length, bool forward_only);
 
-        void expand_subgraph_by_steps(const graph_t &source, graph_t &subgraph, const uint64_t &steps,
-                                      bool forward_only, const std::string &progress_message = "");
+        void expand_subgraph_by_steps(const graph_t &source, graph_t &subgraph, const uint64_t &steps, bool forward_only);
 
         void extract_id_range(const graph_t &source, const nid_t &id1, const nid_t &id2, graph_t &subgraph,
                               const std::string &progress_message = "");

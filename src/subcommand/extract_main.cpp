@@ -257,25 +257,21 @@ namespace odgi {
                 }
 
                 if (use_length) {
-                    algorithms::expand_subgraph_by_length(source, subgraph, context_size, false,
-                                                          show_progress ? "[odgi::extract] adding connecting edges"
-                                                                        : "");
+                    algorithms::expand_subgraph_by_length(source, subgraph, context_size, false);
                 } else {
-                    algorithms::expand_subgraph_by_steps(source, subgraph, context_size, false,
-                                                         show_progress ? "[odgi::extract] adding connecting edges"
-                                                                       : "");
+                    algorithms::expand_subgraph_by_steps(source, subgraph, context_size, false);
                 }
-            } else {
-                algorithms::add_connecting_edges_to_subgraph(source, subgraph, show_progress
-                                                                               ? "[odgi::extract] adding connecting edges"
-                                                                               : "");
             }
+
+            algorithms::add_connecting_edges_to_subgraph(source, subgraph, show_progress
+                                                                           ? "[odgi::extract] adding connecting edges"
+                                                                           : "");
 
             algorithms::add_subpaths_to_subgraph(source, paths, subgraph, num_threads,
                                                  show_progress ? "[odgi::extract] adding subpaths" : "");
 
             // This should not be necessary, if the extraction works correctly
-            // graph.remove_orphan_edges();
+            // subgraph.remove_orphan_edges();
         };
 
         auto check_and_create_handle = [&](const graph_t &source, graph_t &subgraph, const nid_t node_id) {
