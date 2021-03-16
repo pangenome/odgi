@@ -797,9 +797,9 @@ namespace odgi {
                         path_g = 220;
                         path_b = 220;
                     } else if (_binned_mode && _color_by_mean_coverage) {
-                        path_r = 0;
-                        path_g = 0;
-                        path_b = 255;
+                        path_r = 128;
+                        path_g = 255;
+                        path_b = 0;
                     } else if (_color_by_mean_inversion_rate) {
                         path_r = 255;
                         path_g = 0;
