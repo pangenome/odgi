@@ -249,16 +249,8 @@ namespace odgi {
             }
 
             if (full_range) {
-                // find the start and end node of this and fill things in
-                nid_t id_start = std::numeric_limits<nid_t>::max();
-                nid_t id_end = 1;
-                subgraph.for_each_handle([&](handle_t handle) {
-                    nid_t id = subgraph.get_id(handle);
-                    id_start = std::min(id_start, id);
-                    id_end = std::max(id_end, id);
-                });
-
-                algorithms::extract_id_range(source, id_start, id_end, subgraph, show_progress
+                // Take the start and end node of this and fill things in
+                algorithms::extract_id_range(source, subgraph.min_node_id(), subgraph.max_node_id() , subgraph, show_progress
                                                                                  ? "[odgi::extract] collecting all nodes in the path range"
                                                                                  : "");
             }
