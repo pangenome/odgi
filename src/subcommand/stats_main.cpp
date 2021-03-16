@@ -618,7 +618,7 @@ int main_stats(int argc, char** argv) {
                     total_length += l;
                 }
             }, true);
-        std::cout << "length\tgraph.frac\nn.paths\tpath.multiset" << std::endl;
+        std::cout << "length\tgraph.frac\tn.paths\tpath.multiset" << std::endl;
         for (auto& p : multisetcov) {
             std::cout << p.second << "\t"
                       << (double)p.second/(double)total_length << "\t"

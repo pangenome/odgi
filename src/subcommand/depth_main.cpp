@@ -1,6 +1,6 @@
 #include "subcommand.hpp"
 #include "odgi.hpp"
-#include "depth.hpp"
+//#include "depth.hpp"
 #include "args.hxx"
 #include "split.hpp"
 #include "algorithms/bfs.hpp"
@@ -50,14 +50,14 @@ int main_depth(int argc, char** argv) {
     }
 
     if (!og_target_file) {
-        std::cerr << "[odgi depth] error: please specify a target graph via -i=[FILE], --idx=[FILE]." << std::endl;
+        std::cerr << "[odgi::depth] error: please specify a target graph via -i=[FILE], --idx=[FILE]." << std::endl;
         return 1;
     }
 
     odgi::graph_t graph;
     assert(argc > 0);
     std::string infile = args::get(og_file);
-    if (infile.size()) {
+    if (!infile.empty()) {
         if (infile == "-") {
             graph.deserialize(std::cin);
         } else {
@@ -91,7 +91,7 @@ int main_depth(int argc, char** argv) {
             */
             uint64_t id = std::stoi(vals[0]);
             if (!graph.has_node(id)) {
-                std::cerr << "[odgi depth] error: no node " << id << " in graph" << std::endl;
+                std::cerr << "[odgi::depth] error: no node " << id << " in graph" << std::endl;
                 exit(1);
             }
             uint64_t offset = 0;
@@ -99,7 +99,7 @@ int main_depth(int argc, char** argv) {
                 offset = std::stoi(vals[1]);
                 handle_t h = graph.get_handle(id);
                 if (graph.get_length(h) < offset) {
-                    std::cerr << "[odgi depth] error: offset of " << offset << " lies beyond the end of node " << id << std::endl;
+                    std::cerr << "[odgi::depth] error: offset of " << offset << " lies beyond the end of node " << id << std::endl;
                     exit(1);
                 }
             }
@@ -116,14 +116,14 @@ int main_depth(int argc, char** argv) {
             auto vals = split(buffer, ',');
             /*
             if (vals.size() != 3) {
-                std::cerr << "[odgi depth] error: path depth record is incomplete" << std::endl;
-                std::cerr << "[odgi depth] error: got '" << buffer << "'" << std::endl;
+                std::cerr << "[odgi::depth] error: path depth record is incomplete" << std::endl;
+                std::cerr << "[odgi::depth] error: got '" << buffer << "'" << std::endl;
                 exit(1); // bail
             }
             */
             auto& path_name = vals[0];
             if (!graph.has_path(path_name)) {
-                std::cerr << "[odgi depth] error: ref path " << path_name << " not found in graph" << std::endl;
+                std::cerr << "[odgi::depth] error: ref path " << path_name << " not found in graph" << std::endl;
                 exit(1);
             } else {
                 path_depths.push_back({
@@ -140,14 +140,14 @@ int main_depth(int argc, char** argv) {
             auto vals = split(buffer, '\t');
             /*
             if (vals.size() != 3) {
-                std::cerr << "[odgi depth] error: path depth record is incomplete" << std::endl;
-                std::cerr << "[odgi depth] error: got '" << buffer << "'" << std::endl;
+                std::cerr << "[odgi::depth] error: path depth record is incomplete" << std::endl;
+                std::cerr << "[odgi::depth] error: got '" << buffer << "'" << std::endl;
                 exit(1); // bail
             }
             */
             auto& path_name = vals[0];
             if (!graph.has_path(path_name)) {
-                std::cerr << "[odgi depth] error: ref path " << path_name << " not found in graph" << std::endl;
+                std::cerr << "[odgi::depth] error: ref path " << path_name << " not found in graph" << std::endl;
                 exit(1);
             } else {
                 path_ranges.push_back(
@@ -231,7 +231,7 @@ int main_depth(int argc, char** argv) {
                 walked += node_length;
             }
 #pragma omp critical (cout)
-            std::cerr << "[odgi depth] warning: depth " << graph.get_path_name(pos.path) << ":" << pos.offset << " outside of path" << std::endl;
+            std::cerr << "[odgi::depth] warning: depth " << graph.get_path_name(pos.path) << ":" << pos.offset << " outside of path" << std::endl;
             return make_pos_t(0, false, 0);
         };
 
