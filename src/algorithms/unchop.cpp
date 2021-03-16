@@ -355,7 +355,7 @@ namespace odgi {
 
             std::atomic<bool> ok(true);
 
-#pragma omp parallel for schedule(static, 1) num_threads(nthreads)
+#pragma omp parallel for schedule(dynamic, 1) num_threads(nthreads)
             for (rank = 0; rank < path_names.size(); ++rank) {
                 std::string seq;
                 graph.for_each_step_in_path(
