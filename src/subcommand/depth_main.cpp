@@ -1,6 +1,6 @@
 #include "subcommand.hpp"
 #include "odgi.hpp"
-//#include "depth.hpp"
+#include "position.hpp"
 #include "args.hxx"
 #include "split.hpp"
 #include "algorithms/bfs.hpp"
@@ -26,11 +26,10 @@ int main_depth(int argc, char** argv) {
     //args::ValueFlag<std::string> path_name(parser, "PATH_NAME", "compute the depth of the given path in the graph", {'r', "path"});
     //args::ValueFlag<std::string> path_file(parser, "FILE", "compute depth for the paths listed in FILE", {'R', "paths"});
     args::ValueFlag<std::string> graph_pos(parser, "[node_id][,offset[,(+|-)]*]*", "compute the depth at the given node, e.g. 7 or 3,4 or 42,10,+ or 302,0,-", {'g', "graph-pos"});
-    args::ValueFlag<std::string> graph_pos_file(parser, "FILE", "a file with one graph depth per line", {'G', "graph-pos-file"});
+    args::ValueFlag<std::string> graph_pos_file(parser, "FILE", "a file with one graph position per line", {'G', "graph-pos-file"});
     args::ValueFlag<std::string> path_pos(parser, "[path_name][,offset[,(+|-)]*]*", "return depth at the given path position e.g. chrQ or chr3,42 or chr8,1337,+ or chrZ,3929,-", {'p', "path-pos"});
     args::ValueFlag<std::string> path_pos_file(parser, "FILE", "a file with one path position per line", {'F', "path-pos-file"});
-    //args::ValueFlag<std::string> bed_input(parser, "FILE", "a BED file of ranges in paths in the graph to lift into the target graph", {'b', "bed-input"});
-    //args::Flag give_graph_pos(parser, "give-graph-pos", "emit graph depths (node,offset,strand) rather than path depths", {'v', "give-graph-pos"});
+    args::ValueFlag<std::string> bed_input(parser, "FILE", "a BED file of ranges in paths in the graph", {'b', "bed-input"});
     args::Flag graph_depth(parser, "graph-depth", "compute the depth on each node in the graph (or subset covered by the given paths)", {'d', "graph-depth"});
     args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
@@ -49,7 +48,7 @@ int main_depth(int argc, char** argv) {
         return 1;
     }
 
-    if (!og_target_file) {
+    if (!og_file) {
         std::cerr << "[odgi::depth] error: please specify a target graph via -i=[FILE], --idx=[FILE]." << std::endl;
         return 1;
     }
@@ -79,13 +78,13 @@ int main_depth(int argc, char** argv) {
     // TODO the parsers here should find the last 2 , delimiters and split on them
     
     auto add_graph_pos =
-        [&graph_depths](const odgi::graph_t& graph,
+        [&graph_positions](const odgi::graph_t& graph,
                            const std::string& buffer) {
             auto vals = split(buffer, ',');
             /*
             if (vals.size() != 3) {
-                std::cerr << "[odgi depth] error: graph depth record is incomplete" << std::endl;
-                std::cerr << "[odgi depth] error: got '" << buffer << "'" << std::endl;
+                std::cerr << "[odgi::depth] error: graph position record is incomplete" << std::endl;
+                std::cerr << "[odgi::depth] error: got '" << buffer << "'" << std::endl;
                 exit(1); // bail
             }
             */
@@ -107,16 +106,16 @@ int main_depth(int argc, char** argv) {
             if (vals.size() == 3) {
                 is_rev = vals[2] == "-";
             }
-            graph_depths.push_back(make_pos_t(id, is_rev, offset));
+            graph_positions.push_back(make_pos_t(id, is_rev, offset));
         };
 
     auto add_path_pos =
-        [&path_depths](const odgi::graph_t& graph,
+        [&path_positions](const odgi::graph_t& graph,
                           const std::string& buffer) {
             auto vals = split(buffer, ',');
             /*
             if (vals.size() != 3) {
-                std::cerr << "[odgi::depth] error: path depth record is incomplete" << std::endl;
+                std::cerr << "[odgi::depth] error: path position record is incomplete" << std::endl;
                 std::cerr << "[odgi::depth] error: got '" << buffer << "'" << std::endl;
                 exit(1); // bail
             }
@@ -126,7 +125,7 @@ int main_depth(int argc, char** argv) {
                 std::cerr << "[odgi::depth] error: ref path " << path_name << " not found in graph" << std::endl;
                 exit(1);
             } else {
-                path_depths.push_back({
+                path_positions.push_back({
                         graph.get_path_handle(path_name),
                         (vals.size() > 1 ? (uint64_t)std::stoi(vals[1]) : 0),
                         (vals.size() == 3 ? vals[2] == "-" : false)
@@ -140,7 +139,7 @@ int main_depth(int argc, char** argv) {
             auto vals = split(buffer, '\t');
             /*
             if (vals.size() != 3) {
-                std::cerr << "[odgi::depth] error: path depth record is incomplete" << std::endl;
+                std::cerr << "[odgi::depth] error: path position record is incomplete" << std::endl;
                 std::cerr << "[odgi::depth] error: got '" << buffer << "'" << std::endl;
                 exit(1); // bail
             }
@@ -194,14 +193,30 @@ int main_depth(int argc, char** argv) {
             add_bed_range(graph, buffer);
         }
     }
-    // todo: bed files
+
+    // for each position that we want to look up
+#pragma omp parallel for schedule(dynamic,1)
+    for (auto& pos : graph_positions) {
+        uint64_t node_coverage = 0;
+
+        nid_t node_id = id(pos);
+        handle_t h = graph.get_handle(node_id);
+
+        graph.for_each_step_on_handle(h, [&](const step_handle_t& occ) {
+            ++node_coverage;
+        });
+
+#pragma omp critical (cout)
+        std::cout << id(pos) << "," << offset(pos) << "," << (is_rev(pos) ? "-" : "+") << "\t"
+                  << "\t" << node_coverage << std::endl;
+    }
 
 
-    /// HERE things start to diverge
+
 
 
     /// todo remove below and write a path depth measurer
-    
+    /*
     // make an hash set of our ref path ids for quicker lookup
     hash_set<uint64_t> ref_path_set;
     for (auto& path : ref_paths) {
@@ -215,7 +230,7 @@ int main_depth(int argc, char** argv) {
     for (auto& path : lift_paths_target) {
         lift_path_set_target.insert(as_integer(path));
     }
-
+    */
     auto get_graph_pos =
         [](const odgi::graph_t& graph,
            const path_pos_t& pos) {
@@ -231,7 +246,7 @@ int main_depth(int argc, char** argv) {
                 walked += node_length;
             }
 #pragma omp critical (cout)
-            std::cerr << "[odgi::depth] warning: depth " << graph.get_path_name(pos.path) << ":" << pos.offset << " outside of path" << std::endl;
+            std::cerr << "[odgi::depth] warning: position " << graph.get_path_name(pos.path) << ":" << pos.offset << " outside of path" << std::endl;
             return make_pos_t(0, false, 0);
         };
 
@@ -252,6 +267,7 @@ int main_depth(int argc, char** argv) {
     // TODO this part needs to include adjustments for in-node offsets vs. where we find the ref path
     // TODO should we always look "backwards" when seeking the ref pos?
 
+    /*
     struct lift_result_t {
         int64_t path_offset = 0;
         step_handle_t ref_hit;
@@ -260,7 +276,7 @@ int main_depth(int argc, char** argv) {
         bool used_bidirectional = false;
     };
 
-    auto get_depth =
+    auto get_position =
         [&search_radius,&get_offset_in_path](const odgi::graph_t& graph,
                                              const hash_set<uint64_t>& path_set,
                                              const pos_t& pos, lift_result_t& lift) {
@@ -295,7 +311,7 @@ int main_depth(int argc, char** argv) {
                                            if (rev_vs_ref) {
                                                // and if the path orientation is the same as our traversal orientation
                                                // then we need to add the remaining distance from our original offset to the end of node
-                                               // to the final path depth offset
+                                               // to the final path position offset
                                                adj_last_node = graph.get_length(h) - offset(pos);
                                            } else {
                                                // otherwise if the original path is in the same orientation
@@ -310,7 +326,7 @@ int main_depth(int argc, char** argv) {
                                            } else {
                                                // otherwise, it means the original path is in the same orientation
                                                // then we need to adjust by the length of this stepb
-                                               // because we enter at node end, but we'll get the graph depth for the step
+                                               // because we enter at node end, but we'll get the graph position for the step
                                                // at the node beginning
                                                adj_last_node = graph.get_length(h);
                                            }
@@ -343,57 +359,16 @@ int main_depth(int argc, char** argv) {
             }
         };
 
-    // for each depth that we want to look up
-#pragma omp parallel for schedule(dynamic,1)
-    for (auto& _pos : graph_depths) {
-        // go to the graph
-        // do a little BFS, bounded by our limit
-        // now, if we found our hit, print
-        // optionally, we will translate from a source graph into a target graph
-        lift_result_t source_result;
-        //bool ok = false;
-        pos_t pos;
-        if (lifting) {
-            if (get_depth(source_graph, lift_path_set_source, _pos, source_result)) {
-                pos = get_graph_pos(target_graph,
-                                    { target_graph.get_path_handle(
-                                            source_graph.get_path_name(
-                                                source_graph.get_path_handle_of_step(
-                                                    source_result.ref_hit))),
-                                      (uint64_t)source_result.path_offset,
-                                      source_result.is_rev_vs_ref });
-            } else {
-                pos = make_pos_t(0,false,0); // couldn't lift
-            }
-        } else {
-            pos = _pos;
-        }
-        //= (lifting ? ok = get_depth(source_graph, lay_path_set
-        lift_result_t result;
-        if (id(pos) && give_graph_pos) {
-            // force graph depth in target
-#pragma omp critical (cout)
-            std::cout << id(_pos) << "," << offset(_pos) << "," << (is_rev(_pos) ? "-" : "+") << "\t"
-                      << "\t" << id(pos) << "," << offset(pos) << "," << (is_rev(pos) ? "-" : "+") << std::endl;
-        } else if (get_depth(target_graph, ref_path_set, pos, result)) {
-            bool ref_is_rev = false;
-            path_handle_t p = target_graph.get_path_handle_of_step(result.ref_hit);
-#pragma omp critical (cout)
-            std::cout << id(pos) << "," << offset(pos) << "," << (is_rev(pos) ? "-" : "+") << "\t"
-                      << target_graph.get_path_name(p) << "," << result.path_offset << "," << (ref_is_rev ? "-" : "+") << "\t"
-                      << result.walked_to_hit_ref << "\t" << (result.is_rev_vs_ref ? "-" : "+") << std::endl;
-        }
-    }
 
 #pragma omp parallel for schedule(dynamic,1)
-    for (auto& path_pos : path_depths) {
+    for (auto& path_pos : path_positions) {
         // TODO we need a better input format
         pos_t pos;
         // handle the lift into the target graph
         if (lifting) {
             lift_result_t source_result;
             pos_t _pos = get_graph_pos(source_graph, path_pos);
-            if (id(_pos) && get_depth(source_graph, lift_path_set_source, _pos, source_result)) {
+            if (id(_pos) && get_position(source_graph, lift_path_set_source, _pos, source_result)) {
                 pos = get_graph_pos(target_graph,
                                     { target_graph.get_path_handle(
                                             source_graph.get_path_name(
@@ -417,7 +392,7 @@ int main_depth(int argc, char** argv) {
                 std::cout << (lifting ? source_graph.get_path_name(path_pos.path) : target_graph.get_path_name(path_pos.path))
                           << "," << path_pos.offset << "," << (path_pos.is_rev ? "-" : "+")
                           << "\t" << id(pos) << "," << offset(pos) << "," << (is_rev(pos) ? "-" : "+") << std::endl;
-            } else if (get_depth(target_graph, ref_path_set, pos, result)) {
+            } else if (get_position(target_graph, ref_path_set, pos, result)) {
                 bool ref_is_rev = false;
                 path_handle_t p = target_graph.get_path_handle_of_step(result.ref_hit);
 #pragma omp critical (cout)
@@ -437,8 +412,8 @@ int main_depth(int argc, char** argv) {
             lift_result_t source_begin_result, source_end_result;
             pos_t _pos_begin = get_graph_pos(source_graph, path_range.begin);
             pos_t _pos_end = get_graph_pos(source_graph, path_range.end);
-            if (id(_pos_begin) && get_depth(source_graph, lift_path_set_source, _pos_begin, source_begin_result)
-                && id(_pos_end) && get_depth(source_graph, lift_path_set_source, _pos_end, source_end_result)) {
+            if (id(_pos_begin) && get_position(source_graph, lift_path_set_source, _pos_begin, source_begin_result)
+                && id(_pos_end) && get_position(source_graph, lift_path_set_source, _pos_end, source_end_result)) {
                 pos_begin = get_graph_pos(target_graph,
                                           { target_graph.get_path_handle(
                                                   source_graph.get_path_name(
@@ -472,8 +447,8 @@ int main_depth(int argc, char** argv) {
                 std::cout << id(pos_begin) << "," << offset(pos_begin) << "," << (is_rev(pos_begin)?"-":"+") << "\t"
                           << id(pos_end) << "," << offset(pos_end) << "," << (is_rev(pos_end)?"-":"+") << "\t"
                           << path_range.data << std::endl;
-            } else if (get_depth(target_graph, ref_path_set, pos_begin, lift_begin)
-                       && get_depth(target_graph, ref_path_set, pos_end, lift_end)) {
+            } else if (get_position(target_graph, ref_path_set, pos_begin, lift_begin)
+                       && get_position(target_graph, ref_path_set, pos_end, lift_end)) {
                 bool ref_is_rev = false;
                 path_handle_t p_begin = target_graph.get_path_handle_of_step(lift_begin.ref_hit);
                 path_handle_t p_end = target_graph.get_path_handle_of_step(lift_end.ref_hit);
@@ -492,15 +467,14 @@ int main_depth(int argc, char** argv) {
         }
     }
 
-    // todo - lift the depth into another graph
+    // todo - lift the position into another graph
     // requires an input of target paths in the final graph
     // and optionally the set of paths in common (we can compute this by default) to drive the lift
-
+*/
     return 0;
 }
 
-static Subcommand odgi_depth("depth", "coordinate projections between nodes and paths",
+static Subcommand odgi_depth("depth", "find the depth of graph as defined by query criteria",
                                 PIPELINE, 3, main_depth);
-
 
 }
