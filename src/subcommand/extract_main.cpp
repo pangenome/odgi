@@ -259,6 +259,7 @@ namespace odgi {
                                                                            ? "[odgi::extract] adding connecting edges"
                                                                            : "");
 
+            // Add subpaths covering the collected handles
             algorithms::add_subpaths_to_subgraph(source, paths, subgraph, num_threads,
                                                  show_progress ? "[odgi::extract] adding subpaths" : "");
 

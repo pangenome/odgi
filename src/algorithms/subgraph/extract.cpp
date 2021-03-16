@@ -123,7 +123,9 @@ namespace odgi {
                 if (walked > start) {
                     nid_t id = source.get_id(cur_handle);
                     if (!subgraph.has_node(id)) {
-                        subgraph.create_handle(source.get_sequence(source.get_handle(id)), id);
+                        subgraph.create_handle(
+                                source.get_sequence(source.get_is_reverse(cur_handle) ? source.flip(cur_handle) : cur_handle),
+                                id);
                     }
 
                     // This code ensures that there are edges connecting the nodes the path crosses.
@@ -258,9 +260,12 @@ namespace odgi {
                 progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(id2 - id1 + 1, progress_message);
             }
 
-            for (nid_t i = id1; i <= id2; ++i) {
-                if (!subgraph.has_node(i)) {
-                    subgraph.create_handle(source.get_sequence(source.get_handle(i)), i);
+            for (nid_t id = id1; id <= id2; ++id) {
+                if (!subgraph.has_node(id)) {
+                    handle_t cur_handle = source.get_handle(id);
+                    subgraph.create_handle(
+                            source.get_sequence(source.get_is_reverse(cur_handle) ? source.flip(cur_handle) : cur_handle),
+                            id);
                 }
 
                 if (show_progress) {
