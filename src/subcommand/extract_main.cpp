@@ -236,6 +236,18 @@ namespace odgi {
 
         auto prep_graph = [&](graph_t &source, const std::vector<path_handle_t> source_paths, graph_t &subgraph,
                               uint64_t context_size, bool use_length, bool full_range)  {
+            if (context_size > 0) {
+                if (show_progress) {
+                    std::cerr << "[odgi::extract] expansion and adding connecting edges" << std::endl;
+                }
+
+                if (use_length) {
+                    algorithms::expand_subgraph_by_length(source, subgraph, context_size, false);
+                } else {
+                    algorithms::expand_subgraph_by_steps(source, subgraph, context_size, false);
+                }
+            }
+
             if (full_range) {
                 // find the start and end node of this and fill things in
                 nid_t id_start = std::numeric_limits<nid_t>::max();
@@ -247,20 +259,8 @@ namespace odgi {
                 });
 
                 algorithms::extract_id_range(source, id_start, id_end, subgraph, show_progress
-                                                                                ? "[odgi::extract] collecting all nodes in the path range"
-                                                                                : "");
-            }
-
-            if (context_size > 0) {
-                if (show_progress) {
-                    std::cerr << "[odgi::extract] expansion and adding connecting edges" << std::endl;
-                }
-
-                if (use_length) {
-                    algorithms::expand_subgraph_by_length(source, subgraph, context_size, false);
-                } else {
-                    algorithms::expand_subgraph_by_steps(source, subgraph, context_size, false);
-                }
+                                                                                 ? "[odgi::extract] collecting all nodes in the path range"
+                                                                                 : "");
             }
 
             algorithms::add_connecting_edges_to_subgraph(source, subgraph, show_progress
