@@ -266,22 +266,33 @@ namespace odgi {
             }
 
             if (inverse) {
-                if (show_progress) {
-                    std::cerr << "[odgi::extract] inversing the query criteria." << std::endl;
-                }
-
                 unordered_set<nid_t> node_ids_to_ignore;
                 subgraph.for_each_handle([&](const handle_t &h) {
                     node_ids_to_ignore.insert(subgraph.get_id(h));
                 });
+
+                std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress;
+                if (show_progress) {
+                    progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+                            source.get_node_count() - node_ids_to_ignore.size(), "[odgi::extract] inverting the query criteria");
+                }
+
                 subgraph.clear();
 
                 source.for_each_handle([&](const handle_t &h) {
                     nid_t id = source.get_id(h);
                     if (node_ids_to_ignore.count(id) <= 0) {
                         subgraph.create_handle(graph.get_sequence(graph.get_handle(id)), id);
+
+                        if (show_progress) {
+                            progress->increment(1);
+                        }
                     }
                 });
+
+                if (show_progress) {
+                    progress->finish();
+                }
             }
 
             // Connect the collected handles
