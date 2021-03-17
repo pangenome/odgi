@@ -4,7 +4,6 @@
 #include "args.hxx"
 #include <omp.h>
 #include "algorithms/layout.hpp"
-#include "algorithms/bed_records.hpp"
 #include <numeric>
 #include "progress.hpp"
 
@@ -14,7 +13,7 @@ using namespace odgi::subcommand;
 
 int main_relax(int argc, char **argv) {
 
-    // trick argumentparser to do the right thing with the subcommand
+    // trick argument parser to do the right thing with the subcommand
     for (uint64_t i = 1; i < argc - 1; ++i) {
         argv[i] = argv[i + 1];
     }
@@ -26,12 +25,9 @@ int main_relax(int argc, char **argv) {
         "relax a graph by converting global large structural variants into large local bubbles");
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-    args::ValueFlag<std::string> layout_in_file(parser, "FILE", "read the layout coordinates from this .lay format file produced by odgi sort or odgi layout", {'c', "coords-in"});
-    args::ValueFlag<std::string> bed_in_file(parser, "FILE", "read the (bgzip) BED file from this file", {'B', "bed-in"});
-    args::ValueFlag<double> window_size(parser, "N", "window size in kb in which each tension is calculated, DEFAULT: 1kb", {'w', "window-size"});
-    args::Flag progress(parser, "progress", "display progress of the sort", {'P', "progress"});
+    args::ValueFlag<std::string> bed_in_file(parser, "FILE", "read the sorted BED file from this file", {'B', "bed-in"});
+    args::Flag progress(parser, "progress", "display progress", {'P', "progress"});
     args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel phases", {'t', "threads"});
-    args::Flag debug(parser, "debug", "print information about the layout", {'d', "debug"});
 
     try {
         parser.ParseCLI(argc, argv);
@@ -56,7 +52,14 @@ int main_relax(int argc, char **argv) {
 
     if (!dg_in_file) {
         std::cerr
-                << "[odgi tension] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
+                << "[odgi relax] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
+                << std::endl;
+        return 1;
+    }
+
+    if (!bed_in_file) {
+        std::cerr
+                << "[odgi relax] error: Please specify an input file from where to read the BED records via -B=[FILE], --bed-in=[FILE]."
                 << std::endl;
         return 1;
     }
@@ -74,140 +77,28 @@ int main_relax(int argc, char **argv) {
         }
     }
 
-    algorithms::layout::Layout layout;
-    if (layout_in_file) {
-        auto& infile = args::get(layout_in_file);
-        if (infile.size()) {
-            if (infile == "-") {
-                layout.load(std::cin);
-            } else {
-                ifstream f(infile.c_str());
-                layout.load(f);
-                f.close();
-            }
-        }
-    }
+    // TODO read BED line by line and put each of them into a min_bed_record_t struct:
+    //        std::string chrom;
+    //        uint64_t chromStart;
+    //        uint64_t chromEnd;
+    //        double path_layout_nuc_dist_ratio;
+    // The struct will be made in bed_records.hpp
+    // TODO calculate median path_layout_nuc_dist_ratio
+    // TODO only keep min_bed_record_t structs which are double -m/--min-median-factor above the median
+    // TODO only keep the -r/--relax-num OR -e/--relax-percentage min_bed_record_t structs
+    // TODO add these as a vector<min_bed_record_t> to a flat hash map for each path
+    // the flat hash map is the result of the function, which will be stored here
 
-    double window_size_ = 1000;
-    if (window_size) {
-        window_size_ = args::get(window_size) * 1000;
-    }
+    // TODO iterate over the entries of the hash map, in parallel, if possible, and relax
+    // 1. iterate over all steps, if we have a hit within the given range, note down the handles and start and end step, careful about orientation!
+    // 2. remove the steps from the graph, if possible also the nodes and edges
+    // 3. add new nodes and steps using std::pair<step_handle_t, step_handle_t> graph_t::rewrite_segment(const step_handle_t& segment_begin,
+    //                                                                 const step_handle_t& segment_end,
+    //                                                                 const std::vector<handle_t>& new_segment)
 
-    vector<path_handle_t> p_handles;
-    graph.for_each_path_handle([&] (const path_handle_t &p) {
-       p_handles.push_back(p);
-    });
+    // TODO clean up the graph, removing zero coverage nodes and edges
 
-    std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress_meter;
-    if (progress) {
-        progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
-                p_handles.size(), "[odgi::relax::main] BED Progress:");
-    }
-
-    algorithms::bed_records_class bed;
-    bed.open_writer();
-#pragma omp parallel for schedule(static, 1) num_threads(thread_count)
-    for (uint64_t idx = 0; idx < p_handles.size(); idx++) {
-        path_handle_t p = p_handles[idx];
-        std::string path_name = graph.get_path_name(p);
-        uint64_t cur_window_start = 1;
-        uint64_t cur_window_end = 0;
-        double path_layout_dist = 0;
-        uint64_t path_nuc_dist = 0;
-        graph.for_each_step_in_path(p, [&](const step_handle_t &s) {
-            handle_t h = graph.get_handle_of_step(s);
-            algorithms::xy_d_t h_coords_start;
-            algorithms::xy_d_t h_coords_end;
-            if (graph.get_is_reverse(h)) {
-                h_coords_start = layout.coords(graph.flip(h));
-                h_coords_end = layout.coords(h);
-            } else {
-                h_coords_start = layout.coords(h);
-                h_coords_end = layout.coords(graph.flip(h));
-            }
-            // did we hit the last step?
-            if (graph.has_next_step(s)) {
-                step_handle_t next_s = graph.get_next_step(s);
-                handle_t next_h = graph.get_handle_of_step(next_s);
-                algorithms::xy_d_t next_h_coords_start;
-                algorithms::xy_d_t next_h_coords_end;
-                if (graph.get_is_reverse(next_h)) {
-                    next_h_coords_start = layout.coords(graph.flip(next_h));
-                    next_h_coords_end = layout.coords(next_h);
-                } else {
-                    next_h_coords_start = layout.coords(next_h);
-                    next_h_coords_end = layout.coords(graph.flip(next_h));
-                }
-                double within_node_dist = 0;
-                double from_node_to_node_dist = 0;
-                if (!graph.get_is_reverse(h)) {
-                    /// f + f
-                    if (!graph.get_is_reverse(next_h)) {
-                        within_node_dist = algorithms::layout::coord_dist(h_coords_start, h_coords_end);
-                        from_node_to_node_dist = algorithms::layout::coord_dist(h_coords_end, next_h_coords_start);
-                    } else {
-                        /// f + r
-                        within_node_dist = algorithms::layout::coord_dist(h_coords_start, h_coords_end);
-                        from_node_to_node_dist = algorithms::layout::coord_dist(h_coords_end, next_h_coords_end);
-                    }
-                } else {
-                    /// r + r
-                    if (graph.get_is_reverse(next_h)) {
-                        within_node_dist = algorithms::layout::coord_dist(h_coords_end, h_coords_start);
-                        from_node_to_node_dist = algorithms::layout::coord_dist(h_coords_start, next_h_coords_start);
-                    } else {
-                        /// r + f
-                        within_node_dist = algorithms::layout::coord_dist(h_coords_end, h_coords_start);
-                        from_node_to_node_dist = algorithms::layout::coord_dist(h_coords_start, next_h_coords_end);
-                    }
-                }
-                path_layout_dist += within_node_dist;
-                path_layout_dist += from_node_to_node_dist;
-                uint64_t nuc_dist = graph.get_length(h);
-                path_nuc_dist += nuc_dist;
-                cur_window_end += nuc_dist;
-                if ((cur_window_end - cur_window_start + 1) >= window_size_) {
-                    double path_layout_nuc_dist_ratio = (double) path_layout_dist / (double) path_nuc_dist;
-                    bed.append(path_name,
-                               (cur_window_start - 1),
-                               cur_window_end,
-                               path_layout_dist,
-                               path_nuc_dist,
-                               path_layout_nuc_dist_ratio);
-                    cur_window_start = cur_window_end + 1;
-                    cur_window_end = cur_window_start - 1;
-                    path_layout_dist = 0;
-                    path_nuc_dist = 0;
-                }
-            } else {
-                // we only take a look at the current node
-                /// f
-                if (!graph.get_is_reverse(h)) {
-                    path_layout_dist += algorithms::layout::coord_dist(h_coords_start, h_coords_end);
-                } else {
-                    /// r
-                    path_layout_dist += algorithms::layout::coord_dist(h_coords_end, h_coords_start);
-                }
-                uint64_t nuc_dist = graph.get_length(h);
-                path_nuc_dist += nuc_dist;
-                cur_window_end += nuc_dist;
-                double path_layout_nuc_dist_ratio = (double) path_layout_dist / (double) path_nuc_dist;
-                bed.append(path_name,
-                           (cur_window_start - 1),
-                           cur_window_end,
-                           path_layout_dist,
-                           path_nuc_dist,
-                           path_layout_nuc_dist_ratio);
-            }
-        });
-        if (progress) {
-            progress_meter->increment(1);
-        }
-    }
-    bed.close_writer();
-    if (progress) {
-        progress_meter->finish();
-    }
+    // TODO write out the graph
 
     return 0;
 }

@@ -14,7 +14,7 @@ using namespace odgi::subcommand;
 
 int main_tension(int argc, char **argv) {
 
-    // trick argumentparser to do the right thing with the subcommand
+    // trick argument parser to do the right thing with the subcommand
     for (uint64_t i = 1; i < argc - 1; ++i) {
         argv[i] = argv[i + 1];
     }
@@ -30,9 +30,8 @@ int main_tension(int argc, char **argv) {
     args::ValueFlag<double> window_size(parser, "N", "window size in kb in which each tension is calculated, DEFAULT: 1kb", {'w', "window-size"});
     args::ValueFlag<std::string> tsv_out_file(parser, "FILE", "write the TSV layout to this file", {'T', "tsv"});
     // args::ValueFlag<std::string> bed_out_file(parser, "FILE", "write the BED intervals to this file", {'B', "bed"}); we write to stdout
-    args::Flag progress(parser, "progress", "display progress of the sort", {'P', "progress"});
+    args::Flag progress(parser, "progress", "display progress", {'P', "progress"});
     args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel phases", {'t', "threads"});
-    args::Flag debug(parser, "debug", "print information about the layout", {'d', "debug"});
 
     try {
         parser.ParseCLI(argc, argv);
