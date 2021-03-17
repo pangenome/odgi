@@ -223,10 +223,10 @@ namespace odgi {
             while (std::getline(refs, path_name)) {
                 add_bed_range(graph, path_name);
             }
-        }/* else {
+        } else {
             // using all the paths in the graph
-            graph.for_each_path_handle([&](const path_handle_t& path) { paths_to_consider.push_back(path); });
-        }*/
+            graph.for_each_path_handle([&](const path_handle_t& path) { add_bed_range(graph, graph.get_path_name(path)); });
+        }
 
         auto get_graph_pos = [](const odgi::graph_t &graph,
                                 const path_pos_t &pos) {
