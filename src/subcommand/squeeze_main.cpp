@@ -183,8 +183,6 @@ namespace odgi {
 
                         squeezed_graph.append_step(new_path_handle, new_handle);
                     });
-
-
                 }
 
                 shift_id = max_id;

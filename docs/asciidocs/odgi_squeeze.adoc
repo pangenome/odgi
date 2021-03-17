@@ -43,6 +43,12 @@ The odgi squeeze(1) command merges multiple graphs into the same file.
   Compact the node ID space in each input file before imploding.
 
 
+=== Threading
+
+*-t, --threads*=_N_::
+  Number of threads to use.
+
+
 === Processing Information
 
 *-P, --progress*::
