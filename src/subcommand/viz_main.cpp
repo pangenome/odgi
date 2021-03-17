@@ -58,7 +58,7 @@ namespace odgi {
         args::ValueFlag<char> _color_by_prefix(parser, "C", "colors paths by their names looking at the prefix before the given character C",{'s', "color-by-prefix"});
 
         /// Range selection
-        args::ValueFlag<std::string> _nucleotide_range(parser, "STRING","nucleotide range to visualize: STRING=[PATH:]start-end. `*-end` for `[0,end]`; `start-*` for `[start,pangenome_length]`. If no PATH is specified, the nucleotide positions refer to the pangenome's sequence (i.e., the sequence obtained arranging all the graph's node from left to right).",{'r', "pangenomic-range"});
+        args::ValueFlag<std::string> _nucleotide_range(parser, "STRING","nucleotide range to visualize: STRING=[PATH:]start-end. `*-end` for `[0,end]`; `start-*` for `[start,pangenome_length]`. If no PATH is specified, the nucleotide positions refer to the pangenome's sequence (i.e., the sequence obtained arranging all the graph's node from left to right).",{'r', "path-range"});
 
         /// Paths selection
         args::ValueFlag<std::string> _path_names_file(parser, "FILE", "list of paths to display in the specified order; the file must contain one path name per line and a subset of all paths can be specified.", {'p', "paths-to-display"});

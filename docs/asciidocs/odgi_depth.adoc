@@ -32,6 +32,10 @@ The odgi depth(1) command finds the depth of graph as defined by query criteria.
 
 === Depth Options
 
+*-s, --subset-paths*=_FILE_::
+  Compute the depth considering only the paths specified in the FILE; the file must contain one path name per line and a
+  subset of all paths can be specified.
+
 *-r, --path*=_STRING_::
   Compute the depth of the given path in the graph
 

@@ -1123,6 +1123,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 <h4 id="_depth_options">4.4.2. Depth Options</h4>
 <div class="dlist">
 <dl>
+<dt class="hdlist1"><strong>-s, --subset-paths</strong>=<em>FILE</em></dt>
+<dd>
+<p>Compute the depth considering only the paths specified in the FILE; the file must contain one path name per line and a
+subset of all paths can be specified.</p>
+</dd>
 <dt class="hdlist1"><strong>-r, --path</strong>=<em>STRING</em></dt>
 <dd>
 <p>Compute the depth of the given path in the graph</p>
@@ -2508,11 +2513,11 @@ mean inversion rate equals to 1).</p>
 <h4 id="_intervals_selection">14.4.3. Intervals selection</h4>
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><strong>-r, --pangenomic-range</strong></dt>
+<dt class="hdlist1"><strong>-r, --path-range</strong></dt>
 <dd>
 <p>Nucleotide range to visualize: <code>STRING=[PATH:]start-end</code>. <code>*-end</code> for <code>[0,end]</code>; <code>start-*</code> for <code>[start,pangenome_length]</code>.
-If no PATH is specified, the nucleotide positions refer to the pangenome&#8217;s sequence (i.e., the sequence obtained arranging all the graph&#8217;s node
-from left to right).</p>
+If no PATH is specified, the nucleotide positions refer to the pangenome&#8217;s sequence (i.e., the sequence obtained arranging
+all the graph&#8217;s node from left to right).</p>
 </dd>
 </dl>
 </div>
@@ -4487,7 +4492,7 @@ be selected. odgi test(1) depends on <a href="https://github.com/catchorg/Catch2
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-03-17 16:49:48 +0100
+Last updated 2021-03-17 18:27:05 +0100
 </div>
 </div>
 </body>

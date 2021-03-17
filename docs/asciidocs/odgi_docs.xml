@@ -508,6 +508,13 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</simp
 <title>Depth Options</title>
 <variablelist>
 <varlistentry>
+<term><emphasis role="strong">-s, --subset-paths</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>Compute the depth considering only the paths specified in the FILE; the file must contain one path name per line and a
+subset of all paths can be specified.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
 <term><emphasis role="strong">-r, --path</emphasis>=<emphasis>STRING</emphasis></term>
 <listitem>
 <simpara>Compute the depth of the given path in the graph</simpara>
@@ -1931,11 +1938,11 @@ mean inversion rate equals to 1).</simpara>
 <title>Intervals selection</title>
 <variablelist>
 <varlistentry>
-<term><emphasis role="strong">-r, --pangenomic-range</emphasis></term>
+<term><emphasis role="strong">-r, --path-range</emphasis></term>
 <listitem>
 <simpara>Nucleotide range to visualize: <literal>STRING=[PATH:]start-end</literal>. <literal>*-end</literal> for <literal>[0,end]</literal>; <literal>start-*</literal> for <literal>[start,pangenome_length]</literal>.
-If no PATH is specified, the nucleotide positions refer to the pangenome&#8217;s sequence (i.e., the sequence obtained arranging all the graph&#8217;s node
-from left to right).</simpara>
+If no PATH is specified, the nucleotide positions refer to the pangenome&#8217;s sequence (i.e., the sequence obtained arranging
+all the graph&#8217;s node from left to right).</simpara>
 </listitem>
 </varlistentry>
 </variablelist>
