@@ -23,8 +23,10 @@ namespace odgi {
         args::ArgumentParser parser("find the depth of graph as defined by query criteria");
         args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
         args::ValueFlag<std::string> og_file(parser, "FILE", "compute path depths in this graph", {'i', "input"});
-        //args::ValueFlag<std::string> path_name(parser, "PATH_NAME", "compute the depth of the given path in the graph", {'r', "path"});
-        //args::ValueFlag<std::string> path_file(parser, "FILE", "compute depth for the paths listed in FILE", {'R', "paths"});
+        args::ValueFlag<std::string> path_name(parser, "PATH_NAME", "compute the depth of the given path in the graph",
+                                               {'r', "path"});
+        args::ValueFlag<std::string> path_file(parser, "FILE", "compute depth for the paths listed in FILE",
+                                               {'R', "paths"});
         args::ValueFlag<std::string> graph_pos(parser, "[node_id][,offset[,(+|-)]*]*",
                                                "compute the depth at the given node, e.g. 7 or 3,4 or 42,10,+ or 302,0,-",
                                                {'g', "graph-pos"});
@@ -40,7 +42,7 @@ namespace odgi {
         args::Flag graph_depth(parser, "graph-depth",
                                "compute the depth on each node in the graph (or subset covered by the given paths)",
                                {'d', "graph-depth"});
-        args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
+        args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use", {'t', "threads"});
 
         try {
             parser.ParseCLI(argc, argv);
@@ -75,9 +77,8 @@ namespace odgi {
             }
         }
 
-        if (args::get(threads)) {
-            omp_set_num_threads(args::get(threads));
-        }
+        uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+        omp_set_num_threads(num_threads);
 
         // these options are exclusive (probably we should say with a warning)
         std::vector<odgi::pos_t> graph_positions;
@@ -154,16 +155,26 @@ namespace odgi {
                 std::cerr << "[odgi::depth] error: ref path " << path_name << " not found in graph" << std::endl;
                 exit(1);
             } else {
+                uint64_t start = vals.size() == 3 ? (uint64_t) std::stoi(vals[1]) : 0;
+                uint64_t end = 0;
+                if (vals.size() == 3) {
+                    end = (uint64_t) std::stoi(vals[2]);
+                } else {
+                    graph.for_each_step_in_path(graph.get_path_handle(path_name), [&](const step_handle_t &s) {
+                        end += graph.get_length(graph.get_handle_of_step(s));
+                    });
+                }
+
                 path_ranges.push_back(
                         {
                                 {
                                         graph.get_path_handle(path_name),
-                                        (uint64_t) std::stoi(vals[1]),
+                                        start,
                                         false
                                 },
                                 {
                                         graph.get_path_handle(path_name),
-                                        (uint64_t) std::stoi(vals[2]),
+                                        end,
                                         false
                                 },
                                 (vals.size() > 3 && vals[3] == "-"),
@@ -197,8 +208,19 @@ namespace odgi {
             while (std::getline(bed_in, buffer)) {
                 add_bed_range(graph, buffer);
             }
-        }
-
+        } else if (path_name) {
+            add_bed_range(graph, args::get(path_name));
+        } else if (path_file) {
+            // for thing in things
+            std::ifstream refs(args::get(path_file).c_str());
+            std::string path_name;
+            while (std::getline(refs, path_name)) {
+                add_bed_range(graph, path_name);
+            }
+        }/* else {
+            // using all the paths in the graph
+            graph.for_each_path_handle([&](const path_handle_t& path) { paths_to_consider.push_back(path); });
+        }*/
 
         auto get_graph_pos = [](const odgi::graph_t &graph,
                                 const path_pos_t &pos) {
@@ -275,6 +297,38 @@ namespace odgi {
                 std::cout << (graph.get_path_name(path_pos.path)) << "," << path_pos.offset << ","
                           << (path_pos.is_rev ? "-" : "+") << "\t"
                           << coverage.first << "\t" << coverage.second << std::endl;
+            }
+        }
+
+        if (!path_ranges.empty()) {
+            std::cout << "#path\tstart\tend\tmean_coverage" << std::endl;
+#pragma omp parallel for schedule(dynamic, 1)
+            for (auto &path_range : path_ranges) {
+                uint64_t start = path_range.begin.offset;
+                uint64_t end = path_range.end.offset;
+                path_handle_t path_handle = path_range.begin.path;
+
+                uint64_t coverage = 0;
+
+                uint64_t walked = 0;
+                auto path_end = graph.path_end(path_handle);
+                for (step_handle_t cur_step = graph.path_begin(path_handle);
+                     cur_step != path_end && walked <= end; cur_step = graph.get_next_step(cur_step)) {
+                    handle_t cur_handle = graph.get_handle_of_step(cur_step);
+                    walked += graph.get_length(cur_handle);
+                    if (walked > start) {
+                        uint64_t c = 0;
+                        graph.for_each_step_on_handle(cur_handle, [&](const step_handle_t &step) {
+                            ++c;
+                        });
+
+                        coverage += c;
+                    }
+                }
+
+#pragma omp critical (cout)
+                std::cout << (graph.get_path_name(path_handle)) << "\t" << start << "\t" << end << "\t"
+                          << (double) coverage / (double) (end - start) << std::endl;
             }
         }
 
