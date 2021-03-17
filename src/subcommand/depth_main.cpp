@@ -317,12 +317,16 @@ namespace odgi {
                     handle_t cur_handle = graph.get_handle_of_step(cur_step);
                     walked += graph.get_length(cur_handle);
                     if (walked > start) {
-                        uint64_t c = 0;
+                        bool seen = false;
                         graph.for_each_step_on_handle(cur_handle, [&](const step_handle_t &step) {
-                            ++c;
+                            if (!seen) {
+                                if (graph.get_path_handle_of_step(step) == path_handle) {
+                                    seen = true;
+                                    return;
+                                }
+                            }
+                            ++coverage;
                         });
-
-                        coverage += c;
                     }
                 }
 
