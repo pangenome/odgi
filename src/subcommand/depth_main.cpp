@@ -319,15 +319,16 @@ namespace odgi {
                 uint64_t walked = 0;
                 auto path_end = graph.path_end(path_handle);
                 for (step_handle_t cur_step = graph.path_begin(path_handle);
-                     cur_step != path_end && walked <= end; cur_step = graph.get_next_step(cur_step)) {
+                     cur_step != path_end && walked < end; cur_step = graph.get_next_step(cur_step)) {
                     handle_t cur_handle = graph.get_handle_of_step(cur_step);
-                    walked += graph.get_length(cur_handle);
-                    if (walked > start) {
+                    uint64_t cur_length = graph.get_length(cur_handle);
+                    walked += cur_length;
+                    if (walked >= start) {
                         // the coverage is steps_on_handle - 1
-                        graph.for_each_step_on_handle(cur_handle, [&](const step_handle_t &step) {
-                            ++coverage;
-                        });
-                        --coverage;
+                        coverage += (graph.get_step_count(cur_handle) - 1)
+                            * (cur_length
+                               - (walked - cur_length < start ? cur_length - (walked - start) : 0)
+                               - (walked > end ? end - walked : 0));
                     }
                 }
 
