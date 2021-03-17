@@ -2,12 +2,12 @@
 .\"     Title: odgi
 .\"    Author: Erik Garrison
 .\" Generator: Asciidoctor 2.0.10
-.\"      Date: 2021-03-16
+.\"      Date: 2021-03-17
 .\"    Manual: odgi
 .\"    Source: odgi v0.6.0
 .\"  Language: English
 .\"
-.TH "ODGI" "1" "2021-03-16" "odgi v0.6.0" "odgi"
+.TH "ODGI" "1" "2021-03-17" "odgi v0.6.0" "odgi"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -34,6 +34,8 @@ odgi \- dynamic succinct variation graph tool
 \fBodgi\fP build \-g graph.gfa \-o graph.og
 .sp
 \fBodgi\fP stats \-i graph.og \-S
+.sp
+\fBodgi\fP depth \-i graph.og
 .sp
 \fBodgi\fP cover \-i graph.og \-o graph.paths.og
 .sp
@@ -108,6 +110,9 @@ The odgi build(1) command constructs a succinct variation graph from a GFA. Curr
 \fBodgi stats\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fIOPTION\fP]...
 .br
 The odgi stats(1) command produces statistics of a variation graph. Among other metrics, it can calculate the #nodes, #edges, #paths and the total nucleotide length of the graph. Various histogram summary options complement the tool. If [\fB\-B, \-\-bed\-multicov\fP=\fIBED\fP] is set, the metrics will be produced for the intervals specified in the BED.
+.sp
+\fBodgi depth\fP [\fB\-i, \-\-input\fP=\fIFILE\fP] [\fIOPTION\fP]...
+The odgi depth(1) command finds the depth of graph as defined by query criteria.
 .sp
 \fBodgi cover\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
 .br
@@ -338,7 +343,7 @@ Refer to the \fBodgi\fP issue tracker at \c
 .URL "https://github.com/vgteam/odgi/issues" "" "."
 .SH "AUTHORS"
 .sp
-Erik Garrison from the University of California Santa Cruz wrote the whole \fBodgi\fP tool. Simon Heumos from the Quantitative Biology Center Tübingen wrote \fBodgi pathindex\fP, \fBodgi panpos\fP, \fBodgi server\fP, and this documentation. Andrea Guarracino from the University of Rome Tor Vergata wrote \fBodgi viz\fP, \fBodgi extract\fP, \fBodgi cover\fP, \fBodgi explode\fP, \fBodgi squeeze\fP, and this documentation*.
+Erik Garrison from the University of California Santa Cruz wrote the whole \fBodgi\fP tool. Simon Heumos from the Quantitative Biology Center Tübingen wrote \fBodgi pathindex\fP, \fBodgi panpos\fP, \fBodgi server\fP, and this documentation. Andrea Guarracino from the University of Rome Tor Vergata wrote \fBodgi viz\fP, \fBodgi extract\fP, \fBodgi cover\fP, \fBodgi explode\fP, \fBodgi squeeze\fP, \fBodgi depth\fP, and this documentation*.
 .SH "RESOURCES"
 .sp
 \fBProject web site:\fP \c

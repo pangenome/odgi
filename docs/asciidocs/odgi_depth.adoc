@@ -1,63 +1,64 @@
-= odgi position(1)
+= odgi depth(1)
 ifdef::backend-manpage[]
-Erik Garrison
+Andrea Guarracino
 :doctype: manpage
 :release-version: v0.6.0
-:man manual: odgi position
+:man manual: odgi depth
 :man source: odgi v0.6.0
 :page-layout: base
 endif::[]
 
 == NAME
 
-odgi_position - position parts of the graph as defined by query criteria
+odgi_depth - find the depth of graph as defined by query criteria
 
 
 == SYNOPSIS
 
-*odgi position* [*-i, --target*=_FILE_] [_OPTION_]...
+*odgi depth* [*-i, --input*=_FILE_] [_OPTION_]...
 
 == DESCRIPTION
 
-The odgi position(1) command position parts of the graph as defined by query criteria.
+The odgi depth(1) command finds the depth of graph as defined by query criteria.
 
 
 == OPTIONS
 
 === Graph Files IO
 
-*-i, --target*=_FILE_::
-  Describe positions in this graph.
-
-*-x, --source*=_FILE_::
-  Translate positions from this graph into the target graph using common `--lift-paths` shared between both graphs [default: use the same source/target
-graph]
+*-i, --input*=_FILE_::
+  Compute path depths in this graph.
 
 
-=== Position Options
+=== Depth Options
 
-*-r, --ref-paths*=_STRING_::
-  Translate the given positions into positions relative to this reference path.
+*-s, --subset-paths*=_FILE_::
+  Compute the depth considering only the paths specified in the FILE; the file must contain one path name per line and a
+  subset of all paths can be specified.
 
-*-R, --ref-paths*=_FILE_::
-  Use the ref-paths in FILE.
+*-r, --path*=_STRING_::
+  Compute the depth of the given path in the graph
 
-*-l, --lift-path*=_STRING_::
-  Lift positions from `--source` to `--target` via coordinates in this path common to both graphs [default: all common paths
-between `--source` and `--target`].
+*-R, --paths*=_FILE_::
+  Compute depth for the paths listed in FILE.
 
 *-g, --graph-pos*=_[[node_id][,offset[,(+|-)]*]*]_::
-  A graph position, e.g. 42,10,+ or 302,0,-.
+  Compute the depth at the given node, e.g. 7 or 3,4 or 42,10,+ or 302,0,-.
+
+*-G, --graph-pos-file*=_FILE_::
+  A file with graph path position per line.
+
+*-p, --path-pos*=_[[path_name][,offset[,(+|-)]*]*]_::
+  Return depth at the given path position e.g. chrQ or chr3,42 or chr8,1337,+ or chrZ,3929,-.
 
 *-F, --path-pos-file*=_FILE_::
   A file with one path position per line.
 
 *-b, --bed-input*=_FILE_::
-  A BED file of ranges in paths in the graph to lift into the target graph `-v`, `--give-graph-pos` emit graph positions.
+  A BED file of ranges in paths in the graph.
 
-*-v, --give-graph-pos*::
-  Emit graph positions (node,offset,strand) rather than path positions.
-
+*-d, --graph-depth*::
+  Compute the depth on each node in the graph.
 
 *-d, --search-radius*=_STRING_::
   Limit coordinate conversion breadth-first search up to DISTANCE bp from each given position [default: 10000].
@@ -72,7 +73,7 @@ between `--source` and `--target`].
 === Program Information
 
 *-h, --help*::
-  Print a help message for *odgi position*.
+  Print a help message for *odgi depth*.
 
 
 == EXIT STATUS
@@ -89,7 +90,7 @@ Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
 
 == AUTHORS
 
-*odgi position* was written by Erik Garrison.
+*odgi depth* was written by Andrea Guarracino.
 
 ifdef::backend-manpage[]
 == RESOURCES
