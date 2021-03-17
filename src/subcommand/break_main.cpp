@@ -43,12 +43,12 @@ int main_break(int argc, char** argv) {
     }
 
     if (!odgi_in_file) {
-        std::cerr << "[odgi break] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
+        std::cerr << "[odgi::break] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
         return 1;
     }
 
     if (!odgi_out_file) {
-        std::cerr << "[odgi break] error: Please specify an output file to where to store the broken graph via -o=[FILE], --out=[FILE]." << std::endl;
+        std::cerr << "[odgi::break] error: please specify an output file to where to store the broken graph via -o=[FILE], --out=[FILE]." << std::endl;
         return 1;
     }
     

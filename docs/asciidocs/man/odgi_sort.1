@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: odgi sort
-.\"    Author: Erik Garrison
+.\"    Author: Erik Garrison, Simon Heumos, Andrea Guarracino
 .\" Generator: Asciidoctor 2.0.10
-.\"      Date: 2020-06-23
+.\"      Date: 2021-03-12
 .\"    Manual: odgi sort
-.\"    Source: odgi v0.4.1
+.\"    Source: odgi v0.6.0
 .\"  Language: English
 .\"
-.TH "ODGI_SORT" "1" "2020-06-23" "odgi v0.4.1" "odgi sort"
+.TH "ODGI_SORT" "1" "2021-03-12" "odgi v0.6.0" "odgi sort"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -76,19 +76,6 @@ generated numbers.
 .  sp -1
 .  IP \(bu 2.3
 .\}
-A sparse matrix mondriaan sort: We can partition a hypergraph with integer weights and uniform hyperedge costs using the \c
-.URL "http://www.staff.science.uu.nl/~bisse101/Mondriaan/" "Mondriaan" " "
-partitioner.
-.RE
-.sp
-.RS 4
-.ie n \{\
-\h'-04'\(bu\h'+03'\c
-.\}
-.el \{\
-.  sp -1
-.  IP \(bu 2.3
-.\}
 A 1D linear SGD sort: Odgi implements a 1D linear, variation graph adjusted, multi\-threaded version of the \c
 .URL "https://arxiv.org/abs/1710.04626" "Graph Drawing
 by Stochastic Gradient Descent"  algorithm. The force\-directed graph drawing algorithm minimizes the graph\(cqs energy function
@@ -103,8 +90,11 @@ or stress level. It applies stochastic gradient descent (SGD) to move a single p
 .  sp -1
 .  IP \(bu 2.3
 .\}
-An eades algorithmic sort: Use \c
-.URL "http://www.it.usyd.edu.au/~pead6616/old_spring_paper.pdf" "Peter Eades\(aq heuristic for graph drawing" "."
+A path guided, 1D linear SGD sort: Odgi implements a 1D linear, variation graph adjusted, multi\-threaded version of the \c
+.URL "https://arxiv.org/abs/1710.04626" "Graph Drawing
+by Stochastic Gradient Descent"  algorithm. The force\-directed graph drawing algorithm minimizes the graph\(cqs energy function
+or stress level. It applies stochastic gradient descent (SGD) to move a single pair of nodes at a time. The path index is used to pick the terms to move stochastically. If ran with 1 thread only,
+the resulting order of the graph is deterministic. The seed is adjustable.
 .RE
 .sp
 Sorting the paths in a graph my refine the sorting process. For the users\(aq convenience, it is possible to specify a whole
@@ -168,68 +158,92 @@ Use a cycle breaking sort.
 .RS 4
 Randomly sort the graph.
 .RE
-.SS "Mondriaan Sort"
+.SS "Path Guided 1D Linear SGD Sort"
 .sp
-\fB\-m, \-\-mondriaan\fP
+\fB\-Y, \-\-path\-sgd\fP
 .RS 4
-Use the sparse matrix diagonalization to sort the graph.
+Apply path guided 1D linear SGD algorithm to organize the graph.
 .RE
 .sp
-\fB\-N, \-\-mondriaan\-n\-parts\fP=\fIN\fP
+\fB\-X, \-\-path\-index\fP=\fIFILE\fP
 .RS 4
-Number of partitions for the mondriaan sort.
+Load the path index from this \fIFILE\fP.
 .RE
 .sp
-\fB\-E, \-\-mondriaan\-epsilon\fP=\fIN\fP
+\fB\-f, \-\-path\-sgd\-use\-paths\fP=FILE
 .RS 4
-Set the epsilon parameter for the mondriaan sort.
+Specify a line separated list of paths to sample from for the on the fly term generation process in the path guided linear 1D SGD. The default value are \fIall paths\fP.
 .RE
 .sp
-\fB\-W, \-\-mondriaan\-path\-weight\fP
+\fB\-G, \-\-path\-sgd\-min\-term\-updates\-paths\fP=\fIN\fP
 .RS 4
-Weight the mondriaan input matrix by the path coverage of edges.
-.RE
-.SS "1D Linear SGD Sort"
-.sp
-\fB\-S, \-\-linear\-sgd\fP
-.RS 4
-Apply 1D linear SGD algorithm to sort the graph.
+The minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of total path steps. The default value is \fI1.0\fP. Can be overwritten by \fI\-U, \-path\-sgd\-min\-term\-updates\-nodes=N\fP.
 .RE
 .sp
-\fB\-O, \-\-sgd\-bandwidth\fP=\fIsgd\-bandwidth\fP
+\fB\-U, \-\-path\-sgd\-min\-term\-updates\-nodes\fP=\fIN\fP
 .RS 4
-Bandwidth of linear SGD model. The default value is \fI1000\fP.
+The minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of the number of nodes. Per default, the argument is not set. The default of \fI\-G, path\-sgd\-min\-term\-updates\-paths=N\fP is used).
 .RE
 .sp
-\fB\-Q, \-\-sgd\-sampling\-rate\fP=\fIsgd\-sampling\-rate\fP
+\fB\-j, \-\-path\-sgd\-delta\fP=\fIN\fP
 .RS 4
-Sample pairs of nodes with probability distance between them divided by the sampling rate. The default value is \fI20\fP.
+The threshold of maximum displacement approximately in bp at which to stop path guided linear 1D SGD. Default values is \fI0.0\fP.
 .RE
 .sp
-\fB\-K, \-\-sgd\-use\-paths\fP
+\fB\-g, \-\-path\-sgd\-eps\fP=\fIN\fP
 .RS 4
-Use the paths to structure the distances between nodes in SGD.
+The final learning rate for path guided linear 1D SGD model. The default value is \fI0.01\fP.
 .RE
 .sp
-\fB\-T, \-\-sgd\-iter\-max\fP=\fIsgd_iter\-max\fP
+\fB\-v, \-\-path\-sgd\-eta\-max\fP=\fIN\fP
 .RS 4
-The maximum number of iterations for the linear SGD model. The default value is \fI30\fP.
+The first and maximum learning rate for path guided linear 1D SGD model. The default value is \fIsquared steps of longest path in graph\fP.
 .RE
 .sp
-\fB\-V, \-\-sgd\-eps\fP=\fIsgd\-eps\fP
+\fB\-a, \-\-path\-sgd\-zipf\-theta\fP=\fIN\fP
 .RS 4
-The final learning rate for the linear SGD model. The default value is \fI0.01\fP.
+The theta value for the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model. The default value is \fI0.99\fP.
 .RE
 .sp
-\fB\-C, \-\-sgd\-delta\fP=\fIsgd\-delta\fP
+\fB\-x, \-\-path\-sgd\-iter\-max\fP=\fIN\fP
 .RS 4
-The threshold of the maximum node displacement, approximately in base pairs, at which to stop SGD.
+The maximum number of iterations for path guided linear 1D SGD model. The default value is \fI30\fP.
 .RE
-.SS "Eades Sort"
 .sp
-\fB\-e, \-\-eades\fP
+\fB\-F, \-\-iteration\-max\-learning\-rate\fP=\fIN\fP
 .RS 4
-Use eades algorithm.
+The iteration where the learning rate is max for path guided linear 1D SGD model. The default value is \fI0\fP.
+.RE
+.sp
+\fB\-k, \-\-path\-sgd\-zipf\-space\fP=\fIN\fP
+.RS 4
+The maximum space size of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model. The default value is the \fIlongest path length\fP.
+.RE
+.sp
+\fB\-I, \-\-path\-sgd\-zipf\-space\-max\fP=\fIN\fP
+.RS 4
+The maximum space size of the Zipfian distribution beyond which quantization occurs. Default value is \fI100\fP.
+.RE
+.sp
+\fB\-l, \-\-path\-sgd\-zipf\-space\-quantization\-step\fP=\fIN\fP
+.RS 4
+Quantization step size when the maximum space size of the Zipfian distribution is exceeded. Default value is \fI100\fP.
+.RE
+.sp
+\fB\-y, \-\-path\-sgd\-zipf\-max\-num\-distributions\fP=\fIN\fP
+.RS 4
+Approximate maximum number of Zipfian distributions to calculate. The default value is \fI100\fP.
+.RE
+.sp
+\fB\-q, \-\-path\-sgd\-seed\fP=\fIN\fP
+.RS 4
+Set the seed for the deterministic 1\-threaded path guided linear 1D SGD model. The default value is \fIpangenomic!\fP.
+.RE
+.sp
+\fB\-u, \-\-path\-sgd\-snapshot\fP=\fISTRING\fP
+.RS 4
+Set the prefix to which each snapshot graph of a path guided 1D SGD iteration should be written to. This is turned off per default.
+This argument only works when \fI\-Y, \-\-path\-sgd\fP was specified. Not applicable in a pipeline of sorts.
 .RE
 .SS "Path Sorting Options"
 .sp
@@ -279,7 +293,7 @@ Use the MutableHandleGraph::optimize method to compact the node identifier space
 .sp
 \fB\-t, \-\-threads\fP=\fIN\fP
 .RS 4
-Number of threads to use for parallel sorting in SGD. Only specify this argument in combination with \fB\-S, \-\-linear\-sgd\fP. No multi\-threading support for any other sorting algorithm.
+Number of threads to use for the parallel operations.
 .RE
 .SS "Processing Information"
 .sp
@@ -310,7 +324,7 @@ Refer to the \fBodgi\fP issue tracker at \c
 .URL "https://github.com/vgteam/odgi/issues" "" "."
 .SH "AUTHORS"
 .sp
-\fBodgi sort\fP was written by Erik Garrison.
+\fBodgi sort\fP was written by Erik Garrison, Simon Heumos, and Andrea Guarracino.
 .SH "RESOURCES"
 .sp
 \fBProject web site:\fP \c
@@ -348,4 +362,4 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 .SH "AUTHOR"
 .sp
-Erik Garrison
+Erik Garrison, Simon Heumos, Andrea Guarracino

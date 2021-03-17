@@ -27,7 +27,7 @@ namespace odgi {
           Ignores node ids that are not present in the graph.
         */
         ska::flat_hash_set<handlegraph::nid_t>
-        is_nice_and_acyclic(const HandleGraph &graph, const ska::flat_hash_set<handlegraph::nid_t> &component, const bool& ignore_paths);
+        is_nice_and_acyclic(const HandleGraph &graph, const ska::flat_hash_set<handlegraph::nid_t> &component);
 
         /*
           Find a path cover of the graph with num_paths_per_component paths per component, adding the generated paths in

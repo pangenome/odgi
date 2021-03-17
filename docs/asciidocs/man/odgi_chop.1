@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: odgi chop
-.\"    Author: Erik Garrison
+.\"    Author: Erik Garrison, Andrea Guarracino
 .\" Generator: Asciidoctor 2.0.10
-.\"      Date: 2020-06-23
+.\"      Date: 2021-03-12
 .\"    Manual: odgi chop
-.\"    Source: odgi v0.4.1
+.\"    Source: odgi v0.6.0
 .\"  Language: English
 .\"
-.TH "ODGI_CHOP" "1" "2020-06-23" "odgi v0.4.1" "odgi chop"
+.TH "ODGI_CHOP" "1" "2021-03-12" "odgi v0.6.0" "odgi chop"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -34,7 +34,7 @@ odgi_chop \- divide nodes into smaller pieces
 \fBodgi chop\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fB\-c, \-\-chop\-to\fP=\fIN\fP] [\fIOPTION\fP]...
 .SH "DESCRIPTION"
 .sp
-The odgi chop(1) command chops long nodes into short ones while preserving the graph topology.
+The odgi chop(1) command chops long nodes into short ones while preserving the graph topology and node order.
 .SH "OPTIONS"
 .SS "Graph Files IO"
 .sp
@@ -53,11 +53,17 @@ Write the choped succinct variation graph to \fIFILE\fP. The file name usually e
 .RS 4
 Divide nodes that longer than \fIN\fP into nodes no longer than \fIN\fP while maintaining graph topology.
 .RE
+.SS "Threading"
+.sp
+\fB\-t, \-\-threads\fP=\fIN\fP
+.RS 4
+Number of threads to use for the parallel operations.
+.RE
 .SS "Processing Information"
 .sp
 \fB\-d, \-\-debug\fP
 .RS 4
-Print information about the components to stdout.
+Print information about the process to stderr.
 .RE
 .SS "Program Information"
 .sp
@@ -82,7 +88,7 @@ Refer to the \fBodgi\fP issue tracker at \c
 .URL "https://github.com/vgteam/odgi/issues" "" "."
 .SH "AUTHORS"
 .sp
-\fBodgi chop\fP was written by Erik Garrison.
+\fBodgi chop\fP was written by Erik Garrison and Andrea Guarracino.
 .SH "RESOURCES"
 .sp
 \fBProject web site:\fP \c
@@ -120,4 +126,4 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 .SH "AUTHOR"
 .sp
-Erik Garrison
+Erik Garrison, Andrea Guarracino

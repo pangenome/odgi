@@ -1,10 +1,10 @@
 = odgi chop(1)
 ifdef::backend-manpage[]
-Erik Garrison
+Erik Garrison, Andrea Guarracino
 :doctype: manpage
-:release-version: v0.4.1 
+:release-version: v0.6.0
 :man manual: odgi chop
-:man source: odgi v0.4.1 
+:man source: odgi v0.6.0
 :page-layout: base
 endif::[]
 
@@ -64,7 +64,7 @@ Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
 
 == AUTHORS
 
-*odgi chop* was written by Erik Garrison.
+*odgi chop* was written by Erik Garrison and Andrea Guarracino.
 
 ifdef::backend-manpage[]
 == RESOURCES

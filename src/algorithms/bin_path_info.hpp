@@ -13,6 +13,7 @@
 #include <handlegraph/handle_graph.hpp>
 #include <handlegraph/util.hpp>
 #include <handlegraph/path_handle_graph.hpp>
+#include "progress.hpp"
 
 namespace odgi {
     namespace algorithms {
@@ -39,6 +40,7 @@ namespace odgi {
                            const std::function<void(const std::string&)> &handle_fasta,
                            uint64_t num_bins = 0,
                            uint64_t bin_width = 0,
-                           bool drop_gap_links = false);
+                           bool drop_gap_links = false,
+                           bool progress = false);
     }
 }

@@ -22,7 +22,7 @@ int main_groom(int argc, char** argv) {
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> og_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> og_out_file(parser, "FILE", "store the graph self index in this file", {'o', "out"});
-    args::Flag progress(parser, "progress", "display progress of the grooming", {'P', "progress"});
+    args::Flag progress(parser, "progress", "display progress of the grooming to stderr", {'P', "progress"});
 
     try {
         parser.ParseCLI(argc, argv);
@@ -40,19 +40,19 @@ int main_groom(int argc, char** argv) {
     }
 
     if (!og_in_file) {
-        std::cerr << "[odgi groom] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
+        std::cerr << "[odgi::groom] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
         return 1;
     }
 
     if (!og_out_file) {
-        std::cerr << "[odgi groom] error: Please specify an output file to where to store the groomped graph via -o=[FILE], --out=[FILE]." << std::endl;
+        std::cerr << "[odgi::groom] error: please specify an output file to where to store the groomped graph via -o=[FILE], --out=[FILE]." << std::endl;
         return 1;
     }
 
     graph_t graph;
     assert(argc > 0);
     std::string infile = args::get(og_in_file);
-    if (infile.size()) {
+    if (!infile.empty()) {
         if (infile == "-") {
             graph.deserialize(std::cin);
         } else {
@@ -69,7 +69,7 @@ int main_groom(int argc, char** argv) {
     graph.apply_ordering(algorithms::groom(graph, progress));
     
     std::string outfile = args::get(og_out_file);
-    if (outfile.size()) {
+    if (!outfile.empty()) {
         if (outfile == "-") {
             graph.serialize(std::cout);
         } else {

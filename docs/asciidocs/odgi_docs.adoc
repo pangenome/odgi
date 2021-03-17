@@ -2,13 +2,18 @@
 :toclevels: 1
 :sectnums:
 
-= Reference Documentation for ODGI v0.4.1
+= Reference Documentation for ODGI v0.6.0
 Simon Heumos, Andrea Guarracino, Erik Garrison
 
 include::odgi.adoc[leveloffset=+1]
 include::odgi_build.adoc[leveloffset=+1]
 include::odgi_stats.adoc[leveloffset=+1]
 include::odgi_sort.adoc[leveloffset=+1]
+include::odgi_groom.adoc[leveloffset=+1]
+include::odgi_cover.adoc[leveloffset=+1]
+include::odgi_explode.adoc[leveloffset=+1]
+include::odgi_squeeze.adoc[leveloffset=+1]
+include::odgi_extract.adoc[leveloffset=+1]
 include::odgi_view.adoc[leveloffset=+1]
 include::odgi_kmers.adoc[leveloffset=+1]
 include::odgi_unitig.adoc[leveloffset=+1]
@@ -17,7 +22,6 @@ include::odgi_paths.adoc[leveloffset=+1]
 include::odgi_prune.adoc[leveloffset=+1]
 include::odgi_unchop.adoc[leveloffset=+1]
 include::odgi_normalize.adoc[leveloffset=+1]
-include::odgi_subset.adoc[leveloffset=+1]
 include::odgi_bin.adoc[leveloffset=+1]
 include::odgi_matrix.adoc[leveloffset=+1]
 include::odgi_chop.adoc[leveloffset=+1]
@@ -26,6 +30,7 @@ include::odgi_flatten.adoc[leveloffset=+1]
 include::odgi_break.adoc[leveloffset=+1]
 include::odgi_pathindex.adoc[leveloffset=+1]
 include::odgi_panpos.adoc[leveloffset=+1]
+include::odgi_position.adoc[leveloffset=+1]
 include::odgi_server.adoc[leveloffset=+1]
 include::odgi_test.adoc[leveloffset=+1]
 include::odgi_version.adoc[leveloffset=+1]

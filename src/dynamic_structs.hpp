@@ -67,8 +67,8 @@ private:
 class SuccinctSplayTree {
 
 public:
-    SuccinctSplayTree(void);
-    ~SuccinctSplayTree(void);
+    SuccinctSplayTree();
+    ~SuccinctSplayTree();
         
     void insert(const size_t& key, const size_t& value);
         

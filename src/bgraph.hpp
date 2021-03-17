@@ -48,15 +48,15 @@ public:
     
     /// Return the number of nodes in the graph
     /// TODO: can't be node_count because XG has a field named node_count.
-    size_t node_size(void) const;
+    size_t node_size() const;
     
     /// Return the smallest ID in the graph, or some smaller number if the
     /// smallest ID is unavailable. Return value is unspecified if the graph is empty.
-    handlegraph::nid_t min_node_id(void) const;
+    handlegraph::nid_t min_node_id() const;
     
     /// Return the largest ID in the graph, or some larger number if the
     /// largest ID is unavailable. Return value is unspecified if the graph is empty.
-    handlegraph::nid_t max_node_id(void) const;
+    handlegraph::nid_t max_node_id() const;
     
     ////////////////////////////////////////////////////////////////////////////
     // Interface that needs to be using'd
@@ -281,7 +281,7 @@ public:
     }
     
     /// Remove all nodes and edges. Does not update any stored paths.
-    void clear(void);
+    void clear();
     
     /// Swap the nodes corresponding to the given handles, in the ordering used
     /// by for_each_handle when looping over the graph. Other handles to the

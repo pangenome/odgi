@@ -7,6 +7,8 @@
 //#include "io_helper.hpp"
 #include <omp.h>
 #include "algorithms/layout.hpp"
+#include "algorithms/weakly_connected_components.hpp"
+#include "cover.hpp"
 
 //#define debug_odgi_stats
 
@@ -28,7 +30,11 @@ int main_stats(int argc, char** argv) {
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the variation graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> layout_in_file(parser, "FILE", "read the layout coordinates from this file", {'c', "coords-in"});
+
     args::Flag summarize(parser, "summarize", "summarize the graph properties and dimensions", {'S', "summarize"});
+
+    args::Flag weakly_connected_components(parser, "show", "shows the properties of the weakly connected components", {'W', "weak-connected-components"});
+
     args::Flag base_content(parser, "base-content", "describe the base content of the graph", {'b', "base-content"});
     args::Flag path_coverage(parser, "coverage", "provide a histogram of path coverage over bases in the graph", {'C', "coverage"});
     args::Flag path_setcov(parser, "setcov", "provide a histogram of coverage over unique sets of paths", {'V', "set-coverage"});
@@ -64,14 +70,14 @@ int main_stats(int argc, char** argv) {
     if (!args::get(mean_links_length) && !args::get(sum_of_path_node_distances)){
         if (args::get(path_statistics)){
             std::cerr
-                    << "[odgi stats] error: Please specify the -l/--mean-links-length and/or the -s/--sum-path-nodes-distances options to use the -P/--path-statistics option."
+                    << "[odgi::stats] error: please specify the -l/--mean-links-length and/or the -s/--sum-path-nodes-distances options to use the -P/--path-statistics option."
                     << std::endl;
             return 1;
         }
 
         if (layout_in_file){
             std::cerr
-                    << "[odgi stats] error: Please specify the -l/--mean-links-length and/or the -s/--sum-path-nodes-distances options to specify the layout coordinates (-c/--coords-in option)."
+                    << "[odgi::stats] error: please specify the -l/--mean-links-length and/or the -s/--sum-path-nodes-distances options to specify the layout coordinates (-c/--coords-in option)."
                     << std::endl;
             return 1;
         }
@@ -79,19 +85,19 @@ int main_stats(int argc, char** argv) {
 
     if (args::get(penalize_diff_orientation) && !args::get(sum_of_path_node_distances)){
         std::cerr
-                << "[odgi stats] error: Please specify the -s/--sum-path-nodes-distances option to use the -d/--penalize-different-orientation option."
+                << "[odgi::stats] error: please specify the -s/--sum-path-nodes-distances option to use the -d/--penalize-different-orientation option."
                 << std::endl;
         return 1;
     }
     if (args::get(dont_penalize_gap_links)){
         if (!args::get(mean_links_length)) {
             std::cerr
-                    << "[odgi stats] error: Please specify the -l/--mean-links-length option to use the -g/--no-gap-links option."
+                    << "[odgi::stats] error: please specify the -l/--mean-links-length option to use the -g/--no-gap-links option."
                     << std::endl;
             return 1;
         } else if (layout_in_file){
             std::cerr
-                    << "[odgi stats] error: The -g/--no-gap-links option can be specified together with the layout coordinates (-c/--coords-in option)."
+                    << "[odgi::stats] error: The -g/--no-gap-links option can be specified together with the layout coordinates (-c/--coords-in option)."
                     << std::endl;
             return 1;
         }
@@ -133,6 +139,22 @@ int main_stats(int argc, char** argv) {
         std::cout << "#length\tnodes\tedges\tpaths" << std::endl;
         std::cout << length_in_bp << "\t" << node_count << "\t" << edge_count << "\t" << path_count << std::endl;
     }
+
+    if (args::get(weakly_connected_components)) {
+        std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components = algorithms::weakly_connected_components(&graph);
+
+        std::cout << "##num_weakly_connected_components: " << weak_components.size() << std::endl;
+        std::cout << "#component\tnodes\tis_acyclic" << std::endl;
+        for(uint64_t i = 0; i < weak_components.size(); ++i) {
+            auto& weak_component = weak_components[i];
+
+            ska::flat_hash_set<handlegraph::nid_t> head_nodes = algorithms::is_nice_and_acyclic(graph, weak_components[i]);
+            bool acyclic = !(head_nodes.empty());
+
+            std::cout << i << "\t" << weak_components[i].size() << "\t" << (acyclic ? "yes" : "no") << std::endl;
+        }
+    }
+
     if (args::get(base_content)) {
         std::vector<uint64_t> chars(256);
         graph.for_each_handle([&](const handle_t& h) {
@@ -200,7 +222,7 @@ int main_stats(int argc, char** argv) {
         graph.for_each_handle([&](const handle_t &h) {
             nid_t node_id = graph.get_id(h);
             if (node_id - last_node_id > 1) {
-                std::cerr << "[odgi stats] error: The graph is not optimized. Please run 'odgi sort' using -O, --optimize" << std::endl;
+                std::cerr << "[odgi::stats] error: The graph is not optimized. Please run 'odgi sort' using -O, --optimize" << std::endl;
                 exit(1);
             }
             last_node_id = node_id;

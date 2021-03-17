@@ -46,7 +46,7 @@ template <typename K, typename V> class bmap {
     void load(std::istream& in);
 
     // clear storage
-    void clear(void);
+    void clear();
 
 private:
     // helper function for binary search
@@ -203,7 +203,7 @@ void bmap<K, V>::load(std::istream &in) {
 }
 
 template <typename K, typename V>
-void bmap<K, V>::clear(void) {
+void bmap<K, V>::clear() {
     //kv_list = std::vector<std::pair<K,V>>();
     dyn::hacked_vector null_iv;
     kv_list = null_iv;

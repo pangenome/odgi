@@ -29,27 +29,33 @@ std::vector<std::vector<handle_t>> simple_components(
         [&](const handle_t& h) {
             uint64_t h_i = bphf.lookup(as_integer(h));
             uint64_t h_j = bphf.lookup(as_integer(graph.flip(h)));
-            simple_dset.unite(h_i, h_j);
-        }, in_parallel);
-
-    graph.for_each_edge(
-        [&](const edge_t& edge) {
-            const handle_t& from = edge.first;
-            const handle_t& to = edge.second;
-            if (graph.get_id(from) != graph.get_id(to)) {
-                // check if they can be linked across the edge
-                if (graph.get_degree(from, false) == 1
-                    && graph.get_degree(to, true) == 1 // this must be the only edge connecting these node ends
-                    // and their path sets are contiguous across the edge
-                    && nodes_are_perfect_path_neighbors(graph, from, to)) {
-                    //std::cerr << "would merge " << graph.get_id(from)
-                    //          << " with " << graph.get_id(to) << std::endl;
-                    // get indexes in union-find structure
-                    uint64_t from_i = bphf.lookup(as_integer(from));
-                    uint64_t to_i = bphf.lookup(as_integer(to));
-                    //std::cerr << "indexes " << from_i << " and " << to_i << std::endl;
-                    simple_dset.unite(from_i, to_i);
-                }
+            if (graph.get_degree(h, true) == 1) {
+                // go backward
+                graph.follow_edges(
+                    h, true,
+                    [&](const handle_t& prev) {
+                        if (graph.get_id(h) != graph.get_id(prev)
+                            && graph.get_degree(prev, false) == 1
+                            && nodes_are_perfect_path_neighbors(graph, prev, h)) {
+                            uint64_t from_i = bphf.lookup(as_integer(prev));
+                            uint64_t to_i = bphf.lookup(as_integer(h));
+                            simple_dset.unite(from_i, to_i);
+                        }
+                    });
+            }
+            if (graph.get_degree(h, false) == 1) {
+                // go forward
+                graph.follow_edges(
+                    h, false,
+                    [&](const handle_t& next) {
+                        if (graph.get_id(h) != graph.get_id(next)
+                            && graph.get_degree(next, true) == 1
+                            && nodes_are_perfect_path_neighbors(graph, h, next)) {
+                            uint64_t from_i = bphf.lookup(as_integer(h));
+                            uint64_t to_i = bphf.lookup(as_integer(next));
+                            simple_dset.unite(from_i, to_i);
+                        }
+                    });
             }
         }, in_parallel);
 
@@ -64,65 +70,67 @@ std::vector<std::vector<handle_t>> simple_components(
     // now we combine and order the nodes in each dset
     std::vector<std::vector<handle_t>> handle_components;
     //std::cerr << "processing components" << std::endl;
+    auto pred_in_comp = [&](const handle_t& h,
+                            const ska::flat_hash_set<uint64_t>& comp) {
+                            bool in = true;
+                            graph.follow_edges(h, true, [&](const handle_t& prev) {
+                                                            in &= comp.count(graph.get_id(prev));
+                                                            //in &= graph.get_id(h) != graph.get_id(prev);
+                                                        });
+                            return in;
+                        };
+
     for (auto& c : simple_components) {
-        //std::cerr << "on component " << i++ << std::endl;
         auto& comp = c.second;
-        // sorting to get the highest id as our starting handle
-        std::sort(
-            comp.begin(), comp.end(),
-            [&](const handle_t& a, const handle_t& b) {
-                return as_integer(a) > as_integer(b);
-            });
         assert(comp.size());
+        /*
+        std::cerr << "on component " << i++ << std::endl;
+        for (auto& h : comp) {
+            std::cerr << graph.get_id(h) << (graph.get_is_reverse(h) ? "-" : "+") << ",";
+        }
+        std::cerr << std::endl;
+        */
+
         if (comp.size() >= min_size) {
             // start somewhere
             ska::flat_hash_set<uint64_t> comp_set;
-            for (auto& h : comp) comp_set.insert(as_integer(h));
-            handle_t h = comp.front();
-            handle_t base = h; // so we don't loop endlessly in self-linking components
-            //std::cerr << "base is " << graph.get_id(base) << std::endl;
-            bool has_prev = false;
-            do {
-                has_prev = graph.get_degree(h, true) == 1;
-                handle_t prev = h;
-                if (has_prev) {
-                    graph.follow_edges(h, true, [&](const handle_t& p) { prev = p; });
-                }
-                if (h != prev
-                    && prev != base
-                    && comp_set.count(as_integer(prev))) {
-                    //std::cerr << "continuing to prev = " << graph.get_id(prev) << std::endl;
-                    h = prev;
-                } else {
-                    //std::cerr << "breaking at prev = " << graph.get_id(prev) << std::endl;
-                    has_prev = false;
-                }
-            } while (has_prev);
-            base = h; // reset base
-            //std::cerr << "Front is " << graph.get_id(h) << std::endl;
+            for (auto& h : comp) comp_set.insert(graph.get_id(h));
+            auto h_itr = comp.begin();
+            // try to find the start of the component
+            while (h_itr != comp.end()
+                   && graph.get_degree(*h_itr, true) == 1
+                   && pred_in_comp(*h_itr, comp_set)) {
+                ++h_itr;
+            }
+            handle_t h;
+            if (h_itr == comp.end()) {
+                // could be looping, take the start as the first node in the component
+                h = comp.front();
+            } else {
+                h = *h_itr;
+            }
             handle_components.emplace_back();
+            // walk from our start node through the component
             auto& sorted_comp = handle_components.back();
-            bool has_next = false;
+            bool fail = false;
             do {
                 sorted_comp.push_back(h);
-                has_next = graph.get_degree(h, false) == 1;
-                handle_t next = h;
-                if (has_next) {
-                    graph.follow_edges(h, false, [&](const handle_t& n) { next = n; });
-                }
-                if (h != next
-                    && next != base
-                    && comp_set.count(as_integer(next))) {
-                    //std::cerr << "continuing to next = " << graph.get_id(next) << std::endl;
-                    h = next;
-                } else {
-                    //std::cerr << "breaking at next = " << graph.get_id(next) << std::endl;
-                    has_next = false;
-                }
-            } while (has_next);
-            assert(sorted_comp.size() > 0);
-            if (sorted_comp.size() < min_size) {
+                graph.follow_edges(h, false, [&](const handle_t& next) {
+                                                 if (comp_set.count(graph.get_id(next))) {
+                                                     h = next;
+                                                 } else {
+                                                     // previous ordering assumptions are violated
+                                                     // this can be caused by self-looping head or tail nodes
+                                                     // in the component
+                                                     fail = true;
+                                                 }
+                                             });
+            } while (sorted_comp.size() < comp.size() && !fail);
+            if (sorted_comp.size() < min_size
+                || sorted_comp.size() < comp.size()) {
                 handle_components.pop_back();
+            } else {
+                assert(sorted_comp.front() != sorted_comp.back());
             }
         }
     }

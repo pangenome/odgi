@@ -1,10 +1,10 @@
 = odgi bin(1)
 ifdef::backend-manpage[]
-Erik Garrison
+Erik Garrison, Simon Heumos
 :doctype: manpage
-:release-version: v0.4.1 
+:release-version: v0.6.0
 :man manual: odgi bin
-:man source: odgi v0.4.1 
+:man source: odgi v0.6.0
 :page-layout: base
 endif::[]
 
@@ -29,7 +29,10 @@ project. Per default, odgi bin writes the bins to stdout in a tab-delimited form
 *mean.pos* (mean nucleotide position of this path in this bin), *first.nucl* (first nucleotide position of this path in this bin),
 *last.nucl* (last nucleotide position of this path in this bin). These nucleotide ranges might span positions that are not present in the bin. Example:
 A range of 1-100 means that the first nucleotide has position 1 and the last has position 100, but nucleotide 45 could be located in
-another bin. For an exact positional output, please specify [*-j, --json*].
+another bin. For an exact positional output, please specify [*-j, --json*]. +
+Running odgi bin in https://github.com/tpook92/HaploBlocker[HaploBlocker] mode, only arguments [*-b, --haplo-blocker*],
+[*-p[N], --haplo-blocker-min-paths[N]*], and [*-c[N], --haplo-blocker-min-coverage[N]*] are required. A TSV is printed to stdout:
+Each row corresponds to a node. Each column corresponds to a path. Each value is the coverage of a specific node of a specific path.
 
 == OPTIONS
 
@@ -75,10 +78,25 @@ another bin. For an exact positional output, please specify [*-j, --json*].
   path from left to right may not be relevant to understand a path's traversal through the bins. Therefore, when this option
   is set, the gap-links are left out saving disk space
 
+=== HaploBlocker Options
+
+*-b, --haplo-blocker*::
+    Write a TSV to stdout formatted in a way ready for HaploBlocker: Each row corresponds to a node. Each column corresponds to a path.
+    Each value is the coverage of a specific node of a specific path.
+
+*-p[N], --haplo-blocker-min-paths[N]*::
+    Specify the minimum number of paths that need to be present in the bin to actually report that bin. The default value is 1.
+
+*-c[N], --haplo-blocker-min-coverage[N]*::
+    Specify the minimum coverage a path needs to have in a bin to actually report that bin. The default value is 1.
+
 === Program Information
 
 *-h, --help*::
   Print a help message for *odgi bin*.
+
+*-P, --progress*::
+    Write the current progress to stderr.
 
 == EXIT STATUS
 
@@ -94,7 +112,7 @@ Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
 
 == AUTHORS
 
-*odgi bin* was written by Erik Garrison.
+*odgi bin* was written by Erik Garrison and Simon Heumos
 
 ifdef::backend-manpage[]
 == RESOURCES

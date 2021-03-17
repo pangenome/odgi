@@ -27,7 +27,7 @@ namespace odgi {
         args::Flag ignore_paths(parser, "ignore-paths", "ignore the paths already embedded in the graph during the nodes coverage initialization",{'I', "ignore-paths"});
         args::ValueFlag<std::string> write_node_coverages(parser, "FILE","write the node coverages at the end of the paths generation in this file",{'w', "write-node-coverages"});
         args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for the parallel sorter", {'t', "threads"});
-        args::Flag debug(parser, "debug", "print information about the components and the progress to stderr",{'d', "debug"});
+        args::Flag debug(parser, "progress", "print information about the components and the progress to stderr",{'P', "progress"});
 
         try {
             parser.ParseCLI(argc, argv);
@@ -46,14 +46,14 @@ namespace odgi {
 
         if (!dg_in_file) {
             std::cerr
-                    << "[odgi cover] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
+                    << "[odgi::cover] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
                     << std::endl;
             return 1;
         }
 
         if (!dg_out_file) {
             std::cerr
-                    << "[odgi cover] error: please specify an output file to where to store the graph via -o=[FILE], --out=[FILE]."
+                    << "[odgi::cover] error: please specify an output file to where to store the graph via -o=[FILE], --out=[FILE]."
                     << std::endl;
             return 1;
         }
@@ -62,7 +62,7 @@ namespace odgi {
         uint64_t _min_node_coverage = args::get(min_node_coverage);
         if (_num_paths_per_component && _min_node_coverage) {
             std::cerr
-                    << "[odgi cover] error: please specify -n/--num-paths-per-component or -c/--min-node-coverage, not both."
+                    << "[odgi::cover] error: please specify -n/--num-paths-per-component or -c/--min-node-coverage, not both."
                     << std::endl;
             return 1;
         } else if (!_num_paths_per_component && !_min_node_coverage) {
@@ -73,7 +73,7 @@ namespace odgi {
                                                                  : algorithms::PATH_COVER_DEFAULT_K;
         if (_node_window_size < 2) {
             std::cerr
-                    << "[odgi cover] error: please specify a node window size greater than or equal to 2 via -k=[N], --node-window-size=[N]."
+                    << "[odgi::cover] error: please specify a node window size greater than or equal to 2 via -k=[N], --node-window-size=[N]."
                     << std::endl;
             return 1;
         }
@@ -94,11 +94,11 @@ namespace odgi {
         uint64_t max_number_of_paths_generable = graph.get_node_count() * 5;
         if (args::get(debug)){
             if (_min_node_coverage) {
-                std::cerr << "There will be generated paths until the minimum node coverage is " << _min_node_coverage
+                std::cerr << "[odgi::cover] there will be generated paths until the minimum node coverage is " << _min_node_coverage
                           << ", or until the maximum number of allowed generated paths is reached ("
                           << max_number_of_paths_generable << ")." << std::endl;
             } else {
-                std::cerr << "There will be generated " << _num_paths_per_component << " paths per component."
+                std::cerr << "[odgi::cover] there will be generated " << _num_paths_per_component << " paths per component."
                           << std::endl;
             }
         }

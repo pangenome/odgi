@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: odgi stats
-.\"    Author: Erik Garrison
+.\"    Author: Erik Garrison, Andrea Guarracino
 .\" Generator: Asciidoctor 2.0.10
-.\"      Date: 2020-06-23
+.\"      Date: 2021-03-12
 .\"    Manual: odgi stats
-.\"    Source: odgi v0.4.1
+.\"    Source: odgi v0.6.0
 .\"  Language: English
 .\"
-.TH "ODGI_STATS" "1" "2020-06-23" "odgi v0.4.1" "odgi stats"
+.TH "ODGI_STATS" "1" "2021-03-12" "odgi v0.6.0" "odgi stats"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -49,6 +49,11 @@ File containing the succinct variation graph to create statistics from. The file
 Summarize the graph properties and dimensions. Print to stdout the #nucleotides, #nodes, #edges and #paths of the graph.
 .RE
 .sp
+\fB\-W, \-\-weak\-connected\-components\fP
+.RS 4
+Shows the properties of the weakly connected components.
+.RE
+.sp
 \fB\-b, \-\-base\-content\fP
 .RS 4
 Describe the base content of the graph. Print to stdout the #A, #C, #G and #T of the graph.
@@ -73,6 +78,37 @@ Provide a histogram of coverage over unique multiset, the combination with possi
 \fB\-B, \-\-bed\-multicov\fP=\fIBED\fP
 .RS 4
 For each BED entry, provide a table of path coverage over unique multisets of paths in the graph. Each unique multiset of paths overlapping a given BED interval is described in terms of its length relative to the total interval, the number of path traversals and unique paths involved in these traversals.
+.RE
+.SS "Sorting goodness evaluation"
+.sp
+\fB\-l, \-\-mean\-links\-length\fP
+.RS 4
+Calculate the mean links length. This metric is path\-guided and computable in 1D and 2D.
+.RE
+.sp
+\fB\-g, \-\-no\-gap\-links\fP
+.RS 4
+Don\(cqt penalize gap links in the mean links length. A gap link is a link which connects two nodes that are consecutive in the linear pangenomic order. This option is specifiable only to compute the mean links length in 1D.
+.RE
+.sp
+\fB\-s, \-\-sum\-path\-nodes\-distances\fP
+.RS 4
+Calculate the sum of path nodes distances. This metric is path\-guided and computable in 1D and 2D. For each path, it iterates from node to node, summing their distances, and normalizing by the path length. In 1D, if a link goes back in the linearized viewpoint of the graph, this is penalized (adding 3 times its length in the sum).
+.RE
+.sp
+\fB\-d, \-\-penalize\-different\-orientation\fP
+.RS 4
+If a link connects two nodes which have different orientations, this is penalized (adding 2 times its length in the sum).
+.RE
+.sp
+\fB\-c, \-\-coords\-in\fP
+.RS 4
+File containing the layout coordinates of the succinct variation graph specified as input. The file name usually ends with \fI.lay\fP. When the layout coordinates are provided, the mean links length and the sum path nodes distances statistics are evaluated in 2D, else in 1D.
+.RE
+.sp
+\fB\-P, \-\-path\-statistics\fP
+.RS 4
+Display the statistics (mean links length or sum path nodes distances) for each path.
 .RE
 .SS "Threading"
 .sp
@@ -103,7 +139,7 @@ Refer to the \fBodgi\fP issue tracker at \c
 .URL "https://github.com/vgteam/odgi/issues" "" "."
 .SH "AUTHORS"
 .sp
-\fBodgi stats\fP was written by Erik Garrison.
+\fBodgi stats\fP was written by Erik Garrison and Andrea Guarracino.
 .SH "RESOURCES"
 .sp
 \fBProject web site:\fP \c
@@ -141,4 +177,4 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 .SH "AUTHOR"
 .sp
-Erik Garrison
+Erik Garrison, Andrea Guarracino

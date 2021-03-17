@@ -6,7 +6,6 @@
 #include "catch.hpp"
 
 #include <handlegraph/handle_graph.hpp>
-#include <handlegraph/handle_graph.hpp>
 #include <handlegraph/util.hpp>
 #include "odgi.hpp"
 

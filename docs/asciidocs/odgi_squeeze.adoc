@@ -1,0 +1,107 @@
+= odgi squeeze(1)
+ifdef::backend-manpage[]
+Andrea Guarracino
+:doctype: manpage
+:release-version: v0.6.0
+:man manual: odgi squeeze
+:man source: odgi v0.6.0
+:page-layout: base
+endif::[]
+
+== NAME
+
+odgi_squeeze - squeezes multiple graphs into the same file
+
+
+== SYNOPSIS
+
+*odgi squeeze* [*-f, --input-graphs*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]...
+
+
+== DESCRIPTION
+
+The odgi squeeze(1) command merges multiple graphs into the same file.
+
+
+== OPTIONS
+
+=== Graph Files IO
+
+*-f, --input-graphs*=_FILE_::
+  Input file containing the list of graphs to squeeze into the same file. The file must contain one path per line.
+
+*-o, --out*=_FILE_::
+  Store all the input graphs in this file. The file name usually ends with _.og_.
+
+
+=== Squeeze Options
+
+*-s, --rank-suffix*=_STRING_::
+  Add the separator and the input file rank as suffix to the path names (to avoid path name collisions).
+
+*-O, --optimize*::
+  Compact the node ID space in each input file before imploding.
+
+
+=== Processing Information
+
+*-P, --progress*::
+  Print information about the progress to stderr.
+
+
+=== Program Information
+
+*-h, --help*::
+  Print a help message for *odgi squeeze*.
+
+
+== EXIT STATUS
+
+*0*::
+  Success.
+
+*1*::
+  Failure (syntax or usage error; parameter error; file processing failure; unexpected error).
+
+== BUGS
+
+Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
+
+== AUTHORS
+
+*odgi squeeze* was written by Andrea Guarracino.
+
+ifdef::backend-manpage[]
+== RESOURCES
+
+*Project web site:* https://github.com/vgteam/odgi
+
+*Git source repository on GitHub:* https://github.com/vgteam/odgi
+
+*GitHub organization:* https://github.com/vgteam
+
+*Discussion list / forum:* https://github.com/vgteam/odgi/issues
+
+== COPYING
+
+The MIT License (MIT)
+
+Copyright (c) 2019 Erik Garrison
+
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+endif::[]

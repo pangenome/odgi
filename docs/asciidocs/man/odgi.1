@@ -2,12 +2,12 @@
 .\"     Title: odgi
 .\"    Author: Erik Garrison
 .\" Generator: Asciidoctor 2.0.10
-.\"      Date: 2020-06-23
+.\"      Date: 2021-03-12
 .\"    Manual: odgi
-.\"    Source: odgi v0.4.1
+.\"    Source: odgi v0.6.0
 .\"  Language: English
 .\"
-.TH "ODGI" "1" "2020-06-23" "odgi v0.4.1" "odgi"
+.TH "ODGI" "1" "2021-03-12" "odgi v0.6.0" "odgi"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -35,6 +35,16 @@ odgi \- dynamic succinct variation graph tool
 .sp
 \fBodgi\fP stats \-i graph.og \-S
 .sp
+\fBodgi\fP cover \-i graph.og \-o graph.paths.og
+.sp
+\fBodgi\fP extract \-i graph.og \-p prefix \-r path_name:0\-17
+.sp
+\fBodgi\fP explode \-i graph.og \-p prefix
+.sp
+\fBodgi\fP squeeze \-f input_graphs.txt \-o graphs.og
+.sp
+\fBodgi\fP position \-i target_graph.og \-g
+.sp
 \fBodgi\fP sort \-i graph.og \-o graph.sorted.og \-p bSnSnS
 .sp
 \fBodgi\fP view \-i graph.og \-g
@@ -52,8 +62,6 @@ odgi \- dynamic succinct variation graph tool
 \fBodgi\fP unchop \-i graph.og \-o graph.unchopped.og
 .sp
 \fBodgi\fP normalize \-i graph.og \-o graph.normalized.og \-I 100 \-d
-.sp
-\fBodgi\fP subset \-i graph.og \-o graph.subsetted.og \-n 1 \-t 28
 .sp
 \fBodgi\fP bin \-i graph.og \-j \-w 100 \-s \-g
 .sp
@@ -100,6 +108,23 @@ The odgi build(1) command constructs a succinct variation graph from a GFA. Curr
 \fBodgi stats\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fIOPTION\fP]...
 .br
 The odgi stats(1) command produces statistics of a variation graph. Among other metrics, it can calculate the #nodes, #edges, #paths and the total nucleotide length of the graph. Various histogram summary options complement the tool. If [\fB\-B, \-\-bed\-multicov\fP=\fIBED\fP] is set, the metrics will be produced for the intervals specified in the BED.
+.sp
+\fBodgi cover\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
+.br
+The odgi cover(1) command finds a path cover of a variation graph, with a specified number of paths per component.
+.sp
+\fBodgi extract\fP [\fB\-f, \-\-input\-graphs\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
+The odgi extract(1) command extracts parts of the graph as defined by query criteria.
+.sp
+\fBodgi explode\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-p, \-\-prefix\fP=\fISTRING\fP] [\fIOPTION\fP]...
+.br
+The odgi explode(1) command breaks a graph into connected components, writing each component in its own file.
+.sp
+\fBodgi squeeze\fP [\fB\-f, \-\-input\-graphs\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
+The odgi squeeze(1) command squeezes multiple graphs into the same file.
+.sp
+\fBodgi position\fP [\fB\-i, \-\-target\fP=\fIFILE\fP] [\fIOPTION\fP]...
+The odgi position(1) command position parts of the graph as defined by query criteria.
 .sp
 \fBodgi sort\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
 .br
@@ -220,11 +245,6 @@ The odgi unchop(1) command merges each unitig into a single node.
 .br
 The odgi normalize(1) command unchops a given variation graph and simplifies redundant furcations.
 .sp
-\fBodgi subset\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
-.br
-Extracting a node subset of a variation graph is the task of the odgi subset(1) command. Users can specify a node, a list of nodes
-or a the context of which to generate a subset from.
-.sp
 \fBodgi matrix\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fIOPTION\fP]...
 .br
 The odgi matrix(1) command generates a sparse matrix format out of the graph topology of a given variation graph.
@@ -318,7 +338,7 @@ Refer to the \fBodgi\fP issue tracker at \c
 .URL "https://github.com/vgteam/odgi/issues" "" "."
 .SH "AUTHORS"
 .sp
-Erik Garrison from the University of California Santa Cruz wrote the whole \fBodgi\fP tool. Simon Heumos from the Quantitative Biology Center Tübingen wrote \fBodgi pathindex\fP, \fBodgi panpos\fP, \fBodgi server\fP, and this documentation.
+Erik Garrison from the University of California Santa Cruz wrote the whole \fBodgi\fP tool. Simon Heumos from the Quantitative Biology Center Tübingen wrote \fBodgi pathindex\fP, \fBodgi panpos\fP, \fBodgi server\fP, and this documentation. Andrea Guarracino from the University of Rome Tor Vergata wrote \fBodgi viz\fP, \fBodgi extract\fP, \fBodgi cover\fP, \fBodgi explode\fP, \fBodgi squeeze\fP, and this documentation*.
 .SH "RESOURCES"
 .sp
 \fBProject web site:\fP \c

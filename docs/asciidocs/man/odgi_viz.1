@@ -1,13 +1,13 @@
 '\" t
 .\"     Title: odgi viz
-.\"    Author: Erik Garrison
+.\"    Author: Erik Garrison, Andrea Guarracino
 .\" Generator: Asciidoctor 2.0.10
-.\"      Date: 2020-06-23
+.\"      Date: 2021-03-12
 .\"    Manual: odgi viz
-.\"    Source: odgi v0.4.1
+.\"    Source: odgi v0.6.0
 .\"  Language: English
 .\"
-.TH "ODGI_VIZ" "1" "2020-06-23" "odgi v0.4.1" "odgi viz"
+.TH "ODGI_VIZ" "1" "2021-03-12" "odgi v0.6.0" "odgi viz"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -36,10 +36,8 @@ odgi_viz \- variation graph visualizations
 .sp
 The odgi viz(1) command can produce a linear, static visualization of an odgi variation graph. It can aggregate the pangenome into bins
 and directly renders a raster image. The binning level can be specified in input or it is calculated from the target width of the PNG to emit.
-Can be used to produce visualizations for gigabase scale pangenomes. For more information  about the binning process,
-please refer to odgi bin. If reverse coloring was selected, only
-the bins with a reverse rate of at least 0.5 are colored. Currently, there is no parameter to color according to the
-sequence coverage in bins available.
+Can be used to produce visualizations for gigabase scale pangenomes. For more information about the binning process,
+please refer to odgi bin.
 .SH "OPTIONS"
 .SS "Graph Files IO"
 .sp
@@ -86,17 +84,62 @@ Show thin links of this relative width to connect path pieces.
 .sp
 \fB\-A, \-\-alignment\-prefix\fP=\fISTRING\fP
 .RS 4
-Apply alignment related visual motifs to paths which have this name prefix.
+Apply alignment related visual motifs to paths which have this name prefix. It affects the [\fB\-S, \-\-show\-strand\fP] and
+[\fB\-d, \-\-change\-darkness\fP] options.
 .RE
 .sp
 \fB\-S, \-\-show\-strand\fP
 .RS 4
-Use red and blue coloring to display forward and reverse alignments. This parameter should only be set in combination with
+Use red and blue coloring to display forward and reverse alignments. This parameter can be set in combination with
 [\fB\-A, \-\-alignment\-prefix\fP=\fISTRING\fP].
+.RE
+.sp
+\fB\-z, \-\-color\-by\-mean\-inversion\-rate\fP
+.RS 4
+Change the color respect to the node strandness (black for forward, red for reverse); in binned mode (\fB\-b, \-\-binned\-mode\fP),
+change the color respect to the mean inversion rate of the path for each bin, from black (no inversions) to red (bin
+mean inversion rate equals to 1).
+.RE
+.sp
+\fB\-s, \-\-color\-by\-prefix\fP
+.RS 4
+Colors paths by their names looking at the prefix before the given character C.
+.RE
+.SS "Intervals selection"
+.sp
+\fB\-r, \-\-pangenomic\-range\fP
+.RS 4
+Nucleotide range to visualize: \f(CRSTRING=[PATH:]start\-end\fP. \f(CR*\-end\fP for \f(CR[0,end]\fP; \f(CRstart\-*\fP for \f(CR[start,pangenome_length]\fP.
+If no PATH is specified, the nucleotide positions refer to the pangenome\(cqs sequence (i.e., the sequence obtained arranging all the graph\(cqs node
+from left to right).
+.RE
+.SS "Paths selection"
+.sp
+\fB\-p, \-\-paths\-to\-display\fP
+.RS 4
+List of paths to display in the specified order; the file must contain one path name per line and a subset of all
+paths can be specified.
+.RE
+.SS "Path names visualization Options"
+.sp
+\fB\-H, \-\-hide\-path\-names\fP
+.RS 4
+Hide the path names on the left of the generated image.
+.RE
+.sp
+\fB\-C, \-\-color\-path\-names\-background\fP
+.RS 4
+Color path names background with the same color as paths
+.RE
+.sp
+\fB\-c, \-\-max\-num\-of\-characters\fP
+.RS 4
+Maximum number of characters to display for each path name (max 128 characters). The default value is
+\fIthe length of the longest path name\fP (up to 32 characters).
 .RE
 .SS "Binned Mode Options"
 .sp
-\fB\-b, \-\-binned\-mode\fP=\fIN\fP
+\fB\-b, \-\-binned\-mode\fP
 .RS 4
 The variation graph is binned before its visualization. Each pixel in the output image will correspond to a bin.
 For more information about the binning process, please refer to odgi bin.
@@ -120,8 +163,7 @@ We divide links into 2 classes:
 .  sp -1
 .  IP " 1." 4.2
 .\}
-Class: The links which help to follow complex variations. They need to be drawn, else one could not follow
-the sequence of a path.
+the links which help to follow complex variations. They need to be drawn, else one could not follow the sequence of a path.
 .RE
 .sp
 .RS 4
@@ -132,15 +174,35 @@ the sequence of a path.
 .  sp -1
 .  IP " 2." 4.2
 .\}
-Class: The links helping to follow simple variations. Such links solely connecting a path from left to right may not
-be relevant to understand a path\(cqs traversal through the bins. Therefore, they are not drawn in the binned mode.
+the links helping to follow simple variations. These links are called \fBgap\-links\fP. Such links solely connecting a
+path from left to right may not be relevant to understand a path\(cqs traversal through the bins. Therefore, when this option
+is set, the gap\-links are not drawn in binned mode.
 .RE
 .RE
-.SS "Threading"
 .sp
-\fB\-t, \-\-threads\fP=\fIN\fP
+\fB\-m, \-\-color\-by\-mean\-coverage\fP
 .RS 4
-Number of threads to use.
+Change the color respect to the mean coverage of the path for each bin, from black (no coverage) to blue (max bin mean
+coverage in the entire graph).
+.RE
+.SS "Gradient Mode (also known as Position Mode) Options"
+.sp
+\fB\-d, \-\-change\-darkness\fP
+.RS 4
+Change the color darkness based on nucleotide position in the path. When it is used in binned mode, the mean inversion
+rate of the bin node is considered to set the color gradient starting position: when this rate is greater than 0.5, the
+bin is considered inverted, and the color gradient starts from the right\-end of the bin. This parameter can be set in
+combination with [\fB\-A, \-\-alignment\-prefix\fP=\fISTRING\fP].
+.RE
+.sp
+\fB\-l, \-\-longest\-path\fP
+.RS 4
+Use the longest path length to change the color darkness.
+.RE
+.sp
+\fB\-u, \-\-white\-to\-black\fP
+.RS 4
+Change the color darkness from white (for the first nucleotide position) to black (for the last nucleotide position).
 .RE
 .SS "Program Information"
 .sp
@@ -161,11 +223,14 @@ Failure (syntax or usage error; parameter error; file processing failure; unexpe
 .RE
 .SH "BUGS"
 .sp
-Refer to the \fBodgi\fP issue tracker at \c
-.URL "https://github.com/vgteam/odgi/issues" "" "."
+.if n .RS 4
+.nf
+Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
+.fi
+.if n .RE
 .SH "AUTHORS"
 .sp
-\fBodgi viz\fP was written by Erik Garrison.
+\fBodgi viz\fP was written by Erik Garrison and Andrea Guarracino.
 .SH "RESOURCES"
 .sp
 \fBProject web site:\fP \c
@@ -203,4 +268,4 @@ IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
 CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
 .SH "AUTHOR"
 .sp
-Erik Garrison
+Erik Garrison, Andrea Guarracino

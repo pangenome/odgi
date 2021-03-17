@@ -338,6 +338,9 @@ set(CMAKE_BUILD_TYPE Debug)
 add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/odgi.cpp
   ${CMAKE_SOURCE_DIR}/src/reclaimer.cpp
+  ${CMAKE_SOURCE_DIR}/src/utils.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/subgraph/region.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/subgraph/extract.cpp
   ${CMAKE_SOURCE_DIR}/src/position.cpp
   ${CMAKE_SOURCE_DIR}/src/gfa_to_handle.cpp
   ${CMAKE_SOURCE_DIR}/src/split.cpp
@@ -352,11 +355,14 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/unittest/sort.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/pathindex.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/edge.cpp
+  ${CMAKE_SOURCE_DIR}/src/unittest/extract.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/subcommand.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/build_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/test_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/stats_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/cover_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/explode_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/squeeze_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/sort_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/view_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/kmers_main.cpp
@@ -366,7 +372,8 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/prune_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/unchop_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/normalize_main.cpp
-  ${CMAKE_SOURCE_DIR}/src/subcommand/subset_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/extract_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/position_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/bin_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/matrix_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/chop_main.cpp
@@ -401,6 +408,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/id_ordered_paths.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/simple_components.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_info.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_coverage.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/sgd_layout.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/mondriaan_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/matrix_writer.cpp
@@ -533,6 +541,7 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/algorithms/prune.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/reverse_complement.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_info.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_coverage.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/dfs.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/chop.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/unchop.hpp
@@ -580,6 +589,7 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/algorithms/strongly_connected_components.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/mondriaan_sort.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/hash.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/hilbert.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/groom.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/distance_to_head.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/is_single_stranded.hpp

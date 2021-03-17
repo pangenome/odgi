@@ -1,56 +1,79 @@
-= odgi subset(1)
+= odgi position(1)
 ifdef::backend-manpage[]
 Erik Garrison
 :doctype: manpage
-:release-version: v0.4.1 
-:man manual: odgi subset
-:man source: odgi v0.4.1 
+:release-version: v0.6.0
+:man manual: odgi position
+:man source: odgi v0.6.0
 :page-layout: base
 endif::[]
 
 == NAME
 
-odgi_subset - extract subsets of the graph as defined by query criteria
+odgi_position -  position parts of the graph as defined by query criteria
+
 
 == SYNOPSIS
 
-*odgi subset* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]...
+*odgi position* [*-i, --target*=_FILE_] [_OPTION_]...
 
 == DESCRIPTION
 
-Extracting a node subset of a variation graph is the task of the odgi subset(1) command. Users can specify a node, a list of nodes
-or a context of which to generate a subset from.
+The odgi position(1) command position parts of the graph as defined by query criteria.
+
 
 == OPTIONS
 
 === Graph Files IO
 
-*-i, --idx*=_FILE_::
-  File containing the succinct variation graph to subset. The file name usually ends with _.og_.
+*-i, --target*=_FILE_::
+  Describe positions in this graph.
 
-*-o, --out*=_FILE_::
-  Write the subset to this file.
+*-x, --source*=_FILE_::
+  Translate positions from this graph into the target graph using common `--lift-paths` shared between both graphs [default: use the same source/target
+graph]
 
-=== Traversal Options
 
-*-l, --node-list*=_FILE_::
-  A file with one node identifier per line. All nodes specified here will be extract as a subset.
+=== Position Options
 
-*-n, --node*=_N_::
-  Specify the node identifier from which our traversal should begin.
+*-r, --ref-paths*=_STRING_::
+  Translate the given positions into positions relative to this reference path.
 
-*-c, --context*=_N_::
-  The number of steps away from which to begin our traversal.
+*-R, --ref-paths*=_FILE_::
+  Use the ref-paths in FILE.
+
+*-l, --lift-path*=_STRING_::
+  Lift positions from `--source` to `--target` via coordinates in this path common to both graphs [default: all common paths
+between `--source` and `--target`].
+
+*-g, --graph-pos*=_[[node_id][,offset[,(+|-)]*]*]_::
+  A graph position, e.g. 42,10,+ or 302,0,-.
+
+*-F, --path-pos-file*=_FILE_::
+  A file with one path position per line.
+
+*-b, --bed-input*=_FILE_::
+  A BED file of ranges in paths in the graph to lift into the target graph `-v`, `--give-graph-pos` emit graph positions.
+
+*-v, --give-graph-pos*::
+  Emit graph positions (node,offset,strand) rather than path positions.
+
+
+*-d, --search-radius*=_STRING_::
+  Limit coordinate conversion breadth-first search up to DISTANCE bp from each given position [default: 10000].
+
 
 === Threading
 
 *-t, --threads*=_N_::
   Number of threads to use.
 
+
 === Program Information
 
 *-h, --help*::
-  Print a help message for *odgi subset*.
+  Print a help message for *odgi position*.
+
 
 == EXIT STATUS
 
@@ -66,7 +89,7 @@ Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
 
 == AUTHORS
 
-*odgi subset* was written by Erik Garrison.
+*odgi position* was written by Erik Garrison.
 
 ifdef::backend-manpage[]
 == RESOURCES

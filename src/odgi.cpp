@@ -140,19 +140,19 @@ bool graph_t::for_each_handle_impl(const std::function<bool(const handle_t&)>& i
 
 /// Return the number of nodes in the graph
 /// TODO: can't be node_count because XG has a field named node_count.
-size_t graph_t::get_node_count(void) const {
+size_t graph_t::get_node_count() const {
     return node_v.size()-deleted_nodes.size();
 }
 
 /// Return the smallest ID in the graph, or some smaller number if the
 /// smallest ID is unavailable. Return value is unspecified if the graph is empty.
-nid_t graph_t::min_node_id(void) const {
+nid_t graph_t::min_node_id() const {
     return _min_node_id;
 }
 
 /// Return the largest ID in the graph, or some larger number if the
 /// largest ID is unavailable. Return value is unspecified if the graph is empty.
-nid_t graph_t::max_node_id(void) const {
+nid_t graph_t::max_node_id() const {
     return _max_node_id;
 }
 
@@ -242,7 +242,7 @@ size_t graph_t::get_step_count(const path_handle_t& path_handle) const {
 }
 
 /// Returns the number of paths stored in the graph
-size_t graph_t::get_path_count(void) const {
+size_t graph_t::get_path_count() const {
     return _path_count;
 }
 
@@ -505,8 +505,8 @@ handle_t graph_t::create_handle(const std::string& sequence, const nid_t& id) {
     assert(sequence.size());
     assert(id > 0);
     assert(!has_node(id));
+
     if (id > node_v.size()) {
-        uint64_t to_add = id - node_v.size();
         uint64_t old_size = node_v.size();
         // realloc
         node_v.resize((uint64_t)id, nullptr);
@@ -573,7 +573,7 @@ void graph_t::destroy_handle(const handle_t& handle) {
 }
 
 /*
-void graph_t::rebuild_id_handle_mapping(void) {
+void graph_t::rebuild_id_handle_mapping() {
     // for each live node, record the id in a new vector
     uint64_t j = 0;
     for (uint64_t i = 0; i < node_v.size(); ++i) {
@@ -659,7 +659,7 @@ void graph_t::destroy_edge(const handle_t& left_h, const handle_t& right_h) {
 }
 
 /// Remove all nodes and edges. Does not update any stored paths.
-void graph_t::clear(void) {
+void graph_t::clear() {
     suc_bv null_bv;
     _max_node_id = 0;
     _min_node_id = 0;
@@ -681,7 +681,7 @@ void graph_t::clear(void) {
     _path_handle_next = 0;
 }
 
-void graph_t::clear_paths(void) {
+void graph_t::clear_paths() {
     for_each_handle(
         [&](const handle_t& handle) {
             node_t& node = get_node_ref(handle);
@@ -711,7 +711,7 @@ void graph_t::swap_handles(const handle_t& a, const handle_t& b) {
 }
 
 void graph_t::optimize(bool allow_id_reassignment) {
-    apply_ordering({}, true);
+    apply_ordering({}, allow_id_reassignment);
 }
 
 void graph_t::reassign_node_ids(const std::function<nid_t(const nid_t&)>& get_new_id) {
@@ -849,8 +849,8 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
         _max_node_id = new_node_v.size();
     } else {
         uint64_t j = 0;
-        for (uint64_t i = 0; i < node_v.size(); ++i) {
-            if (node_v[i] != nullptr) {
+        for (auto n_v : node_v) {
+            if (n_v != nullptr) {
                 auto h = (*order)[j++];
                 new_node_v.push_back(&get_node_ref(h));
             } else {
@@ -1440,7 +1440,7 @@ handle_t graph_t::rank_to_handle(const size_t &rank) const {
     return number_bool_packing::pack(rank, false);
 }
 
-void graph_t::display(void) const {
+void graph_t::display() const {
     std::cerr << "------ graph state ------" << std::endl;
 
     std::cerr << "_max_node_id = " << _max_node_id << std::endl;
@@ -1557,7 +1557,7 @@ void graph_t::to_gfa(std::ostream& out) const {
         });
 }
 
-uint32_t graph_t::get_magic_number(void) const {
+uint32_t graph_t::get_magic_number() const {
     return 1988148666ul; // TODO update me
 }
 

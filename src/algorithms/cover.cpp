@@ -5,8 +5,7 @@
 namespace odgi {
     namespace algorithms {
 
-        ska::flat_hash_set<handlegraph::nid_t>
-        is_nice_and_acyclic(const HandleGraph &graph, const ska::flat_hash_set<handlegraph::nid_t> &component, const bool& ignore_paths) {
+        ska::flat_hash_set<handlegraph::nid_t> is_nice_and_acyclic(const HandleGraph &graph, const ska::flat_hash_set<handlegraph::nid_t> &component) {
             ska::flat_hash_set<handlegraph::nid_t> head_nodes;
             if (component.empty()) { return head_nodes; }
 
@@ -251,7 +250,7 @@ namespace odgi {
 
             ska::flat_hash_set<handlegraph::nid_t> &component = components[component_id];
             size_t component_size = component.size();
-            ska::flat_hash_set<handlegraph::nid_t> head_nodes = is_nice_and_acyclic(graph, component, ignore_paths);
+            ska::flat_hash_set<handlegraph::nid_t> head_nodes = is_nice_and_acyclic(graph, component);
             bool acyclic = !(head_nodes.empty());
             if (show_progress) {
                 std::cerr << Coverage::name() << ": processing component " << (component_id + 1) << " / "
@@ -300,7 +299,7 @@ namespace odgi {
 
                 if (node_coverage.front().second >= min_node_coverage) {
                     if (show_progress) {
-                        std::cerr << "Minimum node coverage reached after generating " << i << " paths." << std::endl;
+                        std::cerr << Coverage::name() << ": minimum node coverage reached after generating " << i << " paths." << std::endl;
                     }
 
                     break;
@@ -341,7 +340,7 @@ namespace odgi {
             }
 
             if ((min_node_coverage != std::numeric_limits<uint64_t>::max()) && (i >= num_paths_per_component)){
-                std::cerr << "Maximum number of generable paths reached." << std::endl;
+                std::cerr << Coverage::name() <<": maximum number of generable paths reached." << std::endl;
             }
 
             if (write_node_covearges) {
@@ -378,7 +377,7 @@ namespace odgi {
                     processed_components++;
 
                     if (show_progress) {
-                        std::cerr << "Processed: " << processed_components << std::endl;
+                        std::cerr << "[odgi::path_cover] Processed: " << processed_components << std::endl;
                     }
                 }
             }

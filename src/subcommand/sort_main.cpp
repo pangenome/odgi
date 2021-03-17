@@ -92,18 +92,18 @@ int main_sort(int argc, char** argv) {
     }
 
     if (!dg_in_file) {
-        std::cerr << "[odgi sort] Error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
+        std::cerr << "[odgi::sort] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
         return 1;
     }
 
     if (!dg_out_file) {
-        std::cerr << "[odgi sort] Error: Please specify an output file to store the graph via -o=[FILE], --out=[FILE]." << std::endl;
+        std::cerr << "[odgi::sort] error: please specify an output file to store the graph via -o=[FILE], --out=[FILE]." << std::endl;
         return 1;
     }
 
     if (args::get(p_sgd_zipf_space_quantization_step) && args::get(p_sgd_zipf_max_number_of_distributions)){
         std::cerr
-                << "[odgi sort] error: Please specify -l/--path-sgd-zipf-space-quantization-step or -y/--path-sgd-zipf-max-num-distributions, not both."
+                << "[odgi::sort] error: please specify -l/--path-sgd-zipf-space-quantization-step or -y/--path-sgd-zipf-max-num-distributions, not both."
                 << std::endl;
         return 1;
     }
@@ -162,7 +162,7 @@ int main_sort(int argc, char** argv) {
     std::string path_sgd_seed;
     if (p_sgd_seed) {
         if (num_threads > 1) {
-            std::cerr << "[odgi sort] Error: Please only specify a seed for the path guided 1D linear SGD when using 1 thread." << std::endl;
+            std::cerr << "[odgi::sort] error: please only specify a seed for the path guided 1D linear SGD when using 1 thread." << std::endl;
             return 1;
         }
         path_sgd_seed = args::get(p_sgd_seed);
@@ -170,7 +170,7 @@ int main_sort(int argc, char** argv) {
         path_sgd_seed = "pangenomic!";
     }
     if (p_sgd_min_term_updates_paths && p_sgd_min_term_updates_num_nodes) {
-        std::cerr << "[odgi sort] Error: There can only be one argument provided for the minimum number of term updates in the path guided 1D SGD."
+        std::cerr << "[odgi::sort] error: there can only be one argument provided for the minimum number of term updates in the path guided 1D SGD."
                      "Please either use -G=[N], path-sgd-min-term-updates-paths=[N] or -U=[N], path-sgd-min-term-updates-nodes=[N]." << std::endl;
         return 1;
     }
@@ -217,7 +217,7 @@ int main_sort(int argc, char** argv) {
                 if (graph.has_path(buf)) {
                     path_sgd_use_paths.push_back(graph.get_path_handle(buf));
                 } else {
-                    std::cerr << "[odgi sort] Error: Path '" << buf
+                    std::cerr << "[odgi::sort] error: path '" << buf
                               << "' as was given by -f=[FILE], --path-sgd-use-paths=[FILE]"
                                  " is not present in the graph. Please remove this path from the file and restart 'odgi sort'.";
                 }
@@ -393,7 +393,7 @@ int main_sort(int argc, char** argv) {
                         break;
                 }
                 if (order.size() != graph.get_node_count()) {
-                    std::cerr << "[odgi sort] Error: expected " << graph.get_node_count()
+                    std::cerr << "[odgi::sort] error: expected " << graph.get_node_count()
                               << " handles in the order "
                               << "but got " << order.size() << std::endl;
                     assert(false);

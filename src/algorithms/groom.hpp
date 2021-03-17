@@ -12,16 +12,16 @@
 //#include "bfs.cpp"
 
 namespace odgi {
-namespace algorithms {
+    namespace algorithms {
 
-using namespace handlegraph;
+        using namespace handlegraph;
 
 /**
  * Remove spurious inverting links based on a dominant orientation of the graph
  */
-std::vector<handle_t>
-groom(const handlegraph::MutablePathDeletableHandleGraph& graph,
-      bool progress_reporting);
+        std::vector<handle_t>
+        groom(const handlegraph::MutablePathDeletableHandleGraph &graph,
+              bool progress_reporting);
 
-}
+    }
 }

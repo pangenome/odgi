@@ -73,6 +73,20 @@ inline pos_t reverse(const pos_t& pos, size_t node_length) {
     return rev;
 }
 
+/// A path position
+struct path_pos_t {
+    handlegraph::path_handle_t path;
+    uint64_t offset;
+    bool is_rev;
+};
+
+struct path_range_t {
+    path_pos_t begin;
+    path_pos_t end;
+    bool is_rev;
+    std::string data;
+};
+
 }
 
 #endif

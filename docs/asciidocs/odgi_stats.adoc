@@ -1,10 +1,10 @@
 = odgi stats(1)
 ifdef::backend-manpage[]
-Erik Garrison
+Erik Garrison, Andrea Guarracino
 :doctype: manpage
-:release-version: v0.4.1 
+:release-version: v0.6.0
 :man manual: odgi stats
-:man source: odgi v0.4.1 
+:man source: odgi v0.6.0
 :page-layout: base
 endif::[]
 
@@ -32,6 +32,9 @@ The odgi stats(1) command produces statistics of a variation graph. Among other 
 
 *-S, --summarize*::
   Summarize the graph properties and dimensions. Print to stdout the #nucleotides, #nodes, #edges and #paths of the graph.
+
+*-W, --weak-connected-components*::
+  Shows the properties of the weakly connected components.
 
 *-b, --base-content*::
   Describe the base content of the graph. Print to stdout the #A, #C, #G and #T of the graph.
@@ -97,7 +100,7 @@ Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
 
 == AUTHORS
 
-*odgi stats* was written by Erik Garrison.
+*odgi stats* was written by Erik Garrison and Andrea Guarracino.
 
 ifdef::backend-manpage[]
 == RESOURCES

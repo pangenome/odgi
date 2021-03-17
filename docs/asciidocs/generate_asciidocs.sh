@@ -23,7 +23,7 @@ asciidoctor -b manpage odgi_paths.adoc
 asciidoctor -b manpage odgi_prune.adoc
 asciidoctor -b manpage odgi_unchop.adoc
 asciidoctor -b manpage odgi_normalize.adoc
-asciidoctor -b manpage odgi_subset.adoc
+asciidoctor -b manpage odgi_extract.adoc
 asciidoctor -b manpage odgi_bin.adoc
 asciidoctor -b manpage odgi_matrix.adoc
 asciidoctor -b manpage odgi_chop.adoc
@@ -35,5 +35,9 @@ asciidoctor -b manpage odgi_panpos.adoc
 asciidoctor -b manpage odgi_server.adoc
 asciidoctor -b manpage odgi_test.adoc
 asciidoctor -b manpage odgi_version.adoc
+asciidoctor -b manpage odgi_cover.adoc
+asciidoctor -b manpage odgi_explode.adoc
+asciidoctor -b manpage odgi_squeeze.adoc
+asciidoctor -b manpage odgi_position.adoc
 
 mv *.1 man/

@@ -32,7 +32,8 @@ namespace odgi {
                            const std::function<void(const string &)> &handle_fasta,
                            uint64_t num_bins,
                            uint64_t bin_width,
-                           bool drop_gap_links) {
+                           bool drop_gap_links,
+                           bool progress) {
             // the graph must be compacted for this to work
             std::vector<uint64_t> position_map(graph.get_node_count() + 1);
             uint64_t len = 0;
@@ -62,6 +63,11 @@ namespace odgi {
             std::unordered_map<path_handle_t, uint64_t> path_length;
             uint64_t gap_links_removed = 0;
             uint64_t total_links = 0;
+            std::unique_ptr<progress_meter::ProgressMeter> progress_meter;
+            if (progress) {
+                progress_meter = std::make_unique<progress_meter::ProgressMeter>(
+                        graph.get_path_count(), "[odgi::bin] bin_path_info:");
+            }
             graph.for_each_path_handle([&](const path_handle_t &path) {
                 std::vector<std::pair<uint64_t, uint64_t>> links;
                 std::map<uint64_t, path_info_t> bins;
@@ -163,12 +169,20 @@ namespace odgi {
                 }
 
                 handle_path(graph.get_path_name(path), links, bins);
+
+                if (progress) {
+                    progress_meter->increment(1);
+                }
             });
+
+            if (progress) {
+                progress_meter->finish();
+            }
 
             if (drop_gap_links) {
                 uint64_t path_count = graph.get_path_count();
 
-                std::cerr << std::setprecision(4) << "Gap links removed: " << (100.0 *  ((double)gap_links_removed / (double)total_links))
+                std::cerr << std::setprecision(4) << "[odgi::bin_path_info] Gap links removed: " << (100.0 *  ((double)gap_links_removed / (double)total_links))
                           << "%, that is " << gap_links_removed << " gap links (" << path_count << " path start links + "
                           << path_count << " path end links + " << (gap_links_removed - path_count * 2) << " inner gap links) of "
                           << total_links << " total links" << std::endl;

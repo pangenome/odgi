@@ -2,9 +2,9 @@
 ifdef::backend-manpage[]
 Erik Garrison, Andrea Guarracino
 :doctype: manpage
-:release-version: v0.4.1 
+:release-version: v0.6.0
 :man manual: odgi viz
-:man source: odgi v0.4.1 
+:man source: odgi v0.6.0
 :page-layout: base
 endif::[]
 
@@ -72,6 +72,14 @@ please refer to <<odgi_bin.adoc#_odgi_bin1, odgi bin>>.
 
 *-s, --color-by-prefix*::
   Colors paths by their names looking at the prefix before the given character C.
+
+
+=== Intervals selection
+
+*-r, --pangenomic-range*::
+  Nucleotide range to visualize: `STRING=[PATH:]start-end`. `\*-end` for `[0,end]`; `start-*` for `[start,pangenome_length]`.
+  If no PATH is specified, the nucleotide positions refer to the pangenome's sequence (i.e., the sequence obtained arranging all the graph's node
+  from left to right).
 
 
 === Paths selection
@@ -153,7 +161,7 @@ paths can be specified.
 
 == AUTHORS
 
-*odgi viz* was written by Erik Garrison.
+*odgi viz* was written by Erik Garrison and Andrea Guarracino.
 
 ifdef::backend-manpage[]
 
