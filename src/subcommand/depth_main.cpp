@@ -39,6 +39,8 @@ namespace odgi {
                                                    {'F', "path-pos-file"});
         args::ValueFlag<std::string> bed_input(parser, "FILE", "a BED file of ranges in paths in the graph",
                                                {'b', "bed-input"});
+
+        // TODO: (or subset covered by the given paths)
         args::Flag graph_depth(parser, "graph-depth",
                                "compute the depth on each node in the graph (or subset covered by the given paths)",
                                {'d', "graph-depth"});
@@ -183,7 +185,11 @@ namespace odgi {
             }
         };
 
-        if (graph_pos) {
+        if (graph_depth) {
+            graph.for_each_handle([&](const handle_t& h) {
+                add_graph_pos(graph, std::to_string(graph.get_id(h)));
+            });
+        } else if (graph_pos) {
             // if we're given a graph_pos, we'll convert it into a path pos
             add_graph_pos(graph, args::get(graph_pos));
         } else if (graph_pos_file) {
