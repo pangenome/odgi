@@ -4,7 +4,7 @@
 <article xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" version="5.0" xml:lang="en">
 <info>
 <title>Reference Documentation for ODGI v0.6.0</title>
-<date>2021-03-12</date>
+<date>2021-03-16</date>
 <author>
 <personname>
 <firstname>Simon Heumos, Andrea Guarracino, Erik Garrison</firstname>
@@ -1311,6 +1311,12 @@ This argument only works when <emphasis>-Y, --path-sgd</emphasis> was specified.
 <term><emphasis role="strong">-s, --split-subgraphs</emphasis>=<emphasis>STRING</emphasis></term>
 <listitem>
 <simpara>Instead of writing the target subgraphs into a single graph, write one subgraph per given target to a separate file named <literal>path:start-end.og</literal> (0-based coordinates).</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-I, --inverse</emphasis></term>
+<listitem>
+<simpara>Extract parts of the graph that do not meet the query criteria.</simpara>
 </listitem>
 </varlistentry>
 <varlistentry>

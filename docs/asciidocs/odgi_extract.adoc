@@ -39,6 +39,9 @@ The odgi extract(1) command extracts parts of the graph as defined by query crit
 *-s, --split-subgraphs*=_STRING_::
     Instead of writing the target subgraphs into a single graph, write one subgraph per given target to a separate file named `path:start-end.og` (0-based coordinates).
 
+*-I, --inverse*::
+    Extract parts of the graph that do not meet the query criteria.
+
 *-l, --node-list*::_FILE_::
     A file with one node id per line. The node specified will be extracted from the input graph.
 

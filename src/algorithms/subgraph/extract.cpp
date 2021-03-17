@@ -123,7 +123,9 @@ namespace odgi {
                 if (walked > start) {
                     nid_t id = source.get_id(cur_handle);
                     if (!subgraph.has_node(id)) {
-                        subgraph.create_handle(source.get_sequence(source.get_handle(id)), id);
+                        subgraph.create_handle(
+                                source.get_sequence(source.get_is_reverse(cur_handle) ? source.flip(cur_handle) : cur_handle),
+                                id);
                     }
 
                     // This code ensures that there are edges connecting the nodes the path crosses.
@@ -183,10 +185,7 @@ namespace odgi {
             }
         }
 
-        void expand_subgraph_by_steps(const graph_t &source, graph_t &subgraph, const uint64_t &steps,
-                                      bool forward_only, const std::string& progress_message) {
-            bool show_progress = !progress_message.empty();
-
+        void expand_subgraph_by_steps(const graph_t &source, graph_t &subgraph, const uint64_t &steps, bool forward_only) {
             std::vector<handle_t> curr_handles;
             subgraph.for_each_handle([&](const handle_t &h) {
                 curr_handles.push_back(h);
@@ -196,51 +195,29 @@ namespace odgi {
                 for (auto &h : curr_handles) {
                     handle_t old_h = source.get_handle(subgraph.get_id(h));
                     source.follow_edges(old_h, false, [&](const handle_t &c) {
-                        handle_t x;
                         if (!subgraph.has_node(source.get_id(c))) {
-                            x = subgraph.create_handle(
+                            handle_t x = subgraph.create_handle(
                                     source.get_sequence(source.get_is_reverse(c) ? source.flip(c) : c),
                                     source.get_id(c));
                             next_handles.push_back(x);
-                        } else {
-                            x = subgraph.get_handle(source.get_id(c));
-                        }
-                        if (source.get_is_reverse(c)) {
-                            x = subgraph.flip(x);
-                        }
-                        if (!subgraph.has_edge(h, x)) {
-                            subgraph.create_edge(h, x);
                         }
                     });
                     if (!forward_only) {
                         source.follow_edges(old_h, true, [&](const handle_t &c) {
-                            handle_t x;
                             if (!subgraph.has_node(source.get_id(c))) {
-                                x = subgraph.create_handle(
+                                handle_t x = subgraph.create_handle(
                                         source.get_sequence(source.get_is_reverse(c) ? source.flip(c) : c),
                                         source.get_id(c));
                                 next_handles.push_back(x);
-                            } else {
-                                x = subgraph.get_handle(source.get_id(c));
-                            }
-                            if (source.get_is_reverse(c)) {
-                                x = subgraph.flip(x);
-                            }
-                            if (!subgraph.has_edge(x, h)) {
-                                subgraph.create_edge(x, h);
                             }
                         });
                     }
                 }
                 curr_handles = std::move(next_handles);
             }
-            add_connecting_edges_to_subgraph(source, subgraph, progress_message);
         }
 
-        void expand_subgraph_by_length(const graph_t &source, graph_t &subgraph, const uint64_t &length,
-                                       bool forward_only, const std::string& progress_message) {
-            bool show_progress = !progress_message.empty();
-
+        void expand_subgraph_by_length(const graph_t &source, graph_t &subgraph, const uint64_t &length, bool forward_only) {
             uint64_t accumulated_length = 0;
             std::vector<handle_t> curr_handles;
             subgraph.for_each_handle([&](const handle_t &h) {
@@ -251,47 +228,28 @@ namespace odgi {
                 for (auto &h : curr_handles) {
                     handle_t old_h = source.get_handle(subgraph.get_id(h));
                     source.follow_edges(old_h, false, [&](const handle_t &c) {
-                        handle_t x;
                         if (!subgraph.has_node(source.get_id(c))) {
-                            x = subgraph.create_handle(
+                            handle_t x = subgraph.create_handle(
                                     source.get_sequence(source.get_is_reverse(c) ? source.flip(c) : c),
                                     source.get_id(c));
                             next_handles.push_back(x);
                             accumulated_length += subgraph.get_length(x);
-                        } else {
-                            x = subgraph.get_handle(source.get_id(c));
-                        }
-                        if (source.get_is_reverse(c)) {
-                            x = subgraph.flip(x);
-                        }
-                        if (!subgraph.has_edge(h, x)) {
-                            subgraph.create_edge(h, x);
                         }
                     });
                     if (!forward_only) {
                         source.follow_edges(old_h, true, [&](const handle_t &c) {
-                            handle_t x;
                             if (!subgraph.has_node(source.get_id(c))) {
-                                x = subgraph.create_handle(
+                                handle_t x = subgraph.create_handle(
                                         source.get_sequence(source.get_is_reverse(c) ? source.flip(c) : c),
                                         source.get_id(c));
                                 next_handles.push_back(x);
                                 accumulated_length += subgraph.get_length(x);
-                            } else {
-                                x = subgraph.get_handle(source.get_id(c));
-                            }
-                            if (source.get_is_reverse(c)) {
-                                x = subgraph.flip(x);
-                            }
-                            if (!subgraph.has_edge(x, h)) {
-                                subgraph.create_edge(x, h);
                             }
                         });
                     }
                 }
                 curr_handles = std::move(next_handles);
             }
-            add_connecting_edges_to_subgraph(source, subgraph, progress_message);
         }
 
         void extract_id_range(const graph_t &source, const nid_t &id1, const nid_t &id2, graph_t &subgraph, const std::string& progress_message) {
@@ -302,9 +260,12 @@ namespace odgi {
                 progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(id2 - id1 + 1, progress_message);
             }
 
-            for (nid_t i = id1; i <= id2; ++i) {
-                if (!subgraph.has_node(i)) {
-                    subgraph.create_handle(source.get_sequence(source.get_handle(i)), i);
+            for (nid_t id = id1; id <= id2; ++id) {
+                if (!subgraph.has_node(id)) {
+                    handle_t cur_handle = source.get_handle(id);
+                    subgraph.create_handle(
+                            source.get_sequence(source.get_is_reverse(cur_handle) ? source.flip(cur_handle) : cur_handle),
+                            id);
                 }
 
                 if (show_progress) {
