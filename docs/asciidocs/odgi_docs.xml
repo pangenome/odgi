@@ -1423,6 +1423,12 @@ This argument only works when <emphasis>-Y, --path-sgd</emphasis> was specified.
 </listitem>
 </varlistentry>
 <varlistentry>
+<term><emphasis role="strong">-I, --inverse</emphasis></term>
+<listitem>
+<simpara>Extract parts of the graph that do not meet the query criteria.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
 <term><emphasis role="strong">-l, --node-list</emphasis>::_FILE_</term>
 <listitem>
 <simpara>A file with one node id per line. The node specified will be extracted from the input graph.</simpara>
