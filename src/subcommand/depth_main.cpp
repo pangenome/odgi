@@ -40,9 +40,9 @@ namespace odgi {
         args::ValueFlag<std::string> bed_input(parser, "FILE", "a BED file of ranges in paths in the graph",
                                                {'b', "bed-input"});
 
-        // TODO: (or subset covered by the given paths)
+        // TODO: compute the depth on each node in the graph (or subset covered by the given paths)
         args::Flag graph_depth(parser, "graph-depth",
-                               "compute the depth on each node in the graph (or subset covered by the given paths)",
+                               "compute the depth on each node in the graph",
                                {'d', "graph-depth"});
         args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use", {'t', "threads"});
 
@@ -323,16 +323,11 @@ namespace odgi {
                     handle_t cur_handle = graph.get_handle_of_step(cur_step);
                     walked += graph.get_length(cur_handle);
                     if (walked > start) {
-                        bool seen = false;
+                        // the coverage is steps_on_handle - 1
                         graph.for_each_step_on_handle(cur_handle, [&](const step_handle_t &step) {
-                            if (!seen) {
-                                if (graph.get_path_handle_of_step(step) == path_handle) {
-                                    seen = true;
-                                    return;
-                                }
-                            }
                             ++coverage;
                         });
+                        --coverage;
                     }
                 }
 
