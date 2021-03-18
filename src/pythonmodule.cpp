@@ -17,7 +17,7 @@ PYBIND11_MODULE(odgi, m)
     py::class_<handlegraph::handle_t>(m, "handle", "the handle, which refers to oriented nodes");
     py::class_<handlegraph::path_handle_t>(m, "path_handle", "the path handle type, which refers to paths");
     
-    // see https://github.com/vgteam/odgi/issues/18
+    // see https://github.com/pangenome/odgi/issues/18
     py::class_<handlegraph::step_handle_t>(m, "step_handle", "the step handle type, which refers to path paths")
         .def("path_id", [](handlegraph::step_handle_t &step_handle) {
                 return (reinterpret_cast<const int64_t*>(&step_handle)[0]) >> 1;

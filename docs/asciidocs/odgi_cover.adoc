@@ -79,7 +79,7 @@ Number of threads to use for the parallel sorter.
 
 == BUGS
 
-Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
+Refer to the *odgi* issue tracker at https://github.com/pangenome/odgi/issues.
 
 == AUTHORS
 
@@ -88,13 +88,13 @@ Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
 ifdef::backend-manpage[]
 == RESOURCES
 
-*Project web site:* https://github.com/vgteam/odgi
+*Project web site:* https://github.com/pangenome/odgi
 
-*Git source repository on GitHub:* https://github.com/vgteam/odgi
+*Git source repository on GitHub:* https://github.com/pangenome/odgi
 
-*GitHub organization:* https://github.com/vgteam
+*GitHub organization:* https://github.com/pangenome
 
-*Discussion list / forum:* https://github.com/vgteam/odgi/issues
+*Discussion list / forum:* https://github.com/pangenome/odgi/issues
 
 == COPYING
 

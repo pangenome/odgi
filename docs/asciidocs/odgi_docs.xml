@@ -4,7 +4,7 @@
 <article xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" version="5.0" xml:lang="en">
 <info>
 <title>Reference Documentation for ODGI v0.6.0</title>
-<date>2021-03-17</date>
+<date>2021-03-18</date>
 <author>
 <personname>
 <firstname>Simon Heumos, Andrea Guarracino, Erik Garrison</firstname>
@@ -181,7 +181,7 @@ The odgi version(1) command prints the current git version with tags and codenam
 </section>
 <section xml:id="_bugs">
 <title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors">
 <title>AUTHORS</title>
@@ -189,15 +189,15 @@ The odgi version(1) command prints the current git version with tags and codenam
 </section>
 <section xml:id="_resources">
 <title>RESOURCES</title>
-<simpara><emphasis role="strong">Project web site:</emphasis> <link xl:href="https://github.com/vgteam/odgi">https://github.com/vgteam/odgi</link></simpara>
-<simpara><emphasis role="strong">Git source repository on GitHub:</emphasis> <link xl:href="https://github.com/vgteam/odgi">https://github.com/vgteam/odgi</link></simpara>
-<simpara><emphasis role="strong">GitHub organization:</emphasis> <link xl:href="https://github.com/vgteam">https://github.com/vgteam</link></simpara>
-<simpara><emphasis role="strong">Discussion list / forum:</emphasis> <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link></simpara>
+<simpara><emphasis role="strong">Project web site:</emphasis> <link xl:href="https://github.com/pangenome/odgi">https://github.com/pangenome/odgi</link></simpara>
+<simpara><emphasis role="strong">Git source repository on GitHub:</emphasis> <link xl:href="https://github.com/pangenome/odgi">https://github.com/pangenome/odgi</link></simpara>
+<simpara><emphasis role="strong">GitHub organization:</emphasis> <link xl:href="https://github.com/pangenome">https://github.com/pangenome</link></simpara>
+<simpara><emphasis role="strong">Discussion list / forum:</emphasis> <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link></simpara>
 </section>
 <section xml:id="_copying">
 <title>COPYING</title>
 <simpara>The MIT License (MIT)</simpara>
-<simpara>Copyright (c) 2019 Erik Garrison</simpara>
+<simpara>Copyright (c) 2019-2021 Erik Garrison</simpara>
 <simpara>Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
 the Software without restriction, including without limitation the rights to
@@ -330,7 +330,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</simp
 </section>
 <section xml:id="_bugs_2">
 <title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors_2">
 <title>AUTHORS</title>
@@ -470,7 +470,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</simp
 </section>
 <section xml:id="_bugs_3">
 <title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors_3">
 <title>AUTHORS</title>
@@ -612,7 +612,7 @@ subset of all paths can be specified.</simpara>
 </section>
 <section xml:id="_bugs_4">
 <title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors_4">
 <title>AUTHORS</title>
@@ -966,7 +966,7 @@ This argument only works when <emphasis>-Y, --path-sgd</emphasis> was specified.
 </section>
 <section xml:id="_bugs_5">
 <title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors_5">
 <title>AUTHORS</title>
@@ -1048,7 +1048,7 @@ This argument only works when <emphasis>-Y, --path-sgd</emphasis> was specified.
 </section>
 <section xml:id="_bugs_6">
 <title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors_6">
 <title>AUTHORS</title>
@@ -1176,7 +1176,7 @@ This argument only works when <emphasis>-Y, --path-sgd</emphasis> was specified.
 </section>
 <section xml:id="_bugs_7">
 <title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors_7">
 <title>AUTHORS</title>
@@ -1281,7 +1281,7 @@ This argument only works when <emphasis>-Y, --path-sgd</emphasis> was specified.
 </section>
 <section xml:id="_bugs_8">
 <title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors_8">
 <title>AUTHORS</title>
@@ -1391,7 +1391,7 @@ This argument only works when <emphasis>-Y, --path-sgd</emphasis> was specified.
 </section>
 <section xml:id="_bugs_9">
 <title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors_9">
 <title>AUTHORS</title>
@@ -1544,7 +1544,7 @@ Be careful to use it with very complex graphs.</simpara>
 </section>
 <section xml:id="_bugs_10">
 <title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors_10">
 <title>AUTHORS</title>
@@ -1627,7 +1627,7 @@ the nodes vector, the delete nodes bit vector and the path metadata, each in a s
 </section>
 <section xml:id="_bugs_11">
 <title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors_11">
 <title>AUTHORS</title>
@@ -1733,7 +1733,7 @@ of furcations at edges or by not considering nodes above a given node degree lim
 </section>
 <section xml:id="_bugs_12">
 <title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors_12">
 <title>AUTHORS</title>
@@ -1833,7 +1833,7 @@ in a fixed sequence quality FASTQ format. Various parameters can refine the unit
 </section>
 <section xml:id="_bugs_13">
 <title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors_13">
 <title>AUTHORS</title>
@@ -2093,7 +2093,7 @@ combination with [<emphasis role="strong">-A, --alignment-prefix</emphasis>=<emp
 </section>
 <section xml:id="_bugs_14">
 <title>BUGS</title>
-<literallayout class="monospaced">Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.</literallayout>
+<literallayout class="monospaced">Refer to the *odgi* issue tracker at https://github.com/pangenome/odgi/issues.</literallayout>
 </section>
 <section xml:id="_authors_14">
 <title>AUTHORS</title>
@@ -2215,7 +2215,7 @@ with [<emphasis role="strong">-H, --haplotypes</emphasis>]. Prints an additional
 </section>
 <section xml:id="_bugs_15">
 <title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors_15">
 <title>AUTHORS</title>
@@ -2374,7 +2374,7 @@ fitting into these conditions.</simpara>
 </section>
 <section xml:id="_bugs_16">
 <title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors_16">
 <title>AUTHORS</title>
@@ -2467,7 +2467,7 @@ fitting into these conditions.</simpara>
 </section>
 <section xml:id="_bugs_17">
 <title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors_17">
 <title>AUTHORS</title>
@@ -2555,7 +2555,7 @@ fitting into these conditions.</simpara>
 </section>
 <section xml:id="_bugs_18">
 <title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors_18">
 <title>AUTHORS</title>
@@ -2737,7 +2737,7 @@ Each value is the coverage of a specific node of a specific path.</simpara>
 </section>
 <section xml:id="_bugs_19">
 <title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors_19">
 <title>AUTHORS</title>
@@ -2819,7 +2819,7 @@ Each value is the coverage of a specific node of a specific path.</simpara>
 </section>
 <section xml:id="_bugs_20">
 <title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors_20">
 <title>AUTHORS</title>
@@ -2923,7 +2923,7 @@ Each value is the coverage of a specific node of a specific path.</simpara>
 </section>
 <section xml:id="_bugs_21">
 <title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors_21">
 <title>AUTHORS</title>
@@ -3048,7 +3048,7 @@ It applies SGD to move a single pair of nodes at a time. The rendered graph is w
 </section>
 <section xml:id="_bugs_22">
 <title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors_22">
 <title>AUTHORS</title>
@@ -3136,7 +3136,7 @@ It applies SGD to move a single pair of nodes at a time. The rendered graph is w
 </section>
 <section xml:id="_bugs_23">
 <title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors_23">
 <title>AUTHORS</title>
@@ -3237,7 +3237,7 @@ the graph&#8217;s paths.</simpara>
 </section>
 <section xml:id="_bugs_24">
 <title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors_24">
 <title>AUTHORS</title>
@@ -3311,7 +3311,7 @@ navigating large graphs in an interactive manner like in the <link xl:href="http
 </section>
 <section xml:id="_bugs_25">
 <title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors_25">
 <title>AUTHORS</title>
@@ -3396,7 +3396,7 @@ input and output positions are 1-based.</simpara>
 </section>
 <section xml:id="_bugs_26">
 <title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors_26">
 <title>AUTHORS</title>
@@ -3415,7 +3415,10 @@ input and output positions are 1-based.</simpara>
 </section>
 <section xml:id="_description_27">
 <title>DESCRIPTION</title>
-<simpara>The odgi position(1) command position parts of the graph as defined by query criteria.</simpara>
+<simpara>The odgi position(1) command translates positions and coordinate ranges between nodes and embedded paths.
+It provides liftover functionality, allowing us to translate a position between any reference paths embedded in the <literal>-i, --target</literal> graph.
+We can additionally project coordinates and annotations from a source graph <literal>-x, --source</literal> into the <literal>target</literal>.
+When completing this "graph lift", the intersecting set of paths in the two graphs are used to complete the coordinate projection.</simpara>
 </section>
 <section xml:id="_options_26">
 <title>OPTIONS</title>
@@ -3533,7 +3536,7 @@ between <literal>--source</literal> and <literal>--target</literal>].</simpara>
 </section>
 <section xml:id="_bugs_27">
 <title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors_27">
 <title>AUTHORS</title>
@@ -3620,7 +3623,7 @@ input and output positions are 1-based. If no IP address is specified, the serve
 </section>
 <section xml:id="_bugs_28">
 <title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors_28">
 <title>AUTHORS</title>
@@ -3830,7 +3833,7 @@ be selected. odgi test(1) depends on <link xl:href="https://github.com/catchorg/
 </section>
 <section xml:id="_bugs_29">
 <title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors_29">
 <title>AUTHORS</title>
@@ -3907,7 +3910,7 @@ be selected. odgi test(1) depends on <link xl:href="https://github.com/catchorg/
 </section>
 <section xml:id="_bugs_30">
 <title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/vgteam/odgi/issues">https://github.com/vgteam/odgi/issues</link>.</simpara>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors_30">
 <title>AUTHORS</title>
