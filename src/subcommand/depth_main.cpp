@@ -185,6 +185,7 @@ namespace odgi {
                     std::cerr << "[odgi::depth] error: path " << path_name << " not found in graph" << std::endl;
                     exit(1);
                 } else {
+                    uint64_t start = vals.size() > 1 ? (uint64_t) std::stoi(vals[1]) : 0;
                     uint64_t end;
                     if (vals.size() > 2) {
                         end = (uint64_t) std::stoi(vals[2]);
@@ -194,11 +195,16 @@ namespace odgi {
                         });
                     }
 
+                    if (start > end) {
+                        std::cerr << "[odgi::depth] error: wrong input coordinates in row: " << buffer << std::endl;
+                        exit(1);
+                    }
+
                     path_ranges.push_back(
                             {
                                     {
                                             graph.get_path_handle(path_name),
-                                            vals.size() > 1 ? (uint64_t) std::stoi(vals[1]) : 0,
+                                            start,
                                             false
                                     },
                                     {
