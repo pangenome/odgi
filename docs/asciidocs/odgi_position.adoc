@@ -19,8 +19,10 @@ odgi_position - position parts of the graph as defined by query criteria
 
 == DESCRIPTION
 
-The odgi position(1) command position parts of the graph as defined by query criteria.
-
+The odgi position(1) command translates positions and coordinate ranges between nodes and embedded paths.
+It provides liftover functionality, allowing us to translate a position between any reference paths embedded in the `-i, --target` graph.
+We can additionally project coordinates and annotations from a source graph `-x, --source` into the `target`.
+When completing this "graph lift", the intersecting set of paths in the two graphs are used to complete the coordinate projection.
 
 == OPTIONS
 
@@ -106,7 +108,7 @@ ifdef::backend-manpage[]
 
 The MIT License (MIT)
 
-Copyright (c) 2019 Erik Garrison
+Copyright (c) 2019-2021 Erik Garrison
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in
