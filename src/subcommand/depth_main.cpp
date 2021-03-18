@@ -185,9 +185,8 @@ namespace odgi {
                     std::cerr << "[odgi::depth] error: path " << path_name << " not found in graph" << std::endl;
                     exit(1);
                 } else {
-                    uint64_t start = vals.size() == 3 ? (uint64_t) std::stoi(vals[1]) : 0;
-                    uint64_t end = 0;
-                    if (vals.size() == 3) {
+                    uint64_t end;
+                    if (vals.size() > 2) {
                         end = (uint64_t) std::stoi(vals[2]);
                     } else {
                         graph.for_each_step_in_path(graph.get_path_handle(path_name), [&](const step_handle_t &s) {
@@ -199,7 +198,7 @@ namespace odgi {
                             {
                                     {
                                             graph.get_path_handle(path_name),
-                                            start,
+                                            vals.size() > 1 ? (uint64_t) std::stoi(vals[1]) : 0,
                                             false
                                     },
                                     {

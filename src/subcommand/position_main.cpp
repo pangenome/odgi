@@ -263,16 +263,25 @@ int main_position(int argc, char** argv) {
                 std::cerr << "[odgi::position] error: ref path " << path_name << " not found in graph" << std::endl;
                 exit(1);
             } else {
+                uint64_t end;
+                if (vals.size() > 2) {
+                    end = (uint64_t) std::stoi(vals[2]);
+                } else {
+                    graph.for_each_step_in_path(graph.get_path_handle(path_name), [&](const step_handle_t &s) {
+                        end += graph.get_length(graph.get_handle_of_step(s));
+                    });
+                }
+
                 path_ranges.push_back(
                     {
                         {
                             graph.get_path_handle(path_name),
-                            (uint64_t)std::stoi(vals[1]),
+                            vals.size() > 1 ? (uint64_t) std::stoi(vals[1]) : 0,
                             false
                         },
                         {
                             graph.get_path_handle(path_name),
-                            (uint64_t)std::stoi(vals[2]),
+                            end,
                             false
                         },
                         (vals.size() > 3 && vals[3] == "-"),
