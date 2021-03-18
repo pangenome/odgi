@@ -39,20 +39,20 @@ The odgi stats(1) command produces statistics of a variation graph. Among other 
 *-b, --base-content*::
   Describe the base content of the graph. Print to stdout the #A, #C, #G and #T of the graph.
 
-*-C, --coverage*::
-  Provide a histogram of path coverage over bases in the graph. Print three tab-delimited columns to stdout: *type*, *cov*, *N*. *type* is one of _full_ or _uniq_ and determines if the histogram corresponds to the full graph or only to a unique paths graph. *cov* implies the #paths. *N* implies the #nucleotides.
-
-*-V, --set-coverage*::
-  Provide a histogram of coverage over unique set of paths. Print two tab-delimited columns to stdout: *cov*, *sets*. *cov* implies #nucleotides. *sets* lists the unique set of paths in a comma separated list. Sets with a *cov* of one and no paths in *sets* are listed, too.
-
-*-M, --multi-coverage*::
-  Provide a histogram of coverage over unique multiset, the combination with possible repetition of paths. Print two tab-delimited columns to stdout: *cov*, *sets*. *cov* implies #nucleotides. *sets* lists the unique multisets of paths in a comma separated list. Multisets with a *cov* of one and no paths in *sets* are listed, too.
-
-
-=== BED Interval
-
-*-B, --bed-multicov*=_BED_::
-  For each BED entry, provide a table of path coverage over unique multisets of paths in the graph. Each unique multiset of paths overlapping a given BED interval is described in terms of its length relative to the total interval, the number of path traversals and unique paths involved in these traversals.
+//*-C, --coverage*::
+//  Provide a histogram of path coverage over bases in the graph. Print three tab-delimited columns to stdout: *type*, *cov*, *N*. *type* is one of _full_ or _uniq_ and determines if the histogram corresponds to the full graph or only to a unique paths graph. *cov* implies the #paths. *N* implies the #nucleotides.
+//
+//*-V, --set-coverage*::
+//  Provide a histogram of coverage over unique set of paths. Print two tab-delimited columns to stdout: *cov*, *sets*. *cov* implies #nucleotides. *sets* lists the unique set of paths in a comma separated list. Sets with a *cov* of one and no paths in *sets* are listed, too.
+//
+//*-M, --multi-coverage*::
+//  Provide a histogram of coverage over unique multiset, the combination with possible repetition of paths. Print two tab-delimited columns to stdout: *cov*, *sets*. *cov* implies #nucleotides. *sets* lists the unique multisets of paths in a comma separated list. Multisets with a *cov* of one and no paths in *sets* are listed, too.
+//
+//
+//=== BED Interval
+//
+//*-B, --bed-multicov*=_BED_::
+//  For each BED entry, provide a table of path coverage over unique multisets of paths in the graph. Each unique multiset of paths overlapping a given BED interval is described in terms of its length relative to the total interval, the number of path traversals and unique paths involved in these traversals.
 
 
 === Sorting goodness evaluation

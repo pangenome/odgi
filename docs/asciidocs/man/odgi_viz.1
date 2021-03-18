@@ -2,12 +2,12 @@
 .\"     Title: odgi viz
 .\"    Author: Erik Garrison, Andrea Guarracino
 .\" Generator: Asciidoctor 2.0.10
-.\"      Date: 2021-03-16
+.\"      Date: 2021-03-17
 .\"    Manual: odgi viz
 .\"    Source: odgi v0.6.0
 .\"  Language: English
 .\"
-.TH "ODGI_VIZ" "1" "2021-03-16" "odgi v0.6.0" "odgi viz"
+.TH "ODGI_VIZ" "1" "2021-03-17" "odgi v0.6.0" "odgi viz"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -107,11 +107,11 @@ Colors paths by their names looking at the prefix before the given character C.
 .RE
 .SS "Intervals selection"
 .sp
-\fB\-r, \-\-pangenomic\-range\fP
+\fB\-r, \-\-path\-range\fP
 .RS 4
 Nucleotide range to visualize: \f(CRSTRING=[PATH:]start\-end\fP. \f(CR*\-end\fP for \f(CR[0,end]\fP; \f(CRstart\-*\fP for \f(CR[start,pangenome_length]\fP.
-If no PATH is specified, the nucleotide positions refer to the pangenome\(cqs sequence (i.e., the sequence obtained arranging all the graph\(cqs node
-from left to right).
+If no PATH is specified, the nucleotide positions refer to the pangenome\(cqs sequence (i.e., the sequence obtained arranging
+all the graph\(cqs node from left to right).
 .RE
 .SS "Paths selection"
 .sp
