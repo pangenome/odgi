@@ -2,10 +2,9 @@
 #include <iostream>
 #include "odgi.hpp"
 #include "args.hxx"
-#include <omp.h>
-#include "algorithms/layout.hpp"
 #include <numeric>
 #include "progress.hpp"
+#include "algorithms/relax_prep_bed_records.hpp"
 
 namespace odgi {
 
@@ -64,6 +63,14 @@ int main_relax(int argc, char **argv) {
         return 1;
     }
 
+    std::string bed_infile = args::get(bed_in_file);
+    if (bed_infile.empty()) {
+        std::cerr
+                << "[odgi relax] error: The specified input file " << bed_infile << " from where to read the BED records via -B=[FILE], --bed-in=[FILE] does not exist!"
+                << std::endl;
+        return 1;
+    }
+
     graph_t graph;
     assert(argc > 0);
     std::string infile = args::get(dg_in_file);
@@ -88,6 +95,7 @@ int main_relax(int argc, char **argv) {
     // TODO only keep the -r/--relax-num OR -e/--relax-percentage min_bed_record_t structs
     // TODO add these as a vector<min_bed_record_t> to a flat hash map for each path
     // the flat hash map is the result of the function, which will be stored here
+    ska::flat_hash_map<path_handle_t, vector<algorithms::min_bed_record_t>> found_ranges = algorithms::find_ranges(bed_infile);
 
     // TODO iterate over the entries of the hash map, in parallel, if possible, and relax
     // 1. iterate over all steps, if we have a hit within the given range, note down the handles and start and end step, careful about orientation!

@@ -387,6 +387,8 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/panpos_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/server_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/version_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/tension_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/relax_main.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/hash.cpp
@@ -433,9 +435,8 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/remove_isolated.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/expand_context.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/groom.cpp
-  ${CMAKE_SOURCE_DIR}/src/unittest/edge.cpp
-  ${CMAKE_SOURCE_DIR}/src/subcommand/tension_main.cpp
-  ${CMAKE_SOURCE_DIR}/src/subcommand/relax_main.cpp)
+  ${CMAKE_SOURCE_DIR}/src/algorithms/relax_prep_bed_records.cpp
+  ${CMAKE_SOURCE_DIR}/src/unittest/edge.cpp)
 
 set(odgi_DEPS
     sdsl-lite
@@ -595,7 +596,8 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/algorithms/is_single_stranded.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/shortest_cycle.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/progress.hpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/bed_records.hpp)
+  ${CMAKE_SOURCE_DIR}/src/algorithms/bed_records.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/relax_prep_bed_records.hpp)
 
 target_include_directories(odgi_objs PUBLIC ${odgi_INCLUDES})
 set_target_properties(odgi_objs PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
