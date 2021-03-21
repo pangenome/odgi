@@ -64,20 +64,20 @@ The libhandlegraph APIs describe a hierarchy of increasingly complex capabilitie
 This hierarchy allows us to build a consistent interface to implementations that may be optimial in a particular application but which lack generic functionality.
 For example, a static graph which cannot be modified is usually more efficient in terms of memory and access time than a dynamic graph, but it will not be able to match parts of the API which require modification of the graph.
 
-In this document, we'll avoid the complexity of this C++ API hierarchy, and focus on the most generic type of graph, the `MutablePathDeletableHandleGraph` model implemented in [`odgi`](https://github.com/vgteam/odgi/blob/master/src/odgi.hpp), the [`PackedGraph`](https://github.com/vgteam/libbdsg/blob/master/include/bdsg/packed_graph.hpp) and [`HashGraph`](https://github.com/vgteam/libbdsg/blob/master/include/bdsg/hash_graph.hpp) from libbdsg.
+In this document, we'll avoid the complexity of this C++ API hierarchy, and focus on the most generic type of graph, the `MutablePathDeletableHandleGraph` model implemented in [`odgi`](https://github.com/pangenome/odgi/blob/master/src/odgi.hpp), the [`PackedGraph`](https://github.com/vgteam/libbdsg/blob/master/include/bdsg/packed_graph.hpp) and [`HashGraph`](https://github.com/vgteam/libbdsg/blob/master/include/bdsg/hash_graph.hpp) from libbdsg.
 This model allows both query and modification (deletion, addition, division, unification) of all graph elements.
 As such, it is suitable for generic operations on genome graphs, both their construction and interrogation.
 
 ## odgi's python API
 
-Most of the elements in the HandleGraph API are [wrapped in a python module](https://github.com/vgteam/odgi/blob/master/src/pythonmodule.cpp).
+Most of the elements in the HandleGraph API are [wrapped in a python module](https://github.com/pangenome/odgi/blob/master/src/pythonmodule.cpp).
 Python makes for good pseudocode, and so we can use it here to provide some examples of how to work with the HandleGraph abstraction.
 
 ### Loading a graph
 
-Given a [graph in GFA format](https://github.com/vgteam/odgi/blob/master/docs/assets/lil.gfa), we can build the odgi serialization of it using `odgi build`.
+Given a [graph in GFA format](https://github.com/pangenome/odgi/blob/master/docs/assets/lil.gfa), we can build the odgi serialization of it using `odgi build`.
 
-![example graph](https://github.com/vgteam/odgi/blob/master/docs/assets/lil.png)
+![example graph](https://github.com/pangenome/odgi/blob/master/docs/assets/lil.png)
 
 ```txt
 H	VN:Z:1.0

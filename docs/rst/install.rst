@@ -10,7 +10,7 @@ First, obtain a copy of the repository and its submodules:
 
 .. code-block:: bash 
 
-   git clone --recursive https://github.com/vgteam/odgi.git
+   git clone --recursive https://github.com/pangenome/odgi.git
    cd odgi
 
 Then build through cmake:
