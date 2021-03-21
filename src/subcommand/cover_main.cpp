@@ -21,6 +21,7 @@ namespace odgi {
         args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
         args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
         args::ValueFlag<std::string> dg_out_file(parser, "FILE","store the graph with the generated paths in this file", {'o', "out"});
+        args::ValueFlag<double> hogwild_depth(parser, "DEPTH", "randomly cover the graph until it has reaches the given average DEPTH",{'H', "hogwild-depth"});
         args::ValueFlag<uint64_t> num_paths_per_component(parser, "N", "number of paths to generate per component",{'n', "num-paths-per-component"});
         args::ValueFlag<uint64_t> node_window_size(parser, "N","size of the node window to check each time a new path is extended (it has to be greater than or equal to 2)",{'k', "node-window-size"});
         args::ValueFlag<uint64_t> min_node_coverage(parser, "N","minimum node coverage to reach (it has to be greater than 0)",{'c', "min-node-coverage"});
@@ -91,32 +92,36 @@ namespace odgi {
             }
         }
 
-        uint64_t max_number_of_paths_generable = graph.get_node_count() * 5;
-        if (args::get(debug)){
-            if (_min_node_coverage) {
-                std::cerr << "[odgi::cover] there will be generated paths until the minimum node coverage is " << _min_node_coverage
-                          << ", or until the maximum number of allowed generated paths is reached ("
-                          << max_number_of_paths_generable << ")." << std::endl;
-            } else {
-                std::cerr << "[odgi::cover] there will be generated " << _num_paths_per_component << " paths per component."
-                          << std::endl;
-            }
-        }
-
         uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
 
-        std::string node_coverages;
-        algorithms::path_cover(graph, _num_paths_per_component, _node_window_size, _min_node_coverage,
-                               max_number_of_paths_generable,
-                               write_node_coverages, node_coverages,
-                               num_threads, args::get(ignore_paths), args::get(debug));
+        if (hogwild_depth) {
+            algorithms::hogwild_path_cover(graph, args::get(hogwild_depth), num_threads, args::get(ignore_paths), args::get(debug));
+        } else {
+            uint64_t max_number_of_paths_generable = graph.get_node_count() * 5;
+            if (args::get(debug)){
+                if (_min_node_coverage) {
+                    std::cerr << "[odgi::cover] there will be generated paths until the minimum node coverage is " << _min_node_coverage
+                              << ", or until the maximum number of allowed generated paths is reached ("
+                              << max_number_of_paths_generable << ")." << std::endl;
+                } else {
+                    std::cerr << "[odgi::cover] there will be generated " << _num_paths_per_component << " paths per component."
+                              << std::endl;
+                }
+            }
 
-        if (write_node_coverages) {
-            std::string covfile = args::get(write_node_coverages);
+            std::string node_coverages;
+            algorithms::path_cover(graph, _num_paths_per_component, _node_window_size, _min_node_coverage,
+                                   max_number_of_paths_generable,
+                                   write_node_coverages, node_coverages,
+                                   num_threads, args::get(ignore_paths), args::get(debug));
 
-            ofstream f(covfile.c_str());
-            f << node_coverages;
-            f.close();
+            if (write_node_coverages) {
+                std::string covfile = args::get(write_node_coverages);
+
+                ofstream f(covfile.c_str());
+                f << node_coverages;
+                f.close();
+            }
         }
 
         std::string outfile = args::get(dg_out_file);
