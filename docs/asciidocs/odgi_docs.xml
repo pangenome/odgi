@@ -1338,6 +1338,17 @@ This argument only works when <emphasis>-Y, --path-sgd</emphasis> was specified.
 </varlistentry>
 </variablelist>
 </section>
+<section xml:id="_threading_6">
+<title>Threading</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-t, --threads</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Number of threads to use.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
 <section xml:id="_processing_information_6">
 <title>Processing Information</title>
 <variablelist>
@@ -1480,7 +1491,7 @@ Be careful to use it with very complex graphs.</simpara>
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_threading_6">
+<section xml:id="_threading_7">
 <title>Threading</title>
 <variablelist>
 <varlistentry>
@@ -1680,7 +1691,7 @@ of furcations at edges or by not considering nodes above a given node degree lim
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_threading_7">
+<section xml:id="_threading_8">
 <title>Threading</title>
 <variablelist>
 <varlistentry>
@@ -2162,7 +2173,7 @@ with [<emphasis role="strong">-H, --haplotypes</emphasis>]. Prints an additional
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_threading_8">
+<section xml:id="_threading_9">
 <title>Threading</title>
 <variablelist>
 <varlistentry>
@@ -2321,7 +2332,7 @@ fitting into these conditions.</simpara>
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_threading_9">
+<section xml:id="_threading_10">
 <title>Threading</title>
 <variablelist>
 <varlistentry>
@@ -2414,7 +2425,7 @@ fitting into these conditions.</simpara>
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_threading_10">
+<section xml:id="_threading_11">
 <title>Threading</title>
 <variablelist>
 <varlistentry>
@@ -2859,7 +2870,7 @@ Each value is the coverage of a specific node of a specific path.</simpara>
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_threading_11">
+<section xml:id="_threading_12">
 <title>Threading</title>
 <variablelist>
 <varlistentry>
@@ -3480,7 +3491,7 @@ between <literal>--source</literal> and <literal>--target</literal>].</simpara>
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_threading_12">
+<section xml:id="_threading_13">
 <title>Threading</title>
 <variablelist>
 <varlistentry>
