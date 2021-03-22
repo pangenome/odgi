@@ -597,29 +597,50 @@ void graph_t::rebuild_id_handle_mapping() {
 /// Create an edge connecting the given handles in the given order and orientations.
 /// Ignores existing edges.
 void graph_t::create_edge(const handle_t& left_h, const handle_t& right_h) {
-    //if (has_edge(left, right)) return; // do nothing if edge exists
-    if (has_edge(left_h, right_h)) return; // do nothing if edge exists
-
     uint64_t left_rank = number_bool_packing::unpack_number(left_h);
     uint64_t right_rank = number_bool_packing::unpack_number(right_h);
-    // insert the edge for each side
+    bool create_edge = false;
     auto& left_node = get_node_ref(left_h);
-    left_node.add_edge(get_id(right_h),
-                       get_is_reverse(right_h),
-                       false,
-                       get_is_reverse(left_h));
-
-    ++_edge_count;
-
-    // only insert the second side if it's on a different node
-    if (left_rank == right_rank) return;
-
     auto& right_node = get_node_ref(right_h);
-    right_node.add_edge(get_id(left_h),
-                        get_is_reverse(left_h),
-                        true,
-                        get_is_reverse(right_h));
-
+    // ordered locking
+    if (left_rank < right_rank) {
+        left_node.get_lock();
+        right_node.get_lock();
+    } else if (left_rank != right_rank) {
+        right_node.get_lock();
+        left_node.get_lock();
+    } else {
+        left_node.get_lock();
+    }
+    if (!has_edge(left_h, right_h)) { // do nothing if edge exists
+        create_edge = true;
+    }
+    // insert the edge for each side
+    if (create_edge) {
+        ++_edge_count;
+        left_node.add_edge(get_id(right_h),
+                           get_is_reverse(right_h),
+                           false,
+                           get_is_reverse(left_h));
+        left_node.clear_lock();
+        // only insert the second side if it's on a different node
+        if (left_rank != right_rank) {
+            right_node.add_edge(get_id(left_h),
+                                get_is_reverse(left_h),
+                                true,
+                                get_is_reverse(right_h));
+        }
+    }
+    // ordered unlocking
+    if (left_rank < right_rank) {
+        right_node.clear_lock();
+        left_node.clear_lock();
+    } else if (left_rank != right_rank) {
+        left_node.clear_lock();
+        right_node.clear_lock();
+    } else {
+        left_node.clear_lock();
+    }
 }
 
 /*
