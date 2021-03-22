@@ -269,10 +269,10 @@ int main_position(int argc, char** argv) {
                     if (vals.size() > 2) {
                         end = (uint64_t) std::stoi(vals[2]);
                     } else {
+                        // In the BED format, the end is non-inclusive, unlike start
                         graph.for_each_step_in_path(graph.get_path_handle(path_name), [&](const step_handle_t &s) {
                             end += graph.get_length(graph.get_handle_of_step(s));
                         });
-                        --end; // BED-style to 0-based inclusive coordinates
                     }
 
                     if (start > end) {
@@ -368,7 +368,7 @@ int main_position(int argc, char** argv) {
                  s != path_end; s = graph.get_next_step(s)) {
                 handle_t h = graph.get_handle_of_step(s);
                 uint64_t node_length = graph.get_length(h);
-                if (walked + node_length > pos.offset) {
+                if (walked + node_length >= pos.offset) {
                     return make_pos_t(graph.get_id(h), graph.get_is_reverse(h), pos.offset - walked);
                 }
                 walked += node_length;

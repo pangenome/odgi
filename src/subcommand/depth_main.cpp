@@ -190,10 +190,10 @@ namespace odgi {
                     if (vals.size() > 2) {
                         end = (uint64_t) std::stoi(vals[2]);
                     } else {
+                        // In the BED format, the end is non-inclusive, unlike start
                         graph.for_each_step_in_path(graph.get_path_handle(path_name), [&](const step_handle_t &s) {
                             end += graph.get_length(graph.get_handle_of_step(s));
                         });
-                        --end; // BED-style to 0-based inclusive coordinates
                     }
 
                     if (start > end) {
