@@ -250,7 +250,7 @@ int main_position(int argc, char** argv) {
     auto add_bed_range =
         [&path_ranges](const odgi::graph_t& graph,
                        const std::string& buffer) {
-            if (!buffer.empty()) {
+            if (!buffer.empty() && buffer[0] != '#') {
                 auto vals = split(buffer, '\t');
                 /*
                 if (vals.size() != 3) {
@@ -272,6 +272,7 @@ int main_position(int argc, char** argv) {
                         graph.for_each_step_in_path(graph.get_path_handle(path_name), [&](const step_handle_t &s) {
                             end += graph.get_length(graph.get_handle_of_step(s));
                         });
+                        --end; // BED-style to 0-based inclusive coordinates
                     }
 
                     if (start > end) {
