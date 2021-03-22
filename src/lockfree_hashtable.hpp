@@ -12,7 +12,7 @@ namespace lockfree {
 // maximum bucket size is 64^4. If the load factor is 0.5, the maximum number of
 // items that Hash Table contains is 64^4 * 0.5 = 2^23. You can adjust the
 // following two values according to your memory size.
-const int kMaxLevel = 4;
+const int kMaxLevel = 6; // good for ~30 billion entries
 const int kSegmentSize = 64;
 const size_t kMaxBucketSize = pow(kSegmentSize, kMaxLevel);
 
