@@ -265,7 +265,7 @@ int main_position(int argc, char** argv) {
                     exit(1);
                 } else {
                     uint64_t start = vals.size() > 1 ? (uint64_t) std::stoi(vals[1]) : 0;
-                    uint64_t end ;
+                    uint64_t end = 0;
                     if (vals.size() > 2) {
                         end = (uint64_t) std::stoi(vals[2]);
                     } else {
