@@ -171,7 +171,7 @@ namespace odgi {
 
         auto add_bed_range = [&path_ranges](const odgi::graph_t &graph,
                                             const std::string &buffer) {
-            if (!buffer.empty()) {
+            if (!buffer.empty() && buffer[0] != '#') {
                 auto vals = split(buffer, '\t');
                 /*
                 if (vals.size() != 3) {
@@ -186,10 +186,11 @@ namespace odgi {
                     exit(1);
                 } else {
                     uint64_t start = vals.size() > 1 ? (uint64_t) std::stoi(vals[1]) : 0;
-                    uint64_t end;
+                    uint64_t end = 0;
                     if (vals.size() > 2) {
                         end = (uint64_t) std::stoi(vals[2]);
                     } else {
+                        // In the BED format, the end is non-inclusive, unlike start
                         graph.for_each_step_in_path(graph.get_path_handle(path_name), [&](const step_handle_t &s) {
                             end += graph.get_length(graph.get_handle_of_step(s));
                         });
