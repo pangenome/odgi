@@ -273,13 +273,21 @@ namespace odgi {
         if (!path_ranges.empty()) {
             std::cout << "#path\tpath_touched" << std::endl;
 
-#pragma omp parallel for schedule(dynamic, 1)
+            // todo check if subset or not
+            std::vector<path_handle_t> paths;
+            paths.reserve(graph.get_path_count());
+            graph.for_each_path_handle([&](const path_handle_t path) {
+                paths.push_back(path);
+            });
+
+//#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
             for (auto &path_range : path_ranges) {
+                // Collect handles crossed by the path in the specified range
                 uint64_t start = path_range.begin.offset;
                 uint64_t end = path_range.end.offset;
                 path_handle_t path_handle = path_range.begin.path;
 
-                std::unordered_set<path_handle_t> touched_path_handles;
+                std::unordered_set<handle_t> handles;
 
                 uint64_t walked = 0;
                 auto path_end = graph.path_end(path_handle);
@@ -289,17 +297,29 @@ namespace odgi {
                     uint64_t cur_length = graph.get_length(cur_handle);
                     walked += cur_length;
                     if (walked >= start) {
-                        graph.for_each_step_on_handle(cur_handle, [&](const step_handle_t &step) {
-                            path_handle_t p_h = graph.get_path_handle_of_step(step);
+                        handles.insert(cur_handle);
+                    }
+                }
 
-                            if ((p_h != path_handle) && (!subset_paths || paths_to_consider[as_integer(p_h)])) {
-                                touched_path_handles.insert(p_h);
-                            };
+                // Collect paths that cross the collected handles
+                std::vector<path_handle_t> touched_path_handles;
+
+                // todo to parallelize?
+//#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
+                for (path_handle_t p_h : paths) {
+                    if (p_h != path_handle && (!subset_paths || paths_to_consider[as_integer(p_h)])) {
+                        bool stop = false;
+                        graph.for_each_step_in_path(p_h, [&](const step_handle_t &step) {
+                            handle_t h = graph.get_handle_of_step(step);
+                            if (!stop && handles.count(h) > 0) {
+                                touched_path_handles.push_back(p_h);
+                                stop = true;
+                            }
                         });
                     }
                 }
 
-#pragma omp critical (cout)
+//#pragma omp critical (cout)
                 for (auto touched_path_handle : touched_path_handles) {
                     std::cout << (graph.get_path_name(path_handle)) << "\t" << start << "\t" << end << "\t"
                               << graph.get_path_name(touched_path_handle) << std::endl;
