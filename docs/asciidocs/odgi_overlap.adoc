@@ -1,25 +1,25 @@
-= odgi depth(1)
+= odgi overlap(1)
 ifdef::backend-manpage[]
 Andrea Guarracino
 :doctype: manpage
 :release-version: v0.6.0
-:man manual: odgi depth
+:man manual: odgi overlap
 :man source: odgi v0.6.0
 :page-layout: base
 endif::[]
 
 == NAME
 
-odgi_depth - find the depth of graph as defined by query criteria
+odgi_overlap - find the paths touched by the input paths
 
 
 == SYNOPSIS
 
-*odgi depth* [*-i, --input*=_FILE_] [_OPTION_]...
+*odgi overlap* [*-i, --input*=_FILE_] [_OPTION_]...
 
 == DESCRIPTION
 
-The odgi depth(1) command finds the depth of graph as defined by query criteria.
+The odgi overlap(1) command finds the paths touched by the input paths.
 
 
 == OPTIONS
@@ -27,41 +27,23 @@ The odgi depth(1) command finds the depth of graph as defined by query criteria.
 === Graph Files IO
 
 *-i, --input*=_FILE_::
-  Compute path depths in this graph.
+  Perform the search in this graph.
 
 
-=== Depth Options
+=== Overlap Options
 
 *-s, --subset-paths*=_FILE_::
-  Compute the depth considering only the paths specified in the FILE; the file must contain one path name per line and a
+  Perform the search considering only the paths specified in the FILE; the file must contain one path name per line and a
   subset of all paths can be specified.
 
 *-r, --path*=_STRING_::
-  Compute the depth of the given path in the graph.
+  Perform the search of the given path in the graph.
 
 *-R, --paths*=_FILE_::
-  Compute depth for the paths listed in FILE.
-
-*-g, --graph-pos*=_[[node_id][,offset[,(+|-)]*]*]_::
-  Compute the depth at the given node, e.g. 7 or 3,4 or 42,10,+ or 302,0,-.
-
-*-G, --graph-pos-file*=_FILE_::
-  A file with graph path position per line.
-
-*-p, --path-pos*=_[[path_name][,offset[,(+|-)]*]*]_::
-  Return depth at the given path position e.g. chrQ or chr3,42 or chr8,1337,+ or chrZ,3929,-.
-
-*-F, --path-pos-file*=_FILE_::
-  A file with one path position per line.
+  Perform the search for the paths listed in FILE
 
 *-b, --bed-input*=_FILE_::
   A BED file of ranges in paths in the graph.
-
-*-d, --graph-depth*::
-  Compute the depth on each node in the graph.
-
-*-d, --search-radius*=_STRING_::
-  Limit coordinate conversion breadth-first search up to DISTANCE bp from each given position [default: 10000].
 
 
 === Threading
@@ -73,7 +55,7 @@ The odgi depth(1) command finds the depth of graph as defined by query criteria.
 === Program Information
 
 *-h, --help*::
-  Print a help message for *odgi depth*.
+  Print a help message for *odgi overlap*.
 
 
 == EXIT STATUS
@@ -90,7 +72,7 @@ Refer to the *odgi* issue tracker at https://github.com/pangenome/odgi/issues.
 
 == AUTHORS
 
-*odgi depth* was written by Andrea Guarracino.
+*odgi overlap* was written by Andrea Guarracino.
 
 ifdef::backend-manpage[]
 == RESOURCES
