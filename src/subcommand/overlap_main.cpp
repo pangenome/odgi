@@ -76,23 +76,26 @@ namespace odgi {
         uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
         omp_set_num_threads(num_threads);
 
-        std::vector<bool> paths_to_consider;
-
-        if (subset_paths) {
-            paths_to_consider.resize(graph.get_path_count() + 1, false);
-
-            std::ifstream refs(args::get(subset_paths).c_str());
-            std::string path_name;
-            while (std::getline(refs, path_name)) {
-                if (!path_name.empty()) {
-                    if (!graph.has_path(path_name)) {
-                        std::cerr << "[odgi::overlap] error: path " << path_name << " not found in graph" << std::endl;
+        std::vector<path_handle_t> paths_to_consider;
+        if (subset_paths && !args::get(subset_paths).empty()) {
+            std::ifstream refs(args::get(subset_paths));
+            std::string line;
+            while (std::getline(refs, line)) {
+                if (!line.empty()) {
+                    if (!graph.has_path(line)) {
+                        std::cerr << "[odgi::overlap] error: path " << line << " not found in graph" << std::endl;
                         exit(1);
                     }
 
-                    paths_to_consider[as_integer(graph.get_path_handle(path_name))] = true;
+                    paths_to_consider.push_back(graph.get_path_handle(line));
                 }
             }
+        } else {
+            // All paths
+            paths_to_consider.reserve(graph.get_path_count());
+            graph.for_each_path_handle([&](const path_handle_t path) {
+                paths_to_consider.push_back(path);
+            });
         }
 
 
@@ -253,32 +256,8 @@ namespace odgi {
             return walked;
         };
 
-        auto get_graph_node_coverage = [](const odgi::graph_t &graph, const nid_t node_id, const bool subset_paths,
-                                          const std::vector<bool> paths_to_consider) {
-            uint64_t node_coverage = 0;
-            std::set<uint64_t> unique_paths;
-
-            handle_t h = graph.get_handle(node_id);
-
-            graph.for_each_step_on_handle(h, [&](const step_handle_t &occ) {
-                if (!subset_paths || paths_to_consider[as_integer(graph.get_path_handle_of_step(occ))]) {
-                    ++node_coverage;
-                    unique_paths.insert(as_integer(graph.get_path(occ)));
-                }
-            });
-
-            return make_pair(node_coverage, unique_paths.size());
-        };
-
         if (!path_ranges.empty()) {
             std::cout << "#path\tpath_touched" << std::endl;
-
-            // todo check if subset or not
-            std::vector<path_handle_t> paths;
-            paths.reserve(graph.get_path_count());
-            graph.for_each_path_handle([&](const path_handle_t path) {
-                paths.push_back(path);
-            });
 
 //#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
             for (auto &path_range : path_ranges) {
@@ -306,8 +285,8 @@ namespace odgi {
 
                 // todo to parallelize?
 //#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
-                for (path_handle_t p_h : paths) {
-                    if (p_h != path_handle && (!subset_paths || paths_to_consider[as_integer(p_h)])) {
+                for (path_handle_t p_h : paths_to_consider) {
+                    if (p_h != path_handle) {
                         bool stop = false;
                         graph.for_each_step_in_path(p_h, [&](const step_handle_t &step) {
                             handle_t h = graph.get_handle_of_step(step);
