@@ -3,8 +3,8 @@
 #include "position.hpp"
 #include "args.hxx"
 #include "split.hpp"
-#include "algorithms/bfs.hpp"
 #include <omp.h>
+#include <mutex>
 
 namespace odgi {
 
@@ -283,15 +283,19 @@ namespace odgi {
                 // Collect paths that cross the collected handles
                 std::vector<path_handle_t> touched_path_handles;
 
-                // todo to parallelize?
-//#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
+                std::mutex touched_path_handles_mutex;
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
                 for (path_handle_t p_h : paths_to_consider) {
                     if (p_h != path_handle) {
                         bool stop = false;
                         graph.for_each_step_in_path(p_h, [&](const step_handle_t &step) {
                             handle_t h = graph.get_handle_of_step(step);
                             if (!stop && handles.count(h) > 0) {
-                                touched_path_handles.push_back(p_h);
+                                {
+                                    std::lock_guard<std::mutex> guard(touched_path_handles_mutex);
+                                    touched_path_handles.push_back(p_h);
+                                }
+
                                 stop = true;
                             }
                         });
