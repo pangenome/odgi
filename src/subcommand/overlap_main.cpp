@@ -34,6 +34,9 @@ namespace odgi {
         args::ValueFlag<std::string> path_file(parser, "FILE", "perform the search for the paths listed in FILE",
                                                {'R', "paths"});
 
+        args::ValueFlag<std::string> bed_input(parser, "FILE", "a BED file of ranges in paths in the graph",
+                                               {'b', "bed-input"});
+
         args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use", {'t', "threads"});
 
         try {
@@ -56,8 +59,8 @@ namespace odgi {
             return 1;
         }
 
-        if ((!path_name || args::get(path_name).empty()) && (!path_file || args::get(path_file).empty())) {
-            std::cerr << "[odgi::overlap] error: please specify an input path (-r/--path) or a list of paths (with -R/--paths)." << std::endl;
+        if ((!path_name || args::get(path_name).empty()) && (!path_file || args::get(path_file).empty()) && (!bed_input || args::get(bed_input).empty())) {
+            std::cerr << "[odgi::overlap] error: please specify an input path (-r/--path), a list of paths (with -R/--paths), or a list of path ranges (-b/--bed-input)." << std::endl;
             return 1;
         }
 
@@ -154,12 +157,18 @@ namespace odgi {
 
         if (path_name) {
             add_bed_range(graph, args::get(path_name));
-        } else {//{ if (path_file) {
+        } else if (path_file) {
             // for thing in things
-            std::ifstream refs(args::get(path_file).c_str());
-            std::string path_name;
-            while (std::getline(refs, path_name)) {
-                add_bed_range(graph, path_name);
+            std::ifstream refs(args::get(path_file));
+            std::string line;
+            while (std::getline(refs, line)) {
+                add_bed_range(graph, line);
+            }
+        } else {// if (bed_input) {
+            std::ifstream bed_in(args::get(bed_input));
+            std::string line;
+            while (std::getline(bed_in, line)) {
+                add_bed_range(graph, line);
             }
         }
 
