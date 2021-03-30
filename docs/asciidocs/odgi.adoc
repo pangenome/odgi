@@ -42,6 +42,8 @@ odgi - dynamic succinct variation graph tool
 
 *odgi* <<odgi_viz.adoc#_odgi_viz1, viz>> -i graph.og -o graph.og.png -x 1920 -y 1080 -R -t 28
 
+*odgi* <<odgi_draw.adoc#_odgi_draw1, draw>> -i graph.og -c coords.lay -p .png -x 1920 -y 1080 -R -t 28
+
 *odgi* <<odgi_paths.adoc#_odgi_paths1, paths>> -i graph.og -f
 
 *odgi* <<odgi_prune.adoc#_odgi_prune1, prune>> -i graph.og -o graph.pruned.og -c 3 -C 345 -T
@@ -148,6 +150,9 @@ about the binning process, please refer to <<odgi_bin.adoc#_odgi_bin1, odgi bin>
 the bins with a reverse rate of at least 0.5 are colored. Currently, there is no parameter to color according to the
 sequence coverage in bins available.
 
+*odgi draw* [*-i, --idx*=_FILE_] [*-c, --coords-in*=_FILE_] [*-p, --png*=_FILE_] [_OPTION_]...
+The odgi draw(1) command draws previously-determined 2D layouts of the graph with diverse annotations.
+
 *odgi paths* [*-i, --idx*=_FILE_] [_OPTION_]... +
 The odgi paths(1) command allows the investigation of paths of a given variation graph. It can calculate overlap statistics
 of groupings of paths.
@@ -184,10 +189,10 @@ another bin. For an exact positional output, please specify [*-j, --json*].
 The odgi chop(1) command chops long nodes into short ones while preserving the graph topology.
 
 *odgi layout* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]... +
-The odgi layout(1) command draws 2D layouts of the graph using stochastic gradient descent (SGD). The input graph must be sorted
+The odgi layout(1) command computes 2D layouts of the graph using stochastic gradient descent (SGD). The input graph must be sorted
 and id-compacted. The algorithm itself is described in https://arxiv.org/abs/1710.04626[Graph Drawing by Stochastic Gradient Descent].
 The force-directed graph drawing algorithm minimizes the graph's energy function or stress level.
-It applies SGD to move a single pair of nodes at a time. The rendered graph is written in SVG format.
+It applies SGD to move a single pair of nodes at a time.
 
 *odgi flatten* [*-i, --idx*=_FILE_] [_OPTION_]... +
 The odgi flatten(1) command projects the graph sequence and paths into FASTA and BED.

@@ -34,6 +34,7 @@
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_kmers1">kmers</link> -i graph.og -c -k 23 -e 34 -D 50</simpara>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_unitig1">unitig</link> -i graph.og -f -t 1324 -l 120</simpara>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_viz1">viz</link> -i graph.og -o graph.og.png -x 1920 -y 1080 -R -t 28</simpara>
+<simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_draw1">draw</link> -i graph.og -c coords.lay -p .png -x 1920 -y 1080 -R -t 28</simpara>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_paths1">paths</link> -i graph.og -f</simpara>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_prune1">prune</link> -i graph.og -o graph.pruned.og -c 3 -C 345 -T</simpara>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_unchop1">unchop</link> -i graph.og -o graph.unchopped.og</simpara>
@@ -121,6 +122,8 @@ and directly renders a raster image. The binning level depends on the target wid
 about the binning process, please refer to <link linkend="_odgi_bin1">odgi bin</link>. If reverse coloring was selected, only
 the bins with a reverse rate of at least 0.5 are colored. Currently, there is no parameter to color according to the
 sequence coverage in bins available.</simpara>
+<simpara><emphasis role="strong">odgi draw</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-c, --coords-in</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-p, --png</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;
+The odgi draw(1) command draws previously-determined 2D layouts of the graph with diverse annotations.</simpara>
 <simpara><emphasis role="strong">odgi paths</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;<?asciidoc-br?>
 The odgi paths(1) command allows the investigation of paths of a given variation graph. It can calculate overlap statistics
 of groupings of paths.</simpara>
@@ -150,10 +153,10 @@ another bin. For an exact positional output, please specify [<emphasis role="str
 <simpara><emphasis role="strong">odgi chop</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-c, --chop-to</emphasis>=<emphasis>N</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;<?asciidoc-br?>
 The odgi chop(1) command chops long nodes into short ones while preserving the graph topology.</simpara>
 <simpara><emphasis role="strong">odgi layout</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;<?asciidoc-br?>
-The odgi layout(1) command draws 2D layouts of the graph using stochastic gradient descent (SGD). The input graph must be sorted
+The odgi layout(1) command computes 2D layouts of the graph using stochastic gradient descent (SGD). The input graph must be sorted
 and id-compacted. The algorithm itself is described in <link xl:href="https://arxiv.org/abs/1710.04626">Graph Drawing by Stochastic Gradient Descent</link>.
 The force-directed graph drawing algorithm minimizes the graph&#8217;s energy function or stress level.
-It applies SGD to move a single pair of nodes at a time. The rendered graph is written in SVG format.</simpara>
+It applies SGD to move a single pair of nodes at a time.</simpara>
 <simpara><emphasis role="strong">odgi flatten</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;<?asciidoc-br?>
 The odgi flatten(1) command projects the graph sequence and paths into FASTA and BED.</simpara>
 <simpara><emphasis role="strong">odgi break</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;<?asciidoc-br?>
@@ -2209,6 +2212,148 @@ combination with [<emphasis role="strong">-A, --alignment-prefix</emphasis>=<emp
 <simpara><emphasis role="strong">odgi viz</emphasis> was written by Erik Garrison and Andrea Guarracino.</simpara>
 </section>
 </section>
+<section xml:id="_odgi_draw1">
+<title>odgi draw(1)</title>
+<section xml:id="_name_15">
+<title>NAME</title>
+<simpara>odgi_draw - variation graph visualizations in 2D</simpara>
+</section>
+<section xml:id="_synopsis_15">
+<title>SYNOPSIS</title>
+<simpara><emphasis role="strong">odgi draw</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-c, --coords-in</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-p, --png</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
+</section>
+<section xml:id="_description_15">
+<title>DESCRIPTION</title>
+<simpara>The odgi draw(1) command draws previously-determined 2D layouts of the graph with diverse annotations.</simpara>
+</section>
+<section xml:id="_options_14">
+<title>OPTIONS</title>
+<section xml:id="_files_io">
+<title>Files IO</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>Load the graph from this file. The file name usually ends with <emphasis>.og</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-c, --coords-in</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>Read the layout coordinates from this .lay format file produced by <link linkend="_odgi_layout1">odgi layout</link></simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-T, --tsv</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>Write the TSV layout plus displayed annotations to this file.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-s, --svg</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>Write an SVG rendering to this file.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-p, --png</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>Write a rasterized PNG rendering to this file.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_visualization_options_2">
+<title>Visualization Options</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-H, --png-height</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Height of PNG rendering (default: 1000).</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-E, --png-border</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Size of PNG border in bp (default: 10).</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-C --color-paths</emphasis></term>
+<listitem>
+<simpara>Color paths (in PNG output).</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-R, --scale</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Image scaling (default 1.0).</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-B, --border</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Image border (in approximate bp) (default 100.0).</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-w, --line-width</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Line width (in approximate bp) (default 0.0).</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-S, --path-line-spacing</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Spacing between path lines in png layout (in approximate bp) (default 0.0).</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-X, --path-index</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>Load the path index from this file.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_program_information_14">
+<title>Program Information</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-h, --help</emphasis></term>
+<listitem>
+<simpara>Print a help message for <emphasis role="strong">odgi draw</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+</section>
+<section xml:id="_exit_status_14">
+<title>EXIT STATUS</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">0</emphasis></term>
+<listitem>
+<simpara>Success.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">1</emphasis></term>
+<listitem>
+<simpara>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_bugs_15">
+<title>BUGS</title>
+<literallayout class="monospaced">Refer to the *odgi* issue tracker at https://github.com/pangenome/odgi/issues.</literallayout>
+</section>
+<section xml:id="_authors_15">
+<title>AUTHORS</title>
+<simpara><emphasis role="strong">odgi draw</emphasis> was written by Erik Garrison.</simpara>
+</section>
+</section>
 <section xml:id="_odgi_paths1">
 <title>odgi paths(1)</title>
 <section xml:id="_name_16">
@@ -3051,10 +3196,10 @@ Each value is the coverage of a specific node of a specific path.</simpara>
 </section>
 <section xml:id="_description_23">
 <title>DESCRIPTION</title>
-<simpara>The odgi layout(1) command draws 2D layouts of the graph using stochastic gradient descent (SGD). The input graph must be sorted
+<simpara>The odgi layout(1) command computes 2D layouts of the graph using stochastic gradient descent (SGD). The input graph must be sorted
 and id-compacted. The algorithm itself is described in <link xl:href="https://arxiv.org/abs/1710.04626">Graph Drawing by Stochastic Gradient Descent</link>.
 The force-directed graph drawing algorithm minimizes the graph&#8217;s energy function or stress level.
-It applies SGD to move a single pair of nodes at a time. The rendered graph is written in SVG format.</simpara>
+It applies SGD to move a single pair of nodes at a time.</simpara>
 </section>
 <section xml:id="_options_22">
 <title>OPTIONS</title>

@@ -39,9 +39,9 @@ int main_draw(int argc, char **argv) {
     //args::ValueFlag<double> png_line_overlay(parser, "N", "line width (in approximate bp) (default 10.0)", {'O', "line-overlay"});
     args::ValueFlag<double> png_path_line_spacing(parser, "N", "spacing between path lines in png layout (in approximate bp) (default 0.0)", {'S', "path-line-spacing"});
     args::ValueFlag<std::string> xp_in_file(parser, "FILE", "load the path index from this file", {'X', "path-index"});
-    args::Flag progress(parser, "progress", "display progress of the sort", {'P', "progress"});
-    args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel phases", {'t', "threads"});
-    args::Flag debug(parser, "debug", "print information about the layout", {'d', "debug"});
+    //args::Flag progress(parser, "progress", "display progress", {'P', "progress"});
+    //args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel phases", {'t', "threads"});
+    //args::Flag debug(parser, "debug", "print information about the layout", {'d', "debug"});
 
     try {
         parser.ParseCLI(argc, argv);
@@ -58,9 +58,9 @@ int main_draw(int argc, char **argv) {
         return 1;
     }
 
-    if (args::get(nthreads)) {
-        omp_set_num_threads(args::get(nthreads));
-    }
+//    if (args::get(nthreads)) {
+//        omp_set_num_threads(args::get(nthreads));
+//    }
 
     if (!dg_in_file) {
         std::cerr
@@ -79,7 +79,7 @@ int main_draw(int argc, char **argv) {
     graph_t graph;
     assert(argc > 0);
     std::string infile = args::get(dg_in_file);
-    if (infile.size()) {
+    if (!infile.empty()) {
         if (infile == "-") {
             graph.deserialize(std::cin);
         } else {
@@ -105,7 +105,7 @@ int main_draw(int argc, char **argv) {
     
     if (layout_in_file) {
         auto& infile = args::get(layout_in_file);
-        if (infile.size()) {
+        if (!infile.empty()) {
             if (infile == "-") {
                 layout.load(std::cin);
             } else {
@@ -118,7 +118,7 @@ int main_draw(int argc, char **argv) {
 
     if (tsv_out_file) {
         auto& outfile = args::get(tsv_out_file);
-        if (outfile.size()) {
+        if (!outfile.empty()) {
             if (outfile == "-") {
                 layout.to_tsv(std::cout);
             } else {

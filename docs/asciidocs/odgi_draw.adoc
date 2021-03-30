@@ -1,66 +1,78 @@
-= odgi layout(1)
+= odgi draw(1)
 ifdef::backend-manpage[]
-Erik Garrison, Andrea Guarracino, Simon Heumos
+Erik Garrison
 :doctype: manpage
 :release-version: v0.6.0
-:man manual: odgi layout
+:man manual: odgi draw
 :man source: odgi v0.6.0
 :page-layout: base
 endif::[]
 
+
 == NAME
 
-odgi_layout - use SGD to make 2D layouts of the graph
+odgi_draw - variation graph visualizations in 2D
+
 
 == SYNOPSIS
 
-*odgi layout* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]...
+*odgi draw* [*-i, --idx*=_FILE_] [*-c, --coords-in*=_FILE_] [*-p, --png*=_FILE_] [_OPTION_]...
+
 
 == DESCRIPTION
 
-The odgi layout(1) command computes 2D layouts of the graph using stochastic gradient descent (SGD). The input graph must be sorted
-and id-compacted. The algorithm itself is described in https://arxiv.org/abs/1710.04626[Graph Drawing by Stochastic Gradient Descent].
-The force-directed graph drawing algorithm minimizes the graph's energy function or stress level.
-It applies SGD to move a single pair of nodes at a time.
+The odgi draw(1) command draws previously-determined 2D layouts of the graph with diverse annotations.
 
 == OPTIONS
 
-=== Graph Files IO
+=== Files IO
 
 *-i, --idx*=_FILE_::
-  File containing the succinct variation graph to layout. The file name usually ends with _.og_.
+  Load the graph from this file. The file name usually ends with _.og_.
 
-*-o, --out*=_FILE_::
-  Write the rendered layout in SVG format to _FILE_.
+*-c, --coords-in*=_FILE_::
+  Read the layout coordinates from this .lay format file produced by <<odgi_layout.adoc#_odgi_layout1, odgi layout>>
 
-=== SGD Options
+*-T, --tsv*=_FILE_::
+    Write the TSV layout plus displayed annotations to this file.
 
-*-m, --iter-max*=_N_::
-  The maximum number of iterations to run the layout. Default is _30_.
+*-s, --svg*=_FILE_::
+  Write an SVG rendering to this file.
 
-*-p, --n-pivots*=_N_::
-  The number of pivots for sparse layout. Default is _0_ leading to a non-sparse layout.
+*-p, --png*=_FILE_::
+  Write a rasterized PNG rendering to this file.
 
-*-e, --eps*=_N_::
-  The learning rate for SGD layout. Default is _0.01_.
+=== Visualization Options
 
-=== SVG Options
+*-H, --png-height*=_N_::
+  Height of PNG rendering (default: 1000).
 
-*-x, --x-padding*=_N_::
-  The padding between the connected component layouts. Default is _10.0_.
+*-E, --png-border*=_N_::
+  Size of PNG border in bp (default: 10).
 
-*-R, --render-scale*=_N_::
-  SVG scaling Default is _5.0_.
+*-C --color-paths*::
+  Color paths (in PNG output).
 
-=== Processing Information
+*-R, --scale*=_N_::
+  Image scaling (default 1.0).
 
-*-d, --debug*::
-  Print information about the components to stdout.
+*-B, --border*=_N_::
+  Image border (in approximate bp) (default 100.0).
+
+*-w, --line-width*=_N_::
+  Line width (in approximate bp) (default 0.0).
+
+*-S, --path-line-spacing*=_N_::
+  Spacing between path lines in png layout (in approximate bp) (default 0.0).
+
+*-X, --path-index*=_FILE_::
+  Load the path index from this file.
 
 === Program Information
 
 *-h, --help*::
-  Print a help message for *odgi layout*.
+  Print a help message for *odgi draw*.
+
 
 == EXIT STATUS
 
@@ -70,14 +82,19 @@ It applies SGD to move a single pair of nodes at a time.
 *1*::
   Failure (syntax or usage error; parameter error; file processing failure; unexpected error).
 
+
 == BUGS
 
-Refer to the *odgi* issue tracker at https://github.com/pangenome/odgi/issues.
+  Refer to the *odgi* issue tracker at https://github.com/pangenome/odgi/issues.
+
 
 == AUTHORS
 
-*odgi layout* was written by Erik Garrison, Andrea Guarracino, and Simon Heumos.
+*odgi draw* was written by Erik Garrison.
+
 ifdef::backend-manpage[]
+
+
 == RESOURCES
 
 *Project web site:* https://github.com/pangenome/odgi
@@ -87,6 +104,7 @@ ifdef::backend-manpage[]
 *GitHub organization:* https://github.com/pangenome
 
 *Discussion list / forum:* https://github.com/pangenome/odgi/issues
+
 
 == COPYING
 
