@@ -1,79 +1,77 @@
-= odgi depth(1)
+= odgi draw(1)
 ifdef::backend-manpage[]
-Andrea Guarracino
+Erik Garrison
 :doctype: manpage
 :release-version: v0.6.0
-:man manual: odgi depth
+:man manual: odgi draw
 :man source: odgi v0.6.0
 :page-layout: base
 endif::[]
 
+
 == NAME
 
-odgi_depth - find the depth of graph as defined by query criteria
+odgi_draw - variation graph visualizations in 2D
 
 
 == SYNOPSIS
 
-*odgi depth* [*-i, --input*=_FILE_] [_OPTION_]...
+*odgi draw* [*-i, --idx*=_FILE_] [*-c, --coords-in*=_FILE_] [*-p, --png*=_FILE_] [_OPTION_]...
+
 
 == DESCRIPTION
 
-The odgi depth(1) command finds the depth of graph as defined by query criteria.
-
+The odgi draw(1) command draws previously-determined 2D layouts of the graph with diverse annotations.
 
 == OPTIONS
 
-=== Graph Files IO
+=== Files IO
 
-*-i, --input*=_FILE_::
-  Compute path depths in this graph.
+*-i, --idx*=_FILE_::
+  Load the graph from this file. The file name usually ends with _.og_.
 
+*-c, --coords-in*=_FILE_::
+  Read the layout coordinates from this .lay format file produced by <<odgi_layout.adoc#_odgi_layout1, odgi layout>>
 
-=== Depth Options
+*-T, --tsv*=_FILE_::
+    Write the TSV layout plus displayed annotations to this file.
 
-*-s, --subset-paths*=_FILE_::
-  Compute the depth considering only the paths specified in the FILE; the file must contain one path name per line and a
-  subset of all paths can be specified.
+*-s, --svg*=_FILE_::
+  Write an SVG rendering to this file.
 
-*-r, --path*=_STRING_::
-  Compute the depth of the given path in the graph
+*-p, --png*=_FILE_::
+  Write a rasterized PNG rendering to this file.
 
-*-R, --paths*=_FILE_::
-  Compute depth for the paths listed in FILE.
+=== Visualization Options
 
-*-g, --graph-pos*=_[[node_id][,offset[,(+|-)]*]*]_::
-  Compute the depth at the given node, e.g. 7 or 3,4 or 42,10,+ or 302,0,-.
+*-H, --png-height*=_N_::
+  Height of PNG rendering (default: 1000).
 
-*-G, --graph-pos-file*=_FILE_::
-  A file with graph path position per line.
+*-E, --png-border*=_N_::
+  Size of PNG border in bp (default: 10).
 
-*-p, --path-pos*=_[[path_name][,offset[,(+|-)]*]*]_::
-  Return depth at the given path position e.g. chrQ or chr3,42 or chr8,1337,+ or chrZ,3929,-.
+*-C --color-paths*::
+  Color paths (in PNG output).
 
-*-F, --path-pos-file*=_FILE_::
-  A file with one path position per line.
+*-R, --scale*=_N_::
+  Image scaling (default 1.0).
 
-*-b, --bed-input*=_FILE_::
-  A BED file of ranges in paths in the graph.
+*-B, --border*=_N_::
+  Image border (in approximate bp) (default 100.0).
 
-*-d, --graph-depth*::
-  Compute the depth on each node in the graph.
+*-w, --line-width*=_N_::
+  Line width (in approximate bp) (default 0.0).
 
-*-d, --search-radius*=_STRING_::
-  Limit coordinate conversion breadth-first search up to DISTANCE bp from each given position [default: 10000].
+*-S, --path-line-spacing*=_N_::
+  Spacing between path lines in png layout (in approximate bp) (default 0.0).
 
-
-=== Threading
-
-*-t, --threads*=_N_::
-  Number of threads to use.
-
+*-X, --path-index*=_FILE_::
+  Load the path index from this file.
 
 === Program Information
 
 *-h, --help*::
-  Print a help message for *odgi depth*.
+  Print a help message for *odgi draw*.
 
 
 == EXIT STATUS
@@ -84,15 +82,19 @@ The odgi depth(1) command finds the depth of graph as defined by query criteria.
 *1*::
   Failure (syntax or usage error; parameter error; file processing failure; unexpected error).
 
+
 == BUGS
 
-Refer to the *odgi* issue tracker at https://github.com/pangenome/odgi/issues.
+  Refer to the *odgi* issue tracker at https://github.com/pangenome/odgi/issues.
+
 
 == AUTHORS
 
-*odgi depth* was written by Andrea Guarracino.
+*odgi draw* was written by Erik Garrison.
 
 ifdef::backend-manpage[]
+
+
 == RESOURCES
 
 *Project web site:* https://github.com/pangenome/odgi
@@ -102,6 +104,7 @@ ifdef::backend-manpage[]
 *GitHub organization:* https://github.com/pangenome
 
 *Discussion list / forum:* https://github.com/pangenome/odgi/issues
+
 
 == COPYING
 

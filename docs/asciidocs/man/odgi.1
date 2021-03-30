@@ -2,12 +2,12 @@
 .\"     Title: odgi
 .\"    Author: Erik Garrison
 .\" Generator: Asciidoctor 2.0.10
-.\"      Date: 2021-03-18
+.\"      Date: 2021-03-30
 .\"    Manual: odgi
 .\"    Source: odgi v0.6.0
 .\"  Language: English
 .\"
-.TH "ODGI" "1" "2021-03-18" "odgi v0.6.0" "odgi"
+.TH "ODGI" "1" "2021-03-30" "odgi v0.6.0" "odgi"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -56,6 +56,8 @@ odgi \- dynamic succinct variation graph tool
 \fBodgi\fP unitig \-i graph.og \-f \-t 1324 \-l 120
 .sp
 \fBodgi\fP viz \-i graph.og \-o graph.og.png \-x 1920 \-y 1080 \-R \-t 28
+.sp
+\fBodgi\fP draw \-i graph.og \-c coords.lay \-p .png \-x 1920 \-y 1080 \-R \-t 28
 .sp
 \fBodgi\fP paths \-i graph.og \-f
 .sp
@@ -231,6 +233,9 @@ about the binning process, please refer to odgi bin. If reverse coloring was sel
 the bins with a reverse rate of at least 0.5 are colored. Currently, there is no parameter to color according to the
 sequence coverage in bins available.
 .sp
+\fBodgi draw\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-c, \-\-coords\-in\fP=\fIFILE\fP] [\fB\-p, \-\-png\fP=\fIFILE\fP] [\fIOPTION\fP]...
+The odgi draw(1) command draws previously\-determined 2D layouts of the graph with diverse annotations.
+.sp
 \fBodgi paths\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fIOPTION\fP]...
 .br
 The odgi paths(1) command allows the investigation of paths of a given variation graph. It can calculate overlap statistics
@@ -277,11 +282,11 @@ The odgi chop(1) command chops long nodes into short ones while preserving the g
 .sp
 \fBodgi layout\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
 .br
-The odgi layout(1) command draws 2D layouts of the graph using stochastic gradient descent (SGD). The input graph must be sorted
+The odgi layout(1) command computes 2D layouts of the graph using stochastic gradient descent (SGD). The input graph must be sorted
 and id\-compacted. The algorithm itself is described in \c
 .URL "https://arxiv.org/abs/1710.04626" "Graph Drawing by Stochastic Gradient Descent" "."
 The force\-directed graph drawing algorithm minimizes the graph\(cqs energy function or stress level.
-It applies SGD to move a single pair of nodes at a time. The rendered graph is written in SVG format.
+It applies SGD to move a single pair of nodes at a time.
 .sp
 \fBodgi flatten\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fIOPTION\fP]...
 .br

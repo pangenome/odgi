@@ -4,7 +4,7 @@
 <article xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" version="5.0" xml:lang="en">
 <info>
 <title>Reference Documentation for ODGI v0.6.0</title>
-<date>2021-03-18</date>
+<date>2021-03-30</date>
 <author>
 <personname>
 <firstname>Simon Heumos, Andrea Guarracino, Erik Garrison</firstname>
@@ -33,6 +33,7 @@
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_kmers1">kmers</link> -i graph.og -c -k 23 -e 34 -D 50</simpara>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_unitig1">unitig</link> -i graph.og -f -t 1324 -l 120</simpara>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_viz1">viz</link> -i graph.og -o graph.og.png -x 1920 -y 1080 -R -t 28</simpara>
+<simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_draw1">draw</link> -i graph.og -c coords.lay -p .png -x 1920 -y 1080 -R -t 28</simpara>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_paths1">paths</link> -i graph.og -f</simpara>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_prune1">prune</link> -i graph.og -o graph.pruned.og -c 3 -C 345 -T</simpara>
 <simpara><emphasis role="strong">odgi</emphasis> <link linkend="_odgi_unchop1">unchop</link> -i graph.og -o graph.unchopped.og</simpara>
@@ -118,6 +119,8 @@ and directly renders a raster image. The binning level depends on the target wid
 about the binning process, please refer to <link linkend="_odgi_bin1">odgi bin</link>. If reverse coloring was selected, only
 the bins with a reverse rate of at least 0.5 are colored. Currently, there is no parameter to color according to the
 sequence coverage in bins available.</simpara>
+<simpara><emphasis role="strong">odgi draw</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-c, --coords-in</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-p, --png</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;
+The odgi draw(1) command draws previously-determined 2D layouts of the graph with diverse annotations.</simpara>
 <simpara><emphasis role="strong">odgi paths</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;<?asciidoc-br?>
 The odgi paths(1) command allows the investigation of paths of a given variation graph. It can calculate overlap statistics
 of groupings of paths.</simpara>
@@ -147,10 +150,10 @@ another bin. For an exact positional output, please specify [<emphasis role="str
 <simpara><emphasis role="strong">odgi chop</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-c, --chop-to</emphasis>=<emphasis>N</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;<?asciidoc-br?>
 The odgi chop(1) command chops long nodes into short ones while preserving the graph topology.</simpara>
 <simpara><emphasis role="strong">odgi layout</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;<?asciidoc-br?>
-The odgi layout(1) command draws 2D layouts of the graph using stochastic gradient descent (SGD). The input graph must be sorted
+The odgi layout(1) command computes 2D layouts of the graph using stochastic gradient descent (SGD). The input graph must be sorted
 and id-compacted. The algorithm itself is described in <link xl:href="https://arxiv.org/abs/1710.04626">Graph Drawing by Stochastic Gradient Descent</link>.
 The force-directed graph drawing algorithm minimizes the graph&#8217;s energy function or stress level.
-It applies SGD to move a single pair of nodes at a time. The rendered graph is written in SVG format.</simpara>
+It applies SGD to move a single pair of nodes at a time.</simpara>
 <simpara><emphasis role="strong">odgi flatten</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;<?asciidoc-br?>
 The odgi flatten(1) command projects the graph sequence and paths into FASTA and BED.</simpara>
 <simpara><emphasis role="strong">odgi break</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;<?asciidoc-br?>
@@ -2100,22 +2103,164 @@ combination with [<emphasis role="strong">-A, --alignment-prefix</emphasis>=<emp
 <simpara><emphasis role="strong">odgi viz</emphasis> was written by Erik Garrison and Andrea Guarracino.</simpara>
 </section>
 </section>
-<section xml:id="_odgi_paths1">
-<title>odgi paths(1)</title>
+<section xml:id="_odgi_draw1">
+<title>odgi draw(1)</title>
 <section xml:id="_name_15">
 <title>NAME</title>
-<simpara>odgi_paths - embedded path interrogation</simpara>
+<simpara>odgi_draw - variation graph visualizations in 2D</simpara>
 </section>
 <section xml:id="_synopsis_15">
 <title>SYNOPSIS</title>
-<simpara><emphasis role="strong">odgi paths</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
+<simpara><emphasis role="strong">odgi draw</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-c, --coords-in</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-p, --png</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
 </section>
 <section xml:id="_description_15">
+<title>DESCRIPTION</title>
+<simpara>The odgi draw(1) command draws previously-determined 2D layouts of the graph with diverse annotations.</simpara>
+</section>
+<section xml:id="_options_14">
+<title>OPTIONS</title>
+<section xml:id="_files_io">
+<title>Files IO</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>Load the graph from this file. The file name usually ends with <emphasis>.og</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-c, --coords-in</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>Read the layout coordinates from this .lay format file produced by <link linkend="_odgi_layout1">odgi layout</link></simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-T, --tsv</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>Write the TSV layout plus displayed annotations to this file.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-s, --svg</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>Write an SVG rendering to this file.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-p, --png</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>Write a rasterized PNG rendering to this file.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_visualization_options_2">
+<title>Visualization Options</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-H, --png-height</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Height of PNG rendering (default: 1000).</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-E, --png-border</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Size of PNG border in bp (default: 10).</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-C --color-paths</emphasis></term>
+<listitem>
+<simpara>Color paths (in PNG output).</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-R, --scale</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Image scaling (default 1.0).</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-B, --border</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Image border (in approximate bp) (default 100.0).</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-w, --line-width</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Line width (in approximate bp) (default 0.0).</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-S, --path-line-spacing</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Spacing between path lines in png layout (in approximate bp) (default 0.0).</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-X, --path-index</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>Load the path index from this file.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_program_information_14">
+<title>Program Information</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-h, --help</emphasis></term>
+<listitem>
+<simpara>Print a help message for <emphasis role="strong">odgi draw</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+</section>
+<section xml:id="_exit_status_14">
+<title>EXIT STATUS</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">0</emphasis></term>
+<listitem>
+<simpara>Success.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">1</emphasis></term>
+<listitem>
+<simpara>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_bugs_15">
+<title>BUGS</title>
+<literallayout class="monospaced">Refer to the *odgi* issue tracker at https://github.com/pangenome/odgi/issues.</literallayout>
+</section>
+<section xml:id="_authors_15">
+<title>AUTHORS</title>
+<simpara><emphasis role="strong">odgi draw</emphasis> was written by Erik Garrison.</simpara>
+</section>
+</section>
+<section xml:id="_odgi_paths1">
+<title>odgi paths(1)</title>
+<section xml:id="_name_16">
+<title>NAME</title>
+<simpara>odgi_paths - embedded path interrogation</simpara>
+</section>
+<section xml:id="_synopsis_16">
+<title>SYNOPSIS</title>
+<simpara><emphasis role="strong">odgi paths</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
+</section>
+<section xml:id="_description_16">
 <title>DESCRIPTION</title>
 <simpara>The odgi paths(1) command allows the investigation of paths of a given variation graph. It can calculate overlap statistics
 of groupings of paths.</simpara>
 </section>
-<section xml:id="_options_14">
+<section xml:id="_options_15">
 <title>OPTIONS</title>
 <section xml:id="_graph_files_io_14">
 <title>Graph Files IO</title>
@@ -2184,7 +2329,7 @@ with [<emphasis role="strong">-H, --haplotypes</emphasis>]. Prints an additional
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_program_information_14">
+<section xml:id="_program_information_15">
 <title>Program Information</title>
 <variablelist>
 <varlistentry>
@@ -2196,7 +2341,7 @@ with [<emphasis role="strong">-H, --haplotypes</emphasis>]. Prints an additional
 </variablelist>
 </section>
 </section>
-<section xml:id="_exit_status_14">
+<section xml:id="_exit_status_15">
 <title>EXIT STATUS</title>
 <variablelist>
 <varlistentry>
@@ -2213,32 +2358,32 @@ with [<emphasis role="strong">-H, --haplotypes</emphasis>]. Prints an additional
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_bugs_15">
+<section xml:id="_bugs_16">
 <title>BUGS</title>
 <simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
-<section xml:id="_authors_15">
+<section xml:id="_authors_16">
 <title>AUTHORS</title>
 <simpara><emphasis role="strong">odgi paths</emphasis> was written by Erik Garrison.</simpara>
 </section>
 </section>
 <section xml:id="_odgi_prune1">
 <title>odgi prune(1)</title>
-<section xml:id="_name_16">
+<section xml:id="_name_17">
 <title>NAME</title>
 <simpara>odgi_prune - remove complex parts of the graph</simpara>
 </section>
-<section xml:id="_synopsis_16">
+<section xml:id="_synopsis_17">
 <title>SYNOPSIS</title>
 <simpara><emphasis role="strong">odgi prune</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
 </section>
-<section xml:id="_description_16">
+<section xml:id="_description_17">
 <title>DESCRIPTION</title>
 <simpara>The odgi prune(1) command can remove complex parts of a graph. One can drop paths, nodes by a certain kind of edge coverage,
 edges and graph tips. Specifying a kmer length and a maximum number of furcations, the graph can be broken at edges not
 fitting into these conditions.</simpara>
 </section>
-<section xml:id="_options_15">
+<section xml:id="_options_16">
 <title>OPTIONS</title>
 <section xml:id="_graph_files_io_15">
 <title>Graph Files IO</title>
@@ -2343,7 +2488,7 @@ fitting into these conditions.</simpara>
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_program_information_15">
+<section xml:id="_program_information_16">
 <title>Program Information</title>
 <variablelist>
 <varlistentry>
@@ -2355,7 +2500,7 @@ fitting into these conditions.</simpara>
 </variablelist>
 </section>
 </section>
-<section xml:id="_exit_status_15">
+<section xml:id="_exit_status_16">
 <title>EXIT STATUS</title>
 <variablelist>
 <varlistentry>
@@ -2372,30 +2517,30 @@ fitting into these conditions.</simpara>
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_bugs_16">
+<section xml:id="_bugs_17">
 <title>BUGS</title>
 <simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
-<section xml:id="_authors_16">
+<section xml:id="_authors_17">
 <title>AUTHORS</title>
 <simpara><emphasis role="strong">odgi prune</emphasis> was written by Erik Garrison.</simpara>
 </section>
 </section>
 <section xml:id="_odgi_unchop1">
 <title>odgi unchop(1)</title>
-<section xml:id="_name_17">
+<section xml:id="_name_18">
 <title>NAME</title>
 <simpara>odgi_unchop - merge unitigs into single nodes</simpara>
 </section>
-<section xml:id="_synopsis_17">
+<section xml:id="_synopsis_18">
 <title>SYNOPSIS</title>
 <simpara><emphasis role="strong">odgi unchop</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
 </section>
-<section xml:id="_description_17">
+<section xml:id="_description_18">
 <title>DESCRIPTION</title>
 <simpara>The odgi unchop(1) command merges each unitig into a single node preserving the node order.</simpara>
 </section>
-<section xml:id="_options_16">
+<section xml:id="_options_17">
 <title>OPTIONS</title>
 <section xml:id="_graph_files_io_16">
 <title>Graph Files IO</title>
@@ -2436,7 +2581,7 @@ fitting into these conditions.</simpara>
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_program_information_16">
+<section xml:id="_program_information_17">
 <title>Program Information</title>
 <variablelist>
 <varlistentry>
@@ -2448,7 +2593,7 @@ fitting into these conditions.</simpara>
 </variablelist>
 </section>
 </section>
-<section xml:id="_exit_status_16">
+<section xml:id="_exit_status_17">
 <title>EXIT STATUS</title>
 <variablelist>
 <varlistentry>
@@ -2465,30 +2610,30 @@ fitting into these conditions.</simpara>
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_bugs_17">
+<section xml:id="_bugs_18">
 <title>BUGS</title>
 <simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
-<section xml:id="_authors_17">
+<section xml:id="_authors_18">
 <title>AUTHORS</title>
 <simpara><emphasis role="strong">odgi unchop</emphasis> was written by Erik Garrison and Andrea Guarracino.</simpara>
 </section>
 </section>
 <section xml:id="_odgi_normalize1">
 <title>odgi normalize(1)</title>
-<section xml:id="_name_18">
+<section xml:id="_name_19">
 <title>NAME</title>
 <simpara>odgi_normalize - compact unitigs and simplify redundant furcations</simpara>
 </section>
-<section xml:id="_synopsis_18">
+<section xml:id="_synopsis_19">
 <title>SYNOPSIS</title>
 <simpara><emphasis role="strong">odgi normalize</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
 </section>
-<section xml:id="_description_18">
+<section xml:id="_description_19">
 <title>DESCRIPTION</title>
 <simpara>The odgi normalize(1) command <link linkend="_odgi_unchop1">unchops</link> a given variation graph and simplifies redundant furcations.</simpara>
 </section>
-<section xml:id="_options_17">
+<section xml:id="_options_18">
 <title>OPTIONS</title>
 <section xml:id="_graph_files_io_17">
 <title>Graph Files IO</title>
@@ -2524,7 +2669,7 @@ fitting into these conditions.</simpara>
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_program_information_17">
+<section xml:id="_program_information_18">
 <title>Program Information</title>
 <variablelist>
 <varlistentry>
@@ -2536,7 +2681,7 @@ fitting into these conditions.</simpara>
 </variablelist>
 </section>
 </section>
-<section xml:id="_exit_status_17">
+<section xml:id="_exit_status_18">
 <title>EXIT STATUS</title>
 <variablelist>
 <varlistentry>
@@ -2553,26 +2698,26 @@ fitting into these conditions.</simpara>
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_bugs_18">
+<section xml:id="_bugs_19">
 <title>BUGS</title>
 <simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
-<section xml:id="_authors_18">
+<section xml:id="_authors_19">
 <title>AUTHORS</title>
 <simpara><emphasis role="strong">odgi normalize</emphasis> was written by Erik Garrison.</simpara>
 </section>
 </section>
 <section xml:id="_odgi_bin1">
 <title>odgi bin(1)</title>
-<section xml:id="_name_19">
+<section xml:id="_name_20">
 <title>NAME</title>
 <simpara>odgi_bin - binning of pangenome sequence and path information in the graph</simpara>
 </section>
-<section xml:id="_synopsis_19">
+<section xml:id="_synopsis_20">
 <title>SYNOPSIS</title>
 <simpara><emphasis role="strong">odgi bin</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
 </section>
-<section xml:id="_description_19">
+<section xml:id="_description_20">
 <title>DESCRIPTION</title>
 <simpara>The odgi bin(1) command bins a given variation graph. The pangenome sequence, the one-time traversal of all nodes from smallest to
 largest node identifier, can be summed up into bins of a specified size. For each bin, the path metainformation is summarized.
@@ -2590,7 +2735,7 @@ Running odgi bin in <link xl:href="https://github.com/tpook92/HaploBlocker">Hapl
 [<emphasis role="strong">-p[N], --haplo-blocker-min-paths[N]</emphasis>], and [<emphasis role="strong">-c[N], --haplo-blocker-min-coverage[N]</emphasis>] are required. A TSV is printed to stdout:
 Each row corresponds to a node. Each column corresponds to a path. Each value is the coverage of a specific node of a specific path.</simpara>
 </section>
-<section xml:id="_options_18">
+<section xml:id="_options_19">
 <title>OPTIONS</title>
 <section xml:id="_graph_files_io_18">
 <title>Graph Files IO</title>
@@ -2700,7 +2845,7 @@ Each value is the coverage of a specific node of a specific path.</simpara>
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_program_information_18">
+<section xml:id="_program_information_19">
 <title>Program Information</title>
 <variablelist>
 <varlistentry>
@@ -2718,7 +2863,7 @@ Each value is the coverage of a specific node of a specific path.</simpara>
 </variablelist>
 </section>
 </section>
-<section xml:id="_exit_status_18">
+<section xml:id="_exit_status_19">
 <title>EXIT STATUS</title>
 <variablelist>
 <varlistentry>
@@ -2735,30 +2880,30 @@ Each value is the coverage of a specific node of a specific path.</simpara>
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_bugs_19">
+<section xml:id="_bugs_20">
 <title>BUGS</title>
 <simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
-<section xml:id="_authors_19">
+<section xml:id="_authors_20">
 <title>AUTHORS</title>
 <simpara><emphasis role="strong">odgi bin</emphasis> was written by Erik Garrison and Simon Heumos</simpara>
 </section>
 </section>
 <section xml:id="_odgi_matrix1">
 <title>odgi matrix(1)</title>
-<section xml:id="_name_20">
+<section xml:id="_name_21">
 <title>NAME</title>
 <simpara>odgi_matrix - write the graph topology in sparse matrix formats</simpara>
 </section>
-<section xml:id="_synopsis_20">
+<section xml:id="_synopsis_21">
 <title>SYNOPSIS</title>
 <simpara><emphasis role="strong">odgi matrix</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
 </section>
-<section xml:id="_description_20">
+<section xml:id="_description_21">
 <title>DESCRIPTION</title>
 <simpara>The odgi matrix(1) command generates a sparse matrix format out of the graph topology of a given variation graph.</simpara>
 </section>
-<section xml:id="_options_19">
+<section xml:id="_options_20">
 <title>OPTIONS</title>
 <section xml:id="_graph_files_io_19">
 <title>Graph Files IO</title>
@@ -2788,7 +2933,7 @@ Each value is the coverage of a specific node of a specific path.</simpara>
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_program_information_19">
+<section xml:id="_program_information_20">
 <title>Program Information</title>
 <variablelist>
 <varlistentry>
@@ -2800,7 +2945,7 @@ Each value is the coverage of a specific node of a specific path.</simpara>
 </variablelist>
 </section>
 </section>
-<section xml:id="_exit_status_19">
+<section xml:id="_exit_status_20">
 <title>EXIT STATUS</title>
 <variablelist>
 <varlistentry>
@@ -2817,30 +2962,30 @@ Each value is the coverage of a specific node of a specific path.</simpara>
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_bugs_20">
+<section xml:id="_bugs_21">
 <title>BUGS</title>
 <simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
-<section xml:id="_authors_20">
+<section xml:id="_authors_21">
 <title>AUTHORS</title>
 <simpara><emphasis role="strong">odgi matrix</emphasis> was written by Erik Garrison.</simpara>
 </section>
 </section>
 <section xml:id="_odgi_chop1">
 <title>odgi chop(1)</title>
-<section xml:id="_name_21">
+<section xml:id="_name_22">
 <title>NAME</title>
 <simpara>odgi_chop - divide nodes into smaller pieces</simpara>
 </section>
-<section xml:id="_synopsis_21">
+<section xml:id="_synopsis_22">
 <title>SYNOPSIS</title>
 <simpara><emphasis role="strong">odgi chop</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-c, --chop-to</emphasis>=<emphasis>N</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
 </section>
-<section xml:id="_description_21">
+<section xml:id="_description_22">
 <title>DESCRIPTION</title>
 <simpara>The odgi chop(1) command chops long nodes into short ones while preserving the graph topology and node order.</simpara>
 </section>
-<section xml:id="_options_20">
+<section xml:id="_options_21">
 <title>OPTIONS</title>
 <section xml:id="_graph_files_io_20">
 <title>Graph Files IO</title>
@@ -2892,7 +3037,7 @@ Each value is the coverage of a specific node of a specific path.</simpara>
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_program_information_20">
+<section xml:id="_program_information_21">
 <title>Program Information</title>
 <variablelist>
 <varlistentry>
@@ -2904,7 +3049,7 @@ Each value is the coverage of a specific node of a specific path.</simpara>
 </variablelist>
 </section>
 </section>
-<section xml:id="_exit_status_20">
+<section xml:id="_exit_status_21">
 <title>EXIT STATUS</title>
 <variablelist>
 <varlistentry>
@@ -2921,33 +3066,33 @@ Each value is the coverage of a specific node of a specific path.</simpara>
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_bugs_21">
+<section xml:id="_bugs_22">
 <title>BUGS</title>
 <simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
-<section xml:id="_authors_21">
+<section xml:id="_authors_22">
 <title>AUTHORS</title>
 <simpara><emphasis role="strong">odgi chop</emphasis> was written by Erik Garrison and Andrea Guarracino.</simpara>
 </section>
 </section>
 <section xml:id="_odgi_layout1">
 <title>odgi layout(1)</title>
-<section xml:id="_name_22">
+<section xml:id="_name_23">
 <title>NAME</title>
 <simpara>odgi_layout - use SGD to make 2D layouts of the graph</simpara>
 </section>
-<section xml:id="_synopsis_22">
+<section xml:id="_synopsis_23">
 <title>SYNOPSIS</title>
 <simpara><emphasis role="strong">odgi layout</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
 </section>
-<section xml:id="_description_22">
+<section xml:id="_description_23">
 <title>DESCRIPTION</title>
-<simpara>The odgi layout(1) command draws 2D layouts of the graph using stochastic gradient descent (SGD). The input graph must be sorted
+<simpara>The odgi layout(1) command computes 2D layouts of the graph using stochastic gradient descent (SGD). The input graph must be sorted
 and id-compacted. The algorithm itself is described in <link xl:href="https://arxiv.org/abs/1710.04626">Graph Drawing by Stochastic Gradient Descent</link>.
 The force-directed graph drawing algorithm minimizes the graph&#8217;s energy function or stress level.
-It applies SGD to move a single pair of nodes at a time. The rendered graph is written in SVG format.</simpara>
+It applies SGD to move a single pair of nodes at a time.</simpara>
 </section>
-<section xml:id="_options_21">
+<section xml:id="_options_22">
 <title>OPTIONS</title>
 <section xml:id="_graph_files_io_21">
 <title>Graph Files IO</title>
@@ -3017,7 +3162,7 @@ It applies SGD to move a single pair of nodes at a time. The rendered graph is w
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_program_information_21">
+<section xml:id="_program_information_22">
 <title>Program Information</title>
 <variablelist>
 <varlistentry>
@@ -3029,7 +3174,7 @@ It applies SGD to move a single pair of nodes at a time. The rendered graph is w
 </variablelist>
 </section>
 </section>
-<section xml:id="_exit_status_21">
+<section xml:id="_exit_status_22">
 <title>EXIT STATUS</title>
 <variablelist>
 <varlistentry>
@@ -3046,30 +3191,30 @@ It applies SGD to move a single pair of nodes at a time. The rendered graph is w
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_bugs_22">
+<section xml:id="_bugs_23">
 <title>BUGS</title>
 <simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
-<section xml:id="_authors_22">
+<section xml:id="_authors_23">
 <title>AUTHORS</title>
 <simpara><emphasis role="strong">odgi layout</emphasis> was written by Erik Garrison, Andrea Guarracino, and Simon Heumos.</simpara>
 </section>
 </section>
 <section xml:id="_odgi_flatten1">
 <title>odgi flatten(1)</title>
-<section xml:id="_name_23">
+<section xml:id="_name_24">
 <title>NAME</title>
 <simpara>odgi_flatten - generate linearization of the graph</simpara>
 </section>
-<section xml:id="_synopsis_23">
+<section xml:id="_synopsis_24">
 <title>SYNOPSIS</title>
 <simpara><emphasis role="strong">odgi flatten</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
 </section>
-<section xml:id="_description_23">
+<section xml:id="_description_24">
 <title>DESCRIPTION</title>
 <simpara>The odgi flatten(1) command projects the graph sequence and paths into FASTA and BED.</simpara>
 </section>
-<section xml:id="_options_22">
+<section xml:id="_options_23">
 <title>OPTIONS</title>
 <section xml:id="_graph_files_io_22">
 <title>Graph Files IO</title>
@@ -3105,7 +3250,7 @@ It applies SGD to move a single pair of nodes at a time. The rendered graph is w
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_program_information_22">
+<section xml:id="_program_information_23">
 <title>Program Information</title>
 <variablelist>
 <varlistentry>
@@ -3117,7 +3262,7 @@ It applies SGD to move a single pair of nodes at a time. The rendered graph is w
 </variablelist>
 </section>
 </section>
-<section xml:id="_exit_status_22">
+<section xml:id="_exit_status_23">
 <title>EXIT STATUS</title>
 <variablelist>
 <varlistentry>
@@ -3134,31 +3279,31 @@ It applies SGD to move a single pair of nodes at a time. The rendered graph is w
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_bugs_23">
+<section xml:id="_bugs_24">
 <title>BUGS</title>
 <simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
-<section xml:id="_authors_23">
+<section xml:id="_authors_24">
 <title>AUTHORS</title>
 <simpara><emphasis role="strong">odgi flatten</emphasis> was written by Erik Garrison.</simpara>
 </section>
 </section>
 <section xml:id="_odgi_break1">
 <title>odgi break(1)</title>
-<section xml:id="_name_24">
+<section xml:id="_name_25">
 <title>NAME</title>
 <simpara>odgi_break - break cycles in the graph and drop its paths</simpara>
 </section>
-<section xml:id="_synopsis_24">
+<section xml:id="_synopsis_25">
 <title>SYNOPSIS</title>
 <simpara><emphasis role="strong">odgi break</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
 </section>
-<section xml:id="_description_24">
+<section xml:id="_description_25">
 <title>DESCRIPTION</title>
 <simpara>The odgi break(1) command finds cycles in a graph via <link xl:href="https://en.wikipedia.org/wiki/Breadth-first_search">breadth-first search (BFS)</link> and breaks them, also dropping
 the graph&#8217;s paths.</simpara>
 </section>
-<section xml:id="_options_23">
+<section xml:id="_options_24">
 <title>OPTIONS</title>
 <section xml:id="_graph_files_io_23">
 <title>Graph Files IO</title>
@@ -3206,87 +3351,13 @@ the graph&#8217;s paths.</simpara>
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_program_information_23">
-<title>Program Information</title>
-<variablelist>
-<varlistentry>
-<term><emphasis role="strong">-h, --help</emphasis></term>
-<listitem>
-<simpara>Print a help message for <emphasis role="strong">odgi break</emphasis>.</simpara>
-</listitem>
-</varlistentry>
-</variablelist>
-</section>
-</section>
-<section xml:id="_exit_status_23">
-<title>EXIT STATUS</title>
-<variablelist>
-<varlistentry>
-<term><emphasis role="strong">0</emphasis></term>
-<listitem>
-<simpara>Success.</simpara>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term><emphasis role="strong">1</emphasis></term>
-<listitem>
-<simpara>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</simpara>
-</listitem>
-</varlistentry>
-</variablelist>
-</section>
-<section xml:id="_bugs_24">
-<title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
-</section>
-<section xml:id="_authors_24">
-<title>AUTHORS</title>
-<simpara><emphasis role="strong">odgi break</emphasis> was written by Erik Garrison.</simpara>
-</section>
-</section>
-<section xml:id="_odgi_pathindex1">
-<title>odgi pathindex(1)</title>
-<section xml:id="_name_25">
-<title>NAME</title>
-<simpara>odgi_pathindex - create a path index for a given path</simpara>
-</section>
-<section xml:id="_synopsis_25">
-<title>SYNOPSIS</title>
-<simpara><emphasis role="strong">odgi pathindex</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
-</section>
-<section xml:id="_description_25">
-<title>DESCRIPTION</title>
-<simpara>The odgi pathindex(1) command generates a path index of a graph. It uses succinct data structures to encode the index.
-The path index represents a subset of the features of a fully realized <link xl:href="https://github.com/vgteam/xg">xg index</link>. Having a path index, we can use
-odgi <link linkend="_odgi_panpos1">panpos</link> to go from <emphasis role="strong">path:position</emphasis> &#8594; <emphasis role="strong">pangenome:position</emphasis> which is important when
-navigating large graphs in an interactive manner like in the <link xl:href="https://graph-genome.github.io/">Pantograph</link> project.</simpara>
-</section>
-<section xml:id="_options_24">
-<title>OPTIONS</title>
-<section xml:id="_graph_files_io_24">
-<title>Graph Files IO</title>
-<variablelist>
-<varlistentry>
-<term><emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis></term>
-<listitem>
-<simpara>File containing the succinct variation graph to generate a path index from. The file name usually ends with <emphasis>.og</emphasis>.</simpara>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term><emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis></term>
-<listitem>
-<simpara>Write the path index to <emphasis>FILE</emphasis>.</simpara>
-</listitem>
-</varlistentry>
-</variablelist>
-</section>
 <section xml:id="_program_information_24">
 <title>Program Information</title>
 <variablelist>
 <varlistentry>
 <term><emphasis role="strong">-h, --help</emphasis></term>
 <listitem>
-<simpara>Print a help message for <emphasis role="strong">odgi pathindex</emphasis>.</simpara>
+<simpara>Print a help message for <emphasis role="strong">odgi break</emphasis>.</simpara>
 </listitem>
 </varlistentry>
 </variablelist>
@@ -3315,27 +3386,101 @@ navigating large graphs in an interactive manner like in the <link xl:href="http
 </section>
 <section xml:id="_authors_25">
 <title>AUTHORS</title>
+<simpara><emphasis role="strong">odgi break</emphasis> was written by Erik Garrison.</simpara>
+</section>
+</section>
+<section xml:id="_odgi_pathindex1">
+<title>odgi pathindex(1)</title>
+<section xml:id="_name_26">
+<title>NAME</title>
+<simpara>odgi_pathindex - create a path index for a given path</simpara>
+</section>
+<section xml:id="_synopsis_26">
+<title>SYNOPSIS</title>
+<simpara><emphasis role="strong">odgi pathindex</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
+</section>
+<section xml:id="_description_26">
+<title>DESCRIPTION</title>
+<simpara>The odgi pathindex(1) command generates a path index of a graph. It uses succinct data structures to encode the index.
+The path index represents a subset of the features of a fully realized <link xl:href="https://github.com/vgteam/xg">xg index</link>. Having a path index, we can use
+odgi <link linkend="_odgi_panpos1">panpos</link> to go from <emphasis role="strong">path:position</emphasis> &#8594; <emphasis role="strong">pangenome:position</emphasis> which is important when
+navigating large graphs in an interactive manner like in the <link xl:href="https://graph-genome.github.io/">Pantograph</link> project.</simpara>
+</section>
+<section xml:id="_options_25">
+<title>OPTIONS</title>
+<section xml:id="_graph_files_io_24">
+<title>Graph Files IO</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>File containing the succinct variation graph to generate a path index from. The file name usually ends with <emphasis>.og</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis></term>
+<listitem>
+<simpara>Write the path index to <emphasis>FILE</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_program_information_25">
+<title>Program Information</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-h, --help</emphasis></term>
+<listitem>
+<simpara>Print a help message for <emphasis role="strong">odgi pathindex</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+</section>
+<section xml:id="_exit_status_25">
+<title>EXIT STATUS</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">0</emphasis></term>
+<listitem>
+<simpara>Success.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">1</emphasis></term>
+<listitem>
+<simpara>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_bugs_26">
+<title>BUGS</title>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
+</section>
+<section xml:id="_authors_26">
+<title>AUTHORS</title>
 <simpara><emphasis role="strong">odgi pathindex</emphasis> was written by Simon Heumos.</simpara>
 </section>
 </section>
 <section xml:id="_odgi_panpos1">
 <title>odgi panpos(1)</title>
-<section xml:id="_name_26">
+<section xml:id="_name_27">
 <title>NAME</title>
 <simpara>odgi_panpos - get the pangenome position of a given path and nucleotide position (1-based)</simpara>
 </section>
-<section xml:id="_synopsis_26">
+<section xml:id="_synopsis_27">
 <title>SYNOPSIS</title>
 <simpara><emphasis role="strong">odgi panpos</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-p, --path</emphasis>=<emphasis>STRING</emphasis>] [<emphasis role="strong">-n, --nuc-pos</emphasis>=<emphasis>N</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
 </section>
-<section xml:id="_description_26">
+<section xml:id="_description_27">
 <title>DESCRIPTION</title>
 <simpara>The odgi panpos(1) command give a pangenome position for a given path and nucleotide position. It requires a path index,
 which can be created with odgi <link linkend="_odgi_pathindex1">pathindex</link>. Going from <emphasis role="strong">path:position</emphasis> &#8594; <emphasis role="strong">pangenome:position</emphasis> is important when
 navigating large graphs in an interactive manner like in the <link xl:href="https://graph-genome.github.io/">Pantograph</link> project. All
 input and output positions are 1-based.</simpara>
 </section>
-<section xml:id="_options_25">
+<section xml:id="_options_26">
 <title>OPTIONS</title>
 <section xml:id="_graph_files_io_25">
 <title>Graph Files IO</title>
@@ -3365,7 +3510,7 @@ input and output positions are 1-based.</simpara>
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_program_information_25">
+<section xml:id="_program_information_26">
 <title>Program Information</title>
 <variablelist>
 <varlistentry>
@@ -3377,7 +3522,7 @@ input and output positions are 1-based.</simpara>
 </variablelist>
 </section>
 </section>
-<section xml:id="_exit_status_25">
+<section xml:id="_exit_status_26">
 <title>EXIT STATUS</title>
 <variablelist>
 <varlistentry>
@@ -3394,33 +3539,33 @@ input and output positions are 1-based.</simpara>
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_bugs_26">
+<section xml:id="_bugs_27">
 <title>BUGS</title>
 <simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
-<section xml:id="_authors_26">
+<section xml:id="_authors_27">
 <title>AUTHORS</title>
 <simpara><emphasis role="strong">odgi panpos</emphasis> was written by Simon Heumos.</simpara>
 </section>
 </section>
 <section xml:id="_odgi_position1">
 <title>odgi position(1)</title>
-<section xml:id="_name_27">
+<section xml:id="_name_28">
 <title>NAME</title>
 <simpara>odgi_position - position parts of the graph as defined by query criteria</simpara>
 </section>
-<section xml:id="_synopsis_27">
+<section xml:id="_synopsis_28">
 <title>SYNOPSIS</title>
 <simpara><emphasis role="strong">odgi position</emphasis> [<emphasis role="strong">-i, --target</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
 </section>
-<section xml:id="_description_27">
+<section xml:id="_description_28">
 <title>DESCRIPTION</title>
 <simpara>The odgi position(1) command translates positions and coordinate ranges between nodes and embedded paths.
 It provides liftover functionality, allowing us to translate a position between any reference paths embedded in the <literal>-i, --target</literal> graph.
 We can additionally project coordinates and annotations from a source graph <literal>-x, --source</literal> into the <literal>target</literal>.
 When completing this "graph lift", the intersecting set of paths in the two graphs are used to complete the coordinate projection.</simpara>
 </section>
-<section xml:id="_options_26">
+<section xml:id="_options_27">
 <title>OPTIONS</title>
 <section xml:id="_graph_files_io_26">
 <title>Graph Files IO</title>
@@ -3505,7 +3650,7 @@ between <literal>--source</literal> and <literal>--target</literal>].</simpara>
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_program_information_26">
+<section xml:id="_program_information_27">
 <title>Program Information</title>
 <variablelist>
 <varlistentry>
@@ -3517,7 +3662,7 @@ between <literal>--source</literal> and <literal>--target</literal>].</simpara>
 </variablelist>
 </section>
 </section>
-<section xml:id="_exit_status_26">
+<section xml:id="_exit_status_27">
 <title>EXIT STATUS</title>
 <variablelist>
 <varlistentry>
@@ -3534,26 +3679,26 @@ between <literal>--source</literal> and <literal>--target</literal>].</simpara>
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_bugs_27">
+<section xml:id="_bugs_28">
 <title>BUGS</title>
 <simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
-<section xml:id="_authors_27">
+<section xml:id="_authors_28">
 <title>AUTHORS</title>
 <simpara><emphasis role="strong">odgi position</emphasis> was written by Erik Garrison.</simpara>
 </section>
 </section>
 <section xml:id="_odgi_server1">
 <title>odgi server(1)</title>
-<section xml:id="_name_28">
+<section xml:id="_name_29">
 <title>NAME</title>
 <simpara>odgi_server - start a HTTP server with a given index file to query a pangenome position</simpara>
 </section>
-<section xml:id="_synopsis_28">
+<section xml:id="_synopsis_29">
 <title>SYNOPSIS</title>
 <simpara><emphasis role="strong">odgi server</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-p, --port</emphasis>=<emphasis>N</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
 </section>
-<section xml:id="_description_28">
+<section xml:id="_description_29">
 <title>DESCRIPTION</title>
 <simpara>The odgi server(1) command starts an HTTP server with a given path index as input. The idea is that we can go from
 <emphasis role="strong">path:position</emphasis> &#8594; <emphasis role="strong">pangenome:position</emphasis> via GET requests to the HTTP server. The server headers do not block cross origin requests.
@@ -3562,7 +3707,7 @@ The required path index can be created with odgi <link linkend="_odgi_pathindex1
 navigating large graphs in an interactive manner like in the <link xl:href="https://graph-genome.github.io/">Pantograph</link> project. All
 input and output positions are 1-based. If no IP address is specified, the server will run on localhost.</simpara>
 </section>
-<section xml:id="_options_27">
+<section xml:id="_options_28">
 <title>OPTIONS</title>
 <section xml:id="_graph_files_io_27">
 <title>Graph Files IO</title>
@@ -3592,7 +3737,7 @@ input and output positions are 1-based. If no IP address is specified, the serve
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_program_information_27">
+<section xml:id="_program_information_28">
 <title>Program Information</title>
 <variablelist>
 <varlistentry>
@@ -3604,7 +3749,7 @@ input and output positions are 1-based. If no IP address is specified, the serve
 </variablelist>
 </section>
 </section>
-<section xml:id="_exit_status_27">
+<section xml:id="_exit_status_28">
 <title>EXIT STATUS</title>
 <variablelist>
 <varlistentry>
@@ -3621,31 +3766,31 @@ input and output positions are 1-based. If no IP address is specified, the serve
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_bugs_28">
+<section xml:id="_bugs_29">
 <title>BUGS</title>
 <simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
-<section xml:id="_authors_28">
+<section xml:id="_authors_29">
 <title>AUTHORS</title>
 <simpara><emphasis role="strong">odgi server</emphasis> was written by Simon Heumos.</simpara>
 </section>
 </section>
 <section xml:id="_odgi_test1">
 <title>odgi test(1)</title>
-<section xml:id="_name_29">
+<section xml:id="_name_30">
 <title>NAME</title>
 <simpara>odgi_test - run odgi unit tests</simpara>
 </section>
-<section xml:id="_synopsis_29">
+<section xml:id="_synopsis_30">
 <title>SYNOPSIS</title>
 <simpara><emphasis role="strong">odgi test</emphasis> [&lt;TEST NAME|PATTERN|TAGS&gt; &#8230;&#8203;] [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
 </section>
-<section xml:id="_description_29">
+<section xml:id="_description_30">
 <title>DESCRIPTION</title>
 <simpara>The odgi test(1) command starts all unit tests that are implemented in odgi. For targeted testing, a subset of tests can
 be selected. odgi test(1) depends on <link xl:href="https://github.com/catchorg/Catch2">Catch2</link>. In the default setting, all results are printed to stdout.</simpara>
 </section>
-<section xml:id="_options_28">
+<section xml:id="_options_29">
 <title>OPTIONS</title>
 <section xml:id="_testing_options">
 <title>Testing Options</title>
@@ -3802,90 +3947,13 @@ be selected. odgi test(1) depends on <link xl:href="https://github.com/catchorg/
 </varlistentry>
 </variablelist>
 </section>
-<section xml:id="_program_information_28">
+<section xml:id="_program_information_29">
 <title>Program Information</title>
 <variablelist>
 <varlistentry>
 <term><emphasis role="strong">-?, -h, --help</emphasis></term>
 <listitem>
 <simpara>Print a help message for <emphasis role="strong">odgi test</emphasis>.</simpara>
-</listitem>
-</varlistentry>
-</variablelist>
-</section>
-</section>
-<section xml:id="_exit_status_28">
-<title>EXIT STATUS</title>
-<variablelist>
-<varlistentry>
-<term><emphasis role="strong">0</emphasis></term>
-<listitem>
-<simpara>Success.</simpara>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term><emphasis role="strong">1</emphasis></term>
-<listitem>
-<simpara>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</simpara>
-</listitem>
-</varlistentry>
-</variablelist>
-</section>
-<section xml:id="_bugs_29">
-<title>BUGS</title>
-<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
-</section>
-<section xml:id="_authors_29">
-<title>AUTHORS</title>
-<simpara><emphasis role="strong">odgi test</emphasis> was written by Erik Garrison, Simon Heumos, and Andrea Guarracino.</simpara>
-</section>
-</section>
-<section xml:id="_odgi_version1">
-<title>odgi version(1)</title>
-<section xml:id="_name_30">
-<title>NAME</title>
-<simpara>odgi_version - display the version of odgi</simpara>
-</section>
-<section xml:id="_synopsis_30">
-<title>SYNOPSIS</title>
-<simpara><emphasis role="strong">odgi version</emphasis> [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
-</section>
-<section xml:id="_description_30">
-<title>DESCRIPTION</title>
-<simpara>The odgi version(1) command prints the current git version with tags and codename to stdout (like <emphasis>v-44-g89d022b "back to old ABI"</emphasis>). Optionally, only the release, version or codename can be printed.</simpara>
-</section>
-<section xml:id="_options_29">
-<title>OPTIONS</title>
-<section xml:id="_version_options">
-<title>Version Options</title>
-<variablelist>
-<varlistentry>
-<term><emphasis role="strong">-v, --version</emphasis>=</term>
-<listitem>
-<simpara>Print only the version (like <emphasis>v-44-g89d022b</emphasis>).</simpara>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term><emphasis role="strong">-c, --codename</emphasis></term>
-<listitem>
-<simpara>Print only the codename (like <emphasis>back to old ABI</emphasis>).</simpara>
-</listitem>
-</varlistentry>
-<varlistentry>
-<term><emphasis role="strong">-r, --release</emphasis></term>
-<listitem>
-<simpara>Print only the release (like <emphasis>v</emphasis>).</simpara>
-</listitem>
-</varlistentry>
-</variablelist>
-</section>
-<section xml:id="_program_information_29">
-<title>Program Information</title>
-<variablelist>
-<varlistentry>
-<term><emphasis role="strong">-h, --help</emphasis></term>
-<listitem>
-<simpara>Print a help message for <emphasis role="strong">odgi version</emphasis>.</simpara>
 </listitem>
 </varlistentry>
 </variablelist>
@@ -3913,6 +3981,83 @@ be selected. odgi test(1) depends on <link xl:href="https://github.com/catchorg/
 <simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
 </section>
 <section xml:id="_authors_30">
+<title>AUTHORS</title>
+<simpara><emphasis role="strong">odgi test</emphasis> was written by Erik Garrison, Simon Heumos, and Andrea Guarracino.</simpara>
+</section>
+</section>
+<section xml:id="_odgi_version1">
+<title>odgi version(1)</title>
+<section xml:id="_name_31">
+<title>NAME</title>
+<simpara>odgi_version - display the version of odgi</simpara>
+</section>
+<section xml:id="_synopsis_31">
+<title>SYNOPSIS</title>
+<simpara><emphasis role="strong">odgi version</emphasis> [<emphasis>OPTION</emphasis>]&#8230;&#8203;</simpara>
+</section>
+<section xml:id="_description_31">
+<title>DESCRIPTION</title>
+<simpara>The odgi version(1) command prints the current git version with tags and codename to stdout (like <emphasis>v-44-g89d022b "back to old ABI"</emphasis>). Optionally, only the release, version or codename can be printed.</simpara>
+</section>
+<section xml:id="_options_30">
+<title>OPTIONS</title>
+<section xml:id="_version_options">
+<title>Version Options</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-v, --version</emphasis>=</term>
+<listitem>
+<simpara>Print only the version (like <emphasis>v-44-g89d022b</emphasis>).</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-c, --codename</emphasis></term>
+<listitem>
+<simpara>Print only the codename (like <emphasis>back to old ABI</emphasis>).</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-r, --release</emphasis></term>
+<listitem>
+<simpara>Print only the release (like <emphasis>v</emphasis>).</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_program_information_30">
+<title>Program Information</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">-h, --help</emphasis></term>
+<listitem>
+<simpara>Print a help message for <emphasis role="strong">odgi version</emphasis>.</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+</section>
+<section xml:id="_exit_status_30">
+<title>EXIT STATUS</title>
+<variablelist>
+<varlistentry>
+<term><emphasis role="strong">0</emphasis></term>
+<listitem>
+<simpara>Success.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">1</emphasis></term>
+<listitem>
+<simpara>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section xml:id="_bugs_31">
+<title>BUGS</title>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <link xl:href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</link>.</simpara>
+</section>
+<section xml:id="_authors_31">
 <title>AUTHORS</title>
 <simpara><emphasis role="strong">odgi version</emphasis> was written by Simon Heumos.</simpara>
 </section>
