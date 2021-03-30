@@ -93,15 +93,15 @@ namespace odgi {
             paths_to_consider.resize(graph.get_path_count() + 1, false);
 
             std::ifstream refs(args::get(subset_paths).c_str());
-            std::string path_name;
-            while (std::getline(refs, path_name)) {
-                if (!path_name.empty()) {
-                    if (!graph.has_path(path_name)) {
-                        std::cerr << "[odgi::depth] error: path " << path_name << " not found in graph" << std::endl;
+            std::string line;
+            while (std::getline(refs, line)) {
+                if (!line.empty()) {
+                    if (!graph.has_path(line)) {
+                        std::cerr << "[odgi::depth] error: path " << line << " not found in graph" << std::endl;
                         exit(1);
                     }
 
-                    paths_to_consider[as_integer(graph.get_path_handle(path_name))] = true;
+                    paths_to_consider[as_integer(graph.get_path_handle(line))] = true;
                 }
             }
         }

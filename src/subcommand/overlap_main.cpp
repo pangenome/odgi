@@ -99,67 +99,7 @@ namespace odgi {
         }
 
 
-        // these options are exclusive (probably we should say with a warning)
-        std::vector<odgi::pos_t> graph_positions;
-        std::vector<odgi::path_pos_t> path_positions;
         std::vector<odgi::path_range_t> path_ranges;
-
-        auto add_graph_pos = [&graph_positions](const odgi::graph_t &graph,
-                                                const std::string &buffer) {
-            auto vals = split(buffer, ',');
-            /*
-            if (vals.size() != 3) {
-                std::cerr << "[odgi::overlap] error: graph position record is incomplete" << std::endl;
-                std::cerr << "[odgi::overlap] error: got '" << buffer << "'" << std::endl;
-                exit(1); // bail
-            }
-            */
-            uint64_t id = std::stoi(vals[0]);
-            if (!graph.has_node(id)) {
-                std::cerr << "[odgi::overlap] error: no node " << id << " in graph" << std::endl;
-                exit(1);
-            }
-            uint64_t offset = 0;
-            if (vals.size() >= 2) {
-                offset = std::stoi(vals[1]);
-                handle_t h = graph.get_handle(id);
-                if (graph.get_length(h) < offset) {
-                    std::cerr << "[odgi::overlap] error: offset of " << offset << " lies beyond the end of node " << id
-                              << std::endl;
-                    exit(1);
-                }
-            }
-            bool is_rev = false;
-            if (vals.size() == 3) {
-                is_rev = vals[2] == "-";
-            }
-            graph_positions.push_back(make_pos_t(id, is_rev, offset));
-        };
-
-        auto add_path_pos = [&path_positions](const odgi::graph_t &graph,
-                                              const std::string &buffer) {
-            if (!buffer.empty()) {
-                auto vals = split(buffer, ',');
-                /*
-                if (vals.size() != 3) {
-                    std::cerr << "[odgi::overlap] error: path position record is incomplete" << std::endl;
-                    std::cerr << "[odgi::overlap] error: got '" << buffer << "'" << std::endl;
-                    exit(1); // bail
-                }
-                */
-                auto &path_name = vals[0];
-                if (!graph.has_path(path_name)) {
-                    std::cerr << "[odgi::overlap] error: path " << path_name << " not found in graph" << std::endl;
-                    exit(1);
-                } else {
-                    path_positions.push_back({
-                                                     graph.get_path_handle(path_name),
-                                                     (vals.size() > 1 ? (uint64_t) std::stoi(vals[1]) : 0),
-                                                     (vals.size() == 3 ? vals[2] == "-" : false)
-                                             });
-                }
-            }
-        };
 
         auto add_bed_range = [&path_ranges](const odgi::graph_t &graph,
                                             const std::string &buffer) {
@@ -289,8 +229,7 @@ namespace odgi {
                     if (p_h != path_handle) {
                         bool stop = false;
                         graph.for_each_step_in_path(p_h, [&](const step_handle_t &step) {
-                            handle_t h = graph.get_handle_of_step(step);
-                            if (!stop && handles.count(h) > 0) {
+                            if (!stop && handles.count(graph.get_handle_of_step(step)) > 0) {
                                 {
                                     std::lock_guard<std::mutex> guard(touched_path_handles_mutex);
                                     touched_path_handles.push_back(p_h);
