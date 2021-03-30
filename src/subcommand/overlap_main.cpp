@@ -241,6 +241,11 @@ namespace odgi {
                     }
                 }
 
+                std::sort(touched_path_handles.begin(), touched_path_handles.end(),
+                        [](const path_handle_t& a, const path_handle_t& b) {
+                            return as_integer(a) < as_integer(b);
+                        });
+
 //#pragma omp critical (cout)
                 for (auto touched_path_handle : touched_path_handles) {
                     std::cout << (graph.get_path_name(path_handle)) << "\t" << start << "\t" << end << "\t"
