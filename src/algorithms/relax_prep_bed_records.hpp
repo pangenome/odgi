@@ -6,6 +6,7 @@
 #include <sstream>
 #include "hash_map.hpp"
 #include "odgi.hpp"
+#include <split.hpp>
 
 namespace odgi {
     namespace algorithms {

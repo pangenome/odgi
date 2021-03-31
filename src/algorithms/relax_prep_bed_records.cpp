@@ -27,17 +27,16 @@ namespace odgi {
         }
 
         min_bed_record_t parse_bed_line(const std::string &bed_line, const char delim) {
+            auto vals = split(bed_line, '\t');
             uint8_t tab_pos = 0;
-            std::string token;
-            std::istringstream tokenStream(bed_line);
             min_bed_record_t m_b_r_t;
-            while (std::getline(tokenStream, token, delim)) {
-                 if (tab_pos == 1) {
-                    m_b_r_t.chromStart = std::stoi(token);
+            for (auto &val : vals) {
+                if (tab_pos == 1) {
+                    m_b_r_t.chromStart = std::stoi(val);
                 } else if (tab_pos == 2) {
-                    m_b_r_t.chromEnd = std::stoi(token);
+                    m_b_r_t.chromEnd = std::stoi(val);
                 } else if (tab_pos == 5) {
-                    m_b_r_t.path_layout_nuc_dist_ratio = std::stod(token);
+                    m_b_r_t.path_layout_nuc_dist_ratio = std::stod(val);
                 }
                 tab_pos++;
             }
