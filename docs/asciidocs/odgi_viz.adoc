@@ -76,10 +76,10 @@ please refer to <<odgi_bin.adoc#_odgi_bin1, odgi bin>>.
 
 === Intervals selection
 
-*-r, --pangenomic-range*::
+*-r, --path-range*::
   Nucleotide range to visualize: `STRING=[PATH:]start-end`. `\*-end` for `[0,end]`; `start-*` for `[start,pangenome_length]`.
-  If no PATH is specified, the nucleotide positions refer to the pangenome's sequence (i.e., the sequence obtained arranging all the graph's node
-  from left to right).
+  If no PATH is specified, the nucleotide positions refer to the pangenome's sequence (i.e., the sequence obtained arranging
+  all the graph's node from left to right).
 
 
 === Paths selection
@@ -156,7 +156,7 @@ paths can be specified.
 
 == BUGS
 
-  Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.
+  Refer to the *odgi* issue tracker at https://github.com/pangenome/odgi/issues.
 
 
 == AUTHORS
@@ -168,20 +168,20 @@ ifdef::backend-manpage[]
 
 == RESOURCES
 
-*Project web site:* https://github.com/vgteam/odgi
+*Project web site:* https://github.com/pangenome/odgi
 
-*Git source repository on GitHub:* https://github.com/vgteam/odgi
+*Git source repository on GitHub:* https://github.com/pangenome/odgi
 
-*GitHub organization:* https://github.com/vgteam
+*GitHub organization:* https://github.com/pangenome
 
-*Discussion list / forum:* https://github.com/vgteam/odgi/issues
+*Discussion list / forum:* https://github.com/pangenome/odgi/issues
 
 
 == COPYING
 
 The MIT License (MIT)
 
-Copyright (c) 2019 Erik Garrison
+Copyright (c) 2019-2021 Erik Garrison
 
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in

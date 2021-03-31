@@ -2,12 +2,12 @@
 .\"     Title: odgi layout
 .\"    Author: Erik Garrison, Andrea Guarracino, Simon Heumos
 .\" Generator: Asciidoctor 2.0.10
-.\"      Date: 2021-03-12
+.\"      Date: 2021-03-30
 .\"    Manual: odgi layout
 .\"    Source: odgi v0.6.0
 .\"  Language: English
 .\"
-.TH "ODGI_LAYOUT" "1" "2021-03-12" "odgi v0.6.0" "odgi layout"
+.TH "ODGI_LAYOUT" "1" "2021-03-30" "odgi v0.6.0" "odgi layout"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -34,11 +34,11 @@ odgi_layout \- use SGD to make 2D layouts of the graph
 \fBodgi layout\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
 .SH "DESCRIPTION"
 .sp
-The odgi layout(1) command draws 2D layouts of the graph using stochastic gradient descent (SGD). The input graph must be sorted
+The odgi layout(1) command computes 2D layouts of the graph using stochastic gradient descent (SGD). The input graph must be sorted
 and id\-compacted. The algorithm itself is described in \c
 .URL "https://arxiv.org/abs/1710.04626" "Graph Drawing by Stochastic Gradient Descent" "."
 The force\-directed graph drawing algorithm minimizes the graph\(cqs energy function or stress level.
-It applies SGD to move a single pair of nodes at a time. The rendered graph is written in SVG format.
+It applies SGD to move a single pair of nodes at a time.
 .SH "OPTIONS"
 .SS "Graph Files IO"
 .sp
@@ -104,28 +104,28 @@ Failure (syntax or usage error; parameter error; file processing failure; unexpe
 .SH "BUGS"
 .sp
 Refer to the \fBodgi\fP issue tracker at \c
-.URL "https://github.com/vgteam/odgi/issues" "" "."
+.URL "https://github.com/pangenome/odgi/issues" "" "."
 .SH "AUTHORS"
 .sp
 \fBodgi layout\fP was written by Erik Garrison, Andrea Guarracino, and Simon Heumos.
 == RESOURCES
 .sp
 \fBProject web site:\fP \c
-.URL "https://github.com/vgteam/odgi" "" ""
+.URL "https://github.com/pangenome/odgi" "" ""
 .sp
 \fBGit source repository on GitHub:\fP \c
-.URL "https://github.com/vgteam/odgi" "" ""
+.URL "https://github.com/pangenome/odgi" "" ""
 .sp
 \fBGitHub organization:\fP \c
-.URL "https://github.com/vgteam" "" ""
+.URL "https://github.com/pangenome" "" ""
 .sp
 \fBDiscussion list / forum:\fP \c
-.URL "https://github.com/vgteam/odgi/issues" "" ""
+.URL "https://github.com/pangenome/odgi/issues" "" ""
 .SH "COPYING"
 .sp
 The MIT License (MIT)
 .sp
-Copyright (c) 2019 Erik Garrison
+Copyright (c) 2019\-2021 Erik Garrison
 .sp
 Permission is hereby granted, free of charge, to any person obtaining a copy of
 this software and associated documentation files (the "Software"), to deal in

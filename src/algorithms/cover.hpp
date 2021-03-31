@@ -3,14 +3,16 @@
 #include <unordered_map>
 #include <stack>
 #include <map>
-
+#include <sdsl/bit_vectors.hpp>
 #include <handlegraph/mutable_path_deletable_handle_graph.hpp>
 #include <handlegraph/util.hpp>
 #include "weakly_connected_components.hpp"
 #include <deps/ips4o/ips4o.hpp>
+#include "XoshiroCpp.hpp"
+#include "progress.hpp"
 
 namespace odgi {
-    namespace algorithms {
+namespace algorithms {
 
         using namespace handlegraph;
 
@@ -57,5 +59,11 @@ namespace odgi {
                         size_t min_node_coverage, size_t max_number_of_paths_generable,
                         bool write_node_coverages, std::string &node_coverages,
                         const uint64_t& nthreads, const bool& ignore_paths, const bool& show_progress);
-    }
+
+void hogwild_path_cover(handlegraph::MutablePathDeletableHandleGraph &graph,
+                        double target_depth,
+                        //bool write_node_coverages, std::string &node_coverages,
+                        const uint64_t& nthreads, const bool& ignore_paths, const bool& show_progress);
+
+}
 }

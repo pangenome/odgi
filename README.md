@@ -12,17 +12,17 @@ Each node is represented by a byte array into which we write variable length int
 
 The edges and path steps are recorded relativistically, as deltas between the current node id and the target node id, where the node id corresponds to the rank in the global array of nodes.
 Graphs built from biological data sets tend to have local partial order, and when sorted the stored deltas will tend to be small.
-This allows them to be compressed with a variable length integer representation, resulting in a small in-memory footprint at the cost of packing and unpacking.
+This allows them to be compressed with a variable length integer representation, resulting in a small in-memory footprint at the cost of packing and unpacking. 
 
-The savings are substantial.
-In partially ordered regions of the graph, most deltas will require only a single byte.
-The resulting implementation is able to load the whole genome 1000 Genomes Project graph (described in our [publication on vg in Nature Biotechnology](https://www.nature.com/articles/nbt.4227)) in around 20GB of RAM.
-Initially, `odgi` has been developed to allow in-memory manipulation of graphs produced by the [seqwish](https://github.com/ekg/seqwish) variation graph inducer.
+The savings are substantial.  In partially ordered regions of the graph, most deltas will require only a single byte.
+
+<!--- <> The resulting implementation is able to load the whole genome 1000 Genomes Project graph (described in our [publication on vg in Nature Biotechnology](https://www.nature.com/articles/nbt.4227)) in around 20GB of RAM.
+Initially, `odgi` has been developed to allow in-memory manipulation of graphs produced by the [seqwish](https://github.com/ekg/seqwish) variation graph inducer.  -->
 
 ## building
 
 ```
-git clone --recursive https://github.com/vgteam/odgi.git
+git clone --recursive https://github.com/pangenome/odgi.git
 cd odgi
 cmake -H. -Bbuild && cmake --build build -- -j 3
 ```

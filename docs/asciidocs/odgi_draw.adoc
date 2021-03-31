@@ -1,53 +1,78 @@
-= odgi unitig(1)
+= odgi draw(1)
 ifdef::backend-manpage[]
 Erik Garrison
 :doctype: manpage
 :release-version: v0.6.0
-:man manual: odgi unitig
+:man manual: odgi draw
 :man source: odgi v0.6.0
 :page-layout: base
 endif::[]
 
+
 == NAME
 
-odgi_unitig - output unitigs of the graph
+odgi_draw - variation graph visualizations in 2D
+
 
 == SYNOPSIS
 
-*odgi unitig* [*-i, --idx*=_FILE_] [_OPTION_]...
+*odgi draw* [*-i, --idx*=_FILE_] [*-c, --coords-in*=_FILE_] [*-p, --png*=_FILE_] [_OPTION_]...
+
 
 == DESCRIPTION
 
-The odgi unitig(1) command can print all https://github.com/mcveanlab/mccortex/wiki/unitig[unitigs] of a given odgi graph to standard output in FASTA format. Unitigs can also be emitted
-in a fixed sequence quality FASTQ format. Various parameters can refine the unitigs to print.
+The odgi draw(1) command draws previously-determined 2D layouts of the graph with diverse annotations.
 
 == OPTIONS
 
-=== Graph Files IO
+=== Files IO
 
 *-i, --idx*=_FILE_::
-  File containing the succinct variation graph to convert from. The file name usually ends with _.og_.
+  Load the graph from this file. The file name usually ends with _.og_.
 
-=== FASTQ Options
+*-c, --coords-in*=_FILE_::
+  Read the layout coordinates from this .lay format file produced by <<odgi_layout.adoc#_odgi_layout1, odgi layout>>
 
-*-f, --fake-fastq*::
-  Write the unitigs in FASTQ format to stdout with a fixed quality value of _I_.
+*-T, --tsv*=_FILE_::
+    Write the TSV layout plus displayed annotations to this file.
 
-=== Unitig Options
+*-s, --svg*=_FILE_::
+  Write an SVG rendering to this file.
 
-*-t, --sample-to*=_N_::
-  Continue unitigs with a random walk in the graph so that they have at least the given _N_ length.
+*-p, --png*=_FILE_::
+  Write a rasterized PNG rendering to this file.
 
-*-p, --sample-plus*=_N_::
-  Continue unitigs with a random walk in the graph by _N_ past their natural end.
+=== Visualization Options
 
-*-l, --min-begin-node-length*=_N_::
-  Only begin unitigs collection from nodes which have at least length _N_.
+*-H, --png-height*=_N_::
+  Height of PNG rendering (default: 1000).
+
+*-E, --png-border*=_N_::
+  Size of PNG border in bp (default: 10).
+
+*-C --color-paths*::
+  Color paths (in PNG output).
+
+*-R, --scale*=_N_::
+  Image scaling (default 1.0).
+
+*-B, --border*=_N_::
+  Image border (in approximate bp) (default 100.0).
+
+*-w, --line-width*=_N_::
+  Line width (in approximate bp) (default 0.0).
+
+*-S, --path-line-spacing*=_N_::
+  Spacing between path lines in png layout (in approximate bp) (default 0.0).
+
+*-X, --path-index*=_FILE_::
+  Load the path index from this file.
 
 === Program Information
 
 *-h, --help*::
-  Print a help message for *odgi unitig*.
+  Print a help message for *odgi draw*.
+
 
 == EXIT STATUS
 
@@ -57,15 +82,19 @@ in a fixed sequence quality FASTQ format. Various parameters can refine the unit
 *1*::
   Failure (syntax or usage error; parameter error; file processing failure; unexpected error).
 
+
 == BUGS
 
-Refer to the *odgi* issue tracker at https://github.com/pangenome/odgi/issues.
+  Refer to the *odgi* issue tracker at https://github.com/pangenome/odgi/issues.
+
 
 == AUTHORS
 
-*odgi unitig* was written by Erik Garrison.
+*odgi draw* was written by Erik Garrison.
 
 ifdef::backend-manpage[]
+
+
 == RESOURCES
 
 *Project web site:* https://github.com/pangenome/odgi
@@ -75,6 +104,7 @@ ifdef::backend-manpage[]
 *GitHub organization:* https://github.com/pangenome
 
 *Discussion list / forum:* https://github.com/pangenome/odgi/issues
+
 
 == COPYING
 

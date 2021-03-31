@@ -449,32 +449,34 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 <li><a href="#_odgi_1">1. odgi (1)</a></li>
 <li><a href="#_odgi_build1">2. odgi build(1)</a></li>
 <li><a href="#_odgi_stats1">3. odgi stats(1)</a></li>
-<li><a href="#_odgi_sort1">4. odgi sort(1)</a></li>
-<li><a href="#_odgi_groom1">5. odgi groom(1)</a></li>
-<li><a href="#_odgi_cover1">6. odgi cover(1)</a></li>
-<li><a href="#_odgi_explode1">7. odgi explode(1)</a></li>
-<li><a href="#_odgi_squeeze1">8. odgi squeeze(1)</a></li>
-<li><a href="#_odgi_extract1">9. odgi extract(1)</a></li>
-<li><a href="#_odgi_view1">10. odgi view(1)</a></li>
-<li><a href="#_odgi_kmers1">11. odgi kmers(1)</a></li>
-<li><a href="#_odgi_unitig1">12. odgi unitig(1)</a></li>
-<li><a href="#_odgi_viz1">13. odgi viz(1)</a></li>
-<li><a href="#_odgi_paths1">14. odgi paths(1)</a></li>
-<li><a href="#_odgi_prune1">15. odgi prune(1)</a></li>
-<li><a href="#_odgi_unchop1">16. odgi unchop(1)</a></li>
-<li><a href="#_odgi_normalize1">17. odgi normalize(1)</a></li>
-<li><a href="#_odgi_bin1">18. odgi bin(1)</a></li>
-<li><a href="#_odgi_matrix1">19. odgi matrix(1)</a></li>
-<li><a href="#_odgi_chop1">20. odgi chop(1)</a></li>
-<li><a href="#_odgi_layout1">21. odgi layout(1)</a></li>
-<li><a href="#_odgi_flatten1">22. odgi flatten(1)</a></li>
-<li><a href="#_odgi_break1">23. odgi break(1)</a></li>
-<li><a href="#_odgi_pathindex1">24. odgi pathindex(1)</a></li>
-<li><a href="#_odgi_panpos1">25. odgi panpos(1)</a></li>
-<li><a href="#_odgi_position1">26. odgi position(1)</a></li>
-<li><a href="#_odgi_server1">27. odgi server(1)</a></li>
-<li><a href="#_odgi_test1">28. odgi test(1)</a></li>
-<li><a href="#_odgi_version1">29. odgi version(1)</a></li>
+<li><a href="#_odgi_depth1">4. odgi depth(1)</a></li>
+<li><a href="#_odgi_sort1">5. odgi sort(1)</a></li>
+<li><a href="#_odgi_groom1">6. odgi groom(1)</a></li>
+<li><a href="#_odgi_cover1">7. odgi cover(1)</a></li>
+<li><a href="#_odgi_explode1">8. odgi explode(1)</a></li>
+<li><a href="#_odgi_squeeze1">9. odgi squeeze(1)</a></li>
+<li><a href="#_odgi_extract1">10. odgi extract(1)</a></li>
+<li><a href="#_odgi_view1">11. odgi view(1)</a></li>
+<li><a href="#_odgi_kmers1">12. odgi kmers(1)</a></li>
+<li><a href="#_odgi_unitig1">13. odgi unitig(1)</a></li>
+<li><a href="#_odgi_viz1">14. odgi viz(1)</a></li>
+<li><a href="#_odgi_draw1">15. odgi draw(1)</a></li>
+<li><a href="#_odgi_paths1">16. odgi paths(1)</a></li>
+<li><a href="#_odgi_prune1">17. odgi prune(1)</a></li>
+<li><a href="#_odgi_unchop1">18. odgi unchop(1)</a></li>
+<li><a href="#_odgi_normalize1">19. odgi normalize(1)</a></li>
+<li><a href="#_odgi_bin1">20. odgi bin(1)</a></li>
+<li><a href="#_odgi_matrix1">21. odgi matrix(1)</a></li>
+<li><a href="#_odgi_chop1">22. odgi chop(1)</a></li>
+<li><a href="#_odgi_layout1">23. odgi layout(1)</a></li>
+<li><a href="#_odgi_flatten1">24. odgi flatten(1)</a></li>
+<li><a href="#_odgi_break1">25. odgi break(1)</a></li>
+<li><a href="#_odgi_pathindex1">26. odgi pathindex(1)</a></li>
+<li><a href="#_odgi_panpos1">27. odgi panpos(1)</a></li>
+<li><a href="#_odgi_position1">28. odgi position(1)</a></li>
+<li><a href="#_odgi_server1">29. odgi server(1)</a></li>
+<li><a href="#_odgi_test1">30. odgi test(1)</a></li>
+<li><a href="#_odgi_version1">31. odgi version(1)</a></li>
 </ul>
 </div>
 </div>
@@ -495,6 +497,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="paragraph">
 <p><strong>odgi</strong> <a href="#_odgi_stats1">stats</a> -i graph.og -S</p>
+</div>
+<div class="paragraph">
+<p><strong>odgi</strong> <a href="#_odgi_depth1">depth</a> -i graph.og</p>
 </div>
 <div class="paragraph">
 <p><strong>odgi</strong> <a href="#_odgi_cover1">cover</a> -i graph.og -o graph.paths.og</p>
@@ -525,6 +530,9 @@ body.book #toc,body.book #preamble,body.book h1.sect0,body.book .sect1>h2{page-b
 </div>
 <div class="paragraph">
 <p><strong>odgi</strong> <a href="#_odgi_viz1">viz</a> -i graph.og -o graph.og.png -x 1920 -y 1080 -R -t 28</p>
+</div>
+<div class="paragraph">
+<p><strong>odgi</strong> <a href="#_odgi_draw1">draw</a> -i graph.og -c coords.lay -p .png -x 1920 -y 1080 -R -t 28</p>
 </div>
 <div class="paragraph">
 <p><strong>odgi</strong> <a href="#_odgi_paths1">paths</a> -i graph.og -f</p>
@@ -595,6 +603,10 @@ The odgi build(1) command constructs a succinct variation graph from a GFA. Curr
 <div class="paragraph">
 <p><strong>odgi stats</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;<br>
 The odgi stats(1) command produces statistics of a variation graph. Among other metrics, it can calculate the #nodes, #edges, #paths and the total nucleotide length of the graph. Various histogram summary options complement the tool. If [<strong>-B, --bed-multicov</strong>=<em>BED</em>] is set, the metrics will be produced for the intervals specified in the BED.</p>
+</div>
+<div class="paragraph">
+<p><strong>odgi depth</strong> [<strong>-i, --input</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;
+The odgi depth(1) command finds the depth of graph as defined by query criteria.</p>
 </div>
 <div class="paragraph">
 <p><strong>odgi cover</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;<br>
@@ -672,6 +684,10 @@ the bins with a reverse rate of at least 0.5 are colored. Currently, there is no
 sequence coverage in bins available.</p>
 </div>
 <div class="paragraph">
+<p><strong>odgi draw</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-c, --coords-in</strong>=<em>FILE</em>] [<strong>-p, --png</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;
+The odgi draw(1) command draws previously-determined 2D layouts of the graph with diverse annotations.</p>
+</div>
+<div class="paragraph">
 <p><strong>odgi paths</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;<br>
 The odgi paths(1) command allows the investigation of paths of a given variation graph. It can calculate overlap statistics
 of groupings of paths.</p>
@@ -715,10 +731,10 @@ The odgi chop(1) command chops long nodes into short ones while preserving the g
 </div>
 <div class="paragraph">
 <p><strong>odgi layout</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;<br>
-The odgi layout(1) command draws 2D layouts of the graph using stochastic gradient descent (SGD). The input graph must be sorted
+The odgi layout(1) command computes 2D layouts of the graph using stochastic gradient descent (SGD). The input graph must be sorted
 and id-compacted. The algorithm itself is described in <a href="https://arxiv.org/abs/1710.04626">Graph Drawing by Stochastic Gradient Descent</a>.
 The force-directed graph drawing algorithm minimizes the graph&#8217;s energy function or stress level.
-It applies SGD to move a single pair of nodes at a time. The rendered graph is written in SVG format.</p>
+It applies SGD to move a single pair of nodes at a time.</p>
 </div>
 <div class="paragraph">
 <p><strong>odgi flatten</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;<br>
@@ -765,28 +781,28 @@ The odgi version(1) command prints the current git version with tags and codenam
 <div class="sect2">
 <h3 id="_bugs">1.5. BUGS</h3>
 <div class="paragraph">
-<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a>.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_authors">1.6. AUTHORS</h3>
 <div class="paragraph">
-<p>Erik Garrison from the University of California Santa Cruz wrote the whole <strong>odgi</strong> tool. Simon Heumos from the Quantitative Biology Center Tübingen wrote <strong>odgi pathindex</strong>, <strong>odgi panpos</strong>, <strong>odgi server</strong>, and this documentation. Andrea Guarracino from the University of Rome Tor Vergata wrote <strong>odgi viz</strong>, <strong>odgi extract</strong>, <strong>odgi cover</strong>, <strong>odgi explode</strong>, <strong>odgi squeeze</strong>, and this documentation*.</p>
+<p>Erik Garrison from the University of California Santa Cruz wrote the whole <strong>odgi</strong> tool. Simon Heumos from the Quantitative Biology Center Tübingen wrote <strong>odgi pathindex</strong>, <strong>odgi panpos</strong>, <strong>odgi server</strong>, and this documentation. Andrea Guarracino from the University of Rome Tor Vergata wrote <strong>odgi viz</strong>, <strong>odgi extract</strong>, <strong>odgi cover</strong>, <strong>odgi explode</strong>, <strong>odgi squeeze</strong>, <strong>odgi depth</strong>, and this documentation*.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_resources">1.7. RESOURCES</h3>
 <div class="paragraph">
-<p><strong>Project web site:</strong> <a href="https://github.com/vgteam/odgi" class="bare">https://github.com/vgteam/odgi</a></p>
+<p><strong>Project web site:</strong> <a href="https://github.com/pangenome/odgi" class="bare">https://github.com/pangenome/odgi</a></p>
 </div>
 <div class="paragraph">
-<p><strong>Git source repository on GitHub:</strong> <a href="https://github.com/vgteam/odgi" class="bare">https://github.com/vgteam/odgi</a></p>
+<p><strong>Git source repository on GitHub:</strong> <a href="https://github.com/pangenome/odgi" class="bare">https://github.com/pangenome/odgi</a></p>
 </div>
 <div class="paragraph">
-<p><strong>GitHub organization:</strong> <a href="https://github.com/vgteam" class="bare">https://github.com/vgteam</a></p>
+<p><strong>GitHub organization:</strong> <a href="https://github.com/pangenome" class="bare">https://github.com/pangenome</a></p>
 </div>
 <div class="paragraph">
-<p><strong>Discussion list / forum:</strong> <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a></p>
+<p><strong>Discussion list / forum:</strong> <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a></p>
 </div>
 </div>
 <div class="sect2">
@@ -795,7 +811,7 @@ The odgi version(1) command prints the current git version with tags and codenam
 <p>The MIT License (MIT)</p>
 </div>
 <div class="paragraph">
-<p>Copyright (c) 2019 Erik Garrison</p>
+<p>Copyright (c) 2019-2021 Erik Garrison</p>
 </div>
 <div class="paragraph">
 <p>Permission is hereby granted, free of charge, to any person obtaining a copy of
@@ -930,7 +946,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 <div class="sect2">
 <h3 id="_bugs_2">2.6. BUGS</h3>
 <div class="paragraph">
-<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a>.</p>
 </div>
 </div>
 <div class="sect2">
@@ -991,34 +1007,11 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 <dd>
 <p>Describe the base content of the graph. Print to stdout the #A, #C, #G and #T of the graph.</p>
 </dd>
-<dt class="hdlist1"><strong>-C, --coverage</strong></dt>
-<dd>
-<p>Provide a histogram of path coverage over bases in the graph. Print three tab-delimited columns to stdout: <strong>type</strong>, <strong>cov</strong>, <strong>N</strong>. <strong>type</strong> is one of <em>full</em> or <em>uniq</em> and determines if the histogram corresponds to the full graph or only to a unique paths graph. <strong>cov</strong> implies the #paths. <strong>N</strong> implies the #nucleotides.</p>
-</dd>
-<dt class="hdlist1"><strong>-V, --set-coverage</strong></dt>
-<dd>
-<p>Provide a histogram of coverage over unique set of paths. Print two tab-delimited columns to stdout: <strong>cov</strong>, <strong>sets</strong>. <strong>cov</strong> implies #nucleotides. <strong>sets</strong> lists the unique set of paths in a comma separated list. Sets with a <strong>cov</strong> of one and no paths in <strong>sets</strong> are listed, too.</p>
-</dd>
-<dt class="hdlist1"><strong>-M, --multi-coverage</strong></dt>
-<dd>
-<p>Provide a histogram of coverage over unique multiset, the combination with possible repetition of paths. Print two tab-delimited columns to stdout: <strong>cov</strong>, <strong>sets</strong>. <strong>cov</strong> implies #nucleotides. <strong>sets</strong> lists the unique multisets of paths in a comma separated list. Multisets with a <strong>cov</strong> of one and no paths in <strong>sets</strong> are listed, too.</p>
-</dd>
 </dl>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_bed_interval">3.4.3. BED Interval</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-B, --bed-multicov</strong>=<em>BED</em></dt>
-<dd>
-<p>For each BED entry, provide a table of path coverage over unique multisets of paths in the graph. Each unique multiset of paths overlapping a given BED interval is described in terms of its length relative to the total interval, the number of path traversals and unique paths involved in these traversals.</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_sorting_goodness_evaluation">3.4.4. Sorting goodness evaluation</h4>
+<h4 id="_sorting_goodness_evaluation">3.4.3. Sorting goodness evaluation</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-l, --mean-links-length</strong></dt>
@@ -1049,7 +1042,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_threading">3.4.5. Threading</h4>
+<h4 id="_threading">3.4.4. Threading</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-t, --threads</strong>=<em>N</em></dt>
@@ -1060,7 +1053,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_program_information_2">3.4.6. Program Information</h4>
+<h4 id="_program_information_2">3.4.5. Program Information</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-h, --help</strong></dt>
@@ -1089,7 +1082,7 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 <div class="sect2">
 <h3 id="_bugs_3">3.6. BUGS</h3>
 <div class="paragraph">
-<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a>.</p>
 </div>
 </div>
 <div class="sect2">
@@ -1101,22 +1094,156 @@ CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_odgi_sort1">4. odgi sort(1)</h2>
+<h2 id="_odgi_depth1">4. odgi depth(1)</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_name_4">4.1. NAME</h3>
 <div class="paragraph">
-<p>odgi_sort - sort a variation graph</p>
+<p>odgi_depth - find the depth of graph as defined by query criteria</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_synopsis_4">4.2. SYNOPSIS</h3>
 <div class="paragraph">
-<p><strong>odgi sort</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
+<p><strong>odgi depth</strong> [<strong>-i, --input</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_description_4">4.3. DESCRIPTION</h3>
+<div class="paragraph">
+<p>The odgi depth(1) command finds the depth of graph as defined by query criteria.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_options_3">4.4. OPTIONS</h3>
+<div class="sect3">
+<h4 id="_graph_files_io_3">4.4.1. Graph Files IO</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-i, --input</strong>=<em>FILE</em></dt>
+<dd>
+<p>Compute path depths in this graph.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_depth_options">4.4.2. Depth Options</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-s, --subset-paths</strong>=<em>FILE</em></dt>
+<dd>
+<p>Compute the depth considering only the paths specified in the FILE; the file must contain one path name per line and a
+subset of all paths can be specified.</p>
+</dd>
+<dt class="hdlist1"><strong>-r, --path</strong>=<em>STRING</em></dt>
+<dd>
+<p>Compute the depth of the given path in the graph</p>
+</dd>
+<dt class="hdlist1"><strong>-R, --paths</strong>=<em>FILE</em></dt>
+<dd>
+<p>Compute depth for the paths listed in FILE.</p>
+</dd>
+<dt class="hdlist1"><strong>-g, --graph-pos</strong>=<em>[[node_id]<strong class="">]</strong>]</em></dt>
+<dd>
+<p>Compute the depth at the given node, e.g. 7 or 3,4 or 42,10,+ or 302,0,-.</p>
+</dd>
+<dt class="hdlist1"><strong>-G, --graph-pos-file</strong>=<em>FILE</em></dt>
+<dd>
+<p>A file with graph path position per line.</p>
+</dd>
+<dt class="hdlist1"><strong>-p, --path-pos</strong>=<em>[[path_name]<strong class="">]</strong>]</em></dt>
+<dd>
+<p>Return depth at the given path position e.g. chrQ or chr3,42 or chr8,1337,+ or chrZ,3929,-.</p>
+</dd>
+<dt class="hdlist1"><strong>-F, --path-pos-file</strong>=<em>FILE</em></dt>
+<dd>
+<p>A file with one path position per line.</p>
+</dd>
+<dt class="hdlist1"><strong>-b, --bed-input</strong>=<em>FILE</em></dt>
+<dd>
+<p>A BED file of ranges in paths in the graph.</p>
+</dd>
+<dt class="hdlist1"><strong>-d, --graph-depth</strong></dt>
+<dd>
+<p>Compute the depth on each node in the graph.</p>
+</dd>
+<dt class="hdlist1"><strong>-d, --search-radius</strong>=<em>STRING</em></dt>
+<dd>
+<p>Limit coordinate conversion breadth-first search up to DISTANCE bp from each given position [default: 10000].</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_threading_2">4.4.3. Threading</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-t, --threads</strong>=<em>N</em></dt>
+<dd>
+<p>Number of threads to use.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_program_information_3">4.4.4. Program Information</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-h, --help</strong></dt>
+<dd>
+<p>Print a help message for <strong>odgi depth</strong>.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_exit_status_3">4.5. EXIT STATUS</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>0</strong></dt>
+<dd>
+<p>Success.</p>
+</dd>
+<dt class="hdlist1"><strong>1</strong></dt>
+<dd>
+<p>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_bugs_4">4.6. BUGS</h3>
+<div class="paragraph">
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_authors_4">4.7. AUTHORS</h3>
+<div class="paragraph">
+<p><strong>odgi depth</strong> was written by Andrea Guarracino.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_odgi_sort1">5. odgi sort(1)</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_name_5">5.1. NAME</h3>
+<div class="paragraph">
+<p>odgi_sort - sort a variation graph</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_synopsis_5">5.2. SYNOPSIS</h3>
+<div class="paragraph">
+<p><strong>odgi sort</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_description_5">5.3. DESCRIPTION</h3>
 <div class="paragraph">
 <p>The odgi sort(1) command sorts a succinct variation graph. Odgi sort offers a diverse palette of sorting algorithms to
 determine the node order:</p>
@@ -1151,9 +1278,9 @@ pipeline of sorts within one parameter.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_options_3">4.4. OPTIONS</h3>
+<h3 id="_options_4">5.4. OPTIONS</h3>
 <div class="sect3">
-<h4 id="_graph_files_io_3">4.4.1. Graph Files IO</h4>
+<h4 id="_graph_files_io_4">5.4.1. Graph Files IO</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
@@ -1172,7 +1299,7 @@ pipeline of sorts within one parameter.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_topological_sorts">4.4.2. Topological Sorts</h4>
+<h4 id="_topological_sorts">5.4.2. Topological Sorts</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-b, --breadth-first</strong></dt>
@@ -1207,7 +1334,7 @@ pipeline of sorts within one parameter.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_random_sort">4.4.3. Random Sort</h4>
+<h4 id="_random_sort">5.4.3. Random Sort</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-r, --random</strong></dt>
@@ -1218,7 +1345,7 @@ pipeline of sorts within one parameter.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_path_guided_1d_linear_sgd_sort">4.4.4. Path Guided 1D Linear SGD Sort</h4>
+<h4 id="_path_guided_1d_linear_sgd_sort">5.4.4. Path Guided 1D Linear SGD Sort</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-Y, --path-sgd</strong></dt>
@@ -1294,7 +1421,7 @@ This argument only works when <em>-Y, --path-sgd</em> was specified. Not applica
 </div>
 </div>
 <div class="sect3">
-<h4 id="_path_sorting_options">4.4.5. Path Sorting Options</h4>
+<h4 id="_path_sorting_options">5.4.5. Path Sorting Options</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-L, --paths-min</strong></dt>
@@ -1321,7 +1448,7 @@ This argument only works when <em>-Y, --path-sgd</em> was specified. Not applica
 </div>
 </div>
 <div class="sect3">
-<h4 id="_pipeline_sorting">4.4.6. Pipeline Sorting</h4>
+<h4 id="_pipeline_sorting">5.4.6. Pipeline Sorting</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-p, --pipeline</strong>=<em>STRING</em></dt>
@@ -1333,7 +1460,7 @@ This argument only works when <em>-Y, --path-sgd</em> was specified. Not applica
 </div>
 </div>
 <div class="sect3">
-<h4 id="_additional_parameters">4.4.7. Additional Parameters</h4>
+<h4 id="_additional_parameters">5.4.7. Additional Parameters</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-d, --dagify-sort</strong></dt>
@@ -1348,7 +1475,7 @@ This argument only works when <em>-Y, --path-sgd</em> was specified. Not applica
 </div>
 </div>
 <div class="sect3">
-<h4 id="_threading_2">4.4.8. Threading</h4>
+<h4 id="_threading_3">5.4.8. Threading</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-t, --threads</strong>=<em>N</em></dt>
@@ -1359,7 +1486,7 @@ This argument only works when <em>-Y, --path-sgd</em> was specified. Not applica
 </div>
 </div>
 <div class="sect3">
-<h4 id="_processing_information_2">4.4.9. Processing Information</h4>
+<h4 id="_processing_information_2">5.4.9. Processing Information</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-P, --progress</strong></dt>
@@ -1370,102 +1497,12 @@ This argument only works when <em>-Y, --path-sgd</em> was specified. Not applica
 </div>
 </div>
 <div class="sect3">
-<h4 id="_program_information_3">4.4.10. Program Information</h4>
+<h4 id="_program_information_4">5.4.10. Program Information</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-h, --help</strong></dt>
 <dd>
 <p>Print a help message for <strong>odgi sort</strong>.</p>
-</dd>
-</dl>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_exit_status_3">4.5. EXIT STATUS</h3>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>0</strong></dt>
-<dd>
-<p>Success.</p>
-</dd>
-<dt class="hdlist1"><strong>1</strong></dt>
-<dd>
-<p>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_bugs_4">4.6. BUGS</h3>
-<div class="paragraph">
-<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_authors_4">4.7. AUTHORS</h3>
-<div class="paragraph">
-<p><strong>odgi sort</strong> was written by Erik Garrison, Simon Heumos, and Andrea Guarracino.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_odgi_groom1">5. odgi groom(1)</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="_name_5">5.1. NAME</h3>
-<div class="paragraph">
-<p>odgi_groom - resolve spurious inverting links</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_synopsis_5">5.2. SYNOPSIS</h3>
-<div class="paragraph">
-<p><strong>odgi groom</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_description_5">5.3. DESCRIPTION</h3>
-<div class="paragraph">
-<p>The odgi groom(1) command resolves spurious inverting links.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_options_4">5.4. OPTIONS</h3>
-<div class="sect3">
-<h4 id="_graph_files_io_4">5.4.1. Graph Files IO</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
-<dd>
-<p>File containing the succinct variation graph to groom. The file name usually ends with <em>.og</em>.</p>
-</dd>
-<dt class="hdlist1"><strong>-o, --out</strong>=<em>FILE</em></dt>
-<dd>
-<p>Write the groomed succinct variation graph to <em>FILE</em>. The file name usually ends with <em>.og</em>.</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_processing_information_3">5.4.2. Processing Information</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-P, --progress</strong></dt>
-<dd>
-<p>Display progress of the grooming to stderr.</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_program_information_4">5.4.3. Program Information</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-h, --help</strong></dt>
-<dd>
-<p>Print a help message for <strong>odgi groom</strong>.</p>
 </dd>
 </dl>
 </div>
@@ -1489,11 +1526,101 @@ This argument only works when <em>-Y, --path-sgd</em> was specified. Not applica
 <div class="sect2">
 <h3 id="_bugs_5">5.6. BUGS</h3>
 <div class="paragraph">
-<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a>.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_authors_5">5.7. AUTHORS</h3>
+<div class="paragraph">
+<p><strong>odgi sort</strong> was written by Erik Garrison, Simon Heumos, and Andrea Guarracino.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_odgi_groom1">6. odgi groom(1)</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_name_6">6.1. NAME</h3>
+<div class="paragraph">
+<p>odgi_groom - resolve spurious inverting links</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_synopsis_6">6.2. SYNOPSIS</h3>
+<div class="paragraph">
+<p><strong>odgi groom</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_description_6">6.3. DESCRIPTION</h3>
+<div class="paragraph">
+<p>The odgi groom(1) command resolves spurious inverting links.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_options_5">6.4. OPTIONS</h3>
+<div class="sect3">
+<h4 id="_graph_files_io_5">6.4.1. Graph Files IO</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
+<dd>
+<p>File containing the succinct variation graph to groom. The file name usually ends with <em>.og</em>.</p>
+</dd>
+<dt class="hdlist1"><strong>-o, --out</strong>=<em>FILE</em></dt>
+<dd>
+<p>Write the groomed succinct variation graph to <em>FILE</em>. The file name usually ends with <em>.og</em>.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_processing_information_3">6.4.2. Processing Information</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-P, --progress</strong></dt>
+<dd>
+<p>Display progress of the grooming to stderr.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_program_information_5">6.4.3. Program Information</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-h, --help</strong></dt>
+<dd>
+<p>Print a help message for <strong>odgi groom</strong>.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_exit_status_5">6.5. EXIT STATUS</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>0</strong></dt>
+<dd>
+<p>Success.</p>
+</dd>
+<dt class="hdlist1"><strong>1</strong></dt>
+<dd>
+<p>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_bugs_6">6.6. BUGS</h3>
+<div class="paragraph">
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_authors_6">6.7. AUTHORS</h3>
 <div class="paragraph">
 <p><strong>odgi groom</strong> was written by Erik Garrison and Andrea Guarracino.</p>
 </div>
@@ -1501,30 +1628,30 @@ This argument only works when <em>-Y, --path-sgd</em> was specified. Not applica
 </div>
 </div>
 <div class="sect1">
-<h2 id="_odgi_cover1">6. odgi cover(1)</h2>
+<h2 id="_odgi_cover1">7. odgi cover(1)</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_name_6">6.1. NAME</h3>
+<h3 id="_name_7">7.1. NAME</h3>
 <div class="paragraph">
 <p>odgi_cover - find a path cover of the variation graph</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_synopsis_6">6.2. SYNOPSIS</h3>
+<h3 id="_synopsis_7">7.2. SYNOPSIS</h3>
 <div class="paragraph">
 <p><strong>odgi cover</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_description_6">6.3. DESCRIPTION</h3>
+<h3 id="_description_7">7.3. DESCRIPTION</h3>
 <div class="paragraph">
 <p>The odgi cover(1) command finds a path cover of a variation graph, with a specified number of paths per component.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_options_5">6.4. OPTIONS</h3>
+<h3 id="_options_6">7.4. OPTIONS</h3>
 <div class="sect3">
-<h4 id="_graph_files_io_5">6.4.1. Graph Files IO</h4>
+<h4 id="_graph_files_io_6">7.4.1. Graph Files IO</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
@@ -1539,7 +1666,7 @@ This argument only works when <em>-Y, --path-sgd</em> was specified. Not applica
 </div>
 </div>
 <div class="sect3">
-<h4 id="_cover_options">6.4.2. Cover Options</h4>
+<h4 id="_cover_options">7.4.2. Cover Options</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-n, --num-paths-per-component</strong>=<em>N</em></dt>
@@ -1566,7 +1693,7 @@ This argument only works when <em>-Y, --path-sgd</em> was specified. Not applica
 </div>
 </div>
 <div class="sect3">
-<h4 id="_threading_3">6.4.3. Threading</h4>
+<h4 id="_threading_4">7.4.3. Threading</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-t, --threads</strong>=<em>N</em></dt>
@@ -1577,120 +1704,7 @@ This argument only works when <em>-Y, --path-sgd</em> was specified. Not applica
 </div>
 </div>
 <div class="sect3">
-<h4 id="_processing_information_4">6.4.4. Processing Information</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-P, --progress</strong></dt>
-<dd>
-<p>Print information about the components and the progress to stderr.</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_program_information_5">6.4.5. Program Information</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-h, --help</strong></dt>
-<dd>
-<p>Print a help message for <strong>odgi cover</strong>.</p>
-</dd>
-</dl>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_exit_status_5">6.5. EXIT STATUS</h3>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>0</strong></dt>
-<dd>
-<p>Success.</p>
-</dd>
-<dt class="hdlist1"><strong>1</strong></dt>
-<dd>
-<p>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_bugs_6">6.6. BUGS</h3>
-<div class="paragraph">
-<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_authors_6">6.7. AUTHORS</h3>
-<div class="paragraph">
-<p><strong>odgi cover</strong> was written by Andrea Guarracino.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_odgi_explode1">7. odgi explode(1)</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="_name_7">7.1. NAME</h3>
-<div class="paragraph">
-<p>odgi_explode - breaks a graph into connected components in their own files</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_synopsis_7">7.2. SYNOPSIS</h3>
-<div class="paragraph">
-<p><strong>odgi explode</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-p, --prefix</strong>=<em>STRING</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_description_7">7.3. DESCRIPTION</h3>
-<div class="paragraph">
-<p>The odgi explode(1) command breaks a graph into connected components, writing each component in its own file.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_options_6">7.4. OPTIONS</h3>
-<div class="sect3">
-<h4 id="_graph_files_io_6">7.4.1. Graph Files IO</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
-<dd>
-<p>File containing the succinct variation graph to break in its components. The file name usually ends with <em>.og</em>.</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_explode_options">7.4.2. Explode Options</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-p, --prefix</strong>=<em>STRING</em></dt>
-<dd>
-<p>  Write each connected component in a file with the given prefix. The file for the component <code>i</code> will be named
-<code>STRING.i.og</code> (default: <code>component</code>)</p>
-</dd>
-<dt class="hdlist1"><strong>-O, --optimize</strong></dt>
-<dd>
-<p>Compact the node ID space in each connected component.</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_threading_4">7.4.3. Threading</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-t, --threads</strong>=<em>N</em></dt>
-<dd>
-<p>Number of threads to use (to write the components in parallel).</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_processing_information_5">7.4.4. Processing Information</h4>
+<h4 id="_processing_information_4">7.4.4. Processing Information</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-P, --progress</strong></dt>
@@ -1706,7 +1720,7 @@ This argument only works when <em>-Y, --path-sgd</em> was specified. Not applica
 <dl>
 <dt class="hdlist1"><strong>-h, --help</strong></dt>
 <dd>
-<p>Print a help message for <strong>odgi explode</strong>.</p>
+<p>Print a help message for <strong>odgi cover</strong>.</p>
 </dd>
 </dl>
 </div>
@@ -1730,36 +1744,36 @@ This argument only works when <em>-Y, --path-sgd</em> was specified. Not applica
 <div class="sect2">
 <h3 id="_bugs_7">7.6. BUGS</h3>
 <div class="paragraph">
-<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a>.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_authors_7">7.7. AUTHORS</h3>
 <div class="paragraph">
-<p><strong>odgi explode</strong> was written by Andrea Guarracino.</p>
+<p><strong>odgi cover</strong> was written by Andrea Guarracino.</p>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_odgi_squeeze1">8. odgi squeeze(1)</h2>
+<h2 id="_odgi_explode1">8. odgi explode(1)</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_name_8">8.1. NAME</h3>
 <div class="paragraph">
-<p>odgi_squeeze - squeezes multiple graphs into the same file</p>
+<p>odgi_explode - breaks a graph into connected components in their own files</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_synopsis_8">8.2. SYNOPSIS</h3>
 <div class="paragraph">
-<p><strong>odgi squeeze</strong> [<strong>-f, --input-graphs</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
+<p><strong>odgi explode</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-p, --prefix</strong>=<em>STRING</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_description_8">8.3. DESCRIPTION</h3>
 <div class="paragraph">
-<p>The odgi squeeze(1) command merges multiple graphs into the same file.</p>
+<p>The odgi explode(1) command breaks a graph into connected components, writing each component in its own file.</p>
 </div>
 </div>
 <div class="sect2">
@@ -1768,50 +1782,58 @@ This argument only works when <em>-Y, --path-sgd</em> was specified. Not applica
 <h4 id="_graph_files_io_7">8.4.1. Graph Files IO</h4>
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><strong>-f, --input-graphs</strong>=<em>FILE</em></dt>
+<dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
 <dd>
-<p>Input file containing the list of graphs to squeeze into the same file. The file must contain one path per line.</p>
-</dd>
-<dt class="hdlist1"><strong>-o, --out</strong>=<em>FILE</em></dt>
-<dd>
-<p>Store all the input graphs in this file. The file name usually ends with <em>.og</em>.</p>
+<p>File containing the succinct variation graph to break in its components. The file name usually ends with <em>.og</em>.</p>
 </dd>
 </dl>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_squeeze_options">8.4.2. Squeeze Options</h4>
+<h4 id="_explode_options">8.4.2. Explode Options</h4>
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><strong>-s, --rank-suffix</strong>=<em>STRING</em></dt>
+<dt class="hdlist1"><strong>-p, --prefix</strong>=<em>STRING</em></dt>
 <dd>
-<p>Add the separator and the input file rank as suffix to the path names (to avoid path name collisions).</p>
+<p>  Write each connected component in a file with the given prefix. The file for the component <code>i</code> will be named
+<code>STRING.i.og</code> (default: <code>component</code>)</p>
 </dd>
 <dt class="hdlist1"><strong>-O, --optimize</strong></dt>
 <dd>
-<p>Compact the node ID space in each input file before imploding.</p>
+<p>Compact the node ID space in each connected component.</p>
 </dd>
 </dl>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_processing_information_6">8.4.3. Processing Information</h4>
+<h4 id="_threading_5">8.4.3. Threading</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-t, --threads</strong>=<em>N</em></dt>
+<dd>
+<p>Number of threads to use (to write the components in parallel).</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_processing_information_5">8.4.4. Processing Information</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-P, --progress</strong></dt>
 <dd>
-<p>Print information about the progress to stderr.</p>
+<p>Print information about the components and the progress to stderr.</p>
 </dd>
 </dl>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_program_information_7">8.4.4. Program Information</h4>
+<h4 id="_program_information_7">8.4.5. Program Information</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-h, --help</strong></dt>
 <dd>
-<p>Print a help message for <strong>odgi squeeze</strong>.</p>
+<p>Print a help message for <strong>odgi explode</strong>.</p>
 </dd>
 </dl>
 </div>
@@ -1835,11 +1857,127 @@ This argument only works when <em>-Y, --path-sgd</em> was specified. Not applica
 <div class="sect2">
 <h3 id="_bugs_8">8.6. BUGS</h3>
 <div class="paragraph">
-<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a>.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_authors_8">8.7. AUTHORS</h3>
+<div class="paragraph">
+<p><strong>odgi explode</strong> was written by Andrea Guarracino.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_odgi_squeeze1">9. odgi squeeze(1)</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_name_9">9.1. NAME</h3>
+<div class="paragraph">
+<p>odgi_squeeze - squeezes multiple graphs into the same file</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_synopsis_9">9.2. SYNOPSIS</h3>
+<div class="paragraph">
+<p><strong>odgi squeeze</strong> [<strong>-f, --input-graphs</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_description_9">9.3. DESCRIPTION</h3>
+<div class="paragraph">
+<p>The odgi squeeze(1) command merges multiple graphs into the same file.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_options_8">9.4. OPTIONS</h3>
+<div class="sect3">
+<h4 id="_graph_files_io_8">9.4.1. Graph Files IO</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-f, --input-graphs</strong>=<em>FILE</em></dt>
+<dd>
+<p>Input file containing the list of graphs to squeeze into the same file. The file must contain one path per line.</p>
+</dd>
+<dt class="hdlist1"><strong>-o, --out</strong>=<em>FILE</em></dt>
+<dd>
+<p>Store all the input graphs in this file. The file name usually ends with <em>.og</em>.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_squeeze_options">9.4.2. Squeeze Options</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-s, --rank-suffix</strong>=<em>STRING</em></dt>
+<dd>
+<p>Add the separator and the input file rank as suffix to the path names (to avoid path name collisions).</p>
+</dd>
+<dt class="hdlist1"><strong>-O, --optimize</strong></dt>
+<dd>
+<p>Compact the node ID space in each input file before imploding.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_threading_6">9.4.3. Threading</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-t, --threads</strong>=<em>N</em></dt>
+<dd>
+<p>Number of threads to use.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_processing_information_6">9.4.4. Processing Information</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-P, --progress</strong></dt>
+<dd>
+<p>Print information about the progress to stderr.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_program_information_8">9.4.5. Program Information</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-h, --help</strong></dt>
+<dd>
+<p>Print a help message for <strong>odgi squeeze</strong>.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_exit_status_8">9.5. EXIT STATUS</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>0</strong></dt>
+<dd>
+<p>Success.</p>
+</dd>
+<dt class="hdlist1"><strong>1</strong></dt>
+<dd>
+<p>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_bugs_9">9.6. BUGS</h3>
+<div class="paragraph">
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_authors_9">9.7. AUTHORS</h3>
 <div class="paragraph">
 <p><strong>odgi squeeze</strong> was written by Andrea Guarracino.</p>
 </div>
@@ -1847,30 +1985,30 @@ This argument only works when <em>-Y, --path-sgd</em> was specified. Not applica
 </div>
 </div>
 <div class="sect1">
-<h2 id="_odgi_extract1">9. odgi extract(1)</h2>
+<h2 id="_odgi_extract1">10. odgi extract(1)</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_name_9">9.1. NAME</h3>
+<h3 id="_name_10">10.1. NAME</h3>
 <div class="paragraph">
 <p>odgi_extract - extract parts of the graph as defined by query criteria</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_synopsis_9">9.2. SYNOPSIS</h3>
+<h3 id="_synopsis_10">10.2. SYNOPSIS</h3>
 <div class="paragraph">
 <p><strong>odgi extract</strong> [<strong>-f, --input-graphs</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_description_9">9.3. DESCRIPTION</h3>
+<h3 id="_description_10">10.3. DESCRIPTION</h3>
 <div class="paragraph">
 <p>The odgi extract(1) command extracts parts of the graph as defined by query criteria.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_options_8">9.4. OPTIONS</h3>
+<h3 id="_options_9">10.4. OPTIONS</h3>
 <div class="sect3">
-<h4 id="_graph_files_io_8">9.4.1. Graph Files IO</h4>
+<h4 id="_graph_files_io_9">10.4.1. Graph Files IO</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-f, --input-graphs</strong>=<em>FILE</em></dt>
@@ -1885,12 +2023,16 @@ This argument only works when <em>-Y, --path-sgd</em> was specified. Not applica
 </div>
 </div>
 <div class="sect3">
-<h4 id="_extract_options">9.4.2. Extract Options</h4>
+<h4 id="_extract_options">10.4.2. Extract Options</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-s, --split-subgraphs</strong>=<em>STRING</em></dt>
 <dd>
 <p>Instead of writing the target subgraphs into a single graph, write one subgraph per given target to a separate file named <code>path:start-end.og</code> (0-based coordinates).</p>
+</dd>
+<dt class="hdlist1"><strong>-I, --inverse</strong></dt>
+<dd>
+<p>Extract parts of the graph that do not meet the query criteria.</p>
 </dd>
 <dt class="hdlist1"><strong>-l, --node-list</strong>::_FILE_</dt>
 <dd>
@@ -1925,7 +2067,7 @@ Be careful to use it with very complex graphs.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_threading_5">9.4.3. Threading</h4>
+<h4 id="_threading_7">10.4.3. Threading</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-t, --threads</strong>=<em>N</em></dt>
@@ -1936,7 +2078,7 @@ Be careful to use it with very complex graphs.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_processing_information_7">9.4.4. Processing Information</h4>
+<h4 id="_processing_information_7">10.4.4. Processing Information</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-P, --progress</strong></dt>
@@ -1947,103 +2089,12 @@ Be careful to use it with very complex graphs.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_program_information_8">9.4.5. Program Information</h4>
+<h4 id="_program_information_9">10.4.5. Program Information</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-h, --help</strong></dt>
 <dd>
 <p>Print a help message for <strong>odgi extract</strong>.</p>
-</dd>
-</dl>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_exit_status_8">9.5. EXIT STATUS</h3>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>0</strong></dt>
-<dd>
-<p>Success.</p>
-</dd>
-<dt class="hdlist1"><strong>1</strong></dt>
-<dd>
-<p>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_bugs_9">9.6. BUGS</h3>
-<div class="paragraph">
-<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_authors_9">9.7. AUTHORS</h3>
-<div class="paragraph">
-<p><strong>odgi extract</strong> was written by Andrea Guarracino.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_odgi_view1">10. odgi view(1)</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="_name_10">10.1. NAME</h3>
-<div class="paragraph">
-<p>odgi_view - projection of graphs into other formats</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_synopsis_10">10.2. SYNOPSIS</h3>
-<div class="paragraph">
-<p><strong>odgi view</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_description_10">10.3. DESCRIPTION</h3>
-<div class="paragraph">
-<p>The odgi view(1) command can convert a graph in odgi format to GFAv1. It can reveal a graph&#8217;s internal structures for e.g. debugging processes.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_options_9">10.4. OPTIONS</h3>
-<div class="sect3">
-<h4 id="_graph_files_io_9">10.4.1. Graph Files IO</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
-<dd>
-<p>File containing the succinct variation graph to convert from. The file name usually ends with <em>.og</em>.</p>
-</dd>
-<dt class="hdlist1"><strong>-g, --to-gfa</strong></dt>
-<dd>
-<p>Write the graph in GFAv1 format to standard output.</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_summary_options_2">10.4.2. Summary Options</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-d, --display</strong></dt>
-<dd>
-<p>Show the internal structures of a graph. Print to stdout the maximum node identifier, the minimum node identifier,
-the nodes vector, the delete nodes bit vector and the path metadata, each in a separate line.</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_program_information_9">10.4.3. Program Information</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-h, --help</strong></dt>
-<dd>
-<p>Print a help message for <strong>odgi view</strong>.</p>
 </dd>
 </dl>
 </div>
@@ -2067,37 +2118,36 @@ the nodes vector, the delete nodes bit vector and the path metadata, each in a s
 <div class="sect2">
 <h3 id="_bugs_10">10.6. BUGS</h3>
 <div class="paragraph">
-<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a>.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_authors_10">10.7. AUTHORS</h3>
 <div class="paragraph">
-<p><strong>odgi view</strong> was written by Erik Garrison.</p>
+<p><strong>odgi extract</strong> was written by Andrea Guarracino.</p>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_odgi_kmers1">11. odgi kmers(1)</h2>
+<h2 id="_odgi_view1">11. odgi view(1)</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_name_11">11.1. NAME</h3>
 <div class="paragraph">
-<p>odgi_kmers - show and characterize the kmer space of the graph</p>
+<p>odgi_view - projection of graphs into other formats</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_synopsis_11">11.2. SYNOPSIS</h3>
 <div class="paragraph">
-<p><strong>odgi kmers</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-c, --stdout</strong>] [<em>OPTION</em>]&#8230;&#8203;</p>
+<p><strong>odgi view</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_description_11">11.3. DESCRIPTION</h3>
 <div class="paragraph">
-<p>Given a kmer length, the odgi kmers(1) command can emit all kmers. The output can be refined by setting the maximum number
-of furcations at edges or by not considering nodes above a given node degree limit.</p>
+<p>The odgi view(1) command can convert a graph in odgi format to GFAv1. It can reveal a graph&#8217;s internal structures for e.g. debugging processes.</p>
 </div>
 </div>
 <div class="sect2">
@@ -2110,50 +2160,32 @@ of furcations at edges or by not considering nodes above a given node degree lim
 <dd>
 <p>File containing the succinct variation graph to convert from. The file name usually ends with <em>.og</em>.</p>
 </dd>
-<dt class="hdlist1"><strong>-c, --stdout</strong>=</dt>
+<dt class="hdlist1"><strong>-g, --to-gfa</strong></dt>
 <dd>
-<p>Write the kmers to standard output. Kmers are line-separated.</p>
+<p>Write the graph in GFAv1 format to standard output.</p>
 </dd>
 </dl>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_kmer_options">11.4.2. Kmer Options</h4>
+<h4 id="_summary_options_2">11.4.2. Summary Options</h4>
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><strong>-k, --kmer-length</strong>=<em>N</em></dt>
+<dt class="hdlist1"><strong>-d, --display</strong></dt>
 <dd>
-<p>The kmer length to generate kmers from.</p>
-</dd>
-<dt class="hdlist1"><strong>-e, --max-furcations</strong>=<em>N</em></dt>
-<dd>
-<p>Break at edges that would induce this many furcations when generating a kmer.</p>
-</dd>
-<dt class="hdlist1"><strong>-D, --max-degree</strong>=<em>N</em></dt>
-<dd>
-<p>Don&#8217;t take nodes into account that have a degree greater than <em>N</em>.</p>
+<p>Show the internal structures of a graph. Print to stdout the maximum node identifier, the minimum node identifier,
+the nodes vector, the delete nodes bit vector and the path metadata, each in a separate line.</p>
 </dd>
 </dl>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_threading_6">11.4.3. Threading</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-t, --threads</strong>=<em>N</em></dt>
-<dd>
-<p>Number of threads to use.</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_program_information_10">11.4.4. Program Information</h4>
+<h4 id="_program_information_10">11.4.3. Program Information</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-h, --help</strong></dt>
 <dd>
-<p>Print a help message for <strong>odgi kmers</strong>.</p>
+<p>Print a help message for <strong>odgi view</strong>.</p>
 </dd>
 </dl>
 </div>
@@ -2177,37 +2209,37 @@ of furcations at edges or by not considering nodes above a given node degree lim
 <div class="sect2">
 <h3 id="_bugs_11">11.6. BUGS</h3>
 <div class="paragraph">
-<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a>.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_authors_11">11.7. AUTHORS</h3>
 <div class="paragraph">
-<p><strong>odgi kmers</strong> was written by Erik Garrison.</p>
+<p><strong>odgi view</strong> was written by Erik Garrison.</p>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_odgi_unitig1">12. odgi unitig(1)</h2>
+<h2 id="_odgi_kmers1">12. odgi kmers(1)</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_name_12">12.1. NAME</h3>
 <div class="paragraph">
-<p>odgi_unitig - output unitigs of the graph</p>
+<p>odgi_kmers - show and characterize the kmer space of the graph</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_synopsis_12">12.2. SYNOPSIS</h3>
 <div class="paragraph">
-<p><strong>odgi unitig</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
+<p><strong>odgi kmers</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-c, --stdout</strong>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_description_12">12.3. DESCRIPTION</h3>
 <div class="paragraph">
-<p>The odgi unitig(1) command can print all <a href="https://github.com/mcveanlab/mccortex/wiki/unitig">unitigs</a> of a given odgi graph to standard output in FASTA format. Unitigs can also be emitted
-in a fixed sequence quality FASTQ format. Various parameters can refine the unitigs to print.</p>
+<p>Given a kmer length, the odgi kmers(1) command can emit all kmers. The output can be refined by setting the maximum number
+of furcations at edges or by not considering nodes above a given node degree limit.</p>
 </div>
 </div>
 <div class="sect2">
@@ -2220,35 +2252,39 @@ in a fixed sequence quality FASTQ format. Various parameters can refine the unit
 <dd>
 <p>File containing the succinct variation graph to convert from. The file name usually ends with <em>.og</em>.</p>
 </dd>
-</dl>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_fastq_options">12.4.2. FASTQ Options</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-f, --fake-fastq</strong></dt>
+<dt class="hdlist1"><strong>-c, --stdout</strong>=</dt>
 <dd>
-<p>Write the unitigs in FASTQ format to stdout with a fixed quality value of <em>I</em>.</p>
+<p>Write the kmers to standard output. Kmers are line-separated.</p>
 </dd>
 </dl>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_unitig_options">12.4.3. Unitig Options</h4>
+<h4 id="_kmer_options">12.4.2. Kmer Options</h4>
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><strong>-t, --sample-to</strong>=<em>N</em></dt>
+<dt class="hdlist1"><strong>-k, --kmer-length</strong>=<em>N</em></dt>
 <dd>
-<p>Continue unitigs with a random walk in the graph so that they have at least the given <em>N</em> length.</p>
+<p>The kmer length to generate kmers from.</p>
 </dd>
-<dt class="hdlist1"><strong>-p, --sample-plus</strong>=<em>N</em></dt>
+<dt class="hdlist1"><strong>-e, --max-furcations</strong>=<em>N</em></dt>
 <dd>
-<p>Continue unitigs with a random walk in the graph by <em>N</em> past their natural end.</p>
+<p>Break at edges that would induce this many furcations when generating a kmer.</p>
 </dd>
-<dt class="hdlist1"><strong>-l, --min-begin-node-length</strong>=<em>N</em></dt>
+<dt class="hdlist1"><strong>-D, --max-degree</strong>=<em>N</em></dt>
 <dd>
-<p>Only begin unitigs collection from nodes which have at least length <em>N</em>.</p>
+<p>Don&#8217;t take nodes into account that have a degree greater than <em>N</em>.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_threading_8">12.4.3. Threading</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-t, --threads</strong>=<em>N</em></dt>
+<dd>
+<p>Number of threads to use.</p>
 </dd>
 </dl>
 </div>
@@ -2259,7 +2295,7 @@ in a fixed sequence quality FASTQ format. Various parameters can refine the unit
 <dl>
 <dt class="hdlist1"><strong>-h, --help</strong></dt>
 <dd>
-<p>Print a help message for <strong>odgi unitig</strong>.</p>
+<p>Print a help message for <strong>odgi kmers</strong>.</p>
 </dd>
 </dl>
 </div>
@@ -2283,11 +2319,117 @@ in a fixed sequence quality FASTQ format. Various parameters can refine the unit
 <div class="sect2">
 <h3 id="_bugs_12">12.6. BUGS</h3>
 <div class="paragraph">
-<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a>.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_authors_12">12.7. AUTHORS</h3>
+<div class="paragraph">
+<p><strong>odgi kmers</strong> was written by Erik Garrison.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_odgi_unitig1">13. odgi unitig(1)</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_name_13">13.1. NAME</h3>
+<div class="paragraph">
+<p>odgi_unitig - output unitigs of the graph</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_synopsis_13">13.2. SYNOPSIS</h3>
+<div class="paragraph">
+<p><strong>odgi unitig</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_description_13">13.3. DESCRIPTION</h3>
+<div class="paragraph">
+<p>The odgi unitig(1) command can print all <a href="https://github.com/mcveanlab/mccortex/wiki/unitig">unitigs</a> of a given odgi graph to standard output in FASTA format. Unitigs can also be emitted
+in a fixed sequence quality FASTQ format. Various parameters can refine the unitigs to print.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_options_12">13.4. OPTIONS</h3>
+<div class="sect3">
+<h4 id="_graph_files_io_12">13.4.1. Graph Files IO</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
+<dd>
+<p>File containing the succinct variation graph to convert from. The file name usually ends with <em>.og</em>.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_fastq_options">13.4.2. FASTQ Options</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-f, --fake-fastq</strong></dt>
+<dd>
+<p>Write the unitigs in FASTQ format to stdout with a fixed quality value of <em>I</em>.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_unitig_options">13.4.3. Unitig Options</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-t, --sample-to</strong>=<em>N</em></dt>
+<dd>
+<p>Continue unitigs with a random walk in the graph so that they have at least the given <em>N</em> length.</p>
+</dd>
+<dt class="hdlist1"><strong>-p, --sample-plus</strong>=<em>N</em></dt>
+<dd>
+<p>Continue unitigs with a random walk in the graph by <em>N</em> past their natural end.</p>
+</dd>
+<dt class="hdlist1"><strong>-l, --min-begin-node-length</strong>=<em>N</em></dt>
+<dd>
+<p>Only begin unitigs collection from nodes which have at least length <em>N</em>.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_program_information_12">13.4.4. Program Information</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-h, --help</strong></dt>
+<dd>
+<p>Print a help message for <strong>odgi unitig</strong>.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_exit_status_12">13.5. EXIT STATUS</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>0</strong></dt>
+<dd>
+<p>Success.</p>
+</dd>
+<dt class="hdlist1"><strong>1</strong></dt>
+<dd>
+<p>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_bugs_13">13.6. BUGS</h3>
+<div class="paragraph">
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_authors_13">13.7. AUTHORS</h3>
 <div class="paragraph">
 <p><strong>odgi unitig</strong> was written by Erik Garrison.</p>
 </div>
@@ -2295,22 +2437,22 @@ in a fixed sequence quality FASTQ format. Various parameters can refine the unit
 </div>
 </div>
 <div class="sect1">
-<h2 id="_odgi_viz1">13. odgi viz(1)</h2>
+<h2 id="_odgi_viz1">14. odgi viz(1)</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_name_13">13.1. NAME</h3>
+<h3 id="_name_14">14.1. NAME</h3>
 <div class="paragraph">
 <p>odgi_viz - variation graph visualizations</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_synopsis_13">13.2. SYNOPSIS</h3>
+<h3 id="_synopsis_14">14.2. SYNOPSIS</h3>
 <div class="paragraph">
 <p><strong>odgi viz</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_description_13">13.3. DESCRIPTION</h3>
+<h3 id="_description_14">14.3. DESCRIPTION</h3>
 <div class="paragraph">
 <p>The odgi viz(1) command can produce a linear, static visualization of an odgi variation graph. It can aggregate the pangenome into bins
 and directly renders a raster image. The binning level can be specified in input or it is calculated from the target width of the PNG to emit.
@@ -2319,9 +2461,9 @@ please refer to <a href="#_odgi_bin1">odgi bin</a>.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_options_12">13.4. OPTIONS</h3>
+<h3 id="_options_13">14.4. OPTIONS</h3>
 <div class="sect3">
-<h4 id="_graph_files_io_12">13.4.1. Graph Files IO</h4>
+<h4 id="_graph_files_io_13">14.4.1. Graph Files IO</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
@@ -2336,7 +2478,7 @@ please refer to <a href="#_odgi_bin1">odgi bin</a>.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_visualization_options">13.4.2. Visualization Options</h4>
+<h4 id="_visualization_options">14.4.2. Visualization Options</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-x, --width</strong>=<em>N</em></dt>
@@ -2387,20 +2529,20 @@ mean inversion rate equals to 1).</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_intervals_selection">13.4.3. Intervals selection</h4>
+<h4 id="_intervals_selection">14.4.3. Intervals selection</h4>
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><strong>-r, --pangenomic-range</strong></dt>
+<dt class="hdlist1"><strong>-r, --path-range</strong></dt>
 <dd>
 <p>Nucleotide range to visualize: <code>STRING=[PATH:]start-end</code>. <code>*-end</code> for <code>[0,end]</code>; <code>start-*</code> for <code>[start,pangenome_length]</code>.
-If no PATH is specified, the nucleotide positions refer to the pangenome&#8217;s sequence (i.e., the sequence obtained arranging all the graph&#8217;s node
-from left to right).</p>
+If no PATH is specified, the nucleotide positions refer to the pangenome&#8217;s sequence (i.e., the sequence obtained arranging
+all the graph&#8217;s node from left to right).</p>
 </dd>
 </dl>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_paths_selection">13.4.4. Paths selection</h4>
+<h4 id="_paths_selection">14.4.4. Paths selection</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-p, --paths-to-display</strong></dt>
@@ -2412,7 +2554,7 @@ paths can be specified.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_path_names_visualization_options">13.4.5. Path names visualization Options</h4>
+<h4 id="_path_names_visualization_options">14.4.5. Path names visualization Options</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-H, --hide-path-names</strong></dt>
@@ -2432,7 +2574,7 @@ paths can be specified.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_binned_mode_options">13.4.6. Binned Mode Options</h4>
+<h4 id="_binned_mode_options">14.4.6. Binned Mode Options</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-b, --binned-mode</strong></dt>
@@ -2470,7 +2612,7 @@ coverage in the entire graph).</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_gradient_mode_also_known_as_position_mode_options">13.4.7. Gradient Mode (also known as Position Mode) Options</h4>
+<h4 id="_gradient_mode_also_known_as_position_mode_options">14.4.7. Gradient Mode (also known as Position Mode) Options</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-d, --change-darkness</strong></dt>
@@ -2492,7 +2634,7 @@ combination with [<strong>-A, --alignment-prefix</strong>=<em>STRING</em>].</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_program_information_12">13.4.8. Program Information</h4>
+<h4 id="_program_information_13">14.4.8. Program Information</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-h, --help</strong></dt>
@@ -2504,7 +2646,7 @@ combination with [<strong>-A, --alignment-prefix</strong>=<em>STRING</em>].</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_exit_status_12">13.5. EXIT STATUS</h3>
+<h3 id="_exit_status_13">14.5. EXIT STATUS</h3>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>0</strong></dt>
@@ -2519,15 +2661,15 @@ combination with [<strong>-A, --alignment-prefix</strong>=<em>STRING</em>].</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_bugs_13">13.6. BUGS</h3>
+<h3 id="_bugs_14">14.6. BUGS</h3>
 <div class="literalblock">
 <div class="content">
-<pre>Refer to the *odgi* issue tracker at https://github.com/vgteam/odgi/issues.</pre>
+<pre>Refer to the *odgi* issue tracker at https://github.com/pangenome/odgi/issues.</pre>
 </div>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_authors_13">13.7. AUTHORS</h3>
+<h3 id="_authors_14">14.7. AUTHORS</h3>
 <div class="paragraph">
 <p><strong>odgi viz</strong> was written by Erik Garrison and Andrea Guarracino.</p>
 </div>
@@ -2535,31 +2677,163 @@ combination with [<strong>-A, --alignment-prefix</strong>=<em>STRING</em>].</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_odgi_paths1">14. odgi paths(1)</h2>
+<h2 id="_odgi_draw1">15. odgi draw(1)</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_name_14">14.1. NAME</h3>
+<h3 id="_name_15">15.1. NAME</h3>
+<div class="paragraph">
+<p>odgi_draw - variation graph visualizations in 2D</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_synopsis_15">15.2. SYNOPSIS</h3>
+<div class="paragraph">
+<p><strong>odgi draw</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-c, --coords-in</strong>=<em>FILE</em>] [<strong>-p, --png</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_description_15">15.3. DESCRIPTION</h3>
+<div class="paragraph">
+<p>The odgi draw(1) command draws previously-determined 2D layouts of the graph with diverse annotations.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_options_14">15.4. OPTIONS</h3>
+<div class="sect3">
+<h4 id="_files_io">15.4.1. Files IO</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
+<dd>
+<p>Load the graph from this file. The file name usually ends with <em>.og</em>.</p>
+</dd>
+<dt class="hdlist1"><strong>-c, --coords-in</strong>=<em>FILE</em></dt>
+<dd>
+<p>Read the layout coordinates from this .lay format file produced by <a href="#_odgi_layout1">odgi layout</a></p>
+</dd>
+<dt class="hdlist1"><strong>-T, --tsv</strong>=<em>FILE</em></dt>
+<dd>
+<p>Write the TSV layout plus displayed annotations to this file.</p>
+</dd>
+<dt class="hdlist1"><strong>-s, --svg</strong>=<em>FILE</em></dt>
+<dd>
+<p>Write an SVG rendering to this file.</p>
+</dd>
+<dt class="hdlist1"><strong>-p, --png</strong>=<em>FILE</em></dt>
+<dd>
+<p>Write a rasterized PNG rendering to this file.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_visualization_options_2">15.4.2. Visualization Options</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-H, --png-height</strong>=<em>N</em></dt>
+<dd>
+<p>Height of PNG rendering (default: 1000).</p>
+</dd>
+<dt class="hdlist1"><strong>-E, --png-border</strong>=<em>N</em></dt>
+<dd>
+<p>Size of PNG border in bp (default: 10).</p>
+</dd>
+<dt class="hdlist1"><strong>-C --color-paths</strong></dt>
+<dd>
+<p>Color paths (in PNG output).</p>
+</dd>
+<dt class="hdlist1"><strong>-R, --scale</strong>=<em>N</em></dt>
+<dd>
+<p>Image scaling (default 1.0).</p>
+</dd>
+<dt class="hdlist1"><strong>-B, --border</strong>=<em>N</em></dt>
+<dd>
+<p>Image border (in approximate bp) (default 100.0).</p>
+</dd>
+<dt class="hdlist1"><strong>-w, --line-width</strong>=<em>N</em></dt>
+<dd>
+<p>Line width (in approximate bp) (default 0.0).</p>
+</dd>
+<dt class="hdlist1"><strong>-S, --path-line-spacing</strong>=<em>N</em></dt>
+<dd>
+<p>Spacing between path lines in png layout (in approximate bp) (default 0.0).</p>
+</dd>
+<dt class="hdlist1"><strong>-X, --path-index</strong>=<em>FILE</em></dt>
+<dd>
+<p>Load the path index from this file.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_program_information_14">15.4.3. Program Information</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-h, --help</strong></dt>
+<dd>
+<p>Print a help message for <strong>odgi draw</strong>.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_exit_status_14">15.5. EXIT STATUS</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>0</strong></dt>
+<dd>
+<p>Success.</p>
+</dd>
+<dt class="hdlist1"><strong>1</strong></dt>
+<dd>
+<p>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_bugs_15">15.6. BUGS</h3>
+<div class="literalblock">
+<div class="content">
+<pre>Refer to the *odgi* issue tracker at https://github.com/pangenome/odgi/issues.</pre>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_authors_15">15.7. AUTHORS</h3>
+<div class="paragraph">
+<p><strong>odgi draw</strong> was written by Erik Garrison.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_odgi_paths1">16. odgi paths(1)</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_name_16">16.1. NAME</h3>
 <div class="paragraph">
 <p>odgi_paths - embedded path interrogation</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_synopsis_14">14.2. SYNOPSIS</h3>
+<h3 id="_synopsis_16">16.2. SYNOPSIS</h3>
 <div class="paragraph">
 <p><strong>odgi paths</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_description_14">14.3. DESCRIPTION</h3>
+<h3 id="_description_16">16.3. DESCRIPTION</h3>
 <div class="paragraph">
 <p>The odgi paths(1) command allows the investigation of paths of a given variation graph. It can calculate overlap statistics
 of groupings of paths.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_options_13">14.4. OPTIONS</h3>
+<h3 id="_options_15">16.4. OPTIONS</h3>
 <div class="sect3">
-<h4 id="_graph_files_io_13">14.4.1. Graph Files IO</h4>
+<h4 id="_graph_files_io_14">16.4.1. Graph Files IO</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
@@ -2576,7 +2850,7 @@ for each pairing will be calculated and printed to stdout.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_investigation_options">14.4.2. Investigation Options</h4>
+<h4 id="_investigation_options">16.4.2. Investigation Options</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-L, --list-paths</strong></dt>
@@ -2605,270 +2879,12 @@ with [<strong>-H, --haplotypes</strong>]. Prints an additional, first column <st
 </div>
 </div>
 <div class="sect3">
-<h4 id="_threading_7">14.4.3. Threading</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-t, --threads</strong>=<em>N</em></dt>
-<dd>
-<p>Number of threads to use.</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_program_information_13">14.4.4. Program Information</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-h, --help</strong></dt>
-<dd>
-<p>Print a help message for <strong>odgi paths</strong>.</p>
-</dd>
-</dl>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_exit_status_13">14.5. EXIT STATUS</h3>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>0</strong></dt>
-<dd>
-<p>Success.</p>
-</dd>
-<dt class="hdlist1"><strong>1</strong></dt>
-<dd>
-<p>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_bugs_14">14.6. BUGS</h3>
-<div class="paragraph">
-<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_authors_14">14.7. AUTHORS</h3>
-<div class="paragraph">
-<p><strong>odgi paths</strong> was written by Erik Garrison.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_odgi_prune1">15. odgi prune(1)</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="_name_15">15.1. NAME</h3>
-<div class="paragraph">
-<p>odgi_prune - remove complex parts of the graph</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_synopsis_15">15.2. SYNOPSIS</h3>
-<div class="paragraph">
-<p><strong>odgi prune</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_description_15">15.3. DESCRIPTION</h3>
-<div class="paragraph">
-<p>The odgi prune(1) command can remove complex parts of a graph. One can drop paths, nodes by a certain kind of edge coverage,
-edges and graph tips. Specifying a kmer length and a maximum number of furcations, the graph can be broken at edges not
-fitting into these conditions.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_options_14">15.4. OPTIONS</h3>
-<div class="sect3">
-<h4 id="_graph_files_io_14">15.4.1. Graph Files IO</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
-<dd>
-<p>File containing the succinct variation graph to load in. The file name usually ends with <em>.og</em>.</p>
-</dd>
-<dt class="hdlist1"><strong>-o, --out</strong>=<em>FILE</em></dt>
-<dd>
-<p>Write the pruned graph to <em>FILE</em>. The file name should end with <em>.og</em>.</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_kmer_options_2">15.4.2. Kmer Options</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-k, --kmer-length</strong>=<em>N</em></dt>
-<dd>
-<p>The length of the kmers to consider.</p>
-</dd>
-<dt class="hdlist1"><strong>-e, --max-furcations</strong>=<em>N</em></dt>
-<dd>
-<p>Break at edges that would induce <em>N</em> many furcations in a kmer.</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_node_options">15.4.3. Node Options</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-d, --max-degree</strong>=<em>N</em></dt>
-<dd>
-<p>Remove nodes that have a higher node degree than <em>N</em>.</p>
-</dd>
-<dt class="hdlist1"><strong>-c, --min-coverage</strong>=<em>N</em></dt>
-<dd>
-<p>Remove nodese covered by fewer than <em>N</em> number of path steps.</p>
-</dd>
-<dt class="hdlist1"><strong>-C, --max-coverage</strong>=<em>N</em></dt>
-<dd>
-<p>Remove nodes covered by more than <em>N</em> number of path steps.</p>
-</dd>
-<dt class="hdlist1"><strong>-T, --cut-tips</strong>=<em>N</em></dt>
-<dd>
-<p>Remove nodes which are graph tips.</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_edge_options">15.4.4. Edge Options</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-E, --edge-coverage</strong></dt>
-<dd>
-<p>Remove edges outside of the minimum and maximum coverage rather than nodes. Only set this argument in combination with
-[<strong>-c, --min-coverage</strong>=<em>N</em>] and [<strong>-C, --max-coverage</strong>=<em>N</em>].</p>
-</dd>
-<dt class="hdlist1"><strong>-b, --best-edges</strong>=<em>N</em></dt>
-<dd>
-<p>Only keep the <em>N</em> most covered inbound and output edges of each node.</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_path_options">15.4.5. Path Options</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-D, --drop-paths</strong></dt>
-<dd>
-<p>Remove the paths from the graph.</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_threading_8">15.4.6. Threading</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-t, --threads</strong>=<em>N</em></dt>
-<dd>
-<p>Number of threads to use.</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_program_information_14">15.4.7. Program Information</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-h, --help</strong></dt>
-<dd>
-<p>Print a help message for <strong>odgi prune</strong>.</p>
-</dd>
-</dl>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_exit_status_14">15.5. EXIT STATUS</h3>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>0</strong></dt>
-<dd>
-<p>Success.</p>
-</dd>
-<dt class="hdlist1"><strong>1</strong></dt>
-<dd>
-<p>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_bugs_15">15.6. BUGS</h3>
-<div class="paragraph">
-<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_authors_15">15.7. AUTHORS</h3>
-<div class="paragraph">
-<p><strong>odgi prune</strong> was written by Erik Garrison.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_odgi_unchop1">16. odgi unchop(1)</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="_name_16">16.1. NAME</h3>
-<div class="paragraph">
-<p>odgi_unchop - merge unitigs into single nodes</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_synopsis_16">16.2. SYNOPSIS</h3>
-<div class="paragraph">
-<p><strong>odgi unchop</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_description_16">16.3. DESCRIPTION</h3>
-<div class="paragraph">
-<p>The odgi unchop(1) command merges each unitig into a single node preserving the node order.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_options_15">16.4. OPTIONS</h3>
-<div class="sect3">
-<h4 id="_graph_files_io_15">16.4.1. Graph Files IO</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
-<dd>
-<p>File containing the succinct variation graph to unchop. The file name usually ends with <em>.og</em>.</p>
-</dd>
-<dt class="hdlist1"><strong>-o, --out</strong>=<em>FILE</em></dt>
-<dd>
-<p>Write the unchopped dynamic succinct variation graph to this file. A file ending with <em>.og</em> is recommended.</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_processing_information_8">16.4.2. Processing Information</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-d, --debug</strong></dt>
-<dd>
-<p>Print information about the process to stderr.</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect3">
 <h4 id="_threading_9">16.4.3. Threading</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-t, --threads</strong>=<em>N</em></dt>
 <dd>
-<p>Number of threads to use for the parallel operations.</p>
+<p>Number of threads to use.</p>
 </dd>
 </dl>
 </div>
@@ -2879,7 +2895,7 @@ fitting into these conditions.</p>
 <dl>
 <dt class="hdlist1"><strong>-h, --help</strong></dt>
 <dd>
-<p>Print a help message for <strong>odgi unchop</strong>.</p>
+<p>Print a help message for <strong>odgi paths</strong>.</p>
 </dd>
 </dl>
 </div>
@@ -2903,77 +2919,140 @@ fitting into these conditions.</p>
 <div class="sect2">
 <h3 id="_bugs_16">16.6. BUGS</h3>
 <div class="paragraph">
-<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a>.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_authors_16">16.7. AUTHORS</h3>
 <div class="paragraph">
-<p><strong>odgi unchop</strong> was written by Erik Garrison and Andrea Guarracino.</p>
+<p><strong>odgi paths</strong> was written by Erik Garrison.</p>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_odgi_normalize1">17. odgi normalize(1)</h2>
+<h2 id="_odgi_prune1">17. odgi prune(1)</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_name_17">17.1. NAME</h3>
 <div class="paragraph">
-<p>odgi_normalize - compact unitigs and simplify redundant furcations</p>
+<p>odgi_prune - remove complex parts of the graph</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_synopsis_17">17.2. SYNOPSIS</h3>
 <div class="paragraph">
-<p><strong>odgi normalize</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
+<p><strong>odgi prune</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_description_17">17.3. DESCRIPTION</h3>
 <div class="paragraph">
-<p>The odgi normalize(1) command <a href="#_odgi_unchop1">unchops</a> a given variation graph and simplifies redundant furcations.</p>
+<p>The odgi prune(1) command can remove complex parts of a graph. One can drop paths, nodes by a certain kind of edge coverage,
+edges and graph tips. Specifying a kmer length and a maximum number of furcations, the graph can be broken at edges not
+fitting into these conditions.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_options_16">17.4. OPTIONS</h3>
 <div class="sect3">
-<h4 id="_graph_files_io_16">17.4.1. Graph Files IO</h4>
+<h4 id="_graph_files_io_15">17.4.1. Graph Files IO</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
 <dd>
-<p>File containing the succinct variation graph to normalize. The file name usually ends with <em>.og</em>.</p>
+<p>File containing the succinct variation graph to load in. The file name usually ends with <em>.og</em>.</p>
 </dd>
 <dt class="hdlist1"><strong>-o, --out</strong>=<em>FILE</em></dt>
 <dd>
-<p>Write the normalized dynamic succinct variation graph to this file. A file ending with <em>.og</em> is recommended.</p>
-</dd>
-<dt class="hdlist1"><strong>-I, --max-iterations</strong>=<em>N</em></dt>
-<dd>
-<p>Iterate the normalization up to <em>N</em> many times. The default is <em>10</em>.</p>
+<p>Write the pruned graph to <em>FILE</em>. The file name should end with <em>.og</em>.</p>
 </dd>
 </dl>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_program_debugging">17.4.2. Program Debugging</h4>
+<h4 id="_kmer_options_2">17.4.2. Kmer Options</h4>
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><strong>-d, --debug</strong></dt>
+<dt class="hdlist1"><strong>-k, --kmer-length</strong>=<em>N</em></dt>
 <dd>
-<p>Print information about the normalization process to stdout.</p>
+<p>The length of the kmers to consider.</p>
+</dd>
+<dt class="hdlist1"><strong>-e, --max-furcations</strong>=<em>N</em></dt>
+<dd>
+<p>Break at edges that would induce <em>N</em> many furcations in a kmer.</p>
 </dd>
 </dl>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_program_information_16">17.4.3. Program Information</h4>
+<h4 id="_node_options">17.4.3. Node Options</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-d, --max-degree</strong>=<em>N</em></dt>
+<dd>
+<p>Remove nodes that have a higher node degree than <em>N</em>.</p>
+</dd>
+<dt class="hdlist1"><strong>-c, --min-coverage</strong>=<em>N</em></dt>
+<dd>
+<p>Remove nodese covered by fewer than <em>N</em> number of path steps.</p>
+</dd>
+<dt class="hdlist1"><strong>-C, --max-coverage</strong>=<em>N</em></dt>
+<dd>
+<p>Remove nodes covered by more than <em>N</em> number of path steps.</p>
+</dd>
+<dt class="hdlist1"><strong>-T, --cut-tips</strong>=<em>N</em></dt>
+<dd>
+<p>Remove nodes which are graph tips.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_edge_options">17.4.4. Edge Options</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-E, --edge-coverage</strong></dt>
+<dd>
+<p>Remove edges outside of the minimum and maximum coverage rather than nodes. Only set this argument in combination with
+[<strong>-c, --min-coverage</strong>=<em>N</em>] and [<strong>-C, --max-coverage</strong>=<em>N</em>].</p>
+</dd>
+<dt class="hdlist1"><strong>-b, --best-edges</strong>=<em>N</em></dt>
+<dd>
+<p>Only keep the <em>N</em> most covered inbound and output edges of each node.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_path_options">17.4.5. Path Options</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-D, --drop-paths</strong></dt>
+<dd>
+<p>Remove the paths from the graph.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_threading_10">17.4.6. Threading</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-t, --threads</strong>=<em>N</em></dt>
+<dd>
+<p>Number of threads to use.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_program_information_16">17.4.7. Program Information</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-h, --help</strong></dt>
 <dd>
-<p>Print a help message for <strong>odgi normalize</strong>.</p>
+<p>Print a help message for <strong>odgi prune</strong>.</p>
 </dd>
 </dl>
 </div>
@@ -2997,11 +3076,206 @@ fitting into these conditions.</p>
 <div class="sect2">
 <h3 id="_bugs_17">17.6. BUGS</h3>
 <div class="paragraph">
-<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a>.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_authors_17">17.7. AUTHORS</h3>
+<div class="paragraph">
+<p><strong>odgi prune</strong> was written by Erik Garrison.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_odgi_unchop1">18. odgi unchop(1)</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_name_18">18.1. NAME</h3>
+<div class="paragraph">
+<p>odgi_unchop - merge unitigs into single nodes</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_synopsis_18">18.2. SYNOPSIS</h3>
+<div class="paragraph">
+<p><strong>odgi unchop</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_description_18">18.3. DESCRIPTION</h3>
+<div class="paragraph">
+<p>The odgi unchop(1) command merges each unitig into a single node preserving the node order.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_options_17">18.4. OPTIONS</h3>
+<div class="sect3">
+<h4 id="_graph_files_io_16">18.4.1. Graph Files IO</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
+<dd>
+<p>File containing the succinct variation graph to unchop. The file name usually ends with <em>.og</em>.</p>
+</dd>
+<dt class="hdlist1"><strong>-o, --out</strong>=<em>FILE</em></dt>
+<dd>
+<p>Write the unchopped dynamic succinct variation graph to this file. A file ending with <em>.og</em> is recommended.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_processing_information_8">18.4.2. Processing Information</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-d, --debug</strong></dt>
+<dd>
+<p>Print information about the process to stderr.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_threading_11">18.4.3. Threading</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-t, --threads</strong>=<em>N</em></dt>
+<dd>
+<p>Number of threads to use for the parallel operations.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_program_information_17">18.4.4. Program Information</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-h, --help</strong></dt>
+<dd>
+<p>Print a help message for <strong>odgi unchop</strong>.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_exit_status_17">18.5. EXIT STATUS</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>0</strong></dt>
+<dd>
+<p>Success.</p>
+</dd>
+<dt class="hdlist1"><strong>1</strong></dt>
+<dd>
+<p>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_bugs_18">18.6. BUGS</h3>
+<div class="paragraph">
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_authors_18">18.7. AUTHORS</h3>
+<div class="paragraph">
+<p><strong>odgi unchop</strong> was written by Erik Garrison and Andrea Guarracino.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_odgi_normalize1">19. odgi normalize(1)</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_name_19">19.1. NAME</h3>
+<div class="paragraph">
+<p>odgi_normalize - compact unitigs and simplify redundant furcations</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_synopsis_19">19.2. SYNOPSIS</h3>
+<div class="paragraph">
+<p><strong>odgi normalize</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_description_19">19.3. DESCRIPTION</h3>
+<div class="paragraph">
+<p>The odgi normalize(1) command <a href="#_odgi_unchop1">unchops</a> a given variation graph and simplifies redundant furcations.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_options_18">19.4. OPTIONS</h3>
+<div class="sect3">
+<h4 id="_graph_files_io_17">19.4.1. Graph Files IO</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
+<dd>
+<p>File containing the succinct variation graph to normalize. The file name usually ends with <em>.og</em>.</p>
+</dd>
+<dt class="hdlist1"><strong>-o, --out</strong>=<em>FILE</em></dt>
+<dd>
+<p>Write the normalized dynamic succinct variation graph to this file. A file ending with <em>.og</em> is recommended.</p>
+</dd>
+<dt class="hdlist1"><strong>-I, --max-iterations</strong>=<em>N</em></dt>
+<dd>
+<p>Iterate the normalization up to <em>N</em> many times. The default is <em>10</em>.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_program_debugging">19.4.2. Program Debugging</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-d, --debug</strong></dt>
+<dd>
+<p>Print information about the normalization process to stdout.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_program_information_18">19.4.3. Program Information</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-h, --help</strong></dt>
+<dd>
+<p>Print a help message for <strong>odgi normalize</strong>.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_exit_status_18">19.5. EXIT STATUS</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>0</strong></dt>
+<dd>
+<p>Success.</p>
+</dd>
+<dt class="hdlist1"><strong>1</strong></dt>
+<dd>
+<p>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_bugs_19">19.6. BUGS</h3>
+<div class="paragraph">
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_authors_19">19.7. AUTHORS</h3>
 <div class="paragraph">
 <p><strong>odgi normalize</strong> was written by Erik Garrison.</p>
 </div>
@@ -3009,22 +3283,22 @@ fitting into these conditions.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_odgi_bin1">18. odgi bin(1)</h2>
+<h2 id="_odgi_bin1">20. odgi bin(1)</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_name_18">18.1. NAME</h3>
+<h3 id="_name_20">20.1. NAME</h3>
 <div class="paragraph">
 <p>odgi_bin - binning of pangenome sequence and path information in the graph</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_synopsis_18">18.2. SYNOPSIS</h3>
+<h3 id="_synopsis_20">20.2. SYNOPSIS</h3>
 <div class="paragraph">
 <p><strong>odgi bin</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_description_18">18.3. DESCRIPTION</h3>
+<h3 id="_description_20">20.3. DESCRIPTION</h3>
 <div class="paragraph">
 <p>The odgi bin(1) command bins a given variation graph. The pangenome sequence, the one-time traversal of all nodes from smallest to
 largest node identifier, can be summed up into bins of a specified size. For each bin, the path metainformation is summarized.
@@ -3044,9 +3318,9 @@ Each row corresponds to a node. Each column corresponds to a path. Each value is
 </div>
 </div>
 <div class="sect2">
-<h3 id="_options_17">18.4. OPTIONS</h3>
+<h3 id="_options_19">20.4. OPTIONS</h3>
 <div class="sect3">
-<h4 id="_graph_files_io_17">18.4.1. Graph Files IO</h4>
+<h4 id="_graph_files_io_18">20.4.1. Graph Files IO</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
@@ -3057,7 +3331,7 @@ Each row corresponds to a node. Each column corresponds to a path. Each value is
 </div>
 </div>
 <div class="sect3">
-<h4 id="_fasta_options">18.4.2. FASTA Options</h4>
+<h4 id="_fasta_options">20.4.2. FASTA Options</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-f, --fasta</strong>=<em>FILE</em></dt>
@@ -3068,7 +3342,7 @@ Each row corresponds to a node. Each column corresponds to a path. Each value is
 </div>
 </div>
 <div class="sect3">
-<h4 id="_bin_options">18.4.3. Bin Options</h4>
+<h4 id="_bin_options">20.4.3. Bin Options</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-n, --number-bins</strong>=<em>N</em></dt>
@@ -3120,7 +3394,7 @@ is set, the gap-links are left out saving disk space</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_haploblocker_options">18.4.4. HaploBlocker Options</h4>
+<h4 id="_haploblocker_options">20.4.4. HaploBlocker Options</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-b, --haplo-blocker</strong></dt>
@@ -3140,7 +3414,7 @@ Each value is the coverage of a specific node of a specific path.</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_program_information_17">18.4.5. Program Information</h4>
+<h4 id="_program_information_19">20.4.5. Program Information</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-h, --help</strong></dt>
@@ -3150,208 +3424,6 @@ Each value is the coverage of a specific node of a specific path.</p>
 <dt class="hdlist1"><strong>-P, --progress</strong></dt>
 <dd>
 <p>Write the current progress to stderr.</p>
-</dd>
-</dl>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_exit_status_17">18.5. EXIT STATUS</h3>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>0</strong></dt>
-<dd>
-<p>Success.</p>
-</dd>
-<dt class="hdlist1"><strong>1</strong></dt>
-<dd>
-<p>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_bugs_18">18.6. BUGS</h3>
-<div class="paragraph">
-<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_authors_18">18.7. AUTHORS</h3>
-<div class="paragraph">
-<p><strong>odgi bin</strong> was written by Erik Garrison and Simon Heumos</p>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_odgi_matrix1">19. odgi matrix(1)</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="_name_19">19.1. NAME</h3>
-<div class="paragraph">
-<p>odgi_matrix - write the graph topology in sparse matrix formats</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_synopsis_19">19.2. SYNOPSIS</h3>
-<div class="paragraph">
-<p><strong>odgi matrix</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_description_19">19.3. DESCRIPTION</h3>
-<div class="paragraph">
-<p>The odgi matrix(1) command generates a sparse matrix format out of the graph topology of a given variation graph.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_options_18">19.4. OPTIONS</h3>
-<div class="sect3">
-<h4 id="_graph_files_io_18">19.4.1. Graph Files IO</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
-<dd>
-<p>File containing the succinct variation graph to create the sparse matrix from. The file name usually ends with <em>.og</em>.</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_matrix_options">19.4.2. Matrix Options</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-e, --edge-depth-weight</strong></dt>
-<dd>
-<p>Weigh edges by their path depth.</p>
-</dd>
-<dt class="hdlist1"><strong>-d, --delta-weight</strong></dt>
-<dd>
-<p>Weigh edges by their inverse id delta.</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_program_information_18">19.4.3. Program Information</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-h, --help</strong></dt>
-<dd>
-<p>Print a help message for <strong>odgi matrix</strong>.</p>
-</dd>
-</dl>
-</div>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_exit_status_18">19.5. EXIT STATUS</h3>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>0</strong></dt>
-<dd>
-<p>Success.</p>
-</dd>
-<dt class="hdlist1"><strong>1</strong></dt>
-<dd>
-<p>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_bugs_19">19.6. BUGS</h3>
-<div class="paragraph">
-<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_authors_19">19.7. AUTHORS</h3>
-<div class="paragraph">
-<p><strong>odgi matrix</strong> was written by Erik Garrison.</p>
-</div>
-</div>
-</div>
-</div>
-<div class="sect1">
-<h2 id="_odgi_chop1">20. odgi chop(1)</h2>
-<div class="sectionbody">
-<div class="sect2">
-<h3 id="_name_20">20.1. NAME</h3>
-<div class="paragraph">
-<p>odgi_chop - divide nodes into smaller pieces</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_synopsis_20">20.2. SYNOPSIS</h3>
-<div class="paragraph">
-<p><strong>odgi chop</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<strong>-c, --chop-to</strong>=<em>N</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_description_20">20.3. DESCRIPTION</h3>
-<div class="paragraph">
-<p>The odgi chop(1) command chops long nodes into short ones while preserving the graph topology and node order.</p>
-</div>
-</div>
-<div class="sect2">
-<h3 id="_options_19">20.4. OPTIONS</h3>
-<div class="sect3">
-<h4 id="_graph_files_io_19">20.4.1. Graph Files IO</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
-<dd>
-<p>File containing the succinct variation graph to chop. The file name usually ends with <em>.og</em>.</p>
-</dd>
-<dt class="hdlist1"><strong>-o, --out</strong>=<em>FILE</em></dt>
-<dd>
-<p>Write the choped succinct variation graph to <em>FILE</em>. The file name usually ends with <em>.og</em>.</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_chop_options">20.4.2. Chop Options</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-c, --chop-to</strong>=<em>N</em></dt>
-<dd>
-<p>Divide nodes that longer than <em>N</em> into nodes no longer than <em>N</em> while maintaining graph topology.</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_threading_10">20.4.3. Threading</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-t, --threads</strong>=<em>N</em></dt>
-<dd>
-<p>Number of threads to use for the parallel operations.</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_processing_information_9">20.4.4. Processing Information</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-d, --debug</strong></dt>
-<dd>
-<p>Print information about the process to stderr.</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_program_information_19">20.4.5. Program Information</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-h, --help</strong></dt>
-<dd>
-<p>Print a help message for <strong>odgi chop</strong>.</p>
 </dd>
 </dl>
 </div>
@@ -3375,110 +3447,73 @@ Each value is the coverage of a specific node of a specific path.</p>
 <div class="sect2">
 <h3 id="_bugs_20">20.6. BUGS</h3>
 <div class="paragraph">
-<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a>.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_authors_20">20.7. AUTHORS</h3>
 <div class="paragraph">
-<p><strong>odgi chop</strong> was written by Erik Garrison and Andrea Guarracino.</p>
+<p><strong>odgi bin</strong> was written by Erik Garrison and Simon Heumos</p>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_odgi_layout1">21. odgi layout(1)</h2>
+<h2 id="_odgi_matrix1">21. odgi matrix(1)</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_name_21">21.1. NAME</h3>
 <div class="paragraph">
-<p>odgi_layout - use SGD to make 2D layouts of the graph</p>
+<p>odgi_matrix - write the graph topology in sparse matrix formats</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_synopsis_21">21.2. SYNOPSIS</h3>
 <div class="paragraph">
-<p><strong>odgi layout</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
+<p><strong>odgi matrix</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_description_21">21.3. DESCRIPTION</h3>
 <div class="paragraph">
-<p>The odgi layout(1) command draws 2D layouts of the graph using stochastic gradient descent (SGD). The input graph must be sorted
-and id-compacted. The algorithm itself is described in <a href="https://arxiv.org/abs/1710.04626">Graph Drawing by Stochastic Gradient Descent</a>.
-The force-directed graph drawing algorithm minimizes the graph&#8217;s energy function or stress level.
-It applies SGD to move a single pair of nodes at a time. The rendered graph is written in SVG format.</p>
+<p>The odgi matrix(1) command generates a sparse matrix format out of the graph topology of a given variation graph.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_options_20">21.4. OPTIONS</h3>
 <div class="sect3">
-<h4 id="_graph_files_io_20">21.4.1. Graph Files IO</h4>
+<h4 id="_graph_files_io_19">21.4.1. Graph Files IO</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
 <dd>
-<p>File containing the succinct variation graph to layout. The file name usually ends with <em>.og</em>.</p>
-</dd>
-<dt class="hdlist1"><strong>-o, --out</strong>=<em>FILE</em></dt>
-<dd>
-<p>Write the rendered layout in SVG format to <em>FILE</em>.</p>
+<p>File containing the succinct variation graph to create the sparse matrix from. The file name usually ends with <em>.og</em>.</p>
 </dd>
 </dl>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_sgd_options">21.4.2. SGD Options</h4>
+<h4 id="_matrix_options">21.4.2. Matrix Options</h4>
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><strong>-m, --iter-max</strong>=<em>N</em></dt>
+<dt class="hdlist1"><strong>-e, --edge-depth-weight</strong></dt>
 <dd>
-<p>The maximum number of iterations to run the layout. Default is <em>30</em>.</p>
+<p>Weigh edges by their path depth.</p>
 </dd>
-<dt class="hdlist1"><strong>-p, --n-pivots</strong>=<em>N</em></dt>
+<dt class="hdlist1"><strong>-d, --delta-weight</strong></dt>
 <dd>
-<p>The number of pivots for sparse layout. Default is <em>0</em> leading to a non-sparse layout.</p>
-</dd>
-<dt class="hdlist1"><strong>-e, --eps</strong>=<em>N</em></dt>
-<dd>
-<p>The learning rate for SGD layout. Default is <em>0.01</em>.</p>
+<p>Weigh edges by their inverse id delta.</p>
 </dd>
 </dl>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_svg_options">21.4.3. SVG Options</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-x, --x-padding</strong>=<em>N</em></dt>
-<dd>
-<p>The padding between the connected component layouts. Default is <em>10.0</em>.</p>
-</dd>
-<dt class="hdlist1"><strong>-R, --render-scale</strong>=<em>N</em></dt>
-<dd>
-<p>SVG scaling Default is <em>5.0</em>.</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_processing_information_10">21.4.4. Processing Information</h4>
-<div class="dlist">
-<dl>
-<dt class="hdlist1"><strong>-d, --debug</strong></dt>
-<dd>
-<p>Print information about the components to stdout.</p>
-</dd>
-</dl>
-</div>
-</div>
-<div class="sect3">
-<h4 id="_program_information_20">21.4.5. Program Information</h4>
+<h4 id="_program_information_20">21.4.3. Program Information</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-h, --help</strong></dt>
 <dd>
-<p>Print a help message for <strong>odgi layout</strong>.</p>
+<p>Print a help message for <strong>odgi matrix</strong>.</p>
 </dd>
 </dl>
 </div>
@@ -3502,77 +3537,95 @@ It applies SGD to move a single pair of nodes at a time. The rendered graph is w
 <div class="sect2">
 <h3 id="_bugs_21">21.6. BUGS</h3>
 <div class="paragraph">
-<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a>.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_authors_21">21.7. AUTHORS</h3>
 <div class="paragraph">
-<p><strong>odgi layout</strong> was written by Erik Garrison, Andrea Guarracino, and Simon Heumos.</p>
+<p><strong>odgi matrix</strong> was written by Erik Garrison.</p>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_odgi_flatten1">22. odgi flatten(1)</h2>
+<h2 id="_odgi_chop1">22. odgi chop(1)</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_name_22">22.1. NAME</h3>
 <div class="paragraph">
-<p>odgi_flatten - generate linearization of the graph</p>
+<p>odgi_chop - divide nodes into smaller pieces</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_synopsis_22">22.2. SYNOPSIS</h3>
 <div class="paragraph">
-<p><strong>odgi flatten</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
+<p><strong>odgi chop</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<strong>-c, --chop-to</strong>=<em>N</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_description_22">22.3. DESCRIPTION</h3>
 <div class="paragraph">
-<p>The odgi flatten(1) command projects the graph sequence and paths into FASTA and BED.</p>
+<p>The odgi chop(1) command chops long nodes into short ones while preserving the graph topology and node order.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_options_21">22.4. OPTIONS</h3>
 <div class="sect3">
-<h4 id="_graph_files_io_21">22.4.1. Graph Files IO</h4>
+<h4 id="_graph_files_io_20">22.4.1. Graph Files IO</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
 <dd>
-<p>File containing the succinct variation graph to flatten. The file name usually ends with <em>.og</em>.</p>
+<p>File containing the succinct variation graph to chop. The file name usually ends with <em>.og</em>.</p>
+</dd>
+<dt class="hdlist1"><strong>-o, --out</strong>=<em>FILE</em></dt>
+<dd>
+<p>Write the choped succinct variation graph to <em>FILE</em>. The file name usually ends with <em>.og</em>.</p>
 </dd>
 </dl>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_output_options">22.4.2. Output Options</h4>
+<h4 id="_chop_options">22.4.2. Chop Options</h4>
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><strong>-f, --fasta</strong>=<em>FILE</em></dt>
+<dt class="hdlist1"><strong>-c, --chop-to</strong>=<em>N</em></dt>
 <dd>
-<p>Write the concatenated node sequences in FASTA format to <em>FILE</em>.</p>
-</dd>
-<dt class="hdlist1"><strong>-n, --name-seq</strong>=<em>STRING</em></dt>
-<dd>
-<p>The name to use for the concatenated graph sequence. Default is the name of the input file which was specified via [<strong>-i, --idx</strong>=<em>FILE</em>].</p>
-</dd>
-<dt class="hdlist1"><strong>-b, --bed</strong>=<em>FILE</em></dt>
-<dd>
-<p>Write the mapping between graph paths and the linearized FASTA sequence in BED format to <em>FILE</em>.</p>
+<p>Divide nodes that longer than <em>N</em> into nodes no longer than <em>N</em> while maintaining graph topology.</p>
 </dd>
 </dl>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_program_information_21">22.4.3. Program Information</h4>
+<h4 id="_threading_12">22.4.3. Threading</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-t, --threads</strong>=<em>N</em></dt>
+<dd>
+<p>Number of threads to use for the parallel operations.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_processing_information_9">22.4.4. Processing Information</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-d, --debug</strong></dt>
+<dd>
+<p>Print information about the process to stderr.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_program_information_21">22.4.5. Program Information</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-h, --help</strong></dt>
 <dd>
-<p>Print a help message for <strong>odgi flatten</strong>.</p>
+<p>Print a help message for <strong>odgi chop</strong>.</p>
 </dd>
 </dl>
 </div>
@@ -3596,86 +3649,110 @@ It applies SGD to move a single pair of nodes at a time. The rendered graph is w
 <div class="sect2">
 <h3 id="_bugs_22">22.6. BUGS</h3>
 <div class="paragraph">
-<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a>.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_authors_22">22.7. AUTHORS</h3>
 <div class="paragraph">
-<p><strong>odgi flatten</strong> was written by Erik Garrison.</p>
+<p><strong>odgi chop</strong> was written by Erik Garrison and Andrea Guarracino.</p>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_odgi_break1">23. odgi break(1)</h2>
+<h2 id="_odgi_layout1">23. odgi layout(1)</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_name_23">23.1. NAME</h3>
 <div class="paragraph">
-<p>odgi_break - break cycles in the graph and drop its paths</p>
+<p>odgi_layout - use SGD to make 2D layouts of the graph</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_synopsis_23">23.2. SYNOPSIS</h3>
 <div class="paragraph">
-<p><strong>odgi break</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
+<p><strong>odgi layout</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_description_23">23.3. DESCRIPTION</h3>
 <div class="paragraph">
-<p>The odgi break(1) command finds cycles in a graph via <a href="https://en.wikipedia.org/wiki/Breadth-first_search">breadth-first search (BFS)</a> and breaks them, also dropping
-the graph&#8217;s paths.</p>
+<p>The odgi layout(1) command computes 2D layouts of the graph using stochastic gradient descent (SGD). The input graph must be sorted
+and id-compacted. The algorithm itself is described in <a href="https://arxiv.org/abs/1710.04626">Graph Drawing by Stochastic Gradient Descent</a>.
+The force-directed graph drawing algorithm minimizes the graph&#8217;s energy function or stress level.
+It applies SGD to move a single pair of nodes at a time.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_options_22">23.4. OPTIONS</h3>
 <div class="sect3">
-<h4 id="_graph_files_io_22">23.4.1. Graph Files IO</h4>
+<h4 id="_graph_files_io_21">23.4.1. Graph Files IO</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
 <dd>
-<p>File containing the succinct variation graph to break. The file name usually ends with <em>.og</em>.</p>
+<p>File containing the succinct variation graph to layout. The file name usually ends with <em>.og</em>.</p>
 </dd>
 <dt class="hdlist1"><strong>-o, --out</strong>=<em>FILE</em></dt>
 <dd>
-<p>Write the broken graph to <em>FILE</em>.</p>
+<p>Write the rendered layout in SVG format to <em>FILE</em>.</p>
 </dd>
 </dl>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_cycle_options">23.4.2. Cycle Options</h4>
+<h4 id="_sgd_options">23.4.2. SGD Options</h4>
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><strong>-c, --cycle-max-bp</strong>=<em>N</em></dt>
+<dt class="hdlist1"><strong>-m, --iter-max</strong>=<em>N</em></dt>
 <dd>
-<p>The maximum cycle length at which to break.</p>
+<p>The maximum number of iterations to run the layout. Default is <em>30</em>.</p>
 </dd>
-<dt class="hdlist1"><strong>-s, --max-search-bp</strong>=<em>N</em></dt>
+<dt class="hdlist1"><strong>-p, --n-pivots</strong>=<em>N</em></dt>
 <dd>
-<p>The maximum search space of each BFS given in number of base pairs.</p>
+<p>The number of pivots for sparse layout. Default is <em>0</em> leading to a non-sparse layout.</p>
 </dd>
-<dt class="hdlist1"><strong>-u, --repeat-up-to</strong>=<em>N</em></dt>
+<dt class="hdlist1"><strong>-e, --eps</strong>=<em>N</em></dt>
 <dd>
-<p>Iterate cycle breaking up to <em>N</em> times or stop if no new edges are removed.</p>
-</dd>
-<dt class="hdlist1"><strong>-d, --show</strong></dt>
-<dd>
-<p>Print the edges we would remove to stdout.</p>
+<p>The learning rate for SGD layout. Default is <em>0.01</em>.</p>
 </dd>
 </dl>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_program_information_22">23.4.3. Program Information</h4>
+<h4 id="_svg_options">23.4.3. SVG Options</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-x, --x-padding</strong>=<em>N</em></dt>
+<dd>
+<p>The padding between the connected component layouts. Default is <em>10.0</em>.</p>
+</dd>
+<dt class="hdlist1"><strong>-R, --render-scale</strong>=<em>N</em></dt>
+<dd>
+<p>SVG scaling Default is <em>5.0</em>.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_processing_information_10">23.4.4. Processing Information</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-d, --debug</strong></dt>
+<dd>
+<p>Print information about the components to stdout.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_program_information_22">23.4.5. Program Information</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-h, --help</strong></dt>
 <dd>
-<p>Print a help message for <strong>odgi break</strong>.</p>
+<p>Print a help message for <strong>odgi layout</strong>.</p>
 </dd>
 </dl>
 </div>
@@ -3699,65 +3776,77 @@ the graph&#8217;s paths.</p>
 <div class="sect2">
 <h3 id="_bugs_23">23.6. BUGS</h3>
 <div class="paragraph">
-<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a>.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_authors_23">23.7. AUTHORS</h3>
 <div class="paragraph">
-<p><strong>odgi break</strong> was written by Erik Garrison.</p>
+<p><strong>odgi layout</strong> was written by Erik Garrison, Andrea Guarracino, and Simon Heumos.</p>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_odgi_pathindex1">24. odgi pathindex(1)</h2>
+<h2 id="_odgi_flatten1">24. odgi flatten(1)</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_name_24">24.1. NAME</h3>
 <div class="paragraph">
-<p>odgi_pathindex - create a path index for a given path</p>
+<p>odgi_flatten - generate linearization of the graph</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_synopsis_24">24.2. SYNOPSIS</h3>
 <div class="paragraph">
-<p><strong>odgi pathindex</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
+<p><strong>odgi flatten</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_description_24">24.3. DESCRIPTION</h3>
 <div class="paragraph">
-<p>The odgi pathindex(1) command generates a path index of a graph. It uses succinct data structures to encode the index.
-The path index represents a subset of the features of a fully realized <a href="https://github.com/vgteam/xg">xg index</a>. Having a path index, we can use
-odgi <a href="#_odgi_panpos1">panpos</a> to go from <strong>path:position</strong> &#8594; <strong>pangenome:position</strong> which is important when
-navigating large graphs in an interactive manner like in the <a href="https://graph-genome.github.io/">Pantograph</a> project.</p>
+<p>The odgi flatten(1) command projects the graph sequence and paths into FASTA and BED.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_options_23">24.4. OPTIONS</h3>
 <div class="sect3">
-<h4 id="_graph_files_io_23">24.4.1. Graph Files IO</h4>
+<h4 id="_graph_files_io_22">24.4.1. Graph Files IO</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
 <dd>
-<p>File containing the succinct variation graph to generate a path index from. The file name usually ends with <em>.og</em>.</p>
-</dd>
-<dt class="hdlist1"><strong>-o, --out</strong>=<em>FILE</em></dt>
-<dd>
-<p>Write the path index to <em>FILE</em>.</p>
+<p>File containing the succinct variation graph to flatten. The file name usually ends with <em>.og</em>.</p>
 </dd>
 </dl>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_program_information_23">24.4.2. Program Information</h4>
+<h4 id="_output_options">24.4.2. Output Options</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-f, --fasta</strong>=<em>FILE</em></dt>
+<dd>
+<p>Write the concatenated node sequences in FASTA format to <em>FILE</em>.</p>
+</dd>
+<dt class="hdlist1"><strong>-n, --name-seq</strong>=<em>STRING</em></dt>
+<dd>
+<p>The name to use for the concatenated graph sequence. Default is the name of the input file which was specified via [<strong>-i, --idx</strong>=<em>FILE</em>].</p>
+</dd>
+<dt class="hdlist1"><strong>-b, --bed</strong>=<em>FILE</em></dt>
+<dd>
+<p>Write the mapping between graph paths and the linearized FASTA sequence in BED format to <em>FILE</em>.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_program_information_23">24.4.3. Program Information</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-h, --help</strong></dt>
 <dd>
-<p>Print a help message for <strong>odgi pathindex</strong>.</p>
+<p>Print a help message for <strong>odgi flatten</strong>.</p>
 </dd>
 </dl>
 </div>
@@ -3781,65 +3870,75 @@ navigating large graphs in an interactive manner like in the <a href="https://gr
 <div class="sect2">
 <h3 id="_bugs_24">24.6. BUGS</h3>
 <div class="paragraph">
-<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a>.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_authors_24">24.7. AUTHORS</h3>
 <div class="paragraph">
-<p><strong>odgi pathindex</strong> was written by Simon Heumos.</p>
+<p><strong>odgi flatten</strong> was written by Erik Garrison.</p>
 </div>
 </div>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_odgi_panpos1">25. odgi panpos(1)</h2>
+<h2 id="_odgi_break1">25. odgi break(1)</h2>
 <div class="sectionbody">
 <div class="sect2">
 <h3 id="_name_25">25.1. NAME</h3>
 <div class="paragraph">
-<p>odgi_panpos - get the pangenome position of a given path and nucleotide position (1-based)</p>
+<p>odgi_break - break cycles in the graph and drop its paths</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_synopsis_25">25.2. SYNOPSIS</h3>
 <div class="paragraph">
-<p><strong>odgi panpos</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-p, --path</strong>=<em>STRING</em>] [<strong>-n, --nuc-pos</strong>=<em>N</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
+<p><strong>odgi break</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_description_25">25.3. DESCRIPTION</h3>
 <div class="paragraph">
-<p>The odgi panpos(1) command give a pangenome position for a given path and nucleotide position. It requires a path index,
-which can be created with odgi <a href="#_odgi_pathindex1">pathindex</a>. Going from <strong>path:position</strong> &#8594; <strong>pangenome:position</strong> is important when
-navigating large graphs in an interactive manner like in the <a href="https://graph-genome.github.io/">Pantograph</a> project. All
-input and output positions are 1-based.</p>
+<p>The odgi break(1) command finds cycles in a graph via <a href="https://en.wikipedia.org/wiki/Breadth-first_search">breadth-first search (BFS)</a> and breaks them, also dropping
+the graph&#8217;s paths.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_options_24">25.4. OPTIONS</h3>
 <div class="sect3">
-<h4 id="_graph_files_io_24">25.4.1. Graph Files IO</h4>
+<h4 id="_graph_files_io_23">25.4.1. Graph Files IO</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
 <dd>
-<p>File containing the succinct variation graph index to find the pangenome position in. The file name usually ends with <em>.xp</em>.</p>
+<p>File containing the succinct variation graph to break. The file name usually ends with <em>.og</em>.</p>
+</dd>
+<dt class="hdlist1"><strong>-o, --out</strong>=<em>FILE</em></dt>
+<dd>
+<p>Write the broken graph to <em>FILE</em>.</p>
 </dd>
 </dl>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_position_options">25.4.2. Position Options</h4>
+<h4 id="_cycle_options">25.4.2. Cycle Options</h4>
 <div class="dlist">
 <dl>
-<dt class="hdlist1"><strong>-p, --path</strong>=<em>STRING</em></dt>
+<dt class="hdlist1"><strong>-c, --cycle-max-bp</strong>=<em>N</em></dt>
 <dd>
-<p>The path name of the query.</p>
+<p>The maximum cycle length at which to break.</p>
 </dd>
-<dt class="hdlist1"><strong>-n, --nuc-pos</strong>=<em>STRING</em></dt>
+<dt class="hdlist1"><strong>-s, --max-search-bp</strong>=<em>N</em></dt>
 <dd>
-<p>The nucleotide sequence of the query.</p>
+<p>The maximum search space of each BFS given in number of base pairs.</p>
+</dd>
+<dt class="hdlist1"><strong>-u, --repeat-up-to</strong>=<em>N</em></dt>
+<dd>
+<p>Iterate cycle breaking up to <em>N</em> times or stop if no new edges are removed.</p>
+</dd>
+<dt class="hdlist1"><strong>-d, --show</strong></dt>
+<dd>
+<p>Print the edges we would remove to stdout.</p>
 </dd>
 </dl>
 </div>
@@ -3850,7 +3949,7 @@ input and output positions are 1-based.</p>
 <dl>
 <dt class="hdlist1"><strong>-h, --help</strong></dt>
 <dd>
-<p>Print a help message for <strong>odgi panpos</strong>.</p>
+<p>Print a help message for <strong>odgi break</strong>.</p>
 </dd>
 </dl>
 </div>
@@ -3874,11 +3973,186 @@ input and output positions are 1-based.</p>
 <div class="sect2">
 <h3 id="_bugs_25">25.6. BUGS</h3>
 <div class="paragraph">
-<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a>.</p>
 </div>
 </div>
 <div class="sect2">
 <h3 id="_authors_25">25.7. AUTHORS</h3>
+<div class="paragraph">
+<p><strong>odgi break</strong> was written by Erik Garrison.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_odgi_pathindex1">26. odgi pathindex(1)</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_name_26">26.1. NAME</h3>
+<div class="paragraph">
+<p>odgi_pathindex - create a path index for a given path</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_synopsis_26">26.2. SYNOPSIS</h3>
+<div class="paragraph">
+<p><strong>odgi pathindex</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-o, --out</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_description_26">26.3. DESCRIPTION</h3>
+<div class="paragraph">
+<p>The odgi pathindex(1) command generates a path index of a graph. It uses succinct data structures to encode the index.
+The path index represents a subset of the features of a fully realized <a href="https://github.com/vgteam/xg">xg index</a>. Having a path index, we can use
+odgi <a href="#_odgi_panpos1">panpos</a> to go from <strong>path:position</strong> &#8594; <strong>pangenome:position</strong> which is important when
+navigating large graphs in an interactive manner like in the <a href="https://graph-genome.github.io/">Pantograph</a> project.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_options_25">26.4. OPTIONS</h3>
+<div class="sect3">
+<h4 id="_graph_files_io_24">26.4.1. Graph Files IO</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
+<dd>
+<p>File containing the succinct variation graph to generate a path index from. The file name usually ends with <em>.og</em>.</p>
+</dd>
+<dt class="hdlist1"><strong>-o, --out</strong>=<em>FILE</em></dt>
+<dd>
+<p>Write the path index to <em>FILE</em>.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_program_information_25">26.4.2. Program Information</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-h, --help</strong></dt>
+<dd>
+<p>Print a help message for <strong>odgi pathindex</strong>.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_exit_status_25">26.5. EXIT STATUS</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>0</strong></dt>
+<dd>
+<p>Success.</p>
+</dd>
+<dt class="hdlist1"><strong>1</strong></dt>
+<dd>
+<p>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_bugs_26">26.6. BUGS</h3>
+<div class="paragraph">
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_authors_26">26.7. AUTHORS</h3>
+<div class="paragraph">
+<p><strong>odgi pathindex</strong> was written by Simon Heumos.</p>
+</div>
+</div>
+</div>
+</div>
+<div class="sect1">
+<h2 id="_odgi_panpos1">27. odgi panpos(1)</h2>
+<div class="sectionbody">
+<div class="sect2">
+<h3 id="_name_27">27.1. NAME</h3>
+<div class="paragraph">
+<p>odgi_panpos - get the pangenome position of a given path and nucleotide position (1-based)</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_synopsis_27">27.2. SYNOPSIS</h3>
+<div class="paragraph">
+<p><strong>odgi panpos</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-p, --path</strong>=<em>STRING</em>] [<strong>-n, --nuc-pos</strong>=<em>N</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_description_27">27.3. DESCRIPTION</h3>
+<div class="paragraph">
+<p>The odgi panpos(1) command give a pangenome position for a given path and nucleotide position. It requires a path index,
+which can be created with odgi <a href="#_odgi_pathindex1">pathindex</a>. Going from <strong>path:position</strong> &#8594; <strong>pangenome:position</strong> is important when
+navigating large graphs in an interactive manner like in the <a href="https://graph-genome.github.io/">Pantograph</a> project. All
+input and output positions are 1-based.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_options_26">27.4. OPTIONS</h3>
+<div class="sect3">
+<h4 id="_graph_files_io_25">27.4.1. Graph Files IO</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
+<dd>
+<p>File containing the succinct variation graph index to find the pangenome position in. The file name usually ends with <em>.xp</em>.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_position_options">27.4.2. Position Options</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-p, --path</strong>=<em>STRING</em></dt>
+<dd>
+<p>The path name of the query.</p>
+</dd>
+<dt class="hdlist1"><strong>-n, --nuc-pos</strong>=<em>STRING</em></dt>
+<dd>
+<p>The nucleotide sequence of the query.</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect3">
+<h4 id="_program_information_26">27.4.3. Program Information</h4>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>-h, --help</strong></dt>
+<dd>
+<p>Print a help message for <strong>odgi panpos</strong>.</p>
+</dd>
+</dl>
+</div>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_exit_status_26">27.5. EXIT STATUS</h3>
+<div class="dlist">
+<dl>
+<dt class="hdlist1"><strong>0</strong></dt>
+<dd>
+<p>Success.</p>
+</dd>
+<dt class="hdlist1"><strong>1</strong></dt>
+<dd>
+<p>Failure (syntax or usage error; parameter error; file processing failure; unexpected error).</p>
+</dd>
+</dl>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_bugs_27">27.6. BUGS</h3>
+<div class="paragraph">
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a>.</p>
+</div>
+</div>
+<div class="sect2">
+<h3 id="_authors_27">27.7. AUTHORS</h3>
 <div class="paragraph">
 <p><strong>odgi panpos</strong> was written by Simon Heumos.</p>
 </div>
@@ -3886,30 +4160,33 @@ input and output positions are 1-based.</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_odgi_position1">26. odgi position(1)</h2>
+<h2 id="_odgi_position1">28. odgi position(1)</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_name_26">26.1. NAME</h3>
+<h3 id="_name_28">28.1. NAME</h3>
 <div class="paragraph">
-<p>odgi_position -  position parts of the graph as defined by query criteria</p>
+<p>odgi_position - position parts of the graph as defined by query criteria</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_synopsis_26">26.2. SYNOPSIS</h3>
+<h3 id="_synopsis_28">28.2. SYNOPSIS</h3>
 <div class="paragraph">
 <p><strong>odgi position</strong> [<strong>-i, --target</strong>=<em>FILE</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_description_26">26.3. DESCRIPTION</h3>
+<h3 id="_description_28">28.3. DESCRIPTION</h3>
 <div class="paragraph">
-<p>The odgi position(1) command position parts of the graph as defined by query criteria.</p>
+<p>The odgi position(1) command translates positions and coordinate ranges between nodes and embedded paths.
+It provides liftover functionality, allowing us to translate a position between any reference paths embedded in the <code>-i, --target</code> graph.
+We can additionally project coordinates and annotations from a source graph <code>-x, --source</code> into the <code>target</code>.
+When completing this "graph lift", the intersecting set of paths in the two graphs are used to complete the coordinate projection.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_options_25">26.4. OPTIONS</h3>
+<h3 id="_options_27">28.4. OPTIONS</h3>
 <div class="sect3">
-<h4 id="_graph_files_io_25">26.4.1. Graph Files IO</h4>
+<h4 id="_graph_files_io_26">28.4.1. Graph Files IO</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-i, --target</strong>=<em>FILE</em></dt>
@@ -3925,7 +4202,7 @@ graph]</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_position_options_2">26.4.2. Position Options</h4>
+<h4 id="_position_options_2">28.4.2. Position Options</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-r, --ref-paths</strong>=<em>STRING</em></dt>
@@ -3965,7 +4242,7 @@ between <code>--source</code> and <code>--target</code>].</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_threading_11">26.4.3. Threading</h4>
+<h4 id="_threading_13">28.4.3. Threading</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-t, --threads</strong>=<em>N</em></dt>
@@ -3976,7 +4253,7 @@ between <code>--source</code> and <code>--target</code>].</p>
 </div>
 </div>
 <div class="sect3">
-<h4 id="_program_information_25">26.4.4. Program Information</h4>
+<h4 id="_program_information_27">28.4.4. Program Information</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-h, --help</strong></dt>
@@ -3988,7 +4265,7 @@ between <code>--source</code> and <code>--target</code>].</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_exit_status_25">26.5. EXIT STATUS</h3>
+<h3 id="_exit_status_27">28.5. EXIT STATUS</h3>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>0</strong></dt>
@@ -4003,13 +4280,13 @@ between <code>--source</code> and <code>--target</code>].</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_bugs_26">26.6. BUGS</h3>
+<h3 id="_bugs_28">28.6. BUGS</h3>
 <div class="paragraph">
-<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a>.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_authors_26">26.7. AUTHORS</h3>
+<h3 id="_authors_28">28.7. AUTHORS</h3>
 <div class="paragraph">
 <p><strong>odgi position</strong> was written by Erik Garrison.</p>
 </div>
@@ -4017,22 +4294,22 @@ between <code>--source</code> and <code>--target</code>].</p>
 </div>
 </div>
 <div class="sect1">
-<h2 id="_odgi_server1">27. odgi server(1)</h2>
+<h2 id="_odgi_server1">29. odgi server(1)</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_name_27">27.1. NAME</h3>
+<h3 id="_name_29">29.1. NAME</h3>
 <div class="paragraph">
 <p>odgi_server - start a HTTP server with a given index file to query a pangenome position</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_synopsis_27">27.2. SYNOPSIS</h3>
+<h3 id="_synopsis_29">29.2. SYNOPSIS</h3>
 <div class="paragraph">
 <p><strong>odgi server</strong> [<strong>-i, --idx</strong>=<em>FILE</em>] [<strong>-p, --port</strong>=<em>N</em>] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_description_27">27.3. DESCRIPTION</h3>
+<h3 id="_description_29">29.3. DESCRIPTION</h3>
 <div class="paragraph">
 <p>The odgi server(1) command starts an HTTP server with a given path index as input. The idea is that we can go from
 <strong>path:position</strong> &#8594; <strong>pangenome:position</strong> via GET requests to the HTTP server. The server headers do not block cross origin requests.
@@ -4043,9 +4320,9 @@ input and output positions are 1-based. If no IP address is specified, the serve
 </div>
 </div>
 <div class="sect2">
-<h3 id="_options_26">27.4. OPTIONS</h3>
+<h3 id="_options_28">29.4. OPTIONS</h3>
 <div class="sect3">
-<h4 id="_graph_files_io_26">27.4.1. Graph Files IO</h4>
+<h4 id="_graph_files_io_27">29.4.1. Graph Files IO</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-i, --idx</strong>=<em>FILE</em></dt>
@@ -4056,7 +4333,7 @@ input and output positions are 1-based. If no IP address is specified, the serve
 </div>
 </div>
 <div class="sect3">
-<h4 id="_http_options">27.4.2. HTTP Options</h4>
+<h4 id="_http_options">29.4.2. HTTP Options</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-p, --port</strong>=<em>N</em></dt>
@@ -4071,7 +4348,7 @@ input and output positions are 1-based. If no IP address is specified, the serve
 </div>
 </div>
 <div class="sect3">
-<h4 id="_program_information_26">27.4.3. Program Information</h4>
+<h4 id="_program_information_28">29.4.3. Program Information</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-h, --help</strong></dt>
@@ -4083,7 +4360,7 @@ input and output positions are 1-based. If no IP address is specified, the serve
 </div>
 </div>
 <div class="sect2">
-<h3 id="_exit_status_26">27.5. EXIT STATUS</h3>
+<h3 id="_exit_status_28">29.5. EXIT STATUS</h3>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>0</strong></dt>
@@ -4098,13 +4375,13 @@ input and output positions are 1-based. If no IP address is specified, the serve
 </div>
 </div>
 <div class="sect2">
-<h3 id="_bugs_27">27.6. BUGS</h3>
+<h3 id="_bugs_29">29.6. BUGS</h3>
 <div class="paragraph">
-<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a>.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_authors_27">27.7. AUTHORS</h3>
+<h3 id="_authors_29">29.7. AUTHORS</h3>
 <div class="paragraph">
 <p><strong>odgi server</strong> was written by Simon Heumos.</p>
 </div>
@@ -4112,31 +4389,31 @@ input and output positions are 1-based. If no IP address is specified, the serve
 </div>
 </div>
 <div class="sect1">
-<h2 id="_odgi_test1">28. odgi test(1)</h2>
+<h2 id="_odgi_test1">30. odgi test(1)</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_name_28">28.1. NAME</h3>
+<h3 id="_name_30">30.1. NAME</h3>
 <div class="paragraph">
 <p>odgi_test - run odgi unit tests</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_synopsis_28">28.2. SYNOPSIS</h3>
+<h3 id="_synopsis_30">30.2. SYNOPSIS</h3>
 <div class="paragraph">
 <p><strong>odgi test</strong> [&lt;TEST NAME|PATTERN|TAGS&gt; &#8230;&#8203;] [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_description_28">28.3. DESCRIPTION</h3>
+<h3 id="_description_30">30.3. DESCRIPTION</h3>
 <div class="paragraph">
 <p>The odgi test(1) command starts all unit tests that are implemented in odgi. For targeted testing, a subset of tests can
 be selected. odgi test(1) depends on <a href="https://github.com/catchorg/Catch2">Catch2</a>. In the default setting, all results are printed to stdout.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_options_27">28.4. OPTIONS</h3>
+<h3 id="_options_29">30.4. OPTIONS</h3>
 <div class="sect3">
-<h4 id="_testing_options">28.4.1. Testing Options</h4>
+<h4 id="_testing_options">30.4.1. Testing Options</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-l, --list-tests</strong></dt>
@@ -4243,7 +4520,7 @@ be selected. odgi test(1) depends on <a href="https://github.com/catchorg/Catch2
 </div>
 </div>
 <div class="sect3">
-<h4 id="_program_information_27">28.4.2. Program Information</h4>
+<h4 id="_program_information_29">30.4.2. Program Information</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-?, -h, --help</strong></dt>
@@ -4255,7 +4532,7 @@ be selected. odgi test(1) depends on <a href="https://github.com/catchorg/Catch2
 </div>
 </div>
 <div class="sect2">
-<h3 id="_exit_status_27">28.5. EXIT STATUS</h3>
+<h3 id="_exit_status_29">30.5. EXIT STATUS</h3>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>0</strong></dt>
@@ -4270,13 +4547,13 @@ be selected. odgi test(1) depends on <a href="https://github.com/catchorg/Catch2
 </div>
 </div>
 <div class="sect2">
-<h3 id="_bugs_28">28.6. BUGS</h3>
+<h3 id="_bugs_30">30.6. BUGS</h3>
 <div class="paragraph">
-<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a>.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_authors_28">28.7. AUTHORS</h3>
+<h3 id="_authors_30">30.7. AUTHORS</h3>
 <div class="paragraph">
 <p><strong>odgi test</strong> was written by Erik Garrison, Simon Heumos, and Andrea Guarracino.</p>
 </div>
@@ -4284,30 +4561,30 @@ be selected. odgi test(1) depends on <a href="https://github.com/catchorg/Catch2
 </div>
 </div>
 <div class="sect1">
-<h2 id="_odgi_version1">29. odgi version(1)</h2>
+<h2 id="_odgi_version1">31. odgi version(1)</h2>
 <div class="sectionbody">
 <div class="sect2">
-<h3 id="_name_29">29.1. NAME</h3>
+<h3 id="_name_31">31.1. NAME</h3>
 <div class="paragraph">
 <p>odgi_version - display the version of odgi</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_synopsis_29">29.2. SYNOPSIS</h3>
+<h3 id="_synopsis_31">31.2. SYNOPSIS</h3>
 <div class="paragraph">
 <p><strong>odgi version</strong> [<em>OPTION</em>]&#8230;&#8203;</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_description_29">29.3. DESCRIPTION</h3>
+<h3 id="_description_31">31.3. DESCRIPTION</h3>
 <div class="paragraph">
 <p>The odgi version(1) command prints the current git version with tags and codename to stdout (like <em>v-44-g89d022b "back to old ABI"</em>). Optionally, only the release, version or codename can be printed.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_options_28">29.4. OPTIONS</h3>
+<h3 id="_options_30">31.4. OPTIONS</h3>
 <div class="sect3">
-<h4 id="_version_options">29.4.1. Version Options</h4>
+<h4 id="_version_options">31.4.1. Version Options</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-v, --version</strong>=</dt>
@@ -4326,7 +4603,7 @@ be selected. odgi test(1) depends on <a href="https://github.com/catchorg/Catch2
 </div>
 </div>
 <div class="sect3">
-<h4 id="_program_information_28">29.4.2. Program Information</h4>
+<h4 id="_program_information_30">31.4.2. Program Information</h4>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>-h, --help</strong></dt>
@@ -4338,7 +4615,7 @@ be selected. odgi test(1) depends on <a href="https://github.com/catchorg/Catch2
 </div>
 </div>
 <div class="sect2">
-<h3 id="_exit_status_28">29.5. EXIT STATUS</h3>
+<h3 id="_exit_status_30">31.5. EXIT STATUS</h3>
 <div class="dlist">
 <dl>
 <dt class="hdlist1"><strong>0</strong></dt>
@@ -4353,13 +4630,13 @@ be selected. odgi test(1) depends on <a href="https://github.com/catchorg/Catch2
 </div>
 </div>
 <div class="sect2">
-<h3 id="_bugs_29">29.6. BUGS</h3>
+<h3 id="_bugs_31">31.6. BUGS</h3>
 <div class="paragraph">
-<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/vgteam/odgi/issues" class="bare">https://github.com/vgteam/odgi/issues</a>.</p>
+<p>Refer to the <strong>odgi</strong> issue tracker at <a href="https://github.com/pangenome/odgi/issues" class="bare">https://github.com/pangenome/odgi/issues</a>.</p>
 </div>
 </div>
 <div class="sect2">
-<h3 id="_authors_29">29.7. AUTHORS</h3>
+<h3 id="_authors_31">31.7. AUTHORS</h3>
 <div class="paragraph">
 <p><strong>odgi version</strong> was written by Simon Heumos.</p>
 </div>
@@ -4369,7 +4646,7 @@ be selected. odgi test(1) depends on <a href="https://github.com/catchorg/Catch2
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-03-12 21:12:32 +0100
+Last updated 2021-03-30 18:13:47 +0200
 </div>
 </div>
 </body>

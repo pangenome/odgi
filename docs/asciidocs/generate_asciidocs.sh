@@ -14,11 +14,13 @@ asciidoctor -r asciidoctor-pdf -b pdf odgi_docs.adoc
 asciidoctor -b manpage odgi.adoc
 asciidoctor -b manpage odgi_build.adoc
 asciidoctor -b manpage odgi_stats.adoc
+asciidoctor -b manpage odgi_depth.adoc
 asciidoctor -b manpage odgi_sort.adoc
 asciidoctor -b manpage odgi_view.adoc
 asciidoctor -b manpage odgi_kmers.adoc
 asciidoctor -b manpage odgi_unitig.adoc
 asciidoctor -b manpage odgi_viz.adoc
+asciidoctor -b manpage odgi_draw.adoc
 asciidoctor -b manpage odgi_paths.adoc
 asciidoctor -b manpage odgi_prune.adoc
 asciidoctor -b manpage odgi_unchop.adoc

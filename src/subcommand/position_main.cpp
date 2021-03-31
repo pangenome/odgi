@@ -250,34 +250,52 @@ int main_position(int argc, char** argv) {
     auto add_bed_range =
         [&path_ranges](const odgi::graph_t& graph,
                        const std::string& buffer) {
-            auto vals = split(buffer, '\t');
-            /*
-            if (vals.size() != 3) {
-                std::cerr << "[odgi::position] error: path position record is incomplete" << std::endl;
-                std::cerr << "[odgi::position] error: got '" << buffer << "'" << std::endl;
-                exit(1); // bail
-            }
-            */
-            auto& path_name = vals[0];
-            if (!graph.has_path(path_name)) {
-                std::cerr << "[odgi::position] error: ref path " << path_name << " not found in graph" << std::endl;
-                exit(1);
-            } else {
-                path_ranges.push_back(
-                    {
-                        {
-                            graph.get_path_handle(path_name),
-                            (uint64_t)std::stoi(vals[1]),
-                            false
-                        },
-                        {
-                            graph.get_path_handle(path_name),
-                            (uint64_t)std::stoi(vals[2]),
-                            false
-                        },
-                        (vals.size() > 3 && vals[3] == "-"),
-                        buffer
-                    });
+            if (!buffer.empty() && buffer[0] != '#') {
+                auto vals = split(buffer, '\t');
+                /*
+                if (vals.size() != 3) {
+                    std::cerr << "[odgi::position] error: path position record is incomplete" << std::endl;
+                    std::cerr << "[odgi::position] error: got '" << buffer << "'" << std::endl;
+                    exit(1); // bail
+                }
+                */
+                auto& path_name = vals[0];
+                if (!graph.has_path(path_name)) {
+                    std::cerr << "[odgi::position] error: ref path " << path_name << " not found in graph" << std::endl;
+                    exit(1);
+                } else {
+                    uint64_t start = vals.size() > 1 ? (uint64_t) std::stoi(vals[1]) : 0;
+                    uint64_t end = 0;
+                    if (vals.size() > 2) {
+                        end = (uint64_t) std::stoi(vals[2]);
+                    } else {
+                        // In the BED format, the end is non-inclusive, unlike start
+                        graph.for_each_step_in_path(graph.get_path_handle(path_name), [&](const step_handle_t &s) {
+                            end += graph.get_length(graph.get_handle_of_step(s));
+                        });
+                    }
+
+                    if (start > end) {
+                        std::cerr << "[odgi::position] error: wrong input coordinates in row: " << buffer << std::endl;
+                        exit(1);
+                    }
+
+                    path_ranges.push_back(
+                            {
+                                    {
+                                            graph.get_path_handle(path_name),
+                                            start,
+                                            false
+                                    },
+                                    {
+                                            graph.get_path_handle(path_name),
+                                            end,
+                                            false
+                                    },
+                                    (vals.size() > 3 && vals[3] == "-"),
+                                    buffer
+                            });
+                }
             }
         };
     
@@ -350,7 +368,7 @@ int main_position(int argc, char** argv) {
                  s != path_end; s = graph.get_next_step(s)) {
                 handle_t h = graph.get_handle_of_step(s);
                 uint64_t node_length = graph.get_length(h);
-                if (walked + node_length > pos.offset) {
+                if (walked + node_length >= pos.offset) {
                     return make_pos_t(graph.get_id(h), graph.get_is_reverse(h), pos.offset - walked);
                 }
                 walked += node_length;
@@ -498,13 +516,15 @@ int main_position(int argc, char** argv) {
         if (id(pos) && give_graph_pos) {
             // force graph position in target
 #pragma omp critical (cout)
-            std::cout << id(_pos) << "," << offset(_pos) << "," << (is_rev(_pos) ? "-" : "+") << "\t"
+            std::cout << "#source.path.pos\ttarget.graph.pos" << std::endl
+                      << id(_pos) << "," << offset(_pos) << "," << (is_rev(_pos) ? "-" : "+") << "\t"
                       << "\t" << id(pos) << "," << offset(pos) << "," << (is_rev(pos) ? "-" : "+") << std::endl;
         } else if (get_position(target_graph, ref_path_set, pos, result)) {
             bool ref_is_rev = false;
             path_handle_t p = target_graph.get_path_handle_of_step(result.ref_hit);
 #pragma omp critical (cout)
-            std::cout << id(pos) << "," << offset(pos) << "," << (is_rev(pos) ? "-" : "+") << "\t"
+            std::cout << "#source.path.pos\ttarget.path.pos\tdist.to.ref\tstrand.vs.ref" << std::endl
+                      << id(pos) << "," << offset(pos) << "," << (is_rev(pos) ? "-" : "+") << "\t"
                       << target_graph.get_path_name(p) << "," << result.path_offset << "," << (ref_is_rev ? "-" : "+") << "\t"
                       << result.walked_to_hit_ref << "\t" << (result.is_rev_vs_ref ? "-" : "+") << std::endl;
         }
@@ -539,14 +559,16 @@ int main_position(int argc, char** argv) {
         if (id(pos)) {
             if (give_graph_pos) {
 #pragma omp critical (cout)
-                std::cout << (lifting ? source_graph.get_path_name(path_pos.path) : target_graph.get_path_name(path_pos.path))
+                std::cout << "#source.path.pos\ttarget.graph.pos" << std::endl
+                          << (lifting ? source_graph.get_path_name(path_pos.path) : target_graph.get_path_name(path_pos.path))
                           << "," << path_pos.offset << "," << (path_pos.is_rev ? "-" : "+")
                           << "\t" << id(pos) << "," << offset(pos) << "," << (is_rev(pos) ? "-" : "+") << std::endl;
             } else if (get_position(target_graph, ref_path_set, pos, result)) {
                 bool ref_is_rev = false;
                 path_handle_t p = target_graph.get_path_handle_of_step(result.ref_hit);
 #pragma omp critical (cout)
-                std::cout << (lifting ? source_graph.get_path_name(path_pos.path) : target_graph.get_path_name(path_pos.path)) << ","
+                std::cout << "#source.path.pos\ttarget.path.pos\tdist.to.ref\tstrand.vs.ref" << std::endl
+                          << (lifting ? source_graph.get_path_name(path_pos.path) : target_graph.get_path_name(path_pos.path)) << ","
                           << path_pos.offset << "," << (path_pos.is_rev ? "-" : "+") << "\t"
                           << target_graph.get_path_name(p) << "," << result.path_offset << "," << (ref_is_rev ? "-" : "+") << "\t"
                           << result.walked_to_hit_ref << "\t" << (result.is_rev_vs_ref ? "-" : "+") << std::endl;
@@ -594,9 +616,9 @@ int main_position(int argc, char** argv) {
             // TODO optionally list out the nodes in this particular range (e.g. those within it in our sort order)
             if (give_graph_pos) {
 #pragma omp critical (cout)
-                std::cout << id(pos_begin) << "," << offset(pos_begin) << "," << (is_rev(pos_begin)?"-":"+") << "\t"
-                          << id(pos_end) << "," << offset(pos_end) << "," << (is_rev(pos_end)?"-":"+") << "\t"
-                          << path_range.data << std::endl;
+                std::cout << path_range.data << "\t"
+                          << id(pos_begin) << "," << offset(pos_begin) << "," << (is_rev(pos_begin)?"-":"+") << "\t"
+                          << id(pos_end) << "," << offset(pos_end) << "," << (is_rev(pos_end)?"-":"+") << std::endl;
             } else if (get_position(target_graph, ref_path_set, pos_begin, lift_begin)
                        && get_position(target_graph, ref_path_set, pos_end, lift_end)) {
                 bool ref_is_rev = false;
@@ -604,14 +626,14 @@ int main_position(int argc, char** argv) {
                 path_handle_t p_end = target_graph.get_path_handle_of_step(lift_end.ref_hit);
                 // XXX TODO assert these to be equal......
 #pragma omp critical (cout)
-                std::cout << target_graph.get_path_name(p_begin) << ","
+                std::cout << path_range.data << "\t"
+                          << target_graph.get_path_name(p_begin) << ","
                           << lift_begin.path_offset << ","
                           << (lift_begin.is_rev_vs_ref ? "-" : "+") << "\t"
                           << target_graph.get_path_name(p_end) << ","
                           << lift_end.path_offset << ","
                           << (lift_end.is_rev_vs_ref ? "-" : "+") << "\t"
-                          << (lift_begin.is_rev_vs_ref ^ path_range.is_rev ? "-" : "+") << "\t"
-                          << path_range.data << std::endl;
+                          << (lift_begin.is_rev_vs_ref ^ path_range.is_rev ? "-" : "+") << std::endl;
                     //<< walked_to_hit_ref << "\t" << (is_rev_vs_ref ? "-" : "+") << std::endl;
             }
         }

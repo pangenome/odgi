@@ -34,7 +34,8 @@ namespace odgi {
                                           {'s', "rank-suffix"});
         args::Flag _optimize(parser, "optimize", "compact the node ID space in each connected component",
                              {'O', "optimize"});
-        //args::ValueFlag<uint64_t> nthreads(parser, "N","number of threads to use (to write the components in parallel)",{'t', "threads"});
+        args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use",
+                                           {'t', "threads"});
         args::Flag _debug(parser, "progress", "print information about the components and the progress to stderr",
                           {'P', "progress"});
 
@@ -91,7 +92,8 @@ namespace odgi {
         bool debug = args::get(_debug);
         bool optimize = args::get(_optimize);
 
-        //uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+        uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+        omp_set_num_threads(num_threads);
 
         std::unique_ptr<algorithms::progress_meter::ProgressMeter> component_progress;
 
@@ -156,25 +158,33 @@ namespace odgi {
                     });
                 });
 
-                // Copy the paths over
-                graph.for_each_path_handle([&](const path_handle_t &p) {
-                    std::string new_path_name = graph.get_path_name(p);
+                // Copy the paths
+                std::vector<std::pair<path_handle_t, path_handle_t>> old_and_new_paths;
+                old_and_new_paths.reserve(graph.get_path_count());
+
+                graph.for_each_path_handle([&](const path_handle_t old_path_handle) {
+                    std::string new_path_name = graph.get_path_name(old_path_handle);
                     if (_add_suffix) {
                         new_path_name += separator + std::to_string(input_graph_rank);
                     }
 
                     path_handle_t new_path_handle = squeezed_graph.create_path_handle(
-                            new_path_name, graph.get_is_circular(p));
+                            new_path_name, graph.get_is_circular(old_path_handle));
 
-                    graph.for_each_step_in_path(p, [&](const step_handle_t &step) {
+                    old_and_new_paths.push_back({old_path_handle, new_path_handle});
+                });
+
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
+                for (auto old_new_path : old_and_new_paths) {
+                    graph.for_each_step_in_path(old_new_path.first, [&](const step_handle_t &step) {
                         handle_t old_handle = graph.get_handle_of_step(step);
                         handle_t new_handle = squeezed_graph.get_handle(
                                 graph.get_id(old_handle) + shift_id,
                                 graph.get_is_reverse(old_handle));
 
-                        squeezed_graph.append_step(new_path_handle, new_handle);
+                        squeezed_graph.append_step(old_new_path.second, new_handle);
                     });
-                });
+                }
 
                 shift_id = max_id;
                 ++input_graph_rank;

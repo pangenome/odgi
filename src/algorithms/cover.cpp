@@ -383,5 +383,115 @@ namespace odgi {
             }
         }
 
+
+
+void hogwild_path_cover(handlegraph::MutablePathDeletableHandleGraph &graph,
+                        double target_depth,
+                        //bool write_node_coverages, std::string &node_coverages,
+                        const uint64_t& nthreads, const bool& ignore_paths, const bool& show_progress) {
+
+    // get depth -> graph depth
+    uint64_t node_count = graph.get_node_count();
+    uint64_t graph_bp = 0;
+    uint64_t step_count = 0;
+    // make a rank select dictionary over our sequence space
+    // to get a node randomly distributed in the total length of the graph
+    graph.for_each_handle(
+        [&](const handle_t& h) {
+            graph_bp += graph.get_length(h);
+            step_count += graph.get_step_count(h);
+        });
+    //sdsl::bit_vector graph_vec();
+    sdsl::bit_vector graph_bv(graph_bp);
+    graph_bp = 0;
+    graph.for_each_handle(
+        [&](const handle_t& h) {
+            graph_bv[graph_bp] = 1;
+            graph_bp += graph.get_length(h);
+        });
+    sdsl::bit_vector::rank_1_type graph_bv_rank;
+    sdsl::util::assign(graph_bv_rank, sdsl::bit_vector::rank_1_type(&graph_bv));
+    uint64_t target_step_count = node_count * target_depth - (ignore_paths ? 0 : step_count);
+    // run hogwild until our thread count is
+    std::unique_ptr<progress_meter::ProgressMeter> progress_meter;
+    if (show_progress) {
+        progress_meter = std::make_unique<progress_meter::ProgressMeter>(
+            target_step_count, "[odgi::hogwild_cover] covering the graph:");
+    }
+    // launch a thread to update the learning rate, count iterations, and decide when to stop
+    std::atomic<uint64_t> added_steps; added_steps.store(0);
+    std::atomic<uint64_t> added_paths; added_paths.store(0);
+    auto worker_lambda =
+        [&](uint64_t tid) {
+            // everyone tries to seed with their own random data
+            const std::uint64_t seed = 9399220 + tid;
+            XoshiroCpp::Xoshiro256Plus gen(seed); // a nice, fast PRNG
+
+            // we'll sample from all path steps
+            std::uniform_int_distribution<uint64_t> dis_graph_pos = std::uniform_int_distribution<uint64_t>(0, graph_bp-1);
+            std::uniform_int_distribution<uint64_t> flip(0, 1);
+            while (added_steps.load() < target_step_count) {
+                // create a path
+                std::stringstream ss;
+                ss << "cover_" << added_paths++;
+                path_handle_t path = graph.create_path_handle(ss.str());
+                // find a random handle
+                handle_t h = graph.get_handle(graph_bv_rank(dis_graph_pos(gen)), flip(gen));
+                uint64_t iter = 0;
+                handle_t lowest;
+                bool seen_low = false;
+                while (graph.get_step_count(h) > 0 && iter++ < 100) {
+                    h = graph.get_handle(graph_bv_rank(dis_graph_pos(gen)), flip(gen));
+                    if (!seen_low || graph.get_step_count(h) < graph.get_step_count(lowest)) {
+                        lowest = h;
+                        seen_low = true;
+                    }
+                }
+                if (seen_low) {
+                    h = lowest;
+                }
+                while (true) {
+                    graph.append_step(path, h);
+                    if (show_progress) progress_meter->increment(1);
+                    ++added_steps;
+                    if (added_steps.load() >= target_step_count) {
+                        break;
+                    }
+                    handle_t best_next;
+                    uint64_t lowest_cov = std::numeric_limits<uint64_t>::max();
+                    graph.follow_edges(
+                        h, false,
+                        [&](const handle_t& n) {
+                            uint64_t next_cov = graph.get_step_count(n);
+                            if (next_cov < lowest_cov) {
+                                best_next = n;
+                                lowest_cov = next_cov;
+                            }
+                        });
+                    if (lowest_cov < std::numeric_limits<uint64_t>::max()) {
+                        h = best_next;
+                    } else {
+                        break;
+                    }
+                }
+            }
+        };
+
+    std::vector<std::thread> workers;
+    workers.reserve(nthreads);
+    for (uint64_t t = 0; t < nthreads; ++t) {
+        workers.emplace_back(worker_lambda, t);
+    }
+
+    for (uint64_t t = 0; t < nthreads; ++t) {
+        workers[t].join();
+    }
+
+    if (show_progress) {
+        progress_meter->finish();
+    }
+}
+
+
     }
 }
