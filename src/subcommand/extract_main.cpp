@@ -196,7 +196,7 @@ namespace odgi {
             std::cerr << "[odgi::extract] found " << paths.size() << "/" << num_of_paths_in_file
                       << " paths to consider." << std::endl;
 
-            if (paths.size() == 0) {
+            if (paths.empty()) {
                 std::cerr << "[odgi::extract] error: no path to consider." << std::endl;
                 exit(1);
             }
@@ -297,8 +297,9 @@ namespace odgi {
         uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
         omp_set_num_threads(num_threads);
 
-        auto prep_graph = [&](graph_t &source, const std::vector<path_handle_t> source_paths, graph_t &subgraph,
-                              uint64_t context_size, bool use_length, bool full_range, bool inverse)  {
+        auto prep_graph = [](graph_t &source, const std::vector<path_handle_t>& source_paths, graph_t &subgraph,
+                              uint64_t context_size, bool use_length, bool full_range, bool inverse,
+                              uint64_t num_threads, bool show_progress) {
             if (context_size > 0) {
                 if (show_progress) {
                     std::cerr << "[odgi::extract] expansion and adding connecting edges" << std::endl;
@@ -335,7 +336,7 @@ namespace odgi {
                 source.for_each_handle([&](const handle_t &h) {
                     nid_t id = source.get_id(h);
                     if (node_ids_to_ignore.count(id) <= 0) {
-                        subgraph.create_handle(graph.get_sequence(graph.get_handle(id)), id);
+                        subgraph.create_handle(source.get_sequence(source.get_handle(id)), id);
 
                         if (show_progress) {
                             progress->increment(1);
@@ -354,7 +355,7 @@ namespace odgi {
                                                                            : "");
 
             // Add subpaths covering the collected handles
-            algorithms::add_subpaths_to_subgraph(source, paths, subgraph, num_threads,
+            algorithms::add_subpaths_to_subgraph(source, source_paths, subgraph, num_threads,
                                                  show_progress ? "[odgi::extract] adding subpaths" : "");
 
             // This should not be necessary, if the extraction works correctly
@@ -387,7 +388,7 @@ namespace odgi {
                 }
                 algorithms::extract_path_range(graph, path_handle, path_range.begin.offset, path_range.end.offset , subgraph);
 
-                prep_graph(graph, paths, subgraph, context_size, _use_length, _full_range, false);
+                prep_graph(graph, paths, subgraph, context_size, _use_length, _full_range, false, num_threads, show_progress);
 
                 string filename = graph.get_path_name(path_range.begin.path) + ":" + to_string(path_range.begin.offset) + "-" + to_string(path_range.end.offset) + ".og";
 
@@ -424,7 +425,7 @@ namespace odgi {
                 }
             }
 
-            prep_graph(graph, paths, subgraph, context_size, _use_length, _full_range, _inverse);
+            prep_graph(graph, paths, subgraph, context_size, _use_length, _full_range, _inverse, num_threads, show_progress);
 
             std::string outfile = args::get(og_out_file);
             if (!outfile.empty()) {
