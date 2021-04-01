@@ -234,7 +234,7 @@ Refer to the *odgi* issue tracker at https://github.com/pangenome/odgi/issues.
 
 == AUTHORS
 
-Erik Garrison from the University of California Santa Cruz wrote the whole *odgi* tool. Simon Heumos from the Quantitative Biology Center Tübingen wrote *odgi pathindex*, *odgi panpos*, *odgi server*, and this documentation. Andrea Guarracino from the University of Rome Tor Vergata wrote *odgi viz*, *odgi extract*, *odgi cover*, *odgi explode*, *odgi squeeze*, *odgi depth*, *odgi overlap*, and this documentation*.
+Erik Garrison from the University of California Santa Cruz wrote the whole *odgi* tool. Simon Heumos from the Quantitative Biology Center Tübingen wrote *odgi pathindex*, *odgi panpos*, *odgi server*, and this documentation. Andrea Guarracino from the University of Rome Tor Vergata wrote *odgi viz*, *odgi extract*, *odgi cover*, *odgi explode*, *odgi squeeze*, *odgi depth*, *odgi overlap*, and this documentation.
 
 == RESOURCES
 
