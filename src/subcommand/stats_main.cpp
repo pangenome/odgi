@@ -116,7 +116,7 @@ int main_stats(int argc, char** argv) {
     graph_t graph;
     assert(argc > 0);
     std::string infile = args::get(dg_in_file);
-    if (infile.size()) {
+    if (!infile.empty()) {
         if (infile == "-") {
             graph.deserialize(std::cin);
         } else {
@@ -166,6 +166,7 @@ int main_stats(int argc, char** argv) {
                 loops.insert(graph.get_id(e.first));
             }
         });
+
         cout << "#num_self_loops" << "\n" << loops.size() << endl;
     }
 

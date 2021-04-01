@@ -36,6 +36,9 @@ The odgi stats(1) command produces statistics of a variation graph. Among other 
 *-W, --weak-connected-components*::
   Shows the properties of the weakly connected components.
 
+*-L, --self-loops*::
+  Number of nodes with a self-loop.
+
 *-b, --base-content*::
   Describe the base content of the graph. Print to stdout the #A, #C, #G and #T of the graph.
 
