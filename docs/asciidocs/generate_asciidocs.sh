@@ -15,6 +15,7 @@ asciidoctor -b manpage odgi.adoc
 asciidoctor -b manpage odgi_build.adoc
 asciidoctor -b manpage odgi_stats.adoc
 asciidoctor -b manpage odgi_depth.adoc
+asciidoctor -b manpage odgi_overlap.adoc
 asciidoctor -b manpage odgi_sort.adoc
 asciidoctor -b manpage odgi_view.adoc
 asciidoctor -b manpage odgi_kmers.adoc

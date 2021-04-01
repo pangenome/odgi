@@ -93,15 +93,15 @@ namespace odgi {
             paths_to_consider.resize(graph.get_path_count() + 1, false);
 
             std::ifstream refs(args::get(subset_paths).c_str());
-            std::string path_name;
-            while (std::getline(refs, path_name)) {
-                if (!path_name.empty()) {
-                    if (!graph.has_path(path_name)) {
-                        std::cerr << "[odgi::depth] error: path " << path_name << " not found in graph" << std::endl;
+            std::string line;
+            while (std::getline(refs, line)) {
+                if (!line.empty()) {
+                    if (!graph.has_path(line)) {
+                        std::cerr << "[odgi::depth] error: path " << line << " not found in graph" << std::endl;
                         exit(1);
                     }
 
-                    paths_to_consider[as_integer(graph.get_path_handle(path_name))] = true;
+                    paths_to_consider[as_integer(graph.get_path_handle(line))] = true;
                 }
             }
         }
@@ -228,7 +228,7 @@ namespace odgi {
             // if we're given a graph_pos, we'll convert it into a path pos
             add_graph_pos(graph, args::get(graph_pos));
         } else if (graph_pos_file) {
-            std::ifstream gpos(args::get(graph_pos_file).c_str());
+            std::ifstream gpos(args::get(graph_pos_file));
             std::string buffer;
             while (std::getline(gpos, buffer)) {
                 add_graph_pos(graph, buffer);
@@ -238,13 +238,13 @@ namespace odgi {
             add_path_pos(graph, args::get(path_pos));
         } else if (path_pos_file) {
             // if we're given a file of path depths, we'll convert them all
-            std::ifstream refs(args::get(path_pos_file).c_str());
+            std::ifstream refs(args::get(path_pos_file));
             std::string buffer;
             while (std::getline(refs, buffer)) {
                 add_path_pos(graph, buffer);
             }
         } else if (bed_input) {
-            std::ifstream bed_in(args::get(bed_input).c_str());
+            std::ifstream bed_in(args::get(bed_input));
             std::string buffer;
             while (std::getline(bed_in, buffer)) {
                 add_bed_range(graph, buffer);
@@ -253,10 +253,10 @@ namespace odgi {
             add_bed_range(graph, args::get(path_name));
         } else if (path_file) {
             // for thing in things
-            std::ifstream refs(args::get(path_file).c_str());
-            std::string path_name;
-            while (std::getline(refs, path_name)) {
-                add_bed_range(graph, path_name);
+            std::ifstream refs(args::get(path_file));
+            std::string line;
+            while (std::getline(refs, line)) {
+                add_bed_range(graph, line);
             }
         } else {
             // using all the paths in the graph

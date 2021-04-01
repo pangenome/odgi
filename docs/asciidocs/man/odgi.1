@@ -37,6 +37,8 @@ odgi \- dynamic succinct variation graph tool
 .sp
 \fBodgi\fP depth \-i graph.og
 .sp
+\fBodgi\fP overlap \-i graph.og \-r path_name
+.sp
 \fBodgi\fP cover \-i graph.og \-o graph.paths.og
 .sp
 \fBodgi\fP extract \-i graph.og \-p prefix \-r path_name:0\-17
@@ -116,6 +118,9 @@ The odgi stats(1) command produces statistics of a variation graph. Among other 
 \fBodgi depth\fP [\fB\-i, \-\-input\fP=\fIFILE\fP] [\fIOPTION\fP]...
 The odgi depth(1) command finds the depth of graph as defined by query criteria.
 .sp
+\fBodgi overlap\fP [\fB\-i, \-\-input\fP=\fIFILE\fP] [\fIOPTION\fP]...
+The odgi overlap(1) command finds the paths touched by the input paths.
+.sp
 \fBodgi cover\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
 .br
 The odgi cover(1) command finds a path cover of a variation graph, with a specified number of paths per component.
@@ -135,7 +140,7 @@ The odgi position(1) command position parts of the graph as defined by query cri
 .sp
 \fBodgi sort\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
 .br
-The odgi sort(1) command sorts a succinct variation graph. Odgi sort offers a diverse palette of sorting algorithms to
+The odgi sort(1) command sorts a succinct variation graph. The command offers a diverse palette of sorting algorithms to
 determine the node order:
 .sp
 .RS 4
@@ -348,7 +353,7 @@ Refer to the \fBodgi\fP issue tracker at \c
 .URL "https://github.com/pangenome/odgi/issues" "" "."
 .SH "AUTHORS"
 .sp
-Erik Garrison from the University of California Santa Cruz wrote the whole \fBodgi\fP tool. Simon Heumos from the Quantitative Biology Center Tübingen wrote \fBodgi pathindex\fP, \fBodgi panpos\fP, \fBodgi server\fP, and this documentation. Andrea Guarracino from the University of Rome Tor Vergata wrote \fBodgi viz\fP, \fBodgi extract\fP, \fBodgi cover\fP, \fBodgi explode\fP, \fBodgi squeeze\fP, \fBodgi depth\fP, and this documentation*.
+Erik Garrison from the University of California Santa Cruz wrote the whole \fBodgi\fP tool. Simon Heumos from the Quantitative Biology Center Tübingen wrote \fBodgi pathindex\fP, \fBodgi panpos\fP, \fBodgi server\fP, and this documentation. Andrea Guarracino from the University of Rome Tor Vergata wrote \fBodgi viz\fP, \fBodgi extract\fP, \fBodgi cover\fP, \fBodgi explode\fP, \fBodgi squeeze\fP, \fBodgi depth\fP, \fBodgi overlap\fP, and this documentation*.
 .SH "RESOURCES"
 .sp
 \fBProject web site:\fP \c
