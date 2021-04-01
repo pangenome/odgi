@@ -31,9 +31,12 @@ int main_stats(int argc, char** argv) {
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the variation graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> layout_in_file(parser, "FILE", "read the layout coordinates from this file", {'c', "coords-in"});
 
-    args::Flag summarize(parser, "summarize", "summarize the graph properties and dimensions", {'S', "summarize"});
+    args::Flag _summarize(parser, "summarize", "summarize the graph properties and dimensions", {'S', "summarize"});
 
-    args::Flag weakly_connected_components(parser, "show", "shows the properties of the weakly connected components", {'W', "weak-connected-components"});
+    args::Flag _weakly_connected_components(parser, "show", "shows the properties of the weakly connected components", {'W', "weak-connected-components"});
+
+    args::Flag _num_self_loops(parser, "show", "number of nodes with a self-loop", {'L', "self-loops"});
+
 
     args::Flag base_content(parser, "base-content", "describe the base content of the graph", {'b', "base-content"});
     //args::Flag path_coverage(parser, "coverage", "provide a histogram of path coverage over bases in the graph", {'C', "coverage"});
@@ -124,7 +127,7 @@ int main_stats(int argc, char** argv) {
     }
     ///graph.display();
 
-    if (args::get(summarize)) {
+    if (args::get(_summarize)) {
         uint64_t length_in_bp = 0, node_count = 0, edge_count = 0, path_count = 0;
         graph.for_each_handle([&](const handle_t& h) {
                 length_in_bp += graph.get_length(h);
@@ -141,7 +144,7 @@ int main_stats(int argc, char** argv) {
         std::cout << length_in_bp << "\t" << node_count << "\t" << edge_count << "\t" << path_count << std::endl;
     }
 
-    if (args::get(weakly_connected_components)) {
+    if (args::get(_weakly_connected_components)) {
         std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components = algorithms::weakly_connected_components(&graph);
 
         std::cout << "##num_weakly_connected_components: " << weak_components.size() << std::endl;
@@ -154,6 +157,16 @@ int main_stats(int argc, char** argv) {
 
             std::cout << i << "\t" << weak_components[i].size() << "\t" << (acyclic ? "yes" : "no") << std::endl;
         }
+    }
+
+    if (_num_self_loops) {
+        std::unordered_set<nid_t> loops;
+        graph.for_each_edge([&](const edge_t& e) {
+            if (graph.get_id(e.first) == graph.get_id(e.second)) {
+                loops.insert(graph.get_id(e.first));
+            }
+        });
+        cout << "#num_self_loops" << "\n" << loops.size() << endl;
     }
 
     if (args::get(base_content)) {
