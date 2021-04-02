@@ -20,7 +20,7 @@ namespace odgi {
                     });
                 }
             });
-
+            std::cerr << "[odgi::explode]" << std::endl;
             // Copy the paths over
             for (path_handle_t path_handle : paths) {
                 path_handle_t new_path_handle = component.create_path_handle(source.get_path_name(path_handle),
@@ -52,20 +52,6 @@ namespace odgi {
                 }
                 path_handle_t path = subgraph.create_path_handle(subpath_name, is_circular);
             };
-
-            auto fill_subpath = [](graph_t &subgraph, const string &path_name,
-                                   const size_t start, const size_t end,
-                                   std::vector<handle_t> &handles_to_embed) {
-                string subpath_name = make_subpath_name(path_name, start, end);
-                path_handle_t path = subgraph.get_path_handle(subpath_name);
-
-                for (auto h_to_embed : handles_to_embed) {
-                    subgraph.append_step(path, h_to_embed);
-                }
-
-                std::vector<handle_t>().swap(handles_to_embed);
-            };
-
 
             std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress;
             if (show_progress) {
