@@ -95,6 +95,8 @@ namespace odgi {
 
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
         for (uint64_t component_index = 0; component_index < weak_components.size(); ++component_index) {
+            std::cerr << "[odgi::explode] num " << component_index << std::endl;
+
             auto &weak_component = weak_components[component_index];
 
             graph_t subgraph;
@@ -102,6 +104,8 @@ namespace odgi {
             for (auto node_id : weak_component) {
                 subgraph.create_handle(graph.get_sequence(graph.get_handle(node_id)), node_id);
             }
+
+            weak_component.clear();
 
             algorithms::add_connecting_edges_to_subgraph(graph, subgraph);
             algorithms::add_full_paths_to_component(graph, subgraph);
