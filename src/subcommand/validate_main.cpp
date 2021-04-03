@@ -69,7 +69,16 @@ namespace odgi {
                     step_handle_t next_step = graph.get_next_step(step);
                     handle_t h = graph.get_handle_of_step(step);
                     handle_t next_h = graph.get_handle_of_step(next_step);
-                    assert(graph.has_edge(h, next_h));
+
+                    if (!graph.has_edge(h, next_h)) {
+                        std::cerr << "[odgi::validate] error: path " << graph.get_path_name(path) << " does not respect "
+                                  << "the graph topology. The link "
+                                  << graph.get_id(h) << (graph.get_is_reverse(h) ? "-" : "+")
+                                  << ","
+                                  << graph.get_id(next_h) << (graph.get_is_reverse(next_h) ? "-" : "+")
+                                  << " is missing." << std::endl;
+                        exit(1);
+                    }
                 }
             });
         });
