@@ -3826,6 +3826,12 @@ between <literal>--source</literal> and <literal>--target</literal>].</simpara>
 </listitem>
 </varlistentry>
 <varlistentry>
+<term><emphasis role="strong">-I, --all-immediate</emphasis></term>
+<listitem>
+<simpara>Emit all positions immediately at the given graph/path position.</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
 <term><emphasis role="strong">-d, --search-radius</emphasis>=<emphasis>STRING</emphasis></term>
 <listitem>
 <simpara>Limit coordinate conversion breadth-first search up to DISTANCE bp from each given position [default: 10000].</simpara>
