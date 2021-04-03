@@ -2,12 +2,12 @@
 .\"     Title: odgi
 .\"    Author: Erik Garrison
 .\" Generator: Asciidoctor 2.0.10
-.\"      Date: 2021-04-01
+.\"      Date: 2021-04-03
 .\"    Manual: odgi
 .\"    Source: odgi v0.6.0
 .\"  Language: English
 .\"
-.TH "ODGI" "1" "2021-04-01" "odgi v0.6.0" "odgi"
+.TH "ODGI" "1" "2021-04-03" "odgi v0.6.0" "odgi"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -32,6 +32,8 @@ odgi \- dynamic succinct variation graph tool
 .SH "SYNOPSIS"
 .sp
 \fBodgi\fP build \-g graph.gfa \-o graph.og
+.sp
+\fBodgi\fP validate \-i graph.og
 .sp
 \fBodgi\fP stats \-i graph.og \-S
 .sp
@@ -110,6 +112,9 @@ Each command has its own man page which can be viewed using e.g. \fBman odgi_bui
 .br
 The odgi build(1) command constructs a succinct variation graph from a GFA. Currently, only GFA1 is supported. For details of the format please see \c
 .URL "https://github.com/GFA\-spec/GFA\-spec/blob/master/GFA1.md" "" "."
+.sp
+\fBodgi validate\fP [\fB\-i, \-\-input\fP=\fIFILE\fP] [\fIOPTION\fP]...
+The odgi validate(1) command validates the graph (currently, it checks if the paths are consistent with the graph topology).
 .sp
 \fBodgi stats\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fIOPTION\fP]...
 .br
@@ -353,7 +358,7 @@ Refer to the \fBodgi\fP issue tracker at \c
 .URL "https://github.com/pangenome/odgi/issues" "" "."
 .SH "AUTHORS"
 .sp
-Erik Garrison from the University of California Santa Cruz wrote the whole \fBodgi\fP tool. Simon Heumos from the Quantitative Biology Center Tübingen wrote \fBodgi pathindex\fP, \fBodgi panpos\fP, \fBodgi server\fP, and this documentation. Andrea Guarracino from the University of Rome Tor Vergata wrote \fBodgi viz\fP, \fBodgi extract\fP, \fBodgi cover\fP, \fBodgi explode\fP, \fBodgi squeeze\fP, \fBodgi depth\fP, \fBodgi overlap\fP, and this documentation.
+Erik Garrison from the University of California Santa Cruz wrote the whole \fBodgi\fP tool. Simon Heumos from the Quantitative Biology Center Tübingen wrote \fBodgi pathindex\fP, \fBodgi panpos\fP, \fBodgi server\fP, and this documentation. Andrea Guarracino from the University of Rome Tor Vergata wrote \fBodgi viz\fP, \fBodgi extract\fP, \fBodgi cover\fP, \fBodgi explode\fP, \fBodgi squeeze\fP, \fBodgi depth\fP, \fBodgi overlap\fP, \fBodgi validate\fP, and this documentation.
 .SH "RESOURCES"
 .sp
 \fBProject web site:\fP \c

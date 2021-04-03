@@ -7,6 +7,7 @@ Simon Heumos, Andrea Guarracino, Erik Garrison
 
 include::odgi.adoc[leveloffset=+1]
 include::odgi_build.adoc[leveloffset=+1]
+include::odgi_validate.adoc[leveloffset=+1]
 include::odgi_stats.adoc[leveloffset=+1]
 include::odgi_depth.adoc[leveloffset=+1]
 include::odgi_overlap.adoc[leveloffset=+1]
