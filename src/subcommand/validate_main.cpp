@@ -20,7 +20,8 @@ namespace odgi {
         argv[0] = (char *) prog_name.c_str();
         --argc;
 
-        args::ArgumentParser parser("validate the graph (currently, check if the paths are consistent with the graph topology)");
+        args::ArgumentParser parser(
+                "validate the graph (currently, check if the paths are consistent with the graph topology)");
         args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
         args::ValueFlag<std::string> og_file(parser, "FILE", "validate this graph", {'i', "input"});
 
@@ -42,7 +43,8 @@ namespace odgi {
         }
 
         if (!og_file) {
-            std::cerr << "[odgi::validate] error: please specify a graph to validate via -i=[FILE], --idx=[FILE]." << std::endl;
+            std::cerr << "[odgi::validate] error: please specify a graph to validate via -i=[FILE], --idx=[FILE]."
+                      << std::endl;
             return 1;
         }
 
@@ -62,6 +64,7 @@ namespace odgi {
         uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
         omp_set_num_threads(num_threads);
 
+        bool valid_graph = true;
 
         graph.for_each_path_handle([&](const path_handle_t &path) {
             graph.for_each_step_in_path(path, [&](const step_handle_t& step) {
@@ -77,7 +80,8 @@ namespace odgi {
                                   << ","
                                   << graph.get_id(next_h) << (graph.get_is_reverse(next_h) ? "-" : "+")
                                   << " is missing." << std::endl;
-                        exit(1);
+
+                        valid_graph = false;
                     }
                 }
             });
@@ -106,10 +110,11 @@ namespace odgi {
 //            }
 //        }
 
-        return 0;
+        return (valid_graph ? 0 : 1);
     }
 
-    static Subcommand odgi_validate("validate", "validate the graph (currently, check if the paths are consistent with the graph topology)",
-                                 PIPELINE, 3, main_validate);
+    static Subcommand odgi_validate("validate",
+                                    "validate the graph (currently, check if the paths are consistent with the graph topology)",
+                                    PIPELINE, 3, main_validate);
 
 }
