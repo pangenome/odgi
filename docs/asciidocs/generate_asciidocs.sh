@@ -41,6 +41,7 @@ asciidoctor -b manpage odgi_version.adoc
 asciidoctor -b manpage odgi_cover.adoc
 asciidoctor -b manpage odgi_explode.adoc
 asciidoctor -b manpage odgi_squeeze.adoc
+asciidoctor -b manpage odgi_validate.adoc
 asciidoctor -b manpage odgi_position.adoc
 
 mv *.1 man/
