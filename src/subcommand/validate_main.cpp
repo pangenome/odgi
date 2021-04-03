@@ -21,7 +21,7 @@ namespace odgi {
         --argc;
 
         args::ArgumentParser parser(
-                "validate the graph (currently, check if the paths are consistent with the graph topology)");
+                "validate the graph (currently, it checks if the paths are consistent with the graph topology)");
         args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
         args::ValueFlag<std::string> og_file(parser, "FILE", "validate this graph", {'i', "input"});
 
@@ -99,7 +99,7 @@ namespace odgi {
     }
 
     static Subcommand odgi_validate("validate",
-                                    "validate the graph (currently, check if the paths are consistent with the graph topology)",
+                                    "validate the graph (currently, it checks if the paths are consistent with the graph topology)",
                                     PIPELINE, 3, main_validate);
 
 }
