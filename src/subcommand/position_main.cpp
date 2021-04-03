@@ -312,8 +312,14 @@ int main_position(int argc, char** argv) {
     } else if (graph_pos_file) {
         std::ifstream gpos(args::get(graph_pos_file).c_str());
         std::string buffer;
-        while (std::getline(gpos, buffer)) {
-            add_graph_pos(source_graph, buffer);
+        if (lifting) {
+            while (std::getline(gpos, buffer)) {
+                add_graph_pos(source_graph, buffer);
+            }
+        } else {
+            while (std::getline(gpos, buffer)) {
+                add_graph_pos(target_graph, buffer);
+            }
         }
     } else if (path_pos) {
         // if given a path pos, we convert it into a path pos in our reference set
