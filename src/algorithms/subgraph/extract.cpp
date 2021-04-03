@@ -20,7 +20,7 @@ namespace odgi {
                     });
                 }
             });
-            std::cerr << "[odgi::explode]" << std::endl;
+
             // Copy the paths over
             for (path_handle_t path_handle : paths) {
                 path_handle_t new_path_handle = component.create_path_handle(source.get_path_name(path_handle),

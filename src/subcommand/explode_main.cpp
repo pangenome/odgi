@@ -95,8 +95,6 @@ namespace odgi {
 
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
         for (uint64_t component_index = 0; component_index < weak_components.size(); ++component_index) {
-            std::cerr << "[odgi::explode] num " << component_index << std::endl;
-
             auto &weak_component = weak_components[component_index];
 
             graph_t subgraph;
