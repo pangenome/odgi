@@ -33,8 +33,8 @@ namespace odgi {
         }
 
         // Create a subpath name
-        string make_subpath_name(const string &path_name, size_t offset, size_t end_offset) {
-            string out_name = path_name + ":" + std::to_string(offset);
+        std::string make_path_name(const string &path_name, size_t offset, size_t end_offset) {
+            std::string out_name = path_name + ":" + std::to_string(offset);
             if (end_offset > offset) {
                 out_name += "-" + std::to_string(end_offset);
             }
@@ -108,7 +108,7 @@ namespace odgi {
                 std::string path_name = source.get_path_name(source_path_handle);
 
                 for (auto subpath_range : subpath_ranges[path_rank]) {
-                    create_subpath(subgraph, make_subpath_name(path_name, subpath_range.first, subpath_range.second),
+                    create_subpath(subgraph, make_path_name(path_name, subpath_range.first, subpath_range.second),
                                    source.get_is_circular(source_path_handle));
                 }
 
@@ -127,13 +127,11 @@ namespace odgi {
                     // The path ranges are sorted by coordinates by design
                     uint64_t range_rank = 0;
                     path_handle_t subpath_handle = subgraph.get_path_handle(
-                            make_subpath_name(path_name, subpath_ranges[path_rank][0].first,
-                                              subpath_ranges[path_rank][0].second)
+                            make_path_name(path_name, subpath_ranges[path_rank][0].first,
+                                           subpath_ranges[path_rank][0].second)
                     );
 
                     uint64_t walked = 0;
-
-                    std::vector<handle_t> handles_to_embed;
                     source.for_each_step_in_path(source_path_handle, [&](const step_handle_t &step) {
                         if (range_rank < subpath_ranges[path_rank].size()) {
                             handle_t source_handle = source.get_handle_of_step(step);
@@ -152,8 +150,8 @@ namespace odgi {
                                 ++range_rank;
                                 if (range_rank < subpath_ranges[path_rank].size()) {
                                     subpath_handle = subgraph.get_path_handle(
-                                            make_subpath_name(path_name, subpath_ranges[path_rank][range_rank].first,
-                                                              subpath_ranges[path_rank][range_rank].second)
+                                            make_path_name(path_name, subpath_ranges[path_rank][range_rank].first,
+                                                           subpath_ranges[path_rank][range_rank].second)
                                     );
                                 }//else not other subpath ranges for this path
                             }
