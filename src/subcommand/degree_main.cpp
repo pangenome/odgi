@@ -77,16 +77,23 @@ int main_degree(int argc, char** argv) {
                           << std::endl;
             }, in_parallel);
     } else {
-        std::atomic<uint64_t> total_edges;
-        total_edges.store(0);
+        // todo min and max degree
+        uint64_t total_edges = 0;
+        uint64_t min_degree = std::numeric_limits<uint64_t>::max();
+        uint64_t max_degree = std::numeric_limits<uint64_t>::min();
         graph.for_each_handle(
             [&](const handle_t& handle) {
-                total_edges += graph.get_degree(handle, false) + graph.get_degree(handle, true);
-            }, in_parallel);
-        std::cout << "#node.count\tedge.count\tavg.degree" << std::endl
+                uint64_t degree = graph.get_degree(handle, false) + graph.get_degree(handle, true);
+                total_edges += degree;
+                min_degree = std::min(min_degree, degree);
+                max_degree = std::max(max_degree, degree);
+            });
+        std::cout << "#node.count\tedge.count\tavg.degree\tmin.degree\tmax.degree" << std::endl
                   << graph.get_node_count() << "\t"
                   << total_edges / 2 << "\t" // we double-count edges
-                  << (double) total_edges / (double)graph.get_node_count()
+                  << (double) total_edges / (double)graph.get_node_count() << "\t"
+                  << min_degree << "\t"
+                  << max_degree
                   << std::endl;
 
     }
