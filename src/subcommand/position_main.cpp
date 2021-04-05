@@ -35,6 +35,7 @@ int main_position(int argc, char** argv) {
     args::ValueFlag<std::string> path_pos_file(parser, "FILE", "a file with one path position per line", {'F', "path-pos-file"});
     args::ValueFlag<std::string> bed_input(parser, "FILE", "a BED file of ranges in paths in the graph to lift into the target graph", {'b', "bed-input"});
     args::Flag give_graph_pos(parser, "give-graph-pos", "emit graph positions (node,offset,strand) rather than path positions", {'v', "give-graph-pos"});
+    args::Flag all_immediate(parser, "all-immediate", "emit all positions immediately at the given graph/path position", {'I', "all-immediate"});
     args::ValueFlag<uint64_t> _search_radius(parser, "DISTANCE", "limit coordinate conversion breadth-first search up to DISTANCE bp from each given position [default: 10000]", {'d',"search-radius"});
     args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
@@ -89,6 +90,8 @@ int main_position(int argc, char** argv) {
 
     if (args::get(threads)) {
         omp_set_num_threads(args::get(threads));
+    } else {
+        omp_set_num_threads(1);
     }
 
     // todo: load many positions from a file
@@ -309,8 +312,14 @@ int main_position(int argc, char** argv) {
     } else if (graph_pos_file) {
         std::ifstream gpos(args::get(graph_pos_file).c_str());
         std::string buffer;
-        while (std::getline(gpos, buffer)) {
-            add_graph_pos(source_graph, buffer);
+        if (lifting) {
+            while (std::getline(gpos, buffer)) {
+                add_graph_pos(source_graph, buffer);
+            }
+        } else {
+            while (std::getline(gpos, buffer)) {
+                add_graph_pos(target_graph, buffer);
+            }
         }
     } else if (path_pos) {
         // if given a path pos, we convert it into a path pos in our reference set
@@ -403,6 +412,41 @@ int main_position(int argc, char** argv) {
         bool used_bidirectional = false;
     };
 
+    // get the reference path positions right where we are
+    auto get_immediate =
+        [&search_radius,&get_offset_in_path](const odgi::graph_t& graph,
+                                             const hash_set<uint64_t>& path_set,
+                                             const pos_t& pos, std::vector<lift_result_t>& lifts) {
+            // unpacking our args
+            handle_t h = graph.get_handle(id(pos), is_rev(pos));
+            graph.for_each_step_on_handle(
+                h, [&](const step_handle_t& s) {
+                       auto p = graph.get_path_handle_of_step(s);
+                       if (path_set.count(as_integer(p))) {
+                           // are we reverse against the reference
+                           bool rev_vs_ref = graph.get_is_reverse(graph.get_handle_of_step(s)) != graph.get_is_reverse(h);
+                           int adj_node = 0;
+                           if (rev_vs_ref) {
+                               // and if the path orientation is the same as our traversal orientation
+                               // then we need to add the remaining distance from our original offset to the end of node
+                               // to the final path position offset
+                               adj_node = graph.get_length(h) - offset(pos);
+                           } else {
+                               // otherwise if the original path is in the same orientation
+                               // then we add the original forward offset to the ref path offset
+                               adj_node = offset(pos);
+                           }
+                           lifts.emplace_back();
+                           auto& lift = lifts.back();
+                           lift.ref_hit = s;
+                           lift.path_offset = get_offset_in_path(graph, p, lift.ref_hit) + adj_node;
+                           lift.walked_to_hit_ref = 0;
+                           lift.is_rev_vs_ref = rev_vs_ref;
+                       }
+                   });
+            return lifts.size() > 0;
+        };
+
     auto get_position =
         [&search_radius,&get_offset_in_path](const odgi::graph_t& graph,
                                              const hash_set<uint64_t>& path_set,
@@ -433,6 +477,7 @@ int main_position(int argc, char** argv) {
                                        got_hit = true;
                                        hit = s;
                                        walked_to_hit_ref += l; // how far we came to get to this node
+                                       // this check is confusing, but it's due to us walking the reverse graph from our start position in the BFS
                                        rev_vs_ref = graph.get_is_reverse(graph.get_handle_of_step(s)) == graph.get_is_reverse(h);
                                        if (d == 0) { // if we're on the start node
                                            if (rev_vs_ref) {
@@ -486,6 +531,20 @@ int main_position(int argc, char** argv) {
             }
         };
 
+    if (graph_positions.size()) {
+        if (lifting) {
+            std::cout << "#source.graph.pos\ttarget.graph.pos\t";
+        } else {
+            std::cout << "#target.graph.pos\t";
+        }
+        if (give_graph_pos) {
+            std::cout << "target.graph.pos" << std::endl;
+        } else if (all_immediate) {
+            std::cout << "target.path.pos\tdist.to.ref\tstrand.vs.ref" << std::endl;
+        } else {
+            std::cout << "target.path.pos\tdist.to.ref\tstrand.vs.ref" << std::endl;
+        }
+    }
     // for each position that we want to look up
 #pragma omp parallel for schedule(dynamic,1)
     for (auto& _pos : graph_positions) {
@@ -513,20 +572,43 @@ int main_position(int argc, char** argv) {
         }
         //= (lifting ? ok = get_position(source_graph, lay_path_set
         lift_result_t result;
+        std::vector<lift_result_t> result_v;
         if (id(pos) && give_graph_pos) {
             // force graph position in target
 #pragma omp critical (cout)
-            std::cout << "#source.path.pos\ttarget.graph.pos" << std::endl
-                      << id(_pos) << "," << offset(_pos) << "," << (is_rev(_pos) ? "-" : "+") << "\t"
-                      << "\t" << id(pos) << "," << offset(pos) << "," << (is_rev(pos) ? "-" : "+") << std::endl;
+            {
+                if (lifting) {
+                    std::cout << id(_pos) << "," << offset(_pos) << "," << (is_rev(_pos) ? "-" : "+") << "\t";
+                }
+                std::cout << id(pos) << "," << offset(pos) << "," << (is_rev(pos) ? "-" : "+") << "\t"
+                          << "\t" << id(pos) << "," << offset(pos) << "," << (is_rev(pos) ? "-" : "+") << std::endl;
+            }
+        } else if (args::get(all_immediate) && get_immediate(target_graph, ref_path_set, pos, result_v)) {
+            bool ref_is_rev = false;
+            for (auto& result : result_v) {
+                path_handle_t p = target_graph.get_path_handle_of_step(result.ref_hit);
+#pragma omp critical (cout)
+                {
+                    if (lifting) {
+                        std::cout << id(_pos) << "," << offset(_pos) << "," << (is_rev(_pos) ? "-" : "+") << "\t";
+                    }
+                    std::cout << id(pos) << "," << offset(pos) << "," << (is_rev(pos) ? "-" : "+") << "\t"
+                              << target_graph.get_path_name(p) << "," << result.path_offset << "," << (ref_is_rev ? "-" : "+") << "\t"
+                              << result.walked_to_hit_ref << "\t" << (result.is_rev_vs_ref ? "-" : "+") << std::endl;
+                }
+            }
         } else if (get_position(target_graph, ref_path_set, pos, result)) {
             bool ref_is_rev = false;
             path_handle_t p = target_graph.get_path_handle_of_step(result.ref_hit);
 #pragma omp critical (cout)
-            std::cout << "#source.path.pos\ttarget.path.pos\tdist.to.ref\tstrand.vs.ref" << std::endl
-                      << id(pos) << "," << offset(pos) << "," << (is_rev(pos) ? "-" : "+") << "\t"
-                      << target_graph.get_path_name(p) << "," << result.path_offset << "," << (ref_is_rev ? "-" : "+") << "\t"
-                      << result.walked_to_hit_ref << "\t" << (result.is_rev_vs_ref ? "-" : "+") << std::endl;
+            {
+                if (lifting) {
+                    std::cout << id(_pos) << "," << offset(_pos) << "," << (is_rev(_pos) ? "-" : "+") << "\t";
+                }
+                std::cout << id(pos) << "," << offset(pos) << "," << (is_rev(pos) ? "-" : "+") << "\t"
+                          << target_graph.get_path_name(p) << "," << result.path_offset << "," << (ref_is_rev ? "-" : "+") << "\t"
+                          << result.walked_to_hit_ref << "\t" << (result.is_rev_vs_ref ? "-" : "+") << std::endl;
+            }
         }
     }
 
