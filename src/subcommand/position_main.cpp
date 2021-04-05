@@ -20,7 +20,7 @@ int main_position(int argc, char** argv) {
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
-    args::ArgumentParser parser("position parts of the graph as defined by query criteria");
+    args::ArgumentParser parser("find, translate, and liftover graph and path positions between graphs");
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> og_target_file(parser, "FILE", "describe positions in this graph", {'i', "target"});
     args::ValueFlag<std::string> og_source_file(parser, "FILE", "translate positions from this graph into the target graph using common --lift-paths shared between both graphs [default: use the same source/target graph]", {'x', "source"});

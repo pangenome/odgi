@@ -376,6 +376,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/normalize_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/extract_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/position_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/degree_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/bin_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/matrix_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/chop_main.cpp
