@@ -103,6 +103,8 @@ namespace odgi {
                 subgraph.create_handle(graph.get_sequence(graph.get_handle(node_id)), node_id);
             }
 
+            weak_component.clear();
+
             algorithms::add_connecting_edges_to_subgraph(graph, subgraph);
             algorithms::add_full_paths_to_component(graph, subgraph);
 
