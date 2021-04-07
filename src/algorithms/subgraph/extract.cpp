@@ -341,5 +341,48 @@ namespace odgi {
                 progress->finish();
             }
         }
+
+        void embed_lace_paths(graph_t &source, graph_t &subgraph,
+                              const std::vector<path_handle_t>& lace_paths) {
+
+            std::vector<std::pair<step_handle_t, step_handle_t>> ranges_to_lace;
+            for (auto& path : lace_paths) {
+                // check if the nodes are in the output subgraph
+                bool in_match = true;
+                step_handle_t lace_start = source.path_begin(path);
+                // get each range that isn't included
+                source.for_each_step_in_path(
+                    path,
+                    [&](const step_handle_t& step) {
+                        if (!subgraph.has_node(source.get_id(source.get_handle_of_step(step)))) {
+                            if (in_match) {
+                                lace_start = step;
+                            }
+                        } else {
+                            if (!in_match) {
+                                ranges_to_lace.push_back(std::make_pair(lace_start, step));
+                            }
+                            in_match = true;
+                        }
+                    });
+                if (!in_match) {
+                    ranges_to_lace.push_back(std::make_pair(lace_start, source.path_end(path)));
+                }
+            }
+            for (auto& range : ranges_to_lace) {
+                // get its sequence
+                std::string seq;
+                for (step_handle_t step = range.first;
+                     step != range.second;
+                     step = source.get_next_step(step)) {
+                    seq += source.get_sequence(source.get_handle_of_step(step));
+                }
+                // add a node with this sequence to both graphs using the same id
+                auto h = source.create_handle(seq);
+                subgraph.create_handle(seq, source.get_id(h));
+                // rewrite the segment in the source graph
+                source.rewrite_segment(range.first, range.second, { h });
+            }
+        }
     }
 }

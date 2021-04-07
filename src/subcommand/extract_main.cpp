@@ -66,6 +66,11 @@ namespace odgi {
                                                       "contain one path name per line and a subset of all paths can be specified.",
                                                       {'p', "paths-to-extract"});
 
+        args::ValueFlag<std::string> _lace_paths_file(parser, "FILE",
+                                                       "list of paths to fully retain in the extracted graph; must "
+                                                       "contain one path name per line and a subset of all paths can be specified.",
+                                                      {'R', "lace-paths"});
+
         args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use (to embed the subpaths in parallel)",
                                            {'t', "threads"});
 
@@ -202,6 +207,28 @@ namespace odgi {
             }
         }
 
+        std::vector<path_handle_t> lace_paths;
+        if (!args::get(_lace_paths_file).empty()) {
+            ska::flat_hash_set<path_handle_t> lace_paths_set;
+            std::ifstream path_names_in(args::get(_lace_paths_file));
+            uint64_t num_of_paths_in_file = 0;
+            std::string line;
+            while (std::getline(path_names_in, line)) {
+                if (!line.empty()
+                    && graph.has_path(line)) {
+                    auto path = graph.get_path_handle(line);
+                    if (!lace_paths_set.count(path)) {
+                        lace_paths.push_back(path);
+                        lace_paths_set.insert(path);
+                    }
+                }
+            }
+            path_names_in.close();
+            if (lace_paths.empty()) {
+                std::cerr << "[odgi::extract] error: no path to consider." << std::endl;
+                exit(1);
+            }
+        }
 
         std::vector<odgi::path_range_t> path_ranges;
 
@@ -297,9 +324,10 @@ namespace odgi {
         uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
         omp_set_num_threads(num_threads);
 
-        auto prep_graph = [](graph_t &source, const std::vector<path_handle_t>& source_paths, graph_t &subgraph,
-                              uint64_t context_size, bool use_length, bool full_range, bool inverse,
-                              uint64_t num_threads, bool show_progress) {
+        auto prep_graph = [](graph_t &source, const std::vector<path_handle_t>& source_paths,
+                             const std::vector<path_handle_t>& lace_paths, graph_t &subgraph,
+                             uint64_t context_size, bool use_length, bool full_range, bool inverse,
+                             uint64_t num_threads, bool show_progress) {
             if (context_size > 0) {
                 if (show_progress) {
                     std::cerr << "[odgi::extract] expansion and adding connecting edges" << std::endl;
@@ -349,6 +377,14 @@ namespace odgi {
                 }
             }
 
+            // rewrite lace paths so that skipped regions are represented as new nodes that we then add to our subgraph
+            if (!lace_paths.empty()) {
+                if (show_progress) {
+                    std::cerr << "[odgi::extract] adding " << lace_paths.size() << " lace paths" << std::endl;
+                }
+                algorithms::embed_lace_paths(source, subgraph, lace_paths);
+            }
+
             // Connect the collected handles
             algorithms::add_connecting_edges_to_subgraph(source, subgraph, show_progress
                                                                            ? "[odgi::extract] adding connecting edges"
@@ -388,7 +424,7 @@ namespace odgi {
                 }
                 algorithms::extract_path_range(graph, path_handle, path_range.begin.offset, path_range.end.offset , subgraph);
 
-                prep_graph(graph, paths, subgraph, context_size, _use_length, _full_range, false, num_threads, show_progress);
+                prep_graph(graph, paths, lace_paths, subgraph, context_size, _use_length, _full_range, false, num_threads, show_progress);
 
                 string filename = graph.get_path_name(path_range.begin.path) + ":" + to_string(path_range.begin.offset) + "-" + to_string(path_range.end.offset) + ".og";
 
@@ -425,7 +461,7 @@ namespace odgi {
                 }
             }
 
-            prep_graph(graph, paths, subgraph, context_size, _use_length, _full_range, _inverse, num_threads, show_progress);
+            prep_graph(graph, paths, lace_paths, subgraph, context_size, _use_length, _full_range, _inverse, num_threads, show_progress);
 
             std::string outfile = args::get(og_out_file);
             if (!outfile.empty()) {
