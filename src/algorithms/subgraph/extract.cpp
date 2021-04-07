@@ -367,7 +367,7 @@ namespace odgi {
                         }
                     });
                 if (!in_match) {
-                    ranges_to_lace.push_back(std::make_pair(lace_start, source.path_end(path)));
+                    ranges_to_lace.push_back(std::make_pair(lace_start, source.path_back(path)));
                 }
             }
             for (auto& range : ranges_to_lace) {
@@ -379,6 +379,7 @@ namespace odgi {
                     seq += source.get_sequence(source.get_handle_of_step(step));
                 }
                 // add a node with this sequence to both graphs using the same id
+                assert(seq.size());
                 auto h = source.create_handle(seq);
                 subgraph.create_handle(seq, source.get_id(h));
                 // rewrite the segment in the source graph
