@@ -1,9 +1,7 @@
 #include "subcommand.hpp"
 #include "odgi.hpp"
-#include "position.hpp"
 #include "args.hxx"
 #include "split.hpp"
-#include "algorithms/bfs.hpp"
 #include <omp.h>
 
 namespace odgi {
@@ -16,7 +14,7 @@ int main_degree(int argc, char** argv) {
     for (uint64_t i = 1; i < argc-1; ++i) {
         argv[i] = argv[i+1];
     }
-    std::string prog_name = "odgi position";
+    std::string prog_name = "odgi degree";
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
@@ -42,14 +40,14 @@ int main_degree(int argc, char** argv) {
     }
 
     if (!og_file) {
-        std::cerr << "[odgi::position] error: please specify a target graph via -i=[FILE], --idx=[FILE]." << std::endl;
+        std::cerr << "[odgi::degree] error: please specify a target graph via -i=[FILE], --idx=[FILE]." << std::endl;
         return 1;
     }
 
     odgi::graph_t graph;
     assert(argc > 0);
-    std::string infile = args::get(og_file);
-    if (infile.size()) {
+    if (!args::get(og_file).empty()) {
+        std::string infile = args::get(og_file);
         if (infile == "-") {
             graph.deserialize(std::cin);
         } else {
@@ -77,7 +75,6 @@ int main_degree(int argc, char** argv) {
                           << std::endl;
             }, in_parallel);
     } else {
-        // todo min and max degree
         uint64_t total_edges = 0;
         uint64_t min_degree = std::numeric_limits<uint64_t>::max();
         uint64_t max_degree = std::numeric_limits<uint64_t>::min();
