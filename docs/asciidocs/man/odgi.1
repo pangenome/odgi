@@ -2,12 +2,12 @@
 .\"     Title: odgi
 .\"    Author: Erik Garrison
 .\" Generator: Asciidoctor 2.0.10
-.\"      Date: 2021-04-03
+.\"      Date: 2021-04-07
 .\"    Manual: odgi
 .\"    Source: odgi v0.6.0
 .\"  Language: English
 .\"
-.TH "ODGI" "1" "2021-04-03" "odgi v0.6.0" "odgi"
+.TH "ODGI" "1" "2021-04-07" "odgi v0.6.0" "odgi"
 .ie \n(.g .ds Aq \(aq
 .el       .ds Aq '
 .ss \n[.ss] 0
@@ -34,6 +34,8 @@ odgi \- dynamic succinct variation graph tool
 \fBodgi\fP build \-g graph.gfa \-o graph.og
 .sp
 \fBodgi\fP validate \-i graph.og
+.sp
+\fBodgi\fP stats \-i graph.og \-S
 .sp
 \fBodgi\fP stats \-i graph.og \-S
 .sp
@@ -119,6 +121,9 @@ The odgi validate(1) command validates the graph (currently, it checks if the pa
 \fBodgi stats\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fIOPTION\fP]...
 .br
 The odgi stats(1) command produces statistics of a variation graph. Among other metrics, it can calculate the #nodes, #edges, #paths and the total nucleotide length of the graph. Various histogram summary options complement the tool. If [\fB\-B, \-\-bed\-multicov\fP=\fIBED\fP] is set, the metrics will be produced for the intervals specified in the BED.
+.sp
+\fBodgi degree\fP [\fB\-i, \-\-idx\fP=\fIFILE\fP] [\fIOPTION\fP]...
+The odgi degree(1) command describes the graph in terms of node degree. For the input graph, it shows the node.count, edge.count, avg.degree, min.degree, and max.degree.
 .sp
 \fBodgi depth\fP [\fB\-i, \-\-input\fP=\fIFILE\fP] [\fIOPTION\fP]...
 The odgi depth(1) command finds the depth of graph as defined by query criteria.

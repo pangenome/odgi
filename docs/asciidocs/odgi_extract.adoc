@@ -64,6 +64,13 @@ The odgi extract(1) command extracts parts of the graph as defined by query crit
     Collects all nodes in the sorted order of the graph in the min and max position touched by the given path ranges.
     Be careful to use it with very complex graphs.
 
+*-p, --paths-to-extract*::_FILE_::
+    List of paths to consider in the extraction; the file must contain one path name per line and a subset of all paths can be specified.
+
+*-R, --lace-paths*::_FILE_::
+    List of paths to fully retain in the extracted graph; must contain one path name per line and a subset of all paths can be specified.
+
+
 === Threading
 
 *-t, --threads*=_N_::
