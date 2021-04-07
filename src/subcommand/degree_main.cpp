@@ -21,7 +21,7 @@ int main_degree(int argc, char** argv) {
     args::ArgumentParser parser("describe the graph in terms of node degree");
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> og_file(parser, "FILE", "describe node degree in this graph", {'i', "input"});
-    args::Flag summarize(parser, "summarize", "summarize the degree with aggregate statistics", {'s', "summarize"});
+    args::Flag summarize(parser, "summarize", "summarize the degree with aggregate statistics", {'S', "summarize"});
     args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
     try {
@@ -92,7 +92,6 @@ int main_degree(int argc, char** argv) {
                   << min_degree << "\t"
                   << max_degree
                   << std::endl;
-
     }
 
     return 0;
