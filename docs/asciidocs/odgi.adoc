@@ -20,6 +20,8 @@ odgi - dynamic succinct variation graph tool
 
 *odgi* <<odgi_stats.adoc#_odgi_stats1, stats>> -i graph.og -S
 
+*odgi* <<odgi_degree.adoc#_odgi_degree1, stats>> -i graph.og -S
+
 *odgi* <<odgi_depth.adoc#_odgi_depth1, depth>> -i graph.og
 
 *odgi* <<odgi_overlap.adoc#_odgi_overlap1, overlap>> -i graph.og -r path_name
@@ -97,6 +99,9 @@ The odgi validate(1) command validates the graph (currently, it checks if the pa
 
 *odgi stats* [*-i, --idx*=_FILE_] [_OPTION_]... +
 The odgi stats(1) command produces statistics of a variation graph. Among other metrics, it can calculate the #nodes, #edges, #paths and the total nucleotide length of the graph. Various histogram summary options complement the tool. If [*-B, --bed-multicov*=_BED_] is set, the metrics will be produced for the intervals specified in the BED.
+
+*odgi degree* [*-i, --idx*=_FILE_] [_OPTION_]...
+The odgi degree(1) command describes the graph in terms of node degree. For the input graph, it shows the node.count, edge.count, avg.degree, min.degree, and max.degree.
 
 *odgi depth* [*-i, --input*=_FILE_] [_OPTION_]...
 The odgi depth(1) command finds the depth of graph as defined by query criteria.

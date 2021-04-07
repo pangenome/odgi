@@ -35,7 +35,8 @@ int main_stats(int argc, char** argv) {
 
     args::Flag _weakly_connected_components(parser, "show", "shows the properties of the weakly connected components", {'W', "weak-connected-components"});
 
-    args::Flag _num_self_loops(parser, "show", "number of nodes with a self-loop", {'L', "self-loops"});
+    args::Flag _num_self_loops(parser, "show", "number of self-loops", {'L', "self-loops"});
+    args::Flag _show_nondeterministic_edges(parser, "show", "show nondeterministic edges (those that extend to the same next base)", {'N', "nondeterministic-edges"});
 
 
     args::Flag base_content(parser, "base-content", "describe the base content of the graph", {'b', "base-content"});
@@ -160,14 +161,41 @@ int main_stats(int argc, char** argv) {
     }
 
     if (_num_self_loops) {
+        uint64_t total_self_loops = 0;
         std::unordered_set<nid_t> loops;
         graph.for_each_edge([&](const edge_t& e) {
             if (graph.get_id(e.first) == graph.get_id(e.second)) {
+                ++total_self_loops;
                 loops.insert(graph.get_id(e.first));
             }
         });
 
-        cout << "#num_self_loops" << "\n" << loops.size() << endl;
+        // Should be these always equal?
+        cout << "#type\tnum" << endl;
+        cout << "total" << "\t" << total_self_loops << endl;
+        cout << "unique" << "\t" << loops.size() << endl;
+    }
+
+    if (_show_nondeterministic_edges) {
+        // This edges could be compressed in principle
+
+        std::cout << "#from_node\tto_node" << std::endl;
+        graph.for_each_handle([&](const handle_t& handle) {
+            nid_t id = graph.get_id(handle);
+            for (bool is_reverse : { false, true }) {
+                ska::flat_hash_map<char, std::vector<handle_t>> edges;
+                graph.follow_edges(graph.get_handle(id, is_reverse), false, [&](const handle_t& to) {
+                    edges[graph.get_base(to, 0)].push_back(to);
+                });
+                for (auto iter = edges.begin(); iter != edges.end(); ++iter) {
+                    if (iter->second.size() > 1) {
+                        for (const handle_t& to : iter->second) {
+                            std::cout << id << (is_reverse ? "-" : "+") << "\t" << graph.get_id(to) << (graph.get_is_reverse(to) ? "-" : "+") << std::endl;
+                        }
+                    }
+                }
+            }
+        });
     }
 
     if (args::get(base_content)) {

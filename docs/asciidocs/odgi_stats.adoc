@@ -39,6 +39,9 @@ The odgi stats(1) command produces statistics of a variation graph. Among other 
 *-L, --self-loops*::
   Number of nodes with a self-loop.
 
+*-N, --nondeterministic-edges*::
+  Show nondeterministic edges (those that extend to the same next base).
+
 *-b, --base-content*::
   Describe the base content of the graph. Print to stdout the #A, #C, #G and #T of the graph.
 
