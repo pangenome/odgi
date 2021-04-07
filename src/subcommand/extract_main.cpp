@@ -394,6 +394,22 @@ namespace odgi {
             algorithms::add_subpaths_to_subgraph(source, source_paths, subgraph, num_threads,
                                                  show_progress ? "[odgi::extract] adding subpaths" : "");
 
+            // force embed the paths
+            subgraph.for_each_path_handle(
+                [&](const path_handle_t& path) {
+                    handle_t last;
+                    step_handle_t begin_step = subgraph.path_begin(path);
+                    subgraph.for_each_step_in_path(
+                        path,
+                        [&](const step_handle_t &step) {
+                            handle_t h = subgraph.get_handle_of_step(step);
+                            if (step != begin_step) {
+                                subgraph.create_edge(last, h);
+                            }
+                            last = h;
+                        });
+                });
+
             // This should not be necessary, if the extraction works correctly
             // subgraph.remove_orphan_edges();
         };

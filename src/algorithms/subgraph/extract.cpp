@@ -357,6 +357,7 @@ namespace odgi {
                         if (!subgraph.has_node(source.get_id(source.get_handle_of_step(step)))) {
                             if (in_match) {
                                 lace_start = step;
+                                in_match = false;
                             }
                         } else {
                             if (!in_match) {
