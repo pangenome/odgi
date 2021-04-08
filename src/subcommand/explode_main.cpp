@@ -153,7 +153,7 @@ namespace odgi {
                         break;
                     }
                     default: {
-                        // p
+                        // p path mass (total number of path bases) (default)
                         //ToDo
                         break;
                     }
@@ -161,13 +161,13 @@ namespace odgi {
             }
 
             // Sort by component size
-            std::sort(component_and_size.begin(), component_and_size.end(), [](auto& a, auto& b) {
+            std::sort(component_and_size.begin(), component_and_size.end(), [](auto &a, auto &b) {
                 return a.second > b.second;
             });
 
             // Not ignore the first `write_biggest_components` components
             uint64_t write_biggest_components = args::get(_write_biggest_components);
-            for (auto& c_and_s : component_and_size) {
+            for (auto &c_and_s : component_and_size) {
                 ignore_component.reset(c_and_s.first);
 
                 if (--write_biggest_components == 0) {
@@ -184,9 +184,19 @@ namespace odgi {
         std::unique_ptr<algorithms::progress_meter::ProgressMeter> component_progress;
         if (debug) {
             component_progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
-                    weak_components.size(), "[odgi::explode] exploding components");
+                    weak_components.size(), "[odgi::explode] exploding component(s)");
 
-            std::cerr << "[odgi::explode] detected " << weak_components.size() << " connected components" << std::endl;
+            std::cerr << "[odgi::explode] detected " << weak_components.size() << " connected component(s)"
+                      << std::endl;
+
+            if (_write_biggest_components && args::get(_write_biggest_components) > 0) {
+                uint64_t write_biggest_components = args::get(_write_biggest_components);
+
+                std::cerr << "[odgi::explode] explode the biggest "
+                          << (write_biggest_components <= weak_components.size() ? write_biggest_components
+                                                                                 : weak_components.size())
+                          << " connected component(s)" << std::endl;
+            }
         }
 
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
