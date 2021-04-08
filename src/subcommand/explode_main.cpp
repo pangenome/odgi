@@ -130,18 +130,25 @@ namespace odgi {
 
                 auto &weak_component = weak_components[component_index];
 
+                {'s', "sorting-criteria"});
                 switch (size_metric) {
                     case 'l': {
+                        // graph length (number of node bases)
+
                         for (auto node_id : weak_component) {
                             component_and_size[component_index].second += graph.get_length(graph.get_handle(node_id));
                         }
                         break;
                     }
                     case 'n': {
+                        // number of nodes
+
                         component_and_size[component_index].second = weak_component.size();
                         break;
                     }
                     case 'P': {
+                        // longest path",
+
                         set<path_handle_t> paths;
                         get_path_handles(graph, weak_component, paths);
 
@@ -157,7 +164,8 @@ namespace odgi {
                         break;
                     }
                     default: {
-                        // p
+                        // p: path mass (total number of path bases)
+
                         set<path_handle_t> paths;
                         get_path_handles(graph, weak_component, paths);
 
