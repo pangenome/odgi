@@ -372,18 +372,20 @@ namespace odgi {
             }
             for (auto& range : ranges_to_lace) {
                 // get its sequence
-                std::string seq;
-                for (step_handle_t step = range.first;
-                     step != range.second;
-                     step = source.get_next_step(step)) {
-                    seq += source.get_sequence(source.get_handle_of_step(step));
+                if (range.first != range.second) {
+                    std::string seq;
+                    for (step_handle_t step = range.first;
+                         step != range.second;
+                         step = source.get_next_step(step)) {
+                        seq += source.get_sequence(source.get_handle_of_step(step));
+                    }
+                    // add a node with this sequence to both graphs using the same id
+                    assert(seq.size());
+                    auto h = source.create_handle(seq);
+                    subgraph.create_handle(seq, source.get_id(h));
+                    // rewrite the segment in the source graph (nb. inclusive range)
+                    source.rewrite_segment(range.first, source.get_previous_step(range.second), { h });
                 }
-                // add a node with this sequence to both graphs using the same id
-                assert(seq.size());
-                auto h = source.create_handle(seq);
-                subgraph.create_handle(seq, source.get_id(h));
-                // rewrite the segment in the source graph (nb. inclusive range)
-                source.rewrite_segment(range.first, source.get_previous_step(range.second), { h });
             }
         }
     }
