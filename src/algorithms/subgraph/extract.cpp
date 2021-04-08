@@ -382,8 +382,8 @@ namespace odgi {
                 assert(seq.size());
                 auto h = source.create_handle(seq);
                 subgraph.create_handle(seq, source.get_id(h));
-                // rewrite the segment in the source graph
-                source.rewrite_segment(range.first, range.second, { h });
+                // rewrite the segment in the source graph (nb. inclusive range)
+                source.rewrite_segment(range.first, source.get_previous_step(range.second), { h });
             }
         }
     }
