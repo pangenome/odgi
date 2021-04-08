@@ -99,6 +99,16 @@ namespace odgi {
         if (_write_biggest_components && args::get(_write_biggest_components) > 0) {
             char size_metric = _size_metric ? args::get(_size_metric) : 'p';
 
+            auto get_path_handles = [](const graph_t &graph, const ska::flat_hash_set<handlegraph::nid_t>& node_ids, set<path_handle_t>& paths) {
+                for (auto node_id : node_ids) {
+                    handle_t handle = graph.get_handle(node_id);
+
+                    graph.for_each_step_on_handle(handle, [&](const step_handle_t &source_step) {
+                        paths.insert(graph.get_path_handle_of_step(source_step));
+                    });
+                }
+            };
+
             auto get_path_length = [](const graph_t &graph, const path_handle_t &path_handle) {
                 uint64_t path_len = 0;
                 graph.for_each_step_in_path(path_handle, [&](const step_handle_t &s) {
@@ -133,13 +143,7 @@ namespace odgi {
                     }
                     case 'P': {
                         set<path_handle_t> paths;
-                        for (auto node_id : weak_component) {
-                            handle_t handle = graph.get_handle(node_id);
-
-                            graph.for_each_step_on_handle(handle, [&](const step_handle_t &source_step) {
-                                paths.insert(graph.get_path_handle_of_step(source_step));
-                            });
-                        }
+                        get_path_handles(graph, weak_component, paths);
 
                         uint64_t max_path_len = 0, current_path_len;
                         for (path_handle_t path_handle : paths) {
@@ -153,8 +157,16 @@ namespace odgi {
                         break;
                     }
                     default: {
-                        // p path mass (total number of path bases) (default)
-                        //ToDo
+                        // p
+                        set<path_handle_t> paths;
+                        get_path_handles(graph, weak_component, paths);
+
+                        uint64_t sum_path_len = 0;
+                        for (path_handle_t path_handle : paths) {
+                            sum_path_len += get_path_length(graph, path_handle);
+                        }
+                        component_and_size[component_index].second = sum_path_len;
+
                         break;
                     }
                 }
@@ -175,10 +187,10 @@ namespace odgi {
                 }
             }
 
-//            for(auto& c : component_and_size) {
-//                std::cerr << c.first << " (" << ignore_component.test(c.first) << ") - " << c.second << std::endl;
-//            }
-//            exit(1);
+            for(auto& c : component_and_size) {
+                std::cerr << c.first << " (" << ignore_component.test(c.first) << ") - " << c.second << std::endl;
+            }
+            exit(1);
         }
 
         std::unique_ptr<algorithms::progress_meter::ProgressMeter> component_progress;
