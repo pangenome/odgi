@@ -29,10 +29,10 @@ namespace odgi {
                                              "(default: `component`)", {'p', "prefix"});
 
         args::ValueFlag<uint64_t> _write_biggest_components(parser, "N",
-                                                            "specify the number of the biggest connected components to write, sorted by decreasing size (default disabled, for writing them all) ",
+                                                            "specify the number of the biggest connected components to write, sorted by decreasing size (default: disabled, for writing them all) ",
                                                             {'b', "biggest"});
         args::ValueFlag<char> _size_metric(parser, "C",
-                                           "specify how to sort the connected components by size:\np) path mass (total number of path bases) (default)\nl) graph length (number of node bases)\nn) number of nodes\nP)longest path",
+                                           "specify how to sort the connected components by size:\np) path mass (total number of path bases) (default)\nl) graph length (number of node bases)\nn) number of nodes\nP) longest path",
                                            {'s', "sorting-criteria"});
 
         args::Flag _optimize(parser, "optimize", "compact the node ID space in each connected component",
@@ -155,7 +155,7 @@ namespace odgi {
                         set<path_handle_t> paths;
                         get_path_handles(graph, weak_component, paths);
 
-                        uint64_t max_path_len = 0, current_path_len;
+                        uint64_t current_path_len;
                         for (path_handle_t path_handle : paths) {
                             current_path_len = get_path_length(graph, path_handle);
                             if (current_path_len > size) {

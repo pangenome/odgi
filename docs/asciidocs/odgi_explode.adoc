@@ -34,7 +34,17 @@ The odgi explode(1) command breaks a graph into connected components, writing ea
 
 *-p, --prefix*=_STRING_::
   Write each connected component in a file with the given prefix. The file for the component `i` will be named
-`STRING.i.og` (default: `component`)
+`STRING.i.og` (default: `component`).
+
+*-b, --biggest*=_N_::
+  Specify the number of the biggest connected components to write, sorted by decreasing size (default: disabled, for writing them all).
+
+*-s, --sorting-criteria*=_C_::
+  Specify how to sort the connected components by size:
+  - p) path mass (total number of path bases) (default)
+  - l) graph length (number of node bases)
+  - n) number of nodes
+  - P) longest path
 
 *-O, --optimize*::
   Compact the node ID space in each connected component.
