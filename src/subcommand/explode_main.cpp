@@ -187,10 +187,9 @@ namespace odgi {
                 }
             }
 
-            for(auto& c : component_and_size) {
-                std::cerr << c.first << " (" << ignore_component.test(c.first) << ") - " << c.second << std::endl;
-            }
-            exit(1);
+//            for(auto& c : component_and_size) {
+//                std::cerr << c.first << " (" << ignore_component.test(c.first) << ") - " << c.second << std::endl;
+//            }
         }
 
         std::unique_ptr<algorithms::progress_meter::ProgressMeter> component_progress;
