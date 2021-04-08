@@ -120,7 +120,7 @@ namespace odgi {
                         break;
                     }
                     case 'n': {
-                        //ToDo
+                        component_and_size[component_index].second = weak_component.size();
                         break;
                     }
                     case 'P': {
@@ -142,7 +142,6 @@ namespace odgi {
 
             // Not ignore the first `write_biggest_components` components
             uint64_t write_biggest_components = args::get(_write_biggest_components);
-
             for (auto& c_and_s : component_and_size) {
                 ignore_component.reset(c_and_s.first);
 
