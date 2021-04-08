@@ -57,8 +57,8 @@ namespace odgi {
 
         graph_t graph;
         assert(argc > 0);
-        std::string infile = args::get(dg_in_file);
-        if (!infile.empty()) {
+        if (!args::get(dg_in_file).empty()) {
+            std::string infile = args::get(dg_in_file);
             if (infile == "-") {
                 graph.deserialize(std::cin);
             } else {
@@ -68,10 +68,10 @@ namespace odgi {
             }
         }
 
-        bool debug = args::get(_debug);
-        bool optimize = args::get(_optimize);
+        const bool debug = args::get(_debug);
+        const bool optimize = args::get(_optimize);
 
-        uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+        const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
 
         std::string output_dir_plus_prefix = "./";
         if (!args::get(_prefix).empty()) {
@@ -90,8 +90,6 @@ namespace odgi {
 
             std::cerr << "[odgi::explode] detected " << weak_components.size() << " connected components" << std::endl;
         }
-
-        //std::mutex debug_mutex;
 
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
         for (uint64_t component_index = 0; component_index < weak_components.size(); ++component_index) {
@@ -144,6 +142,5 @@ namespace odgi {
 
     static Subcommand odgi_explode("explode", "breaks a graph into connected components",
                                    PIPELINE, 3, main_explode);
-
 
 }

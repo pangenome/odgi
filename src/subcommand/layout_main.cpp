@@ -119,8 +119,8 @@ int main_layout(int argc, char **argv) {
 
     graph_t graph;
     assert(argc > 0);
-    std::string infile = args::get(dg_in_file);
-    if (infile.size()) {
+    if (!args::get(dg_in_file).empty()) {
+        std::string infile = args::get(dg_in_file);
         if (infile == "-") {
             graph.deserialize(std::cin);
         } else {
