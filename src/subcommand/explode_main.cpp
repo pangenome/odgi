@@ -99,7 +99,8 @@ namespace odgi {
         if (_write_biggest_components && args::get(_write_biggest_components) > 0) {
             char size_metric = _size_metric ? args::get(_size_metric) : 'p';
 
-            auto get_path_handles = [](const graph_t &graph, const ska::flat_hash_set<handlegraph::nid_t>& node_ids, set<path_handle_t>& paths) {
+            auto get_path_handles = [](const graph_t &graph, const ska::flat_hash_set<handlegraph::nid_t> &node_ids,
+                                       set<path_handle_t> &paths) {
                 for (auto node_id : node_ids) {
                     handle_t handle = graph.get_handle(node_id);
 
@@ -126,24 +127,26 @@ namespace odgi {
                 ignore_component.set(component_index);
 
                 component_and_size[component_index].first = component_index;
-                component_and_size[component_index].second = 0;
 
                 auto &weak_component = weak_components[component_index];
 
-                {'s', "sorting-criteria"});
+                uint64_t size = 0;
+
                 switch (size_metric) {
                     case 'l': {
                         // graph length (number of node bases)
 
                         for (auto node_id : weak_component) {
-                            component_and_size[component_index].second += graph.get_length(graph.get_handle(node_id));
+                            size += graph.get_length(graph.get_handle(node_id));
                         }
+
                         break;
                     }
                     case 'n': {
                         // number of nodes
 
-                        component_and_size[component_index].second = weak_component.size();
+                        size = weak_component.size();
+
                         break;
                     }
                     case 'P': {
@@ -155,11 +158,10 @@ namespace odgi {
                         uint64_t max_path_len = 0, current_path_len;
                         for (path_handle_t path_handle : paths) {
                             current_path_len = get_path_length(graph, path_handle);
-                            if (current_path_len > max_path_len) {
-                                max_path_len = current_path_len;
+                            if (current_path_len > size) {
+                                size = current_path_len;
                             }
                         }
-                        component_and_size[component_index].second = max_path_len;
 
                         break;
                     }
@@ -169,15 +171,15 @@ namespace odgi {
                         set<path_handle_t> paths;
                         get_path_handles(graph, weak_component, paths);
 
-                        uint64_t sum_path_len = 0;
                         for (path_handle_t path_handle : paths) {
-                            sum_path_len += get_path_length(graph, path_handle);
+                            size += get_path_length(graph, path_handle);
                         }
-                        component_and_size[component_index].second = sum_path_len;
 
                         break;
                     }
                 }
+
+                component_and_size[component_index].second = size;
             }
 
             // Sort by component size
