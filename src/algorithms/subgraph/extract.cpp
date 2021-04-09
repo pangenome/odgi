@@ -33,8 +33,8 @@ namespace odgi {
         }
 
         // Create a subpath name
-        string make_subpath_name(const string &path_name, size_t offset, size_t end_offset) {
-            string out_name = path_name + ":" + std::to_string(offset);
+        std::string make_path_name(const string &path_name, size_t offset, size_t end_offset) {
+            std::string out_name = path_name + ":" + std::to_string(offset);
             if (end_offset > offset) {
                 out_name += "-" + std::to_string(end_offset);
             }
@@ -52,20 +52,6 @@ namespace odgi {
                 }
                 path_handle_t path = subgraph.create_path_handle(subpath_name, is_circular);
             };
-
-            auto fill_subpath = [](graph_t &subgraph, const string &path_name,
-                                   const size_t start, const size_t end,
-                                   std::vector<handle_t> &handles_to_embed) {
-                string subpath_name = make_subpath_name(path_name, start, end);
-                path_handle_t path = subgraph.get_path_handle(subpath_name);
-
-                for (auto h_to_embed : handles_to_embed) {
-                    subgraph.append_step(path, h_to_embed);
-                }
-
-                std::vector<handle_t>().swap(handles_to_embed);
-            };
-
 
             std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress;
             if (show_progress) {
@@ -122,7 +108,7 @@ namespace odgi {
                 std::string path_name = source.get_path_name(source_path_handle);
 
                 for (auto subpath_range : subpath_ranges[path_rank]) {
-                    create_subpath(subgraph, make_subpath_name(path_name, subpath_range.first, subpath_range.second),
+                    create_subpath(subgraph, make_path_name(path_name, subpath_range.first, subpath_range.second),
                                    source.get_is_circular(source_path_handle));
                 }
 
@@ -141,13 +127,11 @@ namespace odgi {
                     // The path ranges are sorted by coordinates by design
                     uint64_t range_rank = 0;
                     path_handle_t subpath_handle = subgraph.get_path_handle(
-                            make_subpath_name(path_name, subpath_ranges[path_rank][0].first,
-                                              subpath_ranges[path_rank][0].second)
+                            make_path_name(path_name, subpath_ranges[path_rank][0].first,
+                                           subpath_ranges[path_rank][0].second)
                     );
 
                     uint64_t walked = 0;
-
-                    std::vector<handle_t> handles_to_embed;
                     source.for_each_step_in_path(source_path_handle, [&](const step_handle_t &step) {
                         if (range_rank < subpath_ranges[path_rank].size()) {
                             handle_t source_handle = source.get_handle_of_step(step);
@@ -166,8 +150,8 @@ namespace odgi {
                                 ++range_rank;
                                 if (range_rank < subpath_ranges[path_rank].size()) {
                                     subpath_handle = subgraph.get_path_handle(
-                                            make_subpath_name(path_name, subpath_ranges[path_rank][range_rank].first,
-                                                              subpath_ranges[path_rank][range_rank].second)
+                                            make_path_name(path_name, subpath_ranges[path_rank][range_rank].first,
+                                                           subpath_ranges[path_rank][range_rank].second)
                                     );
                                 }//else not other subpath ranges for this path
                             }
@@ -355,6 +339,51 @@ namespace odgi {
 
             if (show_progress) {
                 progress->finish();
+            }
+        }
+
+        void embed_lace_paths(graph_t &source, graph_t &subgraph,
+                              const std::vector<path_handle_t>& lace_paths) {
+
+            std::vector<std::pair<step_handle_t, step_handle_t>> ranges_to_lace;
+            for (auto& path : lace_paths) {
+                // check if the nodes are in the output subgraph
+                bool in_match = true;
+                step_handle_t lace_start = source.path_begin(path);
+                // get each range that isn't included
+                source.for_each_step_in_path(
+                    path,
+                    [&](const step_handle_t& step) {
+                        if (!subgraph.has_node(source.get_id(source.get_handle_of_step(step)))) {
+                            if (in_match) {
+                                lace_start = step;
+                                in_match = false;
+                            }
+                        } else {
+                            if (!in_match) {
+                                ranges_to_lace.push_back(std::make_pair(lace_start, step));
+                            }
+                            in_match = true;
+                        }
+                    });
+                if (!in_match) {
+                    ranges_to_lace.push_back(std::make_pair(lace_start, source.path_back(path)));
+                }
+            }
+            for (auto& range : ranges_to_lace) {
+                // get its sequence
+                std::string seq;
+                for (step_handle_t step = range.first;
+                     step != range.second;
+                     step = source.get_next_step(step)) {
+                    seq += source.get_sequence(source.get_handle_of_step(step));
+                }
+                // add a node with this sequence to both graphs using the same id
+                assert(seq.size());
+                auto h = source.create_handle(seq);
+                subgraph.create_handle(seq, source.get_id(h));
+                // rewrite the segment in the source graph (nb. inclusive range)
+                source.rewrite_segment(range.first, source.get_previous_step(range.second), { h });
             }
         }
     }

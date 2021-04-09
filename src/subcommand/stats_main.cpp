@@ -31,9 +31,13 @@ int main_stats(int argc, char** argv) {
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the variation graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> layout_in_file(parser, "FILE", "read the layout coordinates from this file", {'c', "coords-in"});
 
-    args::Flag summarize(parser, "summarize", "summarize the graph properties and dimensions", {'S', "summarize"});
+    args::Flag _summarize(parser, "summarize", "summarize the graph properties and dimensions", {'S', "summarize"});
 
-    args::Flag weakly_connected_components(parser, "show", "shows the properties of the weakly connected components", {'W', "weak-connected-components"});
+    args::Flag _weakly_connected_components(parser, "show", "shows the properties of the weakly connected components", {'W', "weak-connected-components"});
+
+    args::Flag _num_self_loops(parser, "show", "number of self-loops", {'L', "self-loops"});
+    args::Flag _show_nondeterministic_edges(parser, "show", "show nondeterministic edges (those that extend to the same next base)", {'N', "nondeterministic-edges"});
+
 
     args::Flag base_content(parser, "base-content", "describe the base content of the graph", {'b', "base-content"});
     //args::Flag path_coverage(parser, "coverage", "provide a histogram of path coverage over bases in the graph", {'C', "coverage"});
@@ -113,7 +117,7 @@ int main_stats(int argc, char** argv) {
     graph_t graph;
     assert(argc > 0);
     std::string infile = args::get(dg_in_file);
-    if (infile.size()) {
+    if (!infile.empty()) {
         if (infile == "-") {
             graph.deserialize(std::cin);
         } else {
@@ -124,7 +128,7 @@ int main_stats(int argc, char** argv) {
     }
     ///graph.display();
 
-    if (args::get(summarize)) {
+    if (args::get(_summarize)) {
         uint64_t length_in_bp = 0, node_count = 0, edge_count = 0, path_count = 0;
         graph.for_each_handle([&](const handle_t& h) {
                 length_in_bp += graph.get_length(h);
@@ -141,7 +145,7 @@ int main_stats(int argc, char** argv) {
         std::cout << length_in_bp << "\t" << node_count << "\t" << edge_count << "\t" << path_count << std::endl;
     }
 
-    if (args::get(weakly_connected_components)) {
+    if (args::get(_weakly_connected_components)) {
         std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components = algorithms::weakly_connected_components(&graph);
 
         std::cout << "##num_weakly_connected_components: " << weak_components.size() << std::endl;
@@ -154,6 +158,44 @@ int main_stats(int argc, char** argv) {
 
             std::cout << i << "\t" << weak_components[i].size() << "\t" << (acyclic ? "yes" : "no") << std::endl;
         }
+    }
+
+    if (_num_self_loops) {
+        uint64_t total_self_loops = 0;
+        std::unordered_set<nid_t> loops;
+        graph.for_each_edge([&](const edge_t& e) {
+            if (graph.get_id(e.first) == graph.get_id(e.second)) {
+                ++total_self_loops;
+                loops.insert(graph.get_id(e.first));
+            }
+        });
+
+        // Should be these always equal?
+        cout << "#type\tnum" << endl;
+        cout << "total" << "\t" << total_self_loops << endl;
+        cout << "unique" << "\t" << loops.size() << endl;
+    }
+
+    if (_show_nondeterministic_edges) {
+        // This edges could be compressed in principle
+
+        std::cout << "#from_node\tto_node" << std::endl;
+        graph.for_each_handle([&](const handle_t& handle) {
+            nid_t id = graph.get_id(handle);
+            for (bool is_reverse : { false, true }) {
+                ska::flat_hash_map<char, std::vector<handle_t>> edges;
+                graph.follow_edges(graph.get_handle(id, is_reverse), false, [&](const handle_t& to) {
+                    edges[graph.get_base(to, 0)].push_back(to);
+                });
+                for (auto iter = edges.begin(); iter != edges.end(); ++iter) {
+                    if (iter->second.size() > 1) {
+                        for (const handle_t& to : iter->second) {
+                            std::cout << id << (is_reverse ? "-" : "+") << "\t" << graph.get_id(to) << (graph.get_is_reverse(to) ? "-" : "+") << std::endl;
+                        }
+                    }
+                }
+            }
+        });
     }
 
     if (args::get(base_content)) {

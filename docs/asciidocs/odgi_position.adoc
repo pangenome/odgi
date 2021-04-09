@@ -60,6 +60,8 @@ between `--source` and `--target`].
 *-v, --give-graph-pos*::
   Emit graph positions (node,offset,strand) rather than path positions.
 
+*-I, --all-immediate*::
+  Emit all positions immediately at the given graph/path position.
 
 *-d, --search-radius*=_STRING_::
   Limit coordinate conversion breadth-first search up to DISTANCE bp from each given position [default: 10000].

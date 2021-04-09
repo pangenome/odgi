@@ -16,9 +16,15 @@ odgi - dynamic succinct variation graph tool
 
 *odgi* <<odgi_build.adoc#_odgi_build1, build>> -g graph.gfa -o graph.og
 
+*odgi* <<odgi_validate.adoc#_odgi_validate1, validate>> -i graph.og
+
 *odgi* <<odgi_stats.adoc#_odgi_stats1, stats>> -i graph.og -S
 
+*odgi* <<odgi_degree.adoc#_odgi_degree1, stats>> -i graph.og -S
+
 *odgi* <<odgi_depth.adoc#_odgi_depth1, depth>> -i graph.og
+
+*odgi* <<odgi_overlap.adoc#_odgi_overlap1, overlap>> -i graph.og -r path_name
 
 *odgi* <<odgi_cover.adoc#_odgi_cover1, cover>> -i graph.og -o graph.paths.og
 
@@ -88,11 +94,20 @@ Each command has its own man page which can be viewed using e.g. *man odgi_build
 *odgi build* [*-g, --gfa*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]... +
 The odgi build(1) command constructs a succinct variation graph from a GFA. Currently, only GFA1 is supported. For details of the format please see https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md.
 
+*odgi validate* [*-i, --input*=_FILE_] [_OPTION_]...
+The odgi validate(1) command validates the graph (currently, it checks if the paths are consistent with the graph topology).
+
 *odgi stats* [*-i, --idx*=_FILE_] [_OPTION_]... +
 The odgi stats(1) command produces statistics of a variation graph. Among other metrics, it can calculate the #nodes, #edges, #paths and the total nucleotide length of the graph. Various histogram summary options complement the tool. If [*-B, --bed-multicov*=_BED_] is set, the metrics will be produced for the intervals specified in the BED.
 
+*odgi degree* [*-i, --idx*=_FILE_] [_OPTION_]...
+The odgi degree(1) command describes the graph in terms of node degree. For the input graph, it shows the node.count, edge.count, avg.degree, min.degree, and max.degree.
+
 *odgi depth* [*-i, --input*=_FILE_] [_OPTION_]...
 The odgi depth(1) command finds the depth of graph as defined by query criteria.
+
+*odgi overlap* [*-i, --input*=_FILE_] [_OPTION_]...
+The odgi overlap(1) command finds the paths touched by the input paths.
 
 *odgi cover* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]... +
 The odgi cover(1) command finds a path cover of a variation graph, with a specified number of paths per component.
@@ -110,7 +125,7 @@ The odgi squeeze(1) command squeezes multiple graphs into the same file.
 The odgi position(1) command position parts of the graph as defined by query criteria.
 
 *odgi sort* [*-i, --idx*=_FILE_] [*-o, --out*=_FILE_] [_OPTION_]... +
-The odgi sort(1) command sorts a succinct variation graph. Odgi sort offers a diverse palette of sorting algorithms to
+The odgi sort(1) command sorts a succinct variation graph. The command offers a diverse palette of sorting algorithms to
 determine the node order:
 
  - A topological sort: A graph can be sorted via https://en.wikipedia.org/wiki/Breadth-first_search[breadth-first search (BFS)] or https://en.wikipedia.org/wiki/Depth-first_search[depth-first search (DFS)]. Optionally,
@@ -229,7 +244,7 @@ Refer to the *odgi* issue tracker at https://github.com/pangenome/odgi/issues.
 
 == AUTHORS
 
-Erik Garrison from the University of California Santa Cruz wrote the whole *odgi* tool. Simon Heumos from the Quantitative Biology Center Tübingen wrote *odgi pathindex*, *odgi panpos*, *odgi server*, and this documentation. Andrea Guarracino from the University of Rome Tor Vergata wrote *odgi viz*, *odgi extract*, *odgi cover*, *odgi explode*, *odgi squeeze*, *odgi depth*, and this documentation*.
+Erik Garrison from the University of California Santa Cruz wrote the whole *odgi* tool. Simon Heumos from the Quantitative Biology Center Tübingen wrote *odgi pathindex*, *odgi panpos*, *odgi server*, and this documentation. Andrea Guarracino from the University of Rome Tor Vergata wrote *odgi viz*, *odgi extract*, *odgi cover*, *odgi explode*, *odgi squeeze*, *odgi depth*, *odgi overlap*, *odgi validate*, and this documentation.
 
 == RESOURCES
 

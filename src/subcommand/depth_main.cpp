@@ -45,10 +45,11 @@ namespace odgi {
                                                    {'F', "path-pos-file"});
         args::ValueFlag<std::string> bed_input(parser, "FILE", "a BED file of ranges in paths in the graph",
                                                {'b', "bed-input"});
-
         args::Flag graph_depth(parser, "graph-depth",
                                "compute the depth on each node in the graph",
                                {'d', "graph-depth"});
+        args::ValueFlag<uint64_t> _smooth_window(parser, "N", "when using --graph-depth, report mean depth in this window size around each node",
+                                                {'w', "smooth-window"});
         args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use", {'t', "threads"});
 
         try {
@@ -93,15 +94,15 @@ namespace odgi {
             paths_to_consider.resize(graph.get_path_count() + 1, false);
 
             std::ifstream refs(args::get(subset_paths).c_str());
-            std::string path_name;
-            while (std::getline(refs, path_name)) {
-                if (!path_name.empty()) {
-                    if (!graph.has_path(path_name)) {
-                        std::cerr << "[odgi::depth] error: path " << path_name << " not found in graph" << std::endl;
+            std::string line;
+            while (std::getline(refs, line)) {
+                if (!line.empty()) {
+                    if (!graph.has_path(line)) {
+                        std::cerr << "[odgi::depth] error: path " << line << " not found in graph" << std::endl;
                         exit(1);
                     }
 
-                    paths_to_consider[as_integer(graph.get_path_handle(path_name))] = true;
+                    paths_to_consider[as_integer(graph.get_path_handle(line))] = true;
                 }
             }
         }
@@ -220,6 +221,7 @@ namespace odgi {
             }
         };
 
+        uint64_t smooth_window = _smooth_window ? args::get(_smooth_window) : 0;
         if (graph_depth) {
             graph.for_each_handle([&](const handle_t &h) {
                 add_graph_pos(graph, std::to_string(graph.get_id(h)));
@@ -228,7 +230,7 @@ namespace odgi {
             // if we're given a graph_pos, we'll convert it into a path pos
             add_graph_pos(graph, args::get(graph_pos));
         } else if (graph_pos_file) {
-            std::ifstream gpos(args::get(graph_pos_file).c_str());
+            std::ifstream gpos(args::get(graph_pos_file));
             std::string buffer;
             while (std::getline(gpos, buffer)) {
                 add_graph_pos(graph, buffer);
@@ -238,13 +240,13 @@ namespace odgi {
             add_path_pos(graph, args::get(path_pos));
         } else if (path_pos_file) {
             // if we're given a file of path depths, we'll convert them all
-            std::ifstream refs(args::get(path_pos_file).c_str());
+            std::ifstream refs(args::get(path_pos_file));
             std::string buffer;
             while (std::getline(refs, buffer)) {
                 add_path_pos(graph, buffer);
             }
         } else if (bed_input) {
-            std::ifstream bed_in(args::get(bed_input).c_str());
+            std::ifstream bed_in(args::get(bed_input));
             std::string buffer;
             while (std::getline(bed_in, buffer)) {
                 add_bed_range(graph, buffer);
@@ -253,10 +255,10 @@ namespace odgi {
             add_bed_range(graph, args::get(path_name));
         } else if (path_file) {
             // for thing in things
-            std::ifstream refs(args::get(path_file).c_str());
-            std::string path_name;
-            while (std::getline(refs, path_name)) {
-                add_bed_range(graph, path_name);
+            std::ifstream refs(args::get(path_file));
+            std::string line;
+            while (std::getline(refs, line)) {
+                add_bed_range(graph, line);
             }
         } else {
             // using all the paths in the graph
@@ -315,16 +317,42 @@ namespace odgi {
         };
 
         if (!graph_positions.empty()) {
-            std::cout << "#graph_position\tcoverage\tcoverage_uniq" << std::endl;
+            if (!smooth_window) {
+                std::cout << "#graph_position\tcoverage\tcoverage_uniq" << std::endl;
 #pragma omp parallel for schedule(dynamic, 1)
-            for (auto &pos : graph_positions) {
-                nid_t node_id = id(pos);
+                for (auto &pos : graph_positions) {
+                    nid_t node_id = id(pos);
 
-                auto coverage = get_graph_node_coverage(graph, node_id, subset_paths, paths_to_consider);
+                    auto coverage = get_graph_node_coverage(graph, node_id, subset_paths, paths_to_consider);
 
 #pragma omp critical (cout)
-                std::cout << node_id << "," << offset(pos) << "," << (is_rev(pos) ? "-" : "+") << "\t"
-                          << coverage.first << "\t" << coverage.second << std::endl;
+                    std::cout << node_id << "," << offset(pos) << "," << (is_rev(pos) ? "-" : "+") << "\t"
+                              << coverage.first << "\t" << coverage.second << std::endl;
+                }
+            } else {
+                std::vector<uint64_t> raw_depths(graph.get_node_count());
+#pragma omp parallel for schedule(dynamic, 1)
+                for (auto &pos : graph_positions) {
+                    nid_t node_id = id(pos);
+                    auto coverage = get_graph_node_coverage(graph, node_id, subset_paths, paths_to_consider);
+                    raw_depths[node_id-1] = coverage.first;
+                }
+                std::cout << "#graph_position\tcoverage\tcoverage_smooth" << std::endl;
+#pragma omp parallel for schedule(dynamic, 1)
+                for (uint64_t i = 0; i < raw_depths.size(); ++i) {
+                    uint64_t sum = 0;
+                    uint64_t j = i >= smooth_window / 2 ? i - smooth_window / 2 : 0;
+                    uint64_t k = j + smooth_window <= raw_depths.size() ? j + smooth_window : raw_depths.size();
+                    uint64_t nodes = k - j;
+                    for ( ; j < k ; ++j ) {
+                        sum += raw_depths[j];
+                    }
+                    double windowed_mean = (double) sum / (double) nodes;
+#pragma omp critical (cout)
+                    std::cout << i+1 << "\t"
+                              << raw_depths[i] << "\t"
+                              << windowed_mean << std::endl;
+                }
             }
         }
 

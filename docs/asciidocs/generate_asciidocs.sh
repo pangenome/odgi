@@ -14,7 +14,9 @@ asciidoctor -r asciidoctor-pdf -b pdf odgi_docs.adoc
 asciidoctor -b manpage odgi.adoc
 asciidoctor -b manpage odgi_build.adoc
 asciidoctor -b manpage odgi_stats.adoc
+asciidoctor -b manpage odgi_degree.adoc
 asciidoctor -b manpage odgi_depth.adoc
+asciidoctor -b manpage odgi_overlap.adoc
 asciidoctor -b manpage odgi_sort.adoc
 asciidoctor -b manpage odgi_view.adoc
 asciidoctor -b manpage odgi_kmers.adoc
@@ -40,6 +42,7 @@ asciidoctor -b manpage odgi_version.adoc
 asciidoctor -b manpage odgi_cover.adoc
 asciidoctor -b manpage odgi_explode.adoc
 asciidoctor -b manpage odgi_squeeze.adoc
+asciidoctor -b manpage odgi_validate.adoc
 asciidoctor -b manpage odgi_position.adoc
 
 mv *.1 man/

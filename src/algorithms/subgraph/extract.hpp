@@ -35,6 +35,9 @@ namespace odgi {
         void extract_id_range(const graph_t &source, const nid_t &id1, const nid_t &id2, graph_t &subgraph,
                               const std::string &progress_message = "");
 
+        void embed_lace_paths(graph_t &source, graph_t &subgraph,
+                              const std::vector<path_handle_t>& lace_paths);
+
     }
 }
 #endif //ODGI_EXTRACT_H

@@ -349,6 +349,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/version.cpp
   #${CMAKE_SOURCE_DIR}/src/snarls.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/depth_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/overlap_main.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/driver.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/handle.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/fuzz.cpp
@@ -375,6 +376,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/normalize_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/extract_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/position_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/degree_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/bin_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/matrix_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/chop_main.cpp
@@ -437,7 +439,9 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/expand_context.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/groom.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/relax_prep_bed_records.cpp
-  ${CMAKE_SOURCE_DIR}/src/unittest/edge.cpp)
+  ${CMAKE_SOURCE_DIR}/src/unittest/edge.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/validate_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/groom.cpp src/unittest/edge.cpp)
 
 set(odgi_DEPS
     sdsl-lite
