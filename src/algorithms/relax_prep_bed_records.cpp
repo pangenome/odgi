@@ -14,11 +14,16 @@ namespace odgi {
             const char delim = '\t';
             ska::flat_hash_map<path_handle_t, vector<min_bed_record_t>> min_bed_record_t_map;
             std::vector<min_bed_record_t> min_bed_record_t_vec;
+            std::string cur_chrom;
             while (std::getline(bed_in_stream, bed_line)) {
                 if (!first_line_was_read) {
                     first_line_was_read = true;
+                    vector<basic_string<char>> vals = split(bed_line, '\t');
+                    cur_chrom = vals[0];
                 }
-                min_bed_record_t_vec.push_back(parse_bed_line(bed_line, delim));
+                min_bed_record_t_vec.push_back(parse_bed_line(bed_line, delim)); // TODO parse_bed_line must get the splitted bed_line as argument so we can figure out if the CHROM changed!
+                // TODO TAKE OVER DESCRIPTION FROM relax_main
+
             }
             for (auto &min_bed_record : min_bed_record_t_vec) {
                 std::cout << min_bed_record.chromStart << "\t" << min_bed_record.chromEnd << "\t" << min_bed_record.path_layout_nuc_dist_ratio << std::endl;
