@@ -62,7 +62,7 @@ namespace odgi {
 
             // Find all the neighbors. Make sure to translate edges to the other end of
             // the run, or self loops.
-            std::unordered_set<handle_t> left_neighbors;
+            ska::flat_hash_set<handle_t> left_neighbors;
             graph.follow_edges(nodes.front(), true, [&](const handle_t &left_neighbor) {
                 if (left_neighbor == nodes.back()) {
                     // Loop back to the end
@@ -76,7 +76,7 @@ namespace odgi {
                 }
             });
 
-            std::unordered_set<handle_t> right_neighbors;
+            ska::flat_hash_set<handle_t> right_neighbors;
             graph.follow_edges(nodes.back(), false, [&](const handle_t &right_neighbor) {
                 if (right_neighbor == nodes.front()) {
                     // Loop back to the front.

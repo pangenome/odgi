@@ -6,7 +6,6 @@
 
 #include "merge.hpp"
 
-#include <unordered_set>
 #include <iostream>
 
 namespace odgi {
@@ -65,8 +64,8 @@ void merge(handlegraph::MutablePathDeletableHandleGraph& graph, const std::vecto
     middles.pop_back();
     
     // Make sets of neighbors we already have
-    std::unordered_set<handle_t> existing_right_neighbors;
-    std::unordered_set<handle_t> existing_left_neighbors;
+    ska::flat_hash_set<handle_t> existing_right_neighbors;
+    ska::flat_hash_set<handle_t> existing_left_neighbors;
     
     graph.follow_edges(merged, false, [&](const handle_t& h) {
         // Look right and collect neighbors
@@ -83,8 +82,8 @@ void merge(handlegraph::MutablePathDeletableHandleGraph& graph, const std::vecto
     // We need to deduplicate due to
     // https://github.com/vgteam/libbdsg/issues/39 and also because there are
     // likely to be duplicates when merging siblings.
-    std::unordered_set<handle_t> right_neighbors;
-    std::unordered_set<handle_t> left_neighbors;
+    ska::flat_hash_set<handle_t> right_neighbors;
+    ska::flat_hash_set<handle_t> left_neighbors;
     
     for (auto& other : middles) {
         // For each node we merge in
@@ -136,7 +135,7 @@ void merge(handlegraph::MutablePathDeletableHandleGraph& graph, const std::vecto
     for (auto& other : middles) {
         // Delete the other versions of the merged segment.
         // First we have to delete each edge exactly once
-        std::unordered_set<edge_t> to_remove;
+        ska::flat_hash_set<edge_t> to_remove;
         graph.follow_edges(other, false, [&](const handle_t& h) {
             to_remove.insert(graph.edge_handle(other, h));
         });
