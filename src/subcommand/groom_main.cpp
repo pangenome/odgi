@@ -22,6 +22,7 @@ int main_groom(int argc, char** argv) {
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> og_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> og_out_file(parser, "FILE", "store the graph self index in this file", {'o', "out"});
+    args::Flag use_dfs(parser, "use-dfs", "use depthh-first search for groom", {'d', "use-dfs"});
     args::Flag progress(parser, "progress", "display progress of the grooming to stderr", {'P', "progress"});
 
     try {
@@ -66,7 +67,7 @@ int main_groom(int argc, char** argv) {
         omp_set_num_threads(args::get(threads));
     }
     */
-    graph.apply_ordering(algorithms::groom(graph, progress));
+    graph.apply_ordering(algorithms::groom(graph, progress, !args::get(use_dfs)));
     
     std::string outfile = args::get(og_out_file);
     if (!outfile.empty()) {
