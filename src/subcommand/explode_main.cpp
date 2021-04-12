@@ -213,10 +213,10 @@ namespace odgi {
             if (_write_biggest_components && args::get(_write_biggest_components) > 0) {
                 uint64_t write_biggest_components = args::get(_write_biggest_components);
 
-                std::cerr << "[odgi::explode] explode the biggest "
+                std::cerr << "[odgi::explode] explode the "
                           << (write_biggest_components <= weak_components.size() ? write_biggest_components
                                                                                  : weak_components.size())
-                          << " connected component(s)" << std::endl;
+                          << " biggest connected component(s)" << std::endl;
             }
         }
 
