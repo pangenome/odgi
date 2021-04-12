@@ -182,7 +182,7 @@ int main_sort(int argc, char** argv) {
     double path_sgd_eps = args::get(p_sgd_eps) ? args::get(p_sgd_eps) : 0.01;
     double path_sgd_delta = args::get(p_sgd_delta) ? args::get(p_sgd_delta) : 0;
     double path_sgd_max_eta = 0; // update below
-    // will be filled, if the user decides to write a snapshot of the graph after each sorting iterationn
+    // will be filled, if the user decides to write a snapshot of the graph after each sorting iteration
     std::vector<std::string> snapshots;
     const bool snapshot = p_sgd_snapshot;
     // default parameters that need a path index to be present
