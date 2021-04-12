@@ -3,8 +3,9 @@
 #include <handlegraph/types.hpp>
 #include <handlegraph/util.hpp>
 #include <handlegraph/mutable_path_deletable_handle_graph.hpp>
-
+#include <map>
 #include "merge.hpp"
+#include "progress.hpp"
 
 namespace odgi {
 namespace algorithms {
@@ -23,7 +24,8 @@ using namespace handlegraph;
  *
  * Preserves paths.
  */
-bool simplify_siblings(handlegraph::MutablePathDeletableHandleGraph& graph);
+bool simplify_siblings(handlegraph::MutablePathDeletableHandleGraph& graph,
+                       const std::string &progress_message = "");
     
 }
 }

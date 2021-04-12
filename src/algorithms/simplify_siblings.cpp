@@ -7,13 +7,12 @@
 
 #include "simplify_siblings.hpp"
 
-#include <unordered_set>
-#include <map>
-
 namespace odgi {
 namespace algorithms {
 
-bool simplify_siblings(handlegraph::MutablePathDeletableHandleGraph& graph) {
+bool simplify_siblings(
+    handlegraph::MutablePathDeletableHandleGraph& graph,
+    const std::string &progress_message) {
 
     // Each handle is part of a "family" of handles with the same parents on
     // the left side and the same leading base. We elide the trivial ones. We
@@ -26,8 +25,15 @@ bool simplify_siblings(handlegraph::MutablePathDeletableHandleGraph& graph) {
     // to merge. This ignores orientation, to ensure that if we're coming into
     // a node on its local right side in one family, we don't come in on its
     // left side in another.
-    std::unordered_set<nid_t> in_family;
-    
+    ska::flat_hash_set<nid_t> in_family;
+
+    std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress;
+    bool show_progress = !progress_message.empty();
+    if (show_progress) {
+        progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+            graph.get_node_count(), progress_message + " over nodes");
+    }
+
     graph.for_each_handle([&](const handle_t& local_forward_node) {
         // For each node local forward
         
@@ -49,10 +55,10 @@ bool simplify_siblings(handlegraph::MutablePathDeletableHandleGraph& graph) {
                 return;
             }
             // For each handle where it or its RC isn't already in a superfamily, identify its superfamily.
-            std::unordered_set<handle_t> superfamily;
+            ska::flat_hash_set<handle_t> superfamily;
             
             // Look left from the node and make a set of the things you see.
-            std::unordered_set<handle_t> correct_parents;
+            ska::flat_hash_set<handle_t> correct_parents;
             graph.follow_edges(node, true, [&](const handle_t& parent) {
                 correct_parents.insert(parent);
 #ifdef debug
@@ -61,7 +67,7 @@ bool simplify_siblings(handlegraph::MutablePathDeletableHandleGraph& graph) {
             });
             
             // Keep a set of things that are partial siblings so we don't have to constantly check them
-            std::unordered_set<handle_t> partial_siblings;
+            ska::flat_hash_set<handle_t> partial_siblings;
             for (auto& parent : correct_parents) {
                 graph.follow_edges(parent, false, [&](const handle_t& candidate) {
                     // Look right from parents and for each candidate family member
@@ -153,7 +159,7 @@ bool simplify_siblings(handlegraph::MutablePathDeletableHandleGraph& graph) {
                 
                 // Make sure no node appears multiple times in the superfamily (in opposite orientations).
                 // TODO: somehow deal with merging on different ends of the same node
-                std::unordered_set<nid_t> seen;
+                ska::flat_hash_set<nid_t> seen;
                 bool qualified = true;
                 for (auto& h : superfamily) {
                     nid_t id = graph.get_id(h);
@@ -227,14 +233,27 @@ bool simplify_siblings(handlegraph::MutablePathDeletableHandleGraph& graph) {
                 }
             }
         }
+        if (show_progress) {
+            progress->increment(1);
+        }
     });
+
+    if (show_progress) {
+        progress->finish();
+    }
     
     in_family.clear();
     
 #ifdef debug
     cerr << "Found " << families.size() << " distinct nontrivial families" << endl;
 #endif
-    
+
+    if (show_progress) {
+        progress.reset();
+        progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+            families.size(), progress_message + " over families");
+    }
+
     // Now we have a bunch of families that won't invalidate each others' handles.
     
     // We set this tro true if we do any work.
@@ -269,8 +288,16 @@ bool simplify_siblings(handlegraph::MutablePathDeletableHandleGraph& graph) {
         
         // We did a merge
         made_progress = true;
+
+        if (show_progress) {
+            progress->increment(1);
+        }
     }
-    
+
+    if (show_progress) {
+        progress->finish();
+    }
+
     // To merge everything on the other side of stuff we just merged, we need to start from the top again.
     // So return if we did anything and more might remain (or have been created) to do.
     return made_progress;

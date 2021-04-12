@@ -31,17 +31,17 @@ void normalize(handlegraph::MutablePathDeletableHandleGraph& graph, int max_iter
         // combine diced/chopped nodes (subpaths with no branching)
         unchop(graph);
         // Resolve forks that shouldn't be
-        simplify_siblings(graph);
+        simplify_siblings(graph, "[odgi::algorithms::normalize] simplifying siblings");
         
         if (max_iter > 1) {
             size_t curr_len = graph.get_total_length();
-            if (debug) std::cerr << "[algorithms::normalize] iteration " << iter+1 << " current length " << curr_len << std::endl;
+            if (debug) std::cerr << "[odgi::algorithms::normalize] iteration " << iter+1 << " current length " << curr_len << std::endl;
             if (curr_len == last_len) break;
             last_len = curr_len;
         }
     } while (++iter < max_iter);
     if (max_iter > 1) {
-        if (debug) std::cerr << "[algorithms::normalize] normalized in " << iter << " steps" << std::endl;
+        if (debug) std::cerr << "[odgi::algorithms::normalize] normalized in " << iter << " steps" << std::endl;
     }
     
     // there may now be some cut nodes that can be simplified
