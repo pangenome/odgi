@@ -24,7 +24,7 @@ namespace odgi {
         args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
         args::ValueFlag<std::string> og_file(parser, "FILE", "compute path depths in this graph", {'i', "input"});
 
-        args::ValueFlag<std::string> subset_paths(parser, "FILE",
+        args::ValueFlag<std::string> _subset_paths(parser, "FILE",
                                                   "compute the depth considering only the paths specified in the FILE; "
                                                   "the file must contain one path name per line and a subset of all paths can be specified.",
                                                   {'s', "subset-paths"});
@@ -90,10 +90,10 @@ namespace odgi {
 
         std::vector<bool> paths_to_consider;
 
-        if (subset_paths) {
+        if (_subset_paths) {
             paths_to_consider.resize(graph.get_path_count() + 1, false);
 
-            std::ifstream refs(args::get(subset_paths).c_str());
+            std::ifstream refs(args::get(_subset_paths).c_str());
             std::string line;
             while (std::getline(refs, line)) {
                 if (!line.empty()) {
@@ -221,7 +221,7 @@ namespace odgi {
             }
         };
 
-        uint64_t smooth_window = _smooth_window ? args::get(_smooth_window) : 0;
+        const uint64_t smooth_window = _smooth_window ? args::get(_smooth_window) : 0;
         if (graph_depth) {
             graph.for_each_handle([&](const handle_t &h) {
                 add_graph_pos(graph, std::to_string(graph.get_id(h)));
@@ -299,8 +299,10 @@ namespace odgi {
             return walked;
         };
 
-        auto get_graph_node_coverage = [](const odgi::graph_t &graph, const nid_t node_id, const bool subset_paths,
+        auto get_graph_node_coverage = [](const odgi::graph_t &graph, const nid_t node_id,
                                           const std::vector<bool> paths_to_consider) {
+            const bool subset_paths = !paths_to_consider.empty();
+
             uint64_t node_coverage = 0;
             std::set<uint64_t> unique_paths;
 
@@ -317,13 +319,13 @@ namespace odgi {
         };
 
         if (!graph_positions.empty()) {
-            if (!smooth_window) {
+            if (smooth_window == 0) {
                 std::cout << "#graph_position\tcoverage\tcoverage_uniq" << std::endl;
 #pragma omp parallel for schedule(dynamic, 1)
                 for (auto &pos : graph_positions) {
                     nid_t node_id = id(pos);
 
-                    auto coverage = get_graph_node_coverage(graph, node_id, subset_paths, paths_to_consider);
+                    auto coverage = get_graph_node_coverage(graph, node_id, paths_to_consider);
 
 #pragma omp critical (cout)
                     std::cout << node_id << "," << offset(pos) << "," << (is_rev(pos) ? "-" : "+") << "\t"
@@ -334,7 +336,7 @@ namespace odgi {
 #pragma omp parallel for schedule(dynamic, 1)
                 for (auto &pos : graph_positions) {
                     nid_t node_id = id(pos);
-                    auto coverage = get_graph_node_coverage(graph, node_id, subset_paths, paths_to_consider);
+                    auto coverage = get_graph_node_coverage(graph, node_id, paths_to_consider);
                     raw_depths[node_id-1] = coverage.first;
                 }
                 std::cout << "#graph_position\tcoverage\tcoverage_smooth" << std::endl;
@@ -364,7 +366,7 @@ namespace odgi {
 
                 nid_t node_id = id(pos);
 
-                auto coverage = get_graph_node_coverage(graph, node_id, subset_paths, paths_to_consider);
+                auto coverage = get_graph_node_coverage(graph, node_id, paths_to_consider);
 
 #pragma omp critical (cout)
                 std::cout << (graph.get_path_name(path_pos.path)) << "," << path_pos.offset << ","
@@ -374,6 +376,8 @@ namespace odgi {
         }
 
         if (!path_ranges.empty()) {
+            const bool subset_paths = !paths_to_consider.empty();
+
             std::cout << "#path\tstart\tend\tmean_coverage" << std::endl;
 #pragma omp parallel for schedule(dynamic, 1)
             for (auto &path_range : path_ranges) {
