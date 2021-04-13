@@ -42,7 +42,7 @@ namespace odgi {
 
         void windows_in_out(
                 const PathHandleGraph& graph,
-                const std::vector<path_handle_t> paths,
+                const std::vector<path_handle_t>& paths,
                 const std::function<bool(handle_t)>& in_bounds,
                 const uint64_t& length,
                 const std::function<void(const std::vector<path_range_t>&)>& output,
