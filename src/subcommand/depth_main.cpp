@@ -5,6 +5,8 @@
 #include "split.hpp"
 #include "algorithms/bfs.hpp"
 #include <omp.h>
+#include <regex>
+#include "utils.hpp"
 
 namespace odgi {
 
@@ -12,9 +14,9 @@ namespace odgi {
 
     void windows_in(
             const PathHandleGraph& graph,
-            std::function<bool(handle_t)>& in_bounds,
+            const std::function<bool(handle_t)>& in_bounds,
             const uint64_t& length,
-            std::function<void(const std::vector<path_range_t>&)>& output,
+            const std::function<void(const std::vector<path_range_t>&)>& output,
             const uint64_t& num_threads) {
 
         std::vector<path_handle_t> paths;
@@ -33,7 +35,7 @@ namespace odgi {
             uint64_t start, end;
             graph.for_each_step_in_path(path, [&](const step_handle_t &step) {
                 handle_t handle = graph.get_handle_of_step(step);
-                uint64_t length = graph.get_length(handle);
+                uint64_t handle_length = graph.get_length(handle);
 
                 if (in_bounds(handle)) {
                     if (first_node) {
@@ -41,9 +43,9 @@ namespace odgi {
                         start = walked;
                     }
 
-                    end = walked + length;
+                    end = walked + handle_length;
                 } else if (!first_node) {
-                    if (path_ranges.size() > 1 && (start - path_ranges.back().end.offset) < length) {
+                    if (path_ranges.size() > 0 && (start - path_ranges.back().end.offset) < length) {
                         path_ranges.back().end.offset = end;
                     } else {
                         path_ranges.push_back({
@@ -57,7 +59,7 @@ namespace odgi {
                     first_node = true;
                 }
 
-                walked += length;
+                walked += handle_length;
             });
 
             output(path_ranges);
@@ -107,11 +109,11 @@ namespace odgi {
                                                  "when using --graph-depth, report mean depth in this window size around each node",
                                                 {'S', "smooth-window"});
 
-        args::ValueFlag<std::string> windows_in(parser, "LEN:MIN:MAX",
+        args::ValueFlag<std::string> _windows_in(parser, "LEN:MIN:MAX",
                                                 "write a BED file of path intervals where the depth is between MIN and MAX, "
                                                 "merging regions not separated by more than LEN bp",
                                                 {'w', "windows-in"});
-        args::ValueFlag<std::string> windows_out(parser, "LEN:MIN:MAX",
+        args::ValueFlag<std::string> _windows_out(parser, "LEN:MIN:MAX",
                                                  "write a BED file of path intervals where the depth is outside of MIN and MAX, "
                                                  "merging regions not separated by more than LEN bp",
                                                  {'W', "windows-out"});
@@ -136,6 +138,25 @@ namespace odgi {
         if (!og_file) {
             std::cerr << "[odgi::depth] error: please specify a target graph via -i=[FILE], --idx=[FILE]." << std::endl;
             return 1;
+        }
+
+        uint64_t windows_in_len = 0, windows_in_min = 0, windows_in_max = 0;
+        if (_windows_in) {
+            const std::string len_min_max = args::get(_windows_in);
+            const std::regex regex(":");
+            const std::vector<std::string> splitted(
+                    std::sregex_token_iterator(len_min_max.begin(), len_min_max.end(), regex, -1),
+                    std::sregex_token_iterator()
+            );
+
+            if (splitted.size() != 3 || !utils::is_number(splitted[0]) || !utils::is_number(splitted[1]) || !utils::is_number(splitted[2])) {
+                std::cerr << "[odgi::depth] error: please specify a valid string (LEN:MIN:MAX) for the -w/--windows-in option." << std::endl;
+                return 1;
+            }
+
+            windows_in_len = stoull(splitted[0]);
+            windows_in_min = stoull(splitted[1]);
+            windows_in_max = stoull(splitted[2]);
         }
 
         odgi::graph_t graph;
@@ -171,6 +192,26 @@ namespace odgi {
                     paths_to_consider[as_integer(graph.get_path_handle(line))] = true;
                 }
             }
+        }
+
+
+        if (_windows_in) {
+            auto in_bounds = [&graph, &windows_in_min, &windows_in_max](const handle_t &handle) {
+                uint64_t degree = graph.get_degree(handle, false) + graph.get_degree(handle, true);
+
+                return degree >= windows_in_min && degree <= windows_in_max;
+            };
+
+            std::cout << "#path\tstart\tend" << std::endl;
+
+            windows_in(graph, in_bounds, windows_in_len, [&](const std::vector<path_range_t>& path_ranges) {
+#pragma omp critical (cout)
+                for (auto path_range : path_ranges) {
+                    std::cout << graph.get_path_name(path_range.begin.path) << "\t"
+                              << path_range.begin.offset << "\t"
+                              << path_range.end.offset << std::endl;
+                }
+            }, num_threads);
         }
 
 
@@ -228,10 +269,10 @@ namespace odgi {
                     exit(1);
                 } else {
                     path_positions.push_back({
-                                                     graph.get_path_handle(path_name),
-                                                     (vals.size() > 1 ? (uint64_t) std::stoi(vals[1]) : 0),
-                                                     (vals.size() == 3 ? vals[2] == "-" : false)
-                                             });
+                        graph.get_path_handle(path_name),
+                        (vals.size() > 1 ? (uint64_t) std::stoi(vals[1]) : 0),
+                        (vals.size() == 3 ? vals[2] == "-" : false)
+                    });
                 }
             }
         };
@@ -288,6 +329,7 @@ namespace odgi {
         };
 
         const uint64_t smooth_window = _smooth_window ? args::get(_smooth_window) : 0;
+
         if (graph_depth) {
             graph.for_each_handle([&](const handle_t &h) {
                 add_graph_pos(graph, std::to_string(graph.get_id(h)));
