@@ -208,7 +208,7 @@ namespace odgi {
         {
             std::string nucleotide_range = args::get(_nucleotide_range);
             if (!nucleotide_range.empty()) {
-                size_t foundFirstColon = nucleotide_range.find(':');
+                const size_t foundFirstColon = nucleotide_range.find_last_of(':');
                 std::string path_name;
                 if (foundFirstColon != string::npos) {
                     path_name = nucleotide_range.substr(0, foundFirstColon);
@@ -223,8 +223,8 @@ namespace odgi {
                     nucleotide_range = nucleotide_range.substr(foundFirstColon + 1);
                 }
 
-                std::regex regex("-");
-                std::vector<std::string> splitted(
+                const std::regex regex("-");
+                const std::vector<std::string> splitted(
                         std::sregex_token_iterator(nucleotide_range.begin(), nucleotide_range.end(), regex, -1),
                         std::sregex_token_iterator()
                 );
