@@ -5,101 +5,12 @@
 #include "split.hpp"
 #include "algorithms/bfs.hpp"
 #include <omp.h>
-#include <regex>
-#include "utils.hpp"
+
+#include "src/algorithms/subgraph/extract.hpp"
 
 namespace odgi {
 
     using namespace odgi::subcommand;
-
-    void windows_in_out(
-            const PathHandleGraph& graph,
-            const std::vector<path_handle_t> paths,
-            const std::function<bool(handle_t)>& in_bounds,
-            const uint64_t& length,
-            const std::function<void(const std::vector<path_range_t>&)>& output,
-            const uint64_t& num_threads) {
-
-#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
-        for (path_handle_t path : paths) {
-            std::vector<path_range_t> path_ranges;
-
-            uint64_t walked = 0;
-            bool first_node = true;
-
-            uint64_t start, end;
-            graph.for_each_step_in_path(path, [&](const step_handle_t &step) {
-                handle_t handle = graph.get_handle_of_step(step);
-                uint64_t handle_length = graph.get_length(handle);
-
-                if (in_bounds(handle)) {
-                    if (first_node) {
-                        first_node = false;
-                        start = walked;
-                    }
-
-                    end = walked + handle_length;
-                } else if (!first_node) {
-                    if (path_ranges.size() > 0 && (start - path_ranges.back().end.offset) < length) {
-                        path_ranges.back().end.offset = end;
-                    } else {
-                        path_ranges.push_back({
-                            {path, start, false},
-                            {path, end, false},
-                            false,
-                            ""
-                        });
-                    }
-
-                    first_node = true;
-                }
-
-                walked += handle_length;
-            });
-
-            // last path range
-            if (!first_node) {
-                if (path_ranges.size() > 0 && (start - path_ranges.back().end.offset) < length) {
-                    path_ranges.back().end.offset = end;
-                } else {
-                    path_ranges.push_back({
-                        {path, start, false},
-                        {path, end, false},
-                        false,
-                        ""
-                    });
-                }
-            }
-
-            output(path_ranges);
-        }
-    }
-
-    bool check_and_get_windows_in_out_parameter(
-            const std::string parameter,
-            uint64_t &windows_len, uint64_t &windows_min, uint64_t &windows_max) {
-        const std::regex regex(":");
-        const std::vector<std::string> splitted(
-                std::sregex_token_iterator(parameter.begin(), parameter.end(), regex, -1),
-                std::sregex_token_iterator()
-        );
-
-        if (splitted.size() != 3) {
-            return false;
-        }
-        if (!utils::is_number(splitted[0]) || !utils::is_number(splitted[1]) || !utils::is_number(splitted[2])) {
-            return false;
-        }
-        if (stoull(splitted[1]) > stoull(splitted[2])) {
-            return false;
-        }
-
-        windows_len = stoull(splitted[0]);
-        windows_min = stoull(splitted[1]);
-        windows_max = stoull(splitted[2]);
-
-        return true;
-    }
 
     int main_depth(int argc, char **argv) {
 
@@ -182,7 +93,7 @@ namespace odgi {
 
         uint64_t windows_in_len = 0, windows_in_min = 0, windows_in_max = 0;
         if (_windows_in) {
-            if (!check_and_get_windows_in_out_parameter(args::get(_windows_in), windows_in_len, windows_in_min, windows_in_max)) {
+            if (!algorithms::check_and_get_windows_in_out_parameter(args::get(_windows_in), windows_in_len, windows_in_min, windows_in_max)) {
                 std::cerr << "[odgi::depth] error: please specify a valid string (LEN:MIN:MAX) for the -w/--windows-in option." << std::endl;
                 return 1;
             }
@@ -190,7 +101,7 @@ namespace odgi {
 
         uint64_t windows_out_len = 0, windows_out_min = 0, windows_out_max = 0;
         if (_windows_out) {
-            if (!check_and_get_windows_in_out_parameter(args::get(_windows_out), windows_out_len, windows_out_min, windows_out_max)) {
+            if (!algorithms::check_and_get_windows_in_out_parameter(args::get(_windows_out), windows_out_len, windows_out_min, windows_out_max)) {
                 std::cerr << "[odgi::depth] error: please specify a valid string (LEN:MIN:MAX) for the -W/--windows-out option." << std::endl;
                 return 1;
             }
@@ -383,7 +294,7 @@ namespace odgi {
             while (std::getline(refs, line)) {
                 add_bed_range(graph, line);
             }
-        } else {
+        } else if (!_windows_in && !_windows_out){
             // using all the paths in the graph
             graph.for_each_path_handle(
                     [&](const path_handle_t &path) { add_bed_range(graph, graph.get_path_name(path)); });
@@ -465,7 +376,7 @@ namespace odgi {
 
             std::cout << "#path\tstart\tend" << std::endl;
 
-            windows_in_out(graph, paths, in_bounds, _windows_in ? windows_in_len : windows_out_len,
+            algorithms::windows_in_out(graph, paths, in_bounds, _windows_in ? windows_in_len : windows_out_len,
                            [&](const std::vector<path_range_t>& path_ranges) {
 #pragma omp critical (cout)
                                for (auto path_range : path_ranges) {

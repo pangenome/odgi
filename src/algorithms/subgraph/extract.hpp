@@ -1,6 +1,7 @@
 #ifndef ODGI_EXTRACT_H
 #define ODGI_EXTRACT_H
 
+#include <regex>
 #include <unordered_map>
 #include <stack>
 #include <map>
@@ -8,7 +9,8 @@
 #include "handlegraph/path_position_handle_graph.hpp"
 #include "weakly_connected_components.hpp"
 #include "progress.hpp"
-
+#include "utils.hpp"
+#include "position.hpp"
 #include "src/algorithms/subgraph/region.hpp"
 
 namespace odgi {
@@ -37,6 +39,18 @@ namespace odgi {
 
         void embed_lace_paths(graph_t &source, graph_t &subgraph,
                               const std::vector<path_handle_t>& lace_paths);
+
+        void windows_in_out(
+                const PathHandleGraph& graph,
+                const std::vector<path_handle_t> paths,
+                const std::function<bool(handle_t)>& in_bounds,
+                const uint64_t& length,
+                const std::function<void(const std::vector<path_range_t>&)>& output,
+                const uint64_t& num_threads);
+
+        bool check_and_get_windows_in_out_parameter(
+                const std::string& parameter,
+                uint64_t &windows_len, uint64_t &windows_min, uint64_t &windows_max);
 
     }
 }
