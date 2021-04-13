@@ -14,16 +14,11 @@ namespace odgi {
 
     void windows_in(
             const PathHandleGraph& graph,
+            const std::vector<path_handle_t> paths,
             const std::function<bool(handle_t)>& in_bounds,
             const uint64_t& length,
             const std::function<void(const std::vector<path_range_t>&)>& output,
             const uint64_t& num_threads) {
-
-        std::vector<path_handle_t> paths;
-        paths.reserve(graph.get_path_count());
-        graph.for_each_path_handle([&](const path_handle_t path) {
-            paths.push_back(path);
-        });
 
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
         for (path_handle_t path : paths) {
@@ -176,7 +171,6 @@ namespace odgi {
         omp_set_num_threads(num_threads);
 
         std::vector<bool> paths_to_consider;
-
         if (_subset_paths) {
             paths_to_consider.resize(graph.get_path_count() + 1, false);
 
@@ -194,17 +188,30 @@ namespace odgi {
             }
         }
 
-
         if (_windows_in) {
+            std::vector<path_handle_t> paths;
+            if (_subset_paths) {
+                graph.for_each_path_handle([&](const path_handle_t path) {
+                    if (paths_to_consider[as_integer(path)]){
+                        paths.push_back(path);
+                    }
+                });
+            } else {
+                paths.reserve(graph.get_path_count());
+                graph.for_each_path_handle([&](const path_handle_t path) {
+                    paths.push_back(path);
+                });
+            }
+
             auto in_bounds = [&graph, &windows_in_min, &windows_in_max](const handle_t &handle) {
                 uint64_t degree = graph.get_degree(handle, false) + graph.get_degree(handle, true);
-
                 return degree >= windows_in_min && degree <= windows_in_max;
             };
 
             std::cout << "#path\tstart\tend" << std::endl;
 
-            windows_in(graph, in_bounds, windows_in_len, [&](const std::vector<path_range_t>& path_ranges) {
+            windows_in(graph, paths, in_bounds, windows_in_len,
+                       [&](const std::vector<path_range_t>& path_ranges) {
 #pragma omp critical (cout)
                 for (auto path_range : path_ranges) {
                     std::cout << graph.get_path_name(path_range.begin.path) << "\t"
