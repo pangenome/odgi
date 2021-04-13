@@ -12,7 +12,7 @@ namespace odgi {
 
     using namespace odgi::subcommand;
 
-    void windows_in(
+    void windows_in_out(
             const PathHandleGraph& graph,
             const std::vector<path_handle_t> paths,
             const std::function<bool(handle_t)>& in_bounds,
@@ -57,8 +57,48 @@ namespace odgi {
                 walked += handle_length;
             });
 
+            // last path range
+            if (!first_node) {
+                if (path_ranges.size() > 0 && (start - path_ranges.back().end.offset) < length) {
+                    path_ranges.back().end.offset = end;
+                } else {
+                    path_ranges.push_back({
+                        {path, start, false},
+                        {path, end, false},
+                        false,
+                        ""
+                    });
+                }
+            }
+
             output(path_ranges);
         }
+    }
+
+    bool check_and_get_windows_in_out_parameter(
+            const std::string parameter,
+            uint64_t &windows_len, uint64_t &windows_min, uint64_t &windows_max) {
+        const std::regex regex(":");
+        const std::vector<std::string> splitted(
+                std::sregex_token_iterator(parameter.begin(), parameter.end(), regex, -1),
+                std::sregex_token_iterator()
+        );
+
+        if (splitted.size() != 3) {
+            return false;
+        }
+        if (!utils::is_number(splitted[0]) || !utils::is_number(splitted[1]) || !utils::is_number(splitted[2])) {
+            return false;
+        }
+        if (stoull(splitted[1]) > stoull(splitted[2])) {
+            return false;
+        }
+
+        windows_len = stoull(splitted[0]);
+        windows_min = stoull(splitted[1]);
+        windows_max = stoull(splitted[2]);
+
+        return true;
     }
 
     int main_depth(int argc, char **argv) {
@@ -113,7 +153,7 @@ namespace odgi {
                                                  "merging regions not separated by more than LEN bp",
                                                  {'W', "windows-out"});
 
-        args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use", {'t', "threads"});
+        args::ValueFlag<uint64_t> _num_threads(parser, "N", "number of threads to use", {'t', "threads"});
 
         try {
             parser.ParseCLI(argc, argv);
@@ -135,29 +175,31 @@ namespace odgi {
             return 1;
         }
 
+        if (_windows_in && _windows_out) {
+            std::cerr << "[odgi::depth] error: please specify -w/--windows-in or -W/--windows-out, not both." << std::endl;
+            return 1;
+        }
+
         uint64_t windows_in_len = 0, windows_in_min = 0, windows_in_max = 0;
         if (_windows_in) {
-            const std::string len_min_max = args::get(_windows_in);
-            const std::regex regex(":");
-            const std::vector<std::string> splitted(
-                    std::sregex_token_iterator(len_min_max.begin(), len_min_max.end(), regex, -1),
-                    std::sregex_token_iterator()
-            );
-
-            if (splitted.size() != 3 || !utils::is_number(splitted[0]) || !utils::is_number(splitted[1]) || !utils::is_number(splitted[2])) {
+            if (!check_and_get_windows_in_out_parameter(args::get(_windows_in), windows_in_len, windows_in_min, windows_in_max)) {
                 std::cerr << "[odgi::depth] error: please specify a valid string (LEN:MIN:MAX) for the -w/--windows-in option." << std::endl;
                 return 1;
             }
+        }
 
-            windows_in_len = stoull(splitted[0]);
-            windows_in_min = stoull(splitted[1]);
-            windows_in_max = stoull(splitted[2]);
+        uint64_t windows_out_len = 0, windows_out_min = 0, windows_out_max = 0;
+        if (_windows_out) {
+            if (!check_and_get_windows_in_out_parameter(args::get(_windows_out), windows_out_len, windows_out_min, windows_out_max)) {
+                std::cerr << "[odgi::depth] error: please specify a valid string (LEN:MIN:MAX) for the -W/--windows-out option." << std::endl;
+                return 1;
+            }
         }
 
         odgi::graph_t graph;
         assert(argc > 0);
-        std::string infile = args::get(og_file);
-        if (!infile.empty()) {
+        if (!args::get(og_file).empty()) {
+            const std::string infile = args::get(og_file);
             if (infile == "-") {
                 graph.deserialize(std::cin);
             } else {
@@ -167,7 +209,7 @@ namespace odgi {
             }
         }
 
-        uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+        uint64_t num_threads = args::get(_num_threads) ? args::get(_num_threads) : 1;
         omp_set_num_threads(num_threads);
 
         std::vector<bool> paths_to_consider;
@@ -187,40 +229,6 @@ namespace odgi {
                 }
             }
         }
-
-        if (_windows_in) {
-            std::vector<path_handle_t> paths;
-            if (_subset_paths) {
-                graph.for_each_path_handle([&](const path_handle_t path) {
-                    if (paths_to_consider[as_integer(path)]){
-                        paths.push_back(path);
-                    }
-                });
-            } else {
-                paths.reserve(graph.get_path_count());
-                graph.for_each_path_handle([&](const path_handle_t path) {
-                    paths.push_back(path);
-                });
-            }
-
-            auto in_bounds = [&graph, &windows_in_min, &windows_in_max](const handle_t &handle) {
-                uint64_t degree = graph.get_degree(handle, false) + graph.get_degree(handle, true);
-                return degree >= windows_in_min && degree <= windows_in_max;
-            };
-
-            std::cout << "#path\tstart\tend" << std::endl;
-
-            windows_in(graph, paths, in_bounds, windows_in_len,
-                       [&](const std::vector<path_range_t>& path_ranges) {
-#pragma omp critical (cout)
-                for (auto path_range : path_ranges) {
-                    std::cout << graph.get_path_name(path_range.begin.path) << "\t"
-                              << path_range.begin.offset << "\t"
-                              << path_range.end.offset << std::endl;
-                }
-            }, num_threads);
-        }
-
 
         // these options are exclusive (probably we should say with a warning)
         std::vector<odgi::pos_t> graph_positions;
@@ -432,6 +440,41 @@ namespace odgi {
 
             return make_pair(node_coverage, unique_paths.size());
         };
+
+
+
+        if (_windows_in || _windows_out) {
+            std::vector<path_handle_t> paths;
+            if (_subset_paths) {
+                graph.for_each_path_handle([&](const path_handle_t path) {
+                    if (paths_to_consider[as_integer(path)]){
+                        paths.push_back(path);
+                    }
+                });
+            } else {
+                paths.reserve(graph.get_path_count());
+                graph.for_each_path_handle([&](const path_handle_t path) {
+                    paths.push_back(path);
+                });
+            }
+
+            auto in_bounds = [&](const handle_t &handle) {
+                uint64_t coverage = get_graph_node_coverage(graph, graph.get_id(handle), paths_to_consider).first;
+                return _windows_in ? (coverage >= windows_in_min && coverage <= windows_in_max) : (coverage < windows_out_min || coverage > windows_out_max);
+            };
+
+            std::cout << "#path\tstart\tend" << std::endl;
+
+            windows_in_out(graph, paths, in_bounds, _windows_in ? windows_in_len : windows_out_len,
+                           [&](const std::vector<path_range_t>& path_ranges) {
+#pragma omp critical (cout)
+                               for (auto path_range : path_ranges) {
+                                   std::cout << graph.get_path_name(path_range.begin.path) << "\t"
+                                             << path_range.begin.offset << "\t"
+                                             << path_range.end.offset << std::endl;
+                               }
+                           }, num_threads);
+        }
 
         if (!graph_positions.empty()) {
             if (smooth_window == 0) {
