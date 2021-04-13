@@ -10,6 +10,60 @@ namespace odgi {
 
     using namespace odgi::subcommand;
 
+    void windows_in(
+            const PathHandleGraph& graph,
+            std::function<bool(handle_t)>& in_bounds,
+            const uint64_t& length,
+            std::function<void(const std::vector<path_range_t>&)>& output,
+            const uint64_t& num_threads) {
+
+        std::vector<path_handle_t> paths;
+        paths.reserve(graph.get_path_count());
+        graph.for_each_path_handle([&](const path_handle_t path) {
+            paths.push_back(path);
+        });
+
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
+        for (path_handle_t path : paths) {
+            std::vector<path_range_t> path_ranges;
+
+            uint64_t walked = 0;
+            bool first_node = true;
+
+            uint64_t start, end;
+            graph.for_each_step_in_path(path, [&](const step_handle_t &step) {
+                handle_t handle = graph.get_handle_of_step(step);
+                uint64_t length = graph.get_length(handle);
+
+                if (in_bounds(handle)) {
+                    if (first_node) {
+                        first_node = false;
+                        start = walked;
+                    }
+
+                    end = walked + length;
+                } else if (!first_node) {
+                    if (path_ranges.size() > 1 && (start - path_ranges.back().end.offset) < length) {
+                        path_ranges.back().end.offset = end;
+                    } else {
+                        path_ranges.push_back({
+                            {path, start, false},
+                            {path, end, false},
+                            false,
+                            ""
+                        });
+                    }
+
+                    first_node = true;
+                }
+
+                walked += length;
+            });
+
+            output(path_ranges);
+        }
+    }
+
     int main_depth(int argc, char **argv) {
 
         // trick argumentparser to do the right thing with the subcommand
@@ -45,11 +99,23 @@ namespace odgi {
                                                    {'F', "path-pos-file"});
         args::ValueFlag<std::string> bed_input(parser, "FILE", "a BED file of ranges in paths in the graph",
                                                {'b', "bed-input"});
+
         args::Flag graph_depth(parser, "graph-depth",
                                "compute the depth on each node in the graph",
                                {'d', "graph-depth"});
-        args::ValueFlag<uint64_t> _smooth_window(parser, "N", "when using --graph-depth, report mean depth in this window size around each node",
-                                                {'w', "smooth-window"});
+        args::ValueFlag<uint64_t> _smooth_window(parser, "N",
+                                                 "when using --graph-depth, report mean depth in this window size around each node",
+                                                {'S', "smooth-window"});
+
+        args::ValueFlag<std::string> windows_in(parser, "LEN:MIN:MAX",
+                                                "write a BED file of path intervals where the depth is between MIN and MAX, "
+                                                "merging regions not separated by more than LEN bp",
+                                                {'w', "windows-in"});
+        args::ValueFlag<std::string> windows_out(parser, "LEN:MIN:MAX",
+                                                 "write a BED file of path intervals where the depth is outside of MIN and MAX, "
+                                                 "merging regions not separated by more than LEN bp",
+                                                 {'W', "windows-out"});
+
         args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use", {'t', "threads"});
 
         try {
