@@ -120,8 +120,8 @@ namespace odgi {
             }
         }
 
-        uint64_t num_threads = args::get(_num_threads) ? args::get(_num_threads) : 1;
-        omp_set_num_threads(num_threads);
+        const uint64_t num_threads = args::get(_num_threads) ? args::get(_num_threads) : 1;
+        omp_set_num_threads((int) num_threads);
 
         std::vector<bool> paths_to_consider;
         if (_subset_paths) {
@@ -351,8 +351,6 @@ namespace odgi {
 
             return make_pair(node_coverage, unique_paths.size());
         };
-
-
 
         if (_windows_in || _windows_out) {
             std::vector<path_handle_t> paths;
