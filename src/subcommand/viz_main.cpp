@@ -56,6 +56,7 @@ namespace odgi {
         args::Flag color_by_mean_inversion_rate(parser, "color-by-mean-inversion-rate", "change the color respect to the node strandness (black for forward, red for reverse); in binned mode, change the color respect to the mean inversion rate of the path for each bin, from black (no inversions) to red (bin mean inversion rate equals to 1)", {'z', "color-by-mean-inversion-rate"});
 
         args::ValueFlag<char> _color_by_prefix(parser, "C", "colors paths by their names looking at the prefix before the given character C",{'s', "color-by-prefix"});
+        args::ValueFlag<std::string> _name_prefixes(parser, "FILE", "merge paths beginning with prefixes listed (one per line) in FILE", {'M', "prefix-merges"});
 
         /// Range selection
         args::ValueFlag<std::string> _nucleotide_range(parser, "STRING","nucleotide range to visualize: STRING=[PATH:]start-end. `*-end` for `[0,end]`; `start-*` for `[start,pangenome_length]`. If no PATH is specified, the nucleotide positions refer to the pangenome's sequence (i.e., the sequence obtained arranging all the graph's node from left to right).",{'r', "path-range"});
@@ -309,6 +310,7 @@ namespace odgi {
         }
 
         uint64_t max_num_of_characters = args::get(_max_num_of_characters) > 1 ? min(args::get(_max_num_of_characters), (uint64_t) PATH_NAMES_MAX_NUM_OF_CHARACTERS) : 32;
+
         uint64_t path_count = graph.get_path_count();
         uint64_t pix_per_path = args::get(path_height) ? args::get(path_height) : 10;
         uint64_t pix_per_link = std::max((uint64_t) 1, (uint64_t) std::round(args::get(link_path_pieces) * pix_per_path));
@@ -356,6 +358,66 @@ namespace odgi {
         uint8_t max_num_of_chars = 0;
         uint8_t char_size = 0;
 
+        //_name_prefixes(parser, "FILE", "merge paths beginning with prefixes listed (one per line) in FILE", {'M', "prefix-merges"});
+        std::vector<int64_t> path_group;
+        std::vector<std::string> prefixes;
+        bool group_paths = false;
+        if (_name_prefixes) {
+            path_group.resize(path_count, -1);
+            group_paths = true;
+            auto& name_prefixes = args::get(_name_prefixes);
+            ska::flat_hash_set<std::string> group_names;
+            if (!name_prefixes.empty()){
+                std::ifstream prefixes_in(name_prefixes);
+                std::string line;
+                while (std::getline(prefixes_in, line)) {
+                    if (!line.empty()){
+                        if (group_names.count(line)) {
+                            std::cerr << "[odgi::viz] duplicate group name found " << line << std::endl;
+                        } else {
+                            prefixes.push_back(line);
+                            group_names.insert(line);
+                        }
+                    }
+                }
+            }
+            graph.for_each_path_handle(
+                [&](const path_handle_t &path) {
+                    uint64_t path_rank = as_integer(path) - 1;
+                    // XXX quadratic
+                    // could be O(N log N) if we use binary search on a sorted list
+                    auto path_name = graph.get_path_name(path);
+                    uint64_t group_idx = 0;
+                    for (auto& prefix : prefixes) {
+                        // check if it matches the start
+                        if (path_name.find(prefix) == 0) {
+                            //std::cerr << path_name << " -> " << prefix << std::endl;
+                            path_group[path_rank] = group_idx;
+                            break;
+                        }
+                        ++group_idx;
+                    }
+                });
+        }
+
+        auto get_path_display_name =
+            [&](const path_handle_t& p) {
+                if (group_paths) {
+                    return prefixes[path_group[as_integer(p) - 1]];
+                } else {
+                    return graph.get_path_name(p);
+                }
+            };
+
+        auto get_path_idx =
+            [&](const path_handle_t& p) {
+                if (group_paths) {
+                    return (int64_t)path_group[as_integer(p) - 1];
+                } else {
+                    return (int64_t)(as_integer(p) - 1);
+                }
+            };
+
         // map from path id to its starting y position
         //hash_map<uint64_t, uint64_t> path_layout_y;
         std::vector<int64_t> path_layout_y;
@@ -372,15 +434,15 @@ namespace odgi {
                 while (std::getline(path_names_in, line)) {
                     if (!line.empty()){
                         if (graph.has_path(line)){
-                            uint64_t path_rank = as_integer(graph.get_path_handle(line)) - 1;
-                            if (path_layout_y[path_rank] < 0){
-                                path_layout_y[path_rank] = rank_for_visualization;
-                            }else{
+                            // todo here we need to do our grouping
+                            int64_t path_rank = get_path_idx(graph.get_path_handle(line));
+                            if (path_rank >= 0 && path_layout_y[path_rank] < 0) {
+                                path_layout_y[path_rank] = rank_for_visualization++;
+                                //rank_for_visualization++;
+                            } else if (!group_paths) {
                                 std::cerr << "[odgi::viz] error: in the path list there are duplicated path names." << std::endl;
                                 exit(1);
                             }
-
-                            rank_for_visualization++;
                         }
 
                         num_of_paths_in_file++;
@@ -399,10 +461,15 @@ namespace odgi {
                 path_count = rank_for_visualization;
             }else{
                 for (uint64_t i = 0; i < path_count; ++i) {
-                    path_layout_y[i] = i;
+                    // todo here we need to do our grouping
+                    path_layout_y[i] = get_path_idx(as_path_handle(i+1));
                 }
             }
         } else { // pack the paths
+            if (group_paths) {
+                std::cerr << "[odgi::viz] error: not possible to combine path packing and grouping" << std::endl;
+                exit(1);
+            }
             // buffer to record layout bounds
             std::vector<bool> path_layout_buf;
             path_layout_buf.resize(path_count * width);
@@ -446,12 +513,19 @@ namespace odgi {
         std::vector<uint8_t> image_path_names;
         if (!args::get(hide_path_names) && !args::get(pack_paths) && pix_per_path >= 8) {
             uint64_t _max_num_of_chars = std::numeric_limits<uint64_t>::min();
-            graph.for_each_path_handle([&](const path_handle_t &path) {
-                uint64_t path_rank = as_integer(path) - 1;
-                if (path_layout_y[path_rank] >= 0){
-                    _max_num_of_chars = max((uint64_t) _max_num_of_chars, graph.get_path_name(path).length());
+            if (group_paths) {
+                for (auto& prefix : prefixes) {
+                    _max_num_of_chars = max((uint64_t) _max_num_of_chars, prefix.length());
                 }
-            });
+            } else {
+                graph.for_each_path_handle(
+                    [&](const path_handle_t &path) {
+                        int64_t path_rank = get_path_idx(path);
+                        if (path_rank >= 0 && path_layout_y[path_rank] >= 0){
+                            _max_num_of_chars = max((uint64_t) _max_num_of_chars, graph.get_path_name(path).length());
+                        }
+                    });
+            }
             max_num_of_chars = min(_max_num_of_chars, max_num_of_characters);
 
             char_size = min((uint16_t)((pix_per_path / 8) * 8), (uint16_t) PATH_NAMES_MAX_CHARACTER_SIZE);
@@ -646,8 +720,8 @@ namespace odgi {
         double max_mean_cov = 0.0;
         if ((_change_darkness && _longest_path) || (_binned_mode && _color_by_mean_coverage)){
             graph.for_each_path_handle([&](const path_handle_t &path) {
-                uint64_t path_rank = as_integer(path) - 1;
-                if (path_layout_y[path_rank] >= 0){
+                int64_t path_rank = get_path_idx(path);
+                if (path_rank >= 0 && path_layout_y[path_rank] >= 0){
                     uint64_t curr_len = 0, p, hl;
                     handle_t h;
                     std::map<uint64_t, algorithms::path_info_t> bins;
@@ -682,12 +756,11 @@ namespace odgi {
         bool _color_path_names_background = args::get(color_path_names_background);
 
         graph.for_each_path_handle([&](const path_handle_t &path) {
-            //std::cerr << "path " << as_integer(path) << " " << graph.get_path_name(path) << " " << path_r_f << " " << path_g_f << " " << path_b_f
-            //          << " " << (int)path_r << " " << (int)path_g << " " << (int)path_b << std::endl;
-            uint64_t path_rank = as_integer(path) - 1;
-            if (path_layout_y[path_rank] >= 0){
+            int64_t path_rank = get_path_idx(path);
+            //std::cerr << graph.get_path_name(path) << " -> " << path_rank << std::endl;
+            if (path_rank >= 0 && path_layout_y[path_rank] >= 0){
                 // use a sha256 to get a few bytes that we'll use for a color
-                std::string path_name = graph.get_path_name(path);
+                std::string path_name = get_path_display_name(path);
 
     #ifdef debug_odgi_viz
                 std::cerr << "path_name: " << path_name << std::endl;
