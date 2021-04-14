@@ -27,9 +27,10 @@ int main_tension(int argc, char **argv) {
     args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
     args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
     args::ValueFlag<std::string> layout_in_file(parser, "FILE", "read the layout coordinates from this .lay format file produced by odgi sort or odgi layout", {'c', "coords-in"});
-    args::ValueFlag<double> window_size(parser, "N", "window size in kb in which each tension is calculated, DEFAULT: 1kb", {'w', "window-size"});
+    args::ValueFlag<double> window_size(parser, "N", "window size in bases in which each tension is calculated, DEFAULT: 1kb", {'w', "window-size"});
     args::ValueFlag<std::string> tsv_out_file(parser, "FILE", "write the TSV layout to this file", {'T', "tsv"});
     // args::ValueFlag<std::string> bed_out_file(parser, "FILE", "write the BED intervals to this file", {'B', "bed"}); we write to stdout
+    args::Flag node_sized_windows(parser, "node-sized-windows", "instead of manual window sizes, each window has the size of the node of the step we are currently iterating", {'n', "node-sized-windows"});
     args::Flag progress(parser, "progress", "display progress", {'P', "progress"});
     args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel phases", {'t', "threads"});
 
@@ -88,10 +89,17 @@ int main_tension(int argc, char **argv) {
         }
     }
 
-    double window_size_ = 1000;
+    double window_size_ = 1;
     if (window_size) {
-        window_size_ = args::get(window_size) * 1000;
+        window_size_ = args::get(window_size);
     }
+    if (node_sized_windows && window_size) {
+        std::cerr
+                << "[odgi tension] error: Please specify only one of -w=[N], --window-size=[N] or -n, --node-sized-windows"
+                << std::endl;
+        return 1;
+    }
+    const bool node_sized_windows_ = args::get(node_sized_windows);
 
     vector<path_handle_t> p_handles;
     graph.for_each_path_handle([&] (const path_handle_t &p) {
@@ -166,7 +174,20 @@ int main_tension(int argc, char **argv) {
                 uint64_t nuc_dist = graph.get_length(h);
                 path_nuc_dist += nuc_dist;
                 cur_window_end += nuc_dist;
-                if ((cur_window_end - cur_window_start + 1) >= window_size_) {
+                // we add a new bed entry for each step
+                if (node_sized_windows_) {
+                    double path_layout_nuc_dist_ratio = (double) path_layout_dist / (double) path_nuc_dist;
+                    bed.append(path_name,
+                               (cur_window_start - 1),
+                               cur_window_end,
+                               path_layout_dist,
+                               path_nuc_dist,
+                               path_layout_nuc_dist_ratio);
+                    cur_window_start = cur_window_end + 1;
+                    cur_window_end = cur_window_start - 1;
+                    path_layout_dist = 0;
+                    path_nuc_dist = 0;
+                } else if ((cur_window_end - cur_window_start + 1) >= window_size_) {
                     double path_layout_nuc_dist_ratio = (double) path_layout_dist / (double) path_nuc_dist;
                     bed.append(path_name,
                                (cur_window_start - 1),
