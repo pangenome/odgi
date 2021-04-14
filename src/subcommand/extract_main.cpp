@@ -6,7 +6,7 @@
 #include <omp.h>
 #include <regex>
 #include "utils.hpp"
-
+#include "atomic_bitvector.hpp"
 #include "src/algorithms/subgraph/extract.hpp"
 
 namespace odgi {
@@ -452,17 +452,35 @@ namespace odgi {
                 f.close();
             }
         } else {
+            std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress;
+            if (show_progress) {
+                progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+                    path_ranges.size(), "[odgi::extract] extracting path ranges");
+            }
             graph_t subgraph;
-
-            for (auto &path_range : path_ranges) {
-                path_handle_t path_handle = path_range.begin.path;
-
-                if (show_progress) {
-                    std::cerr << "[odgi::extract] extracting path range " << graph.get_path_name(path_range.begin.path) << ":" << path_range.begin.offset
-                              << "-"
-                              << path_range.end.offset << std::endl;
+            {
+                atomicbitvector::atomic_bv_t keep_bv(graph.get_node_count()+1);
+                // collect path ranges by path
+#pragma omp parallel for schedule(dynamic,1)
+                for (auto &path_range : path_ranges) {
+                    path_handle_t path_handle = path_range.begin.path;
+                    if (show_progress) {
+                        progress->increment(1);
+                    }
+                    algorithms::for_handle_in_path_range(
+                        graph, path_handle, path_range.begin.offset, path_range.end.offset,
+                        [&](const handle_t& handle) {
+                            keep_bv.set(graph.get_id(handle));
+                        });
                 }
-                algorithms::extract_path_range(graph, path_handle, path_range.begin.offset, path_range.end.offset, subgraph);
+                for (auto id : keep_bv) {
+                    handle_t h = graph.get_handle(id);
+                    subgraph.create_handle(graph.get_sequence(h),
+                                           id);
+                }
+            }
+            if (show_progress) {
+                progress->finish();
             }
 
             if (args::get(_target_node)) {

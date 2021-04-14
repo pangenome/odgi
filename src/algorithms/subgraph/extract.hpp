@@ -27,6 +27,9 @@ namespace odgi {
         void extract_path_range(const graph_t &source, path_handle_t path_handle, int64_t start, int64_t end,
                                 graph_t &subgraph);
 
+        void for_handle_in_path_range(const graph_t &source, path_handle_t path_handle, int64_t start, int64_t end,
+                                      const std::function<void(const handle_t&)>& lambda);
+
         void add_connecting_edges_to_subgraph(const graph_t &source, graph_t &subgraph,
                                               const std::string &progress_message = "");
 
