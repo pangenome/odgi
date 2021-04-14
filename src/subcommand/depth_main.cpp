@@ -368,10 +368,24 @@ namespace odgi {
                 });
             }
 
-            auto in_bounds = [&](const handle_t &handle) {
-                uint64_t coverage = get_graph_node_coverage(graph, graph.get_id(handle), paths_to_consider).first;
-                return _windows_in ? (coverage >= windows_in_min && coverage <= windows_in_max) : (coverage < windows_out_min || coverage > windows_out_max);
-            };
+            // precompute depths for all handles in parallel
+            std::vector<uint64_t> depths(graph.get_node_count() + 1);
+            graph.for_each_handle(
+                [&](const handle_t& h) {
+                    auto id = graph.get_id(h);
+                    if (id >= depths.size()) {
+                        // require optimized graph to use vector rather than a hash table
+                        std::cerr << "[odgi::depth] error: graph is not optimized, apply odgi sort -O" << std::endl;
+                        assert(false);
+                    }
+                    depths[id] = get_graph_node_coverage(graph, id, paths_to_consider).first;
+                }, true);
+
+            auto in_bounds =
+                [&](const handle_t &handle) {
+                    uint64_t coverage = depths[graph.get_id(handle)];
+                    return _windows_in ? (coverage >= windows_in_min && coverage <= windows_in_max) : (coverage < windows_out_min || coverage > windows_out_max);
+                };
 
             std::cout << "#path\tstart\tend" << std::endl;
 
