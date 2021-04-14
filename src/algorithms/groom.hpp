@@ -9,7 +9,7 @@
 #include "dynamic.hpp"
 #include "topological_sort.hpp"
 #include "progress.hpp"
-//#include "bfs.cpp"
+#include "dfs.hpp"
 
 namespace odgi {
     namespace algorithms {
@@ -21,7 +21,8 @@ namespace odgi {
  */
         std::vector<handle_t>
         groom(const handlegraph::MutablePathDeletableHandleGraph &graph,
-              bool progress_reporting);
+              bool progress_reporting,
+              bool use_bfs = true);
 
     }
 }

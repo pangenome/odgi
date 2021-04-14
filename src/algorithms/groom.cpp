@@ -10,7 +10,7 @@
 namespace odgi {
     namespace algorithms {
 
-        std::vector<handle_t>groom(const handlegraph::MutablePathDeletableHandleGraph &graph, bool progress_reporting) {
+    std::vector<handle_t>groom(const handlegraph::MutablePathDeletableHandleGraph &graph, bool progress_reporting, bool use_bfs) {
 
             // This (s) is our set of oriented nodes.
             //dyn::succinct_bitvector<dyn::spsi<dyn::packed_vector,256,16> > s;
@@ -57,33 +57,61 @@ namespace odgi {
             uint64_t edge_count = 0;
 
             while (unvisited.rank1(unvisited.size()) != 0) {
-                bfs(graph,
-                    [&graph, &unvisited, &flipped, &progress_reporting, &bfs_progress]
-                            (const handle_t &h, const uint64_t &r, const uint64_t &l, const uint64_t &d) {
-                        if (progress_reporting) {
-                            bfs_progress->increment(1);
-                        }
-                        uint64_t i = number_bool_packing::unpack_number(h);
-                        unvisited.set(i, 0);
-                        flipped.set(i, graph.get_is_reverse(h));
-                    },
-                    [&unvisited](const handle_t &h) {
-                        uint64_t i = number_bool_packing::unpack_number(h);
-                        return unvisited.at(i) == 0;
-                    },
-                    [&edge_count](const handle_t &l, const handle_t &h) {
-                        ++edge_count;
-                        return false;
-                    },
-                    [](void) { return false; },
-                    seeds,
-                    {},
-                    false); // don't use bidirectional search
-                // get another seed
-                if (unvisited.rank1(unvisited.size()) != 0) {
-                    uint64_t i = unvisited.select1(0);
-                    handle_t h = number_bool_packing::pack(i, false);
-                    seeds = {h};
+                if (use_bfs) {
+                    bfs(graph,
+                        [&graph, &unvisited, &flipped, &progress_reporting, &bfs_progress]
+                        (const handle_t &h, const uint64_t &r, const uint64_t &l, const uint64_t &d) {
+                            if (progress_reporting) {
+                                bfs_progress->increment(1);
+                            }
+                            uint64_t i = number_bool_packing::unpack_number(h);
+                            unvisited.set(i, 0);
+                            flipped.set(i, graph.get_is_reverse(h));
+                        },
+                        [&unvisited](const handle_t &h) {
+                            uint64_t i = number_bool_packing::unpack_number(h);
+                            return unvisited.at(i) == 0;
+                        },
+                        [&edge_count](const handle_t &l, const handle_t &h) {
+                            ++edge_count;
+                            return false;
+                        },
+                        [](void) { return false; },
+                        seeds,
+                        {},
+                        false); // don't use bidirectional search
+                    // get another seed
+                    if (unvisited.rank1(unvisited.size()) != 0) {
+                        uint64_t i = unvisited.select1(0);
+                        handle_t h = number_bool_packing::pack(i, false);
+                        seeds = {h};
+                    }
+                } else {
+                    dfs(graph,
+                        [&graph, &unvisited, &flipped, &progress_reporting, &bfs_progress]
+                        (const handle_t &h) {
+                            if (progress_reporting) {
+                                bfs_progress->increment(1);
+                            }
+                            uint64_t i = number_bool_packing::unpack_number(h);
+                            unvisited.set(i, 0);
+                            flipped.set(i, graph.get_is_reverse(h));
+                        },
+                        [&unvisited](const handle_t &h) {
+                            uint64_t i = number_bool_packing::unpack_number(h);
+                            return unvisited.at(i) == 0;
+                        },
+                        [](const handle_t& h) { return false; },
+                        [](void) { return false; },
+                        seeds);
+                    //{},
+                    //false); // don't use bidirectional search
+                    // get another seed
+                    if (unvisited.rank1(unvisited.size()) != 0) {
+                        uint64_t i = unvisited.select1(0);
+                        handle_t h = number_bool_packing::pack(i, false);
+                        seeds = {h};
+                    }
                 }
             }
 

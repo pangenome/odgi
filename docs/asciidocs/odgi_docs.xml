@@ -4,7 +4,7 @@
 <article xmlns="http://docbook.org/ns/docbook" xmlns:xl="http://www.w3.org/1999/xlink" version="5.0" xml:lang="en">
 <info>
 <title>Reference Documentation for ODGI v0.6.0</title>
-<date>2021-04-07</date>
+<date>2021-04-08</date>
 <author>
 <personname>
 <firstname>Simon Heumos, Andrea Guarracino, Erik Garrison</firstname>
@@ -1510,7 +1510,33 @@ This argument only works when <emphasis>-Y, --path-sgd</emphasis> was specified.
 <term><emphasis role="strong">-p, --prefix</emphasis>=<emphasis>STRING</emphasis></term>
 <listitem>
 <simpara>  Write each connected component in a file with the given prefix. The file for the component <literal>i</literal> will be named
-<literal>STRING.i.og</literal> (default: <literal>component</literal>)</simpara>
+<literal>STRING.i.og</literal> (default: <literal>component</literal>).</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-b, --biggest</emphasis>=<emphasis>N</emphasis></term>
+<listitem>
+<simpara>Specify the number of the biggest connected components to write, sorted by decreasing size (default: disabled, for writing them all).</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term><emphasis role="strong">-s, --sorting-criteria</emphasis>=<emphasis>C</emphasis></term>
+<listitem>
+<simpara>Specify how to sort the connected components by size:</simpara>
+<itemizedlist>
+<listitem>
+<simpara>p) path mass (total number of path bases) (default)</simpara>
+</listitem>
+<listitem>
+<simpara>l) graph length (number of node bases)</simpara>
+</listitem>
+<listitem>
+<simpara>n) number of nodes</simpara>
+</listitem>
+<listitem>
+<simpara>P) longest path</simpara>
+</listitem>
+</itemizedlist>
 </listitem>
 </varlistentry>
 <varlistentry>

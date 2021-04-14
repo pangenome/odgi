@@ -134,8 +134,8 @@ namespace odgi {
 
         graph_t graph;
         assert(argc > 0);
-        std::string infile = args::get(og_in_file);
-        if (!infile.empty()) {
+        if (!args::get(og_in_file).empty()) {
+            std::string infile = args::get(og_in_file);
             if (infile == "-") {
                 graph.deserialize(std::cin);
             } else {

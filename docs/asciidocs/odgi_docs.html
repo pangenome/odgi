@@ -2121,7 +2121,31 @@ This argument only works when <em>-Y, --path-sgd</em> was specified. Not applica
 <dt class="hdlist1"><strong>-p, --prefix</strong>=<em>STRING</em></dt>
 <dd>
 <p>  Write each connected component in a file with the given prefix. The file for the component <code>i</code> will be named
-<code>STRING.i.og</code> (default: <code>component</code>)</p>
+<code>STRING.i.og</code> (default: <code>component</code>).</p>
+</dd>
+<dt class="hdlist1"><strong>-b, --biggest</strong>=<em>N</em></dt>
+<dd>
+<p>Specify the number of the biggest connected components to write, sorted by decreasing size (default: disabled, for writing them all).</p>
+</dd>
+<dt class="hdlist1"><strong>-s, --sorting-criteria</strong>=<em>C</em></dt>
+<dd>
+<p>Specify how to sort the connected components by size:</p>
+<div class="ulist">
+<ul>
+<li>
+<p>p) path mass (total number of path bases) (default)</p>
+</li>
+<li>
+<p>l) graph length (number of node bases)</p>
+</li>
+<li>
+<p>n) number of nodes</p>
+</li>
+<li>
+<p>P) longest path</p>
+</li>
+</ul>
+</div>
 </dd>
 <dt class="hdlist1"><strong>-O, --optimize</strong></dt>
 <dd>
@@ -4983,7 +5007,7 @@ be selected. odgi test(1) depends on <a href="https://github.com/catchorg/Catch2
 </div>
 <div id="footer">
 <div id="footer-text">
-Last updated 2021-04-07 23:21:33 +0200
+Last updated 2021-04-08 23:20:26 +0200
 </div>
 </div>
 </body>

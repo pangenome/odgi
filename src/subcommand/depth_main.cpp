@@ -6,6 +6,8 @@
 #include "algorithms/bfs.hpp"
 #include <omp.h>
 
+#include "src/algorithms/subgraph/extract.hpp"
+
 namespace odgi {
 
     using namespace odgi::subcommand;
@@ -24,7 +26,7 @@ namespace odgi {
         args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
         args::ValueFlag<std::string> og_file(parser, "FILE", "compute path depths in this graph", {'i', "input"});
 
-        args::ValueFlag<std::string> subset_paths(parser, "FILE",
+        args::ValueFlag<std::string> _subset_paths(parser, "FILE",
                                                   "compute the depth considering only the paths specified in the FILE; "
                                                   "the file must contain one path name per line and a subset of all paths can be specified.",
                                                   {'s', "subset-paths"});
@@ -45,12 +47,25 @@ namespace odgi {
                                                    {'F', "path-pos-file"});
         args::ValueFlag<std::string> bed_input(parser, "FILE", "a BED file of ranges in paths in the graph",
                                                {'b', "bed-input"});
+
         args::Flag graph_depth(parser, "graph-depth",
                                "compute the depth on each node in the graph",
                                {'d', "graph-depth"});
-        args::ValueFlag<uint64_t> _smooth_window(parser, "N", "when using --graph-depth, report mean depth in this window size around each node",
-                                                {'w', "smooth-window"});
-        args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use", {'t', "threads"});
+
+        args::Flag summarize_depth(parser, "summarize-graph-depth",
+                                   "provide a summary of the depth distribution in the graph",
+                                   {'S', "summarize"});
+
+        args::ValueFlag<std::string> _windows_in(parser, "LEN:MIN:MAX",
+                                                "write a BED file of path intervals where the depth is between MIN and MAX, "
+                                                "merging regions not separated by more than LEN bp",
+                                                {'w', "windows-in"});
+        args::ValueFlag<std::string> _windows_out(parser, "LEN:MIN:MAX",
+                                                 "write a BED file of path intervals where the depth is outside of MIN and MAX, "
+                                                 "merging regions not separated by more than LEN bp",
+                                                 {'W', "windows-out"});
+
+        args::ValueFlag<uint64_t> _num_threads(parser, "N", "number of threads to use", {'t', "threads"});
 
         try {
             parser.ParseCLI(argc, argv);
@@ -72,10 +87,31 @@ namespace odgi {
             return 1;
         }
 
+        if (_windows_in && _windows_out) {
+            std::cerr << "[odgi::depth] error: please specify -w/--windows-in or -W/--windows-out, not both." << std::endl;
+            return 1;
+        }
+
+        uint64_t windows_in_len = 0, windows_in_min = 0, windows_in_max = 0;
+        if (_windows_in) {
+            if (!algorithms::check_and_get_windows_in_out_parameter(args::get(_windows_in), windows_in_len, windows_in_min, windows_in_max)) {
+                std::cerr << "[odgi::depth] error: please specify a valid string (LEN:MIN:MAX) for the -w/--windows-in option." << std::endl;
+                return 1;
+            }
+        }
+
+        uint64_t windows_out_len = 0, windows_out_min = 0, windows_out_max = 0;
+        if (_windows_out) {
+            if (!algorithms::check_and_get_windows_in_out_parameter(args::get(_windows_out), windows_out_len, windows_out_min, windows_out_max)) {
+                std::cerr << "[odgi::depth] error: please specify a valid string (LEN:MIN:MAX) for the -W/--windows-out option." << std::endl;
+                return 1;
+            }
+        }
+
         odgi::graph_t graph;
         assert(argc > 0);
-        std::string infile = args::get(og_file);
-        if (!infile.empty()) {
+        if (!args::get(og_file).empty()) {
+            const std::string infile = args::get(og_file);
             if (infile == "-") {
                 graph.deserialize(std::cin);
             } else {
@@ -85,15 +121,14 @@ namespace odgi {
             }
         }
 
-        uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
-        omp_set_num_threads(num_threads);
+        const uint64_t num_threads = args::get(_num_threads) ? args::get(_num_threads) : 1;
+        omp_set_num_threads((int) num_threads);
 
         std::vector<bool> paths_to_consider;
-
-        if (subset_paths) {
+        if (_subset_paths) {
             paths_to_consider.resize(graph.get_path_count() + 1, false);
 
-            std::ifstream refs(args::get(subset_paths).c_str());
+            std::ifstream refs(args::get(_subset_paths).c_str());
             std::string line;
             while (std::getline(refs, line)) {
                 if (!line.empty()) {
@@ -106,7 +141,6 @@ namespace odgi {
                 }
             }
         }
-
 
         // these options are exclusive (probably we should say with a warning)
         std::vector<odgi::pos_t> graph_positions;
@@ -162,10 +196,10 @@ namespace odgi {
                     exit(1);
                 } else {
                     path_positions.push_back({
-                                                     graph.get_path_handle(path_name),
-                                                     (vals.size() > 1 ? (uint64_t) std::stoi(vals[1]) : 0),
-                                                     (vals.size() == 3 ? vals[2] == "-" : false)
-                                             });
+                        graph.get_path_handle(path_name),
+                        (vals.size() > 1 ? (uint64_t) std::stoi(vals[1]) : 0),
+                        (vals.size() == 3 ? vals[2] == "-" : false)
+                    });
                 }
             }
         };
@@ -221,8 +255,9 @@ namespace odgi {
             }
         };
 
-        uint64_t smooth_window = _smooth_window ? args::get(_smooth_window) : 0;
-        if (graph_depth) {
+        if (summarize_depth) {
+            // we do nothing here, we iterate over the handles in the graph later
+        } else if (graph_depth) {
             graph.for_each_handle([&](const handle_t &h) {
                 add_graph_pos(graph, std::to_string(graph.get_id(h)));
             });
@@ -260,7 +295,7 @@ namespace odgi {
             while (std::getline(refs, line)) {
                 add_bed_range(graph, line);
             }
-        } else {
+        } else if (!_windows_in && !_windows_out){
             // using all the paths in the graph
             graph.for_each_path_handle(
                     [&](const path_handle_t &path) { add_bed_range(graph, graph.get_path_name(path)); });
@@ -299,8 +334,10 @@ namespace odgi {
             return walked;
         };
 
-        auto get_graph_node_coverage = [](const odgi::graph_t &graph, const nid_t node_id, const bool subset_paths,
+        auto get_graph_node_coverage = [](const odgi::graph_t &graph, const nid_t node_id,
                                           const std::vector<bool> paths_to_consider) {
+            const bool subset_paths = !paths_to_consider.empty();
+
             uint64_t node_coverage = 0;
             std::set<uint64_t> unique_paths;
 
@@ -316,55 +353,100 @@ namespace odgi {
             return make_pair(node_coverage, unique_paths.size());
         };
 
-        if (!graph_positions.empty()) {
-            if (!smooth_window) {
-                std::cout << "#graph_position\tcoverage\tcoverage_uniq" << std::endl;
-#pragma omp parallel for schedule(dynamic, 1)
-                for (auto &pos : graph_positions) {
-                    nid_t node_id = id(pos);
-
-                    auto coverage = get_graph_node_coverage(graph, node_id, subset_paths, paths_to_consider);
-
-#pragma omp critical (cout)
-                    std::cout << node_id << "," << offset(pos) << "," << (is_rev(pos) ? "-" : "+") << "\t"
-                              << coverage.first << "\t" << coverage.second << std::endl;
-                }
-            } else {
-                std::vector<uint64_t> raw_depths(graph.get_node_count());
-#pragma omp parallel for schedule(dynamic, 1)
-                for (auto &pos : graph_positions) {
-                    nid_t node_id = id(pos);
-                    auto coverage = get_graph_node_coverage(graph, node_id, subset_paths, paths_to_consider);
-                    raw_depths[node_id-1] = coverage.first;
-                }
-                std::cout << "#graph_position\tcoverage\tcoverage_smooth" << std::endl;
-#pragma omp parallel for schedule(dynamic, 1)
-                for (uint64_t i = 0; i < raw_depths.size(); ++i) {
-                    uint64_t sum = 0;
-                    uint64_t j = i >= smooth_window / 2 ? i - smooth_window / 2 : 0;
-                    uint64_t k = j + smooth_window <= raw_depths.size() ? j + smooth_window : raw_depths.size();
-                    uint64_t nodes = k - j;
-                    for ( ; j < k ; ++j ) {
-                        sum += raw_depths[j];
+        if (_windows_in || _windows_out) {
+            std::vector<path_handle_t> paths;
+            if (_subset_paths) {
+                graph.for_each_path_handle([&](const path_handle_t path) {
+                    if (paths_to_consider[as_integer(path)]){
+                        paths.push_back(path);
                     }
-                    double windowed_mean = (double) sum / (double) nodes;
+                });
+            } else {
+                paths.reserve(graph.get_path_count());
+                graph.for_each_path_handle([&](const path_handle_t path) {
+                    paths.push_back(path);
+                });
+            }
+
+            // precompute depths for all handles in parallel
+            std::vector<uint64_t> depths(graph.get_node_count() + 1);
+            graph.for_each_handle(
+                [&](const handle_t& h) {
+                    auto id = graph.get_id(h);
+                    if (id >= depths.size()) {
+                        // require optimized graph to use vector rather than a hash table
+                        std::cerr << "[odgi::depth] error: graph is not optimized, apply odgi sort -O" << std::endl;
+                        assert(false);
+                    }
+                    depths[id] = get_graph_node_coverage(graph, id, paths_to_consider).first;
+                }, true);
+
+            auto in_bounds =
+                [&](const handle_t &handle) {
+                    uint64_t coverage = depths[graph.get_id(handle)];
+                    return _windows_in ? (coverage >= windows_in_min && coverage <= windows_in_max) : (coverage < windows_out_min || coverage > windows_out_max);
+                };
+
+            std::cout << "#path\tstart\tend" << std::endl;
+
+            algorithms::windows_in_out(graph, paths, in_bounds, _windows_in ? windows_in_len : windows_out_len,
+                           [&](const std::vector<path_range_t>& path_ranges) {
 #pragma omp critical (cout)
-                    std::cout << i+1 << "\t"
-                              << raw_depths[i] << "\t"
-                              << windowed_mean << std::endl;
-                }
+                               for (auto path_range : path_ranges) {
+                                   std::cout << graph.get_path_name(path_range.begin.path) << "\t"
+                                             << path_range.begin.offset << "\t"
+                                             << path_range.end.offset << std::endl;
+                               }
+                           }, num_threads);
+        }
+
+        if (summarize_depth) {
+            std::cout << "#node.count\tgraph.length\tstep.count\tpath.length\tcoverage.node\tcoverage.bp" << std::endl;
+            std::atomic<uint64_t> step_count; step_count.store(0);
+            std::atomic<uint64_t> node_count; node_count.store(0);
+            std::atomic<uint64_t> path_length; path_length.store(0);
+            std::atomic<uint64_t> graph_length; graph_length.store(0);
+            graph.for_each_handle(
+                [&](const handle_t& h) {
+                    nid_t node_id = graph.get_id(h);
+                    auto c = get_graph_node_coverage(graph, node_id, paths_to_consider);
+                    step_count += c.first;
+                    ++node_count;
+                    auto l = graph.get_length(graph.get_handle(node_id));
+                    graph_length += l;
+                    path_length += l * c.first;
+                }, true);
+            std::cout << node_count << "\t"
+                      << graph_length << "\t"
+                      << step_count << "\t"
+                      << path_length << "\t"
+                      << (double)step_count / (double)node_count << "\t"
+                      << (double)path_length / (double)graph_length << std::endl;
+        }
+
+        if (!graph_positions.empty()) {
+            std::cout << "#node.id\tcoverage\tcoverage.uniq" << std::endl;
+#pragma omp parallel for schedule(dynamic, 1)
+            for (auto &pos : graph_positions) {
+                nid_t node_id = id(pos);
+
+                auto coverage = get_graph_node_coverage(graph, node_id, paths_to_consider);
+#pragma omp critical (cout)
+                std::cout << node_id << "\t"
+                          << coverage.first << "\t"
+                          << coverage.second << std::endl;
             }
         }
 
         if (!path_positions.empty()) {
-            std::cout << "#path_position\tcoverage\tcoverage_uniq" << std::endl;
+            std::cout << "#path.position\tcoverage\tcoverage.uniq" << std::endl;
 #pragma omp parallel for schedule(dynamic, 1)
             for (auto &path_pos : path_positions) {
                 pos_t pos = get_graph_pos(graph, path_pos);
 
                 nid_t node_id = id(pos);
 
-                auto coverage = get_graph_node_coverage(graph, node_id, subset_paths, paths_to_consider);
+                auto coverage = get_graph_node_coverage(graph, node_id, paths_to_consider);
 
 #pragma omp critical (cout)
                 std::cout << (graph.get_path_name(path_pos.path)) << "," << path_pos.offset << ","
@@ -374,7 +456,9 @@ namespace odgi {
         }
 
         if (!path_ranges.empty()) {
-            std::cout << "#path\tstart\tend\tmean_coverage" << std::endl;
+            const bool subset_paths = !paths_to_consider.empty();
+
+            std::cout << "#path\tstart\tend\tmean.coverage" << std::endl;
 #pragma omp parallel for schedule(dynamic, 1)
             for (auto &path_range : path_ranges) {
                 uint64_t start = path_range.begin.offset;
