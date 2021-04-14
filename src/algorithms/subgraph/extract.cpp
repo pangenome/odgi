@@ -201,6 +201,20 @@ namespace odgi {
             }
         }
 
+        void for_handle_in_path_range(const graph_t &source, path_handle_t path_handle, int64_t start, int64_t end,
+                                      const std::function<void(const handle_t&)>& lambda) {
+            uint64_t walked = 0;
+            auto path_end = source.path_end(path_handle);
+            for (step_handle_t cur_step = source.path_begin(path_handle);
+                 cur_step != path_end && walked <= end; cur_step = source.get_next_step(cur_step)) {
+                handle_t cur_handle = source.get_handle_of_step(cur_step);
+                walked += source.get_length(cur_handle);
+                if (walked > start) {
+                    lambda(cur_handle);
+                }
+            }
+        }
+
         /// We can accumulate a subgraph without accumulating all the edges between its nodes
         /// this helper ensures that we get the full set
         void add_connecting_edges_to_subgraph(const graph_t &source, graph_t &subgraph,
