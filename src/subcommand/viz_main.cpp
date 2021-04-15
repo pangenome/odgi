@@ -45,8 +45,8 @@ namespace odgi {
         args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
         args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the index from this file", {'i', "idx"});
         args::ValueFlag<std::string> png_out_file(parser, "FILE", "write the output (png) to this file", {'o', "out"});
-        args::ValueFlag<uint64_t> image_width(parser, "N", "width in pixels of output image", {'x', "width"});
-        args::ValueFlag<uint64_t> image_height(parser, "N", "height in pixels of output image", {'y', "height"});
+        args::ValueFlag<uint64_t> image_width(parser, "N", "width in pixels of output image [default: 1500]", {'x', "width"});
+        args::ValueFlag<uint64_t> image_height(parser, "N", "height in pixels of output image [default: 500]", {'y', "height"});
         args::ValueFlag<uint64_t> path_height(parser, "N", "path display height", {'P', "path-height"});
         args::ValueFlag<uint64_t> path_x_pad(parser, "N", "path x padding", {'X', "path-x-padding"});
         args::Flag pack_paths(parser, "bool", "pack the graphs rather than displaying a single path per row",{'R', "pack-paths"});
@@ -321,8 +321,8 @@ namespace odgi {
         uint64_t len_to_visualize = pangenomic_end_pos - pangenomic_start_pos + 1;
 
         // the math here only works if the image size is greater than or equal to the graph length
-        uint64_t width = std::min(len_to_visualize, (args::get(image_width) ? args::get(image_width) : 1000));
-        uint64_t height = std::min(len_to_visualize, (args::get(image_height) ? args::get(image_height) : 1000) + bottom_padding);
+        uint64_t width = std::min(len_to_visualize, (args::get(image_width) ? args::get(image_width) : 1500));
+        uint64_t height = std::min(len_to_visualize, (args::get(image_height) ? args::get(image_height) : 500) + bottom_padding);
 
         float scale_x = (float) width / (float) len_to_visualize;
         float scale_y = (float) height / (float) len_to_visualize;
