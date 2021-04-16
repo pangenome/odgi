@@ -186,13 +186,6 @@ int main_tension(int argc, char **argv) {
                 uint64_t nuc_dist = graph.get_length(h);
                 path_nuc_dist += nuc_dist;
                 cur_window_end += nuc_dist;
-                double path_layout_nuc_dist_ratio = (double) path_layout_dist / (double) path_nuc_dist;
-                bed.append(path_name,
-                           (cur_window_start - 1),
-                           cur_window_end,
-                           path_layout_dist,
-                           path_nuc_dist,
-                           path_layout_nuc_dist_ratio);
                 // TODO if we stepped over the given window size or if we are in node-sized-windows, we have to finish this one
             }
             // we add a new bed entry for each step
