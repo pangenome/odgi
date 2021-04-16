@@ -57,6 +57,7 @@ namespace odgi {
 
         args::ValueFlag<char> _color_by_prefix(parser, "C", "colors paths by their names looking at the prefix before the given character C",{'s', "color-by-prefix"});
         args::ValueFlag<std::string> _name_prefixes(parser, "FILE", "merge paths beginning with prefixes listed (one per line) in FILE", {'M', "prefix-merges"});
+        args::ValueFlag<std::string> _ignore_prefix(parser, "PREFIX", "ignore paths starting with the given PREFIX", {'I', "ignore-prefix"});
 
         /// Range selection
         args::ValueFlag<std::string> _nucleotide_range(parser, "STRING","nucleotide range to visualize: STRING=[PATH:]start-end. `*-end` for `[0,end]`; `start-*` for `[start,pangenome_length]`. If no PATH is specified, the nucleotide positions refer to the pangenome's sequence (i.e., the sequence obtained arranging all the graph's node from left to right).",{'r', "path-range"});
@@ -400,21 +401,33 @@ namespace odgi {
                 });
         }
 
+        std::string ignore_prefix = _ignore_prefix ? args::get(_ignore_prefix) : "";
+
         auto get_path_display_name =
             [&](const path_handle_t& p) {
-                if (group_paths) {
-                    return prefixes[path_group[as_integer(p) - 1]];
+                if (!ignore_prefix.empty()
+                    && graph.get_path_name(p).find(ignore_prefix) == 0) {
+                    return std::string();
                 } else {
-                    return graph.get_path_name(p);
+                    if (group_paths) {
+                        return prefixes[path_group[as_integer(p) - 1]];
+                    } else {
+                        return graph.get_path_name(p);
+                    }
                 }
             };
 
         auto get_path_idx =
             [&](const path_handle_t& p) {
-                if (group_paths) {
-                    return (int64_t)path_group[as_integer(p) - 1];
+                if (!ignore_prefix.empty()
+                    && graph.get_path_name(p).find(ignore_prefix) == 0) {
+                    return (int64_t)-1;
                 } else {
-                    return (int64_t)(as_integer(p) - 1);
+                    if (group_paths) {
+                        return (int64_t)path_group[as_integer(p) - 1];
+                    } else {
+                        return (int64_t)(as_integer(p) - 1);
+                    }
                 }
             };
 
@@ -460,10 +473,15 @@ namespace odgi {
 
                 path_count = rank_for_visualization;
             }else{
+                uint64_t rank_for_visualization = 0;
                 for (uint64_t i = 0; i < path_count; ++i) {
                     // todo here we need to do our grouping
-                    path_layout_y[i] = get_path_idx(as_path_handle(i+1));
+                    int64_t path_rank = get_path_idx(as_path_handle(i+1));
+                    if (path_rank >= 0 && path_layout_y[path_rank] < 0) {
+                        path_layout_y[path_rank] = rank_for_visualization++;
+                    }
                 }
+                path_count = rank_for_visualization;
             }
         } else { // pack the paths
             if (group_paths) {
