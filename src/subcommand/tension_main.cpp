@@ -133,40 +133,40 @@ int main_tension(int argc, char **argv) {
                 h_coords_start = layout.coords(h);
                 h_coords_end = layout.coords(graph.flip(h));
             }
-            // did we hit the last step?
-            if (graph.has_next_step(s)) {
-                step_handle_t next_s = graph.get_next_step(s);
-                handle_t next_h = graph.get_handle_of_step(next_s);
-                algorithms::xy_d_t next_h_coords_start;
-                algorithms::xy_d_t next_h_coords_end;
-                if (graph.get_is_reverse(next_h)) {
-                    next_h_coords_start = layout.coords(graph.flip(next_h));
-                    next_h_coords_end = layout.coords(next_h);
+            // did we hit the first step?
+            if (graph.has_previous_step(s)) {
+                step_handle_t prev_s = graph.get_previous_step(s);
+                handle_t prev_h = graph.get_handle_of_step(prev_s);
+                algorithms::xy_d_t prev_h_coords_start;
+                algorithms::xy_d_t prev_h_coords_end;
+                if (graph.get_is_reverse(prev_h)) {
+                    prev_h_coords_start = layout.coords(graph.flip(prev_h));
+                    prev_h_coords_end = layout.coords(prev_h);
                 } else {
-                    next_h_coords_start = layout.coords(next_h);
-                    next_h_coords_end = layout.coords(graph.flip(next_h));
+                    prev_h_coords_start = layout.coords(prev_h);
+                    prev_h_coords_end = layout.coords(graph.flip(prev_h));
                 }
                 double within_node_dist = 0;
                 double from_node_to_node_dist = 0;
-                if (!graph.get_is_reverse(h)) {
+                if (!graph.get_is_reverse(prev_h)) {
                     /// f + f
-                    if (!graph.get_is_reverse(next_h)) {
+                    if (!graph.get_is_reverse(h)) {
                         within_node_dist = algorithms::layout::coord_dist(h_coords_start, h_coords_end);
-                        from_node_to_node_dist = algorithms::layout::coord_dist(h_coords_end, next_h_coords_start);
+                        from_node_to_node_dist = algorithms::layout::coord_dist(prev_h_coords_end, h_coords_start);
                     } else {
                         /// f + r
                         within_node_dist = algorithms::layout::coord_dist(h_coords_start, h_coords_end);
-                        from_node_to_node_dist = algorithms::layout::coord_dist(h_coords_end, next_h_coords_end);
+                        from_node_to_node_dist = algorithms::layout::coord_dist(prev_h_coords_end, h_coords_end);
                     }
                 } else {
                     /// r + r
-                    if (graph.get_is_reverse(next_h)) {
+                    if (graph.get_is_reverse(h)) {
                         within_node_dist = algorithms::layout::coord_dist(h_coords_end, h_coords_start);
-                        from_node_to_node_dist = algorithms::layout::coord_dist(h_coords_start, next_h_coords_start);
+                        from_node_to_node_dist = algorithms::layout::coord_dist(prev_h_coords_start, h_coords_end);
                     } else {
                         /// r + f
                         within_node_dist = algorithms::layout::coord_dist(h_coords_end, h_coords_start);
-                        from_node_to_node_dist = algorithms::layout::coord_dist(h_coords_start, next_h_coords_end);
+                        from_node_to_node_dist = algorithms::layout::coord_dist(prev_h_coords_start, h_coords_start);
                     }
                 }
                 path_layout_dist += within_node_dist;
@@ -174,32 +174,6 @@ int main_tension(int argc, char **argv) {
                 uint64_t nuc_dist = graph.get_length(h);
                 path_nuc_dist += nuc_dist;
                 cur_window_end += nuc_dist;
-                // we add a new bed entry for each step
-                if (node_sized_windows_) {
-                    double path_layout_nuc_dist_ratio = (double) path_layout_dist / (double) path_nuc_dist;
-                    bed.append(path_name,
-                               (cur_window_start - 1),
-                               cur_window_end,
-                               path_layout_dist,
-                               path_nuc_dist,
-                               path_layout_nuc_dist_ratio);
-                    cur_window_start = cur_window_end + 1;
-                    cur_window_end = cur_window_start - 1;
-                    path_layout_dist = 0;
-                    path_nuc_dist = 0;
-                } else if ((cur_window_end - cur_window_start + 1) >= window_size_) {
-                    double path_layout_nuc_dist_ratio = (double) path_layout_dist / (double) path_nuc_dist;
-                    bed.append(path_name,
-                               (cur_window_start - 1),
-                               cur_window_end,
-                               path_layout_dist,
-                               path_nuc_dist,
-                               path_layout_nuc_dist_ratio);
-                    cur_window_start = cur_window_end + 1;
-                    cur_window_end = cur_window_start - 1;
-                    path_layout_dist = 0;
-                    path_nuc_dist = 0;
-                }
             } else {
                 // we only take a look at the current node
                 /// f
@@ -219,8 +193,47 @@ int main_tension(int argc, char **argv) {
                            path_layout_dist,
                            path_nuc_dist,
                            path_layout_nuc_dist_ratio);
+                // TODO if we stepped over the given window size or if we are in node-sized-windows, we have to finish this one
+            }
+            // we add a new bed entry for each step
+            if (node_sized_windows_) {
+                double path_layout_nuc_dist_ratio = (double) path_layout_dist / (double) path_nuc_dist;
+                bed.append(path_name,
+                           (cur_window_start - 1),
+                           cur_window_end,
+                           path_layout_dist,
+                           path_nuc_dist,
+                           path_layout_nuc_dist_ratio);
+                cur_window_start = cur_window_end + 1;
+                cur_window_end = cur_window_start - 1;
+                path_layout_dist = 0;
+                path_nuc_dist = 0;
+                // we only add a new entry of the current node exceeds the window size
+            } else if ((cur_window_end - cur_window_start + 1) >= window_size_) {
+                double path_layout_nuc_dist_ratio = (double) path_layout_dist / (double) path_nuc_dist;
+                bed.append(path_name,
+                           (cur_window_start - 1),
+                           cur_window_end,
+                           path_layout_dist,
+                           path_nuc_dist,
+                           path_layout_nuc_dist_ratio);
+                cur_window_start = cur_window_end + 1;
+                cur_window_end = cur_window_start - 1;
+                path_layout_dist = 0;
+                path_nuc_dist = 0;
             }
         });
+        /// we have to add the last window
+        // we add a new bed entry for each step
+        if (!node_sized_windows_) {
+            double path_layout_nuc_dist_ratio = (double) path_layout_dist / (double) path_nuc_dist;
+            bed.append(path_name,
+                       (cur_window_start - 1),
+                       cur_window_end,
+                       path_layout_dist,
+                       path_nuc_dist,
+                       path_layout_nuc_dist_ratio);
+        }
         if (progress) {
             progress_meter->increment(1);
         }
