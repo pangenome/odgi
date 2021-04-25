@@ -37,7 +37,7 @@ You'll need to set this flag to 0 or remove and rebuild your build directory if 
 Static builds are unlikely to be supported on OSX, and require appropriate static libraries on linux.
 
 It may be necessary to install several system-level libraries to build odgi.
-On Ubuntu 20.04, these can be installed using apt: `sudo apt install build-essential cmake python3-distutils python3-dev`.
+On Ubuntu 20.04, these can be installed using apt: `sudo apt install build-essential cmake python3-distutils python3-dev libjemalloc-dev`.
 
 ## supported functionality
 
