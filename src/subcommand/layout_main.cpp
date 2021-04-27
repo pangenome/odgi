@@ -205,7 +205,7 @@ int main_layout(int argc, char **argv) {
         path_index.load(in);
         in.close();
     } else {
-        path_index.from_handle_graph(graph);
+        path_index.from_handle_graph(graph, num_threads);
     }
     // do we only want so sample from a subset of paths?
     if (p_sgd_in_file) {
