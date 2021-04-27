@@ -203,7 +203,7 @@ int main_sort(int argc, char** argv) {
             path_index.load(in);
             in.close();
         } else {
-            path_index.from_handle_graph(graph);
+            path_index.from_handle_graph(graph, num_threads);
         }
         fresh_path_index = true;
         // do we only want so sample from a subset of paths?
@@ -353,7 +353,7 @@ int main_sort(int argc, char** argv) {
                     case 'Y': {
                         if (!fresh_path_index) {
                             path_index.clean();
-                            path_index.from_handle_graph(graph);
+                            path_index.from_handle_graph(graph, num_threads);
                         }
                         order = algorithms::path_linear_sgd_order(graph,
                                                                   path_index,
