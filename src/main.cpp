@@ -1,10 +1,5 @@
 #include <iostream>
 #include <fstream>
-#include <ctime>
-#include <cstdio>
-#include <csignal>
-#include <getopt.h>
-#include <sys/stat.h>
 
 // New subcommand system provides all the subcommands that used to live here
 #include "subcommand/subcommand.hpp"
@@ -14,7 +9,7 @@ using namespace std;
 using namespace odgi;
 
 void odgi_help(char** argv) {
-    cerr << "odgi: dynamic succinct variation graph tool, version " << Version::get_short() << endl
+    cerr << "odgi: optimized dynamic genome/graph implementation, version " << Version::get_short() << endl
          << endl
          << "usage: " << argv[0] << " <command> [options]" << endl
          << endl
@@ -29,7 +24,7 @@ void odgi_help(char** argv) {
         cerr << "  -- " << name << command.get_description() << endl;
      });
      
-     cerr << endl << "For more commands, type `odgi help`." << endl;
+     //cerr << endl << "For more commands, type `odgi help`." << endl;
  }
 
 // We make sure to compile main for the lowest common denominator architecture.
@@ -46,7 +41,7 @@ int main(int argc, char *argv[]) {
         return 1;
     }
     
-    auto* subcommand = odgi::subcommand::Subcommand::get(argc, argv);
+    const auto* subcommand = odgi::subcommand::Subcommand::get(argc, argv);
     if (subcommand != nullptr) {
         // We found a matching subcommand, so run it
         return (*subcommand)(argc, argv);
