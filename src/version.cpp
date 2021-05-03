@@ -16,9 +16,9 @@
 
 // Define a way to quote macro values.
 // See https://stackoverflow.com/a/196093
-#define QUOTE(arg) #arg
+//#define QUOTE(arg) #arg
 // We need another level to get the macro's value and not its name.
-#define STR(macro) QUOTE(macro)
+//#define STR(macro) QUOTE(macro)
 
 namespace odgi {
 
