@@ -7,12 +7,14 @@ Welcome to odgi's documentation!
 ================================
 
 .. toctree::
-   :maxdepth: 2
+   :maxdepth: 1
 
    rst/install
    rst/tutorial
    rst/glossary
    rst/api
+   handlegraph.md
+   odgi_bin.md
 
 ------
 Index
