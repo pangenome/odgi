@@ -52,6 +52,10 @@ namespace odgi {
                                "compute the depth on each node in the graph",
                                {'d', "graph-depth"});
 
+        args::Flag path_depth(parser, "path-depth",
+                              "compute the depth on each base in each path in the graph",
+                              {'P', "path-depth"});
+
         args::Flag summarize_depth(parser, "summarize-graph-depth",
                                    "provide a summary of the depth distribution in the graph",
                                    {'S', "summarize"});
@@ -261,6 +265,29 @@ namespace odgi {
             graph.for_each_handle([&](const handle_t &h) {
                 add_graph_pos(graph, std::to_string(graph.get_id(h)));
             });
+        } else if (path_depth) {
+            std::vector<path_handle_t> paths;
+            graph.for_each_path_handle([&paths](const path_handle_t& path) { paths.push_back(path); });
+            // for each path handle
+#pragma omp parallel for schedule(dynamic, 1)
+            for (auto& path : paths) {
+                std::stringstream ss;
+                ss << graph.get_path_name(path);
+                // for each step
+                uint64_t pos = 0;
+                graph.for_each_step_in_path(
+                    path,
+                    [&](const step_handle_t& step) {
+                        handle_t handle = graph.get_handle_of_step(step);
+                        auto coverage = graph.get_step_count(handle) - 1; // don't count self
+                        auto next_pos = pos + graph.get_length(handle);
+                        while (pos++ < next_pos) {
+                            ss << " " << coverage;
+                        }
+                    });
+#pragma omp critical (cout)
+                std::cout << ss.str() << std::endl;
+            }
         } else if (graph_pos) {
             // if we're given a graph_pos, we'll convert it into a path pos
             add_graph_pos(graph, args::get(graph_pos));
