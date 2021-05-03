@@ -13,7 +13,7 @@ namespace subcommand {
 std::ostream& operator<<(std::ostream& out, const CommandCategory& category) {
     switch(category) {
     case PIPELINE:
-        out << "overview of available subcommands";
+        out << "overview of available commands";
         break;
     case TOOLKIT:
         out << "useful graph tools";
@@ -48,7 +48,7 @@ Subcommand::Subcommand(const std::string& name, std::string description,
 }
 
 Subcommand::Subcommand(const std::string& name, std::string description,
-    std::function<int(int, char**)> main_function) : Subcommand(name, description, WIDGET, main_function) {
+    std::function<int(int, char**)> main_function) : Subcommand(name, std::move(description), WIDGET, std::move(main_function)) {
     // Nothing to do!
 }
 

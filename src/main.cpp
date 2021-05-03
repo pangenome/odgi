@@ -14,17 +14,17 @@ void odgi_help(char** argv) {
          << "usage: " << argv[0] << " <command> [options]" << endl
          << endl
          << odgi::subcommand::PIPELINE << ":" << endl;
-         
+
     odgi::subcommand::Subcommand::for_each(odgi::subcommand::PIPELINE, [](const odgi::subcommand::Subcommand& command) {
         // Announce every subcommand we have
-        
+
         // Pad all the names so the descriptions line up
         string name = command.get_name();
         name.resize(14, ' ');
         cerr << "  -- " << name << command.get_description() << endl;
      });
-     
-     //cerr << endl << "For more commands, type `odgi help`." << endl;
+
+     cerr << endl;// << "For more commands, type `odgi help`." << endl;
  }
 
 // We make sure to compile main for the lowest common denominator architecture.
@@ -32,7 +32,6 @@ void odgi_help(char** argv) {
 int main(int argc, char *argv[]) __attribute__((__target__("arch=x86-64")));
 
 int main(int argc, char *argv[]) {
-
     // set a higher value for tcmalloc warnings
     setenv("TCMALLOC_LARGE_ALLOC_REPORT_THRESHOLD", "1000000000000000", 1);
 
@@ -40,15 +39,14 @@ int main(int argc, char *argv[]) {
         odgi_help(argv);
         return 1;
     }
-    
+
     const auto* subcommand = odgi::subcommand::Subcommand::get(argc, argv);
     if (subcommand != nullptr) {
         // We found a matching subcommand, so run it
         return (*subcommand)(argc, argv);
     } else {
         // No subcommand found
-        cerr << "[odgi] error: command '" << argv[1] << "' not found. Type `odgi` to list the available commands." << endl;
+        cerr << "[odgi] error: command '" << argv[1] << "' not found.\n\nType `odgi` to list the available commands.\n" << endl;
         return 1;
     }
-
 }
