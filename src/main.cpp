@@ -47,9 +47,7 @@ int main(int argc, char *argv[]) {
         return (*subcommand)(argc, argv);
     } else {
         // No subcommand found
-        string command = argv[1];
-        cerr << "error:[odgi] command " << command << " not found" << endl;
-        odgi_help(argv);
+        cerr << "[odgi] error: command '" << argv[1] << "' not found. Type `odgi` to list the available commands." << endl;
         return 1;
     }
 
