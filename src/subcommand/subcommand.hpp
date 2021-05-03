@@ -79,7 +79,7 @@ public:
      * the given category, with the given priority (lower is better), which
      * calls the given main function when invoked.
      */
-    Subcommand(std::string name, std::string description,
+    Subcommand(const std::string& name, std::string description,
         CommandCategory category, int priority,
         std::function<int(int, char**)> main_function);
     
@@ -88,7 +88,7 @@ public:
      * the given category, with worst priority, which calls the given main
      * function when invoked.
      */
-    Subcommand(std::string name, std::string description,
+    Subcommand(const std::string& name, std::string description,
         CommandCategory category,
         std::function<int(int, char**)> main_function);
     
@@ -97,7 +97,7 @@ public:
      * the WIDGET category, with worst priority, which calls the given main
      * function when invoked.
      */
-    Subcommand(std::string name, std::string description,
+    Subcommand(const std::string& name, std::string description,
         std::function<int(int, char**)> main_function);
         
     /**

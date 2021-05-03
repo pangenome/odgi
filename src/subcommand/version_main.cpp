@@ -36,10 +36,6 @@ namespace odgi {
             std::cerr << parser;
             return 1;
         }
-        if (argc==1) {
-            std::cout << parser;
-            return 1;
-        }
 
         if (version) {
             std::cout << Version::get_version() << endl;
@@ -54,8 +50,7 @@ namespace odgi {
         return 0;
     }
 
-    static Subcommand odgi_version("version",
-            "get the git version of odgi",
-                                     PIPELINE, 3, main_version);
+    static Subcommand odgi_version("version", "get the git version of odgi",
+                                   PIPELINE, 3, main_version);
 
 }
