@@ -20,21 +20,21 @@ namespace xp {
     }
 
     /// build the graph from a graph handle
-    void XP::from_handle_graph(const PathHandleGraph &graph) {
+    void XP::from_handle_graph(const PathHandleGraph &graph, const uint64_t& nthreads) {
         std::string basename;
-        from_handle_graph(graph, basename);
+        from_handle_graph(graph, basename, nthreads);
     }
 
-    void XP::from_handle_graph(const PathHandleGraph &graph, std::string basename) {
+    void XP::from_handle_graph(const PathHandleGraph &graph, std::string basename, const uint64_t& nthreads) {
         // create temporary file for path names
         if (basename.empty()) {
             basename = temp_file::create();
         }
-        from_handle_graph_impl(graph, basename);
+        from_handle_graph_impl(graph, basename, nthreads);
         temp_file::cleanup(); // clean up our temporary files
     }
 
-    void XP::from_handle_graph_impl(const PathHandleGraph &graph, const std::string& basename) {
+    void XP::from_handle_graph_impl(const PathHandleGraph &graph, const std::string& basename, const uint64_t& nthreads) {
         std::string path_names;
         // the graph must be compacted for this to work
         sdsl::int_vector<> position_map;
@@ -114,7 +114,7 @@ namespace xp {
         // read file and construct compressed suffix array
         sdsl::construct(pn_csa, path_name_file, 1);
         // we need to take care of the node->path vectors
-        node_path_ms.index(get_thread_count(), graph.get_node_count() + 1);
+        node_path_ms.index(nthreads, graph.get_node_count() + 1);
         sdsl::util::assign(nr_iv, sdsl::int_vector<>(np_size));
         sdsl::util::assign(np_bv, sdsl::bit_vector(np_size));
         sdsl::util::assign(npi_iv, sdsl::int_vector<>(np_size));
@@ -794,15 +794,5 @@ namespace xp {
 
             return temp_dir;
         }
-    }
-
-    int get_thread_count() {
-        int thread_count = 1;
-#pragma omp parallel
-        {
-#pragma omp master
-            thread_count = omp_get_num_threads();
-        }
-        return thread_count;
     }
 }

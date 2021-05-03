@@ -21,6 +21,7 @@ namespace odgi {
         args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
         args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
         args::ValueFlag<std::string> idx_out_file(parser, "FILE", "store the index in this file", {'o', "out"});
+        args::ValueFlag<std::uint64_t> nthreads(parser, "N", "number of threads to use for path index generation", {'t', "threads"});
 
         try {
             parser.ParseCLI(argc, argv);
@@ -66,7 +67,11 @@ namespace odgi {
         }
 
         XP path_index;
-        path_index.from_handle_graph(graph);
+        uint64_t number_threads = 1;
+        if (nthreads) {
+            number_threads = args::get(nthreads);
+        }
+        path_index.from_handle_graph(graph, number_threads);
         size_t path_count = path_index.path_count;
         if (path_count == 1) {
             std::cout << "Indexed 1 path." << std::endl;

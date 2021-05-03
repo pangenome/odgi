@@ -186,7 +186,7 @@ TEST_CASE("Sorting a graph with paths 1 node long", "[sort]") {
             };
 
     xp::XP path_index;
-    path_index.from_handle_graph(graph);
+    path_index.from_handle_graph(graph, 1);
 
     uint64_t sum_path_step_count = get_sum_path_step_count(path_sgd_use_paths, path_index);
     uint64_t path_sgd_min_term_updates = sum_path_step_count;//p_sgd_min_term_updates * sum_path_step_count;
