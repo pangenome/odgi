@@ -48,7 +48,7 @@ Subcommand::Subcommand(const std::string& name, std::string description,
 }
 
 Subcommand::Subcommand(const std::string& name, std::string description,
-    std::function<int(int, char**)> main_function) : Subcommand(name, std::move(description), WIDGET, std::move(main_function)) {
+    std::function<int(int, char**)> main_function) : Subcommand(name, description, WIDGET, main_function) {
     // Nothing to do!
 }
 
@@ -100,20 +100,20 @@ void Subcommand::for_each(CommandCategory category, const std::function<void(con
 
         // We will store them with their priorities and sort them.
         // Easier than writing a custom comparator.
-        std::vector<std::pair<int, const Subcommand*>> by_priority;
+        std::vector<std::pair<std::string, const Subcommand*>> by_priority;
 
         for_each([&](const Subcommand& command) {
             // Loop over all the subcommands
             if (command.category == category) {
                 // And add the ones we care about by priority
-                by_priority.push_back(std::make_pair(command.priority, &command));
+                by_priority.emplace_back(command.get_name(), &command);
             }
         });
 
         std::sort(by_priority.begin(), by_priority.end());
 
+        // Now in order of decreasing priority
         for (auto& kv : by_priority) {
-            // Now in order of decreasing priority
             // Run the lambda
             lambda(*kv.second);
         }
