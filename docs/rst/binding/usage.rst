@@ -2,16 +2,22 @@
 Usage
 ######
 
-.. TODO link to other pages
-Make sure to install ``odgi`` (see ::ref rst/installation.rst).
+First, make sure you have installed ``odgi`` (see :ref:`installation`).
 
-To import ``odgi`` in ``Python``, make sure that the compiled ``lib/odgi.cpython*.so`` file is on your ``PYTHONPATH`` or
-added to your ``Python`` path through ``sys.path.append``..
+Then, export the following
 
-For example, assuming that your current working directory is the root of the ``odgi`` project:
+.. code-block:: bash
+
+    export LD_PRELOAD=/lib/x86_64-linux-gnu/libjemalloc.so.2
+
+to tell the dynamic linker to bind symbols provided by the ``jemalloc`` shared library before other libraries.
+
+To import ``odgi`` in ``Python``, make sure that the compiled ``lib/odgi.cpython*.so`` file is in your ``PYTHONPATH`` or
+added to your ``Python`` path through ``sys.path.append``. For example, assuming that your current working directory is
+the root of the ``odgi`` project, the following code should not lead to errors:
 
 .. code-block:: python
 
-   import sys
-   sys.path.append("./lib")
-   import odgi
+    import sys
+    sys.path.append("./lib")
+    import odgi
