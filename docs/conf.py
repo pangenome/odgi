@@ -38,7 +38,7 @@ release = u''
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'myst_parser']
+extensions = ['sphinx.ext.autodoc', 'm2r2']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -138,7 +138,9 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('odgi_bin', 'odgi', u'odgi Documentation',
+    ('md/odgi_bin', 'odgi_bin', u'odgi Documentation',
+     [author], 1),
+    ('md/odgi', 'odgi', u'odgi Documentation',
      [author], 1)
 ]
 

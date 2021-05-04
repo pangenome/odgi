@@ -1,0 +1,128 @@
+'\" t
+.\"     Title: odgi squeeze
+.\"    Author: Andrea Guarracino
+.\" Generator: Asciidoctor 2.0.12
+.\"      Date: 2021-03-12
+.\"    Manual: odgi squeeze
+.\"    Source: odgi v0.6.0
+.\"  Language: English
+.\"
+.TH "ODGI_SQUEEZE" "1" "2021-03-12" "odgi v0.6.0" "odgi squeeze"
+.ie \n(.g .ds Aq \(aq
+.el       .ds Aq '
+.ss \n[.ss] 0
+.nh
+.ad l
+.de URL
+\fI\\$2\fP <\\$1>\\$3
+..
+.als MTO URL
+.if \n[.g] \{\
+.  mso www.tmac
+.  am URL
+.    ad l
+.  .
+.  am MTO
+.    ad l
+.  .
+.  LINKSTYLE blue R < >
+.\}
+.SH "NAME"
+odgi_squeeze \- squeezes multiple graphs into the same file
+.SH "SYNOPSIS"
+.sp
+\fBodgi squeeze\fP [\fB\-f, \-\-input\-graphs\fP=\fIFILE\fP] [\fB\-o, \-\-out\fP=\fIFILE\fP] [\fIOPTION\fP]...
+.SH "DESCRIPTION"
+.sp
+The odgi squeeze(1) command merges multiple graphs into the same file.
+.SH "OPTIONS"
+.SS "Graph Files IO"
+.sp
+\fB\-f, \-\-input\-graphs\fP=\fIFILE\fP
+.RS 4
+Input file containing the list of graphs to squeeze into the same file. The file must contain one path per line.
+.RE
+.sp
+\fB\-o, \-\-out\fP=\fIFILE\fP
+.RS 4
+Store all the input graphs in this file. The file name usually ends with \fI.og\fP.
+.RE
+.SS "Squeeze Options"
+.sp
+\fB\-s, \-\-rank\-suffix\fP=\fISTRING\fP
+.RS 4
+Add the separator and the input file rank as suffix to the path names (to avoid path name collisions).
+.RE
+.sp
+\fB\-O, \-\-optimize\fP
+.RS 4
+Compact the node ID space in each input file before imploding.
+.RE
+.SS "Processing Information"
+.sp
+\fB\-P, \-\-progress\fP
+.RS 4
+Print information about the progress to stderr.
+.RE
+.SS "Program Information"
+.sp
+\fB\-h, \-\-help\fP
+.RS 4
+Print a help message for \fBodgi squeeze\fP.
+.RE
+.SH "EXIT STATUS"
+.sp
+\fB0\fP
+.RS 4
+Success.
+.RE
+.sp
+\fB1\fP
+.RS 4
+Failure (syntax or usage error; parameter error; file processing failure; unexpected error).
+.RE
+.SH "BUGS"
+.sp
+Refer to the \fBodgi\fP issue tracker at \c
+.URL "https://github.com/vgteam/odgi/issues" "" "."
+.SH "AUTHORS"
+.sp
+\fBodgi squeeze\fP was written by Andrea Guarracino.
+.SH "RESOURCES"
+.sp
+\fBProject web site:\fP \c
+.URL "https://github.com/vgteam/odgi" "" ""
+.sp
+\fBGit source repository on GitHub:\fP \c
+.URL "https://github.com/vgteam/odgi" "" ""
+.sp
+\fBGitHub organization:\fP \c
+.URL "https://github.com/vgteam" "" ""
+.sp
+\fBDiscussion list / forum:\fP \c
+.URL "https://github.com/vgteam/odgi/issues" "" ""
+.SH "COPYING"
+.sp
+The MIT License (MIT)
+.sp
+Copyright (c) 2019 Erik Garrison
+.sp
+Permission is hereby granted, free of charge, to any person obtaining a copy of
+this software and associated documentation files (the "Software"), to deal in
+the Software without restriction, including without limitation the rights to
+use, copy, modify, merge, publish, distribute, sublicense, and/or sell copies of
+the Software, and to permit persons to whom the Software is furnished to do so,
+subject to the following conditions:
+.sp
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+.sp
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY, FITNESS
+FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR
+COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER
+IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN
+CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+.SH "AUTHOR"
+.sp
+Andrea Guarracino
