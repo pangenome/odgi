@@ -25,10 +25,7 @@ array into which we write variable length integers to represent
    rst/quick_start
    rst/use_cases
    rst/commands
-
-   .. rst/tutorial
-   .. rst/glossary
-   .. rst/api
+   rst/binding
 
 ------
 Index

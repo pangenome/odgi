@@ -1,3 +1,4 @@
+# how to (the German way)
 ## tools
 pandoc
 pip install sphinx --user
@@ -24,3 +25,24 @@ man ./sphinx_build_man/odgi.1
 sphinx-build -b html ./ sphinx_build
 ### disable caching
 rm -rf sphinx_build && sphinx-build -b html ./ sphinx_build
+
+
+
+# how to (the Italian way)
+Assuming you have Python already, install Sphinx:
+
+```
+pip install sphinx
+```
+
+Then, go into your documentation directory
+
+```
+cd docs
+```
+
+and edit your `*.rst` files. Finally, build them to see how they look:
+
+```
+make html
+```
