@@ -9,7 +9,7 @@ Installation
 .. ========
 
 It may be necessary to install several system-level libraries to build ``odgi``.
-On ``Ubuntu 20.04``, these can be installed using ``apt``:
+On ``Ubuntu``, these can be installed using ``apt``:
 
 .. code-block:: bash
 

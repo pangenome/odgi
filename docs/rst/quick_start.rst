@@ -58,7 +58,7 @@ The path's names are:
     gi|528476637:32549024-32560088
     gi|157702218:147985-163915
 
-We can obtain their sequences in FASTA format:
+We can obtain their sequences in ``FASTA`` format:
 
 .. code-block:: bash
 
@@ -70,7 +70,7 @@ We can obtain their sequences in FASTA format:
     >gi|568815592:32578768-32589835
     ATTTAACTCCATCTTTGAGAAACATTTAATAATGTAATGTGTTTGTCATACAGGGTGAATACAGATGCACGGG...
 
-To see a 1-dimensional visualization of the graph, execute
+To visualize the graph, execute
 
 .. code-block:: bash
 
