@@ -1,6 +1,6 @@
 .. meta::
    :description: odgi: optimized dynamic genome/graph implementation
-   :keywords: variation graph, pangenome graph, de-novo assembly
+   :keywords: variation graph, pangenome graph
 
 ================
 Welcome to odgi.
@@ -24,7 +24,7 @@ array into which we write variable length integers to represent
 
     rst/installation
     rst/quick_start
-    rst/use_cases
+    rst/tutorials
     rst/commands
     rst/binding
 
