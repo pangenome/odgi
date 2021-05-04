@@ -19,13 +19,14 @@ array into which we write variable length integers to represent
 
 
 .. toctree::
-   :maxdepth: 1
+    :maxdepth: 1
+    :hidden:
 
-   rst/installation
-   rst/quick_start
-   rst/use_cases
-   rst/commands
-   rst/binding
+    rst/installation
+    rst/quick_start
+    rst/use_cases
+    rst/commands
+    rst/binding
 
 ------
 Index
