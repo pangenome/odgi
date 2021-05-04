@@ -20,8 +20,8 @@ sys.path.insert(0, os.path.abspath('../lib/'))
 # -- Project information -----------------------------------------------------
 
 project = u'odgi'
-copyright = u'2020, vgteam'
-author = u'vgteam'
+copyright = u'2021, Erik Garrison'
+author = u'Andrea Guarracino, Simon Heumos, ... , Pjotr Prince, Erik Garrison'
 
 # The short X.Y version
 version = u''
@@ -128,8 +128,8 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'odgi.tex', u'odgi Documentation',
-     u'vgteam', 'manual'),
+    (master_doc, 'odgi.tex', u'odgi documentation',
+     u'Andrea Guarracino, Simon Heumos, ... , Pjotr Prince, Erik Garrison', 'manual'),
 ]
 
 
@@ -138,9 +138,9 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('md/odgi_bin', 'odgi_bin', u'odgi Documentation',
+    ('md/odgi_bin', 'odgi_bin', u'odgi documentation',
      [author], 1),
-    ('md/odgi', 'odgi', u'odgi Documentation',
+    ('md/odgi', 'odgi', u'odgi documentation',
      [author], 1)
 ]
 

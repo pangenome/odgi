@@ -1,46 +1,27 @@
-#########
+############
 Installation
-#########
+############
 
-=================
-Build directions
-=================
+.. ========
+.. Building
+.. ========
 
-It is straightforward to build ODGI on a unix-based machine.
-First, obtain a copy of the repository and its submodules:
+It may be necessary to install several system-level libraries to build ``odgi``.
+On ``Ubuntu 20.04``, these can be installed using ``apt``:
+
+.. code-block:: bash
+
+   sudo apt install build-essential cmake python3-distutils python3-dev libjemalloc-dev
+
+Then, obtain a copy of the repository and its submodules:
 
 .. code-block:: bash 
 
    git clone --recursive https://github.com/pangenome/odgi.git
    cd odgi
 
-Then build through cmake:
+Finally, build ``odgi`` using ``cmake``:
 
 .. code-block:: bash
 
-   mkdir build
-   cd build
-   cmake ..
-   make
-
-To make a local copy of the documentation:
-
-.. code-block:: bash
-
-   cd docs
-   make html
-
-================
-Python Usage
-================
-
-To import ODGI in python, make sure that the compiled ``lib/odgi.cpython*.so`` file is on your `PYTHONPATH` or added to your python path through `sys.path.append` and run ``import odgi``.
-
-For example, assuming that your current working directory is the root of the odgi project:
-
-.. code-block:: python
-
-   import sys
-   sys.path.append("./lib")
-   import odgi
-
+   cmake -H. -Bbuild && cmake --build build -- -j 2
