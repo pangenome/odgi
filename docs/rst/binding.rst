@@ -6,7 +6,7 @@ Python Binding
     :maxdepth: 1
 
 
-    binding/installation
+    binding/usage
     binding/tutorial
     binding/glossary
     binding/api
