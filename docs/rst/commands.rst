@@ -1,10 +1,9 @@
 =========
-Man Pages
+Commands
 =========
 
 .. toctree::
     :maxdepth: 1
 
-    odgi/odgi
-    odgi/odgi_bin
+    commands/odgi_bin
 

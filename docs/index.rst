@@ -9,11 +9,11 @@ Welcome to odgi's documentation!
 .. toctree::
    :maxdepth: 1
 
-   rst/install
+   rst/installation
    rst/tutorial
    rst/glossary
    rst/api
-   rst/man_pages
+   rst/commands
 
 ------
 Index

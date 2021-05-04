@@ -1,5 +1,6 @@
-Setup
-********
+#########
+Installation
+#########
 
 =================
 Build directions
