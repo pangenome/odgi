@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<?asciidoc-toc?>
+<?asciidoc-numbered?>
+
+<article lang="en">
+<articleinfo>
+    <title>odgi position(1)</title>
+</articleinfo>
+<section id="_name">
+<title>NAME</title>
+<simpara>odgi_position - position parts of the graph as defined by query criteria</simpara>
+</section>
+<section id="_synopsis">
+<title>SYNOPSIS</title>
+<simpara><emphasis role="strong">odgi position</emphasis> [<emphasis role="strong">-i, --target</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;</simpara>
+</section>
+<section id="_description">
+<title>DESCRIPTION</title>
+<simpara>The odgi position(1) command translates positions and coordinate ranges between nodes and embedded paths.
+It provides liftover functionality, allowing us to translate a position between any reference paths embedded in the <literal>-i, --target</literal> graph.
+We can additionally project coordinates and annotations from a source graph <literal>-x, --source</literal> into the <literal>target</literal>.
+When completing this "graph lift", the intersecting set of paths in the two graphs are used to complete the coordinate projection.</simpara>
+</section>
+<section id="_options">
+<title>OPTIONS</title>
+<section id="_graph_files_io">
+<title>Graph Files IO</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-i, --target</emphasis>=<emphasis>FILE</emphasis>
+</term>
+<listitem>
+<simpara>
+  Describe positions in this graph.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-x, --source</emphasis>=<emphasis>FILE</emphasis>
+</term>
+<listitem>
+<simpara>
+  Translate positions from this graph into the target graph using common <literal>--lift-paths</literal> shared between both graphs [default: use the same source/target
+graph]
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_position_options">
+<title>Position Options</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-r, --ref-paths</emphasis>=<emphasis>STRING</emphasis>
+</term>
+<listitem>
+<simpara>
+  Translate the given positions into positions relative to this reference path.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-R, --ref-paths</emphasis>=<emphasis>FILE</emphasis>
+</term>
+<listitem>
+<simpara>
+  Use the ref-paths in FILE.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-l, --lift-path</emphasis>=<emphasis>STRING</emphasis>
+</term>
+<listitem>
+<simpara>
+  Lift positions from <literal>--source</literal> to <literal>--target</literal> via coordinates in this path common to both graphs [default: all common paths
+between <literal>--source</literal> and <literal>--target</literal>].
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-g, --graph-pos</emphasis>=<emphasis>[[node_id][,offset[,(+|-)]<emphasis role="strong">]</emphasis>]</emphasis>
+</term>
+<listitem>
+<simpara>
+  A graph position, e.g. 42,10,+ or 302,0,-.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-F, --path-pos-file</emphasis>=<emphasis>FILE</emphasis>
+</term>
+<listitem>
+<simpara>
+  A file with one path position per line.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-b, --bed-input</emphasis>=<emphasis>FILE</emphasis>
+</term>
+<listitem>
+<simpara>
+  A BED file of ranges in paths in the graph to lift into the target graph <literal>-v</literal>, <literal>--give-graph-pos</literal> emit graph positions.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-v, --give-graph-pos</emphasis>
+</term>
+<listitem>
+<simpara>
+  Emit graph positions (node,offset,strand) rather than path positions.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-I, --all-immediate</emphasis>
+</term>
+<listitem>
+<simpara>
+  Emit all positions immediately at the given graph/path position.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-d, --search-radius</emphasis>=<emphasis>STRING</emphasis>
+</term>
+<listitem>
+<simpara>
+  Limit coordinate conversion breadth-first search up to DISTANCE bp from each given position [default: 10000].
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_threading">
+<title>Threading</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-t, --threads</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  Number of threads to use.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_program_information">
+<title>Program Information</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-h, --help</emphasis>
+</term>
+<listitem>
+<simpara>
+  Print a help message for <emphasis role="strong">odgi position</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+</section>
+<section id="_exit_status">
+<title>EXIT STATUS</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">0</emphasis>
+</term>
+<listitem>
+<simpara>
+  Success.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">1</emphasis>
+</term>
+<listitem>
+<simpara>
+  Failure (syntax or usage error; parameter error; file processing failure; unexpected error).
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_bugs">
+<title>BUGS</title>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <ulink url="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</ulink>.</simpara>
+</section>
+<section id="_authors">
+<title>AUTHORS</title>
+<simpara><emphasis role="strong">odgi position</emphasis> was written by Erik Garrison.</simpara>
+</section>
+</article>

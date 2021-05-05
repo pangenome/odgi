@@ -1,10 +1,10 @@
-.. _odgi bin:
+.. _odgi paths:
 
 #########
-odgi bin
+odgi paths
 #########
 
 .. toctree::
     :maxdepth: 1
 
-    odgi/odgi_bin
+    odgi/odgi_paths

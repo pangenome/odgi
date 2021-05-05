@@ -1,0 +1,329 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<?asciidoc-toc?>
+<?asciidoc-numbered?>
+
+<article lang="en">
+<articleinfo>
+    <title>odgi test(1)</title>
+</articleinfo>
+<section id="_name">
+<title>NAME</title>
+<simpara>odgi_test - run odgi unit tests</simpara>
+</section>
+<section id="_synopsis">
+<title>SYNOPSIS</title>
+<simpara><emphasis role="strong">odgi test</emphasis> [&lt;TEST NAME|PATTERN|TAGS&gt; &#8230;] [<emphasis>OPTION</emphasis>]&#8230;</simpara>
+</section>
+<section id="_description">
+<title>DESCRIPTION</title>
+<simpara>The odgi test(1) command starts all unit tests that are implemented in odgi. For targeted testing, a subset of tests can
+be selected. odgi test(1) depends on <ulink url="https://github.com/catchorg/Catch2">Catch2</ulink>. In the default setting, all results are printed to stdout.</simpara>
+</section>
+<section id="_options">
+<title>OPTIONS</title>
+<section id="_testing_options">
+<title>Testing Options</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-l, --list-tests</emphasis>
+</term>
+<listitem>
+<simpara>
+  List all test cases. If a pattern was specified, all matching test cases are listed.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-t, --list-tags</emphasis>
+</term>
+<listitem>
+<simpara>
+  List all tags. If a pattern was specified, all matching tags are listed.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-s, --success</emphasis>
+</term>
+<listitem>
+<simpara>
+  Include successful tests in output.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-b, --break</emphasis>
+</term>
+<listitem>
+<simpara>
+  Break into debugger mode upon failed test.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-e, --nothrow</emphasis>
+</term>
+<listitem>
+<simpara>
+  Skip exception tests.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-i, --invisibles</emphasis>
+</term>
+<listitem>
+<simpara>
+  Show invisibles like tabs or newlines.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>
+</term>
+<listitem>
+<simpara>
+  Write all output to <emphasis>FILE</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-r, --reporter</emphasis>=<emphasis>STRING</emphasis>
+</term>
+<listitem>
+<simpara>
+  Reporter to use. Default is console.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-n, --name</emphasis>=<emphasis>STRING</emphasis>
+</term>
+<listitem>
+<simpara>
+  Suite name.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-a, --abort</emphasis>
+</term>
+<listitem>
+<simpara>
+  Abort at first failure.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-x, --abortx</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  Abort after <emphasis>N</emphasis> failures.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-w, --warn</emphasis>=<emphasis>STRING</emphasis>
+</term>
+<listitem>
+<simpara>
+  Enable warnings.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-d, --durations</emphasis>=<emphasis>yes|no</emphasis>
+</term>
+<listitem>
+<simpara>
+  Show test durations. Default is <emphasis>no</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-f, --input-file</emphasis>=<emphasis>FILE</emphasis>
+</term>
+<listitem>
+<simpara>
+  Load test names from a file.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-#, --filenames-as-tags</emphasis>
+</term>
+<listitem>
+<simpara>
+  Adds a tag for the file name.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-c, --section</emphasis>=<emphasis>STRING</emphasis>
+</term>
+<listitem>
+<simpara>
+  Specify the section to run the tests on.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-v, --verosity</emphasis>=<emphasis>quiet|normal|high</emphasis>
+</term>
+<listitem>
+<simpara>
+  Set output verbosity. Default is <emphasis>normal</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">--list-test-names-only</emphasis>
+</term>
+<listitem>
+<simpara>
+  List all test cases names only. If a pattern was specified, all matching test cases are listed.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">--list-reporters</emphasis>
+</term>
+<listitem>
+<simpara>
+  List all reporters.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">--order</emphasis>=<emphasis>decl|lex|rand</emphasis>
+</term>
+<listitem>
+<simpara>
+  Test case order. Default ist <emphasis>decl</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">--rng-seed</emphasis>=<emphasis>time|number</emphasis>
+</term>
+<listitem>
+<simpara>
+  Set a specific seed for random numbers.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">--use-color</emphasis>=<emphasis>yes|no</emphasis>
+</term>
+<listitem>
+<simpara>
+  Should the output be colorized? Default is <emphasis>yes</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">--libidentify</emphasis>
+</term>
+<listitem>
+<simpara>
+  Report name and version according to libidentify.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">--wait-for-keypress</emphasis>=<emphasis>start|exit|both</emphasis>
+</term>
+<listitem>
+<simpara>
+  Waits for a keypress before <emphasis>start|exit|both</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">--benchmark-resolution-multiple</emphasis>
+</term>
+<listitem>
+<simpara>
+  Multiple of clock resolution to run benchmarks.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_program_information">
+<title>Program Information</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-?, -h, --help</emphasis>
+</term>
+<listitem>
+<simpara>
+  Print a help message for <emphasis role="strong">odgi test</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+</section>
+<section id="_exit_status">
+<title>EXIT STATUS</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">0</emphasis>
+</term>
+<listitem>
+<simpara>
+  Success.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">1</emphasis>
+</term>
+<listitem>
+<simpara>
+  Failure (syntax or usage error; parameter error; file processing failure; unexpected error).
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_bugs">
+<title>BUGS</title>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <ulink url="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</ulink>.</simpara>
+</section>
+<section id="_authors">
+<title>AUTHORS</title>
+<simpara><emphasis role="strong">odgi test</emphasis> was written by Erik Garrison, Simon Heumos, and Andrea Guarracino.</simpara>
+</section>
+</article>

@@ -1,10 +1,10 @@
-.. _odgi bin:
+.. _odgi prune:
 
 #########
-odgi bin
+odgi prune
 #########
 
 .. toctree::
     :maxdepth: 1
 
-    odgi/odgi_bin
+    odgi/odgi_prune

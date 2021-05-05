@@ -1,10 +1,10 @@
-.. _odgi bin:
+.. _odgi panpos:
 
 #########
-odgi bin
+odgi panpos
 #########
 
 .. toctree::
     :maxdepth: 1
 
-    odgi/odgi_bin
+    odgi/odgi_panpos

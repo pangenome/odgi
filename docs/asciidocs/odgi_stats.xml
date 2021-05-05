@@ -1,0 +1,223 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<?asciidoc-toc?>
+<?asciidoc-numbered?>
+
+<article lang="en">
+<articleinfo>
+    <title>odgi stats(1)</title>
+</articleinfo>
+<section id="_name">
+<title>NAME</title>
+<simpara>odgi_stats - metrics describing variation graphs</simpara>
+</section>
+<section id="_synopsis">
+<title>SYNOPSIS</title>
+<simpara><emphasis role="strong">odgi stats</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;</simpara>
+</section>
+<section id="_description">
+<title>DESCRIPTION</title>
+<simpara>The odgi stats(1) command produces statistics of a variation graph. Among other metrics, it can calculate the #nodes, #edges, #paths and the total nucleotide length of the graph. Various histogram summary options complement the tool. If [<emphasis role="strong">-B, --bed-multicov</emphasis>=<emphasis>BED</emphasis>] is set, the metrics will be produced for the intervals specified in the BED.</simpara>
+</section>
+<section id="_options">
+<title>OPTIONS</title>
+<section id="_graph_files_io">
+<title>Graph Files IO</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>
+</term>
+<listitem>
+<simpara>
+  File containing the succinct variation graph to create statistics from. The file name usually ends with <emphasis>.og</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_summary_options">
+<title>Summary Options</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-S, --summarize</emphasis>
+</term>
+<listitem>
+<simpara>
+  Summarize the graph properties and dimensions. Print to stdout the #nucleotides, #nodes, #edges and #paths of the graph.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-W, --weak-connected-components</emphasis>
+</term>
+<listitem>
+<simpara>
+  Shows the properties of the weakly connected components.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-L, --self-loops</emphasis>
+</term>
+<listitem>
+<simpara>
+  Number of nodes with a self-loop.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-N, --nondeterministic-edges</emphasis>
+</term>
+<listitem>
+<simpara>
+  Show nondeterministic edges (those that extend to the same next base).
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-b, --base-content</emphasis>
+</term>
+<listitem>
+<simpara>
+  Describe the base content of the graph. Print to stdout the #A, #C, #G and #T of the graph.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_sorting_goodness_evaluation">
+<title>Sorting goodness evaluation</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-l, --mean-links-length</emphasis>
+</term>
+<listitem>
+<simpara>
+  Calculate the mean links length. This metric is path-guided and computable in 1D and 2D.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-g, --no-gap-links</emphasis>
+</term>
+<listitem>
+<simpara>
+  Don&#8217;t penalize gap links in the mean links length. A gap link is a link which connects two nodes that are consecutive in the linear pangenomic order. This option is specifiable only to compute the mean links length in 1D.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-s, --sum-path-nodes-distances</emphasis>
+</term>
+<listitem>
+<simpara>
+  Calculate the sum of path nodes distances. This metric is path-guided and computable in 1D and 2D. For each path, it iterates from node to node, summing their distances, and normalizing by the path length. In 1D, if a link goes back in the linearized viewpoint of the graph, this is penalized (adding 3 times its length in the sum).
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-d, --penalize-different-orientation</emphasis>
+</term>
+<listitem>
+<simpara>
+  If a link connects two nodes which have different orientations, this is penalized (adding 2 times its length in the sum).
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-c, --coords-in</emphasis>
+</term>
+<listitem>
+<simpara>
+  File containing the layout coordinates of the succinct variation graph specified as input. The file name usually ends with <emphasis>.lay</emphasis>. When the layout coordinates are provided, the mean links length and the sum path nodes distances statistics are evaluated in 2D, else in 1D.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-P, --path-statistics</emphasis>
+</term>
+<listitem>
+<simpara>
+  Display the statistics (mean links length or sum path nodes distances) for each path.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_threading">
+<title>Threading</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-t, --threads</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  Number of threads to use.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_program_information">
+<title>Program Information</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-h, --help</emphasis>
+</term>
+<listitem>
+<simpara>
+  Print a help message for <emphasis role="strong">odgi stats</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+</section>
+<section id="_exit_status">
+<title>EXIT STATUS</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">0</emphasis>
+</term>
+<listitem>
+<simpara>
+  Success.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">1</emphasis>
+</term>
+<listitem>
+<simpara>
+  Failure (syntax or usage error; parameter error; file processing failure; unexpected error).
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_bugs">
+<title>BUGS</title>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <ulink url="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</ulink>.</simpara>
+</section>
+<section id="_authors">
+<title>AUTHORS</title>
+<simpara><emphasis role="strong">odgi stats</emphasis> was written by Erik Garrison and Andrea Guarracino.</simpara>
+</section>
+</article>

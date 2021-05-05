@@ -1,0 +1,113 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<?asciidoc-toc?>
+<?asciidoc-numbered?>
+
+<article lang="en">
+<articleinfo>
+    <title>odgi groom(1)</title>
+</articleinfo>
+<section id="_name">
+<title>NAME</title>
+<simpara>odgi_groom - resolve spurious inverting links</simpara>
+</section>
+<section id="_synopsis">
+<title>SYNOPSIS</title>
+<simpara><emphasis role="strong">odgi groom</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;</simpara>
+</section>
+<section id="_description">
+<title>DESCRIPTION</title>
+<simpara>The odgi groom(1) command resolves spurious inverting links.</simpara>
+</section>
+<section id="_options">
+<title>OPTIONS</title>
+<section id="_graph_files_io">
+<title>Graph Files IO</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>
+</term>
+<listitem>
+<simpara>
+  File containing the succinct variation graph to groom. The file name usually ends with <emphasis>.og</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>
+</term>
+<listitem>
+<simpara>
+  Write the groomed succinct variation graph to <emphasis>FILE</emphasis>. The file name usually ends with <emphasis>.og</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_processing_information">
+<title>Processing Information</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-P, --progress</emphasis>
+</term>
+<listitem>
+<simpara>
+  Display progress of the grooming to stderr.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_program_information">
+<title>Program Information</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-h, --help</emphasis>
+</term>
+<listitem>
+<simpara>
+  Print a help message for <emphasis role="strong">odgi groom</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+</section>
+<section id="_exit_status">
+<title>EXIT STATUS</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">0</emphasis>
+</term>
+<listitem>
+<simpara>
+  Success.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">1</emphasis>
+</term>
+<listitem>
+<simpara>
+  Failure (syntax or usage error; parameter error; file processing failure; unexpected error).
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_bugs">
+<title>BUGS</title>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <ulink url="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</ulink>.</simpara>
+</section>
+<section id="_authors">
+<title>AUTHORS</title>
+<simpara><emphasis role="strong">odgi groom</emphasis> was written by Erik Garrison and Andrea Guarracino.</simpara>
+</section>
+</article>

@@ -1,10 +1,10 @@
-.. _odgi bin:
+.. _odgi kmers:
 
 #########
-odgi bin
+odgi kmers
 #########
 
 .. toctree::
     :maxdepth: 1
 
-    odgi/odgi_bin
+    odgi/odgi_kmers

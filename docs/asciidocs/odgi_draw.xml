@@ -1,0 +1,213 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<?asciidoc-toc?>
+<?asciidoc-numbered?>
+
+<article lang="en">
+<articleinfo>
+    <title>odgi draw(1)</title>
+</articleinfo>
+<section id="_name">
+<title>NAME</title>
+<simpara>odgi_draw - variation graph visualizations in 2D</simpara>
+</section>
+<section id="_synopsis">
+<title>SYNOPSIS</title>
+<simpara><emphasis role="strong">odgi draw</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-c, --coords-in</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-p, --png</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;</simpara>
+</section>
+<section id="_description">
+<title>DESCRIPTION</title>
+<simpara>The odgi draw(1) command draws previously-determined 2D layouts of the graph with diverse annotations.</simpara>
+</section>
+<section id="_options">
+<title>OPTIONS</title>
+<section id="_files_io">
+<title>Files IO</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>
+</term>
+<listitem>
+<simpara>
+  Load the graph from this file. The file name usually ends with <emphasis>.og</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-c, --coords-in</emphasis>=<emphasis>FILE</emphasis>
+</term>
+<listitem>
+<simpara>
+  Read the layout coordinates from this .lay format file produced by <link linkend="odgi_layout.adoc#_odgi_layout1">odgi layout</link>
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-T, --tsv</emphasis>=<emphasis>FILE</emphasis>
+</term>
+<listitem>
+<simpara>
+    Write the TSV layout plus displayed annotations to this file.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-s, --svg</emphasis>=<emphasis>FILE</emphasis>
+</term>
+<listitem>
+<simpara>
+  Write an SVG rendering to this file.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-p, --png</emphasis>=<emphasis>FILE</emphasis>
+</term>
+<listitem>
+<simpara>
+  Write a rasterized PNG rendering to this file.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_visualization_options">
+<title>Visualization Options</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-H, --png-height</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  Height of PNG rendering (default: 1000).
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-E, --png-border</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  Size of PNG border in bp (default: 10).
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-C --color-paths</emphasis>
+</term>
+<listitem>
+<simpara>
+  Color paths (in PNG output).
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-R, --scale</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  Image scaling (default 1.0).
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-B, --border</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  Image border (in approximate bp) (default 100.0).
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-w, --line-width</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  Line width (in approximate bp) (default 0.0).
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-S, --path-line-spacing</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  Spacing between path lines in png layout (in approximate bp) (default 0.0).
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-X, --path-index</emphasis>=<emphasis>FILE</emphasis>
+</term>
+<listitem>
+<simpara>
+  Load the path index from this file.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_program_information">
+<title>Program Information</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-h, --help</emphasis>
+</term>
+<listitem>
+<simpara>
+  Print a help message for <emphasis role="strong">odgi draw</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+</section>
+<section id="_exit_status">
+<title>EXIT STATUS</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">0</emphasis>
+</term>
+<listitem>
+<simpara>
+  Success.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">1</emphasis>
+</term>
+<listitem>
+<simpara>
+  Failure (syntax or usage error; parameter error; file processing failure; unexpected error).
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_bugs">
+<title>BUGS</title>
+<literallayout class="monospaced">Refer to the *odgi* issue tracker at https://github.com/pangenome/odgi/issues.</literallayout>
+</section>
+<section id="_authors">
+<title>AUTHORS</title>
+<simpara><emphasis role="strong">odgi draw</emphasis> was written by Erik Garrison.</simpara>
+</section>
+</article>

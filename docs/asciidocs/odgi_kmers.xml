@@ -1,0 +1,149 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<?asciidoc-toc?>
+<?asciidoc-numbered?>
+
+<article lang="en">
+<articleinfo>
+    <title>odgi kmers(1)</title>
+</articleinfo>
+<section id="_name">
+<title>NAME</title>
+<simpara>odgi_kmers - show and characterize the kmer space of the graph</simpara>
+</section>
+<section id="_synopsis">
+<title>SYNOPSIS</title>
+<simpara><emphasis role="strong">odgi kmers</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-c, --stdout</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;</simpara>
+</section>
+<section id="_description">
+<title>DESCRIPTION</title>
+<simpara>Given a kmer length, the odgi kmers(1) command can emit all kmers. The output can be refined by setting the maximum number
+of furcations at edges or by not considering nodes above a given node degree limit.</simpara>
+</section>
+<section id="_options">
+<title>OPTIONS</title>
+<section id="_graph_files_io">
+<title>Graph Files IO</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>
+</term>
+<listitem>
+<simpara>
+  File containing the succinct variation graph to convert from. The file name usually ends with <emphasis>.og</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-c, --stdout</emphasis>=
+</term>
+<listitem>
+<simpara>
+  Write the kmers to standard output. Kmers are line-separated.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_kmer_options">
+<title>Kmer Options</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-k, --kmer-length</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  The kmer length to generate kmers from.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-e, --max-furcations</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  Break at edges that would induce this many furcations when generating a kmer.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-D, --max-degree</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  Don&#8217;t take nodes into account that have a degree greater than <emphasis>N</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_threading">
+<title>Threading</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-t, --threads</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  Number of threads to use.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_program_information">
+<title>Program Information</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-h, --help</emphasis>
+</term>
+<listitem>
+<simpara>
+  Print a help message for <emphasis role="strong">odgi kmers</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+</section>
+<section id="_exit_status">
+<title>EXIT STATUS</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">0</emphasis>
+</term>
+<listitem>
+<simpara>
+  Success.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">1</emphasis>
+</term>
+<listitem>
+<simpara>
+  Failure (syntax or usage error; parameter error; file processing failure; unexpected error).
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_bugs">
+<title>BUGS</title>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <ulink url="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</ulink>.</simpara>
+</section>
+<section id="_authors">
+<title>AUTHORS</title>
+<simpara><emphasis role="strong">odgi kmers</emphasis> was written by Erik Garrison.</simpara>
+</section>
+</article>

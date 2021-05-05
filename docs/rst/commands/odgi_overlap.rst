@@ -1,10 +1,10 @@
-.. _odgi bin:
+.. _odgi overlap:
 
 #########
-odgi bin
+odgi overlap
 #########
 
 .. toctree::
     :maxdepth: 1
 
-    odgi/odgi_bin
+    odgi/odgi_overlap

@@ -1,10 +1,10 @@
-.. _odgi bin:
+.. _odgi server:
 
 #########
-odgi bin
+odgi server
 #########
 
 .. toctree::
     :maxdepth: 1
 
-    odgi/odgi_bin
+    odgi/odgi_server

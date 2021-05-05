@@ -1,0 +1,533 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<?asciidoc-toc?>
+<?asciidoc-numbered?>
+
+<article lang="en">
+<articleinfo>
+    <title>odgi sort(1)</title>
+</articleinfo>
+<section id="_name">
+<title>NAME</title>
+<simpara>odgi_sort - sort a variation graph</simpara>
+</section>
+<section id="_synopsis">
+<title>SYNOPSIS</title>
+<simpara><emphasis role="strong">odgi sort</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;</simpara>
+</section>
+<section id="_description">
+<title>DESCRIPTION</title>
+<simpara>The odgi sort(1) command sorts a succinct variation graph. Odgi sort offers a diverse palette of sorting algorithms to
+determine the node order:</simpara>
+<itemizedlist>
+<listitem>
+<simpara>
+A topological sort: A graph can be sorted via <ulink url="https://en.wikipedia.org/wiki/Breadth-first_search">breadth-first search (BFS)</ulink> or <ulink url="https://en.wikipedia.org/wiki/Depth-first_search">depth-first search (DFS)</ulink>. Optionally,
+   a chunk size specifies how much of the graph to grab at once in each topological sorting phase. The sorting algorithm will continue the sort from the
+   next node in the prior graph order that has not been sorted, yet. The cycle breaking algorithm applies a DFS sort until
+   a cycle is found. We break and start a new DFS sort phase from where we stopped.
+</simpara>
+</listitem>
+<listitem>
+<simpara>
+A random sort: The graph is randomly sorted. The node order is randomly shuffled from <ulink url="http://www.cplusplus.com/reference/random/mt19937/">Mersenne Twister pseudo-random</ulink> generated numbers.
+</simpara>
+</listitem>
+<listitem>
+<simpara>
+A 1D linear SGD sort: Odgi implements a 1D linear, variation graph adjusted, multi-threaded version of the <ulink url="https://arxiv.org/abs/1710.04626">Graph Drawing
+   by Stochastic Gradient Descent</ulink> algorithm. The force-directed graph drawing algorithm minimizes the graph&#8217;s energy function
+   or stress level. It applies stochastic gradient descent (SGD) to move a single pair of nodes at a time.
+</simpara>
+</listitem>
+<listitem>
+<simpara>
+A path guided, 1D linear SGD sort: Odgi implements a 1D linear, variation graph adjusted, multi-threaded version of the <ulink url="https://arxiv.org/abs/1710.04626">Graph Drawing
+   by Stochastic Gradient Descent</ulink> algorithm. The force-directed graph drawing algorithm minimizes the graph&#8217;s energy function
+   or stress level. It applies stochastic gradient descent (SGD) to move a single pair of nodes at a time. The path index is used to pick the terms to move stochastically. If ran with 1 thread only,
+  the resulting order of the graph is deterministic. The seed is adjustable.
+</simpara>
+</listitem>
+</itemizedlist>
+<simpara>Sorting the paths in a graph my refine the sorting process. For the users' convenience, it is possible to specify a whole
+pipeline of sorts within one parameter.</simpara>
+</section>
+<section id="_options">
+<title>OPTIONS</title>
+<section id="_graph_files_io">
+<title>Graph Files IO</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>
+</term>
+<listitem>
+<simpara>
+  File containing the succinct variation graph to sort. The file name usually ends with <emphasis>.og</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>
+</term>
+<listitem>
+<simpara>
+  Write the sorted dynamic succinct variation graph to this file. A file ending with <emphasis>.og</emphasis> is recommended.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-s, --sort-order</emphasis>=<emphasis>FILE</emphasis>
+</term>
+<listitem>
+<simpara>
+  File containing the sort order. Each line contains one node identifier.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_topological_sorts">
+<title>Topological Sorts</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-b, --breadth-first</emphasis>
+</term>
+<listitem>
+<simpara>
+  Use a (chunked) breadth first topological sort.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-B, --breadth-first-chunk</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  Chunk size for breadth first topological sort. Specify how many nucleotides to grap at once in each BFS phase.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-z, --depth-first</emphasis>
+</term>
+<listitem>
+<simpara>
+  Use a (chunked) depth first topological sort.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-Z, --depth-first-chunk</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  Chunk size for the depth first topological sort. Specify how many nucleotides to grap at once in each DFS phace.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-w, --two-way</emphasis>
+</term>
+<listitem>
+<simpara>
+  Use a two-way topological algorithm for sorting. It is a maximum of head-first and tail-first topological sort.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-n, --no-seeds</emphasis>
+</term>
+<listitem>
+<simpara>
+  Don&#8217;t use heads or tails to seed topological sort.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-c, --cycle-breaking</emphasis>
+</term>
+<listitem>
+<simpara>
+  Use a cycle breaking sort.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_random_sort">
+<title>Random Sort</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-r, --random</emphasis>
+</term>
+<listitem>
+<simpara>
+  Randomly sort the graph.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_path_guided_1d_linear_sgd_sort">
+<title>Path Guided 1D Linear SGD Sort</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-Y, --path-sgd</emphasis>
+</term>
+<listitem>
+<simpara>
+  Apply path guided 1D linear SGD algorithm to organize the graph.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-X, --path-index</emphasis>=<emphasis>FILE</emphasis>
+</term>
+<listitem>
+<simpara>
+  Load the path index from this <emphasis>FILE</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-f, --path-sgd-use-paths</emphasis>=FILE
+</term>
+<listitem>
+<simpara>
+  Specify a line separated list of paths to sample from for the on the fly term generation process in the path guided linear 1D SGD. The default value are <emphasis>all paths</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-G, --path-sgd-min-term-updates-paths</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  The minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of total path steps. The default value is <emphasis>1.0</emphasis>. Can be overwritten by <emphasis>-U, -path-sgd-min-term-updates-nodes=N</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-U, --path-sgd-min-term-updates-nodes</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  The minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of the number of nodes. Per default, the argument is not set. The default of <emphasis>-G, path-sgd-min-term-updates-paths=N</emphasis> is used).
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-j, --path-sgd-delta</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  The threshold of maximum displacement approximately in bp at which to stop path guided linear 1D SGD. Default values is <emphasis>0.0</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-g, --path-sgd-eps</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  The final learning rate for path guided linear 1D SGD model. The default value is <emphasis>0.01</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-v, --path-sgd-eta-max</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  The first and maximum learning rate for path guided linear 1D SGD model. The default value is <emphasis>squared steps of longest path in graph</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-a, --path-sgd-zipf-theta</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  The theta value for the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model. The default value is <emphasis>0.99</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-x, --path-sgd-iter-max</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  The maximum number of iterations for path guided linear 1D SGD model. The default value is <emphasis>30</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-F, --iteration-max-learning-rate</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  The iteration where the learning rate is max for path guided linear 1D SGD model. The default value is <emphasis>0</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-k, --path-sgd-zipf-space</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  The maximum space size of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model. The default value is the <emphasis>longest path length</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-I, --path-sgd-zipf-space-max</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  The maximum space size of the Zipfian distribution beyond which quantization occurs. Default value is <emphasis>100</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-l, --path-sgd-zipf-space-quantization-step</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  Quantization step size when the maximum space size of the Zipfian distribution is exceeded. Default value is <emphasis>100</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-y, --path-sgd-zipf-max-num-distributions</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  Approximate maximum number of Zipfian distributions to calculate. The default value is <emphasis>100</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-q, --path-sgd-seed</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  Set the seed for the deterministic 1-threaded path guided linear 1D SGD model. The default value is <emphasis>pangenomic!</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-u, --path-sgd-snapshot</emphasis>=<emphasis>STRING</emphasis>
+</term>
+<listitem>
+<simpara>
+  Set the prefix to which each snapshot graph of a path guided 1D SGD iteration should be written to. This is turned off per default.
+  This argument only works when <emphasis>-Y, --path-sgd</emphasis> was specified. Not applicable in a pipeline of sorts.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_path_sorting_options">
+<title>Path Sorting Options</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-L, --paths-min</emphasis>
+</term>
+<listitem>
+<simpara>
+  Sort paths by their lowest contained node identifier.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-M, --paths-max</emphasis>
+</term>
+<listitem>
+<simpara>
+  Sort paths by their highest contained node identifier.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-A, --paths-avg</emphasis>
+</term>
+<listitem>
+<simpara>
+  Sort paths by their average contained node identifier.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-R, --paths-avg-rev</emphasis>
+</term>
+<listitem>
+<simpara>
+  Sort paths in reverse by their average contained node identifier.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-D, --path-delim</emphasis>=<emphasis>path-delim</emphasis>
+</term>
+<listitem>
+<simpara>
+  Sort paths in bins by their prefix up to this delimiter.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_pipeline_sorting">
+<title>Pipeline Sorting</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-p, --pipeline</emphasis>=<emphasis>STRING</emphasis>
+</term>
+<listitem>
+<simpara>
+  Apply a series of sorts, based on single character command line arguments given to this command. The default sort is
+  <emphasis>s</emphasis>. The reverse sort would be specified via <emphasis>f</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_additional_parameters">
+<title>Additional Parameters</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-d, --dagify-sort</emphasis>
+</term>
+<listitem>
+<simpara>
+  Sort on the basis of a DAGified graph.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-O, --Optimize</emphasis>
+</term>
+<listitem>
+<simpara>
+  Use the MutableHandleGraph::optimize method to compact the node identifier space.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_threading">
+<title>Threading</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-t, --threads</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  Number of threads to use for the parallel operations.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_processing_information">
+<title>Processing Information</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-P, --progress</emphasis>
+</term>
+<listitem>
+<simpara>
+  Print sort progress to stdout.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_program_information">
+<title>Program Information</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-h, --help</emphasis>
+</term>
+<listitem>
+<simpara>
+  Print a help message for <emphasis role="strong">odgi sort</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+</section>
+<section id="_exit_status">
+<title>EXIT STATUS</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">0</emphasis>
+</term>
+<listitem>
+<simpara>
+  Success.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">1</emphasis>
+</term>
+<listitem>
+<simpara>
+  Failure (syntax or usage error; parameter error; file processing failure; unexpected error).
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_bugs">
+<title>BUGS</title>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <ulink url="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</ulink>.</simpara>
+</section>
+<section id="_authors">
+<title>AUTHORS</title>
+<simpara><emphasis role="strong">odgi sort</emphasis> was written by Erik Garrison, Simon Heumos, and Andrea Guarracino.</simpara>
+</section>
+</article>

@@ -1,10 +1,8 @@
-## NAME
+# NAME
 
 odgi - dynamic succinct variation graph tool
 
-![image info](../img/exampleGraph.png)
-
-## SYNOPSIS
+# SYNOPSIS
 
 **odgi** [build](#odgi_build.adoc#_odgi_build1) -g graph.gfa -o graph.og
 
@@ -70,11 +68,11 @@ odgi - dynamic succinct variation graph tool
 
 **odgi** [version](#odgi_version.adoc#_odgi_version1)
 
-## DESCRIPTION
+# DESCRIPTION
 
 **odgi**, the **Optimized Dynamic (genome) Graph Interface**, links a thrifty dynamic in-memory variation graph data model to a set of algorithms designed for scalable sorting, pruning, transformation, and visualization of very large [genome graphs](https://pangenome.github.io/). **odgi** includes [python bindings](https://pangenome.github.io/odgi/odgipy.html) that can be used to [directly interface with its data model](https://odgi.readthedocs.io/en/latest/rst/tutorial.html). This **odgi** manual provides detailed information about its features and subcommands, including examples.
 
-## COMMANDS
+# COMMANDS
 
 Each command has its own man page which can be viewed using e.g. **man odgi\_build.1**. Below we have a brief summary of syntax and subcommand description.
 
@@ -180,15 +178,15 @@ The odgi test(1) command starts all unit tests that are implemented in odgi. For
 **odgi version** \[*OPTION*\]…  
 The odgi version(1) command prints the current git version with tags and codename to stdout (like *v-44-g89d022b "back to old ABI"*). Optionally, only the release, version or codename can be printed.
 
-## BUGS
+# BUGS
 
 Refer to the **odgi** issue tracker at <https://github.com/pangenome/odgi/issues>.
 
-## AUTHORS
+# AUTHORS
 
 Erik Garrison from the University of California Santa Cruz wrote the whole **odgi** tool. Simon Heumos from the Quantitative Biology Center Tübingen wrote **odgi pathindex**, **odgi panpos**, **odgi server**, and this documentation. Andrea Guarracino from the University of Rome Tor Vergata wrote **odgi viz**, **odgi extract**, **odgi cover**, **odgi explode**, **odgi squeeze**, **odgi depth**, **odgi overlap**, **odgi validate**, and this documentation.
 
-## RESOURCES
+# RESOURCES
 
 **Project web site:** <https://github.com/pangenome/odgi>
 
@@ -198,7 +196,7 @@ Erik Garrison from the University of California Santa Cruz wrote the whole **odg
 
 **Discussion list / forum:** <https://github.com/pangenome/odgi/issues>
 
-## COPYING
+# COPYING
 
 The MIT License (MIT)
 

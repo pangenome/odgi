@@ -1,10 +1,10 @@
-.. _odgi bin:
+.. _odgi squeeze:
 
 #########
-odgi bin
+odgi squeeze
 #########
 
 .. toctree::
     :maxdepth: 1
 
-    odgi/odgi_bin
+    odgi/odgi_squeeze

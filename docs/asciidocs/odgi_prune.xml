@@ -1,0 +1,226 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE article PUBLIC "-//OASIS//DTD DocBook XML V4.5//EN" "http://www.oasis-open.org/docbook/xml/4.5/docbookx.dtd">
+<?asciidoc-toc?>
+<?asciidoc-numbered?>
+
+<article lang="en">
+<articleinfo>
+    <title>odgi prune(1)</title>
+</articleinfo>
+<section id="_name">
+<title>NAME</title>
+<simpara>odgi_prune - remove complex parts of the graph</simpara>
+</section>
+<section id="_synopsis">
+<title>SYNOPSIS</title>
+<simpara><emphasis role="strong">odgi prune</emphasis> [<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>] [<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>] [<emphasis>OPTION</emphasis>]&#8230;</simpara>
+</section>
+<section id="_description">
+<title>DESCRIPTION</title>
+<simpara>The odgi prune(1) command can remove complex parts of a graph. One can drop paths, nodes by a certain kind of edge coverage,
+edges and graph tips. Specifying a kmer length and a maximum number of furcations, the graph can be broken at edges not
+fitting into these conditions.</simpara>
+</section>
+<section id="_options">
+<title>OPTIONS</title>
+<section id="_graph_files_io">
+<title>Graph Files IO</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-i, --idx</emphasis>=<emphasis>FILE</emphasis>
+</term>
+<listitem>
+<simpara>
+  File containing the succinct variation graph to load in. The file name usually ends with <emphasis>.og</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-o, --out</emphasis>=<emphasis>FILE</emphasis>
+</term>
+<listitem>
+<simpara>
+  Write the pruned graph to <emphasis>FILE</emphasis>. The file name should end with <emphasis>.og</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_kmer_options">
+<title>Kmer Options</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-k, --kmer-length</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  The length of the kmers to consider.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-e, --max-furcations</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  Break at edges that would induce <emphasis>N</emphasis> many furcations in a kmer.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_node_options">
+<title>Node Options</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-d, --max-degree</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  Remove nodes that have a higher node degree than <emphasis>N</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-c, --min-coverage</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  Remove nodese covered by fewer than <emphasis>N</emphasis> number of path steps.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-C, --max-coverage</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  Remove nodes covered by more than <emphasis>N</emphasis> number of path steps.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-T, --cut-tips</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  Remove nodes which are graph tips.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_edge_options">
+<title>Edge Options</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-E, --edge-coverage</emphasis>
+</term>
+<listitem>
+<simpara>
+  Remove edges outside of the minimum and maximum coverage rather than nodes. Only set this argument in combination with
+  [<emphasis role="strong">-c, --min-coverage</emphasis>=<emphasis>N</emphasis>] and [<emphasis role="strong">-C, --max-coverage</emphasis>=<emphasis>N</emphasis>].
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">-b, --best-edges</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  Only keep the <emphasis>N</emphasis> most covered inbound and output edges of each node.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_path_options">
+<title>Path Options</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-D, --drop-paths</emphasis>
+</term>
+<listitem>
+<simpara>
+  Remove the paths from the graph.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_threading">
+<title>Threading</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-t, --threads</emphasis>=<emphasis>N</emphasis>
+</term>
+<listitem>
+<simpara>
+  Number of threads to use.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_program_information">
+<title>Program Information</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">-h, --help</emphasis>
+</term>
+<listitem>
+<simpara>
+  Print a help message for <emphasis role="strong">odgi prune</emphasis>.
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+</section>
+<section id="_exit_status">
+<title>EXIT STATUS</title>
+<variablelist>
+<varlistentry>
+<term>
+<emphasis role="strong">0</emphasis>
+</term>
+<listitem>
+<simpara>
+  Success.
+</simpara>
+</listitem>
+</varlistentry>
+<varlistentry>
+<term>
+<emphasis role="strong">1</emphasis>
+</term>
+<listitem>
+<simpara>
+  Failure (syntax or usage error; parameter error; file processing failure; unexpected error).
+</simpara>
+</listitem>
+</varlistentry>
+</variablelist>
+</section>
+<section id="_bugs">
+<title>BUGS</title>
+<simpara>Refer to the <emphasis role="strong">odgi</emphasis> issue tracker at <ulink url="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</ulink>.</simpara>
+</section>
+<section id="_authors">
+<title>AUTHORS</title>
+<simpara><emphasis role="strong">odgi prune</emphasis> was written by Erik Garrison.</simpara>
+</section>
+</article>
