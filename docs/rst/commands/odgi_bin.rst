@@ -1,5 +1,10 @@
+.. _odgi viz:
+
 #########
 odgi bin
 #########
 
-.. mdinclude:: ../../md/odgi_bin.md
+.. toctree::
+    :maxdepth: 1
+
+    odgi/odgi_bin

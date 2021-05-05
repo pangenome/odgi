@@ -4,5 +4,7 @@
 odgi viz
 #########
 
-.. TODO to fix
-.. mdinclude:: ../../md/odgi_bin.md
+.. toctree::
+    :maxdepth: 1
+
+    odgi/odgi_viz
