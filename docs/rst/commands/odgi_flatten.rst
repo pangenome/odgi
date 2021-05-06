@@ -4,10 +4,7 @@
 odgi flatten
 #########
 
-NAME
-====
-
-odgi_flatten - generate linearization of the graph
+generate linearization of the graph
 
 SYNOPSIS
 ========
@@ -51,23 +48,24 @@ Program Information
 | **-h, –help**
 | Print a help message for **odgi flatten**.
 
-EXIT STATUS
-===========
-
-| **0**
-| Success.
-
-| **1**
-| Failure (syntax or usage error; parameter error; file processing
-  failure; unexpected error).
-
-BUGS
-====
-
-Refer to the **odgi** issue tracker at
-https://github.com/pangenome/odgi/issues.
-
-AUTHORS
-=======
-
-**odgi flatten** was written by Erik Garrison.
+..
+	EXIT STATUS
+	===========
+	
+	| **0**
+	| Success.
+	
+	| **1**
+	| Failure (syntax or usage error; parameter error; file processing
+	  failure; unexpected error).
+	
+	BUGS
+	====
+	
+	Refer to the **odgi** issue tracker at
+	https://github.com/pangenome/odgi/issues.
+	
+	AUTHORS
+	=======
+	
+	**odgi flatten** was written by Erik Garrison.

@@ -4,10 +4,7 @@
 odgi viz
 #########
 
-NAME
-====
-
-odgi_viz - variation graph visualizations
+variation graph visualizations
 
 SYNOPSIS
 ========
@@ -168,24 +165,25 @@ Program Information
 | **-h, –help**
 | Print a help message for **odgi viz**.
 
-EXIT STATUS
-===========
-
-| **0**
-| Success.
-
-| **1**
-| Failure (syntax or usage error; parameter error; file processing
-  failure; unexpected error).
-
-BUGS
-====
-
-::
-
-   Refer to the *odgi* issue tracker at https://github.com/pangenome/odgi/issues.
-
-AUTHORS
-=======
-
-**odgi viz** was written by Erik Garrison and Andrea Guarracino.
+..
+	EXIT STATUS
+	===========
+	
+	| **0**
+	| Success.
+	
+	| **1**
+	| Failure (syntax or usage error; parameter error; file processing
+	  failure; unexpected error).
+	
+	BUGS
+	====
+	
+	::
+	
+	   Refer to the *odgi* issue tracker at https://github.com/pangenome/odgi/issues.
+	
+	AUTHORS
+	=======
+	
+	**odgi viz** was written by Erik Garrison and Andrea Guarracino.

@@ -4,10 +4,7 @@
 odgi build
 #########
 
-NAME
-====
-
-odgi_build - construct a dynamic succinct variation graph
+construct a dynamic succinct variation graph
 
 SYNOPSIS
 ========
@@ -75,23 +72,24 @@ Program Information
 | **-h, –help**
 | Print a help message for **odgi build**.
 
-EXIT STATUS
-===========
+..
+    EXIT STATUS
+    ===========
 
-| **0**
-| Success.
+    | **0**
+    | Success.
 
-| **1**
-| Failure (syntax or usage error; parameter error; file processing
-  failure; unexpected error).
+    | **1**
+    | Failure (syntax or usage error; parameter error; file processing
+      failure; unexpected error).
 
-BUGS
-====
+    BUGS
+    ====
 
-Refer to the **odgi** issue tracker at
-https://github.com/pangenome/odgi/issues.
+    Refer to the **odgi** issue tracker at
+    https://github.com/pangenome/odgi/issues.
 
-AUTHORS
-=======
+    AUTHORS
+    =======
 
-**odgi build** was written by Erik Garrison.
+    **odgi build** was written by Erik Garrison.

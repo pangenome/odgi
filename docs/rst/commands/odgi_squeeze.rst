@@ -4,10 +4,7 @@
 odgi squeeze
 #########
 
-NAME
-====
-
-odgi_squeeze - squeezes multiple graphs into the same file
+squeezes multiple graphs into the same file
 
 SYNOPSIS
 ========
@@ -62,23 +59,24 @@ Program Information
 | **-h, –help**
 | Print a help message for **odgi squeeze**.
 
-EXIT STATUS
-===========
-
-| **0**
-| Success.
-
-| **1**
-| Failure (syntax or usage error; parameter error; file processing
-  failure; unexpected error).
-
-BUGS
-====
-
-Refer to the **odgi** issue tracker at
-https://github.com/pangenome/odgi/issues.
-
-AUTHORS
-=======
-
-**odgi squeeze** was written by Andrea Guarracino.
+..
+	EXIT STATUS
+	===========
+	
+	| **0**
+	| Success.
+	
+	| **1**
+	| Failure (syntax or usage error; parameter error; file processing
+	  failure; unexpected error).
+	
+	BUGS
+	====
+	
+	Refer to the **odgi** issue tracker at
+	https://github.com/pangenome/odgi/issues.
+	
+	AUTHORS
+	=======
+	
+	**odgi squeeze** was written by Andrea Guarracino.

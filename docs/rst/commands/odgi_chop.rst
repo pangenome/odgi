@@ -4,10 +4,7 @@
 odgi chop
 #########
 
-NAME
-====
-
-odgi_chop - divide nodes into smaller pieces
+divide nodes into smaller pieces
 
 SYNOPSIS
 ========
@@ -60,23 +57,24 @@ Program Information
 | **-h, –help**
 | Print a help message for **odgi chop**.
 
-EXIT STATUS
-===========
-
-| **0**
-| Success.
-
-| **1**
-| Failure (syntax or usage error; parameter error; file processing
-  failure; unexpected error).
-
-BUGS
-====
-
-Refer to the **odgi** issue tracker at
-https://github.com/pangenome/odgi/issues.
-
-AUTHORS
-=======
-
-**odgi chop** was written by Erik Garrison and Andrea Guarracino.
+..
+	EXIT STATUS
+	===========
+	
+	| **0**
+	| Success.
+	
+	| **1**
+	| Failure (syntax or usage error; parameter error; file processing
+	  failure; unexpected error).
+	
+	BUGS
+	====
+	
+	Refer to the **odgi** issue tracker at
+	https://github.com/pangenome/odgi/issues.
+	
+	AUTHORS
+	=======
+	
+	**odgi chop** was written by Erik Garrison and Andrea Guarracino.

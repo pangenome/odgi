@@ -4,10 +4,7 @@
 odgi server
 #########
 
-NAME
-====
-
-odgi_server - start a HTTP server with a given index file to query a
+start a HTTP server with a given index file to query a
 pangenome position
 
 SYNOPSIS
@@ -58,23 +55,24 @@ Program Information
 | **-h, –help**
 | Print a help message for **odgi server**.
 
-EXIT STATUS
-===========
-
-| **0**
-| Success.
-
-| **1**
-| Failure (syntax or usage error; parameter error; file processing
-  failure; unexpected error).
-
-BUGS
-====
-
-Refer to the **odgi** issue tracker at
-https://github.com/pangenome/odgi/issues.
-
-AUTHORS
-=======
-
-**odgi server** was written by Simon Heumos.
+..
+	EXIT STATUS
+	===========
+	
+	| **0**
+	| Success.
+	
+	| **1**
+	| Failure (syntax or usage error; parameter error; file processing
+	  failure; unexpected error).
+	
+	BUGS
+	====
+	
+	Refer to the **odgi** issue tracker at
+	https://github.com/pangenome/odgi/issues.
+	
+	AUTHORS
+	=======
+	
+	**odgi server** was written by Simon Heumos.

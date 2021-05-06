@@ -4,10 +4,7 @@
 odgi validate
 #########
 
-NAME
-====
-
-odgi_validate - validate the graph (currently, it checks if the paths
+validate the graph (currently, it checks if the paths
 are consistent with the graph topology)
 
 SYNOPSIS
@@ -42,23 +39,24 @@ Program Information
 | **-h, –help**
 | Print a help message for **odgi validate**.
 
-EXIT STATUS
-===========
-
-| **0**
-| Success.
-
-| **1**
-| Failure (syntax or usage error; parameter error; file processing
-  failure; unexpected error).
-
-BUGS
-====
-
-Refer to the **odgi** issue tracker at
-https://github.com/pangenome/odgi/issues.
-
-AUTHORS
-=======
-
-**odgi validate** was written by Andrea Guarracino.
+..
+	EXIT STATUS
+	===========
+	
+	| **0**
+	| Success.
+	
+	| **1**
+	| Failure (syntax or usage error; parameter error; file processing
+	  failure; unexpected error).
+	
+	BUGS
+	====
+	
+	Refer to the **odgi** issue tracker at
+	https://github.com/pangenome/odgi/issues.
+	
+	AUTHORS
+	=======
+	
+	**odgi validate** was written by Andrea Guarracino.

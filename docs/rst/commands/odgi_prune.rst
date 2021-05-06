@@ -4,10 +4,7 @@
 odgi prune
 #########
 
-NAME
-====
-
-odgi_prune - remove complex parts of the graph
+remove complex parts of the graph
 
 SYNOPSIS
 ========
@@ -89,23 +86,24 @@ Program Information
 | **-h, –help**
 | Print a help message for **odgi prune**.
 
-EXIT STATUS
-===========
-
-| **0**
-| Success.
-
-| **1**
-| Failure (syntax or usage error; parameter error; file processing
-  failure; unexpected error).
-
-BUGS
-====
-
-Refer to the **odgi** issue tracker at
-https://github.com/pangenome/odgi/issues.
-
-AUTHORS
-=======
-
-**odgi prune** was written by Erik Garrison.
+..
+	EXIT STATUS
+	===========
+	
+	| **0**
+	| Success.
+	
+	| **1**
+	| Failure (syntax or usage error; parameter error; file processing
+	  failure; unexpected error).
+	
+	BUGS
+	====
+	
+	Refer to the **odgi** issue tracker at
+	https://github.com/pangenome/odgi/issues.
+	
+	AUTHORS
+	=======
+	
+	**odgi prune** was written by Erik Garrison.

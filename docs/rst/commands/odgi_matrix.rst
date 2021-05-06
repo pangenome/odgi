@@ -4,10 +4,7 @@
 odgi matrix
 #########
 
-NAME
-====
-
-odgi_matrix - write the graph topology in sparse matrix formats
+write the graph topology in sparse matrix formats
 
 SYNOPSIS
 ========
@@ -45,23 +42,24 @@ Program Information
 | **-h, –help**
 | Print a help message for **odgi matrix**.
 
-EXIT STATUS
-===========
-
-| **0**
-| Success.
-
-| **1**
-| Failure (syntax or usage error; parameter error; file processing
-  failure; unexpected error).
-
-BUGS
-====
-
-Refer to the **odgi** issue tracker at
-https://github.com/pangenome/odgi/issues.
-
-AUTHORS
-=======
-
-**odgi matrix** was written by Erik Garrison.
+..
+	EXIT STATUS
+	===========
+	
+	| **0**
+	| Success.
+	
+	| **1**
+	| Failure (syntax or usage error; parameter error; file processing
+	  failure; unexpected error).
+	
+	BUGS
+	====
+	
+	Refer to the **odgi** issue tracker at
+	https://github.com/pangenome/odgi/issues.
+	
+	AUTHORS
+	=======
+	
+	**odgi matrix** was written by Erik Garrison.

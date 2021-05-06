@@ -4,10 +4,7 @@
 odgi layout
 #########
 
-NAME
-====
-
-odgi_layout - use SGD to make 2D layouts of the graph
+use SGD to make 2D layouts of the graph
 
 SYNOPSIS
 ========
@@ -74,24 +71,25 @@ Program Information
 | **-h, –help**
 | Print a help message for **odgi layout**.
 
-EXIT STATUS
-===========
-
-| **0**
-| Success.
-
-| **1**
-| Failure (syntax or usage error; parameter error; file processing
-  failure; unexpected error).
-
-BUGS
-====
-
-Refer to the **odgi** issue tracker at
-https://github.com/pangenome/odgi/issues.
-
-AUTHORS
-=======
-
-**odgi layout** was written by Erik Garrison, Andrea Guarracino, and
-Simon Heumos.
+..
+	EXIT STATUS
+	===========
+	
+	| **0**
+	| Success.
+	
+	| **1**
+	| Failure (syntax or usage error; parameter error; file processing
+	  failure; unexpected error).
+	
+	BUGS
+	====
+	
+	Refer to the **odgi** issue tracker at
+	https://github.com/pangenome/odgi/issues.
+	
+	AUTHORS
+	=======
+	
+	**odgi layout** was written by Erik Garrison, Andrea Guarracino, and
+	Simon Heumos.

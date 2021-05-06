@@ -132,23 +132,24 @@ Program Information
 | **-P, –progress**
 | Write the current progress to stderr.
 
-EXIT STATUS
-===========
+..
+    EXIT STATUS
+    ===========
 
-| **0**
-| Success.
+    | **0**
+    | Success.
 
-| **1**
-| Failure (syntax or usage error; parameter error; file processing
-  failure; unexpected error).
+    | **1**
+    | Failure (syntax or usage error; parameter error; file processing
+      failure; unexpected error).
 
-BUGS
-====
+    BUGS
+    ====
 
-Refer to the **odgi** issue tracker at
-https://github.com/pangenome/odgi/issues.
+    Refer to the **odgi** issue tracker at
+    https://github.com/pangenome/odgi/issues.
 
-AUTHORS
-=======
+    AUTHORS
+    =======
 
-**odgi bin** was written by Erik Garrison and Simon Heumos
+    **odgi bin** was written by Erik Garrison and Simon Heumos
