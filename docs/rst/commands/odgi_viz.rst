@@ -177,10 +177,7 @@ Program Information
 	
 	BUGS
 	====
-	
-	::
-	
-	   Refer to the *odgi* issue tracker at https://github.com/pangenome/odgi/issues.
+	Refer to the *odgi* issue tracker at https://github.com/pangenome/odgi/issues.
 	
 	AUTHORS
 	=======
