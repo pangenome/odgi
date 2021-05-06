@@ -14,84 +14,83 @@ SYNOPSIS
 
 :ref:`odgi stats` -i graph.og -S
 
-**odgi** `stats <#odgi_degree.adoc#_odgi_degree1>`__ -i graph.og -S
+:ref:`odgi degree` -i graph.og -S
 
-**odgi** `depth <#odgi_depth.adoc#_odgi_depth1>`__ -i graph.og
+:ref:`odgi depth` -i graph.og
 
-**odgi** `overlap <#odgi_overlap.adoc#_odgi_overlap1>`__ -i graph.og -r
+:ref:`odgi overlap` -i graph.og -r
 path_name
 
-**odgi** `cover <#odgi_cover.adoc#_odgi_cover1>`__ -i graph.og -o
+:ref:`odgi cover` -i graph.og -o
 graph.paths.og
 
-**odgi** `extract <#odgi_extract.adoc#_odgi_extract1>`__ -i graph.og -p
+:ref:`odgi extract` -i graph.og -p
 prefix -r path_name:0-17
 
-**odgi** `explode <#odgi_explode.adoc#_odgi_explode1>`__ -i graph.og -p
+:ref:`odgi explode` -i graph.og -p
 prefix
 
-**odgi** `squeeze <#odgi_squeeze.adoc#_odgi_squeeze1>`__ -f
+:ref:`odgi squeeze` -f
 input_graphs.txt -o graphs.og
 
-**odgi** `position <#odgi_position.adoc#_odgi_position1>`__ -i
+:ref:`odgi position` -i
 target_graph.og -g
 
-**odgi** `sort <#odgi_sort.adoc#_odgi_sort1>`__ -i graph.og -o
+:ref:`odgi sort` -i graph.og -o
 graph.sorted.og -p bSnSnS
 
-**odgi** `view <#odgi_view.adoc#_odgi_view1>`__ -i graph.og -g
+:ref:`odgi view` -i graph.og -g
 
-**odgi** `kmers <#odgi_kmers.adoc#_odgi_kmers1>`__ -i graph.og -c -k 23
+:ref:`odgi kmers` -i graph.og -c -k 23
 -e 34 -D 50
 
-**odgi** `unitig <#odgi_unitig.adoc#_odgi_unitig1>`__ -i graph.og -f -t
+:ref:`odgi unitig` -i graph.og -f -t
 1324 -l 120
 
-**odgi** `viz <#odgi_viz.adoc#_odgi_viz1>`__ -i graph.og -o graph.og.png
+:ref:`odgi viz` -i graph.og -o graph.og.png
 -x 1920 -y 1080 -R -t 28
 
-**odgi** `draw <#odgi_draw.adoc#_odgi_draw1>`__ -i graph.og -c
+:ref:`odgi draw` -i graph.og -c
 coords.lay -p .png -x 1920 -y 1080 -R -t 28
 
-**odgi** `paths <#odgi_paths.adoc#_odgi_paths1>`__ -i graph.og -f
+:ref:`odgi paths` -i graph.og -f
 
-**odgi** `prune <#odgi_prune.adoc#_odgi_prune1>`__ -i graph.og -o
+:ref:`odgi prune` -i graph.og -o
 graph.pruned.og -c 3 -C 345 -T
 
-**odgi** `unchop <#odgi_unchop.adoc#_odgi_unchop1>`__ -i graph.og -o
+:ref:`odgi unchop` -i graph.og -o
 graph.unchopped.og
 
-**odgi** `normalize <#odgi_normalize.adoc#_odgi_normalize1>`__ -i
+:ref:`odgi normalize` -i
 graph.og -o graph.normalized.og -I 100 -d
 
-**odgi** `bin <#odgi_bin.adoc#_odgi_bin1>`__ -i graph.og -j -w 100 -s -g
+:ref:`odgi bin` -i graph.og -j -w 100 -s -g
 
-**odgi** `matrix <#odgi_matrix.adoc#_odgi_matrix1>`__ -i graph.og -e -d
+:ref:`odgi matrix` -i graph.og -e -d
 
-**odgi** `chop <#odgi_chop.adoc#_odgi_chop1>`__ -i graph.og -o
+:ref:`odgi chop` -i graph.og -o
 graph.choped.og -c 1000
 
-**odgi** `groom <#odgi_groom.adoc#_odgi_groom1>`__ -i graph.og -o
+:ref:`odgi groom` -i graph.og -o
 graph.groomed.og
 
-**odgi** `layout <#odgi_layout.adoc#_odgi_layout1>`__ -i graph.og -o
-graph.svg -R 10 -m 100
+:ref:`odgi layout` -i graph.og -o
+graph.og.lay
 
-**odgi** `break <#odgi_break.adoc#_odgi_break1>`__ -i graph.og -o
+:ref:`odgi break` -i graph.og -o
 graph.broken.og -s 100 -d
 
-**odgi** `pathindex <#odgi_pathindex.adoc#_odgi_pathindex1>`__ -i
-graph.og -o graph.xp
+:ref:`odgi pathindex` -i graph.og -o graph.xp
 
-**odgi** `panpos <#odgi_panpos.adoc#_odgi_panpos1>`__ -i graph.og -p
+:ref:`odgi panpos` -i graph.og -p
 Chr1 -n 4
 
-**odgi** `server <#odgi_server.adoc#_odgi_server1>`__ -i graph.og -p
+:ref:`odgi server` -i graph.og -p
 4000 -ip 192.168.8.9
 
-**odgi** `test <#odgi_test.adoc#_odgi_test1>`__
+:ref:`odgi test`
 
-**odgi** `version <#odgi_version.adoc#_odgi_version1>`__
+:ref:`odgi version`
 
 DESCRIPTION
 ===========
@@ -100,8 +99,7 @@ DESCRIPTION
 thrifty dynamic in-memory variation graph data model to a set of
 algorithms designed for scalable sorting, pruning, transformation, and
 visualization of very large `genome
-graphs <https://pangenome.github.io/>`__. **odgi** includes `python
-bindings <https://pangenome.github.io/odgi/odgipy.html>`__ that can be
+graphs <https://pangenome.github.io/>`__. **odgi** includes :ref:`python bindings` that can be
 used to `directly interface with its data
 model <https://odgi.readthedocs.io/en/latest/rst/tutorial.html>`__. This
 **odgi** manual provides detailed information about its features and
@@ -229,7 +227,7 @@ within one parameter.
   directly renders a raster image. The binning level depends on the
   target width of the PNG to emit. Can be used to produce visualizations
   for gigabase scale pangenomes. For more information about the binning
-  process, please refer to `odgi bin <#odgi_bin.adoc#_odgi_bin1>`__. If
+  process, please refer to :ref:`odgi bin`. If
   reverse coloring was selected, only the bins with a reverse rate of at
   least 0.5 are colored. Currently, there is no parameter to color
   according to the sequence coverage in bins available.
@@ -257,7 +255,7 @@ previously-determined 2D layouts of the graph with diverse annotations.
 | **odgi normalize** [**-i, –idx**\ =\ *FILE*] [**-o, –out**\ =\ *FILE*]
   [*OPTION*]…
 | The odgi normalize(1) command
-  `unchops <#odgi_unchop.adoc#_odgi_unchop1>`__ a given variation graph
+  unchops :ref:`odgi unchop` a given variation graph
   and simplifies redundant furcations.
 
 | **odgi matrix** [**-i, –idx**\ =\ *FILE*] [*OPTION*]…
@@ -272,8 +270,7 @@ previously-determined 2D layouts of the graph with diverse annotations.
   summarized view of gigabase scale graphs. Each step of a path is a bin
   and connected to its next bin via a link. A link has a start bin
   identifier and an end bin identifier.
-| The concept of odgi bin is also applied in odgi
-  `viz <#odgi_viz.adoc#_odgi_viz1>`__. A demonstration of how the odgi
+| The concept of odgi bin is also applied in :ref:`odgi viz`. A demonstration of how the odgi
   bin JSON output can be used for an interactive visualization is
   realized in the `Pantograph <https://graph-genome.github.io/>`__
   project. Per default, odgi bin writes the bins to stdout in a
@@ -320,7 +317,7 @@ previously-determined 2D layouts of the graph with diverse annotations.
   uses succinct data structures to encode the index. The path index
   represents a subset of the features of a fully realized `xg
   index <https://github.com/vgteam/xg>`__. Having a path index, we can
-  use odgi `panpos <#odgi_panpos.adoc#_odgi_panpos1>`__ to go from
+  use :ref:`odgi panpos` to go from
   **path:position** → **pangenome:position** which is important when
   navigating large graphs in an interactive manner like in the
   `Pantograph <https://graph-genome.github.io/>`__ project.
@@ -329,8 +326,7 @@ previously-determined 2D layouts of the graph with diverse annotations.
   [**-n, –nuc-pos**\ =\ *N*] [*OPTION*]…
 | The odgi panpos(1) command give a pangenome position for a given path
   and nucleotide position. It requires a path index, which can be
-  created with odgi
-  `pathindex <#odgi_pathindex.adoc#_odgi_pathindex1>`__. Going from
+  created with :ref:`odgi pathindex`. Going from
   **path:position** → **pangenome:position** is important when
   navigating large graphs in an interactive manner like in the
   `Pantograph <https://graph-genome.github.io/>`__ project. All input
@@ -343,8 +339,7 @@ previously-determined 2D layouts of the graph with diverse annotations.
   **pangenome:position** via GET requests to the HTTP server. The server
   headers do not block cross origin requests. Example GET request:
   *http://localost:3000/path_name/nucleotide_position*.
-| The required path index can be created with odgi
-  `pathindex <#odgi_pathindex.adoc#_odgi_pathindex1>`__. Going from
+| The required path index can be created with :ref:`odgi pathindex`. Going from
   **path:position** → **pangenome:position** is important when
   navigating large graphs in an interactive manner like in the
   `Pantograph <https://graph-genome.github.io/>`__ project. All input
