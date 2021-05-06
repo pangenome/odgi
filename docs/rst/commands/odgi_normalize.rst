@@ -15,8 +15,8 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-The odgi normalize(1) command
-`unchops <#odgi_unchop.adoc#_odgi_unchop1>`__ a given variation graph
+The odgi normalize(1) command unchops
+:ref:`odgi unchop` a given variation graph
 and simplifies redundant furcations.
 
 OPTIONS

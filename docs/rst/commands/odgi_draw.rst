@@ -28,8 +28,7 @@ Files IO
 | Load the graph from this file. The file name usually ends with *.og*.
 
 | **-c, –coords-in**\ =\ *FILE*
-| Read the layout coordinates from this .lay format file produced by
-  `odgi layout <#odgi_layout.adoc#_odgi_layout1>`__
+| Read the layout coordinates from this .lay format file produced by :ref:`odgi layout`.
 
 | **-T, –tsv**\ =\ *FILE*
 | Write the TSV layout plus displayed annotations to this file.

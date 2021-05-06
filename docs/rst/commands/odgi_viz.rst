@@ -20,8 +20,7 @@ odgi variation graph. It can aggregate the pangenome into bins and
 directly renders a raster image. The binning level can be specified in
 input or it is calculated from the target width of the PNG to emit. Can
 be used to produce visualizations for gigabase scale pangenomes. For
-more information about the binning process, please refer to `odgi
-bin <#odgi_bin.adoc#_odgi_bin1>`__.
+more information about the binning process, please refer to :ref:`odgi bin`.
 
 OPTIONS
 =======

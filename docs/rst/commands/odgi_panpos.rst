@@ -18,7 +18,7 @@ DESCRIPTION
 
 The odgi panpos(1) command give a pangenome position for a given path
 and nucleotide position. It requires a path index, which can be created
-with odgi `pathindex <#odgi_pathindex.adoc#_odgi_pathindex1>`__. Going
+with :ref:`odgi pathindex`. Going
 from **path:position** → **pangenome:position** is important when
 navigating large graphs in an interactive manner like in the
 `Pantograph <https://graph-genome.github.io/>`__ project. All input and

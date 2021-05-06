@@ -21,8 +21,7 @@ DESCRIPTION
   summarized view of gigabase scale graphs. Each step of a path is a bin
   and connected to its next bin via a link. A link has a start bin
   identifier and an end bin identifier.
-| The concept of odgi bin is also applied in odgi
-  `viz <#odgi_viz.adoc#_odgi_viz1>`__. A demonstration of how the odgi
+| The concept of odgi bin is also applied in :ref:`odgi viz`. A demonstration of how the odgi
   bin JSON output can be used for an interactive visualization is
   realized in the `Pantograph <https://graph-genome.github.io/>`__
   project. Per default, odgi bin writes the bins to stdout in a
@@ -133,23 +132,23 @@ Program Information
 | Write the current progress to stderr.
 
 ..
-    EXIT STATUS
-    ===========
+	EXIT STATUS
+	===========
 
-    | **0**
-    | Success.
+	| **0**
+	| Success.
 
-    | **1**
-    | Failure (syntax or usage error; parameter error; file processing
-      failure; unexpected error).
+	| **1**
+	| Failure (syntax or usage error; parameter error; file processing
+	  failure; unexpected error).
 
-    BUGS
-    ====
+	BUGS
+	====
 
-    Refer to the **odgi** issue tracker at
-    https://github.com/pangenome/odgi/issues.
+	Refer to the **odgi** issue tracker at
+	https://github.com/pangenome/odgi/issues.
 
-    AUTHORS
-    =======
+	AUTHORS
+	=======
 
-    **odgi bin** was written by Erik Garrison and Simon Heumos
+	**odgi bin** was written by Erik Garrison and Simon Heumos

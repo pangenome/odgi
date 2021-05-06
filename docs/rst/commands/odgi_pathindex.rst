@@ -19,7 +19,7 @@ The odgi pathindex(1) command generates a path index of a graph. It uses
 succinct data structures to encode the index. The path index represents
 a subset of the features of a fully realized `xg
 index <https://github.com/vgteam/xg>`__. Having a path index, we can use
-odgi `panpos <#odgi_panpos.adoc#_odgi_panpos1>`__ to go from
+:ref:`odgi panpos` to go from
 **path:position** → **pangenome:position** which is important when
 navigating large graphs in an interactive manner like in the
 `Pantograph <https://graph-genome.github.io/>`__ project.
