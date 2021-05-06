@@ -4,10 +4,7 @@
 odgi
 #########
 
-NAME
-====
-
-odgi - dynamic succinct variation graph tool
+dynamic succinct variation graph tool
 
 SYNOPSIS
 ========

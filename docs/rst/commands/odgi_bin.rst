@@ -4,11 +4,7 @@
 odgi bin
 #########
 
-NAME
-====
-
-odgi_bin - binning of pangenome sequence and path information in the
-graph
+binning of pangenome sequence and path information in the graph
 
 SYNOPSIS
 ========

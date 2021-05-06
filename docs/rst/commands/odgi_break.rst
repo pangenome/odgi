@@ -4,10 +4,7 @@
 odgi break
 #########
 
-NAME
-====
-
-odgi_break - break cycles in the graph and drop its paths
+break cycles in the graph and drop its paths
 
 SYNOPSIS
 ========

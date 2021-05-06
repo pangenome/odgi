@@ -129,7 +129,7 @@ latex_elements = {
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
     (master_doc, 'odgi.tex', u'odgi documentation',
-     u'Andrea Guarracino, Simon Heumos, ... , Pjotr Prince, Erik Garrison', 'manual'),
+     u'Andrea Guarracino, Simon Heumos, ... , Pjotr Prins, Erik Garrison', 'manual'),
 ]
 
 
@@ -138,10 +138,12 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    ('md/odgi_bin', 'odgi_bin', u'odgi documentation',
+    ('rst/commands/odgi', 'odgi', u'dynamic succinct variation graph tool',
      [author], 1),
-    ('md/odgi', 'odgi', u'odgi documentation',
-     [author], 1)
+    ('rst/commands/odgi_bin', 'odgi_bin', u'binning of pangenome sequence and path information in the graph',
+     [author], 1),
+    ('rst/commands/odgi_break', 'odgi_break', u'break cycles in the graph and drop its paths',
+     [author], 1),
 ]
 
 
