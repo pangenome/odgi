@@ -59,8 +59,3 @@ Program Information
 	
 	Refer to the **odgi** issue tracker at
 	https://github.com/pangenome/odgi/issues.
-	
-	AUTHORS
-	=======
-	
-	**odgi pathindex** was written by Simon Heumos.

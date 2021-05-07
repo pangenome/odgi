@@ -87,9 +87,3 @@ Program Information
 	
 	Refer to the **odgi** issue tracker at
 	https://github.com/pangenome/odgi/issues.
-	
-	AUTHORS
-	=======
-	
-	**odgi layout** was written by Erik Garrison, Andrea Guarracino, and
-	Simon Heumos.

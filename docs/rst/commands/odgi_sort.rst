@@ -257,9 +257,3 @@ Program Information
 	
 	Refer to the **odgi** issue tracker at
 	https://github.com/pangenome/odgi/issues.
-	
-	AUTHORS
-	=======
-	
-	**odgi sort** was written by Erik Garrison, Simon Heumos, and Andrea
-	Guarracino.

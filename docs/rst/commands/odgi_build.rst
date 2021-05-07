@@ -88,8 +88,3 @@ Program Information
 
 	Refer to the **odgi** issue tracker at
 	https://github.com/pangenome/odgi/issues.
-
-	AUTHORS
-	=======
-
-	**odgi build** was written by Erik Garrison.

@@ -73,8 +73,3 @@ Program Information
 	
 	Refer to the **odgi** issue tracker at
 	https://github.com/pangenome/odgi/issues.
-	
-	AUTHORS
-	=======
-	
-	**odgi chop** was written by Erik Garrison and Andrea Guarracino.

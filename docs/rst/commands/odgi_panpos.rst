@@ -4,8 +4,7 @@
 odgi panpos
 #########
 
-get the pangenome position of a given path and nucleotide
-position (1-based)
+get the pangenome position of a given path and nucleotide position (1-based)
 
 SYNOPSIS
 ========
@@ -65,8 +64,3 @@ Program Information
 	
 	Refer to the **odgi** issue tracker at
 	https://github.com/pangenome/odgi/issues.
-	
-	AUTHORS
-	=======
-	
-	**odgi panpos** was written by Simon Heumos.

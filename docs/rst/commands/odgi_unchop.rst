@@ -66,8 +66,3 @@ Program Information
 	
 	Refer to the **odgi** issue tracker at
 	https://github.com/pangenome/odgi/issues.
-	
-	AUTHORS
-	=======
-	
-	**odgi unchop** was written by Erik Garrison and Andrea Guarracino.
