@@ -10,4 +10,3 @@ Exploratory analysis
 6) Linearity (gradient mode with  -d/--change-darkness): short links at the bottom and a smooth color gradient indicate a linear, and well-sorted, graph. We would need to explain the sorting.
 
 7) Completeness of haplotypes (-M/--prefix-merges): we use it to see how complete is the burned graph.
-The ``haplotype_names.txt`` file contains all the haplotypes present in the input de novo assembly.
