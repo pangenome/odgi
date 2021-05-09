@@ -25,7 +25,7 @@ To have basic information on the graph, execute:
 
 .. code-block:: bash
 
-    odgi stats -i DRB1-3123.og -S
+    odgi stats -i DRB1-3123.og -S | column -t
 
 .. code-block:: none
 
