@@ -362,7 +362,7 @@ namespace odgi {
         };
 
         auto get_graph_node_coverage = [](const odgi::graph_t &graph, const nid_t node_id,
-                                          const std::vector<bool> paths_to_consider) {
+                                          const std::vector<bool>& paths_to_consider) {
             const bool subset_paths = !paths_to_consider.empty();
 
             uint64_t node_coverage = 0;
