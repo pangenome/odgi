@@ -5,14 +5,14 @@
 namespace odgi {
     namespace algorithms {
 
-        void bin_path_coverage(const PathHandleGraph &graph,
+        void bin_path_depth(const PathHandleGraph &graph,
                            const bool progress,
                            const uint64_t min_paths,
-                           const uint64_t min_coverage) {
+                           const uint64_t min_depth) {
             std::unique_ptr<progress_meter::ProgressMeter> progress_meter;
             if (progress) {
                 progress_meter = std::make_unique<progress_meter::ProgressMeter>(
-                        graph.get_node_count(), "[odgi::bin] bin_path_coverage:");
+                        graph.get_node_count(), "[odgi::bin] bin_path_depth:");
             }
             const uint64_t path_count = graph.get_path_count();
             // write the header
@@ -37,7 +37,7 @@ namespace odgi {
                 uint64_t idx = 0;
                 for (const auto& path_cov : p_i) {
                     row += "\t";
-                    if (path_cov < min_coverage) {
+                    if (path_cov < min_depth) {
                         row += std::to_string(0);
                     } else {
                         paths_with_cov++;

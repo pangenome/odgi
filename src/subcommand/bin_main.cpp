@@ -30,9 +30,9 @@ int main_bin(int argc, char** argv) {
     args::ValueFlag<uint64_t> bin_width(parser, "bp", "width of each bin in basepairs along the graph vector", {'w', "bin-width"});
     args::Flag write_seqs_not(parser, "write-seqs-not", "don't write out the sequences for each bin", {'s', "no-seqs"});
     args::Flag drop_gap_links(parser, "drop-gap-links", "don't include gap links in the output", {'g', "no-gap-links"});
-    args::Flag haplo_blocker(parser, "haplo-blocker", "write a TSV to stdout for input to HaploBlocker: Each row corresponds to a node. Each column corresponds to a path. Each value is the coverage of a specific node of a specific path.", {'b', "haplo-blocker"});
+    args::Flag haplo_blocker(parser, "haplo-blocker", "write a TSV to stdout for input to HaploBlocker: Each row corresponds to a node. Each column corresponds to a path. Each value is the depth of a specific node of a specific path.", {'b', "haplo-blocker"});
     args::ValueFlag<uint64_t> haplo_blocker_min_paths(parser, "N", "the minimum number of paths that are present in the bin to actually report that bin", {'p', "haplo-blocker-min-paths"});
-    args::ValueFlag<uint64_t> haplo_blocker_min_coverage(parser, "N", "the minimum coverage a path needs to have in a bin to actually report that bin", {'c', "haplo-blocker-min-coverage"});
+    args::ValueFlag<uint64_t> haplo_blocker_min_depth(parser, "N", "the minimum depth a path needs to have in a bin to actually report that bin", {'c', "haplo-blocker-min-depth"});
     args::Flag progress(parser, "progress", "write current progress to stderr", {'P', "progress"});
     try {
         parser.ParseCLI(argc, argv);
@@ -56,8 +56,8 @@ int main_bin(int argc, char** argv) {
 
     graph_t graph;
     assert(argc > 0);
-    std::string infile = args::get(dg_in_file);
-    if (infile.size()) {
+    if (!args::get(dg_in_file).empty()) {
+        std::string infile = args::get(dg_in_file);
         if (infile == "-") {
             graph.deserialize(std::cin);
         } else {
@@ -96,18 +96,18 @@ int main_bin(int argc, char** argv) {
                      "-n/--num-bins, -w/--bin-width, -s/--no-seqs, -g/--no-gap-links." << std::endl;
         // first pass: collect #nucleotides, fill in_all_bins_bv, unique_bins_bv
         uint64_t haplo_blocker_min_paths_ = args::get(haplo_blocker_min_paths) ? args::get(haplo_blocker_min_paths) : 1;
-        uint64_t haplo_blocker_min_coverage_ = args::get(haplo_blocker_min_coverage) ? args::get(haplo_blocker_min_coverage) : 1.0;
-        algorithms::bin_path_coverage(graph, args::get(progress),
-                                      haplo_blocker_min_paths_, haplo_blocker_min_coverage_);
+        uint64_t haplo_blocker_min_depth_ = args::get(haplo_blocker_min_depth) ? args::get(haplo_blocker_min_depth) : 1.0;
+        algorithms::bin_path_depth(graph, args::get(progress),
+                                      haplo_blocker_min_paths_, haplo_blocker_min_depth_);
         // write header of table to stdout
 
         // for all paths, for each node and nucleotide in path --> better unordered_map https://stackoverflow.com/questions/1939953/how-to-find-if-a-given-key-exists-in-a-c-stdmap
         // map<uint64_t, double>: ++ when we cover the bin
         // as it is done so far
 
-        // update mean coverage
+        // update mean depth
         // write to std::cout, only if we have !in_all_bins_bv[idx] && !unique_bins_bv[idx] && auto it = m.find("f"); if (it != m.end()) {/*Use it->second*/}.
-        // cap coverage by 255
+        // cap depth by 255
     } else {
 
         // ODGI JSON VERSION
@@ -180,7 +180,7 @@ int main_bin(int argc, char** argv) {
                       const std::map<uint64_t, algorithms::path_info_t>& bins) {
                     std::string name_prefix = get_path_prefix(path_name);
                     std::string name_suffix = get_path_suffix(path_name);
-                    std::cout << "{\"path_name\":\"" << path_name << "\",";
+                    std::cout << R"({"path_name":")" << path_name << "\",";
                     if (!delim.empty()) {
                         std::cout << "\"path_name_prefix\":\"" << name_prefix << "\","
                                   << "\"path_name_suffix\":\"" << name_suffix << "\",";

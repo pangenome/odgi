@@ -19,9 +19,9 @@ namespace odgi {
         using namespace std;
         using namespace handlegraph;
 
-        void bin_path_coverage(const PathHandleGraph &graph,
+        void bin_path_depth(const PathHandleGraph &graph,
                            const bool progress = false,
                            const uint64_t min_paths = 1,
-                           const uint64_t min_coverage = 1);
+                           const uint64_t min_depth = 1);
     }
 }
