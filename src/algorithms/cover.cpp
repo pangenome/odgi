@@ -149,16 +149,10 @@ namespace odgi {
                     // For example, some nodes of the original graph may be missing from a GBWTGraph.
                     if (!(graph.has_node(id))) { continue; }
 
-                    uint64_t coverage = 0;
-                    if (!ignore_paths){
-                        graph.for_each_step_on_handle(graph.get_handle(id), [&](const step_handle_t& step) {
-                            coverage++;
-                        });
-                    }
-
-                    node_coverage.emplace_back(id, static_cast<coverage_t>(coverage));
-
+                    uint64_t depth = ignore_paths ? 0 : graph.get_step_count(graph.get_handle(id));
+                    node_coverage.emplace_back(id, static_cast<coverage_t>(depth));
                 }
+                
                 return node_coverage;
             }
 
