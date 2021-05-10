@@ -13,7 +13,7 @@ namespace subcommand {
 std::ostream& operator<<(std::ostream& out, const CommandCategory& category) {
     switch(category) {
     case PIPELINE:
-        out << "overview of available subcommands";
+        out << "overview of available commands";
         break;
     case TOOLKIT:
         out << "useful graph tools";
@@ -25,30 +25,30 @@ std::ostream& operator<<(std::ostream& out, const CommandCategory& category) {
         out << "developer commands";
         break;
     }
-    
+
     return out;
 }
 
-Subcommand::Subcommand(std::string name, std::string description,
+Subcommand::Subcommand(const std::string& name, std::string description,
     CommandCategory category, int priority,
     std::function<int(int, char**)> main_function) : name(name),
-    category(category), priority(priority), description(description),
-    main_function(main_function) {
-    
+    category(category), priority(priority), description(std::move(description)),
+    main_function(std::move(main_function)) {
+
     // Add this subcommand to the registry
     Subcommand::get_registry()[name] = this;
 }
 
-Subcommand::Subcommand(std::string name, std::string description,
-    CommandCategory category, 
+Subcommand::Subcommand(const std::string& name, std::string description,
+    CommandCategory category,
     std::function<int(int, char**)> main_function) : Subcommand(name,
-    description, category, std::numeric_limits<int>::max(), main_function) {
-    
+    std::move(description), category, std::numeric_limits<int>::max(), std::move(main_function)) {
+
     // Nothing to do!
 }
 
-Subcommand::Subcommand(std::string name, std::string description,
-    std::function<int(int, char**)> main_function) : Subcommand(name, description, WIDGET, main_function) {
+Subcommand::Subcommand(const std::string& name, std::string description,
+    std::function<int(int, char**)> main_function) : Subcommand(name, std::move(description), WIDGET, std::move(main_function)) {
     // Nothing to do!
 }
 
@@ -77,7 +77,7 @@ const Subcommand* Subcommand::get(int argc, char** argv) {
         // We don't have a subcommand name
         return nullptr;
     }
-    
+
     if(Subcommand::get_registry().count(argv[1])) {
         // We have a matching subcommand pointer, so return it.
         return Subcommand::get_registry()[argv[1]];
@@ -97,27 +97,27 @@ void Subcommand::for_each(const std::function<void(const Subcommand&)>& lambda) 
 void Subcommand::for_each(CommandCategory category, const std::function<void(const Subcommand&)>& lambda) {
     if (category == PIPELINE) {
         // Pipeline commands get a special priority order
-        
+
         // We will store them with their priorities and sort them.
         // Easier than writing a custom comparator.
-        std::vector<std::pair<int, const Subcommand*>> by_priority;
-        
+        std::vector<std::pair<std::string, const Subcommand*>> by_priority;
+
         for_each([&](const Subcommand& command) {
             // Loop over all the subcommands
             if (command.category == category) {
                 // And add the ones we care about by priority
-                by_priority.push_back(std::make_pair(command.priority, &command));
+                by_priority.emplace_back(command.get_name(), &command);
             }
         });
-        
+
         std::sort(by_priority.begin(), by_priority.end());
-        
+
+        // Now in order of decreasing priority
         for (auto& kv : by_priority) {
-            // Now in order of decreasing priority
             // Run the lambda
             lambda(*kv.second);
         }
-        
+
     } else {
         // All other categories just list in alphabetical order
         for_each([&](const Subcommand& command) {
@@ -133,7 +133,7 @@ void Subcommand::for_each(CommandCategory category, const std::function<void(con
 std::map<std::string, Subcommand*>& Subcommand::get_registry() {
     // We keep a static local, which gets initialized when we get called.
     static std::map<std::string, Subcommand*> registry;
-    
+
     // Return a reference to it
     return registry;
 }

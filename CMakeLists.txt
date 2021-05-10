@@ -396,7 +396,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/is_single_stranded.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/remove_high_degree.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/prune.cpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/coverage.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/depth.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/cycle_breaking_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/random_order.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/eades_algorithm.cpp
@@ -411,7 +411,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/id_ordered_paths.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/simple_components.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_info.cpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_coverage.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_depth.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/sgd_layout.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/mondriaan_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/matrix_writer.cpp
@@ -543,7 +543,7 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/algorithms/prune.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/reverse_complement.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_info.hpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_coverage.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_depth.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/dfs.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/chop.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/unchop.hpp

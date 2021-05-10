@@ -56,13 +56,12 @@ namespace algorithms {
         */
         void path_cover(handlegraph::MutablePathDeletableHandleGraph &graph,
                         size_t num_paths_per_component, size_t node_window_size,
-                        size_t min_node_coverage, size_t max_number_of_paths_generable,
-                        bool write_node_coverages, std::string &node_coverages,
+                        size_t min_node_depth, size_t max_number_of_paths_generable,
+                        bool write_node_depth, std::string &node_depth,
                         const uint64_t& nthreads, const bool& ignore_paths, const bool& show_progress);
 
 void hogwild_path_cover(handlegraph::MutablePathDeletableHandleGraph &graph,
                         double target_depth,
-                        //bool write_node_coverages, std::string &node_coverages,
                         const uint64_t& nthreads, const bool& ignore_paths, const bool& show_progress);
 
 }
