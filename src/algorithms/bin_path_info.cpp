@@ -91,7 +91,7 @@ namespace odgi {
                             // bin cross!
                             links.push_back(std::make_pair(last_bin, curr_bin));
                         }
-                        ++bins[curr_bin].mean_cov;
+                        ++bins[curr_bin].mean_depth;
                         if (is_rev) {
                             ++bins[curr_bin].mean_inv;
                         }
@@ -131,9 +131,9 @@ namespace odgi {
                 uint64_t end_nucleotide = nucleotide_count;
                 for (auto &entry : bins) {
                     auto &v = entry.second;
-                    v.mean_inv /= (v.mean_cov ? v.mean_cov : 1);
-                    v.mean_cov /= bin_width;
-                    v.mean_pos /= bin_width * path_length * v.mean_cov;
+                    v.mean_inv /= (v.mean_depth ? v.mean_depth : 1);
+                    v.mean_depth /= bin_width;
+                    v.mean_pos /= bin_width * path_length * v.mean_depth;
                 }
 
                 if (drop_gap_links) {

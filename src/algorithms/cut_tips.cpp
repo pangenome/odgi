@@ -32,7 +32,7 @@ uint64_t cut_tips(
 
 uint64_t cut_tips(
     MutablePathDeletableHandleGraph& graph,
-    uint64_t min_coverage) {
+    uint64_t min_depth) {
     auto tips = tip_handles(graph);
     std::vector<handle_t> drop_tips;
     std::sort(tips.begin(), tips.end());
@@ -43,7 +43,7 @@ uint64_t cut_tips(
             [&](const step_handle_t& step) {
                 to_destroy.push_back(step);
             });
-        if (!min_coverage || to_destroy.size() < min_coverage) {
+        if (!min_depth || to_destroy.size() < min_depth) {
             for (auto& step : to_destroy) {
                 graph.rewrite_segment(step, step, {});
             }

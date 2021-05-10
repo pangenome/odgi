@@ -22,7 +22,7 @@ namespace odgi {
         using namespace handlegraph;
 
         struct path_info_t {
-            double mean_cov;
+            double mean_depth;
             double mean_inv;
             double mean_pos;
             vector<std::pair<uint64_t,uint64_t>> ranges;

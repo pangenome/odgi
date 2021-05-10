@@ -74,7 +74,7 @@ namespace odgi {
         args::Flag binned_mode(parser, "binned-mode", "bin the variation graph before its visualization", {'b', "binned-mode"});
         args::ValueFlag<uint64_t> bin_width(parser, "bp", "width of each bin in basepairs along the graph vector",{'w', "bin-width"});
         args::Flag drop_gap_links(parser, "drop-gap-links", "don't include gap links in the output", {'g', "no-gap-links"});
-        args::Flag color_by_mean_coverage(parser, "color-by-mean-coverage", "change the color respect to the mean coverage of the path for each bin, from black (no coverage) to blue (max bin mean coverage in the entire graph)", {'m', "color-by-mean-coverage"});
+        args::Flag color_by_mean_depth(parser, "color-by-mean-depth", "change the color respect to the mean depth of the path in each bin, from black (no depth) to blue (max bin mean depth in the entire graph)", {'m', "color-by-mean-depth"});
 
         /// Gradient mode
         args::Flag change_darkness(parser, "change-darkness", "change the color darkness based on nucleotide position in the path", {'d', "change-darkness"});
@@ -113,11 +113,11 @@ namespace odgi {
         if (
                 !args::get(binned_mode) &&
                 ((args::get(bin_width) > 0) || args::get(drop_gap_links) ||
-                args::get(color_by_mean_coverage))
+                args::get(color_by_mean_depth))
                 ){
             std::cerr
                     << "[odgi::viz] error: please specify the -b/--binned-mode option to use the "
-                       "-w/--bin_width, -g/--no-gap-links, and -m/--color-by-mean-coverage "
+                       "-w/--bin_width, -g/--no-gap-links, and -m/--color-by-mean-depth "
                        "options."
                     << std::endl;
             return 1;
@@ -130,19 +130,19 @@ namespace odgi {
             return 1;
         }
 
-        if ((args::get(_color_by_prefix) != 0) + args::get(show_strands) + args::get(white_to_black) + args::get(color_by_mean_coverage) + args::get(color_by_mean_inversion_rate) > 1) {
+        if ((args::get(_color_by_prefix) != 0) + args::get(show_strands) + args::get(white_to_black) + args::get(color_by_mean_depth) + args::get(color_by_mean_inversion_rate) > 1) {
             std::cerr
                     << "[odgi::viz] error: please specify only one of the following options: "
                        "-s/--color-by-prefix, -S/--show-strand, -u/--white-to-black, "
-                       "-m/--color-by-mean-coverage, and -z/--color-by-mean-inversion."
+                       "-m/--color-by-mean-depth, and -z/--color-by-mean-inversion."
                     << std::endl;
             return 1;
         }
 
-        if (args::get(change_darkness) && (args::get(color_by_mean_coverage) || args::get(color_by_mean_inversion_rate))) {
+        if (args::get(change_darkness) && (args::get(color_by_mean_depth) || args::get(color_by_mean_inversion_rate))) {
             std::cerr
                     << "[odgi::viz] error: please specify the -d/--change-darkness option without specifying "
-                       "-m/--color-by-mean-coverage or -z/--color-by-mean-inversion."
+                       "-m/--color-by-mean-depth or -z/--color-by-mean-inversion."
                     << std::endl;
             return 1;
         }
@@ -731,12 +731,12 @@ namespace odgi {
         bool _longest_path = args::get(longest_path);
         bool _white_to_black = args::get(white_to_black);
 
-        bool _color_by_mean_coverage = args::get(color_by_mean_coverage);
+        bool _color_by_mean_depth = args::get(color_by_mean_depth);
         bool _color_by_mean_inversion_rate = args::get(color_by_mean_inversion_rate);
 
         uint64_t longest_path_len = 0;
-        double max_mean_cov = 0.0;
-        if ((_change_darkness && _longest_path) || (_binned_mode && _color_by_mean_coverage)){
+        double max_mean_depth = 0.0;
+        if ((_change_darkness && _longest_path) || (_binned_mode && _color_by_mean_depth)){
             graph.for_each_path_handle([&](const path_handle_t &path) {
                 int64_t path_rank = get_path_idx(path);
                 if (path_rank >= 0 && path_layout_y[path_rank] >= 0){
@@ -753,19 +753,19 @@ namespace odgi {
                         for (uint64_t k = 0; k < hl; ++k) {
                             int64_t curr_bin = (p + k) / _bin_width + 1;
 
-                            ++bins[curr_bin].mean_cov;
+                            ++bins[curr_bin].mean_depth;
                         }
                     });
 
                     for (auto &entry : bins) {
-                        max_mean_cov = std::max(entry.second.mean_cov, max_mean_cov);
+                        max_mean_depth = std::max(entry.second.mean_depth, max_mean_depth);
                     }
 
                     longest_path_len = std::max(longest_path_len, curr_len);
                 }
             });
 
-            max_mean_cov /= _bin_width;
+            max_mean_depth /= _bin_width;
         }
 
         std::unordered_set<pair<uint64_t, uint64_t>> edges_drawn;
@@ -821,7 +821,7 @@ namespace odgi {
                     if (
                             _show_strands ||
                             (_change_darkness && !_longest_path) ||
-                            (_binned_mode && (_color_by_mean_coverage || _color_by_mean_inversion_rate || _change_darkness))
+                            (_binned_mode && (_color_by_mean_depth || _color_by_mean_inversion_rate || _change_darkness))
                             ) {
                         handle_t h;
                         uint64_t hl, p;
@@ -841,12 +841,12 @@ namespace odgi {
                                 path_len_to_use += hl;
                             }
 
-                            if (_binned_mode && (_color_by_mean_coverage || _color_by_mean_inversion_rate || _change_darkness)){
+                            if (_binned_mode && (_color_by_mean_depth || _color_by_mean_inversion_rate || _change_darkness)){
                                 p = position_map[number_bool_packing::unpack_number(h)];
                                 for (uint64_t k = 0; k < hl; ++k) {
                                     int64_t curr_bin = (p + k) / _bin_width + 1;
 
-                                    ++bins[curr_bin].mean_cov;
+                                    ++bins[curr_bin].mean_depth;
                                     if (is_rev) {
                                         ++bins[curr_bin].mean_inv;
                                     }
@@ -854,11 +854,11 @@ namespace odgi {
                             }
                         });
 
-                        if (_binned_mode && (_color_by_mean_coverage || _color_by_mean_inversion_rate || _change_darkness)) {
+                        if (_binned_mode && (_color_by_mean_depth || _color_by_mean_inversion_rate || _change_darkness)) {
                             for (auto &entry : bins) {
                                 auto &v = entry.second;
-                                v.mean_inv /= (v.mean_cov ? v.mean_cov : 1);
-                                v.mean_cov /= _bin_width;
+                                v.mean_inv /= (v.mean_depth ? v.mean_depth : 1);
+                                v.mean_depth /= _bin_width;
                             }
                         }
                     }
@@ -887,7 +887,7 @@ namespace odgi {
                         path_r = 220;
                         path_g = 220;
                         path_b = 220;
-                    } else if (_binned_mode && _color_by_mean_coverage) {
+                    } else if (_binned_mode && _color_by_mean_depth) {
                         path_r = 128;
                         path_g = 255;
                         path_b = 0;
@@ -899,7 +899,7 @@ namespace odgi {
                 }
 
                 if (!(
-                        is_aln && (( _change_darkness && _white_to_black) || _color_by_mean_inversion_rate || (_binned_mode && (_color_by_mean_coverage || _change_darkness)))
+                        is_aln && (( _change_darkness && _white_to_black) || _color_by_mean_inversion_rate || (_binned_mode && (_color_by_mean_depth || _change_darkness)))
                         )) {
                     // brighten the color
                     float f = std::min(1.5, 1.0 / std::max(std::max(path_r_f, path_g_f), path_b_f));
@@ -969,8 +969,8 @@ namespace odgi {
                                     if (_change_darkness){
                                         uint64_t ii = bins[curr_bin].mean_inv > 0.5 ? (hl - k) : k;
                                         x = 1 - ( (float)(curr_len + ii) / (float)(path_len_to_use)) * 0.9;
-                                    } else if (_color_by_mean_coverage) {
-                                        x = bins[curr_bin].mean_cov / max_mean_cov;
+                                    } else if (_color_by_mean_depth) {
+                                        x = bins[curr_bin].mean_depth / max_mean_depth;
                                     } else if (_color_by_mean_inversion_rate) {
                                         x = bins[curr_bin].mean_inv;
                                     }

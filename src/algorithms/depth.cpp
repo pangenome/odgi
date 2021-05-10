@@ -1,20 +1,20 @@
-#include "coverage.hpp"
+#include "depth.hpp"
 
 namespace odgi {
 namespace algorithms {
 
-std::vector<handle_t> find_handles_exceeding_coverage_limits(const MutablePathDeletableHandleGraph& graph, uint64_t min_coverage, uint64_t max_coverage) {
+std::vector<handle_t> find_handles_exceeding_depth_limits(const MutablePathDeletableHandleGraph& graph, uint64_t min_depth, uint64_t max_depth) {
     std::vector<handle_t> handles;
     graph.for_each_handle([&](const handle_t& handle) {
             uint64_t step_count = graph.steps_of_handle(handle).size();
-            if (min_coverage && step_count < min_coverage || max_coverage && step_count > max_coverage) {
+            if (min_depth && step_count < min_depth || max_depth && step_count > max_depth) {
                 handles.push_back(handle);
             }
         });
     return handles;
 }
 
-std::vector<edge_t> find_edges_exceeding_coverage_limits(const MutablePathDeletableHandleGraph& graph, uint64_t min_coverage, uint64_t max_coverage) {
+std::vector<edge_t> find_edges_exceeding_depth_limits(const MutablePathDeletableHandleGraph& graph, uint64_t min_depth, uint64_t max_depth) {
     std::vector<edge_t> edges;
     graph.for_each_handle([&](const handle_t& handle) {
             hash_map<handle_t, uint64_t> nexts;
@@ -31,13 +31,13 @@ std::vector<edge_t> find_edges_exceeding_coverage_limits(const MutablePathDeleta
                 });
             for (auto& n : nexts) {
                 const uint64_t& path_cov = n.second;
-                if (min_coverage && path_cov < min_coverage || max_coverage && path_cov > max_coverage) {
+                if (min_depth && path_cov < min_depth || max_depth && path_cov > max_depth) {
                     edges.push_back(std::make_pair(handle, n.first));
                 }
             }
             for (auto& p : prevs) {
                 const uint64_t& path_cov = p.second;
-                if (min_coverage && path_cov < min_coverage || max_coverage && path_cov > max_coverage) {
+                if (min_depth && path_cov < min_depth || max_depth && path_cov > max_depth) {
                     edges.push_back(std::make_pair(p.first, handle));
                 }
             }
