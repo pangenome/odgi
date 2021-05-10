@@ -242,8 +242,8 @@ namespace odgi {
         component_path_cover(handlegraph::MutablePathDeletableHandleGraph &graph,
                              std::vector<ska::flat_hash_set<handlegraph::nid_t>> &components, size_t component_id,
                              size_t num_paths_per_component, size_t node_window_size,
-                             size_t min_node_coverage, size_t max_number_of_paths_generable,
-                             bool write_node_covearges, std::string &node_coverages,
+                             size_t min_node_depth, size_t max_number_of_paths_generable,
+                             bool write_node_depth, std::string &node_depth,
                              const uint64_t& nthreads, const bool& ignore_paths, const bool& show_progress) {
             typedef typename Coverage::coverage_t coverage_t;
             typedef typename Coverage::node_coverage_t node_coverage_t;
@@ -258,15 +258,15 @@ namespace odgi {
                           << (acyclic ? "acyclic." : "cyclic.") << std::endl;
             }
 
-            // Node coverage for the potential starting nodes.
-            std::vector<node_coverage_t> node_coverage = Coverage::init_node_coverage(
+            // Node depth for the potential starting nodes.
+            std::vector<node_coverage_t> all_nodes_depth = Coverage::init_node_coverage(
                     graph, (acyclic ? head_nodes : component), ignore_paths
                     );
             std::map<std::vector<handle_t>, coverage_t> path_coverage; // Path and its reverse complement are equivalent.
 
-            // Node coverage will be empty if we cannot create this type of path cover for the component.
+            // all_nodes_depth will be empty if we cannot create this type of path cover for the component.
             // For example, if there are no haplotypes for LocalHaplotypes.
-            if (node_coverage.empty()) {
+            if (all_nodes_depth.empty()) {
                 if (show_progress) {
                     std::cerr << Coverage::name() << ": Cannot find this type of path cover for the component"
                               << std::endl;
@@ -279,7 +279,7 @@ namespace odgi {
             component = ska::flat_hash_set<handlegraph::nid_t>();
 
             if (num_paths_per_component > 0) {
-                min_node_coverage = std::numeric_limits<uint64_t>::max();
+                min_node_depth = std::numeric_limits<uint64_t>::max();
             } else {
                 num_paths_per_component = max_number_of_paths_generable;
             }
@@ -288,7 +288,7 @@ namespace odgi {
             for (i = 0; i < num_paths_per_component; i++) {
                 // Choose a starting node with minimum coverage and then sort the nodes by id.
                 std::deque<handle_t> path;
-                ips4o::parallel::sort(node_coverage.begin(), node_coverage.end(),
+                ips4o::parallel::sort(all_nodes_depth.begin(), all_nodes_depth.end(),
                           [](const node_coverage_t &a, const node_coverage_t &b) -> bool {
                               return (a.second < b.second);
                           }, nthreads);
@@ -297,17 +297,17 @@ namespace odgi {
                 std::cerr << node_coverage.front().first << " --- " << node_coverage.front().second << std::endl;
 #endif
 
-                if (node_coverage.front().second >= min_node_coverage) {
+                if (all_nodes_depth.front().second >= min_node_depth) {
                     if (show_progress) {
-                        std::cerr << Coverage::name() << ": minimum node coverage reached after generating " << i << " paths." << std::endl;
+                        std::cerr << Coverage::name() << ": minimum node depth reached after generating " << i << " paths." << std::endl;
                     }
 
                     break;
                 }
 
-                path.push_back(graph.get_handle(node_coverage.front().first, false));
-                Coverage::increase_coverage(node_coverage.front());
-                ips4o::parallel::sort(node_coverage.begin(), node_coverage.end(),
+                path.push_back(graph.get_handle(all_nodes_depth.front().first, false));
+                Coverage::increase_coverage(all_nodes_depth.front());
+                ips4o::parallel::sort(all_nodes_depth.begin(), all_nodes_depth.end(),
                           [](const node_coverage_t &a, const node_coverage_t &b) -> bool {
                               return (a.first < b.first);
                           }, nthreads);
@@ -316,10 +316,10 @@ namespace odgi {
                 bool success = true;
                 while (success && path.size() < component_size) {
                     success = false;
-                    success |= Coverage::extend_forward(graph, path, node_window_size, node_coverage, path_coverage,
+                    success |= Coverage::extend_forward(graph, path, node_window_size, all_nodes_depth, path_coverage,
                                                         acyclic);
                     if (!acyclic && path.size() < component_size) {
-                        success |= Coverage::extend_backward(graph, path, node_window_size, node_coverage,
+                        success |= Coverage::extend_backward(graph, path, node_window_size, all_nodes_depth,
                                                              path_coverage);
                     }
                 }
@@ -339,19 +339,19 @@ namespace odgi {
 #endif
             }
 
-            if ((min_node_coverage != std::numeric_limits<uint64_t>::max()) && (i >= num_paths_per_component)){
+            if ((min_node_depth != std::numeric_limits<uint64_t>::max()) && (i >= num_paths_per_component)){
                 std::cerr << Coverage::name() <<": maximum number of generable paths reached." << std::endl;
             }
 
-            if (write_node_covearges) {
+            if (write_node_depth) {
                 if (component_id == 0) {
-                    node_coverages += "component_id\tnode_id\tcoverage\n";
+                    node_depth += "component_id\tnode_id\tdepth\n";
                 }
 
-                for (node_coverage_t single_coverage : node_coverage) {
-                    node_coverages +=
-                            std::to_string(component_id) + "\t" + std::to_string(single_coverage.first) + "\t" +
-                            std::to_string(single_coverage.second) + "\n";
+                for (node_coverage_t single_depth : all_nodes_depth) {
+                    node_depth +=
+                            std::to_string(component_id) + "\t" + std::to_string(single_depth.first) + "\t" +
+                            std::to_string(single_depth.second) + "\n";
                 }
             }
 
@@ -360,8 +360,8 @@ namespace odgi {
 
         void path_cover(handlegraph::MutablePathDeletableHandleGraph &graph,
                         size_t num_paths_per_component, size_t node_window_size,
-                        size_t min_node_coverage, size_t max_number_of_paths_generable,
-                        bool write_node_coverages, std::string &node_coverages,
+                        size_t min_node_depth, size_t max_number_of_paths_generable,
+                        bool write_node_depth, std::string &node_depth,
                         const uint64_t& nthreads, const bool& ignore_paths, const bool& show_progress) {
             std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components = algorithms::weakly_connected_components(
                     &graph);
@@ -371,8 +371,8 @@ namespace odgi {
             for (size_t contig = 0; contig < weak_components.size(); contig++) {
                 if (component_path_cover<SimpleCoverage>(graph, weak_components, contig,
                                                          num_paths_per_component, node_window_size,
-                                                         min_node_coverage, max_number_of_paths_generable,
-                                                         write_node_coverages, node_coverages,
+                                                         min_node_depth, max_number_of_paths_generable,
+                                                         write_node_depth, node_depth,
                                                          nthreads, ignore_paths, show_progress)) {
                     processed_components++;
 
@@ -387,7 +387,6 @@ namespace odgi {
 
 void hogwild_path_cover(handlegraph::MutablePathDeletableHandleGraph &graph,
                         double target_depth,
-                        //bool write_node_coverages, std::string &node_coverages,
                         const uint64_t& nthreads, const bool& ignore_paths, const bool& show_progress) {
 
     // get depth -> graph depth

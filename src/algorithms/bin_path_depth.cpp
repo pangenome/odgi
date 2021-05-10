@@ -1,6 +1,6 @@
-#include "bin_path_coverage.hpp"
+#include "bin_path_depth.hpp"
 
-// #define  debug_bin_path_coverage
+// #define  debug_bin_path_depth
 
 namespace odgi {
     namespace algorithms {

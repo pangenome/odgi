@@ -2,7 +2,7 @@
 #include "odgi.hpp"
 #include "args.hxx"
 #include "algorithms/bin_path_info.hpp"
-#include "algorithms/bin_path_coverage.hpp"
+#include "algorithms/bin_path_depth.hpp"
 
 #include <regex>
 
@@ -191,7 +191,7 @@ int main_bin(int argc, char** argv) {
                         auto& bin_id = entry_it->first;
                         auto &info = entry_it->second;
                         std::cout << "[" << bin_id << ","
-                                  << info.mean_cov << ","
+                                  << info.mean_depth << ","
                                   << info.mean_inv << ","
                                   << info.mean_pos << ",";
                         write_ranges_json(info.ranges);
@@ -227,12 +227,12 @@ int main_bin(int argc, char** argv) {
                     for (auto& entry : bins) {
                         auto& bin_id = entry.first;
                         auto& info = entry.second;
-                        if (info.mean_cov) {
+                        if (info.mean_depth > 0) {
                             std::cout << path_name << "\t"
                                       << name_prefix << "\t"
                                       << name_suffix << "\t"
                                       << bin_id << "\t"
-                                      << info.mean_cov << "\t"
+                                      << info.mean_depth << "\t"
                                       << info.mean_inv << "\t"
                                       << info.mean_pos << "\t"
                                       << info.ranges[0].first << "\t";

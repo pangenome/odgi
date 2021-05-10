@@ -3,7 +3,7 @@
 #include "args.hxx"
 #include <omp.h>
 #include "algorithms/prune.hpp"
-#include "algorithms/coverage.hpp"
+#include "algorithms/depth.hpp"
 #include "algorithms/remove_high_degree.hpp"
 #include "algorithms/cut_tips.hpp"
 #include "algorithms/remove_isolated.hpp"
@@ -106,9 +106,9 @@ int main_prune(int argc, char** argv) {
         std::vector<edge_t> edges_to_drop_best;
 
         if (args::get(edge_depth)) {
-            edges_to_drop_depth = algorithms::find_edges_exceeding_coverage_limits(graph, args::get(min_depth), args::get(max_depth));
+            edges_to_drop_depth = algorithms::find_edges_exceeding_depth_limits(graph, args::get(min_depth), args::get(max_depth));
         } else {
-            handles_to_drop = algorithms::find_handles_exceeding_coverage_limits(graph, args::get(min_depth), args::get(max_depth));
+            handles_to_drop = algorithms::find_handles_exceeding_depth_limits(graph, args::get(min_depth), args::get(max_depth));
         }
         if (args::get(best_edges)) {
             edges_to_drop_best = algorithms::keep_mutual_best_edges(graph, args::get(best_edges));
