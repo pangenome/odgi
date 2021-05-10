@@ -70,7 +70,7 @@ We can obtain their sequences in ``FASTA`` format:
     >gi|568815592:32578768-32589835
     ATTTAACTCCATCTTTGAGAAACATTTAATAATGTAATGTGTTTGTCATACAGGGTGAATACAGATGCACGGG...
 
-To visualize the graph, execute
+To visualize the graph, execute:
 
 .. code-block:: bash
 
