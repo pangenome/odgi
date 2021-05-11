@@ -28,7 +28,7 @@ Assuming that your current working directory is the root of the ``odgi`` project
     odgi build -g test/DRB1-3123.gfa -o DRB1-3123.og
 
 The command creates a file called ``DRB1-3123.og``, which contains the input graph in ``odgi`` format. This graph contains
-12 ALT sequences of the `HLA-DRB1 gene<https://www.ncbi.nlm.nih.gov/gene/3123>`_ from the GRCh38 reference genome.
+12 ALT sequences of the `HLA-DRB1 gene <https://www.ncbi.nlm.nih.gov/gene/3123>`_ from the GRCh38 reference genome.
 
 -----------------------------
 Visualize the DRB1-3123 graph
