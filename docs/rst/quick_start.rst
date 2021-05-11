@@ -1,3 +1,5 @@
+.. _quick_start:
+
 ===========
 Quick Start
 ===========
@@ -8,9 +10,13 @@ Quick Start
 A pangenome models the full set of genomic elements in a given species or clade. It can efficiently be encoded in the
 form of a variation graph, a type of sequence graph that embeds the linear sequences as paths in the graphs themselves.
 
-To exchange pangenomes, the community frequently uses a subset of version 1 of the ``GFA`` (Graphical Fragment Assembly)
-format (`GFAv1 <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8006571/#FN8>`_). However, ``odgi`` works on a dynamic
-succinct variation graph representation, the ``odgi`` format.
+To exchange pangenomes, the community frequently uses a strict subset of the Graphical Fragment Assembly ``GFA`` format
+version 1 (`GFAv1 <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8006571/#FN8>`_). To navigate such files efficiently,
+``odgi`` operates on a dynamic succinct variation graph representation, the ``odgi`` format.
+
+----------------------------
+Build graph from GFA
+----------------------------
 
 Assuming that your current working directory is the root of the ``odgi`` project, to construct an ``odgi`` file from a
 ``GFA`` file, execute:
@@ -20,6 +26,10 @@ Assuming that your current working directory is the root of the ``odgi`` project
     odgi build -g test/DRB1-3123.gfa -o DRB1-3123.og
 
 The command creates a file called ``DRB1-3123.og``, which contains the input graph in ``odgi`` format.
+
+-------------------
+Display graph stats
+-------------------
 
 To have basic information on the graph, execute:
 
@@ -34,8 +44,12 @@ To have basic information on the graph, execute:
 
 This graph file has the following properties:
 
-    - the sum of the lengths of all its nodes is equal to 21997 nucleotides;
+    - the total number of nucleotides of all nodes is 21997;
     - it has 4955 nodes, 6777 edges, and 12 paths.
+
+------------------------------------
+Display path names and extract paths
+------------------------------------
 
 The path's names are:
 
@@ -69,6 +83,10 @@ We can obtain their sequences in ``FASTA`` format:
 
     >gi|568815592:32578768-32589835
     ATTTAACTCCATCTTTGAGAAACATTTAATAATGTAATGTGTTTGTCATACAGGGTGAATACAGATGCACGGG...
+
+---------------------------
+Generate a 1D visualization
+---------------------------
 
 To visualize the graph, execute:
 
