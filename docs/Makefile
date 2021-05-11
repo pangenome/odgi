@@ -7,6 +7,9 @@ SPHINXBUILD   = sphinx-build
 SOURCEDIR     = .
 BUILDDIR      = _build
 
+# we need this for all targets, so we don't make it a prerequisite
+$(shell ./scripts/gen_copy-right_version_release.sh)
+
 # Put it first so that "make" without argument is like "make help".
 help:
 	@$(SPHINXBUILD) -M help "$(SOURCEDIR)" "$(BUILDDIR)" $(SPHINXOPTS) $(O)

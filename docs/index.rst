@@ -15,14 +15,15 @@ to implement.
 
 The optimized dynamic genome/graph implementation ``odgi`` follows the dynamic
 `GBWT <https://github.com/jltsiren/gbwt>`__ in developing
-a byte-packed version of the graph, edges, and paths through it. The node's sequence is stored as a plain
-``std::string``. Bit-compressed dynamic byte arrays, with a local alphabet encoder, represent the local neighbourhood
+a byte-packed version of the graph, edges, and paths through it. The node's id is stored as a ``uint64_t`` and its
+sequence is stored as a plain ``std::string``. Bit-compressed dynamic byte arrays, with a local alphabet encoder,
+represent the local neighbourhood
 of the node:
 
-    1) its edges, and
+    1) The node's edges, and
     2) the paths crossing the node.
 
-To ensure minimal memory usage, only the deltas of the neighbouring steps of a path are hold.
+To ensure minimal memory occupation, only the deltas of the neighbouring steps of a path are hold.
 
 ``odgi`` provides a set of tools ranging from graph building, manipulation, layouting, over graph statistics to graph
 visualization and gene annotation lift overs.
