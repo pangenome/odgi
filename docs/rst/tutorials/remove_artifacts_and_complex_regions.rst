@@ -26,6 +26,10 @@ Steps
 .. seqwish -> /gnu/store/mssfmyj1464a2aq838gfy180i8v5741w-seqwish-0.7.0+f39f875-6/bin/seqwish
 .. smoothxg -> /gnu/store/sawpvg2p95y4adg77swkw1bvix4zy9cc-smoothxg-0.4.0+410e72d-40/bin/smoothxg
 
+--------------------------
+Get the Human chr8 dataset
+--------------------------
+
 Download the pangenome graph of the `Human chromosome 8 <https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2021_05_06_pggb/gfas/chr8.pan.gfa.gz>`_
 in ``GFA`` format, decompress it, and convert it to a graph in ``odgi`` format:
 
@@ -37,6 +41,10 @@ in ``GFA`` format, decompress it, and convert it to a graph in ``odgi`` format:
 
 The command creates a file called ``chr8.pan.og``, which contains the input graph in ``odgi`` format. This graph contains
 88 haploid, phased human genome assemblies from 44 individuals, plus the chm13 and GRCh38 reference genomes.
+
+----------------------------
+Identify problematic regions
+----------------------------
 
 The **depth** is a good metric to identify problematic regions in a pangenome graph. Here we define as **node depth**
 the number of times in which the node is crossed by all the paths present in the graph.
@@ -69,6 +77,10 @@ or equal to 10000 bps, merging the adjacent ranges:
         bedtools sort | bedtools merge > chr8.pan.regions_to_remove.bed
 
 The ``chr8.pan.regions_to_remove.bed`` file contains all the regions to remove.
+
+-----------------------------
+Remove the identified regions
+-----------------------------
 
 To clean the pangenome graph, execute:
 
@@ -109,6 +121,10 @@ The command creates a file called ``chr8.pan.clean.exp.8.og``, which contains th
 (the number 8 in this example) in ``odgi`` format. The ``-s P`` option specifies to consider as biggest component the
 one with the longer path.
 
+-------------------
+Display graph stats
+-------------------
+
 To have basic information on the cleaned graph, execute:
 
 .. code-block:: bash
@@ -119,6 +135,10 @@ To have basic information on the cleaned graph, execute:
 
     #length    nodes    edges    paths
     149046153  4044095  5600776  65354
+
+---------------------------
+Generate a 1D visualization
+---------------------------
 
 To visualize the cleaned graph, first sort it:
 
