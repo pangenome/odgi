@@ -428,7 +428,7 @@ namespace odgi {
         }
 
         if (summarize_depth) {
-            std::cout << "#node.count\tgraph.length\tstep.count\tpath.length\tmean.node.depth\tmean.graph.depth.bp" << std::endl;
+            std::cout << "#node.count\tgraph.length\tstep.count\tpath.length\tmean.node.depth\tmean.graph.depth" << std::endl;
             std::atomic<uint64_t> step_count; step_count.store(0);
             std::atomic<uint64_t> node_count; node_count.store(0);
             std::atomic<uint64_t> path_length; path_length.store(0);
@@ -484,7 +484,7 @@ namespace odgi {
         if (!path_ranges.empty()) {
             const bool subset_paths = !paths_to_consider.empty();
 
-            std::cout << "#path\tstart\tend\tmean.depth.bp" << std::endl;
+            std::cout << "#path\tstart\tend\tmean.depth" << std::endl;
 #pragma omp parallel for schedule(dynamic, 1)
             for (auto &path_range : path_ranges) {
                 const uint64_t start = path_range.begin.offset;
