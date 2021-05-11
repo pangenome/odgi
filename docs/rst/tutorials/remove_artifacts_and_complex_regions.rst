@@ -19,22 +19,24 @@ pangenome graphs can be simplified by applying a set of ``odgi`` tools.
 Steps
 =====
 
-.. TODO: to create a smaller version and upload it on github if possible
-
+.. This pangenome was generated with the following command line:
 .. pggb -t 48 -i chr8.pan.fa -p 98 -s 100000 -n 90 -k 29 -B 10000000 -w 1000000 -G 5000 -v -L -o chr8.pan -Z
 .. pggb -> /gnu/store/bhbh7rc3gza4jmvc09q9dihmm6b4m8jl-pggb-0.1.0+9209280-6/bin/pggb
 .. wfmash -> /gnu/store/xx9mpgmqvv8lm4h1rmwlvd3ckf0s595z-wfmash-0.4.0+c4f2095-28/bin/wfmash
 .. seqwish -> /gnu/store/mssfmyj1464a2aq838gfy180i8v5741w-seqwish-0.7.0+f39f875-6/bin/seqwish
 .. smoothxg -> /gnu/store/sawpvg2p95y4adg77swkw1bvix4zy9cc-smoothxg-0.4.0+410e72d-40/bin/smoothxg
 
-Download the pangenome graph of the `Human chromosome 8 <xxx>`_ in ``GFA`` format, and convert it to a graph in ``odgi``
-format:
+Download the pangenome graph of the `Human chromosome 8 <https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2021_05_06_pggb/gfas/chr8.pan.gfa.gz>`_
+in ``GFA`` format, decompress it, and convert it to a graph in ``odgi`` format:
 
 .. code-block:: bash
 
+    wget -c https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2021_05_06_pggb/gfas/chr8.pan.gfa.gz
+    gunzip chr8.pan.gfa.g
     odgi build -g chr8.pan.gfa -o chr8.pan.og
 
-The command creates a file called ``chr8.pan.og``, which contains the input graph in ``odgi`` format.
+The command creates a file called ``chr8.pan.og``, which contains the input graph in ``odgi`` format. This graph contains
+88 haploid, phased human genome assemblies from 44 individuals, plus the chm13 and GRCh38 reference genomes.
 
 The **depth** is a good metric to identify problematic regions in a pangenome graph. Here we define as **node depth**
 the number of times in which the node is crossed by all the paths present in the graph.
