@@ -27,3 +27,7 @@ Finally, build ``odgi`` using ``cmake``:
 .. code-block:: bash
 
    cmake -H. -Bbuild && cmake --build build -- -j 2
+
+The ``-j`` argument determines the number of threads used for the compilation process. In the command above it is set to
+``2``. As ``odgi`` is a fairly large project, it is recommended to set ``-j`` to the maximum number of available threads. This
+can reduce the compilation time significantly.
