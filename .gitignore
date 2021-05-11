@@ -4,7 +4,6 @@
 build/
 bin/
 lib/
-test/
 .gdb_history
 include/
 docs/sphinx_build
