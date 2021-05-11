@@ -15,7 +15,14 @@ On ``Ubuntu``, these can be installed using ``apt``:
 
    sudo apt install build-essential cmake python3-distutils python3-dev libjemalloc-dev
 
-Then, obtain a copy of the repository and its submodules:
+``odgi`` requires a `C++ version of 9.3 or higher`. You can check your version via:
+
+.. code-block:: bash
+
+    gcc --version
+    g++ --version
+
+If this requirement is satisfied, obtain a copy of the repository and its submodules:
 
 .. code-block:: bash 
 
