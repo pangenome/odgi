@@ -248,13 +248,21 @@ namespace odgi {
                 if (splitted[0] == "*") {
                     pangenomic_start_pos = 0;
                 } else {
-                    pangenomic_start_pos = std::min((double)len - 1, stod(splitted[0]));
+                    pangenomic_start_pos = std::max(0.0, stod(splitted[0]));
                 }
 
                 if (splitted[1] == "*") {
                     pangenomic_end_pos = (double)len - 1;
                 } else {
-                    pangenomic_end_pos = std::min((double)len - 1, stod(splitted[1]));
+                    auto get_path_length = [](const graph_t &graph, const path_handle_t &path_handle) {
+                        uint64_t path_len = 0;
+                        graph.for_each_step_in_path(path_handle, [&](const step_handle_t &s) {
+                            path_len += graph.get_length(graph.get_handle_of_step(s));
+                        });
+                        return path_len;
+                    };
+
+                    pangenomic_end_pos = std::min((double) get_path_length(graph, graph.get_path_handle(path_name)), stod(splitted[1]));
                 }
 
                 //std::cerr << "input A: " << pangenomic_start_pos << std::endl;
