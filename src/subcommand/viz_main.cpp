@@ -164,8 +164,8 @@ namespace odgi {
 
         graph_t graph;
         assert(argc > 0);
-        std::string infile = args::get(dg_in_file);
-        if (!infile.empty()) {
+        if (!args::get(dg_in_file).empty()) {
+            std::string infile = args::get(dg_in_file);
             if (infile == "-") {
                 graph.deserialize(std::cin);
             } else {
@@ -185,24 +185,26 @@ namespace odgi {
 
         std::vector<uint64_t> position_map(graph.get_node_count() + 1);
         uint64_t len = 0;
-        nid_t last_node_id = graph.min_node_id();
-        graph.for_each_handle([&](const handle_t &h) {
-            nid_t node_id = graph.get_id(h);
-            if (node_id - last_node_id > 1) {
-                std::cerr << "[odgi::viz] error: the graph is not optimized. Please run 'odgi sort' using -O, --optimize" << std::endl;
-                exit(1);
-            }
-            last_node_id = node_id;
+        {
+            nid_t last_node_id = graph.min_node_id();
+            graph.for_each_handle([&](const handle_t &h) {
+                const nid_t node_id = graph.get_id(h);
+                if (node_id - last_node_id > 1) {
+                    std::cerr << "[odgi::viz] error: the graph is not optimized. Please run 'odgi sort' using -O, --optimize" << std::endl;
+                    exit(1);
+                }
+                last_node_id = node_id;
 
-            position_map[number_bool_packing::unpack_number(h)] = len;
-            uint64_t hl = graph.get_length(h);
-            len += hl;
+                position_map[number_bool_packing::unpack_number(h)] = len;
+                uint64_t hl = graph.get_length(h);
+                len += hl;
 
 #ifdef debug_odgi_viz
-            std::cerr << "SEGMENT ID: " << graph.get_id(h) << " - " << as_integer(h) << " - index_in_position_map (" << number_bool_packing::unpack_number(h) << ") = " << len << std::endl;
+                std::cerr << "SEGMENT ID: " << graph.get_id(h) << " - " << as_integer(h) << " - index_in_position_map (" << number_bool_packing::unpack_number(h) << ") = " << len << std::endl;
 #endif
-        });
-        position_map[position_map.size() - 1] = len;
+            });
+            position_map[position_map.size() - 1] = len;
+        }
 
         double pangenomic_start_pos = 0.0;
         double pangenomic_end_pos = (double) (len - 1);
@@ -245,24 +247,25 @@ namespace odgi {
                     return 1;
                 }
 
+                auto get_path_length = [](const graph_t &graph, const path_handle_t &path_handle) {
+                    uint64_t path_len = 0;
+                    graph.for_each_step_in_path(path_handle, [&](const step_handle_t &s) {
+                        path_len += graph.get_length(graph.get_handle_of_step(s));
+                    });
+                    return path_len;
+                };
+                const double path_len = (double) get_path_length(graph, graph.get_path_handle(path_name));
+
                 if (splitted[0] == "*") {
                     pangenomic_start_pos = 0;
                 } else {
-                    pangenomic_start_pos = std::max(0.0, stod(splitted[0]));
+                    pangenomic_start_pos = std::max(0.0, std::min(path_len - 1, stod(splitted[0])));
                 }
 
                 if (splitted[1] == "*") {
                     pangenomic_end_pos = (double)len - 1;
                 } else {
-                    auto get_path_length = [](const graph_t &graph, const path_handle_t &path_handle) {
-                        uint64_t path_len = 0;
-                        graph.for_each_step_in_path(path_handle, [&](const step_handle_t &s) {
-                            path_len += graph.get_length(graph.get_handle_of_step(s));
-                        });
-                        return path_len;
-                    };
-
-                    pangenomic_end_pos = std::min((double) get_path_length(graph, graph.get_path_handle(path_name)), stod(splitted[1]));
+                    pangenomic_end_pos = std::min(path_len, stod(splitted[1]));
                 }
 
                 //std::cerr << "input A: " << pangenomic_start_pos << std::endl;
@@ -277,12 +280,12 @@ namespace odgi {
                     double new_pangenomic_start_pos = (double) (len - 1);
                     double new_pangenomic_end_pos = 0;
 
-                    path_handle_t path_handle = graph.get_path_handle(path_name);
+                    const path_handle_t path_handle = graph.get_path_handle(path_name);
 
                     uint64_t nt_position_in_path = 0;
 
                     graph.for_each_step_in_path(path_handle, [&](const step_handle_t &occ) {
-                        handle_t h = graph.get_handle_of_step(occ);
+                        const handle_t h = graph.get_handle_of_step(occ);
                         uint64_t h_pan_pos = position_map[number_bool_packing::unpack_number(h)];
                         uint64_t h_len = graph.get_length(h);
 
@@ -318,23 +321,23 @@ namespace odgi {
             }
         }
 
-        uint64_t max_num_of_characters = args::get(_max_num_of_characters) > 1 ? min(args::get(_max_num_of_characters), (uint64_t) PATH_NAMES_MAX_NUM_OF_CHARACTERS) : 32;
+        const uint64_t max_num_of_characters = args::get(_max_num_of_characters) > 1 ? min(args::get(_max_num_of_characters), (uint64_t) PATH_NAMES_MAX_NUM_OF_CHARACTERS) : 32;
 
         uint64_t path_count = graph.get_path_count();
-        uint64_t pix_per_path = args::get(path_height) ? args::get(path_height) : 10;
-        uint64_t pix_per_link = std::max((uint64_t) 1, (uint64_t) std::round(args::get(link_path_pieces) * pix_per_path));
-        uint64_t link_pix_y = pix_per_path / 2 - pix_per_link / 2;
-        uint64_t path_padding = args::get(path_x_pad);
-        uint64_t bottom_padding = 5;
+        const uint64_t pix_per_path = args::get(path_height) ? args::get(path_height) : 10;
+        const uint64_t pix_per_link = std::max((uint64_t) 1, (uint64_t) std::round(args::get(link_path_pieces) * pix_per_path));
+        const uint64_t link_pix_y = pix_per_path / 2 - pix_per_link / 2;
+        const uint64_t path_padding = args::get(path_x_pad);
+        const uint64_t bottom_padding = 5;
 
-        uint64_t len_to_visualize = pangenomic_end_pos - pangenomic_start_pos + 1;
+        const uint64_t len_to_visualize = pangenomic_end_pos - pangenomic_start_pos + 1;
 
         // the math here only works if the image size is greater than or equal to the graph length
         uint64_t width = std::min(len_to_visualize, (args::get(image_width) ? args::get(image_width) : 1500));
-        uint64_t height = std::min(len_to_visualize, (args::get(image_height) ? args::get(image_height) : 500) + bottom_padding);
+        const uint64_t height = std::min(len_to_visualize, (args::get(image_height) ? args::get(image_height) : 500) + bottom_padding);
 
         float scale_x = (float) width / (float) len_to_visualize;
-        float scale_y = (float) height / (float) len_to_visualize;
+        const float scale_y = (float) height / (float) len_to_visualize;
 
         float _bin_width = args::get(bin_width);
         bool _binned_mode = args::get(binned_mode);
@@ -409,7 +412,7 @@ namespace odgi {
                 });
         }
 
-        std::string ignore_prefix = _ignore_prefix ? args::get(_ignore_prefix) : "";
+        const std::string ignore_prefix = _ignore_prefix ? args::get(_ignore_prefix) : "";
 
         auto get_path_display_name =
             [&](const path_handle_t& p) {
@@ -531,7 +534,7 @@ namespace odgi {
             }
         }
 
-        uint64_t path_space = path_count * pix_per_path;
+        const uint64_t path_space = path_count * pix_per_path;
 
         std::vector<uint8_t> image;
         image.resize(width * (height + path_space) * 4, 255);
@@ -567,7 +570,7 @@ namespace odgi {
                     << std::endl;
         }
 
-        bool aln_mode = !args::get(alignment_prefix).empty();
+        const bool aln_mode = !args::get(alignment_prefix).empty();
         std::string aln_prefix;
         if (aln_mode) {
             aln_prefix = args::get(alignment_prefix);
@@ -594,7 +597,7 @@ namespace odgi {
             std::cerr << a << " --> " << b << std::endl;
 #endif
             // In binned mode, the Links have to be tall to be visible; in standard mode, _bin_width is 1, so nothing changes here
-            uint64_t dist = (b - a) * _bin_width;
+            const uint64_t dist = (b - a) * _bin_width;
 
             uint64_t i = 0;
 
@@ -621,10 +624,10 @@ namespace odgi {
         };
 
         auto add_edge_from_handles = [&](const handle_t& h, const handle_t& o) {
-            uint64_t _a = position_map[number_bool_packing::unpack_number(h) + !number_bool_packing::unpack_bit(h)];
-            uint64_t _b = position_map[number_bool_packing::unpack_number(o) + number_bool_packing::unpack_bit(o)];
-            uint64_t a = std::min(_a, _b);
-            uint64_t b = std::max(_a, _b);
+            const uint64_t _a = position_map[number_bool_packing::unpack_number(h) + !number_bool_packing::unpack_bit(h)];
+            const uint64_t _b = position_map[number_bool_packing::unpack_number(o) + number_bool_packing::unpack_bit(o)];
+            const uint64_t a = std::min(_a, _b);
+            const uint64_t b = std::max(_a, _b);
 
 #ifdef debug_odgi_viz
             std::cerr << graph.get_id(h) << " (" << number_bool_packing::unpack_bit(h) << ") --> " << b << " (" << number_bool_packing::unpack_bit(h) << ") " << std::endl;
@@ -708,9 +711,9 @@ namespace odgi {
         auto add_path_step = [&](std::vector<uint8_t> &img, uint64_t width_img,
                 const uint64_t &_x, const uint64_t &_y,
                 const uint8_t &_r, const uint8_t &_g, const uint8_t &_b) {
-            uint64_t x = std::min((uint64_t) std::round(_x * scale_x), width - 1);
-            uint64_t t = _y * pix_per_path;
-            uint64_t s = t + pix_per_path;
+            const uint64_t x = std::min((uint64_t) std::round(_x * scale_x), width - 1);
+            const uint64_t t = _y * pix_per_path;
+            const uint64_t s = t + pix_per_path;
 
             for (uint64_t y = t; y < s; ++y) {
                 img[4 * width_img * y + 4 * x + 0] = _r;
@@ -722,9 +725,9 @@ namespace odgi {
 
         auto add_path_link = [&](const uint64_t &_x, const uint64_t &_y,
                                  const uint8_t &_r, const uint8_t &_g, const uint8_t &_b) {
-            uint64_t x = std::min((uint64_t) std::round(_x * scale_x), width - 1);
-            uint64_t t = _y * pix_per_path + link_pix_y;
-            uint64_t s = t + pix_per_link;
+            const uint64_t x = std::min((uint64_t) std::round(_x * scale_x), width - 1);
+            const uint64_t t = _y * pix_per_path + link_pix_y;
+            const uint64_t s = t + pix_per_link;
             for (uint64_t y = t; y < s; ++y) {
                 image[4 * width * y + 4 * x + 0] = _r;
                 image[4 * width * y + 4 * x + 1] = _g;
@@ -733,14 +736,14 @@ namespace odgi {
             }
         };
 
-        bool _show_strands = args::get(show_strands);
+        const bool _show_strands = args::get(show_strands);
 
-        bool _change_darkness = args::get(change_darkness);
-        bool _longest_path = args::get(longest_path);
-        bool _white_to_black = args::get(white_to_black);
+        const bool _change_darkness = args::get(change_darkness);
+        const bool _longest_path = args::get(longest_path);
+        const bool _white_to_black = args::get(white_to_black);
 
-        bool _color_by_mean_depth = args::get(color_by_mean_depth);
-        bool _color_by_mean_inversion_rate = args::get(color_by_mean_inversion_rate);
+        const bool _color_by_mean_depth = args::get(color_by_mean_depth);
+        const bool _color_by_mean_inversion_rate = args::get(color_by_mean_inversion_rate);
 
         uint64_t longest_path_len = 0;
         double max_mean_depth = 0.0;
@@ -779,7 +782,7 @@ namespace odgi {
         std::unordered_set<pair<uint64_t, uint64_t>> edges_drawn;
         uint64_t gap_links_removed = 0;
         uint64_t total_links = 0;
-        bool _color_path_names_background = args::get(color_path_names_background);
+        const bool _color_path_names_background = args::get(color_path_names_background);
 
         graph.for_each_path_handle([&](const path_handle_t &path) {
             int64_t path_rank = get_path_idx(path);
