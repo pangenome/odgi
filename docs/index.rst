@@ -2,9 +2,9 @@
    :description: odgi: optimized dynamic genome/graph implementation
    :keywords: variation graph, pangenome graph
 
-===============================
-Welcome the odgi documentation!
-===============================
+=================================
+Welcome to the odgi documentation!
+=================================
 
 In standard genomic approaches sequences are related to a single linear reference genome introducing reference bias.
 `Pangenome graphs <https://pangenome.github.io/>`__ encoded in the variation graph data model describe the all versus all alignment of many sequences.
