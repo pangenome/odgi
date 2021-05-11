@@ -146,3 +146,25 @@ to obtain the following PNG image:
 Low depth regions are black, while high depth regions are colored green. Apo(a) proteins vary in size due to a size
 polymorphism, the KIV-2 variable numbers of tandem repeats (VNTRs). The VNTR region in the LPA pangenome presents high
 `depth`, that becomes evident as a light green stripe in the image.
+
+To obtain the coordinate of the VNTRs, execute:
+
+.. code-block:: bash
+
+    odgi depth -i LPA.og -r HG002__LPA__tig00000001| \
+        bedtools makewindows -b /dev/stdin -w 5000 > HG002__LPA__tig00000001.w5kbps.bed
+
+    odgi depth -i LPA.og -b chm13__LPA__tig00000001.w5kbps.bed | \
+        bedtools sort > chm13__LPA__tig00000001.depth.w5kbps.bed
+
+
+
+To color the bars respect to the mean `depth`, execute:
+
+.. code-block:: bash
+
+    odgi viz -i LPA.og -o LPA.bm.VNTRs.png -x 500 -bm -r chm13__LPA__tig00000001:140000-330243
+
+to obtain the following PNG image:
+
+.. image:: /img/LPA.bm.png

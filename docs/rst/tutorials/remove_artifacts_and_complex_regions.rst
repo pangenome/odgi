@@ -11,7 +11,7 @@ sequences that are difficult to align (e.g., centromeres). These issues lead to 
 very complex regions. To make the downstream analyses easier, as read mapping against the graph or graph visualization,
 pangenome graphs can be simplified by applying a set of ``odgi`` tools.
 
-.. note::
+.. warning::
    This is an advanced tutorial. It is recommended that you follow the other tutorials before tackling this one.
 
 
@@ -36,10 +36,11 @@ in ``GFA`` format, decompress it, and convert it to a graph in ``odgi`` format:
 .. code-block:: bash
 
     wget -c https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2021_05_06_pggb/gfas/chr8.pan.gfa.gz
-    gunzip chr8.pan.gfa.g
+    gunzip chr8.pan.gfa.gz
+
     odgi build -g chr8.pan.gfa -o chr8.pan.og
 
-The command creates a file called ``chr8.pan.og``, which contains the input graph in ``odgi`` format. This graph contains
+The last command creates a file called ``chr8.pan.og``, which contains the input graph in ``odgi`` format. This graph contains
 88 haploid, phased human genome assemblies from 44 individuals, plus the chm13 and GRCh38 reference genomes.
 
 ----------------------------
