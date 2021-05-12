@@ -28,7 +28,7 @@ namespace odgi {
     // helper to get the prefix of a string
     std::string prefix(const std::string& s, const char c) {
         //std::cerr << "prefix of " << s << " by " << c << " is " << s.substr(0, s.find(c)) << std::endl;
-        return s.substr(0, s.find(c));
+        return s.substr(0, s.find_last_of(c));
     }
 
     int main_viz(int argc, char **argv) {
