@@ -29,7 +29,7 @@ in ``GFA`` format, decompress it, and convert it to a graph in ``odgi`` format:
     wget -c https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2021_05_06_pggb/gfas/chr8.pan.gfa.gz
     gunzip chr8.pan.gfa.gz
 
-    odgi build -g chr8.pan.gfa -o chr8.pan.og
+    odgi build -g chr8.pan.gfa -o chr8.pan.og --threads 2 -P
 
 The last command creates a file called ``chr8.pan.og``, which contains the input graph in ``odgi`` format. This graph contains
 88 haploid, phased human genome assemblies from 44 individuals, plus the chm13 and GRCh38 reference genomes.
@@ -48,13 +48,11 @@ To obtain the depth over the pangenome graph, execute:
     odgi depth -i chr8.pan.og -r chm13#chr8 | \
         bedtools makewindows -b /dev/stdin -w 5000 > chm13.chr8.w5kbps.bed
 
-    odgi depth -i chr8.pan.og -b chm13.chr8.w5kbps.bed -t 16 | \
+    odgi depth -i chr8.pan.og -b chm13.chr8.w5kbps.bed --threads 2 | \
         bedtools sort > chr8.pan.depth.w5kbps.bed
 
 The ``chm13.chr8.w5kbps.bed`` file contains 5000 bps interval windows across the chm13 reference chromosome 8. The depth
 is computed for each of these windows, writing the result in the ``chr8.pan.depth.w5kbps.bed`` file, in ``BED`` format.
-
-.. TODO: to upload the file somehere
 
 .. note::
 
