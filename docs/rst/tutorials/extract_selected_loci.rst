@@ -1,6 +1,6 @@
-######################
+#######################
 Extract selected `loci`
-######################
+#######################
 
 ========
 Synopsis
@@ -98,14 +98,15 @@ To see variants for the two contigs of the ``HG02572`` sample, execute:
 The pangenome graphs embed all the mutual relationship between the embedded genomes and their variation. In this example,
 the variants are called respect to the ``chm13__LPA__tig00000001`` contig, which was used as reference path.
 
-----------------------------------------
+-----------------------------------------
 Extract a sub-graph with a variant inside
-----------------------------------------
+-----------------------------------------
 
 The insertion at position 136 (G > GT) is present in only one of the  ``HG02572``'s contig (``HG02572__LPA__tig00000001``).
 To extract the sub-graph where this insertion falls, execute:
 
 .. code-block:: bash
+
     odgi extract -i LPA.og -n 23 -c 1 -o LPA.21_23_G_GT.og
 
 The instruction extracts:
@@ -147,6 +148,7 @@ To visualize the sub-graph, we can also use external tools as `Bandage <https://
 supports grpahs in ``GFA`` format. To covert the graph in ``odgi`` format in a graph in ``GFA`` format, execute:
 
 .. code-block:: bash
+
     odgi view -i LPA.21_23_G_GT.og -g > LPA.21_23_G_GT.gfa
 
 Then, open the ``LPA.21_23_G_GT.gfa`` file with ``Bandage``.
@@ -174,9 +176,9 @@ in ``GFA`` format, decompress it, and convert it to a graph in ``odgi`` format:
 The last command creates a file called ``chr6.pan.og``, which contains the input graph in ``odgi`` format. This graph contains
 88 haploid, phased human genome assemblies from 44 individuals, plus the chm13 and GRCh38 reference genomes.
 
-----------------------
+-----------------------
 Extract the MHC `locus`
-----------------------
+-----------------------
 
 The major `histocompatibility complex <https://en.wikipedia.org/wiki/Major_histocompatibility_complex>`_ (MHC) is a large
 `locus` on vertebrate DNA containing a set of closely linked polymorphic genes that code for cell surface proteins essential
