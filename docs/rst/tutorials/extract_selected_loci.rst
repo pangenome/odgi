@@ -7,14 +7,13 @@ Synopsis
 ========
 
 Pangenome graphs model the full set of genomic elements in a gives species or clade. Nevertheless, downstream analyses
-may require focusing on specific elements. ``odgi`` allows to extract `loci` of interest from the pangenome graph, for
-easily working on them.
-
+may require focusing on specific pangenomic regions. ``odgi`` allows to extract `loci` of interest from the pangenome graph,
+resulting in sub-graphs of the full pangenome graph. Is demonstrated that one can work with such sub-graphs as easily as
+handling the full ones.
 
 =====
 Steps
 =====
-
 
 -----------------------------
 Build the Lipoprotein A graph
@@ -81,28 +80,35 @@ The path's names are:
 Obtain the Lipoprotein A variants
 ---------------------------------
 
-To see variants for the two contigs of the ``HG02572`` sample, execute:
+To see the variants for the two contigs of the ``HG02572`` sample, execute:
 
 .. code-block:: bash
 
-     zgrep '^##' test/LPA.chm13__LPA__tig00000001.vcf.gz -v | head -n 5 | cut -f 1-9,16,17 | column -t
+     zgrep -v '^##' test/LPA.chm13__LPA__tig00000001.vcf.gz | head -n 9 | cut -f 1-9,16,17 | column -t
+
+The pangenome graphs embed the full mutual relationships between the embedded genomes and their variation. In the following example,
+the variants were called with respect to the ``chm13__LPA__tig00000001`` contig, which was used as the reference path.
 
 .. code-block:: none
 
-    #CHROM                   POS  ID      REF  ALT  QUAL  FILTER  INFO                        FORMAT  HG02572__LPA__tig00000001  HG02572__LPA__tig00000005
-    chm13__LPA__tig00000001  6    >3>6    T    A    60    .       AC=1;AF=0.5;AN=2;LV=0;NS=2  GT      1                          0
-    chm13__LPA__tig00000001  134  >6>8    G    GT   60    .       AC=1;AF=0.5;AN=2;LV=0;NS=2  GT      1                          0
-    chm13__LPA__tig00000001  156  >8>11   A    G    60    .       AC=1;AF=0.5;AN=2;LV=0;NS=2  GT      0                          1
-    chm13__LPA__tig00000001  252  >11>13  GT   G    60    .       AC=2;AF=1;AN=2;LV=0;NS=2    GT      1                          1
+    #CHROM                   POS   ID      REF  ALT  QUAL  FILTER  INFO                        FORMAT  HG02572__LPA__tig00000001  HG02572__LPA__tig00000005
+    chm13__LPA__tig00000001  6     >3>6    T    A    60    .       AC=1;AF=0.5;AN=2;LV=0;NS=2  GT      1                          0
+    chm13__LPA__tig00000001  134   >6>8    G    GT   60    .       AC=1;AF=0.5;AN=2;LV=0;NS=2  GT      1                          0
+    chm13__LPA__tig00000001  156   >8>11   A    G    60    .       AC=1;AF=0.5;AN=2;LV=0;NS=2  GT      0                          1
+    chm13__LPA__tig00000001  252   >11>13  GT   G    60    .       AC=2;AF=1;AN=2;LV=0;NS=2    GT      1                          1
+    chm13__LPA__tig00000001  265   >13>16  T    A    60    .       AC=2;AF=1;AN=2;LV=0;NS=2    GT      1                          1
+    chm13__LPA__tig00000001  371   >16>18  AT   A    60    .       AC=2;AF=1;AN=2;LV=0;NS=2    GT      1                          1
+    chm13__LPA__tig00000001  996   >18>21  AG   ATT  60    .       AC=2;AF=1;AN=2;LV=0;NS=2    GT      1                          1
+    chm13__LPA__tig00000001  1050  >21>23  G    GT   60    .       AC=1;AF=0.5;AN=2;LV=0;NS=2  GT      1                          0
 
-The pangenome graphs embed all the mutual relationship between the embedded genomes and their variation. In this example,
-the variants are called respect to the ``chm13__LPA__tig00000001`` contig, which was used as reference path.
+The ``ID`` field in the `VCF <https://samtools.github.io/hts-specs/VCFv4.2.pdf>`_ lists the nodes involved in the variant. A ``>`` means that the node is visited in forward
+orientation, a ``<`` means that the node is visited in reverse orientation.
 
 -----------------------------------------
 Extract a sub-graph with a variant inside
 -----------------------------------------
 
-The insertion at position 136 (G > GT) is present in only one of the  ``HG02572``'s contig (``HG02572__LPA__tig00000001``).
+The insertion at position **1050** (*G > GT*, the last line in the VCF snippet above) is present only in one of the  ``HG02572``'s contig (``HG02572__LPA__tig00000001``).
 To extract the sub-graph where this insertion falls, execute:
 
 .. code-block:: bash
@@ -110,7 +116,8 @@ To extract the sub-graph where this insertion falls, execute:
     odgi extract -i LPA.og -n 23 -c 1 -o LPA.21_23_G_GT.og
 
 The instruction extracts:
-- the node with ID 23 (``-n 23``),
+
+- The node with **ID 23** (``-n 23``),
 - the nodes reachable from this node following a single edge (``-c 1``) in the graph topology,
 - the edges connecting all the extracted nodes, and
 - the paths traversing all the extracted nodes.
@@ -138,7 +145,7 @@ The extracted path's names are:
     HG02572__LPA__tig00000005:999-1641
     HG02572__LPA__tig00000001:1035-1678
 
-The sub-graph contains the contig used as reference in the ``VCF`` file, and the two ``HG02572``'s contigs.
+The sub-graph contains the contig used as a reference in the ``VCF`` file, and the two ``HG02572``'s contigs.
 
 -----------------------
 Visualize the sub-graph
@@ -156,7 +163,7 @@ Then, open the ``LPA.21_23_G_GT.gfa`` file with ``Bandage``.
 .. image:: /img/LPA.21_23_G_GT.png
 
 The image shows the graph topology, where each colored rectangle represents a node. In particular, three paths support
-nodes with ID 21 and 23, and only one path supports the node with ID 22. The node with ID 22 represents in the graph the
+nodes with **ID 21** and **23**, and only one path supports the node with **ID 22**. The node with **ID 22** represents in the graph the
 additional nucleotide ``T`` presents in the ``HG02572__LPA__tig00000001`` contig as an insertion.
 
 --------------------------
@@ -173,7 +180,7 @@ in ``GFA`` format, decompress it, and convert it to a graph in ``odgi`` format:
 
     odgi build -g chr6.pan.gfa -o chr6.pan.og --threads 2 -P
 
-The last command creates a file called ``chr6.pan.og``, which contains the input graph in ``odgi`` format. This graph contains
+The last command creates a file called ``chr6.pan.og``, which contains the input graph in ``odgi`` format. This graph contains contigs of
 88 haploid, phased human genome assemblies from 44 individuals, plus the chm13 and GRCh38 reference genomes.
 
 -----------------------
@@ -181,7 +188,7 @@ Extract the MHC `locus`
 -----------------------
 
 The `major histocompatibility complex <https://en.wikipedia.org/wiki/Major_histocompatibility_complex>`_ (MHC) is a large
-`locus` on vertebrate DNA containing a set of closely linked polymorphic genes that code for cell surface proteins essential
+`locus` in vertebrate DNA containing a set of closely linked polymorphic genes that code for cell surface proteins essential
 for the adaptive immune system. In humans, the MHC region occurs on chromosome 6. The human MHC is also called the HLA
 (human leukocyte antigen) complex (often just the HLA).
 
@@ -215,9 +222,9 @@ To extract the sub-graph containing all the HLA genes annotated in the ``chr6.HL
 
 The instruction extracts:
 
-- the nodes belonging to the ``grch38#chr6`` path ranges specified in the the ``chr6.HLA_genes.bed`` file;
-- all nodes between the min and max positions touched by the given path ranges, also if they belong to other paths (``-E``);
-- the edges connecting all the extracted nodes;
+- The nodes belonging to the ``grch38#chr6`` path ranges specified in the the ``chr6.HLA_genes.bed`` file via ``-b``,
+- all nodes between the min and max positions touched by the given path ranges, also if they belong to other paths (``-E``),
+- the edges connecting all the extracted nodes, and
 - the paths traversing all the extracted nodes.
 
 To have basic information on the sub-graph, execute:
@@ -244,13 +251,14 @@ To visualize the sub-graph with ``odgi``, execute:
     odgi sort -i chr6.pan.MHC.og -o - -O | \
         odgi viz -i - -o chr6.pan.MHC.png -s '#' -P 20
 
-to obtain the following PNG image:
+To obtain the following PNG image:
 
 .. image:: /img/chr6.pan.MHC.png
 
 In this 1-Dimensional visualization all contigs of the same haplotype are represented with the same color (``-s '#'``).
 The majority of the haplotypes has one contig covering the whole `locus`, meanwhile in few of them, the `locus` is split
-in several contigs.
+in several contigs. We had to apply :ref:`odgi sort` here in order to optimize (``-O``) our sub-graph. This ensures that
+the node identifier space is compacted from one to the number of nodes in the sub-graph.
 
 To see the haplotypes sorted by the number of contigs covering the MHC `locus`, execute:
 
