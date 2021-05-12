@@ -235,4 +235,4 @@ We can poke around this data and get the sequence of the path with:
 Reading in a Graph from a Different Format
 ==========================================
 
-Graph assembies can be created with `VG <https://github.com/vgteam/vg>`_.  Currently the method to convert to odgi format is broken, but graphs can be converted to .json format and subsequently converted to odgi with :download:`this script <../exdata/jsoner.py>`.
+Graph assembies can be created with `VG <https://github.com/vgteam/vg>`_.  Currently the method to convert to odgi format is broken, but graphs can be converted to .json format and subsequently converted to odgi with :download:`this script <../../exdata/jsoner.py>`.
