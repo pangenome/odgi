@@ -1,0 +1,271 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>NAME &mdash; odgi e809b89 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+        <script src="../_static/jquery.js"></script>
+        <script src="../_static/underscore.js"></script>
+        <script src="../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../index.html" class="icon icon-home"> odgi
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                v0.5.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul>
+<li class="toctree-l1"><a class="reference internal" href="../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rst/installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rst/quick_start.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rst/tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rst/commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../rst/binding.html">Python Binding</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../index.html">odgi</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+      <li>NAME</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../_sources/asciidocs/odgi_matrix.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="name">
+<h1>NAME<a class="headerlink" href="#name" title="Permalink to this headline">¶</a></h1>
+<p>odgi_matrix - write the graph topology in sparse matrix formats</p>
+</div>
+<div class="section" id="synopsis">
+<h1>SYNOPSIS<a class="headerlink" href="#synopsis" title="Permalink to this headline">¶</a></h1>
+<p><strong>odgi matrix</strong> [<strong>-i, –idx</strong>=<em>FILE</em>] [<em>OPTION</em>]…</p>
+</div>
+<div class="section" id="description">
+<h1>DESCRIPTION<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h1>
+<p>The odgi matrix(1) command generates a sparse matrix format out of the
+graph topology of a given variation graph.</p>
+</div>
+<div class="section" id="options">
+<h1>OPTIONS<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="graph-files-io">
+<h2>Graph Files IO<a class="headerlink" href="#graph-files-io" title="Permalink to this headline">¶</a></h2>
+<div class="line-block">
+<div class="line"><strong>-i, –idx</strong>=<em>FILE</em></div>
+<div class="line">File containing the succinct variation graph to create the sparse
+matrix from. The file name usually ends with <em>.og</em>.</div>
+</div>
+</div>
+<div class="section" id="matrix-options">
+<h2>Matrix Options<a class="headerlink" href="#matrix-options" title="Permalink to this headline">¶</a></h2>
+<div class="line-block">
+<div class="line"><strong>-e, –edge-depth-weight</strong></div>
+<div class="line">Weigh edges by their path depth.</div>
+</div>
+<div class="line-block">
+<div class="line"><strong>-d, –delta-weight</strong></div>
+<div class="line">Weigh edges by their inverse id delta.</div>
+</div>
+</div>
+<div class="section" id="program-information">
+<h2>Program Information<a class="headerlink" href="#program-information" title="Permalink to this headline">¶</a></h2>
+<div class="line-block">
+<div class="line"><strong>-h, –help</strong></div>
+<div class="line">Print a help message for <strong>odgi matrix</strong>.</div>
+</div>
+</div>
+</div>
+<div class="section" id="exit-status">
+<h1>EXIT STATUS<a class="headerlink" href="#exit-status" title="Permalink to this headline">¶</a></h1>
+<div class="line-block">
+<div class="line"><strong>0</strong></div>
+<div class="line">Success.</div>
+</div>
+<div class="line-block">
+<div class="line"><strong>1</strong></div>
+<div class="line">Failure (syntax or usage error; parameter error; file processing
+failure; unexpected error).</div>
+</div>
+</div>
+<div class="section" id="bugs">
+<h1>BUGS<a class="headerlink" href="#bugs" title="Permalink to this headline">¶</a></h1>
+<p>Refer to the <strong>odgi</strong> issue tracker at
+<a class="reference external" href="https://github.com/pangenome/odgi/issues">https://github.com/pangenome/odgi/issues</a>.</p>
+</div>
+<div class="section" id="authors">
+<h1>AUTHORS<a class="headerlink" href="#authors" title="Permalink to this headline">¶</a></h1>
+<p><strong>odgi matrix</strong> was written by Erik Garrison.</p>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Erik Garrison. Revision v0.5.1-e809b89.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

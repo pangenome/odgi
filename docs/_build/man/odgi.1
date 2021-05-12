@@ -1,0 +1,479 @@
+.\" Man page generated from reStructuredText.
+.
+.TH "ODGI" "1" "May 12, 2021" "v0.5.1" "odgi"
+.SH NAME
+odgi \- dynamic succinct variation graph tool
+.
+.nr rst2man-indent-level 0
+.
+.de1 rstReportMargin
+\\$1 \\n[an-margin]
+level \\n[rst2man-indent-level]
+level margin: \\n[rst2man-indent\\n[rst2man-indent-level]]
+-
+\\n[rst2man-indent0]
+\\n[rst2man-indent1]
+\\n[rst2man-indent2]
+..
+.de1 INDENT
+.\" .rstReportMargin pre:
+. RS \\$1
+. nr rst2man-indent\\n[rst2man-indent-level] \\n[an-margin]
+. nr rst2man-indent-level +1
+.\" .rstReportMargin post:
+..
+.de UNINDENT
+. RE
+.\" indent \\n[an-margin]
+.\" old: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.nr rst2man-indent-level -1
+.\" new: \\n[rst2man-indent\\n[rst2man-indent-level]]
+.in \\n[rst2man-indent\\n[rst2man-indent-level]]u
+..
+.SH SYNOPSIS
+.sp
+odgi build \-g graph.gfa \-o graph.og
+.sp
+odgi validate \-i graph.og
+.sp
+odgi stats \-i graph.og \-S
+.sp
+odgi degree \-i graph.og \-S
+.sp
+odgi depth \-i graph.og
+.sp
+odgi overlap \-i graph.og \-r
+path_name
+.sp
+odgi cover \-i graph.og \-o
+graph.paths.og
+.sp
+odgi extract \-i graph.og \-p
+prefix \-r path_name:0\-17
+.sp
+odgi explode \-i graph.og \-p
+prefix
+.sp
+odgi squeeze \-f
+input_graphs.txt \-o graphs.og
+.sp
+odgi position \-i
+target_graph.og \-g
+.sp
+odgi sort \-i graph.og \-o
+graph.sorted.og \-p bSnSnS
+.sp
+odgi view \-i graph.og \-g
+.sp
+odgi kmers \-i graph.og \-c \-k 23
+\-e 34 \-D 50
+.sp
+odgi unitig \-i graph.og \-f \-t
+1324 \-l 120
+.sp
+odgi viz \-i graph.og \-o graph.og.png
+\-x 1920 \-y 1080 \-R \-t 28
+.sp
+odgi draw \-i graph.og \-c
+coords.lay \-p .png \-x 1920 \-y 1080 \-R \-t 28
+.sp
+odgi paths \-i graph.og \-f
+.sp
+odgi prune \-i graph.og \-o
+graph.pruned.og \-c 3 \-C 345 \-T
+.sp
+odgi unchop \-i graph.og \-o
+graph.unchopped.og
+.sp
+odgi normalize \-i
+graph.og \-o graph.normalized.og \-I 100 \-d
+.sp
+odgi bin \-i graph.og \-j \-w 100 \-s \-g
+.sp
+odgi matrix \-i graph.og \-e \-d
+.sp
+odgi chop \-i graph.og \-o
+graph.choped.og \-c 1000
+.sp
+odgi groom \-i graph.og \-o
+graph.groomed.og
+.sp
+odgi layout \-i graph.og \-o
+graph.og.lay
+.sp
+odgi break \-i graph.og \-o
+graph.broken.og \-s 100 \-d
+.sp
+odgi pathindex \-i graph.og \-o graph.xp
+.sp
+odgi panpos \-i graph.og \-p
+Chr1 \-n 4
+.sp
+odgi server \-i graph.og \-p
+4000 \-ip 192.168.8.9
+.sp
+odgi test
+.sp
+odgi version
+.SH DESCRIPTION
+.sp
+\fBodgi\fP, the \fBOptimized Dynamic (genome) Graph Interface\fP, links a
+thrifty dynamic in\-memory variation graph data model to a set of
+algorithms designed for scalable sorting, pruning, transformation, and
+visualization of very large \fI\%genome
+graphs\fP\&. \fBodgi\fP includes python bindings that can be
+used to directly interface with its data model\&. This
+\fBodgi\fP manual provides detailed information about its features and
+subcommands, including examples.
+.SH COMMANDS
+.sp
+Each command has its own man page which can be viewed using e.g.\ \fBman
+odgi_build.1\fP\&. Below we have a brief summary of syntax and subcommand
+description.
+.nf
+\fBodgi build\fP [\fB\-g, –gfa\fP=\fIFILE\fP] [\fB\-o, –out\fP=\fIFILE\fP]
+[\fIOPTION\fP]…
+The odgi build(1) command constructs a succinct variation graph from a
+GFA. Currently, only GFA1 is supported. For details of the format
+please see \fI\%https://github.com/GFA\-spec/GFA\-spec/blob/master/GFA1.md\fP\&.
+.fi
+.sp
+.sp
+\fBodgi validate\fP [\fB\-i, –input\fP=\fIFILE\fP] [\fIOPTION\fP]… The odgi
+validate(1) command validates the graph (currently, it checks if the
+paths are consistent with the graph topology).
+.nf
+\fBodgi stats\fP [\fB\-i, –idx\fP=\fIFILE\fP] [\fIOPTION\fP]…
+The odgi stats(1) command produces statistics of a variation graph.
+Among other metrics, it can calculate the #nodes, #edges, #paths and
+the total nucleotide length of the graph. Various histogram summary
+options complement the tool. If [\fB\-B, –bed\-multicov\fP=\fIBED\fP] is
+set, the metrics will be produced for the intervals specified in the
+BED.
+.fi
+.sp
+.sp
+\fBodgi degree\fP [\fB\-i, –idx\fP=\fIFILE\fP] [\fIOPTION\fP]… The odgi degree(1)
+command describes the graph in terms of node degree. For the input
+graph, it shows the node.count, edge.count, avg.degree, min.degree, and
+max.degree.
+.sp
+\fBodgi depth\fP [\fB\-i, –input\fP=\fIFILE\fP] [\fIOPTION\fP]… The odgi depth(1)
+command finds the depth of graph as defined by query criteria.
+.sp
+\fBodgi overlap\fP [\fB\-i, –input\fP=\fIFILE\fP] [\fIOPTION\fP]… The odgi
+overlap(1) command finds the paths touched by the input paths.
+.nf
+\fBodgi cover\fP [\fB\-i, –idx\fP=\fIFILE\fP] [\fB\-o, –out\fP=\fIFILE\fP]
+[\fIOPTION\fP]…
+The odgi cover(1) command finds a path cover of a variation graph,
+with a specified number of paths per component.
+.fi
+.sp
+.sp
+\fBodgi extract\fP [\fB\-f, –input\-graphs\fP=\fIFILE\fP] [\fB\-o,
+–out\fP=\fIFILE\fP] [\fIOPTION\fP]… The odgi extract(1) command extracts
+parts of the graph as defined by query criteria.
+.nf
+\fBodgi explode\fP [\fB\-i, –idx\fP=\fIFILE\fP] [\fB\-p,
+–prefix\fP=\fISTRING\fP] [\fIOPTION\fP]…
+The odgi explode(1) command breaks a graph into connected components,
+writing each component in its own file.
+.fi
+.sp
+.sp
+\fBodgi squeeze\fP [\fB\-f, –input\-graphs\fP=\fIFILE\fP] [\fB\-o,
+–out\fP=\fIFILE\fP] [\fIOPTION\fP]… The odgi squeeze(1) command squeezes
+multiple graphs into the same file.
+.sp
+\fBodgi position\fP [\fB\-i, –target\fP=\fIFILE\fP] [\fIOPTION\fP]… The odgi
+position(1) command position parts of the graph as defined by query
+criteria.
+.nf
+\fBodgi sort\fP [\fB\-i, –idx\fP=\fIFILE\fP] [\fB\-o, –out\fP=\fIFILE\fP]
+[\fIOPTION\fP]…
+The odgi sort(1) command sorts a succinct variation graph. The command
+offers a diverse palette of sorting algorithms to determine the node
+order:
+.fi
+.sp
+.INDENT 0.0
+.IP \(bu 2
+A topological sort: A graph can be sorted via \fI\%breadth\-first search
+(BFS)\fP or
+\fI\%depth\-first search
+(DFS)\fP\&.
+Optionally, a chunk size specifies how much of the graph to grab at
+once in each topological sorting phase. The sorting algorithm will
+continue the sort from the next node in the prior graph order that
+has not been sorted, yet. The cycle breaking algorithm applies a DFS
+sort until a cycle is found. We break and start a new DFS sort phase
+from where we stopped.
+.IP \(bu 2
+A random sort: The graph is randomly sorted. The node order is
+randomly shuffled from \fI\%Mersenne Twister
+pseudo\-random\fP
+generated numbers.
+.IP \(bu 2
+A sparse matrix mondriaan sort: We can partition a hypergraph with
+integer weights and uniform hyperedge costs using the
+\fI\%Mondriaan\fP
+partitioner.
+.IP \(bu 2
+A 1D linear SGD sort: Odgi implements a 1D linear, variation graph
+adjusted, multi\-threaded version of the \fI\%Graph Drawing by Stochastic
+Gradient Descent\fP algorithm. The
+force\-directed graph drawing algorithm minimizes the graph’s energy
+function or stress level. It applies stochastic gradient descent
+(SGD) to move a single pair of nodes at a time.
+.IP \(bu 2
+An eades algorithmic sort: Use \fI\%Peter Eades’ heuristic for graph
+drawing\fP\&.
+.UNINDENT
+.sp
+Sorting the paths in a graph my refine the sorting process. For the
+users’ convenience, it is possible to specify a whole pipeline of sorts
+within one parameter.
+.nf
+\fBodgi view\fP [\fB\-i, –idx\fP=\fIFILE\fP] [\fIOPTION\fP]…
+The odgi view(1) command can convert a graph in odgi format to GFAv1.
+It can reveal a graph’s internal structures for e.g.\ debugging
+processes.
+.fi
+.sp
+.nf
+\fBodgi kmers\fP [\fB\-i, –idx\fP=\fIFILE\fP] [\fB\-c, –stdout\fP] [\fIOPTION\fP]…
+Given a kmer length, the odgi kmers(1) command can emit all kmers. The
+output can be refined by setting the maximum number of furcations at
+edges or by not considering nodes above a given node degree limit.
+.fi
+.sp
+.nf
+\fBodgi unitig\fP [\fB\-i, –idx\fP=\fIFILE\fP] [\fIOPTION\fP]…
+The odgi unitig(1) command can print all unitigs of a given odgi graph
+to standard output in FASTA format. Unitigs can also be emitted in a
+fixed sequence quality FASTQ format. Various parameters can refine the
+unitigs to print.
+.fi
+.sp
+.nf
+\fBodgi viz\fP [\fB\-i, –idx\fP=\fIFILE\fP] [\fB\-o, –out\fP=\fIFILE\fP]
+[\fIOPTION\fP]…
+The odgi viz(1) command can produce a linear, static visualization of
+an odgi variation graph. It aggregates the pangenome into bins and
+directly renders a raster image. The binning level depends on the
+target width of the PNG to emit. Can be used to produce visualizations
+for gigabase scale pangenomes. For more information about the binning
+process, please refer to odgi bin\&. If
+reverse coloring was selected, only the bins with a reverse rate of at
+least 0.5 are colored. Currently, there is no parameter to color
+according to the sequence coverage in bins available.
+.fi
+.sp
+.sp
+\fBodgi draw\fP [\fB\-i, –idx\fP=\fIFILE\fP] [\fB\-c, –coords\-in\fP=\fIFILE\fP]
+[\fB\-p, –png\fP=\fIFILE\fP] [\fIOPTION\fP]… The odgi draw(1) command draws
+previously\-determined 2D layouts of the graph with diverse annotations.
+.nf
+\fBodgi paths\fP [\fB\-i, –idx\fP=\fIFILE\fP] [\fIOPTION\fP]…
+The odgi paths(1) command allows the investigation of paths of a given
+variation graph. It can calculate overlap statistics of groupings of
+paths.
+.fi
+.sp
+.nf
+\fBodgi prune\fP [\fB\-i, –idx\fP=\fIFILE\fP] [\fB\-o, –out\fP=\fIFILE\fP]
+[\fIOPTION\fP]…
+The odgi prune(1) command can remove complex parts of a graph. One can
+drop paths, nodes by a certain kind of edge coverage, edges and graph
+tips. Specifying a kmer length and a maximum number of furcations, the
+graph can be broken at edges not fitting into these conditions.
+.fi
+.sp
+.nf
+\fBodgi unchop\fP [\fB\-i, –idx\fP=\fIFILE\fP] [\fB\-o, –out\fP=\fIFILE\fP]
+[\fIOPTION\fP]…
+The odgi unchop(1) command merges each unitig into a single node.
+.fi
+.sp
+.nf
+\fBodgi normalize\fP [\fB\-i, –idx\fP=\fIFILE\fP] [\fB\-o, –out\fP=\fIFILE\fP]
+[\fIOPTION\fP]…
+The odgi normalize(1) command
+unchops odgi unchop a given variation graph
+and simplifies redundant furcations.
+.fi
+.sp
+.nf
+\fBodgi matrix\fP [\fB\-i, –idx\fP=\fIFILE\fP] [\fIOPTION\fP]…
+The odgi matrix(1) command generates a sparse matrix format out of the
+graph topology of a given variation graph.
+.fi
+.sp
+.nf
+\fBodgi bin\fP [\fB\-i, –idx\fP=\fIFILE\fP] [\fIOPTION\fP]…
+The odgi bin(1) command bins a given variation graph. The pangenome
+sequence, the one\-time traversal of all nodes from smallest to largest
+node identifier, can be summed up into bins of a specified size. For
+each bin, the path metainformation is summarized. This enables a
+summarized view of gigabase scale graphs. Each step of a path is a bin
+and connected to its next bin via a link. A link has a start bin
+identifier and an end bin identifier.
+The concept of odgi bin is also applied in odgi viz\&. A demonstration of how the odgi
+bin JSON output can be used for an interactive visualization is
+realized in the \fI\%Pantograph\fP
+project. Per default, odgi bin writes the bins to stdout in a
+tab\-delimited format: \fBpath.name\fP, \fBpath.prefix\fP, \fBpath.suffix\fP,
+\fBbin\fP (bin identifier), \fBmean.cov\fP (mean coverage of the path in
+this bin), \fBmean.inv\fP (mean inversion rate of this path in this
+bin), \fBmean.pos\fP (mean nucleotide position of this path in this
+bin), \fBfirst.nucl\fP (first nucleotide position of this path in this
+bin), \fBlast.nucl\fP (last nucleotide position of this path in this
+bin). These nucleotide ranges might span positions that are not
+present in the bin. Example: A range of 1\-100 means that the first
+nucleotide has position 1 and the last has position 100, but
+nucleotide 45 could be located in another bin. For an exact positional
+output, please specify [\fB\-j, –json\fP].
+.fi
+.sp
+.nf
+\fBodgi chop\fP [\fB\-i, –idx\fP=\fIFILE\fP] [\fB\-o, –out\fP=\fIFILE\fP]
+[\fB\-c, –chop\-to\fP=\fIN\fP] [\fIOPTION\fP]…
+The odgi chop(1) command chops long nodes into short ones while
+preserving the graph topology.
+.fi
+.sp
+.nf
+\fBodgi layout\fP [\fB\-i, –idx\fP=\fIFILE\fP] [\fB\-o, –out\fP=\fIFILE\fP]
+[\fIOPTION\fP]…
+The odgi layout(1) command computes 2D layouts of the graph using
+stochastic gradient descent (SGD). The input graph must be sorted and
+id\-compacted. The algorithm itself is described in \fI\%Graph Drawing by
+Stochastic Gradient Descent\fP\&. The
+force\-directed graph drawing algorithm minimizes the graph’s energy
+function or stress level. It applies SGD to move a single pair of
+nodes at a time.
+.fi
+.sp
+.nf
+\fBodgi flatten\fP [\fB\-i, –idx\fP=\fIFILE\fP] [\fIOPTION\fP]…
+The odgi flatten(1) command projects the graph sequence and paths into
+FASTA and BED.
+.fi
+.sp
+.nf
+\fBodgi break\fP [\fB\-i, –idx\fP=\fIFILE\fP] [\fB\-o, –out\fP=\fIFILE\fP]
+[\fIOPTION\fP]…
+The odgi break(1) command finds cycles in a graph via \fI\%breadth\-first
+search (BFS)\fP
+and breaks them, also dropping the graph’s paths.
+.fi
+.sp
+.nf
+\fBodgi pathindex\fP [\fB\-i, –idx\fP=\fIFILE\fP] [\fB\-o, –out\fP=\fIFILE\fP]
+[\fIOPTION\fP]…
+The odgi pathindex(1) command generates a path index of a graph. It
+uses succinct data structures to encode the index. The path index
+represents a subset of the features of a fully realized \fI\%xg
+index\fP\&. Having a path index, we can
+use odgi panpos to go from
+\fBpath:position\fP → \fBpangenome:position\fP which is important when
+navigating large graphs in an interactive manner like in the
+\fI\%Pantograph\fP project.
+.fi
+.sp
+.nf
+\fBodgi panpos\fP [\fB\-i, –idx\fP=\fIFILE\fP] [\fB\-p, –path\fP=\fISTRING\fP]
+[\fB\-n, –nuc\-pos\fP=\fIN\fP] [\fIOPTION\fP]…
+The odgi panpos(1) command give a pangenome position for a given path
+and nucleotide position. It requires a path index, which can be
+created with odgi pathindex\&. Going from
+\fBpath:position\fP → \fBpangenome:position\fP is important when
+navigating large graphs in an interactive manner like in the
+\fI\%Pantograph\fP project. All input
+and output positions are 1\-based.
+.fi
+.sp
+.nf
+\fBodgi server\fP [\fB\-i, –idx\fP=\fIFILE\fP] [\fB\-p, –port\fP=\fIN\fP]
+[\fIOPTION\fP]…
+The odgi server(1) command starts an HTTP server with a given path
+index as input. The idea is that we can go from \fBpath:position\fP →
+\fBpangenome:position\fP via GET requests to the HTTP server. The server
+headers do not block cross origin requests. Example GET request:
+\fIhttp://localost:3000/path_name/nucleotide_position\fP\&.
+The required path index can be created with odgi pathindex\&. Going from
+\fBpath:position\fP → \fBpangenome:position\fP is important when
+navigating large graphs in an interactive manner like in the
+\fI\%Pantograph\fP project. All input
+and output positions are 1\-based. If no IP address is specified, the
+server will run on localhost.
+.fi
+.sp
+.nf
+\fBodgi test\fP [<TEST NAME|PATTERN|TAGS> …] [\fIOPTION\fP]…
+The odgi test(1) command starts all unit tests that are implemented in
+odgi. For targeted testing, a subset of tests can be selected. odgi
+test(1) depends on \fI\%Catch2\fP\&. In
+the default setting, all results are printed to stdout.
+.fi
+.sp
+.nf
+\fBodgi version\fP [\fIOPTION\fP]…
+The odgi version(1) command prints the current git version with tags
+and codename to stdout (like \fIv\-44\-g89d022b “back to old ABI”\fP).
+Optionally, only the release, version or codename can be printed.
+.fi
+.sp
+.SH BUGS
+.sp
+Refer to the \fBodgi\fP issue tracker at
+\fI\%https://github.com/pangenome/odgi/issues\fP\&.
+.SH AUTHORS
+.sp
+Erik Garrison from the University of California Santa Cruz wrote the
+whole \fBodgi\fP tool. Simon Heumos from the Quantitative Biology Center
+Tübingen wrote \fBodgi pathindex\fP, \fBodgi panpos\fP, \fBodgi server\fP, and
+this documentation. Andrea Guarracino from the University of Rome Tor
+Vergata wrote \fBodgi viz\fP, \fBodgi extract\fP, \fBodgi cover\fP, \fBodgi
+explode\fP, \fBodgi squeeze\fP, \fBodgi depth\fP, \fBodgi overlap\fP, \fBodgi
+validate\fP, and this documentation.
+.SH RESOURCES
+.sp
+\fBProject web site:\fP \fI\%https://github.com/pangenome/odgi\fP
+.sp
+\fBGit source repository on GitHub:\fP \fI\%https://github.com/pangenome/odgi\fP
+.sp
+\fBGitHub organization:\fP \fI\%https://github.com/pangenome\fP
+.sp
+\fBDiscussion list / forum:\fP \fI\%https://github.com/pangenome/odgi/issues\fP
+.SH COPYING
+.sp
+The MIT License (MIT)
+.sp
+Copyright (c) 2019\-2021 Erik Garrison
+.sp
+Permission is hereby granted, free of charge, to any person obtaining a
+copy of this software and associated documentation files (the
+“Software”), to deal in the Software without restriction, including
+without limitation the rights to use, copy, modify, merge, publish,
+distribute, sublicense, and/or sell copies of the Software, and to
+permit persons to whom the Software is furnished to do so, subject to
+the following conditions:
+.sp
+The above copyright notice and this permission notice shall be included
+in all copies or substantial portions of the Software.
+.sp
+THE SOFTWARE IS PROVIDED “AS IS”, WITHOUT WARRANTY OF ANY KIND, EXPRESS
+OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT.
+IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY
+CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT,
+TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE
+SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+.SH AUTHOR
+Andrea Guarracino, Simon Heumos, ... , Pjotr Prins, Erik Garrison
+.SH COPYRIGHT
+2021, Erik Garrison. Revision v0.5.1-e809b89
+.\" Generated by docutils manpage writer.
+.
