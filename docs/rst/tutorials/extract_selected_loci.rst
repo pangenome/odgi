@@ -98,6 +98,10 @@ To see variants for the two contigs of the ``HG02572`` sample, execute:
 The pangenome graphs embed all the mutual relationship between the embedded genomes and their variation. In this example,
 the variants are called respect to the ``chm13__LPA__tig00000001`` contig, which was used as reference path.
 
+----------------------------------------
+Extract a sub-graph with a variant inside
+----------------------------------------
+
 The insertion at position 136 (G > GT) is present in only one of the  ``HG02572``'s contig (``HG02572__LPA__tig00000001``).
 To extract the sub-graph where this insertion falls, execute:
 
@@ -106,7 +110,7 @@ To extract the sub-graph where this insertion falls, execute:
 
 The instruction extracts:
 - the node with ID 23 (``-n 23``),
-- the nodes reachable from this node following a single edge (`-c 1`) in the graph topology,
+- the nodes reachable from this node following a single edge (``-c 1``) in the graph topology,
 - the edges connecting all the extracted nodes, and
 - the paths traversing all the extracted nodes.
 
@@ -154,29 +158,90 @@ nodes with ID 21 and 23, and only one path supports the node with ID 22. The nod
 additional nucleotide ``T`` presents in the ``HG02572__LPA__tig00000001`` contig as an insertion.
 
 --------------------------
-Get the Human chr8 dataset
+Get the Human chr6 dataset
 --------------------------
 
-Download the pangenome graph of the `Human chromosome 8 <https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2021_05_06_pggb/gfas/chr8.pan.gfa.gz>`_
+Download the pangenome graph of the `Human chromosome 6 <https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2021_05_06_pggb/gfas/chr6.pan.gfa.gz>`_
 in ``GFA`` format, decompress it, and convert it to a graph in ``odgi`` format:
 
 .. code-block:: bash
 
-    wget -c https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2021_05_06_pggb/gfas/chr8.pan.gfa.gz
-    gunzip chr8.pan.gfa.gz
+    wget -c https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2021_05_06_pggb/gfas/chr6.pan.gfa.gz
+    gunzip chr6.pan.gfa.gz
 
-    odgi build -g chr8.pan.gfa -o chr8.pan.og
+    odgi build -g chr6.pan.gfa -o chr6.pan.og --threads 2 -P
 
-The last command creates a file called ``chr8.pan.og``, which contains the input graph in ``odgi`` format. This graph contains
+The last command creates a file called ``chr6.pan.og``, which contains the input graph in ``odgi`` format. This graph contains
 88 haploid, phased human genome assemblies from 44 individuals, plus the chm13 and GRCh38 reference genomes.
 
------------------------
-Extract the centromeres/beta-defensin cluster
------------------------
+---------------------
+Extract the MHC locus
+---------------------
+
+The major `histocompatibility complex <https://en.wikipedia.org/wiki/Major_histocompatibility_complex>`_ (MHC) is a large
+locus on vertebrate DNA containing a set of closely linked polymorphic genes that code for cell surface proteins essential
+for the adaptive immune system. In humans, the MHC region occurs on chromosome 6. The human MHC is also called the HLA
+(human leukocyte antigen) complex (often just the HLA).
+
+Assuming that your current working directory is the root of the ``odgi`` project, to see the coordinates of some HLA genes,
+execute:
+
+.. code-block:: bash
+
+    head test/chr6.HLA_genes.bed -n 5
+
+.. code-block:: none
+
+    grch38#chr6     29722775        29738528        HLA-F
+    grch38#chr6     29826967        29831125        HLA-G
+    grch38#chr6     29941260        29945884        HLA-A
+    grch38#chr6     30489509        30494194        HLA-E
+    grch38#chr6     31268749        31272130        HLA-C
 
 
+The coordinates are expressed with respect to the GRCh38 reference genome.
+
+--------------------------------------
+Extract a sub-graph with the HLA genes
+--------------------------------------
+
+To extract the sub-graph containing all the HLA genes annotated in the ``chr6.HLA_genes.bed`` file, execute:
+
+.. code-block:: bash
+
+    odgi extract -i chr6.pan.og -o chr6.pan.MHC.og -b chr6.HLA_genes.bed  -E --threads 2 -P
+
+The instruction extracts:
+- the nodes belonging to the ``grch38#chr6`` path ranges specified in the the ``chr6.HLA_genes.bed `` file;
+- all nodes between the min and max positions touched by the given path ranges, also if they belong to other paths (``-E``);
+- the edges connecting all the extracted nodes;
+- the paths traversing all the extracted nodes.
+
+To have basic information on the sub-graph, execute:
+
+.. code-block:: bash
+
+    odgi stats -i chr6.pan.MHC.og -S
+
+.. code-block:: none
+
+    #length	nodes	edges	paths
+    3896981	216352	297890	97
+
+There are 97 paths in the sub-graph. This means that for few individuals, more than one contig covers the MHC locus.
+
 -----------------------
-DO SOMETHING
+Visualize the sub-graph
 -----------------------
 
-8) odgi viz/layout/bandage
+To visualize the sub-graph with ``odgi``, execute:
+
+.. code-block:: bash
+
+    odgi sort -i chr6.pan.MHC.og -o - -O | \
+        odgi viz -i - -o chr6.pan.MHC.png
+
+to obtain the following PNG image:
+
+.. image:: /img/chr6.pan.MHC.png
+
