@@ -98,13 +98,13 @@ to obtain the following PNG image:
 
 .. image:: /img/DRB1-3123.png
 
-In this 1-dimensional visualization:
+In this 1-Dimensional visualization:
 
-- the graph nodes are arranged from left to right, forming the ``pangenome sequence``;
-- the colored bars represent the the paths versus the ``pangenome sequences`` in a binary matrix;
-- the path names are visualized on the left;
-- the black lines under the paths are the links, which represent the graph topology.
+- The graph nodes are arranged from left to right, forming the ``pangenome sequence``.
+- The colored bars represent the the paths versus the ``pangenome sequences`` in a binary matrix.
+- The path names are visualized on the left.
+- The black lines under the paths are the links, which represent the graph topology.
 
-See :ref:`odgi viz` documentation for more information.
+See the :ref:`odgi viz` documentation for more information.
 
 
