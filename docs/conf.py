@@ -20,13 +20,13 @@ sys.path.insert(0, os.path.abspath('../lib/'))
 # -- Project information -----------------------------------------------------
 
 project = u'odgi'
-copyright = '2021, Erik Garrison. Revision v0.5.1-d912d21'
+copyright = '2021, Erik Garrison. Revision v0.5.1-760f4fe'
 author = u'Andrea Guarracino, Simon Heumos, ... , Pjotr Prins, Erik Garrison'
 
 # The short X.Y version
 version = 'v0.5.1'
 # The full version, including alpha/beta/rc tags
-release = 'd912d21'
+release = '760f4fe'
 
 
 # -- General configuration ---------------------------------------------------

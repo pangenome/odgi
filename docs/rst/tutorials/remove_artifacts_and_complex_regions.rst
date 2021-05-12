@@ -8,7 +8,7 @@ Synopsis
 
 `De novo` assemblies may present errors (mis-assembled sequences, e.g., misjoins and erroneous insertions/deletions) or
 sequences that are difficult to align (e.g., centromeres). These issues lead to pangenome graphs with artifacts and/or
-very complex regions. To make the downstream analyses easier, as read mapping against the graph or graph visualization,
+very complex regions. To make the downstream analyses easier, for e.g. read mapping against the graph or graph visualization,
 pangenome graphs can be simplified by applying a set of ``odgi`` tools.
 
 .. warning::
@@ -40,7 +40,7 @@ in ``GFA`` format, decompress it, and convert it to a graph in ``odgi`` format:
 
     odgi build -g chr8.pan.gfa -o chr8.pan.og --threads 2 -P
 
-The last command creates a file called ``chr8.pan.og``, which contains the input graph in ``odgi`` format. This graph contains
+The last command creates a file called ``chr8.pan.og``, which contains the input graph in ``odgi`` format. This graph contains contigs of
 88 haploid, phased human genome assemblies from 44 individuals, plus the chm13 and GRCh38 reference genomes.
 
 ----------------------------
@@ -56,8 +56,9 @@ Low depth regions in the pangenome graph can be artifacts. To identify them, exe
 
     odgi depth -i chr8.pan.og -w 100:0:1 > chr8.pan.low_depth.bed
 
-The ``chr8.pan.low_depth.bed`` file reports the regions where the node depth is between 0X and 1X. Regions closer to
-100 bp have been merged into a single region. The file is in ``BED`` format.
+The ``chr8.pan.low_depth.bed`` file reports the regions where the node depth is between 0x and 1x. Regions closer to
+100 bp have been merged into a single region. The file is in ``BED`` format. ``-w 100:0:1`` selects a window size of
+100 bp where the depth must be within **0** and **1**.
 
 High depth regions in the pangenome graph can indicate complex regions. To identify them, execute:
 
@@ -65,10 +66,10 @@ High depth regions in the pangenome graph can indicate complex regions. To ident
 
     odgi depth -i chr8.pan.og -w 100000:5000:100000000 > chr8.pan.high_depth.bed
 
-The ``chr8.pan.high_depth.bed`` file reports the regions where the node depth is between 5000X and 100000000X. Regions
+The ``chr8.pan.high_depth.bed`` file reports the regions where the node depth is between 5000x and 100000000x. Regions
 closer to 100000 bp have been merged into a single region. The file is in ``BED`` format.
 
-Too short regions can lead to cleaned graphs that are too fragmented. To avoid this, filter out all regions shorter than
+If the extracted regions are too short, the cleaned graphs can become too fragmented. To avoid this, filter out all regions shorter than
 or equal to 10000 bps, merging the adjacent ranges:
 
 .. code-block:: bash
@@ -111,8 +112,8 @@ The resulting graphs presents several connected components:
 
     ##num_weakly_connected_components: 24583
 
-This is due to `de novo` assembly artifacts, under-alignments, and/or complex regions to align. Nevertheless, the cleaned
-version of the input graph is into the biggest connected component. To obtain it, execute:
+This is due to `de novo` assembly artifacts, under-alignments, and/or complex regions to align. Nevertheless, the clean
+version of the input graph can be found in its biggest connected component. To obtain it, execute:
 
 .. code-block:: bash
 
@@ -120,7 +121,7 @@ version of the input graph is into the biggest connected component. To obtain it
 
 The command creates a file called ``chr8.pan.clean.exp.8.og``, which contains the biggest connected component
 (the number 8 in this example) in ``odgi`` format. The ``-s P`` option specifies to consider as biggest component the
-one with the longer path.
+one with the longer path. ``-b`` selects the number of biggest components to retain.
 
 -------------------
 Display graph stats
@@ -147,7 +148,7 @@ To visualize the cleaned graph, first sort it:
 
     odgi sort -p Y -i chr8.pan.clean.exp.8.og -o chr8.pan.clean.sort.og -P
 
-and then execute:
+And then execute:
 
 .. code-block:: bash
 
@@ -155,12 +156,12 @@ and then execute:
 
     odgi viz -i chr8.pan.clean.sort.og -x 1000 -o chr8.pan.clean.sort.png -M chr8.pan.haplotype_names.txt
 
-to obtain the following PNG image:
-
-.. image:: /img/chr8.pan.clean.sort.png
-
 The ``haplotype_names.txt`` file contains all the haplotypes present in the input assembly. They are necessary to
 merge the paths belonging to the same haplotype in the same row in the image.
+
+We obtain the following PNG image:
+
+.. image:: /img/chr8.pan.clean.sort.png
 
 The 1-Dimensional visualization shows that all centromeres have been removed. Indeed, they present high depth being
 very complex regions. Only the GRCh38 reference centromere is present because it was explicitly preserved during the
