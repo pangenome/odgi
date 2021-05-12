@@ -38,7 +38,7 @@ in ``GFA`` format, decompress it, and convert it to a graph in ``odgi`` format:
     wget -c https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2021_05_06_pggb/gfas/chr8.pan.gfa.gz
     gunzip chr8.pan.gfa.gz
 
-    odgi build -g chr8.pan.gfa -o chr8.pan.og
+    odgi build -g chr8.pan.gfa -o chr8.pan.og --threads 2 -P
 
 The last command creates a file called ``chr8.pan.og``, which contains the input graph in ``odgi`` format. This graph contains
 88 haploid, phased human genome assemblies from 44 individuals, plus the chm13 and GRCh38 reference genomes.
@@ -89,7 +89,7 @@ To clean the pangenome graph, execute:
 
     odgi paths -i chr8.pan.og -L | grep '^grch38#chr8' > chr8.pan.path_to_fully_retain.txt
 
-    odgi extract -i chr8.pan.og -P \
+    odgi extract -i chr8.pan.og --threads 2 -P \
          --inverse \
          -b chr8.pan.regions_to_remove.bed \
          -R chr8.pan.path_to_fully_retain.txt \
