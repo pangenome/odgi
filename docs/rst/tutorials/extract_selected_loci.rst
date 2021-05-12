@@ -180,7 +180,7 @@ The last command creates a file called ``chr6.pan.og``, which contains the input
 Extract the MHC `locus`
 -----------------------
 
-The major `histocompatibility complex <https://en.wikipedia.org/wiki/Major_histocompatibility_complex>`_ (MHC) is a large
+The `major histocompatibility complex <https://en.wikipedia.org/wiki/Major_histocompatibility_complex>`_ (MHC) is a large
 `locus` on vertebrate DNA containing a set of closely linked polymorphic genes that code for cell surface proteins essential
 for the adaptive immune system. In humans, the MHC region occurs on chromosome 6. The human MHC is also called the HLA
 (human leukocyte antigen) complex (often just the HLA).
