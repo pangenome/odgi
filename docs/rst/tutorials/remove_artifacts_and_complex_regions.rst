@@ -162,7 +162,7 @@ to obtain the following PNG image:
 The ``haplotype_names.txt`` file contains all the haplotypes present in the input assembly. They are necessary to
 merge the paths belonging to the same haplotype in the same row in the image.
 
-The 1-dimensional visualization shows that all centromeres have been removed. Indeed, they present high depth being
+The 1-Dimensional visualization shows that all centromeres have been removed. Indeed, they present high depth being
 very complex regions. Only the GRCh38 reference centromere is present because it was explicitly preserved during the
 removal step of the low and high depth regions.
 

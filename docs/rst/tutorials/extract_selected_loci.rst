@@ -29,7 +29,7 @@ Assuming that your current working directory is the root of the ``odgi`` project
 
 The command creates a file called ``LPA.og``, which contains the input graph in ``odgi`` format. This graph contains
 13 contigs from 7 haploid human genome assemblies from 6 individuals plus the chm13 cell line. The contigs cover the
-`Lipoprotein A (LPA) <https://www.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000198670>`_ locus, which encodes the
+`Lipoprotein A (LPA) <https://www.ensembl.org/Homo_sapiens/Gene/Summary?g=ENSG00000198670>`_ `locus`, which encodes the
 Apo(a) protein.
 
 .. -----------------------------
@@ -174,12 +174,12 @@ in ``GFA`` format, decompress it, and convert it to a graph in ``odgi`` format:
 The last command creates a file called ``chr6.pan.og``, which contains the input graph in ``odgi`` format. This graph contains
 88 haploid, phased human genome assemblies from 44 individuals, plus the chm13 and GRCh38 reference genomes.
 
----------------------
-Extract the MHC locus
----------------------
+----------------------
+Extract the MHC `locus`
+----------------------
 
 The major `histocompatibility complex <https://en.wikipedia.org/wiki/Major_histocompatibility_complex>`_ (MHC) is a large
-locus on vertebrate DNA containing a set of closely linked polymorphic genes that code for cell surface proteins essential
+`locus` on vertebrate DNA containing a set of closely linked polymorphic genes that code for cell surface proteins essential
 for the adaptive immune system. In humans, the MHC region occurs on chromosome 6. The human MHC is also called the HLA
 (human leukocyte antigen) complex (often just the HLA).
 
@@ -212,7 +212,8 @@ To extract the sub-graph containing all the HLA genes annotated in the ``chr6.HL
     odgi extract -i chr6.pan.og -o chr6.pan.MHC.og -b chr6.HLA_genes.bed  -E --threads 2 -P
 
 The instruction extracts:
-- the nodes belonging to the ``grch38#chr6`` path ranges specified in the the ``chr6.HLA_genes.bed `` file;
+
+- the nodes belonging to the ``grch38#chr6`` path ranges specified in the the ``chr6.HLA_genes.bed`` file;
 - all nodes between the min and max positions touched by the given path ranges, also if they belong to other paths (``-E``);
 - the edges connecting all the extracted nodes;
 - the paths traversing all the extracted nodes.
@@ -228,7 +229,7 @@ To have basic information on the sub-graph, execute:
     #length	nodes	edges	paths
     3896981	216352	297890	97
 
-There are 97 paths in the sub-graph. This means that for few individuals, more than one contig covers the MHC locus.
+There are 97 paths in the sub-graph. This means that for few individuals, more than one contig covers the MHC `locus`.
 
 -----------------------
 Visualize the sub-graph
@@ -239,9 +240,31 @@ To visualize the sub-graph with ``odgi``, execute:
 .. code-block:: bash
 
     odgi sort -i chr6.pan.MHC.og -o - -O | \
-        odgi viz -i - -o chr6.pan.MHC.png
+        odgi viz -i - -o chr6.pan.MHC.png -s '#' -P 20
 
 to obtain the following PNG image:
 
 .. image:: /img/chr6.pan.MHC.png
 
+In this 1-Dimensional visualization all contigs of the same haplotype are represented with the same color (``-s '#'``).
+The majority of the haplotypes has one contig covering the whole `locus`, meanwhile in few of them, the `locus` is split
+in several contigs.
+
+To see the haplotypes sorted by the number of contigs covering the MHC `locus`, execute:
+
+.. code-block:: bash
+
+    odgi paths -i chr6.pan.MHC.og -L | cut -f 1,2 -d '#' | uniq -c | sort -k 1nr | head
+
+.. code-block:: none
+
+          3 HG00733#2
+          2 HG00673#2
+          2 HG01071#1
+          2 HG02630#2
+          2 HG02818#2
+          2 HG03516#2
+          1 chm13#chr6:29595119-32911317
+          1 grch38#chr6:29722774-33089734
+          1 HG00438#1
+          1 HG00438#2
