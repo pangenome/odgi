@@ -58,7 +58,10 @@ is computed for each of these windows, writing the result in the ``chr8.pan.dept
 
 .. note::
 
-   It will take a while to obtain the depth over all the windows. You can download the file from `here <xxxchr8.pan.depth.w5kbps.bedxxx>`_.
+    It will take a while to obtain the depth over all the windows. You can find the gzipped result in the ``test`` folder
+    in the root of the ``odgi`` project, in the ``chr8.pan.depth.w5kbps.bed.gz`` file. Gunzip the file before using it.
+
+Take a look at the first rows of the ``chr8.pan.depth.w5kbps.bed`` file:
 
 .. code-block:: bash
 
@@ -91,11 +94,10 @@ neo-centromere, respectively.
 Centromere's Higher-Order Repeat (HOR) organization
 ---------------------------------------------------
 
-.. TODO add the link to the BED file
-
 The chromosome 8 centromeric HOR array is primarily composed of four distinct HOR types represented by 4, 7, 8 or
 11 α-satellite monomer cassettes. Thanks to the `Logsdon et al., 2021 <https://doi.org/10.1038/s41586-021-03420-7>`_ HOR
-annotations (you can download them `here <xxxHORBEDxxx>`_), we can take a closer look at the centromere:
+annotations (you can find them in the ``test`` folder in the root of the ``odgi`` project, in the ``chr8_HORarray_organization.colors.bed``
+file), we can take a closer look at the centromere:
 
 .. image:: /img/chr8_HOR.mean_depth.2.png
 

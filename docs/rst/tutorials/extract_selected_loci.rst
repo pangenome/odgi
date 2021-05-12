@@ -149,7 +149,7 @@ Then, open the ``LPA.21_23_G_GT.gfa`` file with ``Bandage``.
 
 .. image:: /img/LPA.21_23_G_GT.png
 
-The image shows the graph topology, where each colored rectangle represents a node. In particular, thress paths support
+The image shows the graph topology, where each colored rectangle represents a node. In particular, three paths support
 nodes with ID 21 and 23, and only one path supports the node with ID 22. The node with ID 22 represents in the graph the
 additional nucleotide ``T`` presents in the ``HG02572__LPA__tig00000001`` contig as an insertion.
 
