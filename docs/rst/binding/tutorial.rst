@@ -1,3 +1,5 @@
+.. _python bindings tutorial:
+
 #########
 Tutorial
 #########

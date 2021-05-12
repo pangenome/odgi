@@ -100,8 +100,7 @@ thrifty dynamic in-memory variation graph data model to a set of
 algorithms designed for scalable sorting, pruning, transformation, and
 visualization of very large `genome
 graphs <https://pangenome.github.io/>`__. **odgi** includes :ref:`python bindings` that can be
-used to `directly interface with its data
-model <https://odgi.readthedocs.io/en/latest/rst/tutorial.html>`__. This
+used to :ref:`directly interface with its data model <python bindings tutorial>`. This
 **odgi** manual provides detailed information about its features and
 subcommands, including examples.
 
