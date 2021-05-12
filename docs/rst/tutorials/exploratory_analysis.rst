@@ -132,7 +132,7 @@ Color with respect to the node depth in a path
 ----------------------------------------------
 
 Eukaryotic genomes are characterized by repetitive sequences. These sequences can lead to complex regions in the pangenome
-graphs. To identify them, we can analyze the **depth** in the graph. Here we define *node depth in a path* as the number
+graphs. To identify them, we can analyze the **depth** in the graph. Here we define **node depth in a path** as the number
 of times the node is crossed by a path.
 
 To color the bars with respect to the mean `depth`, execute:
