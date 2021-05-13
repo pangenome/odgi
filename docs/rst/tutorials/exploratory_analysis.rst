@@ -11,7 +11,6 @@ variation. However, complex, nonlinear graph structures are difficult to present
 :ref:`odgi viz` offers a binned, linearized 1-Dimensional rendering. It is able to display gigabase scale pangenomes,
 and several visualization modalities to grasp the complexity in the graphs.
 
-
 =====
 Steps
 =====

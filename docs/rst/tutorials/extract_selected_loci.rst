@@ -8,7 +8,7 @@ Synopsis
 
 Pangenome graphs model the full set of genomic elements in a gives species or clade. Nevertheless, downstream analyses
 may require focusing on specific pangenomic regions. ``odgi`` allows to extract `loci` of interest from the pangenome graph,
-resulting in sub-graphs of the full pangenome graph. Is demonstrated that one can work with such sub-graphs as easily as
+resulting in sub-graphs of the full pangenome graph. It is demonstrated that one can work with such sub-graphs as easily as
 handling the full ones.
 
 =====
