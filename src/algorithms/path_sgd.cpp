@@ -579,12 +579,12 @@ namespace odgi {
                     std::cerr << "[odgi::path_linear_sgd] Applying order to graph of snapshot: " << std::to_string(j + 1)
                               << std::endl;
                     std::string local_snapshot_prefix = snapshot_prefix + std::to_string(j + 1);
-                    graph_t graph_copy;
-                    graph_copy.copy(graph);
-                    graph_copy.apply_ordering(order, true);
+                    auto* graph_copy = new odgi::graph_t();
+                    utils::graph_deep_copy(graph, graph_copy);
+                    graph_copy->apply_ordering(order, true);
                     ofstream f(local_snapshot_prefix);
                     std::cerr << "[odgi::path_linear_sgd] Writing snapshot: " << std::to_string(j + 1) << std::endl;
-                    graph_copy.serialize(f);
+                    graph_copy->serialize(f);
                     f.close();
                 }
             }
@@ -616,6 +616,5 @@ namespace odgi {
             }
             return order;
         }
-
     }
 }
