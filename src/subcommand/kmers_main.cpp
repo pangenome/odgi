@@ -19,7 +19,7 @@ int main_kmers(int argc, char** argv) {
     for (uint64_t i = 1; i < argc-1; ++i) {
         argv[i] = argv[i+1];
     }
-    std::string prog_name = "odgi kmers";
+    const std::string prog_name = "odgi kmers";
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
@@ -29,7 +29,7 @@ int main_kmers(int argc, char** argv) {
     args::ValueFlag<uint64_t> kmer_length(parser, "K", "the length of the kmers to generate", {'k', "kmer-length"});
     args::ValueFlag<uint64_t> max_furcations(parser, "N", "break at edges that would be induce this many furcations in a kmer", {'e', "max-furcations"});
     args::ValueFlag<uint64_t> max_degree(parser, "N", "remove nodes that have degree greater that this level", {'D', "max-degree"});
-    args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
+    args::ValueFlag<int> threads(parser, "N", "number of threads to use", {'t', "threads"});
     args::Flag kmers_stdout(parser, "", "write the kmers to stdout", {'c', "stdout"});
 
     try {
@@ -56,27 +56,30 @@ int main_kmers(int argc, char** argv) {
         std::cerr << "Please specify a kmer length via -k=[N], --kmer-lenght=[N]." << std::endl;
         return 1;
     }
+    assert(args::get(kmer_length));
 
     graph_t graph;
     assert(argc > 0);
-    assert(args::get(kmer_length));
-    std::string infile = args::get(dg_in_file);
-    if (infile.size()) {
-        if (infile == "-") {
-            graph.deserialize(std::cin);
-        } else {
-            ifstream f(infile.c_str());
-            graph.deserialize(f);
-            f.close();
+    {
+        const std::string infile = args::get(dg_in_file);
+        if (!infile.empty()) {
+            if (infile == "-") {
+                graph.deserialize(std::cin);
+            } else {
+                ifstream f(infile.c_str());
+                graph.deserialize(f);
+                f.close();
+            }
         }
     }
 
-    int n_threads = threads ? args::get(threads) : 1;
+    const int n_threads = threads ? args::get(threads) : 1;
     omp_set_num_threads(n_threads);
 
     if (args::get(max_degree)) {
         algorithms::remove_high_degree_nodes(graph, args::get(max_degree));
     }
+
     /*
     if (args::get(max_furcations)) {
         std::vector<edge_t> to_prune = algorithms::find_edges_to_prune(graph, args::get(kmer_length), args::get(max_furcations));
@@ -87,10 +90,12 @@ int main_kmers(int argc, char** argv) {
         std::cerr << "done prune" << std::endl;
     }
     */
-    std::vector<std::vector<kmer_t>> buffers(n_threads);
+
     if (args::get(kmers_stdout)) {
+        std::vector<std::vector<kmer_t>> buffers(n_threads);
+
         algorithms::for_each_kmer(graph, args::get(kmer_length), args::get(max_furcations), [&](const kmer_t& kmer) {
-                int tid = omp_get_thread_num();
+                const int tid = omp_get_thread_num();
                 auto& buffer = buffers.at(tid);
                 buffer.push_back(kmer);
                 if (buffer.size() > 1e5) {
@@ -103,12 +108,15 @@ int main_kmers(int argc, char** argv) {
                     }
                 }
             });
+
+        // last kmers in the buffer
         for (auto& buffer : buffers) {
             for (auto& kmer : buffer) {
                 std::cout << kmer << "\n";
             }
             buffer.clear();
         }
+
         std::cout.flush();
     } else {
         //ska::flat_hash_map<uint32_t, uint32_t> kmer_table;
@@ -131,10 +139,11 @@ int main_kmers(int argc, char** argv) {
                 }
                 */
             });
+
         std::cerr << std::endl;
         std::sort(kmers.begin(), kmers.end());
         kmers.erase(std::unique(kmers.begin(), kmers.end()), kmers.end());
-        boophf_t * bphf = new boomphf::mphf<uint64_t,hasher_t>(kmers.size(),kmers,n_threads);
+        boophf_t* bphf = new boomphf::mphf<uint64_t,hasher_t>(kmers.size(),kmers,n_threads);
         //kmers.clear();
         std::cerr << "querying kmers" << std::endl;
         chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
