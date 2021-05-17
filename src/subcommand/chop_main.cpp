@@ -14,7 +14,7 @@ namespace odgi {
         for (uint64_t i = 1; i < argc - 1; ++i) {
             argv[i] = argv[i + 1];
         }
-        std::string prog_name = "odgi chop";
+        const std::string prog_name = "odgi chop";
         argv[0] = (char *) prog_name.c_str();
         --argc;
 
@@ -65,14 +65,16 @@ namespace odgi {
 
         graph_t graph;
         assert(argc > 0);
-        std::string infile = args::get(dg_in_file);
-        if (!infile.empty()) {
-            if (infile == "-") {
-                graph.deserialize(std::cin);
-            } else {
-                ifstream f(infile.c_str());
-                graph.deserialize(f);
-                f.close();
+        {
+            const std::string infile = args::get(dg_in_file);
+            if (!infile.empty()) {
+                if (infile == "-") {
+                    graph.deserialize(std::cin);
+                } else {
+                    ifstream f(infile.c_str());
+                    graph.deserialize(f);
+                    f.close();
+                }
             }
         }
 
@@ -81,16 +83,19 @@ namespace odgi {
 
         algorithms::chop(graph, args::get(chop_to), num_threads, args::get(debug));
 
-        std::string outfile = args::get(dg_out_file);
-        if (!outfile.empty()) {
-            if (outfile == "-") {
-                graph.serialize(std::cout);
-            } else {
-                ofstream f(outfile.c_str());
-                graph.serialize(f);
-                f.close();
+        {
+            const std::string outfile = args::get(dg_out_file);
+            if (!outfile.empty()) {
+                if (outfile == "-") {
+                    graph.serialize(std::cout);
+                } else {
+                    ofstream f(outfile.c_str());
+                    graph.serialize(f);
+                    f.close();
+                }
             }
         }
+
         return 0;
     }
 

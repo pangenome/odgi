@@ -14,7 +14,7 @@ int main_groom(int argc, char** argv) {
     for (uint64_t i = 1; i < argc-1; ++i) {
         argv[i] = argv[i+1];
     }
-    std::string prog_name = "odgi groom";
+    const std::string prog_name = "odgi groom";
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
@@ -52,33 +52,34 @@ int main_groom(int argc, char** argv) {
 
     graph_t graph;
     assert(argc > 0);
-    std::string infile = args::get(og_in_file);
-    if (!infile.empty()) {
-        if (infile == "-") {
-            graph.deserialize(std::cin);
-        } else {
-            ifstream f(infile.c_str());
-            graph.deserialize(f);
-            f.close();
+    {
+        const std::string infile = args::get(og_in_file);
+        if (!infile.empty()) {
+            if (infile == "-") {
+                graph.deserialize(std::cin);
+            } else {
+                ifstream f(infile.c_str());
+                graph.deserialize(f);
+                f.close();
+            }
         }
     }
-    /*
-    if (args::get(threads)) {
-        omp_set_num_threads(args::get(threads));
-    }
-    */
+
     graph.apply_ordering(algorithms::groom(graph, progress, !args::get(use_dfs)));
-    
-    std::string outfile = args::get(og_out_file);
-    if (!outfile.empty()) {
-        if (outfile == "-") {
-            graph.serialize(std::cout);
-        } else {
-            ofstream f(outfile.c_str());
-            graph.serialize(f);
-            f.close();
+
+    {
+        const std::string outfile = args::get(og_out_file);
+        if (!outfile.empty()) {
+            if (outfile == "-") {
+                graph.serialize(std::cout);
+            } else {
+                ofstream f(outfile.c_str());
+                graph.serialize(f);
+                f.close();
+            }
         }
     }
+
     return 0;
 }
 

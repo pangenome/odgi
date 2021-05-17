@@ -19,7 +19,7 @@ int main_prune(int argc, char** argv) {
     for (uint64_t i = 1; i < argc-1; ++i) {
         argv[i] = argv[i+1];
     }
-    std::string prog_name = "odgi prune";
+    const std::string prog_name = "odgi prune";
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
@@ -41,7 +41,7 @@ int main_prune(int argc, char** argv) {
     args::Flag cut_tips(parser, "bool", "remove nodes which are graph tips", {'T', "cut-tips"});
     args::ValueFlag<uint64_t> cut_tips_min_depth(parser, "bool", "remove nodes which are graph tips and have less than this path depth", {'m', "cut-tips-min-depth"});
     args::Flag remove_isolated(parser, "bool", "remove isolated nodes covered by a single path", {'I', "remove-isolated"});
-    args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
+    args::ValueFlag<int> threads(parser, "N", "number of threads to use", {'t', "threads"});
 
     try {
         parser.ParseCLI(argc, argv);
@@ -73,14 +73,16 @@ int main_prune(int argc, char** argv) {
     }
 
     graph_t graph;;
-    if (!args::get(dg_in_file).empty()) {
-        std::string infile = args::get(dg_in_file);
-        if (infile == "-") {
-            graph.deserialize(std::cin);
-        } else {
-            ifstream f(infile.c_str());
-            graph.deserialize(f);
-            f.close();
+    {
+        const std::string infile = args::get(dg_in_file);
+        if (!infile.empty()) {
+            if (infile == "-") {
+                graph.deserialize(std::cin);
+            } else {
+                ifstream f(infile.c_str());
+                graph.deserialize(f);
+                f.close();
+            }
         }
     }
 
@@ -166,16 +168,19 @@ int main_prune(int argc, char** argv) {
         graph.clear_paths();
     }
 
-    if (!args::get(dg_out_file).empty()) {
-        std::string outfile = args::get(dg_out_file);
-        if (outfile == "-") {
-            graph.serialize(std::cout);
-        } else {
-            ofstream f(outfile.c_str());
-            graph.serialize(f);
-            f.close();
+    {
+        const std::string outfile = args::get(dg_out_file);
+        if (!outfile.empty()) {
+            if (outfile == "-") {
+                graph.serialize(std::cout);
+            } else {
+                ofstream f(outfile.c_str());
+                graph.serialize(f);
+                f.close();
+            }
         }
     }
+
     return 0;
 }
 
