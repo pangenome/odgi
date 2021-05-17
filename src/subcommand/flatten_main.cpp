@@ -14,7 +14,7 @@ int main_flatten(int argc, char** argv) {
     for (uint64_t i = 1; i < argc-1; ++i) {
         argv[i] = argv[i+1];
     }
-    std::string prog_name = "odgi flatten";
+    const std::string prog_name = "odgi flatten";
     argv[0] = (char*)prog_name.c_str();
     --argc;
 
@@ -45,78 +45,84 @@ int main_flatten(int argc, char** argv) {
         return 1;
     }
 
-    graph_t graph;
-    assert(argc > 0);
-    std::string infile = args::get(odgi_in_file);
-    if (infile.size()) {
-        if (infile == "-") {
-            graph.deserialize(std::cin);
-        } else {
-            ifstream f(infile.c_str());
-            graph.deserialize(f);
-            f.close();
-        }
-    }
-
     if (args::get(fasta_out_file).empty() && args::get(bed_out_file).empty()) {
         std::cerr << "[odgi::flatten] error: a FASTA or BED output must be specified" << std::endl;
         return 2;
     }
 
+    graph_t graph;
+    assert(argc > 0);
+    {
+        const std::string infile = args::get(odgi_in_file);
+        if (!infile.empty()) {
+            if (infile == "-") {
+                graph.deserialize(std::cin);
+            } else {
+                ifstream f(infile.c_str());
+                graph.deserialize(f);
+                f.close();
+            }
+        }
+    }
+
     // graph linearization with handle to position mapping
     algorithms::linear_index_t linear(graph);
 
-    std::string fasta_name = !args::get(fasta_seq_name).empty() ? args::get(fasta_seq_name) : args::get(odgi_in_file);
-    std::string fasta_out = args::get(fasta_out_file);
-    uint64_t fasta_line_width = 80;
-    auto write_fasta
-        = [&](ostream& out) {
-              out << ">" << fasta_name << std::endl;
-              for (uint64_t i = 0; i < linear.graph_seq.size(); i+=fasta_line_width) {
-                  out << linear.graph_seq.substr(i, fasta_line_width) << std::endl;
-              }
-          };
-    if (fasta_out.size()) {
-        if (fasta_out == "-") {
-            write_fasta(std::cout);
-        } else {
-            ofstream f(fasta_out.c_str());
-            write_fasta(f);
+    const std::string fasta_name = !args::get(fasta_seq_name).empty() ? args::get(fasta_seq_name) : args::get(odgi_in_file);
+
+    {
+        const std::string fasta_out = args::get(fasta_out_file);
+        if (!fasta_out.empty()) {
+            const uint8_t fasta_line_width = 80;
+
+            auto write_fasta = [&](ostream& out) {
+                out << ">" << fasta_name << std::endl;
+                for (uint64_t i = 0; i < linear.graph_seq.size(); i+=fasta_line_width) {
+                    out << linear.graph_seq.substr(i, fasta_line_width) << std::endl;
+                }
+            };
+
+            if (fasta_out == "-") {
+                write_fasta(std::cout);
+            } else {
+                ofstream f(fasta_out.c_str());
+                write_fasta(f);
+            }
         }
     }
 
     if (!args::get(bed_out_file).empty()) {
-        auto write_bed_line
-            = [&](ostream& out, const std::string& path_name, const uint64_t& start,
-                  const uint64_t& end, bool is_rev, const uint64_t& rank) {
-                  out << fasta_name << "\t" << start << "\t" << end << "\t"
-                      << path_name << "\t" << (is_rev ? "-" : "+") << "\t" << rank << std::endl;
-              };
-        std::string bed_out = args::get(bed_out_file);
+        auto write_bed_line = [&](ostream& out, const std::string& path_name, const uint64_t& start,
+                const uint64_t& end, bool is_rev, const uint64_t& rank) {
+            out << fasta_name << "\t" << start << "\t" << end << "\t"
+            << path_name << "\t" << (is_rev ? "-" : "+") << "\t" << rank << std::endl;
+        };
+
+        const std::string bed_out = args::get(bed_out_file);
         ofstream b;
         bool bed_stdout = true;
         if (bed_out != "-") {
-            b.open(bed_out.c_str());
             bed_stdout = false;
+            b.open(bed_out.c_str());
         }
-        graph.for_each_path_handle(
-            [&](const path_handle_t& p) {
-                std::string path_name = graph.get_path_name(p);
-                uint64_t rank = 0;
-                graph.for_each_step_in_path(
-                    p,
-                    [&](const step_handle_t& s) {
-                        handle_t h = graph.get_handle_of_step(s);
-                        uint64_t start = linear.position_of_handle(h);
-                        uint64_t end = start + graph.get_length(h);
-                        bool is_rev = graph.get_is_reverse(h);
-                        if (bed_stdout) {
-                            write_bed_line(std::cout, path_name, start, end, is_rev, rank++);
-                        } else {
-                            write_bed_line(b, path_name, start, end, is_rev, rank++);
-                        }
-                    });
+
+        (bed_stdout ? std::cout : b) << "name\tstart\tend\tpath.name\tstrand\tstep.rank\n";
+
+        graph.for_each_path_handle([&](const path_handle_t& p) {
+            const std::string path_name = graph.get_path_name(p);
+            uint64_t rank = 0;
+            graph.for_each_step_in_path(p, [&](const step_handle_t& s) {
+                const handle_t h = graph.get_handle_of_step(s);
+                const uint64_t start = linear.position_of_handle(h);
+                const uint64_t end = start + graph.get_length(h);
+                const bool is_rev = graph.get_is_reverse(h);
+                write_bed_line(bed_stdout ? std::cout : b, path_name, start, end, is_rev, rank++);
             });
+        });
+
+        if (!bed_stdout) {
+            b.close();
+        }
     }
     
     return 0;
