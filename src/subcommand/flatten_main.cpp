@@ -106,7 +106,7 @@ int main_flatten(int argc, char** argv) {
             b.open(bed_out.c_str());
         }
 
-        (bed_stdout ? std::cout : b) << "name\tstart\tend\tpath.name\tstrand\tstep.rank\n";
+        (bed_stdout ? std::cout : b) << "#name\tstart\tend\tpath.name\tstrand\tstep.rank\n";
 
         graph.for_each_path_handle([&](const path_handle_t& p) {
             const std::string path_name = graph.get_path_name(p);

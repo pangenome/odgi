@@ -14,15 +14,13 @@ void write_as_sparse_matrix(std::ostream& out, const PathHandleGraph& graph, boo
             double weight = 0;
             if (weight_by_edge_depth) {
                 graph.for_each_step_on_handle(edge.first, [&](const step_handle_t& step) {
-                        if (graph.get_handle_of_step(step) == edge.first
-                            && graph.has_next_step(step)) {
-                            handle_t next = graph.get_handle_of_step(graph.get_next_step(step));
+                        if (graph.get_handle_of_step(step) == edge.first && graph.has_next_step(step)) {
+                            const handle_t next = graph.get_handle_of_step(graph.get_next_step(step));
                             if (next == edge.second) {
                                 ++weight;
                             }
-                        } else if (graph.get_handle_of_step(step) == graph.flip(edge.first)
-                                   && graph.has_previous_step(step)) {
-                            handle_t prev = graph.get_handle_of_step(graph.get_previous_step(step));
+                        } else if (graph.get_handle_of_step(step) == graph.flip(edge.first) && graph.has_previous_step(step)) {
+                            const handle_t prev = graph.get_handle_of_step(graph.get_previous_step(step));
                             if (prev == graph.flip(edge.second)) {
                                 ++weight;
                             }
