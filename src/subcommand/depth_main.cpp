@@ -288,8 +288,8 @@ namespace odgi {
                     path,
                     [&](const step_handle_t& step) {
                         handle_t handle = graph.get_handle_of_step(step);
-                        auto depth = graph.get_step_count(handle) - 1; // don't count self
-                       auto next_pos = pos + graph.get_length(handle);
+                        auto depth = graph.get_step_count(handle);
+                        auto next_pos = pos + graph.get_length(handle);
                         while (pos++ < next_pos) {
                             ss << " " << depth;
                         }
@@ -320,8 +320,7 @@ namespace odgi {
                         graph.for_each_step_on_handle(
                             handle,
                             [&](const step_handle_t& other) {
-                                depth += (other != step
-                                          && path == graph.get_path_handle_of_step(other));
+                                depth += (path == graph.get_path_handle_of_step(other));
                             });
                         auto next_pos = pos + graph.get_length(handle);
                         while (pos++ < next_pos) {
