@@ -53,8 +53,12 @@ namespace odgi {
                                {'d', "graph-depth"});
 
         args::Flag path_depth(parser, "path-depth",
-                              "compute the depth on each base in each path in the graph",
+                              "compute the depth on each base in each path",
                               {'P', "path-depth"});
+
+        args::Flag self_depth(parser, "self-depth",
+                              "compute the depth of the path versus itself on each base in each path",
+                              {'a', "self-depth"});
 
         args::Flag summarize_depth(parser, "summarize-graph-depth",
                                    "provide a summary of the depth distribution in the graph",
@@ -267,7 +271,12 @@ namespace odgi {
             });
         } else if (path_depth) {
             std::vector<path_handle_t> paths;
-            graph.for_each_path_handle([&paths](const path_handle_t& path) { paths.push_back(path); });
+            graph.for_each_path_handle(
+                [&paths,&paths_to_consider](const path_handle_t& path) {
+                    if (paths_to_consider[as_integer(path)]) {
+                        paths.push_back(path);
+                    }
+                });
             // for each path handle
 #pragma omp parallel for schedule(dynamic, 1)
             for (auto& path : paths) {
@@ -280,6 +289,40 @@ namespace odgi {
                     [&](const step_handle_t& step) {
                         handle_t handle = graph.get_handle_of_step(step);
                         auto depth = graph.get_step_count(handle) - 1; // don't count self
+                       auto next_pos = pos + graph.get_length(handle);
+                        while (pos++ < next_pos) {
+                            ss << " " << depth;
+                        }
+                    });
+#pragma omp critical (cout)
+                std::cout << ss.str() << std::endl;
+            }
+        } else if (self_depth) {
+            std::vector<path_handle_t> paths;
+            graph.for_each_path_handle(
+                [&paths,&paths_to_consider](const path_handle_t& path) {
+                    if (paths_to_consider[as_integer(path)]) {
+                        paths.push_back(path);
+                    }
+                });
+            // for each path handle
+#pragma omp parallel for schedule(dynamic, 1)
+            for (auto& path : paths) {
+                std::stringstream ss;
+                ss << graph.get_path_name(path);
+                // for each step
+                uint64_t pos = 0;
+                graph.for_each_step_in_path(
+                    path,
+                    [&](const step_handle_t& step) {
+                        handle_t handle = graph.get_handle_of_step(step);
+                        uint64_t depth = 0;
+                        graph.for_each_step_on_handle(
+                            handle,
+                            [&](const step_handle_t& other) {
+                                depth += (other != step
+                                          && path == graph.get_path_handle_of_step(other));
+                            });
                         auto next_pos = pos + graph.get_length(handle);
                         while (pos++ < next_pos) {
                             ss << " " << depth;
