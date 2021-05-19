@@ -220,7 +220,6 @@ namespace odgi {
             }
         }
 
-#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
         for (uint64_t component_index = 0; component_index < weak_components.size(); ++component_index) {
             if (!ignore_component.test(component_index)) {
                 auto &weak_component = weak_components[component_index];
@@ -234,7 +233,7 @@ namespace odgi {
                 weak_component.clear();
 
                 algorithms::add_connecting_edges_to_subgraph(graph, subgraph);
-                algorithms::add_full_paths_to_component(graph, subgraph);
+                algorithms::add_full_paths_to_component(graph, subgraph, num_threads);
 
                 if (optimize) {
                     subgraph.optimize();

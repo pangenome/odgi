@@ -3,12 +3,10 @@
 namespace odgi {
     namespace algorithms {
 
-        void add_full_paths_to_component(const graph_t &source, graph_t &component) {
+        void add_full_paths_to_component(const graph_t &source, graph_t &component, const uint64_t num_threads) {
+            // Search paths in parallel
+            atomicbitvector::atomic_bv_t take_source_path(source.get_path_count());
 
-            // We want to track the path names in each component
-            set<path_handle_t> paths;
-
-            // Record paths
             component.for_each_handle([&](const handle_t &h) {
                 handlegraph::nid_t id = component.get_id(h);
 
@@ -16,17 +14,30 @@ namespace odgi {
                     handle_t source_handle = source.get_handle(id);
 
                     source.for_each_step_on_handle(source_handle, [&](const step_handle_t &source_step) {
-                        paths.insert(source.get_path_handle_of_step(source_step));
+                        uint64_t source_path_rank = as_integer(source.get_path_handle_of_step(source_step)) - 1;
+                        take_source_path.set(source_path_rank);
                     });
+                }
+            }, true);
+
+            // Create paths
+            std::vector<path_handle_t> taken_source_paths;
+            source.for_each_path_handle([&](const path_handle_t source_path) {
+                uint64_t source_path_rank = as_integer(source_path) - 1;
+
+                if (take_source_path.test(source_path_rank)) {
+                    component.create_path_handle(source.get_path_name(source_path), source.get_is_circular(source_path));
+                    taken_source_paths.push_back(source_path);
                 }
             });
 
-            // Copy the paths over
-            for (path_handle_t path_handle : paths) {
-                path_handle_t new_path_handle = component.create_path_handle(source.get_path_name(path_handle),
-                                                                             source.get_is_circular(path_handle));
-                for (handle_t handle : source.scan_path(path_handle)) {
-                    component.append_step(new_path_handle, component.get_handle(source.get_id(handle),
+            // Fill paths in parallel
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
+            for (auto& source_path : taken_source_paths) {
+                path_handle_t path_handle = component.get_path_handle(source.get_path_name(source_path));
+
+                for (handle_t handle : source.scan_path(source_path)) {
+                    component.append_step(path_handle, component.get_handle(source.get_id(handle),
                                                                                 source.get_is_reverse(handle)));
                 }
             }
