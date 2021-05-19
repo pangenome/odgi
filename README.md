@@ -39,10 +39,10 @@ Static builds are unlikely to be supported on OSX, and require appropriate stati
 It may be necessary to install several system-level libraries to build odgi.
 On Ubuntu 20.04, these can be installed using apt: `sudo apt install build-essential cmake python3-distutils python3-dev libjemalloc-dev`.
 
-## supported functionality
+## documentation
 
 odgi includes a variety of subtools for building and manipulating large genome graphs.
-These are [documented in manual pages for each tool in odgi](https://pangenome.github.io/odgi/odgi_docs.html).
+These are [documented in manual pages for each tool in odgi](https://pangenome.github.io/odgi.github.io/index.html).
 
 ## tests
 
