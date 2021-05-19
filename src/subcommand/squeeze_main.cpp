@@ -105,7 +105,7 @@ namespace odgi {
         std::unique_ptr<algorithms::progress_meter::ProgressMeter> squeeze_progress;
         if (debug) {
             squeeze_progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
-                    num_input_graphs, "[odgi::squeeze] imploding input graphs");
+                    num_input_graphs, "[odgi::squeeze] squeezing input graphs");
 
             std::cerr << "[odgi::squeeze] detected " << num_input_graphs << " input graphs" << std::endl;
         }
