@@ -13,7 +13,7 @@ int main_matrix(int argc, char** argv) {
     for (uint64_t i = 1; i < argc-1; ++i) {
         argv[i] = argv[i+1];
     }
-    std::string prog_name = "odgi matrix";
+    const std::string prog_name = "odgi matrix";
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
@@ -44,14 +44,17 @@ int main_matrix(int argc, char** argv) {
 
     graph_t graph;
     assert(argc > 0);
-    std::string infile = args::get(dg_in_file);
-    if (infile.size()) {
-        if (infile == "-") {
-            graph.deserialize(std::cin);
-        } else {
-            ifstream f(infile.c_str());
-            graph.deserialize(f);
-            f.close();
+
+    {
+        const std::string infile = args::get(dg_in_file);
+        if (!infile.empty()) {
+            if (infile == "-") {
+                graph.deserialize(std::cin);
+            } else {
+                ifstream f(infile.c_str());
+                graph.deserialize(f);
+                f.close();
+            }
         }
     }
 

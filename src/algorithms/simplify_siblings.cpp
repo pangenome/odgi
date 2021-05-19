@@ -28,7 +28,7 @@ bool simplify_siblings(
     ska::flat_hash_set<nid_t> in_family;
 
     std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress;
-    bool show_progress = !progress_message.empty();
+    const bool show_progress = !progress_message.empty();
     if (show_progress) {
         progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
             graph.get_node_count(), progress_message + " over nodes");
@@ -39,7 +39,7 @@ bool simplify_siblings(
         
         for (bool local_orientation : {false, true}) {
             // For it local forward and local reverse
-            handle_t node = local_orientation ? graph.flip(local_forward_node) : local_forward_node;
+            const handle_t node = local_orientation ? graph.flip(local_forward_node) : local_forward_node;
             
 #ifdef debug
             cerr << "Consider " << graph.get_id(node) << (graph.get_is_reverse(node) ? '-' : '+') << endl;

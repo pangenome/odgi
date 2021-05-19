@@ -1,0 +1,452 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odgi viz &mdash; odgi 3c4a8a4 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Python Binding" href="../binding.html" />
+    <link rel="prev" title="odgi view" href="odgi_view.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> odgi
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                v0.5.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quick_start.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../commands.html">Commands</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="odgi.html">odgi</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_bin.html">odgi bin</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_break.html">odgi break</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_build.html">odgi build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_chop.html">odgi chop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_cover.html">odgi cover</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_degree.html">odgi degree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_depth.html">odgi depth</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_draw.html">odgi draw</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_explode.html">odgi explode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_extract.html">odgi extract</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_flatten.html">odgi flatten</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_groom.html">odgi groom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_kmers.html">odgi kmers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_layout.html">odgi layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_matrix.html">odgi matrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_normalize.html">odgi normalize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_overlap.html">odgi overlap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_panpos.html">odgi panpos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_pathindex.html">odgi pathindex</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_paths.html">odgi paths</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_position.html">odgi position</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_prune.html">odgi prune</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_server.html">odgi server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_sort.html">odgi sort</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_squeeze.html">odgi squeeze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_stats.html">odgi stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_test.html">odgi test</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_unchop.html">odgi unchop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_unitig.html">odgi unitig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_validate.html">odgi validate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_version.html">odgi version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_view.html">odgi view</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">odgi viz</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#synopsis">SYNOPSIS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#description">DESCRIPTION</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#options">OPTIONS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#graph-files-io">Graph Files IO</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#visualization-options">Visualization Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#intervals-selection">Intervals selection</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#paths-selection">Paths selection</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#path-names-visualization-options">Path names visualization Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#binned-mode-options">Binned Mode Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#gradient-mode-also-known-as-position-mode-options">Gradient Mode (also known as Position Mode) Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#program-information">Program Information</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../binding.html">Python Binding</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">odgi</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../commands.html">Commands</a> &raquo;</li>
+        
+      <li>odgi viz</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/rst/commands/odgi_viz.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="odgi-viz">
+<span id="id1"></span><h1>odgi viz<a class="headerlink" href="#odgi-viz" title="Permalink to this headline">¶</a></h1>
+<p>variation graph visualizations</p>
+<div class="section" id="synopsis">
+<h2>SYNOPSIS<a class="headerlink" href="#synopsis" title="Permalink to this headline">¶</a></h2>
+<p><strong>odgi viz</strong> [<strong>-i, –idx</strong>=<em>FILE</em>] [<strong>-o, –out</strong>=<em>FILE</em>]
+[<em>OPTION</em>]…</p>
+</div>
+<div class="section" id="description">
+<h2>DESCRIPTION<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h2>
+<p>The odgi viz(1) command can produce a linear, static visualization of an
+odgi variation graph. It can aggregate the pangenome into bins and
+directly renders a raster image. The binning level can be specified in
+input or it is calculated from the target width of the PNG to emit. Can
+be used to produce visualizations for gigabase scale pangenomes. For
+more information about the binning process, please refer to <a class="reference internal" href="odgi_bin.html#odgi-bin"><span class="std std-ref">odgi bin</span></a>.</p>
+</div>
+<div class="section" id="options">
+<h2>OPTIONS<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="graph-files-io">
+<h3>Graph Files IO<a class="headerlink" href="#graph-files-io" title="Permalink to this headline">¶</a></h3>
+<div class="line-block">
+<div class="line"><strong>-i, –idx</strong>=<em>FILE</em></div>
+<div class="line">File containing the succinct variation graph to convert from. The file
+name usually ends with <em>.og</em>.</div>
+</div>
+<div class="line-block">
+<div class="line"><strong>-o, –out</strong>=<em>FILE</em></div>
+<div class="line">Write the visualization in PNG format to this file.</div>
+</div>
+</div>
+<div class="section" id="visualization-options">
+<h3>Visualization Options<a class="headerlink" href="#visualization-options" title="Permalink to this headline">¶</a></h3>
+<div class="line-block">
+<div class="line"><strong>-x, –width</strong>=<em>N</em></div>
+<div class="line">Set the width in pixels of the output image.</div>
+</div>
+<div class="line-block">
+<div class="line"><strong>-y, –height</strong>=<em>N</em></div>
+<div class="line">Set the height in pixels of the output image.</div>
+</div>
+<div class="line-block">
+<div class="line"><strong>-P, –path-height</strong>=<em>N</em></div>
+<div class="line">The height in pixels for a path.</div>
+</div>
+<div class="line-block">
+<div class="line"><strong>-X, –path-x-padding</strong>=<em>N</em></div>
+<div class="line">The padding in pixels on the x-axis for a path.</div>
+</div>
+<div class="line-block">
+<div class="line"><strong>-R, –pack-paths</strong></div>
+<div class="line">Pack all paths rather than displaying a single path per row.</div>
+</div>
+<div class="line-block">
+<div class="line"><strong>-L, –link-path-pieces</strong>=<em>FLOAT</em></div>
+<div class="line">Show thin links of this relative width to connect path pieces.</div>
+</div>
+<div class="line-block">
+<div class="line"><strong>-A, –alignment-prefix</strong>=<em>STRING</em></div>
+<div class="line">Apply alignment related visual motifs to paths which have this name
+prefix. It affects the [<strong>-S, –show-strand</strong>] and [<strong>-d,
+–change-darkness</strong>] options.</div>
+</div>
+<div class="line-block">
+<div class="line"><strong>-S, –show-strand</strong></div>
+<div class="line">Use red and blue coloring to display forward and reverse alignments.
+This parameter can be set in combination with [<strong>-A,
+–alignment-prefix</strong>=<em>STRING</em>].</div>
+</div>
+<div class="line-block">
+<div class="line"><strong>-z, –color-by-mean-inversion-rate</strong></div>
+<div class="line">Change the color respect to the node strandness (black for forward,
+red for reverse); in binned mode (<strong>-b, –binned-mode</strong>), change the
+color respect to the mean inversion rate of the path for each bin,
+from black (no inversions) to red (bin mean inversion rate equals to
+1).</div>
+</div>
+<div class="line-block">
+<div class="line"><strong>-s, –color-by-prefix</strong></div>
+<div class="line">Colors paths by their names looking at the prefix before the given
+character C.</div>
+</div>
+</div>
+<div class="section" id="intervals-selection">
+<h3>Intervals selection<a class="headerlink" href="#intervals-selection" title="Permalink to this headline">¶</a></h3>
+<div class="line-block">
+<div class="line"><strong>-r, –path-range</strong></div>
+<div class="line">Nucleotide range to visualize: <code class="docutils literal notranslate"><span class="pre">STRING=[PATH:]start-end</span></code>. <code class="docutils literal notranslate"><span class="pre">\*-end</span></code>
+for <code class="docutils literal notranslate"><span class="pre">[0,end]</span></code>; <code class="docutils literal notranslate"><span class="pre">start-*</span></code> for <code class="docutils literal notranslate"><span class="pre">[start,pangenome_length]</span></code>. If no
+PATH is specified, the nucleotide positions refer to the pangenome’s
+sequence (i.e., the sequence obtained arranging all the graph’s node
+from left to right).</div>
+</div>
+</div>
+<div class="section" id="paths-selection">
+<h3>Paths selection<a class="headerlink" href="#paths-selection" title="Permalink to this headline">¶</a></h3>
+<div class="line-block">
+<div class="line"><strong>-p, –paths-to-display</strong></div>
+<div class="line">List of paths to display in the specified order; the file must contain
+one path name per line and a subset of all paths can be specified.</div>
+</div>
+</div>
+<div class="section" id="path-names-visualization-options">
+<h3>Path names visualization Options<a class="headerlink" href="#path-names-visualization-options" title="Permalink to this headline">¶</a></h3>
+<div class="line-block">
+<div class="line"><strong>-H, –hide-path-names</strong></div>
+<div class="line">Hide the path names on the left of the generated image.</div>
+</div>
+<div class="line-block">
+<div class="line"><strong>-C, –color-path-names-background</strong></div>
+<div class="line">Color path names background with the same color as paths</div>
+</div>
+<div class="line-block">
+<div class="line"><strong>-c, –max-num-of-characters</strong></div>
+<div class="line">Maximum number of characters to display for each path name (max 128
+characters). The default value is <em>the length of the longest path
+name</em> (up to 32 characters).</div>
+</div>
+</div>
+<div class="section" id="binned-mode-options">
+<h3>Binned Mode Options<a class="headerlink" href="#binned-mode-options" title="Permalink to this headline">¶</a></h3>
+<div class="line-block">
+<div class="line"><strong>-b, –binned-mode</strong></div>
+<div class="line">The variation graph is binned before its visualization. Each pixel in
+the output image will correspond to a bin. For more information about
+the binning process, please refer to <a class="reference external" href="#odgi_bin.adoc#_odgi_bin1">odgi
+bin</a>.</div>
+</div>
+<div class="line-block">
+<div class="line"><strong>-w, –bin-width</strong>=<em>N</em></div>
+<div class="line">The bin width specifies the size of each bin in the binned mode. If it
+is not specified, the bin width is calculated from the width in pixels
+of the output image.</div>
+</div>
+<div class="line-block">
+<div class="line"><strong>-g, –no-gap-links</strong></div>
+<div class="line">We divide links into 2 classes:</div>
+</div>
+<ol class="arabic simple">
+<li><p>the links which help to follow complex variations. They need to be
+drawn, else one could not follow the sequence of a path.</p></li>
+<li><p>the links helping to follow simple variations. These links are called
+<strong>gap-links</strong>. Such links solely connecting a path from left to right
+may not be relevant to understand a path’s traversal through the
+bins. Therefore, when this option is set, the gap-links are not drawn
+in binned mode.</p></li>
+</ol>
+<div class="line-block">
+<div class="line"><strong>-m, –color-by-mean-coverage</strong></div>
+<div class="line">Change the color respect to the mean coverage of the path for each
+bin, from black (no coverage) to blue (max bin mean coverage in the
+entire graph).</div>
+</div>
+</div>
+<div class="section" id="gradient-mode-also-known-as-position-mode-options">
+<h3>Gradient Mode (also known as Position Mode) Options<a class="headerlink" href="#gradient-mode-also-known-as-position-mode-options" title="Permalink to this headline">¶</a></h3>
+<div class="line-block">
+<div class="line"><strong>-d, –change-darkness</strong></div>
+<div class="line">Change the color darkness based on nucleotide position in the path.
+When it is used in binned mode, the mean inversion rate of the bin
+node is considered to set the color gradient starting position: when
+this rate is greater than 0.5, the bin is considered inverted, and the
+color gradient starts from the right-end of the bin. This parameter
+can be set in combination with [<strong>-A,
+–alignment-prefix</strong>=<em>STRING</em>].</div>
+</div>
+<div class="line-block">
+<div class="line"><strong>-l, –longest-path</strong></div>
+<div class="line">Use the longest path length to change the color darkness.</div>
+</div>
+<div class="line-block">
+<div class="line"><strong>-u, –white-to-black</strong></div>
+<div class="line">Change the color darkness from white (for the first nucleotide
+position) to black (for the last nucleotide position).</div>
+</div>
+</div>
+<div class="section" id="program-information">
+<h3>Program Information<a class="headerlink" href="#program-information" title="Permalink to this headline">¶</a></h3>
+<div class="line-block">
+<div class="line"><strong>-h, –help</strong></div>
+<div class="line">Print a help message for <strong>odgi viz</strong>.</div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="../binding.html" class="btn btn-neutral float-right" title="Python Binding" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="odgi_view.html" class="btn btn-neutral float-left" title="odgi view" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Erik Garrison. Revision v0.5.1-3c4a8a4.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

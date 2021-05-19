@@ -1,0 +1,407 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>odgi bin &mdash; odgi 3c4a8a4 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="odgi break" href="odgi_break.html" />
+    <link rel="prev" title="odgi" href="odgi.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> odgi
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                v0.5.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quick_start.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../commands.html">Commands</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="odgi.html">odgi</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">odgi bin</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#synopsis">SYNOPSIS</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#description">DESCRIPTION</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#options">OPTIONS</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#graph-files-io">Graph Files IO</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#fasta-options">FASTA Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#bin-options">Bin Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#haploblocker-options">HaploBlocker Options</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#program-information">Program Information</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_break.html">odgi break</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_build.html">odgi build</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_chop.html">odgi chop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_cover.html">odgi cover</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_degree.html">odgi degree</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_depth.html">odgi depth</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_draw.html">odgi draw</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_explode.html">odgi explode</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_extract.html">odgi extract</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_flatten.html">odgi flatten</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_groom.html">odgi groom</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_kmers.html">odgi kmers</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_layout.html">odgi layout</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_matrix.html">odgi matrix</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_normalize.html">odgi normalize</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_overlap.html">odgi overlap</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_panpos.html">odgi panpos</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_pathindex.html">odgi pathindex</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_paths.html">odgi paths</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_position.html">odgi position</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_prune.html">odgi prune</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_server.html">odgi server</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_sort.html">odgi sort</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_squeeze.html">odgi squeeze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_stats.html">odgi stats</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_test.html">odgi test</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_unchop.html">odgi unchop</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_unitig.html">odgi unitig</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_validate.html">odgi validate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_version.html">odgi version</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_view.html">odgi view</a></li>
+<li class="toctree-l2"><a class="reference internal" href="odgi_viz.html">odgi viz</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../binding.html">Python Binding</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">odgi</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../commands.html">Commands</a> &raquo;</li>
+        
+      <li>odgi bin</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/rst/commands/odgi_bin.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="odgi-bin">
+<span id="id1"></span><h1>odgi bin<a class="headerlink" href="#odgi-bin" title="Permalink to this headline">¶</a></h1>
+<p>binning of pangenome sequence and path information in the graph</p>
+<div class="section" id="synopsis">
+<h2>SYNOPSIS<a class="headerlink" href="#synopsis" title="Permalink to this headline">¶</a></h2>
+<p><strong>odgi bin</strong> [<strong>-i, –idx</strong>=<em>FILE</em>] [<em>OPTION</em>]…</p>
+</div>
+<div class="section" id="description">
+<h2>DESCRIPTION<a class="headerlink" href="#description" title="Permalink to this headline">¶</a></h2>
+<div class="line-block">
+<div class="line">The odgi bin(1) command bins a given variation graph. The pangenome
+sequence, the one-time traversal of all nodes from smallest to largest
+node identifier, can be summed up into bins of a specified size. For
+each bin, the path metainformation is summarized. This enables a
+summarized view of gigabase scale graphs. Each step of a path is a bin
+and connected to its next bin via a link. A link has a start bin
+identifier and an end bin identifier.</div>
+<div class="line">The concept of odgi bin is also applied in <a class="reference internal" href="odgi_viz.html#odgi-viz"><span class="std std-ref">odgi viz</span></a>. A demonstration of how the odgi
+bin JSON output can be used for an interactive visualization is
+realized in the <a class="reference external" href="https://graph-genome.github.io/">Pantograph</a>
+project. Per default, odgi bin writes the bins to stdout in a
+tab-delimited format: <strong>path.name</strong>, <strong>path.prefix</strong>, <strong>path.suffix</strong>,
+<strong>bin</strong> (bin identifier), <strong>mean.cov</strong> (mean coverage of the path in
+this bin), <strong>mean.inv</strong> (mean inversion rate of this path in this
+bin), <strong>mean.pos</strong> (mean nucleotide position of this path in this
+bin), <strong>first.nucl</strong> (first nucleotide position of this path in this
+bin), <strong>last.nucl</strong> (last nucleotide position of this path in this
+bin). These nucleotide ranges might span positions that are not
+present in the bin. Example: A range of 1-100 means that the first
+nucleotide has position 1 and the last has position 100, but
+nucleotide 45 could be located in another bin. For an exact positional
+output, please specify [<strong>-j, –json</strong>].</div>
+<div class="line">Running odgi bin in
+<a class="reference external" href="https://github.com/tpook92/HaploBlocker">HaploBlocker</a> mode, only
+arguments [<strong>-b, –haplo-blocker</strong>], [<strong>-p[N],
+–haplo-blocker-min-paths[N]</strong>], and [<strong>-c[N],
+–haplo-blocker-min-coverage[N]</strong>] are required. A TSV is printed to
+stdout: Each row corresponds to a node. Each column corresponds to a
+path. Each value is the coverage of a specific node of a specific
+path.</div>
+</div>
+</div>
+<div class="section" id="options">
+<h2>OPTIONS<a class="headerlink" href="#options" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="graph-files-io">
+<h3>Graph Files IO<a class="headerlink" href="#graph-files-io" title="Permalink to this headline">¶</a></h3>
+<div class="line-block">
+<div class="line"><strong>-i, –idx</strong>=<em>FILE</em></div>
+<div class="line">File containing the succinct variation graph to investigate the bin
+from. The file name usually ends with <em>.og</em>.</div>
+</div>
+</div>
+<div class="section" id="fasta-options">
+<h3>FASTA Options<a class="headerlink" href="#fasta-options" title="Permalink to this headline">¶</a></h3>
+<div class="line-block">
+<div class="line"><strong>-f, –fasta</strong>=<em>FILE</em></div>
+<div class="line">Write the pangenome sequence to <em>FILE</em> in FASTA format.</div>
+</div>
+</div>
+<div class="section" id="bin-options">
+<h3>Bin Options<a class="headerlink" href="#bin-options" title="Permalink to this headline">¶</a></h3>
+<div class="line-block">
+<div class="line"><strong>-n, –number-bins</strong>=<em>N</em></div>
+<div class="line">The number of bins the pangenome sequence should be chopped up to.</div>
+</div>
+<div class="line-block">
+<div class="line"><strong>-w, –bin-width</strong>=<em>N</em></div>
+<div class="line">The bin width specifies the size of each bin.</div>
+</div>
+<div class="line-block">
+<div class="line"><strong>-D, –path-delim</strong>=<em>STRING</em></div>
+<div class="line">Annotate rows by prefix and suffix of this delimiter.</div>
+</div>
+<div class="line-block">
+<div class="line"><strong>-a, –aggregate-delim</strong></div>
+<div class="line">Aggregate on path prefix delimiter. Argument depends on [<strong>-D,
+–path-delim</strong>=<em>STRING</em>].</div>
+</div>
+<div class="line-block">
+<div class="line"><strong>-j, –json</strong></div>
+<div class="line">Print bins and links to stdout in pseudo JSON format. Each line is a
+valid JSON object, but the whole file is not a valid JSON! First, each
+bin including its pangenome sequence is printed to stdout per line.
+Second, for each path in the graph, its traversed bins including
+metainformation: <strong>bin</strong> (bin identifier), <strong>mean.cov</strong> (mean coverage
+of the path in this bin), <strong>mean.inv</strong> (mean inversion rate of this
+path in this bin), <strong>mean.pos</strong> (mean nucleotide position of this path
+in this bin), and an array of ranges determining the nucleotide
+position of the path in this bin. Switching first and last nucleotide
+in a range represents a complement reverse orientation of that
+particular sequence.</div>
+</div>
+<div class="line-block">
+<div class="line"><strong>-s, –no-seqs</strong></div>
+<div class="line">If [<strong>-j, –json</strong>] is set, no nucleotide sequences will be printed to
+stdout in order to save disk space.</div>
+</div>
+<div class="line-block">
+<div class="line"><strong>-g, –no-gap-links</strong></div>
+<div class="line">We divide links into 2 classes:</div>
+</div>
+<ol class="arabic simple">
+<li><p>the links which help to follow complex variations. They need to be
+drawn, else one could not follow the sequence of a path.</p></li>
+<li><p>the links helping to follow simple variations. These links are called
+<strong>gap-links</strong>. Such links solely connecting a path from left to right
+may not be relevant to understand a path’s traversal through the
+bins. Therefore, when this option is set, the gap-links are left out
+saving disk space</p></li>
+</ol>
+</div>
+<div class="section" id="haploblocker-options">
+<h3>HaploBlocker Options<a class="headerlink" href="#haploblocker-options" title="Permalink to this headline">¶</a></h3>
+<div class="line-block">
+<div class="line"><strong>-b, –haplo-blocker</strong></div>
+<div class="line">Write a TSV to stdout formatted in a way ready for HaploBlocker: Each
+row corresponds to a node. Each column corresponds to a path. Each
+value is the coverage of a specific node of a specific path.</div>
+</div>
+<div class="line-block">
+<div class="line"><strong>-p[N], –haplo-blocker-min-paths[N]</strong></div>
+<div class="line">Specify the minimum number of paths that need to be present in the bin
+to actually report that bin. The default value is 1.</div>
+</div>
+<div class="line-block">
+<div class="line"><strong>-c[N], –haplo-blocker-min-coverage[N]</strong></div>
+<div class="line">Specify the minimum coverage a path needs to have in a bin to actually
+report that bin. The default value is 1.</div>
+</div>
+</div>
+<div class="section" id="program-information">
+<h3>Program Information<a class="headerlink" href="#program-information" title="Permalink to this headline">¶</a></h3>
+<div class="line-block">
+<div class="line"><strong>-h, –help</strong></div>
+<div class="line">Print a help message for <strong>odgi bin</strong>.</div>
+</div>
+<div class="line-block">
+<div class="line"><strong>-P, –progress</strong></div>
+<div class="line">Write the current progress to stderr.</div>
+</div>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="odgi_break.html" class="btn btn-neutral float-right" title="odgi break" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="odgi.html" class="btn btn-neutral float-left" title="odgi" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Erik Garrison. Revision v0.5.1-3c4a8a4.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>

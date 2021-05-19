@@ -39,45 +39,38 @@ namespace odgi {
         }
 
         if (!dg_in_file) {
-            std::cerr
-                    << "[odgi::pathindex] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
-                    << std::endl;
+            std::cerr << "[odgi::pathindex] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
+                      << std::endl;
             return 1;
         }
 
         if (!idx_out_file) {
-            std::cerr
-                    << "[odgi::pathindex] error: please specify an output file to where to store the path index via -o=[FILE], --out=[FILE]."
-                    << std::endl;
+            std::cerr << "[odgi::pathindex] error: please specify an output file to where to store the path index via -o=[FILE], --out=[FILE]."
+                      << std::endl;
             return 1;
         }
 
         // read in the graph
         graph_t graph;
         assert(argc > 0);
-        const std::string infile = args::get(dg_in_file);
-        if (infile.size()) {
-            if (infile == "-") {
-                graph.deserialize(std::cin);
-            } else {
-                ifstream f(infile.c_str());
-                graph.deserialize(f);
-                f.close();
+        {
+            const std::string infile = args::get(dg_in_file);
+            if (!infile.empty()) {
+                if (infile == "-") {
+                    graph.deserialize(std::cin);
+                } else {
+                    ifstream f(infile.c_str());
+                    graph.deserialize(f);
+                    f.close();
+                }
             }
         }
 
         XP path_index;
-        uint64_t number_threads = 1;
-        if (nthreads) {
-            number_threads = args::get(nthreads);
-        }
+        const uint64_t number_threads = nthreads ? args::get(nthreads) : 1;
         path_index.from_handle_graph(graph, number_threads);
-        size_t path_count = path_index.path_count;
-        if (path_count == 1) {
-            std::cout << "Indexed 1 path." << std::endl;
-        } else {
-            std::cout << "Indexed " << path_index.path_count << " paths." << std::endl;
-        }
+
+        std::cout << "Indexed " << path_index.path_count << " path(s)." << std::endl;
 
 #ifdef debug_pathindex
         size_t pangenome_pos = path_index.get_pangenome_pos("5", 1);

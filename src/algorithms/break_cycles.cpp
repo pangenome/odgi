@@ -15,10 +15,10 @@ std::vector<edge_t> edges_inducing_cycles(
     uint64_t min_handle_rank = 0;
     uint64_t max_handle_rank = 0;
     graph.for_each_handle([&](const handle_t& found) {
-                              uint64_t handle_rank = number_bool_packing::unpack_number(found);
-                              min_handle_rank = std::min(min_handle_rank, handle_rank);
-                              max_handle_rank = std::max(max_handle_rank, handle_rank);
-                          });
+        uint64_t handle_rank = number_bool_packing::unpack_number(found);
+        min_handle_rank = std::min(min_handle_rank, handle_rank);
+        max_handle_rank = std::max(max_handle_rank, handle_rank);
+    });
 
     handle_t min_handle = number_bool_packing::pack(min_handle_rank, false);
     handle_t root_handle = min_handle;
@@ -70,8 +70,7 @@ std::vector<edge_t> edges_inducing_cycles(
                     },
                     [&last_min_length_bp,&max_cycle_size,&seen_bp,&max_search_bp]() {
                         //std::cerr << "min_length_bp " << last_min_length_bp << " seen_bp " << seen_bp << std::endl;
-                        return last_min_length_bp > max_cycle_size
-                            || seen_bp > max_search_bp;
+                        return last_min_length_bp > max_cycle_size || seen_bp > max_search_bp;
                     },
                     { root_handle },
                     { },

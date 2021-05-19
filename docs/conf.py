@@ -20,13 +20,13 @@ sys.path.insert(0, os.path.abspath('../lib/'))
 # -- Project information -----------------------------------------------------
 
 project = u'odgi'
-copyright = u'2020, vgteam'
-author = u'vgteam'
+copyright = '2021, Erik Garrison. Revision v0.5.1-a45139f'
+author = u'Andrea Guarracino, Simon Heumos, ... , Pjotr Prins, Erik Garrison'
 
 # The short X.Y version
-version = u''
+version = 'v0.5.1'
 # The full version, including alpha/beta/rc tags
-release = u''
+release = 'a45139f'
 
 
 # -- General configuration ---------------------------------------------------
@@ -38,7 +38,7 @@ release = u''
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc']
+extensions = ['sphinx.ext.autodoc', 'm2r2']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
@@ -46,8 +46,8 @@ templates_path = ['_templates']
 # The suffix(es) of source filenames.
 # You can specify multiple suffix as a list of string:
 #
-# source_suffix = ['.rst', '.md']
-source_suffix = '.rst'
+source_suffix = ['.rst', '.md']
+# source_suffix = '.rst'
 
 # The master toctree document.
 master_doc = 'index'
@@ -128,18 +128,87 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'odgi.tex', u'odgi Documentation',
-     u'vgteam', 'manual'),
+    (master_doc, 'odgi.tex', u'odgi documentation',
+     u'Andrea Guarracino, Simon Heumos, ... , Pjotr Prins, Erik Garrison', 'manual'),
 ]
-
 
 # -- Options for manual page output ------------------------------------------
 
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
+# we list the authors seperately
+EG = 'Erik Garrison'
+AG = 'Andrea Guarracino'
+SH = 'Simon Heumos'
 man_pages = [
-    (master_doc, 'odgi', u'odgi Documentation',
-     [author], 1)
+    ('man/odgi', 'odgi', u'dynamic succinct variation graph tool',
+     [author], 1),
+    ('man/odgi_bin', 'odgi_bin', u'binning of pangenome sequence and path information in the graph',
+     [EG, SH], 1),
+    ('man/odgi_break', 'odgi_break', u'break cycles in the graph and drop its paths',
+     [EG], 1),
+    ('man/odgi_build', 'odgi_build', u'construct a dynamic succinct variation graph',
+     [EG], 1),
+    ('man/odgi_chop', 'odgi_chop', u'divide nodes into smaller pieces',
+     [EG, AG], 1),
+    ('man/odgi_cover', 'odgi_cover', u'find a path cover of the variation graph',
+     [AG], 1),
+    ('man/odgi_degree', 'odgi_degree', u'describe the graph in terms of node degree',
+     [EG], 1),
+    ('man/odgi_depth', 'odgi_depth', u'find the depth of graph as defined by query criteria',
+     [AG], 1),
+    ('man/odgi_draw', 'odgi_draw', u'variation graph visualizations in 2D',
+     [EG], 1),
+    ('man/odgi_explode', 'odgi_explode', u'breaks a graph into connected components in their own',
+     [AG], 1),
+    ('man/odgi_extract', 'odgi_extract', u'extract parts of the graph as defined by query criteria',
+     [AG], 1),
+    ('man/odgi_flatten', 'odgi_flatten', u'generate linearization of the graph',
+     [EG], 1),
+    ('man/odgi_groom', 'odgi_groom', u'resolve spurious inverting links',
+     [EG, AG], 1),
+    ('man/odgi_kmers', 'odgi_kmers', u'show and characterize the kmer space of the graph',
+     [EG], 1),
+    ('man/odgi_layout', 'odgi_layout', u'use SGD to make 2D layouts of the graph',
+     [EG, AG, SH], 1),
+    ('man/odgi_matrix', 'odgi_matrix', u'write the graph topology in sparse matrix formats',
+     [EG], 1),
+    ('man/odgi_normalize', 'odgi_normalize', u'compact unitigs and simplify redundant furcations',
+     [EG], 1),
+    ('man/odgi_overlap', 'odgi_overlap', u'find the paths touched by the input paths',
+     [AG], 1),
+    ('man/odgi_panpos', 'odgi_panpos', u'get the pangenome position of a given path and nucleotide',
+     [SH], 1),
+    ('man/odgi_pathindex', 'odgi_pathindex', u'create a path index for a given path',
+     [SH], 1),
+    ('man/odgi_paths', 'odgi_paths', u'embedded path interrogation',
+     [EG], 1),
+    ('man/odgi_position', 'odgi_position', u'position parts of the graph as defined by query criteria',
+     [EG], 1),
+    ('man/odgi_prune', 'odgi_prune', u'remove complex parts of the graph',
+     [EG], 1),
+    ('man/odgi_server', 'odgi_server', u'start a HTTP server with a given index file to query a',
+     [SH], 1),
+    ('man/odgi_sort', 'odgi_sort', u'sort a variation graph',
+     [SH, AG, EG], 1),
+    ('man/odgi_squeeze', 'odgi_squeeze', u'squeezes multiple graphs into the same file',
+     [AG], 1),
+    ('man/odgi_stats', 'odgi_stats', u'metrics describing variation graphs',
+     [EG, AG], 1),
+    ('man/odgi_test', 'odgi_test', u'run odgi unit tests',
+     [EG, SH, AG], 1),
+    ('man/odgi_unchop', 'odgi_unchop', u'merge unitigs into single nodes',
+     [EG, AG], 1),
+    ('man/odgi_unitig', 'odgi_unitig', u'output unitigs of the graph',
+     [EG], 1),
+    ('man/odgi_validate', 'odgi_validate', u'validate the graph (currently, it checks if the paths',
+     [AG], 1),
+    ('man/odgi_version', 'odgi_version', u'display the version of odgi',
+     [SH], 1),
+    ('man/odgi_view', 'odgi_view', u'projection of graphs into other formats',
+     [EG], 1),
+    ('man/odgi_viz', 'odgi_viz', u'variation graph visualizations',
+     [EG, AG], 1),
 ]
 
 

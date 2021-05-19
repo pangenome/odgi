@@ -37,8 +37,7 @@ namespace odgi {
                 seeds = {min_handle};
             }
 
-            // We need to keep track of the nodes we haven't visited to seed subsequent
-            // runs of the BFS
+            // We need to keep track of the nodes we haven't visited to seed subsequent runs of the BFS
             dyn::succinct_bitvector<dyn::spsi<dyn::packed_vector, 256, 16> > unvisited, flipped;
             for (uint64_t i = 0; i <= max_handle_rank; ++i) {
                 unvisited.push_back(1);

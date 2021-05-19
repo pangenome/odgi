@@ -1,0 +1,400 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Tutorial &mdash; odgi 3c4a8a4 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Sorted Glossary of Methods" href="glossary.html" />
+    <link rel="prev" title="Usage" href="usage.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> odgi
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                v0.5.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quick_start.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../tutorials.html">Tutorials</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../commands.html">Commands</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../binding.html">Python Binding</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="usage.html">Usage</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Tutorial</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#creating-graphs">Creating Graphs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#odgi-objects">ODGI Objects</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#making-a-graph">Making a Graph</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#traversing-edges">Traversing Edges</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#creating-a-path">Creating a Path</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#traversing-a-path">Traversing a path</a></li>
+</ul>
+</li>
+<li class="toctree-l3"><a class="reference internal" href="#saving-and-loading-odgi-graphs">Saving and Loading ODGI Graphs</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#graph-file-example">Graph File Example</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#loading-in-pre-existing-data">Loading in Pre-Existing Data</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#reading-in-a-graph-from-a-different-format">Reading in a Graph from a Different Format</a></li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l2"><a class="reference internal" href="glossary.html">Sorted Glossary of Methods</a></li>
+<li class="toctree-l2"><a class="reference internal" href="api.html">python API</a></li>
+</ul>
+</li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">odgi</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../binding.html">Python Binding</a> &raquo;</li>
+        
+      <li>Tutorial</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/rst/binding/tutorial.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="tutorial">
+<span id="python-bindings-tutorial"></span><h1>Tutorial<a class="headerlink" href="#tutorial" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="creating-graphs">
+<h2>Creating Graphs<a class="headerlink" href="#creating-graphs" title="Permalink to this headline">¶</a></h2>
+<p>Let’s say that you wanted to create the following graph with ODGI:</p>
+<img alt="../../_images/exampleGraph.png" src="../../_images/exampleGraph.png" />
+<p>This graph is a combination of nodes (labelled as <cite>n0</cite>, <cite>n1</cite>, …, <cite>n9</cite>) and directed edges (arrows).</p>
+<div class="section" id="odgi-objects">
+<h3>ODGI Objects<a class="headerlink" href="#odgi-objects" title="Permalink to this headline">¶</a></h3>
+<p><em>Edges</em> and <em>nodes</em> are accessed through a <a class="reference internal" href="api.html#odgi.graph" title="odgi.graph"><code class="xref py py-class docutils literal notranslate"><span class="pre">odgi.graph</span></code></a> object.  Individual nodes in the graph are pointed at by <a class="reference internal" href="api.html#odgi.handle" title="odgi.handle"><code class="xref py py-class docutils literal notranslate"><span class="pre">odgi.handle</span></code></a>.</p>
+<p>Paths in the graph and accessed through <a class="reference internal" href="api.html#odgi.path_handle" title="odgi.path_handle"><code class="xref py py-class docutils literal notranslate"><span class="pre">odgi.path_handle</span></code></a>, which is a series of <a class="reference internal" href="api.html#odgi.step_handle" title="odgi.step_handle"><code class="xref py py-class docutils literal notranslate"><span class="pre">odgi.step_handle</span></code></a> linked together.  Each <a class="reference internal" href="api.html#odgi.step_handle" title="odgi.step_handle"><code class="xref py py-class docutils literal notranslate"><span class="pre">odgi.step_handle</span></code></a> is points to the node in that step, and also contains directional information regarding the nodes preceeding and following it.</p>
+<p>Handles are pointers to specific pieces of the graph, and it is not possible to operate on them directly, aside from comparing whether the objects are equal.  To get information regarding the object that each handle is pointing to, it is necessary to use the corresponding <cite>get</cite> accessor method in <a class="reference internal" href="api.html#odgi.graph" title="odgi.graph"><code class="xref py py-class docutils literal notranslate"><span class="pre">odgi.graph</span></code></a>.</p>
+<p>Reference materials for these methods can be found at the <a class="reference internal" href="api.html#api"><span class="std std-ref">python API</span></a>, as well as the <a class="reference internal" href="glossary_source.html#glossary"><span class="std std-ref">Sorted Glossary of Methods</span></a>, which contains lists sorted by object type for <a class="reference internal" href="glossary_source.html#accessor"><span class="std std-ref">Accessor Methods</span></a>, <a class="reference internal" href="glossary_source.html#mutator"><span class="std std-ref">Mutator Methods</span></a>, and <a class="reference internal" href="glossary_source.html#iterator"><span class="std std-ref">Iteratator Methods</span></a>.</p>
+</div>
+<div class="section" id="making-a-graph">
+<h3>Making a Graph<a class="headerlink" href="#making-a-graph" title="Permalink to this headline">¶</a></h3>
+<p>First, we must create the graph, then make each node and keep track of their handles.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gr</span> <span class="o">=</span> <span class="n">odgi</span><span class="o">.</span><span class="n">graph</span><span class="p">()</span>
+<span class="n">seq</span> <span class="o">=</span> <span class="p">[</span><span class="s2">&quot;CGA&quot;</span><span class="p">,</span> <span class="s2">&quot;TTGG&quot;</span><span class="p">,</span> <span class="s2">&quot;CCGT&quot;</span><span class="p">,</span> <span class="s2">&quot;C&quot;</span><span class="p">,</span> <span class="s2">&quot;GT&quot;</span><span class="p">,</span> <span class="s2">&quot;GATAA&quot;</span><span class="p">,</span> <span class="s2">&quot;CGG&quot;</span><span class="p">,</span> <span class="s2">&quot;ACA&quot;</span><span class="p">,</span> <span class="s2">&quot;GCCG&quot;</span><span class="p">,</span> <span class="s2">&quot;ATATAAC&quot;</span><span class="p">]</span>
+<span class="n">n</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="k">for</span> <span class="n">s</span> <span class="ow">in</span> <span class="n">seq</span><span class="p">:</span>
+        <span class="n">n</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">gr</span><span class="o">.</span><span class="n">create_handle</span><span class="p">(</span><span class="n">s</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Now we link together these nodes using their handles. Note that each of these handles is directional, so in order to create the bidirectional edge between <cite>n5</cite> and <cite>n8</cite> we use <code class="docutils literal notranslate"><span class="pre">create_edge</span></code> twice.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gr</span><span class="o">.</span><span class="n">create_edge</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">gr</span><span class="o">.</span><span class="n">create_edge</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="mi">1</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+<span class="n">gr</span><span class="o">.</span><span class="n">create_edge</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+<span class="n">gr</span><span class="o">.</span><span class="n">create_edge</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="mi">2</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+<span class="n">gr</span><span class="o">.</span><span class="n">create_edge</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="mi">3</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span>
+<span class="n">gr</span><span class="o">.</span><span class="n">create_edge</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">6</span><span class="p">])</span>
+<span class="n">gr</span><span class="o">.</span><span class="n">create_edge</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="mi">5</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">8</span><span class="p">])</span>
+<span class="n">gr</span><span class="o">.</span><span class="n">create_edge</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">7</span><span class="p">])</span>
+<span class="n">gr</span><span class="o">.</span><span class="n">create_edge</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="mi">6</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">8</span><span class="p">])</span>
+<span class="n">gr</span><span class="o">.</span><span class="n">create_edge</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="mi">7</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">9</span><span class="p">])</span>
+<span class="n">gr</span><span class="o">.</span><span class="n">create_edge</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="mi">8</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">9</span><span class="p">])</span>
+<span class="n">gr</span><span class="o">.</span><span class="n">create_edge</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="mi">8</span><span class="p">],</span> <span class="n">n</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="traversing-edges">
+<h3>Traversing Edges<a class="headerlink" href="#traversing-edges" title="Permalink to this headline">¶</a></h3>
+<p>If we wanted to traverse these edges, we could do it using the iterator method <a class="reference internal" href="glossary.html#odgi.graph.follow_edges" title="odgi.graph.follow_edges"><code class="xref py py-func docutils literal notranslate"><span class="pre">odgi.graph.follow_edges()</span></code></a>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="k">def</span> <span class="nf">next_node_list</span><span class="p">(</span><span class="n">handle</span><span class="p">):</span>
+        <span class="n">lis</span> <span class="o">=</span> <span class="p">[]</span>
+        <span class="n">gr</span><span class="o">.</span><span class="n">follow_edges</span><span class="p">(</span><span class="n">handle</span><span class="p">,</span> <span class="kc">False</span><span class="p">,</span> <span class="k">lambda</span> <span class="n">y</span><span class="p">:</span> <span class="n">lis</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+        <span class="k">return</span> <span class="n">lis</span>
+
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;n0: </span><span class="si">{</span><span class="n">gr</span><span class="o">.</span><span class="n">get_sequence</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="n">next_node</span> <span class="o">=</span> <span class="n">next_node_list</span><span class="p">(</span><span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">])[</span><span class="mi">0</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;n1: </span><span class="si">{</span><span class="n">gr</span><span class="o">.</span><span class="n">get_sequence</span><span class="p">(</span><span class="n">next_node</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+<span class="n">next_node</span> <span class="o">=</span> <span class="n">next_node_list</span><span class="p">(</span><span class="n">next_node</span><span class="p">)[</span><span class="mi">0</span><span class="p">]</span>
+<span class="nb">print</span><span class="p">(</span><span class="sa">f</span><span class="s1">&#39;n2: </span><span class="si">{</span><span class="n">gr</span><span class="o">.</span><span class="n">get_sequence</span><span class="p">(</span><span class="n">next_node</span><span class="p">)</span><span class="si">}</span><span class="s1">&#39;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>Which will output the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">n0</span><span class="p">:</span> <span class="n">CGA</span>
+<span class="n">n1</span><span class="p">:</span> <span class="n">TTGG</span>
+<span class="n">n2</span><span class="p">:</span> <span class="n">CCGT</span>
+</pre></div>
+</div>
+<p>A map of the data can be generated using <a class="reference internal" href="glossary.html#odgi.graph.to_gfa" title="odgi.graph.to_gfa"><code class="xref py py-func docutils literal notranslate"><span class="pre">odgi.graph.to_gfa()</span></code></a>.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="nb">print</span><span class="p">(</span><span class="n">gr</span><span class="o">.</span><span class="n">to_gfa</span><span class="p">())</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="creating-a-path">
+<h3>Creating a Path<a class="headerlink" href="#creating-a-path" title="Permalink to this headline">¶</a></h3>
+<p>Generating a linear sequence from this graph could be done in infinitely many ways, due to the interal loop between <cite>n5</cite>, <cite>n6</cite>, and <cite>n8</cite>.  If we wanted to define a single consensus sequence, we would do this by defining a path.</p>
+<img alt="../../_images/exampleGraphPath.png" src="../../_images/exampleGraphPath.png" />
+<p>To create the hilighted path, we would need to create a <a class="reference internal" href="api.html#odgi.path_handle" title="odgi.path_handle"><code class="xref py py-class docutils literal notranslate"><span class="pre">odgi.path_handle</span></code></a> in the graph, and then append each <a class="reference internal" href="api.html#odgi.handle" title="odgi.handle"><code class="xref py py-class docutils literal notranslate"><span class="pre">odgi.handle</span></code></a> to the end of the path.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">path</span> <span class="o">=</span> <span class="n">gr</span><span class="o">.</span><span class="n">create_path_handle</span><span class="p">(</span><span class="s2">&quot;path&quot;</span><span class="p">)</span>
+<span class="n">gr</span><span class="o">.</span><span class="n">append_step</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">gr</span><span class="o">.</span><span class="n">append_step</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">n</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
+<span class="n">gr</span><span class="o">.</span><span class="n">append_step</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">n</span><span class="p">[</span><span class="mi">2</span><span class="p">])</span>
+<span class="n">gr</span><span class="o">.</span><span class="n">append_step</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">n</span><span class="p">[</span><span class="mi">4</span><span class="p">])</span>
+<span class="n">gr</span><span class="o">.</span><span class="n">append_step</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">n</span><span class="p">[</span><span class="mi">5</span><span class="p">])</span>
+<span class="n">gr</span><span class="o">.</span><span class="n">append_step</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">n</span><span class="p">[</span><span class="mi">6</span><span class="p">])</span>
+<span class="n">gr</span><span class="o">.</span><span class="n">append_step</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">n</span><span class="p">[</span><span class="mi">7</span><span class="p">])</span>
+<span class="n">gr</span><span class="o">.</span><span class="n">append_step</span><span class="p">(</span><span class="n">path</span><span class="p">,</span> <span class="n">n</span><span class="p">[</span><span class="mi">9</span><span class="p">])</span>
+</pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><a class="reference internal" href="glossary.html#odgi.graph.append_step" title="odgi.graph.append_step"><code class="xref py py-func docutils literal notranslate"><span class="pre">odgi.graph.append_step()</span></code></a> will not stop you from appending nodes that are not connected to the preceeding node.</p>
+</div>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="c1"># the following code runs without error</span>
+<span class="n">badpath</span> <span class="o">=</span> <span class="n">gr</span><span class="o">.</span><span class="n">create_path_handle</span><span class="p">(</span><span class="s2">&quot;badpath&quot;</span><span class="p">)</span>
+<span class="n">gr</span><span class="o">.</span><span class="n">append_step</span><span class="p">(</span><span class="n">badpath</span><span class="p">,</span> <span class="n">n</span><span class="p">[</span><span class="mi">0</span><span class="p">])</span>
+<span class="n">gr</span><span class="o">.</span><span class="n">append_step</span><span class="p">(</span><span class="n">badpath</span><span class="p">,</span> <span class="n">n</span><span class="p">[</span><span class="mi">3</span><span class="p">])</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="traversing-a-path">
+<h3>Traversing a path<a class="headerlink" href="#traversing-a-path" title="Permalink to this headline">¶</a></h3>
+<p>To traverse a path, we need to fetch a series of <a class="reference internal" href="api.html#odgi.step_handle" title="odgi.step_handle"><code class="xref py py-class docutils literal notranslate"><span class="pre">odgi.step_handle</span></code></a> from the graph. Note that although we are effectively asking the path for these items in it, all accessor methods are a part of the <a class="reference internal" href="api.html#odgi.graph" title="odgi.graph"><code class="xref py py-class docutils literal notranslate"><span class="pre">odgi.graph</span></code></a> object.</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">step</span> <span class="o">=</span> <span class="n">gr</span><span class="o">.</span><span class="n">path_begin</span><span class="p">(</span><span class="n">path</span><span class="p">)</span>
+<span class="k">while</span><span class="p">(</span><span class="n">gr</span><span class="o">.</span><span class="n">has_next_step</span><span class="p">(</span><span class="n">step</span><span class="p">)):</span>
+        <span class="c1"># get the node handle from the step handle</span>
+        <span class="n">current_node_handle</span> <span class="o">=</span> <span class="n">gr</span><span class="o">.</span><span class="n">get_handle_of_step</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+        <span class="c1"># ask the node handle for the sequence</span>
+        <span class="nb">print</span><span class="p">(</span><span class="n">gr</span><span class="o">.</span><span class="n">get_sequence</span><span class="p">(</span><span class="n">current_node_handle</span><span class="p">))</span>
+        <span class="c1"># progress to the next step</span>
+        <span class="n">step</span> <span class="o">=</span> <span class="n">gr</span><span class="o">.</span><span class="n">get_next_step</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+<span class="n">current_node_handle</span> <span class="o">=</span> <span class="n">gr</span><span class="o">.</span><span class="n">get_handle_of_step</span><span class="p">(</span><span class="n">step</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">gr</span><span class="o">.</span><span class="n">get_sequence</span><span class="p">(</span><span class="n">current_node_handle</span><span class="p">))</span>
+</pre></div>
+</div>
+<p>Which will output the following:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="n">CGA</span>
+<span class="n">TTGG</span>
+<span class="n">CCGT</span>
+<span class="n">GT</span>
+<span class="n">GATAA</span>
+<span class="n">CGG</span>
+<span class="n">ACA</span>
+<span class="n">ATATAAC</span>
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="saving-and-loading-odgi-graphs">
+<h2>Saving and Loading ODGI Graphs<a class="headerlink" href="#saving-and-loading-odgi-graphs" title="Permalink to this headline">¶</a></h2>
+<p>Graphs can be saved and loaded through the <a class="reference internal" href="glossary.html#odgi.graph.serialize" title="odgi.graph.serialize"><code class="xref py py-func docutils literal notranslate"><span class="pre">odgi.graph.serialize()</span></code></a> and <a class="reference internal" href="glossary.html#odgi.graph.load" title="odgi.graph.load"><code class="xref py py-func docutils literal notranslate"><span class="pre">odgi.graph.load()</span></code></a> methods.</p>
+<div class="section" id="graph-file-example">
+<h3>Graph File Example<a class="headerlink" href="#graph-file-example" title="Permalink to this headline">¶</a></h3>
+<p>If you wish to save the graph from the above session, that can be done with:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gr</span><span class="o">.</span><span class="n">serialize</span><span class="p">(</span><span class="s2">&quot;example_graph.odgi&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>This can be loaded into a new python session by using:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">gr</span> <span class="o">=</span> <span class="n">odgi</span><span class="o">.</span><span class="n">graph</span><span class="p">()</span>
+<span class="n">gr</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;example_graph.odgi&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="loading-in-pre-existing-data">
+<h3>Loading in Pre-Existing Data<a class="headerlink" href="#loading-in-pre-existing-data" title="Permalink to this headline">¶</a></h3>
+<p>Provided that data has been serialized in ODGI format, it is possible to read it directly from a file.  Download a <cite>*.odgi file</cite> and load it into python with:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">brca2</span> <span class="o">=</span> <span class="n">odgi</span><span class="o">.</span><span class="n">graph</span><span class="p">()</span>
+<span class="n">brca2</span><span class="o">.</span><span class="n">load</span><span class="p">(</span><span class="s2">&quot;cactus-brca2.odgi&quot;</span><span class="p">)</span>
+</pre></div>
+</div>
+<p>We can poke around this data and get the sequence of the path with:</p>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="n">path_handle</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">handles</span> <span class="o">=</span> <span class="p">[]</span>
+<span class="n">brca2</span><span class="o">.</span><span class="n">for_each_path_handle</span><span class="p">(</span><span class="k">lambda</span> <span class="n">y</span><span class="p">:</span> <span class="n">path_handle</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">y</span><span class="p">))</span>
+<span class="n">brca2</span><span class="o">.</span><span class="n">for_each_step_in_path</span><span class="p">(</span><span class="n">path_handle</span><span class="p">[</span><span class="mi">0</span><span class="p">],</span>
+        <span class="k">lambda</span> <span class="n">y</span><span class="p">:</span> <span class="n">handles</span><span class="o">.</span><span class="n">append</span><span class="p">(</span><span class="n">brca2</span><span class="o">.</span><span class="n">get_handle_of_step</span><span class="p">(</span><span class="n">y</span><span class="p">)))</span>
+<span class="n">sequence</span> <span class="o">=</span> <span class="s2">&quot;&quot;</span>
+<span class="k">for</span> <span class="n">handle</span> <span class="ow">in</span> <span class="n">handles</span><span class="p">:</span>
+        <span class="n">sequence</span> <span class="o">+=</span> <span class="n">brca2</span><span class="o">.</span><span class="n">get_sequence</span><span class="p">(</span><span class="n">handle</span><span class="p">)</span>
+<span class="nb">print</span><span class="p">(</span><span class="n">sequence</span><span class="p">)</span>
+</pre></div>
+</div>
+</div>
+<div class="section" id="reading-in-a-graph-from-a-different-format">
+<h3>Reading in a Graph from a Different Format<a class="headerlink" href="#reading-in-a-graph-from-a-different-format" title="Permalink to this headline">¶</a></h3>
+<p>Graph assembies can be created with <a class="reference external" href="https://github.com/vgteam/vg">VG</a>.  Currently the method to convert to odgi format is broken, but graphs can be converted to .json format and subsequently converted to odgi with <a class="reference download internal" download="" href="../../_downloads/ddc245dde750b2361927505d80925b7a/jsoner.py"><code class="xref download docutils literal notranslate"><span class="pre">this</span> <span class="pre">script</span></code></a>.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="glossary.html" class="btn btn-neutral float-right" title="Sorted Glossary of Methods" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="usage.html" class="btn btn-neutral float-left" title="Usage" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Erik Garrison. Revision v0.5.1-3c4a8a4.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
