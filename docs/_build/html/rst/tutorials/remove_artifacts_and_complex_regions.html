@@ -1,0 +1,357 @@
+
+
+<!DOCTYPE html>
+<html class="writer-html5" lang="en" >
+<head>
+  <meta charset="utf-8" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  
+  <title>Remove artifacts and complex regions &mdash; odgi 3c4a8a4 documentation</title>
+  
+
+  
+  <link rel="stylesheet" href="../../_static/css/theme.css" type="text/css" />
+  <link rel="stylesheet" href="../../_static/pygments.css" type="text/css" />
+
+  
+  
+
+  
+  
+
+  
+
+  
+  <!--[if lt IE 9]>
+    <script src="../../_static/js/html5shiv.min.js"></script>
+  <![endif]-->
+  
+    
+      <script type="text/javascript" id="documentation_options" data-url_root="../../" src="../../_static/documentation_options.js"></script>
+        <script src="../../_static/jquery.js"></script>
+        <script src="../../_static/underscore.js"></script>
+        <script src="../../_static/doctools.js"></script>
+    
+    <script type="text/javascript" src="../../_static/js/theme.js"></script>
+
+    
+    <link rel="index" title="Index" href="../../genindex.html" />
+    <link rel="search" title="Search" href="../../search.html" />
+    <link rel="next" title="Commands" href="../commands.html" />
+    <link rel="prev" title="Translate path positions between graphs" href="translate_path_positions_between_graphs.html" /> 
+</head>
+
+<body class="wy-body-for-nav">
+
+   
+  <div class="wy-grid-for-nav">
+    
+    <nav data-toggle="wy-nav-shift" class="wy-nav-side">
+      <div class="wy-side-scroll">
+        <div class="wy-side-nav-search" >
+          
+
+          
+            <a href="../../index.html" class="icon icon-home"> odgi
+          
+
+          
+          </a>
+
+          
+            
+            
+              <div class="version">
+                v0.5.1
+              </div>
+            
+          
+
+          
+<div role="search">
+  <form id="rtd-search-form" class="wy-form" action="../../search.html" method="get">
+    <input type="text" name="q" placeholder="Search docs" />
+    <input type="hidden" name="check_keywords" value="yes" />
+    <input type="hidden" name="area" value="default" />
+  </form>
+</div>
+
+          
+        </div>
+
+        
+        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+          
+            
+            
+              
+            
+            
+              <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../../index.html">Welcome</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../installation.html">Installation</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../quick_start.html">Quick Start</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="../tutorials.html">Tutorials</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="exploratory_analysis.html">Exploratory analysis</a></li>
+<li class="toctree-l2"><a class="reference internal" href="detect_complex_regions.html">Detect complex regions</a></li>
+<li class="toctree-l2"><a class="reference internal" href="extract_selected_loci.html">Extract selected <cite>loci</cite></a></li>
+<li class="toctree-l2"><a class="reference internal" href="sorting_layouting.html">Sorting and Layouting</a></li>
+<li class="toctree-l2"><a class="reference internal" href="translate_path_positions_between_graphs.html">Translate path positions between graphs</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Remove artifacts and complex regions</a><ul>
+<li class="toctree-l3"><a class="reference internal" href="#synopsis">Synopsis</a></li>
+<li class="toctree-l3"><a class="reference internal" href="#steps">Steps</a><ul>
+<li class="toctree-l4"><a class="reference internal" href="#get-the-human-chr8-dataset">Get the Human chr8 dataset</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#identify-problematic-regions">Identify problematic regions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#remove-the-identified-regions">Remove the identified regions</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#display-graph-stats">Display graph stats</a></li>
+<li class="toctree-l4"><a class="reference internal" href="#generate-a-1d-visualization">Generate a 1D visualization</a></li>
+</ul>
+</li>
+</ul>
+</li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../commands.html">Commands</a></li>
+<li class="toctree-l1"><a class="reference internal" href="../binding.html">Python Binding</a></li>
+</ul>
+
+            
+          
+        </div>
+        
+      </div>
+    </nav>
+
+    <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
+
+      
+      <nav class="wy-nav-top" aria-label="top navigation">
+        
+          <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
+          <a href="../../index.html">odgi</a>
+        
+      </nav>
+
+
+      <div class="wy-nav-content">
+        
+        <div class="rst-content">
+        
+          
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<div role="navigation" aria-label="breadcrumbs navigation">
+
+  <ul class="wy-breadcrumbs">
+    
+      <li><a href="../../index.html" class="icon icon-home"></a> &raquo;</li>
+        
+          <li><a href="../tutorials.html">Tutorials</a> &raquo;</li>
+        
+      <li>Remove artifacts and complex regions</li>
+    
+    
+      <li class="wy-breadcrumbs-aside">
+        
+          
+            <a href="../../_sources/rst/tutorials/remove_artifacts_and_complex_regions.rst.txt" rel="nofollow"> View page source</a>
+          
+        
+      </li>
+    
+  </ul>
+
+  
+  <hr/>
+</div>
+          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
+           <div itemprop="articleBody">
+            
+  <div class="section" id="remove-artifacts-and-complex-regions">
+<h1>Remove artifacts and complex regions<a class="headerlink" href="#remove-artifacts-and-complex-regions" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="synopsis">
+<h2>Synopsis<a class="headerlink" href="#synopsis" title="Permalink to this headline">¶</a></h2>
+<p><cite>De novo</cite> assemblies may present errors (mis-assembled sequences, e.g., misjoins and erroneous insertions/deletions) or
+sequences that are difficult to align (e.g., centromeres). These issues lead to pangenome graphs with artifacts and/or
+very complex regions. To make the downstream analyses easier, for e.g. read mapping against the graph or graph visualization,
+pangenome graphs can be simplified by applying a set of <code class="docutils literal notranslate"><span class="pre">odgi</span></code> tools.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This is an advanced tutorial. It is recommended that you follow the other tutorials before tackling this one.</p>
+</div>
+</div>
+<div class="section" id="steps">
+<h2>Steps<a class="headerlink" href="#steps" title="Permalink to this headline">¶</a></h2>
+<div class="section" id="get-the-human-chr8-dataset">
+<h3>Get the Human chr8 dataset<a class="headerlink" href="#get-the-human-chr8-dataset" title="Permalink to this headline">¶</a></h3>
+<p>Download the pangenome graph of the <a class="reference external" href="https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2021_05_06_pggb/gfas/chr8.pan.gfa.gz">Human chromosome 8</a>
+in <code class="docutils literal notranslate"><span class="pre">GFA</span></code> format, decompress it, and convert it to a graph in <code class="docutils literal notranslate"><span class="pre">odgi</span></code> format:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>wget -c https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2021_05_06_pggb/gfas/chr8.pan.gfa.gz
+gunzip chr8.pan.gfa.gz
+
+odgi build -g chr8.pan.gfa -o chr8.pan.og --threads <span class="m">2</span> -P
+</pre></div>
+</div>
+<p>The last command creates a file called <code class="docutils literal notranslate"><span class="pre">chr8.pan.og</span></code>, which contains the input graph in <code class="docutils literal notranslate"><span class="pre">odgi</span></code> format. This graph contains contigs of
+88 haploid, phased human genome assemblies from 44 individuals, plus the chm13 and GRCh38 reference genomes.</p>
+</div>
+<div class="section" id="identify-problematic-regions">
+<h3>Identify problematic regions<a class="headerlink" href="#identify-problematic-regions" title="Permalink to this headline">¶</a></h3>
+<p>The <strong>depth</strong> is a good metric to identify problematic regions in a pangenome graph. Here we define as <strong>node depth</strong>
+the number of times in which the node is crossed by all the paths present in the graph.</p>
+<p>Low depth regions in the pangenome graph can be artifacts. To identify them, execute:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>odgi depth -i chr8.pan.og -w <span class="m">100</span>:0:1 &gt; chr8.pan.low_depth.bed
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">chr8.pan.low_depth.bed</span></code> file reports the regions where the node depth is between 0x and 1x. Regions closer to
+100 bp have been merged into a single region. The file is in <code class="docutils literal notranslate"><span class="pre">BED</span></code> format. <code class="docutils literal notranslate"><span class="pre">-w</span> <span class="pre">100:0:1</span></code> selects a window size of
+100 bp where the depth must be within <strong>0</strong> and <strong>1</strong>.</p>
+<p>High depth regions in the pangenome graph can indicate complex regions. To identify them, execute:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>odgi depth -i chr8.pan.og -w <span class="m">100000</span>:5000:100000000 &gt; chr8.pan.high_depth.bed
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">chr8.pan.high_depth.bed</span></code> file reports the regions where the node depth is between 5000x and 100000000x. Regions
+closer to 100000 bp have been merged into a single region. The file is in <code class="docutils literal notranslate"><span class="pre">BED</span></code> format.</p>
+<p>If the extracted regions are too short, the cleaned graphs can become too fragmented. To avoid this, filter out all regions shorter than
+or equal to 10000 bps, merging the adjacent ranges:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span><span class="o">(</span>awk <span class="s1">&#39;$3 - $2 &gt; &#39;</span><span class="m">10000</span> chr8.pan.low_depth.bed <span class="p">;</span> <span class="se">\</span>
+    awk <span class="s1">&#39;$3 - $2 &gt; &#39;</span><span class="m">100000</span> chr8.pan.high_depth.bed <span class="o">)</span> <span class="p">|</span> <span class="se">\</span>
+    bedtools sort <span class="p">|</span> bedtools merge &gt; chr8.pan.regions_to_remove.bed
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">chr8.pan.regions_to_remove.bed</span></code> file contains all the regions to remove.</p>
+</div>
+<div class="section" id="remove-the-identified-regions">
+<h3>Remove the identified regions<a class="headerlink" href="#remove-the-identified-regions" title="Permalink to this headline">¶</a></h3>
+<p>To clean the pangenome graph, execute:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>odgi paths -i chr8.pan.og -L <span class="p">|</span> grep <span class="s1">&#39;^grch38#chr8&#39;</span> &gt; chr8.pan.path_to_fully_retain.txt
+
+odgi extract -i chr8.pan.og --threads <span class="m">2</span> -P <span class="se">\</span>
+     --inverse <span class="se">\</span>
+     -b chr8.pan.regions_to_remove.bed <span class="se">\</span>
+     -R chr8.pan.path_to_fully_retain.txt <span class="se">\</span>
+     -o chr8.pan.clean.og
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">path_to_fully_retain.txt</span></code> contains the name of the reference genome to fully retain in the resulting graph. This
+is necessary to be able to use the reference coordinate system in the cleaned graph. Moreover, keeping a full genome help
+to avoid breaking the pangenome graph in complex regions like the centromere.</p>
+<p>The <code class="docutils literal notranslate"><span class="pre">--inverse</span></code> flag specifies that the regions in the <code class="docutils literal notranslate"><span class="pre">regions_to_remove.bed</span></code> file are the regions to remove from the graph.</p>
+<p>The resulting graphs presents several connected components:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>odgi stats -i chr8.pan.clean.og -W <span class="p">|</span> head -n <span class="m">1</span>
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>##num_weakly_connected_components: 24583
+</pre></div>
+</div>
+<p>This is due to <cite>de novo</cite> assembly artifacts, under-alignments, and/or complex regions to align. Nevertheless, the clean
+version of the input graph can be found in its biggest connected component. To obtain it, execute:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>odgi explode -i chr8.pan.clean.og -p chr8.pan.clean.exp -b <span class="m">1</span> -s P -O
+</pre></div>
+</div>
+<p>The command creates a file called <code class="docutils literal notranslate"><span class="pre">chr8.pan.clean.exp.8.og</span></code>, which contains the biggest connected component
+(the number 8 in this example) in <code class="docutils literal notranslate"><span class="pre">odgi</span></code> format. The <code class="docutils literal notranslate"><span class="pre">-s</span> <span class="pre">P</span></code> option specifies to consider as biggest component the
+one with the longer path. <code class="docutils literal notranslate"><span class="pre">-b</span></code> selects the number of biggest components to retain.</p>
+</div>
+<div class="section" id="display-graph-stats">
+<h3>Display graph stats<a class="headerlink" href="#display-graph-stats" title="Permalink to this headline">¶</a></h3>
+<p>To have basic information on the cleaned graph, execute:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>odgi stats -i chr8.pan.clean.exp.8.og -S <span class="p">|</span> column -t
+</pre></div>
+</div>
+<div class="highlight-none notranslate"><div class="highlight"><pre><span></span>#length    nodes    edges    paths
+149046153  4044095  5600776  65354
+</pre></div>
+</div>
+</div>
+<div class="section" id="generate-a-1d-visualization">
+<h3>Generate a 1D visualization<a class="headerlink" href="#generate-a-1d-visualization" title="Permalink to this headline">¶</a></h3>
+<p>To visualize the cleaned graph, first sort it:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>odgi sort -p Y -i chr8.pan.clean.exp.8.og -o chr8.pan.clean.sort.og -P
+</pre></div>
+</div>
+<p>And then execute:</p>
+<div class="highlight-bash notranslate"><div class="highlight"><pre><span></span>odgi paths -i chr8.pan.og -L <span class="p">|</span> cut -f <span class="m">1</span>,2 -d <span class="s1">&#39;#&#39;</span> <span class="p">|</span> uniq &gt; chr8.pan.haplotype_names.txt
+
+odgi viz -i chr8.pan.clean.sort.og -x <span class="m">1000</span> -o chr8.pan.clean.sort.png -M chr8.pan.haplotype_names.txt
+</pre></div>
+</div>
+<p>The <code class="docutils literal notranslate"><span class="pre">haplotype_names.txt</span></code> file contains all the haplotypes present in the input assembly. They are necessary to
+merge the paths belonging to the same haplotype in the same row in the image.</p>
+<p>We obtain the following PNG image:</p>
+<img alt="../../_images/chr8.pan.clean.sort.png" src="../../_images/chr8.pan.clean.sort.png" />
+<p>The 1-Dimensional visualization shows that all centromeres have been removed. Indeed, they present high depth being
+very complex regions. Only the GRCh38 reference centromere is present because it was explicitly preserved during the
+removal step of the low and high depth regions.</p>
+<p>Moreover, for two haplotypes (<code class="docutils literal notranslate"><span class="pre">HG01071#2</span></code> and <code class="docutils literal notranslate"><span class="pre">HG03098#1</span></code>), a region close to their centromere is erroneously absent.
+This may be due to under-alignment: this leads to the generation of low depth nodes in the pangenome graph, which would
+be removed during the removal step.</p>
+</div>
+</div>
+</div>
+
+
+           </div>
+           
+          </div>
+          <footer>
+    <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
+        <a href="../commands.html" class="btn btn-neutral float-right" title="Commands" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="translate_path_positions_between_graphs.html" class="btn btn-neutral float-left" title="Translate path positions between graphs" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
+    </div>
+
+  <hr/>
+
+  <div role="contentinfo">
+    <p>
+        &#169; Copyright 2021, Erik Garrison. Revision v0.5.1-3c4a8a4.
+
+    </p>
+  </div>
+    
+    
+    
+    Built with <a href="https://www.sphinx-doc.org/">Sphinx</a> using a
+    
+    <a href="https://github.com/readthedocs/sphinx_rtd_theme">theme</a>
+    
+    provided by <a href="https://readthedocs.org">Read the Docs</a>. 
+
+</footer>
+        </div>
+      </div>
+
+    </section>
+
+  </div>
+  
+
+  <script type="text/javascript">
+      jQuery(function () {
+          SphinxRtdTheme.Navigation.enable(true);
+      });
+  </script>
+
+  
+  
+    
+   
+
+</body>
+</html>
