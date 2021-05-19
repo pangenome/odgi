@@ -17,7 +17,7 @@ namespace odgi {
     namespace algorithms {
         /* Several functions were inspired by https://github.com/vgteam/vg */
 
-        void add_full_paths_to_component(const graph_t &source, graph_t &component);
+        void add_full_paths_to_component(const graph_t &source, graph_t &component, const uint64_t num_threads);
 
         /// add subpaths to the subgraph, providing a concatenation of subpaths that are discontiguous over the subgraph
         void add_subpaths_to_subgraph(const graph_t &source, const std::vector<path_handle_t> source_paths,

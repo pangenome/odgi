@@ -3,30 +3,41 @@
 namespace odgi {
     namespace algorithms {
 
-        void add_full_paths_to_component(const graph_t &source, graph_t &component) {
+        void add_full_paths_to_component(const graph_t &source, graph_t &component, const uint64_t num_threads) {
+            // Search paths in parallel
+            atomicbitvector::atomic_bv_t take_source_path(source.get_path_count());
 
-            // We want to track the path names in each component
-            set<path_handle_t> paths;
-
-            // Record paths
             component.for_each_handle([&](const handle_t &h) {
-                handlegraph::nid_t id = component.get_id(h);
+                const handlegraph::nid_t id = component.get_id(h);
 
                 if (source.has_node(id)) {
                     handle_t source_handle = source.get_handle(id);
 
                     source.for_each_step_on_handle(source_handle, [&](const step_handle_t &source_step) {
-                        paths.insert(source.get_path_handle_of_step(source_step));
+                        const uint64_t source_path_rank = as_integer(source.get_path_handle_of_step(source_step)) - 1;
+                        take_source_path.set(source_path_rank);
                     });
+                }
+            }, true);
+
+            // Create paths
+            std::vector<path_handle_t> taken_source_paths;
+            source.for_each_path_handle([&](const path_handle_t source_path) {
+                const uint64_t source_path_rank = as_integer(source_path) - 1;
+
+                if (take_source_path.test(source_path_rank)) {
+                    component.create_path_handle(source.get_path_name(source_path), source.get_is_circular(source_path));
+                    taken_source_paths.push_back(source_path);
                 }
             });
 
-            // Copy the paths over
-            for (path_handle_t path_handle : paths) {
-                path_handle_t new_path_handle = component.create_path_handle(source.get_path_name(path_handle),
-                                                                             source.get_is_circular(path_handle));
-                for (handle_t handle : source.scan_path(path_handle)) {
-                    component.append_step(new_path_handle, component.get_handle(source.get_id(handle),
+            // Fill paths in parallel
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
+            for (auto& source_path : taken_source_paths) {
+                const path_handle_t path_handle = component.get_path_handle(source.get_path_name(source_path));
+
+                for (handle_t handle : source.scan_path(source_path)) {
+                    component.append_step(path_handle, component.get_handle(source.get_id(handle),
                                                                                 source.get_is_reverse(handle)));
                 }
             }
@@ -44,7 +55,7 @@ namespace odgi {
         void add_subpaths_to_subgraph(const graph_t &source, const std::vector<path_handle_t> source_paths,
                                       graph_t &subgraph, const uint64_t num_threads,
                                       const std::string &progress_message) {
-            bool show_progress = !progress_message.empty();
+            const bool show_progress = !progress_message.empty();
 
             auto create_subpath = [](graph_t &subgraph, const string &subpath_name, const bool is_circular) {
                 if (subgraph.has_path(subpath_name)) {
@@ -66,7 +77,7 @@ namespace odgi {
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
             for (uint64_t path_rank = 0; path_rank < source_paths.size(); ++path_rank) {
                 auto &source_path_handle = source_paths[path_rank];
-                std::string path_name = source.get_path_name(source_path_handle);
+                const std::string path_name = source.get_path_name(source_path_handle);
 
                 uint64_t walked = 0;
                 bool first_node = true;
@@ -104,8 +115,8 @@ namespace odgi {
 
             // Create subpaths
             for (uint64_t path_rank = 0; path_rank < source_paths.size(); ++path_rank) {
-                auto &source_path_handle = source_paths[path_rank];
-                std::string path_name = source.get_path_name(source_path_handle);
+                const auto &source_path_handle = source_paths[path_rank];
+                const std::string path_name = source.get_path_name(source_path_handle);
 
                 for (auto subpath_range : subpath_ranges[path_rank]) {
                     create_subpath(subgraph, make_path_name(path_name, subpath_range.first, subpath_range.second),
@@ -121,8 +132,8 @@ namespace odgi {
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
             for (uint64_t path_rank = 0; path_rank < source_paths.size(); ++path_rank) {
                 if (!subpath_ranges[path_rank].empty()) {
-                    auto &source_path_handle = source_paths[path_rank];
-                    std::string path_name = source.get_path_name(source_path_handle);
+                    const auto &source_path_handle = source_paths[path_rank];
+                    const std::string path_name = source.get_path_name(source_path_handle);
 
                     // The path ranges are sorted by coordinates by design
                     uint64_t range_rank = 0;
@@ -134,7 +145,7 @@ namespace odgi {
                     uint64_t walked = 0;
                     source.for_each_step_in_path(source_path_handle, [&](const step_handle_t &step) {
                         if (range_rank < subpath_ranges[path_rank].size()) {
-                            handle_t source_handle = source.get_handle_of_step(step);
+                            const handle_t source_handle = source.get_handle_of_step(step);
 
                             if (walked >= subpath_ranges[path_rank][range_rank].first &&
                                 walked <= subpath_ranges[path_rank][range_rank].second) {
@@ -176,10 +187,10 @@ namespace odgi {
             auto path_end = source.path_end(path_handle);
             for (step_handle_t cur_step = source.path_begin(path_handle);
                  cur_step != path_end && walked <= end; cur_step = source.get_next_step(cur_step)) {
-                handle_t cur_handle = source.get_handle_of_step(cur_step);
+                const handle_t cur_handle = source.get_handle_of_step(cur_step);
                 walked += source.get_length(cur_handle);
                 if (walked > start) {
-                    nid_t id = source.get_id(cur_handle);
+                    const nid_t id = source.get_id(cur_handle);
                     if (!subgraph.has_node(id)) {
                         subgraph.create_handle(
                                 source.get_sequence(
@@ -204,10 +215,10 @@ namespace odgi {
         void for_handle_in_path_range(const graph_t &source, path_handle_t path_handle, int64_t start, int64_t end,
                                       const std::function<void(const handle_t&)>& lambda) {
             uint64_t walked = 0;
-            auto path_end = source.path_end(path_handle);
+            const auto path_end = source.path_end(path_handle);
             for (step_handle_t cur_step = source.path_begin(path_handle);
                  cur_step != path_end && walked <= end; cur_step = source.get_next_step(cur_step)) {
-                handle_t cur_handle = source.get_handle_of_step(cur_step);
+                const handle_t cur_handle = source.get_handle_of_step(cur_step);
                 walked += source.get_length(cur_handle);
                 if (walked > start) {
                     lambda(cur_handle);
@@ -219,7 +230,7 @@ namespace odgi {
         /// this helper ensures that we get the full set
         void add_connecting_edges_to_subgraph(const graph_t &source, graph_t &subgraph,
                                               const std::string &progress_message) {
-            bool show_progress = !progress_message.empty();
+            const bool show_progress = !progress_message.empty();
 
             std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress;
             if (show_progress) {
@@ -228,10 +239,10 @@ namespace odgi {
             }
 
             subgraph.for_each_handle([&](const handle_t &handle) {
-                nid_t id = subgraph.get_id(handle);
-                handle_t source_handle = source.get_handle(id, subgraph.get_is_reverse(handle));
+                const nid_t id = subgraph.get_id(handle);
+                const handle_t source_handle = source.get_handle(id, subgraph.get_is_reverse(handle));
                 source.follow_edges(source_handle, false, [&](const handle_t &next) {
-                    nid_t next_id = source.get_id(next);
+                    const nid_t next_id = source.get_id(next);
                     if (subgraph.has_node(next_id)) {
                         handle_t subgraph_next = subgraph.get_handle(next_id, source.get_is_reverse(next));
                         if (!subgraph.has_edge(handle, subgraph_next)) {
@@ -240,9 +251,9 @@ namespace odgi {
                     }
                 });
                 source.follow_edges(source_handle, true, [&](const handle_t &prev) {
-                    nid_t prev_id = source.get_id(prev);
+                    const nid_t prev_id = source.get_id(prev);
                     if (subgraph.has_node(prev_id)) {
-                        handle_t subgraph_prev = subgraph.get_handle(prev_id, source.get_is_reverse(prev));
+                        const handle_t subgraph_prev = subgraph.get_handle(prev_id, source.get_is_reverse(prev));
                         if (!subgraph.has_edge(subgraph_prev, handle)) {
                             subgraph.create_edge(subgraph_prev, handle);
                         }
@@ -268,10 +279,10 @@ namespace odgi {
             for (uint64_t i = 0; i < steps && !curr_handles.empty(); ++i) {
                 std::vector<handle_t> next_handles;
                 for (auto &h : curr_handles) {
-                    handle_t old_h = source.get_handle(subgraph.get_id(h));
+                    const handle_t old_h = source.get_handle(subgraph.get_id(h));
                     source.follow_edges(old_h, false, [&](const handle_t &c) {
                         if (!subgraph.has_node(source.get_id(c))) {
-                            handle_t x = subgraph.create_handle(
+                            const handle_t x = subgraph.create_handle(
                                     source.get_sequence(source.get_is_reverse(c) ? source.flip(c) : c),
                                     source.get_id(c));
                             next_handles.push_back(x);
@@ -280,7 +291,7 @@ namespace odgi {
                     if (!forward_only) {
                         source.follow_edges(old_h, true, [&](const handle_t &c) {
                             if (!subgraph.has_node(source.get_id(c))) {
-                                handle_t x = subgraph.create_handle(
+                                const handle_t x = subgraph.create_handle(
                                         source.get_sequence(source.get_is_reverse(c) ? source.flip(c) : c),
                                         source.get_id(c));
                                 next_handles.push_back(x);
@@ -302,10 +313,10 @@ namespace odgi {
             while (accumulated_length < length && !curr_handles.empty()) {
                 std::vector<handle_t> next_handles;
                 for (auto &h : curr_handles) {
-                    handle_t old_h = source.get_handle(subgraph.get_id(h));
+                    const handle_t old_h = source.get_handle(subgraph.get_id(h));
                     source.follow_edges(old_h, false, [&](const handle_t &c) {
                         if (!subgraph.has_node(source.get_id(c))) {
-                            handle_t x = subgraph.create_handle(
+                            const handle_t x = subgraph.create_handle(
                                     source.get_sequence(source.get_is_reverse(c) ? source.flip(c) : c),
                                     source.get_id(c));
                             next_handles.push_back(x);
@@ -315,7 +326,7 @@ namespace odgi {
                     if (!forward_only) {
                         source.follow_edges(old_h, true, [&](const handle_t &c) {
                             if (!subgraph.has_node(source.get_id(c))) {
-                                handle_t x = subgraph.create_handle(
+                                const handle_t x = subgraph.create_handle(
                                         source.get_sequence(source.get_is_reverse(c) ? source.flip(c) : c),
                                         source.get_id(c));
                                 next_handles.push_back(x);
@@ -330,7 +341,7 @@ namespace odgi {
 
         void extract_id_range(const graph_t &source, const nid_t &id1, const nid_t &id2, graph_t &subgraph,
                               const std::string &progress_message) {
-            bool show_progress = !progress_message.empty();
+            const bool show_progress = !progress_message.empty();
 
             std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress;
             if (show_progress) {
@@ -339,7 +350,7 @@ namespace odgi {
 
             for (nid_t id = id1; id <= id2; ++id) {
                 if (!subgraph.has_node(id)) {
-                    handle_t cur_handle = source.get_handle(id);
+                    const handle_t cur_handle = source.get_handle(id);
                     subgraph.create_handle(
                             source.get_sequence(
                                     source.get_is_reverse(cur_handle) ? source.flip(cur_handle) : cur_handle),
@@ -395,7 +406,7 @@ namespace odgi {
                     }
                     // add a node with this sequence to both graphs using the same id
                     assert(seq.size());
-                    auto h = source.create_handle(seq);
+                    const auto h = source.create_handle(seq);
                     subgraph.create_handle(seq, source.get_id(h));
                     // rewrite the segment in the source graph (nb. inclusive range)
                     source.rewrite_segment(range.first, source.get_previous_step(range.second), { h });
@@ -420,8 +431,8 @@ namespace odgi {
 
                 uint64_t start, end;
                 graph.for_each_step_in_path(path, [&](const step_handle_t &step) {
-                    handle_t handle = graph.get_handle_of_step(step);
-                    uint64_t handle_length = graph.get_length(handle);
+                    const handle_t handle = graph.get_handle_of_step(step);
+                    const uint64_t handle_length = graph.get_length(handle);
 
                     if (in_bounds(handle)) {
                         if (first_node) {
