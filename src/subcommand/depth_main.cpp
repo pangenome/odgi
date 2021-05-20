@@ -555,8 +555,8 @@ namespace odgi {
                                 --d;
                             }
                         } else {
-                            // the depth is steps_on_handle - 1
-                            d = (graph.get_step_count(cur_handle) - 1);
+                            // the depth is steps_on_handle
+                            d = (graph.get_step_count(cur_handle));
                         };
 
                         depth += d * (cur_length
