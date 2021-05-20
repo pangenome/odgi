@@ -4,6 +4,7 @@
 #include "args.hxx"
 #include "split.hpp"
 #include "algorithms/bfs.hpp"
+#include "algorithms/depth.hpp"
 #include <omp.h>
 
 #include "src/algorithms/subgraph/extract.hpp"
@@ -524,51 +525,19 @@ namespace odgi {
         }
 
         if (!path_ranges.empty()) {
-            const bool subset_paths = !paths_to_consider.empty();
-
             std::cout << "#path\tstart\tend\tmean.depth" << std::endl;
-#pragma omp parallel for schedule(dynamic, 1)
-            for (auto &path_range : path_ranges) {
-                const uint64_t start = path_range.begin.offset;
-                const uint64_t end = path_range.end.offset;
-                const path_handle_t path_handle = path_range.begin.path;
-
-                uint64_t depth = 0;
-
-                uint64_t walked = 0;
-                const auto path_end = graph.path_end(path_handle);
-                for (step_handle_t cur_step = graph.path_begin(path_handle);
-                     cur_step != path_end && walked < end; cur_step = graph.get_next_step(cur_step)) {
-                    const handle_t cur_handle = graph.get_handle_of_step(cur_step);
-                    const uint64_t cur_length = graph.get_length(cur_handle);
-                    walked += cur_length;
-                    if (walked >= start) {
-                        uint64_t d = 0;
-                        if (subset_paths) {
-                            graph.for_each_step_on_handle(cur_handle, [&](const step_handle_t &step) {
-                                if (paths_to_consider[as_integer(graph.get_path_handle_of_step(step))]) {
-                                    ++d;
-                                }
-                            });
-
-                            if (paths_to_consider[as_integer(path_handle)]) {
-                                --d;
-                            }
-                        } else {
-                            // the depth is steps_on_handle
-                            d = (graph.get_step_count(cur_handle));
-                        };
-
-                        depth += d * (cur_length
-                                           - (walked - cur_length < start ? cur_length - (walked - start) : 0)
-                                           - (walked > end ? end - walked : 0));
-                    }
-                }
-
+            algorithms::for_each_path_range_depth(
+                graph,
+                path_ranges,
+                paths_to_consider,
+                [&](const path_range_t& range,
+                    const double& depth) {
 #pragma omp critical (cout)
-                std::cout << (graph.get_path_name(path_handle)) << "\t" << start << "\t" << end << "\t"
-                          << (double) depth / (double) (end - start) << std::endl;
-            }
+                    std::cout << (graph.get_path_name(range.begin.path)) << "\t"
+                              << range.begin.offset << "\t"
+                              << range.end.offset << "\t"
+                              << depth << std::endl;
+                });
         }
 
         return 0;
