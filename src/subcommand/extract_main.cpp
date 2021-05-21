@@ -394,13 +394,14 @@ namespace odgi {
             algorithms::add_subpaths_to_subgraph(source, source_paths, subgraph, num_threads,
                                                  show_progress ? "[odgi::extract] adding subpaths" : "");
 
+            std::cerr << "[odgi::extract] check missing edges" << std::endl;
             std::vector<path_handle_t> subpaths;
-            subpaths.resize(subgraph.get_path_count());
+            subpaths.reserve(subgraph.get_path_count());
             subgraph.for_each_path_handle([&](const path_handle_t& path) {
                 subpaths.push_back(path);
             });
 
-            set<std::make_pair<handle_t, handle_t>> edges_to_create;
+            ska::flat_hash_set<std::pair<handle_t, handle_t>> edges_to_create;
 
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
             for (auto path: subpaths) {
@@ -410,7 +411,7 @@ namespace odgi {
                         path,
                         [&](const step_handle_t &step) {
                             handle_t h = subgraph.get_handle_of_step(step);
-                            if (step != begin_step) {
+                            if (step != begin_step && !subgraph.has_edge(last, h)) {
 #pragma omp critical (edges_to_create)
                                 edges_to_create.insert({last, h});
                             }
@@ -419,20 +420,11 @@ namespace odgi {
             }
 
             // force embed the paths
-            subgraph.for_each_path_handle(
-                [&](const path_handle_t& path) {
-                    handle_t last;
-                    step_handle_t begin_step = subgraph.path_begin(path);
-                    subgraph.for_each_step_in_path(
-                        path,
-                        [&](const step_handle_t &step) {
-                            handle_t h = subgraph.get_handle_of_step(step);
-                            if (step != begin_step) {
-                                subgraph.create_edge(last, h);
-                            }
-                            last = h;
-                        });
-                });
+            for (auto edge: edges_to_create) {
+                subgraph.create_edge(edge.first, edge.second);
+            }
+
+            std::cerr << "[odgi::extract] fixed " << edges_to_create.size() << " edge(s)" << std::endl;
 
             // This should not be necessary, if the extraction works correctly
             // subgraph.remove_orphan_edges();
