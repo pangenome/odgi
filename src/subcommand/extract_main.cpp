@@ -20,7 +20,7 @@ namespace odgi {
         for (uint64_t i = 1; i < argc - 1; ++i) {
             argv[i] = argv[i + 1];
         }
-        std::string prog_name = "odgi extract";
+        const std::string prog_name = "odgi extract";
         argv[0] = (char *) prog_name.c_str();
         --argc;
 
@@ -134,14 +134,16 @@ namespace odgi {
 
         graph_t graph;
         assert(argc > 0);
-        if (!args::get(og_in_file).empty()) {
-            std::string infile = args::get(og_in_file);
-            if (infile == "-") {
-                graph.deserialize(std::cin);
-            } else {
-                ifstream f(infile.c_str());
-                graph.deserialize(f);
-                f.close();
+        {
+            const std::string infile = args::get(og_in_file);
+            if (!infile.empty()) {
+                if (infile == "-") {
+                    graph.deserialize(std::cin);
+                } else {
+                    ifstream f(infile.c_str());
+                    graph.deserialize(f);
+                    f.close();
+                }
             }
         }
 
@@ -180,8 +182,8 @@ namespace odgi {
             while (std::getline(path_names_in, line)) {
                 if (!line.empty()) {
                     if (graph.has_path(line)) {
-                        path_handle_t path = graph.get_path_handle(line);
-                        uint64_t path_rank = as_integer(path) - 1;
+                        const path_handle_t path = graph.get_path_handle(line);
+                        const uint64_t path_rank = as_integer(path) - 1;
                         if (!path_already_seen[path_rank]) {
                             path_already_seen[path_rank] = true;
                             paths.push_back(path);
@@ -235,7 +237,7 @@ namespace odgi {
         auto add_bed_range = [&path_ranges](const odgi::graph_t &graph,
                                             const std::string &buffer) {
             if (!buffer.empty() && buffer[0] != '#') {
-                auto vals = split(buffer, '\t');
+                const auto vals = split(buffer, '\t');
                 /*
                 if (vals.size() != 3) {
                     std::cerr << "[odgi::extract] error: path position record is incomplete" << std::endl;
@@ -243,7 +245,7 @@ namespace odgi {
                     exit(1); // bail
                 }
                 */
-                auto &path_name = vals[0];
+                const auto &path_name = vals[0];
                 if (!graph.has_path(path_name)) {
                     std::cerr << "[odgi::extract] error: path " << path_name << " not found in graph" << std::endl;
                     exit(1);
@@ -318,10 +320,10 @@ namespace odgi {
             return 1;
         }
 
-        bool show_progress = args::get(_show_progress);
-        uint64_t context_size = _context_size ? args::get(_context_size) : 0;
+        const bool show_progress = args::get(_show_progress);
+        const uint64_t context_size = _context_size ? args::get(_context_size) : 0;
 
-        uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+        const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
         omp_set_num_threads(num_threads);
 
         auto prep_graph = [](graph_t &source, const std::vector<path_handle_t>& source_paths,
@@ -412,7 +414,7 @@ namespace odgi {
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
             for (auto path: subpaths) {
                 handle_t last;
-                step_handle_t begin_step = subgraph.path_begin(path);
+                const step_handle_t begin_step = subgraph.path_begin(path);
                 subgraph.for_each_step_in_path(path, [&](const step_handle_t &step) {
                     handle_t h = subgraph.get_handle_of_step(step);
                     if (step != begin_step && !subgraph.has_edge(last, h)) {
@@ -431,6 +433,8 @@ namespace odgi {
                 progress_checking->finish();
             }
 
+            subpaths.clear();
+
             // force embed the paths
             for (auto edge: edges_to_create) {
                 subgraph.create_edge(edge.first, edge.second);
@@ -445,7 +449,7 @@ namespace odgi {
         auto check_and_create_handle = [&](const graph_t &source, graph_t &subgraph, const nid_t node_id) {
             if (graph.has_node(node_id)) {
                 if (!subgraph.has_node(node_id)){
-                    handle_t cur_handle = graph.get_handle(node_id);
+                    const handle_t cur_handle = graph.get_handle(node_id);
                     subgraph.create_handle(
                             source.get_sequence(source.get_is_reverse(cur_handle) ? source.flip(cur_handle) : cur_handle),
                             node_id);
@@ -459,7 +463,7 @@ namespace odgi {
             for (auto &path_range : path_ranges) {
                 graph_t subgraph;
 
-                path_handle_t path_handle = path_range.begin.path;
+                const path_handle_t path_handle = path_range.begin.path;
 
                 if (show_progress) {
                     std::cerr << "[odgi::extract] extracting path range " << graph.get_path_name(path_range.begin.path) << ":" << path_range.begin.offset
@@ -491,7 +495,7 @@ namespace odgi {
                 // collect path ranges by path
 #pragma omp parallel for schedule(dynamic,1)
                 for (auto &path_range : path_ranges) {
-                    path_handle_t path_handle = path_range.begin.path;
+                    const path_handle_t path_handle = path_range.begin.path;
                     if (show_progress) {
                         progress->increment(1);
                     }
@@ -502,7 +506,7 @@ namespace odgi {
                         });
                 }
                 for (auto id : keep_bv) {
-                    handle_t h = graph.get_handle(id);
+                    const handle_t h = graph.get_handle(id);
                     subgraph.create_handle(graph.get_sequence(h),
                                            id);
                 }
@@ -525,14 +529,16 @@ namespace odgi {
 
             prep_graph(graph, paths, lace_paths, subgraph, context_size, _use_length, _full_range, _inverse, num_threads, show_progress);
 
-            std::string outfile = args::get(og_out_file);
-            if (!outfile.empty()) {
-                if (outfile == "-") {
-                    subgraph.serialize(std::cout);
-                } else {
-                    ofstream f(outfile.c_str());
-                    subgraph.serialize(f);
-                    f.close();
+            {
+                const std::string outfile = args::get(og_out_file);
+                if (!outfile.empty()) {
+                    if (outfile == "-") {
+                        subgraph.serialize(std::cout);
+                    } else {
+                        ofstream f(outfile.c_str());
+                        subgraph.serialize(f);
+                        f.close();
+                    }
                 }
             }
         }
