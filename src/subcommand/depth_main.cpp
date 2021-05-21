@@ -153,6 +153,8 @@ namespace odgi {
                     paths_to_consider[as_integer(graph.get_path_handle(line))] = true;
                 }
             }
+        } else {
+            paths_to_consider.resize(graph.get_path_count() + 1, true);
         }
 
         // these options are exclusive (probably we should say with a warning)
@@ -275,7 +277,6 @@ namespace odgi {
                 add_graph_pos(graph, std::to_string(graph.get_id(h)));
             });
         } else if (graph_depth_vec) {
-            const bool subset_paths = !paths_to_consider.empty();
             std::cout << (og_file ? args::get(og_file) : "graph") << "_vec";
             graph.for_each_handle(
                 [&](const handle_t &h) {
@@ -283,11 +284,10 @@ namespace odgi {
                     graph.for_each_step_on_handle(
                         h,
                         [&](const step_handle_t &occ) {
-                            depth += (!subset_paths
-                                      || paths_to_consider[
-                                          as_integer(
-                                              graph.get_path_handle_of_step(occ))
-                                          ]);
+                            depth += paths_to_consider[
+                                as_integer(
+                                    graph.get_path_handle_of_step(occ))
+                                ];
                         });
                     auto length = graph.get_length(h);
                     for (uint64_t i = 0; i < length; ++i) {
@@ -431,19 +431,21 @@ namespace odgi {
 
         auto get_graph_node_depth = [](const odgi::graph_t &graph, const nid_t node_id,
                                        const std::vector<bool>& paths_to_consider) {
-            const bool subset_paths = !paths_to_consider.empty();
 
             uint64_t node_depth = 0;
             std::set<uint64_t> unique_paths;
 
             const handle_t h = graph.get_handle(node_id);
 
-            graph.for_each_step_on_handle(h, [&](const step_handle_t &occ) {
-                if (!subset_paths || paths_to_consider[as_integer(graph.get_path_handle_of_step(occ))]) {
-                    ++node_depth;
-                    unique_paths.insert(as_integer(graph.get_path(occ)));
-                }
-            });
+            graph.for_each_step_on_handle(
+                h,
+                [&](const step_handle_t &occ) {
+                    if (paths_to_consider[
+                            as_integer(graph.get_path_handle_of_step(occ))]) {
+                        ++node_depth;
+                        unique_paths.insert(as_integer(graph.get_path(occ)));
+                    }
+                });
 
             return make_pair(node_depth, unique_paths.size());
         };
