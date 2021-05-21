@@ -394,12 +394,18 @@ namespace odgi {
             algorithms::add_subpaths_to_subgraph(source, source_paths, subgraph, num_threads,
                                                  show_progress ? "[odgi::extract] adding subpaths" : "");
 
-            std::cerr << "[odgi::extract] check missing edges" << std::endl;
+
             std::vector<path_handle_t> subpaths;
             subpaths.reserve(subgraph.get_path_count());
             subgraph.for_each_path_handle([&](const path_handle_t& path) {
                 subpaths.push_back(path);
             });
+
+            std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress_checking;
+            if (show_progress) {
+                progress_checking = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+                        subpaths.size(), "[odgi::extract] checking missing edges");
+            }
 
             ska::flat_hash_set<std::pair<handle_t, handle_t>> edges_to_create;
 
@@ -407,16 +413,22 @@ namespace odgi {
             for (auto path: subpaths) {
                 handle_t last;
                 step_handle_t begin_step = subgraph.path_begin(path);
-                subgraph.for_each_step_in_path(
-                        path,
-                        [&](const step_handle_t &step) {
-                            handle_t h = subgraph.get_handle_of_step(step);
-                            if (step != begin_step && !subgraph.has_edge(last, h)) {
+                subgraph.for_each_step_in_path(path, [&](const step_handle_t &step) {
+                    handle_t h = subgraph.get_handle_of_step(step);
+                    if (step != begin_step && !subgraph.has_edge(last, h)) {
 #pragma omp critical (edges_to_create)
-                                edges_to_create.insert({last, h});
-                            }
-                            last = h;
-                        });
+                        edges_to_create.insert({last, h});
+                    }
+                    last = h;
+                });
+
+                if (show_progress) {
+                    progress_checking->increment(1);
+                }
+            }
+
+            if (show_progress) {
+                progress_checking->finish();
             }
 
             // force embed the paths
