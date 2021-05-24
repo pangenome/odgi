@@ -1,3 +1,3 @@
 breathe
-m2r
+m2r2
 asciidoc
