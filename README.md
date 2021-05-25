@@ -4,12 +4,9 @@
 
 ## optimized dynamic genome/graph implementation (odgi)
 
-`odgi` provides an efficient, succinct dynamic DNA sequence graph model, as well as a host of algorithms that allow the use of such graphs in bioinformatic analyses.
+`odgi` provides an efficient and succinct dynamic DNA sequence graph model, as well as a host of algorithms that allow the use of such graphs in bioinformatic analyses.
 
-Careful encoding of graph entities allows `odgi` to efficiently compute and transform [pangenomes](https://pangenome.github.io/) with minimal overheads.  `odgi` implements a dynamic data structure that can be updated on the fly. This contrasts with _static_ data structures, such as [xg](https://github.com/vgteam/xg).
-
-`odgi` implements dynamic [GBWT](https://github.com/jltsiren/gbwt) as a byte-packed version of the graph.
-Each node is represented by a `byte array` into which variable length integers are written to represent: 1) node sequences, 2) edges, and 3) paths through nodes.
+Careful encoding of graph entities allows `odgi` to efficiently compute and transform [pangenomes](https://pangenome.github.io/) with minimal overheads.  `odgi` implements a dynamic data structure that leveraged multi-core CPUs and can be updated on the fly.
 
 The edges and path steps are recorded as deltas between the current node id and the target node id, where the node id corresponds to the rank in the global array of nodes.
 Graphs built from biological data sets tend to have local partial order and, when sorted, the deltas be small.
