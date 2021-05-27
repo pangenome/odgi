@@ -42,7 +42,7 @@ On Ubuntu 20.04, these can be installed using apt: `sudo apt install build-essen
 ## documentation
 
 `odgi` includes a variety of tools for analyzing and manipulating large pangenome graphs.
-Read the full documentation at [https://pangenome.github.io/odgi.github.io/index.html](https://pangenome.github.io/odgi.github.io/index.html).
+Read the full documentation at [https://odgi.readthedocs.io/](https://odgi.readthedocs.io/).
 
 ## tests
 
