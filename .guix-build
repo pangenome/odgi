@@ -1,0 +1,4 @@
+# The following command sets up a Guix container that builds odgi. Make sure to check out
+# the git repository with all submodules!
+
+guix environment -C guix --ad-hoc gcc-toolchain git cmake python pybind11 jemalloc --network nss-certs openssl
