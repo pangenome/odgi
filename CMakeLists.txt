@@ -586,7 +586,7 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/algorithms/simplify_siblings.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/sgd_layout.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.hpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/coverage.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/depth.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/sorted_id_ranges.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/strongly_connected_components.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/mondriaan_sort.hpp
