@@ -9,13 +9,13 @@ compact unitigs and simplify redundant furcations
 SYNOPSIS
 ========
 
-**odgi normalize** [**-i, –idx**\ =\ *FILE*] [**-o, –out**\ =\ *FILE*]
+**odgi normalize** [**-i, --idx**\ =\ *FILE*] [**-o, --out**\ =\ *FILE*]
 [*OPTION*]…
 
 DESCRIPTION
 ===========
 
-The odgi normalize(1) command unchops
+The odgi normalize command unchops
 :ref:`odgi unchop` a given variation graph
 and simplifies redundant furcations.
 
@@ -25,27 +25,27 @@ OPTIONS
 Graph Files IO
 --------------
 
-| **-i, –idx**\ =\ *FILE*
+| **-i, --idx**\ =\ *FILE*
 | File containing the succinct variation graph to normalize. The file
   name usually ends with *.og*.
 
-| **-o, –out**\ =\ *FILE*
+| **-o, --out**\ =\ *FILE*
 | Write the normalized dynamic succinct variation graph to this file. A
   file ending with *.og* is recommended.
 
-| **-I, –max-iterations**\ =\ *N*
+| **-I, --max-iterations**\ =\ *N*
 | Iterate the normalization up to *N* many times. The default is *10*.
 
 Program Debugging
 -----------------
 
-| **-d, –debug**
+| **-d, --debug**
 | Print information about the normalization process to stdout.
 
 Program Information
 -------------------
 
-| **-h, –help**
+| **-h, --help**
 | Print a help message for **odgi normalize**.
 
 ..

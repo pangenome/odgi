@@ -9,7 +9,7 @@ divide nodes into smaller pieces
 SYNOPSIS
 ========
 
-**odgi chop** [**-i, –idx**\ =\ *FILE*] [**-o, –out**\ =\ *FILE*] [**-c,
+**odgi chop** [**-i, --idx**\ =\ *FILE*] [**-o, --out**\ =\ *FILE*] [**-c,
 –chop-to**\ =\ *N*] [*OPTION*]…
 
 DESCRIPTION
@@ -24,37 +24,37 @@ OPTIONS
 Graph Files IO
 --------------
 
-| **-i, –idx**\ =\ *FILE*
+| **-i, --idx**\ =\ *FILE*
 | File containing the succinct variation graph to chop. The file name
   usually ends with *.og*.
 
-| **-o, –out**\ =\ *FILE*
+| **-o, --out**\ =\ *FILE*
 | Write the chopped succinct variation graph to *FILE*. The file name
   usually ends with *.og*.
 
 Chop Options
 ------------
 
-| **-c, –chop-to**\ =\ *N*
+| **-c, --chop-to**\ =\ *N*
 | Divide nodes that longer than *N* into nodes no longer than *N* while
   maintaining graph topology.
 
 Threading
 ---------
 
-| **-t, –threads**\ =\ *N*
+| **-t, --threads**\ =\ *N*
 | Number of threads to use for the parallel operations.
 
 Processing Information
 ----------------------
 
-| **-d, –debug**
+| **-d, --debug**
 | Print information about the process to stderr.
 
 Program Information
 -------------------
 
-| **-h, –help**
+| **-h, --help**
 | Print a help message for **odgi chop**.
 
 ..

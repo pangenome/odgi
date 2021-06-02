@@ -9,7 +9,7 @@ describe the graph in terms of node degree
 SYNOPSIS
 ========
 
-**odgi degree** [**-i, –idx**\ =\ *FILE*] [*OPTION*]…
+**odgi degree** [**-i, --idx**\ =\ *FILE*] [*OPTION*]…
 
 DESCRIPTION
 ===========
@@ -25,35 +25,33 @@ OPTIONS
 Graph Files IO
 --------------
 
-| **-i, –idx**\ =\ *FILE*
+| **-i, --idx**\ =\ *FILE*
 | Describe node degree in this graph. The file name usually ends with
   *.og*.
 
 Summary Options
 ---------------
 
-| **-S, –summarize**
+| **-S, --summarize**
 | Summarize the graph properties and dimensions. Print to stdout the
   node.id and the node.degree.
 
-| **-w, –windows-in**\ =\ *LEN:MIN:MAX*
-| Print to stdout a BED file of path intervals where the degree is between *MIN* and
-*MAX*, merging the ranges not separated by more then *LEN* bp.
+| **-w, --windows-in**\ =\ *LEN:MIN:MAX*
+| Print to stdout a BED file of path intervals where the degree is between *MIN* and *MAX*, merging the ranges not separated by more then *LEN* bp.
 
-| **-W, –windows-out**\ =\ *LEN:MIN:MAX*
-| Print to stdout a BED file of path intervals where the degree is outside *MIN* and
-*MAX*, merging the ranges not separated by more then *LEN* bp.
+| **-W, --windows-out**\ =\ *LEN:MIN:MAX*
+| Print to stdout a BED file of path intervals where the degree is outside *MIN* and *MAX*, merging the ranges not separated by more then *LEN* bp.
 
 Threading
 ---------
 
-| **-t, –threads**\ =\ *N*
+| **-t, --threads**\ =\ *N*
 | Number of threads to use.
 
 Program Information
 -------------------
 
-| **-h, –help**
+| **-h, --help**
 | Print a help message for **odgi degree**.
 
 ..

@@ -67,7 +67,7 @@ namespace odgi {
                               {'a', "self-depth"});
 
         args::Flag summarize_depth(parser, "summarize-graph-depth",
-                                   "provide a summary of the depth distribution in the graph, in a tab-delimited format it prints to stdout: node.count, graph.length, step.count, path.length, mean.node.depth, and mean.graph.depth",
+                                   "provide a summary of the depth distribution in the graph, in a tab-delimited format it prints to stdout: node.count, graph.length, step.count, path.length, mean.node.depth (step.count/node.count), and mean.graph.depth (path.length/graph.length)",
                                    {'S', "summarize"});
 
         args::ValueFlag<std::string> _windows_in(parser, "LEN:MIN:MAX",

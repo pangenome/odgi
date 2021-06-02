@@ -9,7 +9,7 @@ break cycles in the graph and drop its paths
 SYNOPSIS
 ========
 
-**odgi break** [**-i, –idx**\ =\ *FILE*] [**-o, –out**\ =\ *FILE*]
+**odgi break** [**-i, --idx**\ =\ *FILE*] [**-o, --out**\ =\ *FILE*]
 [*OPTION*]…
 
 DESCRIPTION
@@ -25,33 +25,33 @@ OPTIONS
 Graph Files IO
 --------------
 
-| **-i, –idx**\ =\ *FILE*
+| **-i, --idx**\ =\ *FILE*
 | File containing the succinct variation graph to break. The file name
   usually ends with *.og*.
 
-| **-o, –out**\ =\ *FILE*
+| **-o, --out**\ =\ *FILE*
 | Write the broken graph to *FILE*.
 
 Cycle Options
 -------------
 
-| **-c, –cycle-max-bp**\ =\ *N*
+| **-c, --cycle-max-bp**\ =\ *N*
 | The maximum cycle length at which to break.
 
-| **-s, –max-search-bp**\ =\ *N*
+| **-s, --max-search-bp**\ =\ *N*
 | The maximum search space of each BFS given in number of base pairs.
 
-| **-u, –repeat-up-to**\ =\ *N*
+| **-u, --repeat-up-to**\ =\ *N*
 | Iterate cycle breaking up to *N* times or stop if no new edges are
   removed.
 
-| **-d, –show**
+| **-d, --show**
 | Print the edges we would remove to stdout.
 
 Program Information
 -------------------
 
-| **-h, –help**
+| **-h, --help**
 | Print a help message for **odgi break**.
 
 ..

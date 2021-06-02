@@ -109,7 +109,7 @@ Each command has its own man page which can be viewed using e.g. **man
 odgi_build**. Below we have a brief summary of syntax and subcommand
 description.
 
-| **odgi bin** [**-i, –idx**\ =\ *FILE*] [*OPTION*]…
+| **odgi bin** [**-i, --idx**\ =\ *FILE*] [*OPTION*]…
 | The odgi bin command bins a given variation graph. The pangenome
   sequence, the one-time traversal of all nodes from smallest to largest
   node identifier, can be summed up into bins of a specified size. For
@@ -131,69 +131,69 @@ description.
   present in the bin. Example: A range of 1-100 means that the first
   nucleotide has position 1 and the last has position 100, but
   nucleotide 45 could be located in another bin. For an exact positional
-  output, please specify [**-j, –json**].
+  output, please specify [**-j, --json**].
   Running odgi bin in
   `HaploBlocker <https://github.com/tpook92/HaploBlocker>`__ mode, only
-  arguments [**-b, –haplo-blocker**], [**-p[N],
+  arguments [**-b, --haplo-blocker**], [**-p[N],
   –haplo-blocker-min-paths[N]**], and [**-c[N],
   –haplo-blocker-min-coverage[N]**] are required. A TSV is printed to
   stdout: Each row corresponds to a node. Each column corresponds to a
   path. Each value is the coverage of a specific node of a specific
   path.
 
-| **odgi break** [**-i, –idx**\ =\ *FILE*] [**-o, –out**\ =\ *FILE*]
+| **odgi break** [**-i, --idx**\ =\ *FILE*] [**-o, --out**\ =\ *FILE*]
   [*OPTION*]…
 | The odgi break command finds cycles in a graph via `breadth-first
   search (BFS) <https://en.wikipedia.org/wiki/Breadth-first_search>`__
   and breaks them, also dropping the graph’s paths.
 
-| **odgi build** [**-g, –gfa**\ =\ *FILE*] [**-o, –out**\ =\ *FILE*]
+| **odgi build** [**-g, --gfa**\ =\ *FILE*] [**-o, --out**\ =\ *FILE*]
   [*OPTION*]…
 | The odgi build command constructs a succinct variation graph from a
   GFA. Currently, only GFA1 is supported. For details of the format
   please see https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md.
 
-| **odgi chop** [**-i, –idx**\ =\ *FILE*] [**-o, –out**\ =\ *FILE*]
-  [**-c, –chop-to**\ =\ *N*] [*OPTION*]…
+| **odgi chop** [**-i, --idx**\ =\ *FILE*] [**-o, --out**\ =\ *FILE*]
+  [**-c, --chop-to**\ =\ *N*] [*OPTION*]…
 | The odgi chop command chops long nodes into short ones while
   preserving the graph topology.
 
-| **odgi cover** [**-i, –idx**\ =\ *FILE*] [**-o, –out**\ =\ *FILE*]
+| **odgi cover** [**-i, --idx**\ =\ *FILE*] [**-o, --out**\ =\ *FILE*]
   [*OPTION*]…
 | The odgi cover command creates a path coverage of a variation graph,
   with a specified number of paths per component.
 
-**odgi degree** [**-i, –idx**\ =\ *FILE*] [*OPTION*]… The odgi degree
+**odgi degree** [**-i, --idx**\ =\ *FILE*] [*OPTION*]… The odgi degree
 command describes the graph in terms of node degree. In summarization mode, it shows the *node.count*, *edge.count*, *avg.degree*,
 *min.degree*, and *max.degree*. One can also specify degree ranges streaming these into
 a BED file.
 
-**odgi depth** [**-i, –input**\ =\ *FILE*] [*OPTION*]… The odgi depth
+**odgi depth** [**-i, --input**\ =\ *FILE*] [*OPTION*]… The odgi depth
 command finds the depth of graph as defined by query criteria.
 
-**odgi draw** [**-i, –idx**\ =\ *FILE*] [**-c, –coords-in**\ =\ *FILE*]
-[**-p, –png**\ =\ *FILE*] [*OPTION*]… The odgi draw command draws
+**odgi draw** [**-i, --idx**\ =\ *FILE*] [**-c, --coords-in**\ =\ *FILE*]
+[**-p, --png**\ =\ *FILE*] [*OPTION*]… The odgi draw command draws
 previously-determined 2D layouts of the graph with diverse annotations.
 
-| **odgi explode** [**-i, –idx**\ =\ *FILE*] [**-p,
+| **odgi explode** [**-i, --idx**\ =\ *FILE*] [**-p,
   –prefix**\ =\ *STRING*] [*OPTION*]…
 | The odgi explode command breaks a graph into connected components,
   writing each component in its own file.
 
-**odgi extract** [**-f, –input-graphs**\ =\ *FILE*] [**-o,
+**odgi extract** [**-f, --input-graphs**\ =\ *FILE*] [**-o,
 –out**\ =\ *FILE*] [*OPTION*]… The odgi extract command extracts
 parts of the graph as defined by query criteria.
 
-| **odgi flatten** [**-i, –idx**\ =\ *FILE*] [*OPTION*]…
+| **odgi flatten** [**-i, --idx**\ =\ *FILE*] [*OPTION*]…
 | The odgi flatten command projects the graph sequence and paths into
   FASTA and BED.
 
-| **odgi kmers** [**-i, –idx**\ =\ *FILE*] [**-c, –stdout**] [*OPTION*]…
+| **odgi kmers** [**-i, --idx**\ =\ *FILE*] [**-c, --stdout**] [*OPTION*]…
 | Given a kmer length, the odgi kmers command can emit all kmers. The
   output can be refined by setting the maximum number of furcations at
   edges or by not considering nodes above a given node degree limit.
 
-| **odgi layout** [**-i, –idx**\ =\ *FILE*] [**-o, –out**\ =\ *FILE*]
+| **odgi layout** [**-i, --idx**\ =\ *FILE*] [**-o, --out**\ =\ *FILE*]
   [*OPTION*]…
 | The odgi layout command computes 2D layouts of the graph using
   stochastic gradient descent (SGD). The input graph must be sorted and
@@ -203,21 +203,21 @@ parts of the graph as defined by query criteria.
   function or stress level. It applies SGD to move a single pair of
   nodes at a time.
 
-| **odgi matrix** [**-i, –idx**\ =\ *FILE*] [*OPTION*]…
+| **odgi matrix** [**-i, --idx**\ =\ *FILE*] [*OPTION*]…
 | The odgi matrix command generates a sparse matrix format out of the
   graph topology of a given variation graph.
 
-| **odgi normalize** [**-i, –idx**\ =\ *FILE*] [**-o, –out**\ =\ *FILE*]
+| **odgi normalize** [**-i, --idx**\ =\ *FILE*] [**-o, --out**\ =\ *FILE*]
   [*OPTION*]…
 | The odgi normalize command
   unchops :ref:`odgi unchop` a given variation graph
   and simplifies redundant furcations.
 
-**odgi overlap** [**-i, –input**\ =\ *FILE*] [*OPTION*]… The odgi
+**odgi overlap** [**-i, --input**\ =\ *FILE*] [*OPTION*]… The odgi
 overlap command finds the paths touched by the input paths.
 
-| **odgi panpos** [**-i, –idx**\ =\ *FILE*] [**-p, –path**\ =\ *STRING*]
-  [**-n, –nuc-pos**\ =\ *N*] [*OPTION*]…
+| **odgi panpos** [**-i, --idx**\ =\ *FILE*] [**-p, --path**\ =\ *STRING*]
+  [**-n, --nuc-pos**\ =\ *N*] [*OPTION*]…
 | The odgi panpos command give a pangenome position for a given path
   and nucleotide position. It requires a path index, which can be
   created with :ref:`odgi pathindex`. Going from
@@ -226,7 +226,7 @@ overlap command finds the paths touched by the input paths.
   `Pantograph <https://graph-genome.github.io/>`__ project. All input
   and output positions are 1-based.
 
-| **odgi pathindex** [**-i, –idx**\ =\ *FILE*] [**-o, –out**\ =\ *FILE*]
+| **odgi pathindex** [**-i, --idx**\ =\ *FILE*] [**-o, --out**\ =\ *FILE*]
   [*OPTION*]…
 | The odgi pathindex command generates a path index of a graph. It
   uses succinct data structures to encode the index. The path index
@@ -237,23 +237,23 @@ overlap command finds the paths touched by the input paths.
   navigating large graphs in an interactive manner like in the
   `Pantograph <https://graph-genome.github.io/>`__ project.
 
-| **odgi paths** [**-i, –idx**\ =\ *FILE*] [*OPTION*]…
+| **odgi paths** [**-i, --idx**\ =\ *FILE*] [*OPTION*]…
 | The odgi paths command allows the investigation of paths of a given
   variation graph. It can calculate overlap statistics of groupings of
   paths.
 
-**odgi position** [**-i, –target**\ =\ *FILE*] [*OPTION*]… The odgi
+**odgi position** [**-i, --target**\ =\ *FILE*] [*OPTION*]… The odgi
 position command position parts of the graph as defined by query
 criteria.
 
-| **odgi prune** [**-i, –idx**\ =\ *FILE*] [**-o, –out**\ =\ *FILE*]
+| **odgi prune** [**-i, --idx**\ =\ *FILE*] [**-o, --out**\ =\ *FILE*]
   [*OPTION*]…
 | The odgi prune command can remove complex parts of a graph. One can
   drop paths, nodes by a certain kind of edge coverage, edges and graph
   tips. Specifying a kmer length and a maximum number of furcations, the
   graph can be broken at edges not fitting into these conditions.
 
-| **odgi server** [**-i, –idx**\ =\ *FILE*] [**-p, –port**\ =\ *N*]
+| **odgi server** [**-i, --idx**\ =\ *FILE*] [**-p, --port**\ =\ *N*]
   [*OPTION*]…
 | The odgi server command starts an HTTP server with a given path
   index as input. The idea is that we can go from **path:position** →
@@ -267,7 +267,7 @@ criteria.
   and output positions are 1-based. If no IP address is specified, the
   server will run on localhost.
 
-| **odgi sort** [**-i, –idx**\ =\ *FILE*] [**-o, –out**\ =\ *FILE*]
+| **odgi sort** [**-i, --idx**\ =\ *FILE*] [**-o, --out**\ =\ *FILE*]
   [*OPTION*]…
 | The odgi sort command sorts a succinct variation graph. The command
   offers a diverse palette of sorting algorithms to determine the node
@@ -308,15 +308,15 @@ Sorting the paths in a graph my refine the sorting process. For the
 users’ convenience, it is possible to specify a whole pipeline of sorts
 within one parameter.
 
-**odgi squeeze** [**-f, –input-graphs**\ =\ *FILE*] [**-o,
+**odgi squeeze** [**-f, --input-graphs**\ =\ *FILE*] [**-o,
 –out**\ =\ *FILE*] [*OPTION*]… The odgi squeeze command squeezes
 multiple graphs into the same file.
 
-| **odgi stats** [**-i, –idx**\ =\ *FILE*] [*OPTION*]…
+| **odgi stats** [**-i, --idx**\ =\ *FILE*] [*OPTION*]…
 | The odgi stats command produces statistics of a variation graph.
   Among other metrics, it can calculate the #nodes, #edges, #paths and
   the total nucleotide length of the graph. Various histogram summary
-  options complement the tool. If [**-B, –bed-multicov**\ =\ *BED*] is
+  options complement the tool. If [**-B, --bed-multicov**\ =\ *BED*] is
   set, the metrics will be produced for the intervals specified in the
   BED.
 
@@ -326,17 +326,17 @@ multiple graphs into the same file.
   test depends on `Catch2 <https://github.com/catchorg/Catch2>`__. In
   the default setting, all results are printed to stdout.
 
-| **odgi unchop** [**-i, –idx**\ =\ *FILE*] [**-o, –out**\ =\ *FILE*]
+| **odgi unchop** [**-i, --idx**\ =\ *FILE*] [**-o, --out**\ =\ *FILE*]
   [*OPTION*]…
 | The odgi unchop command merges each unitig into a single node.
 
-| **odgi unitig** [**-i, –idx**\ =\ *FILE*] [*OPTION*]…
+| **odgi unitig** [**-i, --idx**\ =\ *FILE*] [*OPTION*]…
 | The odgi unitig command can print all unitigs of a given odgi graph
   to standard output in FASTA format. Unitigs can also be emitted in a
   fixed sequence quality FASTQ format. Various parameters can refine the
   unitigs to print.
 
-**odgi validate** [**-i, –input**\ =\ *FILE*] [*OPTION*]… The odgi
+**odgi validate** [**-i, --input**\ =\ *FILE*] [*OPTION*]… The odgi
 validate command validates the graph (currently, it checks if the
 paths are consistent with the graph topology).
 
@@ -345,12 +345,12 @@ paths are consistent with the graph topology).
   and codename to stdout (like *v-44-g89d022b “back to old ABI”*).
   Optionally, only the release, version or codename can be printed.
 
-| **odgi view** [**-i, –idx**\ =\ *FILE*] [*OPTION*]…
+| **odgi view** [**-i, --idx**\ =\ *FILE*] [*OPTION*]…
 | The odgi view command can convert a graph in odgi format to GFAv1.
   It can reveal a graph’s internal structures for e.g. debugging
   processes.
 
-| **odgi viz** [**-i, –idx**\ =\ *FILE*] [**-o, –out**\ =\ *FILE*]
+| **odgi viz** [**-i, --idx**\ =\ *FILE*] [**-o, --out**\ =\ *FILE*]
   [*OPTION*]…
 | The odgi viz command can produce a linear, static visualization of
   an odgi variation graph. It aggregates the pangenome into bins and

@@ -9,7 +9,7 @@ construct a dynamic succinct variation graph
 SYNOPSIS
 ========
 
-**odgi build** [**-g, –gfa**\ =\ *FILE*] [**-o, –out**\ =\ *FILE*]
+**odgi build** [**-g, --gfa**\ =\ *FILE*] [**-o, --out**\ =\ *FILE*]
 [*OPTION*]…
 
 DESCRIPTION
@@ -25,18 +25,18 @@ OPTIONS
 Graph Files IO
 --------------
 
-| **-g, –gfa**\ =\ *FILE*
+| **-g, --gfa**\ =\ *FILE*
 | GFAv1 file containing the nodes, edges and paths to build a dynamic
   succinct variation graph from.
 
-| **-o, –out**\ =\ *FILE*
+| **-o, --out**\ =\ *FILE*
 | Write the dynamic succinct variation graph to this file. A file ending
   with *.og* is recommended.
 
 Graph Sorting
 -------------
 
-| **-s, –sort**
+| **-s, --sort**
 | Apply a general topological sort to the graph and order the node ids
   accordingly. A bidirected adaptation of Kahn’s topological sort (1962)
   is used, which can handle components with no heads or tails. Here,
@@ -45,13 +45,13 @@ Graph Sorting
 Threading
 ---------
 
-| **-t, –threads**\ =\ *N*
+| **-t, --threads**\ =\ *N*
 | Number of threads to use for the parallel operations.
 
 Processing Information
 ----------------------
 
-| **-d, –debug**
+| **-d, --debug**
 | Verbosely print graph information to stderr. This includes the maximum
   node_id, the minimum node_id, the handle to node_id mapping, the
   deleted nodes and the path metadata.
@@ -59,10 +59,10 @@ Processing Information
 Program Information
 -------------------
 
-| **-h, –help**
+| **-h, --help**
 | Print a help message for **odgi build**.
 
-| **-P, –progress**
+| **-P, --progress**
 | Write the current progress to stderr.
 
 ..

@@ -10,13 +10,13 @@ files
 SYNOPSIS
 ========
 
-**odgi explode** [**-i, –idx**\ =\ *FILE*] [**-p,
+**odgi explode** [**-i, --idx**\ =\ *FILE*] [**-p,
 –prefix**\ =\ *STRING*] [*OPTION*]…
 
 DESCRIPTION
 ===========
 
-The odgi explode(1) command breaks a graph into connected components,
+The odgi explode command breaks a graph into connected components,
 writing each component in its own file.
 
 OPTIONS
@@ -25,23 +25,23 @@ OPTIONS
 Graph Files IO
 --------------
 
-| **-i, –idx**\ =\ *FILE*
+| **-i, --idx**\ =\ *FILE*
 | File containing the succinct variation graph to break in its
   components. The file name usually ends with *.og*.
 
 Explode Options
 ---------------
 
-| **-p, –prefix**\ =\ *STRING*
+| **-p, --prefix**\ =\ *STRING*
 | Write each connected component in a file with the given prefix. The
   file for the component ``i`` will be named ``STRING.i.og`` (default:
-  ``component``).
+  ``component.i.og``).
 
-| **-b, –biggest**\ =\ *N*
+| **-b, --biggest**\ =\ *N*
 | Specify the number of the biggest connected components to write,
   sorted by decreasing size (default: disabled, for writing them all).
 
-| **-s, –sorting-criteria**\ =\ *C*
+| **-s, --sorting-criteria**\ =\ *C*
 | Specify how to sort the connected components by size:
 
 -  p) path mass (total number of path bases) (default)
@@ -52,25 +52,25 @@ Explode Options
 
 -  P) longest path
 
-| **-O, –optimize**
+| **-O, --optimize**
 | Compact the node ID space in each connected component.
 
 Threading
 ---------
 
-| **-t, –threads**\ =\ *N*
+| **-t, --threads**\ =\ *N*
 | Number of threads to use (to write the components in parallel).
 
 Processing Information
 ----------------------
 
-| **-P, –progress**
+| **-P, --progress**
 | Print information about the components and the progress to stderr.
 
 Program Information
 -------------------
 
-| **-h, –help**
+| **-h, --help**
 | Print a help message for **odgi explode**.
 
 ..

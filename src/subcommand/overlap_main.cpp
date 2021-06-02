@@ -26,12 +26,13 @@ namespace odgi {
 
         args::ValueFlag<std::string> subset_paths(parser, "FILE",
                                                   "perform the search considering only the paths specified in the FILE; "
-                                                  "the file must contain one path name per line and a subset of all paths can be specified.",
+                                                  "the file must contain one path name per line and a subset of all paths can be specified;"
+                                                  "When searching the overlaps, only these paths will be considered.",
                                                   {'s', "subset-paths"});
 
         args::ValueFlag<std::string> path_name(parser, "PATH_NAME", "perform the search of the given path in the graph",
                                                {'r', "path"});
-        args::ValueFlag<std::string> path_file(parser, "FILE", "perform the search for the paths listed in FILE",
+        args::ValueFlag<std::string> path_file(parser, "FILE", "report the search results only for the paths listed in FILE",
                                                {'R', "paths"});
 
         args::ValueFlag<std::string> bed_input(parser, "FILE", "a BED file of ranges in paths in the graph",

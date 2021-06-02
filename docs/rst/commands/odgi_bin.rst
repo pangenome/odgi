@@ -9,7 +9,7 @@ binning of pangenome sequence and path information in the graph
 SYNOPSIS
 ========
 
-**odgi bin** [**-i, –idx**\ =\ *FILE*] [*OPTION*]…
+**odgi bin** [**-i, --idx**\ =\ *FILE*] [*OPTION*]…
 
 DESCRIPTION
 ===========
@@ -35,12 +35,12 @@ DESCRIPTION
   present in the bin. Example: A range of 1-100 means that the first
   nucleotide has position 1 and the last has position 100, but
   nucleotide 45 could be located in another bin. For an exact positional
-  output, please specify [**-j, –json**].
+  output, please specify [**-j, --json**].
 | Running odgi bin in
   `HaploBlocker <https://github.com/tpook92/HaploBlocker>`__ mode, only
-  arguments [**-b, –haplo-blocker**], [**-p[N],
-  –haplo-blocker-min-paths[N]**], and [**-c[N],
-  –haplo-blocker-min-coverage[N]**] are required. A TSV is printed to
+  arguments [**-b, --haplo-blocker**], [**-p[N],
+  -–haplo-blocker-min-paths[N]**], and [**-c[N],
+  -–haplo-blocker-min-coverage[N]**] are required. A TSV is printed to
   stdout: Each row corresponds to a node. Each column corresponds to a
   path. Each value is the coverage of a specific node of a specific
   path.
@@ -51,33 +51,33 @@ OPTIONS
 Graph Files IO
 --------------
 
-| **-i, –idx**\ =\ *FILE*
+| **-i, --idx**\ =\ *FILE*
 | File containing the succinct variation graph to investigate the bin
   from. The file name usually ends with *.og*.
 
 FASTA Options
 -------------
 
-| **-f, –fasta**\ =\ *FILE*
+| **-f, --fasta**\ =\ *FILE*
 | Write the pangenome sequence to *FILE* in FASTA format.
 
 Bin Options
 -----------
 
-| **-n, –number-bins**\ =\ *N*
+| **-n, --number-bins**\ =\ *N*
 | The number of bins the pangenome sequence should be chopped up to.
 
-| **-w, –bin-width**\ =\ *N*
+| **-w, --bin-width**\ =\ *N*
 | The bin width specifies the size of each bin.
 
-| **-D, –path-delim**\ =\ *STRING*
+| **-D, --path-delim**\ =\ *STRING*
 | Annotate rows by prefix and suffix of this delimiter.
 
-| **-a, –aggregate-delim**
+| **-a, --aggregate-delim**
 | Aggregate on path prefix delimiter. Argument depends on [**-D,
   –path-delim**\ =\ *STRING*].
 
-| **-j, –json**
+| **-j, --json**
 | Print bins and links to stdout in pseudo JSON format. Each line is a
   valid JSON object, but the whole file is not a valid JSON! First, each
   bin including its pangenome sequence is printed to stdout per line.
@@ -90,11 +90,11 @@ Bin Options
   in a range represents a complement reverse orientation of that
   particular sequence.
 
-| **-s, –no-seqs**
-| If [**-j, –json**] is set, no nucleotide sequences will be printed to
+| **-s, --no-seqs**
+| If [**-j, --json**] is set, no nucleotide sequences will be printed to
   stdout in order to save disk space.
 
-| **-g, –no-gap-links**
+| **-g, --no-gap-links**
 | We divide links into 2 classes:
 
 1. the links which help to follow complex variations. They need to be
@@ -109,26 +109,26 @@ Bin Options
 HaploBlocker Options
 --------------------
 
-| **-b, –haplo-blocker**
+| **-b, --haplo-blocker**
 | Write a TSV to stdout formatted in a way ready for HaploBlocker: Each
   row corresponds to a node. Each column corresponds to a path. Each
   value is the coverage of a specific node of a specific path.
 
-| **-p[N], –haplo-blocker-min-paths[N]**
+| **-p[N], --haplo-blocker-min-paths[N]**
 | Specify the minimum number of paths that need to be present in the bin
   to actually report that bin. The default value is 1.
 
-| **-c[N], –haplo-blocker-min-coverage[N]**
+| **-c[N], --haplo-blocker-min-coverage[N]**
 | Specify the minimum coverage a path needs to have in a bin to actually
   report that bin. The default value is 1.
 
 Program Information
 -------------------
 
-| **-h, –help**
+| **-h, --help**
 | Print a help message for **odgi bin**.
 
-| **-P, –progress**
+| **-P, --progress**
 | Write the current progress to stderr.
 
 ..

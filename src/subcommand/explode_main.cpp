@@ -26,7 +26,7 @@ namespace odgi {
         args::ValueFlag<std::string> _prefix(parser, "STRING",
                                              "write each connected component in a file with the given prefix. "
                                              "The file for the component `i` will be named `STRING.i.og` "
-                                             "(default: `component`)", {'p', "prefix"});
+                                             "(default: `component.i.og`)", {'p', "prefix"});
 
         args::ValueFlag<uint64_t> _write_biggest_components(parser, "N",
                                                             "specify the number of the biggest connected components to write, sorted by decreasing size (default: disabled, for writing them all) ",
