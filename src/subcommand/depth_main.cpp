@@ -23,18 +23,19 @@ namespace odgi {
         argv[0] = (char *) prog_name.c_str();
         --argc;
 
-        args::ArgumentParser parser("find the depth of graph as defined by query criteria");
+        args::ArgumentParser parser("find the depth of graph as defined by query criteria, without specifying any non-mandatory options, it prints in a tab-delimited format path, start, end, and mean.depth to stdout");
         args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
         args::ValueFlag<std::string> og_file(parser, "FILE", "compute path depths in this graph", {'i', "input"});
 
         args::ValueFlag<std::string> _subset_paths(parser, "FILE",
                                                   "compute the depth considering only the paths specified in the FILE; "
-                                                  "the file must contain one path name per line and a subset of all paths can be specified.",
+                                                  "the file must contain one path name per line and a subset of all paths can be specified; "
+                                                  "If a step is of a path of the given list, it is taken into account when calculating a node's depth. Else not.",
                                                   {'s', "subset-paths"});
 
         args::ValueFlag<std::string> path_name(parser, "PATH_NAME", "compute the depth of the given path in the graph",
                                                {'r', "path"});
-        args::ValueFlag<std::string> path_file(parser, "FILE", "compute depth for the paths listed in FILE",
+        args::ValueFlag<std::string> path_file(parser, "FILE", "report the depth only for the paths listed in FILE",
                                                {'R', "paths"});
         args::ValueFlag<std::string> graph_pos(parser, "[node_id][,offset[,(+|-)]*]*",
                                                "compute the depth at the given node, e.g. 7 or 3,4 or 42,10,+ or 302,0,-",
@@ -66,7 +67,7 @@ namespace odgi {
                               {'a', "self-depth"});
 
         args::Flag summarize_depth(parser, "summarize-graph-depth",
-                                   "provide a summary of the depth distribution in the graph",
+                                   "provide a summary of the depth distribution in the graph, in a tab-delimited format it prints to stdout: node.count, graph.length, step.count, path.length, mean.node.depth, and mean.graph.depth",
                                    {'S', "summarize"});
 
         args::ValueFlag<std::string> _windows_in(parser, "LEN:MIN:MAX",

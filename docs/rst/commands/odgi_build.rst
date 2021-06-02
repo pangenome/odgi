@@ -15,8 +15,8 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-The odgi build(1) command constructs a succinct variation graph from a
-GFA. Currently, only GFA1 is supported. For details of the format please
+The odgi build command constructs a succinct variation graph from a
+GFA. Currently, only GFAv1 is supported. For details of the format please
 see https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md.
 
 OPTIONS
@@ -26,7 +26,7 @@ Graph Files IO
 --------------
 
 | **-g, –gfa**\ =\ *FILE*
-| GFA1 file containing the nodes, edges and paths to build a dynamic
+| GFAv1 file containing the nodes, edges and paths to build a dynamic
   succinct variation graph from.
 
 | **-o, –out**\ =\ *FILE*
@@ -42,35 +42,28 @@ Graph Sorting
   is used, which can handle components with no heads or tails. Here,
   both heads and tails are taken into account.
 
+Threading
+---------
+
+| **-t, –threads**\ =\ *N*
+| Number of threads to use for the parallel operations.
+
 Processing Information
 ----------------------
-
-| **-p, –progress**
-| Print progress updates to stdout.
 
 | **-d, –debug**
 | Verbosely print graph information to stderr. This includes the maximum
   node_id, the minimum node_id, the handle to node_id mapping, the
   deleted nodes and the path metadata.
 
-| **–trace**
-| Include backtrace information when reporting errors.
-
-| **-v, –verbose**
-| Verbosely print processing information to stderr, including
-  debug-level log messages.
-
-| **-w, –warnings**
-| Turn on script warnings (applies to executed code).
-
-| **-t, –threads**\ =\ *N*
-| Number of threads to use for the parallel operations.
-
 Program Information
 -------------------
 
 | **-h, –help**
 | Print a help message for **odgi build**.
+
+| **-P, –progress**
+| Write the current progress to stderr.
 
 ..
 	EXIT STATUS

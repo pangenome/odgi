@@ -15,7 +15,7 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-The odgi break(1) command finds cycles in a graph via `breadth-first
+The odgi break command finds cycles in a graph via `breadth-first
 search (BFS) <https://en.wikipedia.org/wiki/Breadth-first_search>`__ and
 breaks them, also dropping the graph’s paths.
 

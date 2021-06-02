@@ -15,7 +15,7 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-The odgi cover(1) command finds a path cover of a variation graph, with
+The odgi cover command creates a path coverage of a variation graph, with
 a specified number of paths per component.
 
 OPTIONS
@@ -35,6 +35,10 @@ Graph Files IO
 Cover Options
 -------------
 
+| **-H, –hogwild-depth**\ =\ *DEPTH*
+| Randomly cover the graph until it reaches the given average *DEPTH*. Specifying
+this options ignores all other Cover Options except **-I, –ignore-paths**!
+
 | **-n, –num-paths-per-component**\ =\ *N*
 | Number of paths to generate per component.
 
@@ -48,12 +52,12 @@ Cover Options
   reached, or until the maximum number of allowed generated paths is
   reached (number of nodes in the input variation graph).
 
-| **-i, –ignore-paths**
+| **-I, –ignore-paths**
 | Ignore the paths already embedded in the graph during the nodes
   coverage initialization.
 
 | **-w, –write-node-coverages**\ =\ *FILE*
-| Write the node coverages at the end of the paths generation to FILE.
+| Write the node coverages at the end of the paths generation to *FILE*.
   The file will contain tab-separated values (header included), and have
   3 columns: *component_id*, *node_id*, and *coverage*.
 

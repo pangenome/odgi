@@ -14,7 +14,7 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-| The odgi bin(1) command bins a given variation graph. The pangenome
+| The odgi bin command bins a given variation graph. The pangenome
   sequence, the one-time traversal of all nodes from smallest to largest
   node identifier, can be summed up into bins of a specified size. For
   each bin, the path metainformation is summarized. This enables a

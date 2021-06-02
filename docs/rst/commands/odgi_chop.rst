@@ -15,7 +15,7 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-The odgi chop(1) command chops long nodes into short ones while
+The odgi chop command chops long nodes into short ones while
 preserving the graph topology and node order.
 
 OPTIONS
@@ -29,7 +29,7 @@ Graph Files IO
   usually ends with *.og*.
 
 | **-o, –out**\ =\ *FILE*
-| Write the choped succinct variation graph to *FILE*. The file name
+| Write the chopped succinct variation graph to *FILE*. The file name
   usually ends with *.og*.
 
 Chop Options

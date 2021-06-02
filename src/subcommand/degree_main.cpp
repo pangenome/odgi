@@ -27,11 +27,11 @@ int main_degree(int argc, char** argv) {
 
 
     args::ValueFlag<std::string> _windows_in(parser, "LEN:MIN:MAX",
-                                             "write a BED file of path intervals where the degree is between MIN and MAX, "
+                                             "print to stdout a BED file of path intervals where the degree is between MIN and MAX, "
                                              "merging regions not separated by more than LEN bp",
                                              {'w', "windows-in"});
     args::ValueFlag<std::string> _windows_out(parser, "LEN:MIN:MAX",
-                                              "write a BED file of path intervals where the degree is outside of MIN and MAX, "
+                                              "print to stdout a BED file of path intervals where the degree is outside of MIN and MAX, "
                                               "merging regions not separated by more than LEN bp",
                                               {'W', "windows-out"});
 

@@ -14,9 +14,10 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-The odgi degree(1) command describes the graph in terms of node degree.
-For the input graph, it shows the node.count, edge.count, avg.degree,
-min.degree, and max.degree.
+The odgi degree command describes the graph in terms of node degree.
+In summarization mode, it shows the *node.count*, *edge.count*, *avg.degree*,
+*min.degree*, and *max.degree*. One can also specify degree ranges streaming these into
+a BED file.
 
 OPTIONS
 =======
@@ -34,6 +35,14 @@ Summary Options
 | **-S, –summarize**
 | Summarize the graph properties and dimensions. Print to stdout the
   node.id and the node.degree.
+
+| **-w, –windows-in**\ =\ *LEN:MIN:MAX*
+| Print to stdout a BED file of path intervals where the degree is between *MIN* and
+*MAX*, merging the ranges not separated by more then *LEN* bp.
+
+| **-W, –windows-out**\ =\ *LEN:MIN:MAX*
+| Print to stdout a BED file of path intervals where the degree is outside *MIN* and
+*MAX*, merging the ranges not separated by more then *LEN* bp.
 
 Threading
 ---------

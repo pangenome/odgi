@@ -21,7 +21,7 @@ namespace odgi {
         args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
         args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
         args::ValueFlag<std::string> dg_out_file(parser, "FILE","store the graph with the generated paths in this file", {'o', "out"});
-        args::ValueFlag<double> hogwild_depth(parser, "DEPTH", "randomly cover the graph until it has reaches the given average DEPTH",{'H', "hogwild-depth"});
+        args::ValueFlag<double> hogwild_depth(parser, "DEPTH", "randomly cover the graph until it has reaches the given average DEPTH, specifying this option overwrites all other cover options except -I, --ignore-paths!",{'H', "hogwild-depth"});
         args::ValueFlag<uint64_t> num_paths_per_component(parser, "N", "number of paths to generate per component",{'n', "num-paths-per-component"});
         args::ValueFlag<uint64_t> node_window_size(parser, "N","size of the node window to check each time a new path is extended (it has to be greater than or equal to 2)",{'k', "node-window-size"});
         args::ValueFlag<uint64_t> min_node_depth(parser, "N","minimum node depth to reach (it has to be greater than 0)",{'c', "min-node-depth"});
