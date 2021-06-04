@@ -4,7 +4,7 @@
 odgi normalize
 #########
 
-compact unitigs and simplify redundant furcations
+Compact unitigs and simplify redundant furcations.
 
 SYNOPSIS
 ========
@@ -22,21 +22,23 @@ and simplifies redundant furcations.
 OPTIONS
 =======
 
-Graph Files IO
+MANDATORY OPTIONS
 --------------
 
 | **-i, --idx**\ =\ *FILE*
-| File containing the succinct variation graph to normalize. The file
-  name usually ends with *.og*.
+| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.
 
 | **-o, --out**\ =\ *FILE*
-| Write the normalized dynamic succinct variation graph to this file. A
+| Write the normalized dynamic succinct variation graph in ODGI format to this file. A
   file ending with *.og* is recommended.
+
+Normalize Options
+-----------------
 
 | **-I, --max-iterations**\ =\ *N*
 | Iterate the normalization up to *N* many times. The default is *10*.
 
-Program Debugging
+Processing Information
 -----------------
 
 | **-d, --debug**

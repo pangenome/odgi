@@ -20,13 +20,13 @@ sys.path.insert(0, os.path.abspath('../lib/'))
 # -- Project information -----------------------------------------------------
 
 project = u'odgi'
-copyright = '2021, Erik Garrison. Revision v0.5.1-a2276ee'
+copyright = '2021, Erik Garrison. Revision v0.5.1-36a9408'
 author = u'Andrea Guarracino, Simon Heumos, ... , Pjotr Prins, Erik Garrison'
 
 # The short X.Y version
 version = 'v0.5.1'
 # The full version, including alpha/beta/rc tags
-release = 'a2276ee'
+release = '36a9408'
 
 
 # -- General configuration ---------------------------------------------------
@@ -175,13 +175,13 @@ man_pages = [
      [EG, AG, SH], 1),
     ('man/odgi_matrix', 'odgi_matrix', u'Write the graph topology in sparse matrix formats.',
      [EG], 1),
-    ('man/odgi_normalize', 'odgi_normalize', u'compact unitigs and simplify redundant furcations',
+    ('man/odgi_normalize', 'odgi_normalize', u'Compact unitigs and simplify redundant furcations.',
      [EG], 1),
-    ('man/odgi_overlap', 'odgi_overlap', u'find the paths touched by the input paths',
+    ('man/odgi_overlap', 'odgi_overlap', u'Find the paths touched by given input paths.',
      [AG], 1),
-    ('man/odgi_panpos', 'odgi_panpos', u'get the pangenome position of a given path and nucleotide',
+    ('man/odgi_panpos', 'odgi_panpos', u'Get the pangenome position of a given path and nucleotide position (1-based).',
      [SH], 1),
-    ('man/odgi_pathindex', 'odgi_pathindex', u'create a path index for a given path',
+    ('man/odgi_pathindex', 'odgi_pathindex', u'Create a path index for a given graph.',
      [SH], 1),
     ('man/odgi_paths', 'odgi_paths', u'embedded path interrogation',
      [EG], 1),

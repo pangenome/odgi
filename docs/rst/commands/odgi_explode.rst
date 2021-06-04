@@ -53,7 +53,7 @@ Threading
 ---------
 
 | **-t, --threads**\ =\ *N*
-| Number of threads to use (to write the components in parallel).
+| Number of threads to use for parallel operations.
 
 Processing Information
 ----------------------

@@ -18,13 +18,17 @@ int main_normalize(int argc, char** argv) {
     argv[0] = (char*)prog_name.c_str();
     --argc;
 
-    args::ArgumentParser parser("compact unitigs and simplify redundant furcations");
-    args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-    args::ValueFlag<std::string> og_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-    args::ValueFlag<std::string> og_out_file(parser, "FILE", "store the graph self index in this file", {'o', "out"});
-    args::ValueFlag<uint64_t> max_iterations(parser, "N", "iterate normalization up to this many times (default: 10)", {'I', "max-iterations"});
-    args::Flag debug(parser, "debug", "print information about the normalization process", {'d', "debug"});
-    //args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
+    args::ArgumentParser parser("Compact unitigs and simplify redundant furcations.");
+    args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+    args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+    args::ValueFlag<std::string> og_out_file(mandatory_opts, "FILE", "Write the normalized dynamic succinct variation graph in ODGI format to this file. A"
+                                                                     " file ending with *.og* is recommended.", {'o', "out"});
+    args::Group norm_opts(parser, "[ Normalize Options ]");
+    args::ValueFlag<uint64_t> max_iterations(norm_opts, "N", "Iterate the normalization up to N many times (default: 10).", {'I', "max-iterations"});
+    args::Group process_info_opts(parser, "[ Processing Information ]");
+    args::Flag debug(process_info_opts, "debug", "Print information about the normalization process to stdout.", {'d', "debug"});
+    args::Group program_info_opts(parser, "[ Program Information ]");
+    args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi normalize.", {'h', "help"});
 
     try {
         parser.ParseCLI(argc, argv);

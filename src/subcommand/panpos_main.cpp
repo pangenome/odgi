@@ -16,11 +16,13 @@ namespace odgi {
         argv[0] = (char*)prog_name.c_str();
         --argc;
 
-        args::ArgumentParser parser("get the pangenome position of a given path and nucleotide position (1-based)");
-        args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-        args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the path index from this file", {'i', "idx"});
-        args::ValueFlag<std::string> path_name(parser, "STRING", "get the pangenome position of this path", {'p', "path"});
-        args::ValueFlag<uint64_t> nuc_pos(parser, "N", "get the pangenome position of this nucleotide position", {'n', "nuc-pos"});
+        args::ArgumentParser parser("Get the pangenome position of a given path and nucleotide position (1-based).");
+        args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+        args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph index in xp format from this *FILE*. The file name usually ends with *.xp*.", {'i', "idx"});
+        args::ValueFlag<std::string> path_name(mandatory_opts, "STRING", "The path name of the query.", {'p', "path"});
+        args::ValueFlag<uint64_t> nuc_pos(mandatory_opts, "N", "The nucleotide position of the query.", {'n', "nuc-pos"});
+        args::Group program_info_opts(parser, "[ Program Information ]");
+        args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi panpos.", {'h', "help"});
 
         try {
             parser.ParseCLI(argc, argv);

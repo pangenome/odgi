@@ -4,7 +4,7 @@
 odgi overlap
 #########
 
-find the paths touched by the input paths
+Find the paths touched by given input paths.
 
 SYNOPSIS
 ========
@@ -19,11 +19,11 @@ The odgi overlap command finds the paths touched by the input paths.
 OPTIONS
 =======
 
-Graph Files IO
+MANDATORY OPTIONS
 --------------
 
 | **-i, --input**\ =\ *FILE*
-| Perform the search in this graph.
+| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.
 
 Overlap Options
 ---------------
@@ -46,7 +46,7 @@ Threading
 ---------
 
 | **-t, --threads**\ =\ *N*
-| Number of threads to use.
+| Number of threads to use for parallel operations..
 
 Program Information
 -------------------
