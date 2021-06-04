@@ -4,7 +4,7 @@
 odgi degree
 #########
 
-describe the graph in terms of node degree
+Describe the graph in terms of node degree.
 
 SYNOPSIS
 ========
@@ -22,12 +22,11 @@ a BED file.
 OPTIONS
 =======
 
-Graph Files IO
+MANDATORY OPTIONS
 --------------
 
 | **-i, --idx**\ =\ *FILE*
-| Describe node degree in this graph. The file name usually ends with
-  *.og*.
+| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.
 
 Summary Options
 ---------------
@@ -46,7 +45,7 @@ Threading
 ---------
 
 | **-t, --threads**\ =\ *N*
-| Number of threads to use.
+| Number of threads to use for parallel operations.
 
 Program Information
 -------------------

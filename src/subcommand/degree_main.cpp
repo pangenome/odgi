@@ -20,23 +20,23 @@ int main_degree(int argc, char** argv) {
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
-    args::ArgumentParser parser("describe the graph in terms of node degree");
-    args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-    args::ValueFlag<std::string> og_file(parser, "FILE", "describe node degree in this graph", {'i', "input"});
-    args::Flag _summarize(parser, "summarize", "summarize the degree with aggregate statistics", {'S', "summarize"});
-
-
-    args::ValueFlag<std::string> _windows_in(parser, "LEN:MIN:MAX",
-                                             "print to stdout a BED file of path intervals where the degree is between MIN and MAX, "
-                                             "merging regions not separated by more than LEN bp",
+    args::ArgumentParser parser("Describe the graph in terms of node degree.");
+    args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+    args::ValueFlag<std::string> og_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "input"});
+    args::Group summary_opts(parser, "[ Summary Options ]");
+    args::Flag _summarize(summary_opts, "summarize", "Summarize the graph properties and dimensions. Print to stdout the node.id and the node.degree.", {'S', "summarize"});
+    args::ValueFlag<std::string> _windows_in(summary_opts, "LEN:MIN:MAX",
+                                             "Print to stdout a BED file of path intervals where the degree is between MIN and MAX, "
+                                             "merging regions not separated by more than LEN bp.",
                                              {'w', "windows-in"});
-    args::ValueFlag<std::string> _windows_out(parser, "LEN:MIN:MAX",
-                                              "print to stdout a BED file of path intervals where the degree is outside of MIN and MAX, "
-                                              "merging regions not separated by more than LEN bp",
+    args::ValueFlag<std::string> _windows_out(summary_opts, "LEN:MIN:MAX",
+                                              "Print to stdout a BED file of path intervals where the degree is outside of MIN and MAX, "
+                                              "merging regions not separated by more than LEN bp.",
                                               {'W', "windows-out"});
-
-    args::ValueFlag<uint64_t> _num_threads(parser, "N", "number of threads to use", {'t', "threads"});
-
+    args::Group threading_opts(parser, "[ Threading ]");
+    args::ValueFlag<uint64_t> _num_threads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
+    args::Group program_info_opts(parser, "[ Program Information ]");
+    args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi degree.", {'h', "help"});
     try {
         parser.ParseCLI(argc, argv);
     } catch (args::Help) {

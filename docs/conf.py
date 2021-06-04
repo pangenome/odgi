@@ -20,13 +20,13 @@ sys.path.insert(0, os.path.abspath('../lib/'))
 # -- Project information -----------------------------------------------------
 
 project = u'odgi'
-copyright = '2021, Erik Garrison. Revision v0.5.1-a344ddd'
+copyright = '2021, Erik Garrison. Revision v0.5.1-682a15d'
 author = u'Andrea Guarracino, Simon Heumos, ... , Pjotr Prins, Erik Garrison'
 
 # The short X.Y version
 version = 'v0.5.1'
 # The full version, including alpha/beta/rc tags
-release = 'a344ddd'
+release = '682a15d'
 
 
 # -- General configuration ---------------------------------------------------
@@ -153,13 +153,15 @@ man_pages = [
      [EG, AG], 1),
     ('man/odgi_cover', 'odgi_cover', u'Cover the graph with paths.',
      [AG], 1),
-    ('man/odgi_degree', 'odgi_degree', u'describe the graph in terms of node degree',
+    ('man/odgi_degree', 'odgi_degree', u'Describe the graph in terms of node degree.',
      [EG], 1),
-    ('man/odgi_depth', 'odgi_depth', u'find the depth of graph as defined by query criteria',
+    ('man/odgi_depth', 'odgi_depth', u'Find the depth of a graph as defined by query criteria. Without specifying any '
+                                     u'non-mandatory options, it prints in a tab-delimited format path, start, end, '
+                                     u'and mean.depth to stdout.',
      [AG], 1),
-    ('man/odgi_draw', 'odgi_draw', u'variation graph visualizations in 2D',
+    ('man/odgi_draw', 'odgi_draw', u'Draw previously-determined 2D layouts of the graph with diverse annotations.',
      [EG], 1),
-    ('man/odgi_explode', 'odgi_explode', u'breaks a graph into connected components in their own',
+    ('man/odgi_explode', 'odgi_explode', u'Breaks a graph into connected components storing each component in its own file.',
      [AG], 1),
     ('man/odgi_extract', 'odgi_extract', u'extract parts of the graph as defined by query criteria',
      [AG], 1),

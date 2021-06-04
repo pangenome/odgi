@@ -4,7 +4,7 @@
 odgi draw
 #########
 
-variation graph visualizations in 2D
+Draw previously-determined 2D layouts of the graph with diverse annotations.
 
 SYNOPSIS
 ========
@@ -21,23 +21,29 @@ graph with diverse annotations.
 OPTIONS
 =======
 
+MANDATORY OPTIONS
+-----------------
+
+| **-i, --idx**\ =\ *FILE*
+| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.
+
+| **-c, --coords-in**\ =\ *FILE*
+| Read the layout coordinates from this .lay format *FILE* produced by :ref:`odgi layout`.
+
 Files IO
 --------
 
-| **-i, --idx**\ =\ *FILE*
-| Load the graph from this file. The file name usually ends with *.og*.
-
-| **-c, --coords-in**\ =\ *FILE*
-| Read the layout coordinates from this .lay format file produced by :ref:`odgi layout`.
-
 | **-T, --tsv**\ =\ *FILE*
-| Write the TSV layout plus displayed annotations to this file.
+| Write the TSV layout plus displayed annotations to this *FILE*.
 
 | **-s, --svg**\ =\ *FILE*
-| Write an SVG rendering to this file.
+| Write an SVG rendering to this *FILE*.
 
 | **-p, --png**\ =\ *FILE*
-| Write a rasterized PNG rendering to this file.
+| Write a rasterized PNG rendering to this *FILE*.
+
+| **-X, --path-index**\ =\ *FILE*
+| Load the path index from this *FILE*.
 
 Visualization Options
 ---------------------
@@ -61,11 +67,8 @@ Visualization Options
 | Line width (in approximate bp) (default 0.0).
 
 | **-S, --path-line-spacing**\ =\ *N*
-| Spacing between path lines in png layout (in approximate bp) (default
+| Spacing between path lines in PNG layout (in approximate bp) (default
   0.0).
-
-| **-X, --path-index**\ =\ *FILE*
-| Load the path index from this file.
 
 Program Information
 -------------------

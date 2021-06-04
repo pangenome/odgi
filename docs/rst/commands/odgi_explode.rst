@@ -4,8 +4,7 @@
 odgi explode
 #########
 
-breaks a graph into connected components in their own
-files
+Breaks a graph into connected components storing each component in its own file.
 
 SYNOPSIS
 ========
@@ -22,18 +21,17 @@ writing each component in its own file.
 OPTIONS
 =======
 
-Graph Files IO
+MANDATORY OPTIONS
 --------------
 
 | **-i, --idx**\ =\ *FILE*
-| File containing the succinct variation graph to break in its
-  components. The file name usually ends with *.og*.
+| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.
 
 Explode Options
 ---------------
 
 | **-p, --prefix**\ =\ *STRING*
-| Write each connected component in a file with the given prefix. The
+| Write each connected component in a file with the given *STRING* prefix. The
   file for the component ``i`` will be named ``STRING.i.og`` (default:
   ``component.i.og``).
 
@@ -43,14 +41,10 @@ Explode Options
 
 | **-s, --sorting-criteria**\ =\ *C*
 | Specify how to sort the connected components by size:
-
--  p) path mass (total number of path bases) (default)
-
--  l) graph length (number of node bases)
-
--  n) number of nodes
-
--  P) longest path
+| p) Path mass (total number of path bases) (default).
+| l) Graph length (number of node bases).
+| n) Number of nodes.
+| P) Longest path.
 
 | **-O, --optimize**
 | Compact the node ID space in each connected component.
