@@ -4,7 +4,7 @@
 odgi build
 #########
 
-construct a dynamic succinct variation graph
+Construct a dynamic succinct variation graph in ODGI format from a GFAv1
 
 SYNOPSIS
 ========
@@ -26,12 +26,15 @@ Graph Files IO
 --------------
 
 | **-g, --gfa**\ =\ *FILE*
-| GFAv1 file containing the nodes, edges and paths to build a dynamic
+| GFAv1 *FILE* containing the nodes, edges and paths to build a dynamic
   succinct variation graph from.
 
 | **-o, --out**\ =\ *FILE*
-| Write the dynamic succinct variation graph to this file. A file ending
+| Write the dynamic succinct variation graph to this *FILE*. A file ending
   with *.og* is recommended.
+
+| **-G, --to-gfa**
+| Write the graph to stdout in GFAv1 format.
 
 Graph Sorting
 -------------
@@ -46,7 +49,7 @@ Threading
 ---------
 
 | **-t, --threads**\ =\ *N*
-| Number of threads to use for the parallel operations.
+| Number of threads to use for parallel operations.
 
 Processing Information
 ----------------------
