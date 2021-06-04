@@ -2,8 +2,8 @@
 #define DG_SUBCOMMAND_SUBCOMMAND_HPP_INCLUDED
 
 /** \file
- * subcommand.hpp: defines a system for registering subcommands of the vg
- * command (vg construct, vg view, etc.) at compile time. Replaces the system of
+ * subcommand.hpp: defines a system for registering subcommands of the odgi
+ * command (odgi build, odgi viz, etc.) at compile time. Replaces the system of
  * defining two functions and a giant run of if statements in main.cpp.
  *
  * main.cpp does *not* need to include any subcommand headers!
@@ -12,9 +12,9 @@
  * units, which have to be explicitly linked into the binary (they won't be
  * pulled out of a library if nothing references their symbols).
  *
- * Subcommands are responsible for printing their own help; we can do "vg help"
+ * Subcommands are responsible for printing their own help; we can do "odgi help"
  * and print all the subcommands that exist (via a help subcommand), but we
- * can't do "vg help subcommand" and have that be equivalent to "vg subcommand
+ * can't do "odgi help subcommand" and have that be equivalent to "odgi subcommand
  * --help" (because the help subcommand doesn't know how to get help info on the
  * others).
  *
@@ -29,8 +29,7 @@
  * "subcommand" directory:
  * 
  *     #include "subcommand.hpp"
- *     using namespace vg::subcommand;
- * 
+ *
  *     int main_frobnicate(int argc, char** argv) {
  *         return 0;
  *     }
@@ -149,8 +148,8 @@ private:
      * Since we can't rely on a static member field being constructed before any
      * static code that creates actual subcommands gets run, we rely on keeping
      * the registry in a static variable inside a static method, so it gets
-     * constructed on first use. Note that at shutdown some of the poinbters in
-     * the registry may be to already-destructed static objects.
+     * constructed on first use. Note that at shutdown some of the pointers in
+     * the registry may point to already destructed static objects.
      */
     static std::map<std::string, Subcommand*>& get_registry();
     

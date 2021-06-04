@@ -21,17 +21,22 @@ int main_build(int argc, char** argv) {
     --argc;
     
     args::ArgumentParser parser("Construct a dynamic succinct variation graph in ODGI format from a GFAv1.");
-    args::HelpFlag help(parser, "help", "Display this help summary.", {'h', "help"});
-    args::ValueFlag<std::string> gfa_file(parser, "FILE", "GFAv1 FILE containing the nodes, edges and "
+    args::Group graph_files_io(parser, "[ Graph Files IO ]");
+    args::ValueFlag<std::string> gfa_file(graph_files_io, "FILE", "GFAv1 FILE containing the nodes, edges and "
                                                           "paths to build a dynamic succinct variation graph from.", {'g', "gfa"});
-    args::ValueFlag<std::string> dg_out_file(parser, "FILE", "Write the dynamic succinct variation graph to this file. A file ending with *.og* is recommended.", {'o', "out"});
-    args::Flag to_gfa(parser, "to_gfa", "Write the graph to stdout in GFAv1 format.", {'G', "to-gfa"});
-    args::Flag toposort(parser, "sort", "Apply a general topological sort to the graph and order the node ids"
+    args::ValueFlag<std::string> dg_out_file(graph_files_io, "FILE", "Write the dynamic succinct variation graph to this file. A file ending with *.og* is recommended.", {'o', "out"});
+    args::Flag to_gfa(graph_files_io, "to_gfa", "Write the graph to stdout in GFAv1 format.", {'G', "to-gfa"});
+    args::Group graph_sorting(parser, "[ Graph Sorting ]");
+    args::Flag toposort(graph_sorting, "sort", "Apply a general topological sort to the graph and order the node ids"
                                         "  accordingly. A bidirected adaptation of Kahn’s topological sort (1962)"
                                         "  is used, which can handle components with no heads or tails. Here, both heads and tails are taken into account.", {'s', "sort"});
-    args::ValueFlag<uint64_t> nthreads(parser, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
-    args::Flag debug(parser, "debug", "enable debugging", {'d', "debug"});
-    args::Flag progress(parser, "progress", "show progress updates", {'P', "progress"});
+    args::Group threading(parser, "[ Threading ]");
+    args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
+    args::Group program_information(parser, "[ Program Information ]");
+    args::Flag progress(program_information, "progress", "show progress updates", {'P', "progress"});
+    args::HelpFlag help(program_information, "help", "Display this help summary.", {'h', "help"});
+    args::Group processing_information(parser, "[ Processing Information ]");
+    args::Flag debug(processing_information, "debug", "enable debugging", {'d', "debug"});
     try {
         parser.ParseCLI(argc, argv);
     } catch (args::Help) {
