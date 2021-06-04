@@ -25,69 +25,58 @@ int main_layout(int argc, char **argv) {
     --argc;
 
     args::ArgumentParser parser(
-        "establish 2D layouts of the graph using path-guided stochastic gradient descent (the graph must be sorted and id-compacted)");
-    args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-    args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-    args::ValueFlag<std::string> layout_out_file(parser, "FILE", "write the layout coordinates to this file in .lay binary format", {'o', "out"});
-    args::ValueFlag<std::string> tsv_out_file(parser, "FILE", "write the TSV layout to this file", {'T', "tsv"});
-    args::ValueFlag<std::string> svg_out_file(parser, "FILE", "write an SVG rendering to this file", {'s', "svg"});
-    args::ValueFlag<std::string> png_out_file(parser, "FILE", "write a rasterized PNG rendering to this file", {'p', "png"});
-    args::ValueFlag<uint64_t> png_height(parser, "FILE", "height of PNG rendering (default: 1000)", {'H', "png-height"});
-    args::ValueFlag<uint64_t> png_border(parser, "FILE", "size of PNG border in bp (default: 10)", {'E', "png-border"});
-    args::Flag color_paths(parser, "color-paths", "color paths (in PNG output)", {'C', "color-paths"});
-    args::ValueFlag<double> render_scale(parser, "N", "image scaling (default 1.0)", {'R', "scale"});
-    args::ValueFlag<double> render_border(parser, "N", "image border (in approximate bp) (default 100.0)", {'B', "border"});
-    args::ValueFlag<std::string> xp_in_file(parser, "FILE", "load the path index from this file", {'X', "path-index"});
+        "Establish 2D layouts of the graph using path-guided stochastic gradient descent (the graph must be sorted and id-compacted).");
+    args::HelpFlag help(parser, "help", "Display this help summary.", {'h', "help"});
+    args::ValueFlag<std::string> dg_in_file(parser, "FILE", "File containing the succinct variation graph to layout. The FILE name usually ends with *.og*.", {'i', "idx"});
+    args::ValueFlag<std::string> layout_out_file(parser, "FILE", "Write the layout coordinates to this FILE in .lay binary format.", {'o', "out"});
+    args::ValueFlag<std::string> tsv_out_file(parser, "FILE", "Write the layout in TSV format to this FILE.", {'T', "tsv"});
+    args::ValueFlag<std::string> xp_in_file(parser, "FILE", "Load the path index from this FILE so that it does not have to be created for the layout calculation.", {'X', "path-index"});
     /// Path-guided-2D-SGD parameters
     args::ValueFlag<std::string> p_sgd_in_file(parser, "FILE",
-                                               "specify a line separated list of paths to sample from for the on the fly term generation process in the path guided linear 1D SGD default: sample from all paths)",
+                                               "Specify a line separated list of paths to sample from for the on the fly term generation process in the path guided 2D SGD (default: sample from all paths).",
                                                {'f', "path-sgd-use-paths"});
-    args::ValueFlag<char> p_sgd_layout_initialization(parser, "C", "specify the layout initialization mode: d) node rank in X and gaussian noise in Y (default)\nr) uniform noise in X and Y in the order of the graph length\nu) node rank in X and uniform noise in Y\ng) gaussian noise in X and Y\nh) hilbert curve in X and Y", {'N', "layout-initialization"});
+    args::ValueFlag<char> p_sgd_layout_initialization(parser, "C", "Specify the layout initialization mode:\nd) Node rank in X and gaussian noise in Y (default).\nr) Uniform noise in X and Y in the order of the graph length.\nu) Node rank in X and uniform noise in Y.\ng) Gaussian noise in X and Y.\nh) Hilbert curve in X and Y.", {'N', "layout-initialization"});
     args::ValueFlag<double> p_sgd_min_term_updates_paths(parser, "N",
-                                                         "minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of total path length (default: 10)",
+                                                         "Minimum number of terms N to be updated before a new path guided 2D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of total path length (default: 10).",
                                                          {'G', "path-sgd-min-term-updates-paths"});
     args::ValueFlag<double> p_sgd_min_term_updates_num_nodes(parser, "N",
-                                                             "minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of the number of nodes (default: argument is not set, the default of -G=[N], path-sgd-min-term-updates-paths=[N] is used)",
+                                                             "Minimum number of terms N to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of the number of nodes (default: argument is not set, the default of -G=[N], path-sgd-min-term-updates-paths=[N] is used).",
                                                              {'U', "path-sgd-min-term-updates-nodes"});
     args::ValueFlag<double> p_sgd_delta(parser, "N",
-                                        "threshold of maximum displacement approximately in bp at which to stop path guided linear 1D SGD (default: 0)",
+                                        "The threshold of the maximum displacement approximately in bp at which to stop path guided 2D SGD (default: 0).",
                                         {'j', "path-sgd-delta"});
     args::ValueFlag<double> p_sgd_eps(parser, "N",
-                                      "final learning rate for path guided linear 1D SGD model (default: 0.01)",
-                                      {'g', "path-sgd-eps"});
+                                      "The final learning rate for path guided 2D SGD model (default: 0.01).",
+                                      {'g', "path-sgd-eta"});
     args::ValueFlag<double> p_sgd_eta_max(parser, "N",
-                                          "first and maximum learning rate for path guided linear 1D SGD model (default: squared longest path length)",
+                                          "The first and maximum learning rate N for path guided 2D SGD model (default: squared longest path length).",
                                           {'v', "path-sgd-eta-max"});
     args::ValueFlag<double> p_sgd_zipf_theta(parser, "N",
-                                             "the theta value for the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: 0.99)",
+                                             "The theta value N for the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided 2D SGD model (default: 0.99).",
                                              {'a', "path-sgd-zipf-theta"});
     args::ValueFlag<uint64_t> p_sgd_iter_max(parser, "N",
-                                             "max number of iterations for path guided linear 1D SGD model (default: 30)",
+                                             "The maximum number of iterations N for the path guided 2D SGD model (default: 30).",
                                              {'x', "path-sgd-iter-max"});
     args::ValueFlag<uint64_t> p_sgd_iter_with_max_learning_rate(parser, "N",
-                                                                "iteration where the learning rate is max for path guided linear 1D SGD model (default: 0)",
-                                                                {'F', "iteration-max-learning-rate"});
+                                                                "Specify the iteration N where the learning rate is max for path guided 2D SGD model (default: 0).",
+                                                                {'F', "path-sgd-iteration-max-learning-rate"});
     args::ValueFlag<uint64_t> p_sgd_zipf_space(parser, "N",
-                                               "the maximum space size of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: max path lengths))",
+                                               "The maximum space size N of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided 2D SGD model (default: max path lengths).",
                                                {'k', "path-sgd-zipf-space"});
-    args::ValueFlag<uint64_t> p_sgd_zipf_space_max(parser, "N", "the maximum space size of the Zipfian distribution beyond which quantization occurs (default: 1000)", {'I', "path-sgd-zipf-space-max"});
-    args::ValueFlag<uint64_t> p_sgd_zipf_space_quantization_step(parser, "N", "quantization step when the maximum space size of the Zipfian distribution is exceeded (default: 100)", {'l', "path-sgd-zipf-space-quantization-step"});
-
+    args::ValueFlag<uint64_t> p_sgd_zipf_space_max(parser, "N", "The maximum space size N of the Zipfian distribution beyond which quantization occurs (default: 1000).", {'I', "path-sgd-zipf-space-max"});
+    args::ValueFlag<uint64_t> p_sgd_zipf_space_quantization_step(parser, "N", "The size of the quantization step N when the maximum space size of the Zipfian distribution is exceeded (default: 100).", {'l', "path-sgd-zipf-space-quantization-step"});
+    /*
     args::ValueFlag<std::string> p_sgd_seed(parser, "STRING",
                                             "set the seed for the deterministic 1-threaded path guided linear 1D SGD model (default: pangenomic!)",
                                             {'q', "path-sgd-seed"});
+    */
     args::ValueFlag<std::string> p_sgd_snapshot(parser, "STRING",
-                                                "set the prefix to which each snapshot graph of a path guided 1D SGD iteration should be written to, no default",
+                                                "Set the prefix to which each snapshot layout of a path guided 2D SGD iteration should be written to (default: NONE).",
                                                 {'u', "path-sgd-snapshot"});
-
-    //args::ValueFlag<double> x_pad(parser, "N", "padding between connected component layouts (default 10.0)",
-    //{'p', "x-padding"});
     args::Flag progress(parser, "progress", "display progress of the sort", {'P', "progress"});
     args::ValueFlag<uint64_t> nthreads(parser, "N",
-                                       "number of threads to use for parallel sorters (currently only SGD is supported)",
+                                       "Number of threads to use.",
                                        {'t', "threads"});
-    args::Flag debug(parser, "debug", "print information about the layout", {'d', "debug"});
-
     try {
         parser.ParseCLI(argc, argv);
     } catch (args::Help) {
@@ -105,14 +94,14 @@ int main_layout(int argc, char **argv) {
 
     if (!dg_in_file) {
         std::cerr
-            << "[odgi::layout] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
+            << "[odgi::layout] error: Please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
             << std::endl;
         return 1;
     }
 
-    if (!layout_out_file && !svg_out_file && !png_out_file && !tsv_out_file) {
+    if (!layout_out_file && !tsv_out_file) {
         std::cerr
-            << "[odgi::layout] error: please specify an output file to where to store the layout via -o/--out=[FILE], -p/--png=[FILE], -s/--svg=[FILE], -T/--tsv=[FILE]"
+            << "[odgi::layout] error: Please specify an output file to where to store the layout via -o/--out=[FILE] or -T/--tsv=[FILE]."
             << std::endl;
         return 1;
     }
@@ -132,9 +121,6 @@ int main_layout(int argc, char **argv) {
 
     const uint64_t t_max = !p_sgd_iter_max ? 30 : args::get(p_sgd_iter_max);
     const double eps = !p_sgd_eps ? 0.01 : args::get(p_sgd_eps);
-    //const double x_padding = !x_pad ? 10.0 : args::get(x_pad);
-    const double svg_scale = !render_scale ? 1.0 : args::get(render_scale);
-    const double border_bp = !render_border ? 100.0 : args::get(render_border);
     const double sgd_delta = p_sgd_delta ? args::get(p_sgd_delta) : 0;
     const uint64_t num_threads = nthreads ? args::get(nthreads) : 1;
     const bool show_progress = progress ? args::get(progress) : false;
@@ -159,6 +145,7 @@ int main_layout(int argc, char **argv) {
               return max_path_step_count;
           };
     // default parameters
+    /* We don't do this, yet.
     std::string path_sgd_seed;
     if (p_sgd_seed) {
         if (num_threads > 1) {
@@ -171,6 +158,7 @@ int main_layout(int argc, char **argv) {
     } else {
         path_sgd_seed = "pangenomic!";
     }
+    */
     if (p_sgd_min_term_updates_paths && p_sgd_min_term_updates_num_nodes) {
         std::cerr
             << "[odgi::layout] error: there can only be one argument provided for the minimum number of term updates in the path guided 1D SGD."
@@ -417,20 +405,6 @@ int main_layout(int argc, char **argv) {
                 f.close();
             }
         }
-    }
-
-    if (svg_out_file) {
-        auto& outfile = args::get(svg_out_file);
-        ofstream f(outfile.c_str());
-        algorithms::draw_svg(f, X_final, Y_final, graph, svg_scale, border_bp);
-        f.close();    
-    }
-
-    if (png_out_file) {
-        auto& outfile = args::get(png_out_file);
-        uint64_t _png_height = png_height ? args::get(png_height) : 1000;
-        bool _color_paths = args::get(color_paths);
-        algorithms::draw_png(outfile, X_final, Y_final, graph, 1.0, border_bp, 0, _png_height, 0.0, 1.0, _color_paths);
     }
     
     return 0;

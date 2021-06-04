@@ -195,9 +195,9 @@ parts of the graph as defined by query criteria.
 
 | **odgi layout** [**-i, --idx**\ =\ *FILE*] [**-o, --out**\ =\ *FILE*]
   [*OPTION*]…
-| The odgi layout command computes 2D layouts of the graph using
-  stochastic gradient descent (SGD). The input graph must be sorted and
-  id-compacted. The algorithm itself is described in `Graph Drawing by
+| The odgi layout command computes 2D layouts of the graph using path-guided
+  stochastic gradient descent (PG-SGD). The input graph must be sorted and
+  id-compacted. The basic algorithm itself is described in `Graph Drawing by
   Stochastic Gradient Descent <https://arxiv.org/abs/1710.04626>`__. The
   force-directed graph drawing algorithm minimizes the graph’s energy
   function or stress level. It applies SGD to move a single pair of

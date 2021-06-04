@@ -20,13 +20,13 @@ sys.path.insert(0, os.path.abspath('../lib/'))
 # -- Project information -----------------------------------------------------
 
 project = u'odgi'
-copyright = '2021, Erik Garrison. Revision v0.5.1-bf5e483'
+copyright = '2021, Erik Garrison. Revision v0.5.1-1364965'
 author = u'Andrea Guarracino, Simon Heumos, ... , Pjotr Prins, Erik Garrison'
 
 # The short X.Y version
 version = 'v0.5.1'
 # The full version, including alpha/beta/rc tags
-release = 'bf5e483'
+release = '1364965'
 
 
 # -- General configuration ---------------------------------------------------
@@ -169,7 +169,7 @@ man_pages = [
      [EG, AG], 1),
     ('man/odgi_kmers', 'odgi_kmers', u'show and characterize the kmer space of the graph',
      [EG], 1),
-    ('man/odgi_layout', 'odgi_layout', u'use SGD to make 2D layouts of the graph',
+    ('man/odgi_layout', 'odgi_layout', u'Establish 2D layouts of the graph using path-guided stochastic gradient descent (the graph must be sorted and id-compacted).',
      [EG, AG, SH], 1),
     ('man/odgi_matrix', 'odgi_matrix', u'write the graph topology in sparse matrix formats',
      [EG], 1),
