@@ -17,11 +17,15 @@ int main_matrix(int argc, char** argv) {
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
-    args::ArgumentParser parser("write the graph topology in sparse matrix formats");
-    args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-    args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-    args::Flag weight_by_edge_depth(parser, "edge-depth-weight", "weight edges by their path depth", {'e', "edge-depth-weight"});
-    args::Flag weight_by_edge_delta(parser, "delta-weight", "weight edges by the inverse id delta", {'d', "delta-weight"});
+    args::ArgumentParser parser("Write the graph topology in sparse matrix formats.");
+    args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+    args::Group matrix_opts(parser, "[ Matrix Options ]");
+    args::Flag weight_by_edge_depth(matrix_opts, "edge-depth-weight", "Weigh edges by their path depth.", {'e', "edge-depth-weight"});
+    args::Flag weight_by_edge_delta(matrix_opts, "delta-weight", "Weigh edges by the inverse id delta.", {'d', "delta-weight"});
+    args::Group program_info_opts(parser, "[ Program Information ]");
+    args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi matrix.", {'h', "help"});
+
     try {
         parser.ParseCLI(argc, argv);
     } catch (args::Help) {

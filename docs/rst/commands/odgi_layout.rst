@@ -26,11 +26,14 @@ at a time.
 OPTIONS
 =======
 
-Files IO
+MANDATORY OPTIONS
 --------------
 
 | **-i, --idx**\ =\ *FILE*
-| File containing the succinct variation graph to layout. The file name usually ends with *.og*.
+| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.
+
+Files IO
+-------
 
 | **-o, --out**\ =\ *FILE*
 | Write the layout coordinates to this *FILE* in .lay binary format.
@@ -104,16 +107,19 @@ Threading
 ---------
 
 | **-t, --threads**\ =\ *N*
-| Number of threads to use.
+| Number of threads to use for parallel operations.
+
+Processing Information
+----------------------
+
+| **-P, --progress**
+| Write the current progress to stderr.
 
 Program Information
 -------------------
 
 | **-h, --help**
 | Print a help message for **odgi layout**.
-
-| **-P, --progress**
-| Write the current progress to stderr.
 
 ..
 	EXIT STATUS

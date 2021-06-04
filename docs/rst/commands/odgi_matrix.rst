@@ -4,7 +4,7 @@
 odgi matrix
 #########
 
-write the graph topology in sparse matrix formats
+Write the graph topology in sparse matrix formats.
 
 SYNOPSIS
 ========
@@ -20,12 +20,11 @@ graph topology of a given variation graph.
 OPTIONS
 =======
 
-Graph Files IO
+MANDATORY OPTIONS
 --------------
 
 | **-i, --idx**\ =\ *FILE*
-| File containing the succinct variation graph to create the sparse
-  matrix from. The file name usually ends with *.og*.
+| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.
 
 Matrix Options
 --------------

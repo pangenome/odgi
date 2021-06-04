@@ -18,12 +18,15 @@ int main_flatten(int argc, char** argv) {
     argv[0] = (char*)prog_name.c_str();
     --argc;
 
-    args::ArgumentParser parser("generate linearizations of the graph");
-    args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-    args::ValueFlag<std::string> odgi_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-    args::ValueFlag<std::string> fasta_out_file(parser, "FILE", "write concatenated node sequences in FASTA format to FILE", {'f', "fasta"});
-    args::ValueFlag<std::string> fasta_seq_name(parser, "FILE", "name to use for the concatenated graph sequence (default: input file name)", {'n', "name-seq"});
-    args::ValueFlag<std::string> bed_out_file(parser, "FILE", "write a BED format FILE describing the mapping between graph paths and the linearized FASTA sequence", {'b', "bed"});
+    args::ArgumentParser parser("Generate linearizations of a graph.");
+    args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+    args::ValueFlag<std::string> odgi_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+    args::Group output_opts(parser, "[ Output Options ]");
+    args::ValueFlag<std::string> fasta_out_file(output_opts, "FILE", "Write the concatenated node sequences in FASTA format to FILE.", {'f', "fasta"});
+    args::ValueFlag<std::string> fasta_seq_name(output_opts, "FILE", "The name to use for the concatenated graph sequence (default: input file name which was specified via -i, --idx=[FILE]).", {'n', "name-seq"});
+    args::ValueFlag<std::string> bed_out_file(output_opts, "FILE", "Write the mapping between graph paths and the linearized FASTA sequence in BED format to FILE.", {'b', "bed"});
+    args::Group program_info_opts(parser, "[ Program Information ]");
+    args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi flatten.", {'h', "help"});
 
     try {
         parser.ParseCLI(argc, argv);

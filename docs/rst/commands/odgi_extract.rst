@@ -4,7 +4,7 @@
 odgi extract
 #########
 
-extract parts of the graph as defined by query criteria
+Extract subgraphs or parts of a graph defined by query criteria.
 
 SYNOPSIS
 ========
@@ -15,21 +15,23 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-The odgi extract command extracts parts of the graph as defined by
+The odgi extract command extracts parts of the graph defined by
 query criteria.
 
 OPTIONS
 =======
 
+MANDATORY OPTIONS
+-----------------
+
+| **-i, --idx**\ =\ *FILE*
+| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.
+
 Graph Files IO
 --------------
 
-| **-f, --input-graphs**\ =\ *FILE*
-| File containing the succinct variation graph. The file name usually
-  ends with *.og*.
-
 | **-o, --out**\ =\ *FILE*
-| Store all subgraph in this file. The file name usually ends with
+| Store all subgraphs in this FILE. The file name usually ends with
   *.og*.
 
 Extract Options
@@ -41,7 +43,7 @@ Extract Options
   ``path:start-end.og`` (0-based coordinates).
 
 | **-I, --inverse**
-| Extract parts of the graph that do not meet the query criteria.
+| Extract the parts of the graph that do not meet the query criteria.
 
 | **-l, --node-list**\ =\ *FILE*
 | A file with one node id per line. The node specified will be extracted
@@ -71,11 +73,11 @@ Extract Options
   very complex graphs.
 
 | **-p, --paths-to-extract**\ =\ *FILE*
-| List of paths to consider in the extraction; the file must contain one
+| List of paths to consider in the extraction. The *FILE* must contain one
   path name per line and a subset of all paths can be specified.
 
 | **-R, --lace-paths**\ =\ *FILE*
-| List of paths to fully retain in the extracted graph; must contain one
+| List of paths to fully retain in the extracted graph. Must contain one
   path name per line and a subset of all paths can be specified.
 
 Threading
@@ -88,7 +90,7 @@ Processing Information
 ----------------------
 
 | **-P, --progress**
-| Print information to stderr.
+| Print information about the operations and the progress to stderr.
 
 Program Information
 -------------------

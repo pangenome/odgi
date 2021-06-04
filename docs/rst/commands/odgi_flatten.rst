@@ -4,7 +4,7 @@
 odgi flatten
 #########
 
-generate linearization of the graph
+Generate linearizations of a graph.
 
 SYNOPSIS
 ========
@@ -20,12 +20,11 @@ FASTA and BED.
 OPTIONS
 =======
 
-Graph Files IO
+MANDATORY OPTIONS
 --------------
 
 | **-i, --idx**\ =\ *FILE*
-| File containing the succinct variation graph to flatten. The file name
-  usually ends with *.og*.
+| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.
 
 Output Options
 --------------

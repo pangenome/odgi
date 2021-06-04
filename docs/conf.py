@@ -20,13 +20,13 @@ sys.path.insert(0, os.path.abspath('../lib/'))
 # -- Project information -----------------------------------------------------
 
 project = u'odgi'
-copyright = '2021, Erik Garrison. Revision v0.5.1-682a15d'
+copyright = '2021, Erik Garrison. Revision v0.5.1-a2276ee'
 author = u'Andrea Guarracino, Simon Heumos, ... , Pjotr Prins, Erik Garrison'
 
 # The short X.Y version
 version = 'v0.5.1'
 # The full version, including alpha/beta/rc tags
-release = '682a15d'
+release = 'a2276ee'
 
 
 # -- General configuration ---------------------------------------------------
@@ -163,17 +163,17 @@ man_pages = [
      [EG], 1),
     ('man/odgi_explode', 'odgi_explode', u'Breaks a graph into connected components storing each component in its own file.',
      [AG], 1),
-    ('man/odgi_extract', 'odgi_extract', u'extract parts of the graph as defined by query criteria',
+    ('man/odgi_extract', 'odgi_extract', u'Extract subgraphs or parts of a graph defined by query criteria.',
      [AG], 1),
-    ('man/odgi_flatten', 'odgi_flatten', u'generate linearization of the graph',
+    ('man/odgi_flatten', 'odgi_flatten', u'Generate linearizations of a graph.',
      [EG], 1),
-    ('man/odgi_groom', 'odgi_groom', u'resolve spurious inverting links',
+    ('man/odgi_groom', 'odgi_groom', u'Resolve spurious inverting links.',
      [EG, AG], 1),
-    ('man/odgi_kmers', 'odgi_kmers', u'show and characterize the kmer space of the graph',
+    ('man/odgi_kmers', 'odgi_kmers', u'Display and characterize the kmer space of a graph.',
      [EG], 1),
     ('man/odgi_layout', 'odgi_layout', u'Establish 2D layouts of the graph using path-guided stochastic gradient descent (the graph must be sorted and id-compacted).',
      [EG, AG, SH], 1),
-    ('man/odgi_matrix', 'odgi_matrix', u'write the graph topology in sparse matrix formats',
+    ('man/odgi_matrix', 'odgi_matrix', u'Write the graph topology in sparse matrix formats.',
      [EG], 1),
     ('man/odgi_normalize', 'odgi_normalize', u'compact unitigs and simplify redundant furcations',
      [EG], 1),

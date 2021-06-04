@@ -24,59 +24,56 @@ namespace odgi {
         argv[0] = (char *) prog_name.c_str();
         --argc;
 
-        args::ArgumentParser parser("extract parts of the graph as defined by query criteria");
-        args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-
-        args::ValueFlag<std::string> og_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-        args::ValueFlag<std::string> og_out_file(parser, "FILE", "store the graph self index in this file",
+        args::ArgumentParser parser("Extract subgraphs or parts of a graph defined by query criteria.");
+        args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+        args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+        args::Group graph_files_io_opts(parser, "[ Graph Files IO ]");
+        args::ValueFlag<std::string> og_out_file(graph_files_io_opts, "FILE", "Store all subgraphs in this FILE. The file name usually ends with *.og*.",
                                                  {'o', "out"});
-        args::Flag _split_subgraphs(parser, "split_subgraphs",
-                                    "instead of writing the target subgraphs into a single graph, "
-                                    "write one subgraph per given target to a separate file named path:start-end.og  "
-                                    "(0-based coordinates)", {'s', "split-subgraphs"});
-
-        args::Flag _inverse(parser, "inverse",
-                               "extract parts of the graph that do not meet the query criteria",
+        args::Group extract_opts(parser, "[ Extract Options ]");
+        args::Flag _split_subgraphs(extract_opts, "split_subgraphs",
+                                    "Instead of writing the target subgraphs into a single graph, "
+                                    "write one subgraph per given target to a separate file named path:start-end.og "
+                                    "(0-based coordinates).", {'s', "split-subgraphs"});
+        args::Flag _inverse(extract_opts, "inverse",
+                               "Extract the parts of the graph that do not meet the query criteria.",
                                {'I', "inverse"});
-
-        args::ValueFlag<uint64_t> _target_node(parser, "ID", "a single node from which to begin our traversal",
+        args::ValueFlag<uint64_t> _target_node(extract_opts, "ID", "A single node ID from which to begin our traversal.",
                                                {'n', "node"});
-        args::ValueFlag<std::string> _node_list(parser, "FILE", "a file with one node id per line", {'l', "node-list"});
-
-        args::ValueFlag<uint64_t> _context_size(parser, "N",
-                                                "the number of steps away from our initial subgraph that we should collect",
+        args::ValueFlag<std::string> _node_list(extract_opts, "FILE", "A file with one node id per line. The node specified will be extracted from the input graph.", {'l', "node-list"});
+        args::ValueFlag<uint64_t> _context_size(extract_opts, "N",
+                                                "The number of steps away from our initial subgraph that we should collect.",
                                                 {'c', "context"});
-        args::Flag _use_length(parser, "use_length",
-                               "treat the context size as a length in bases (and not as a number of steps)",
+        args::Flag _use_length(extract_opts, "use_length",
+                               "Treat the context size as a length in bases (and not as a number of steps).",
                                {'L', "use-length"});
-
-        args::ValueFlag<std::string> _path_range(parser, "STRING",
-                                                 "find the node(s) in the specified path range TARGET=path[:pos1[-pos2]] "
-                                                 "(0-based coordinates)", {'r', "path-range"});
-        args::ValueFlag<std::string> _path_bed_file(parser, "FILE",
-                                                    "find the node(s) in the path range(s) specified in the given BED FILE",
+        args::ValueFlag<std::string> _path_range(extract_opts, "STRING",
+                                                 "Find the node(s) in the specified path range TARGET=path[:pos1[-pos2]] "
+                                                 "(0-based coordinates).", {'r', "path-range"});
+        args::ValueFlag<std::string> _path_bed_file(extract_opts, "FILE",
+                                                    "Find the node(s) in the path range(s) specified in the given BED FILE.",
                                                     {'b', "bed-file"});
-        args::Flag _full_range(parser, "use_length",
-                               "collects all nodes in the sorted order of the graph in the min and max position touched by the given path ranges. "
-                               "Be careful to use it with very complex graphs",
+        args::Flag _full_range(extract_opts, "use_length",
+                               "Collects all nodes in the sorted order of the graph in the min and max positions touched by the given path ranges. "
+                               "Be careful to use it with very complex graphs.",
                                {'E', "full-range"});
-
-        args::ValueFlag<std::string> _path_names_file(parser, "FILE",
-                                                      "list of paths to consider in the extraction; the file must "
+        args::ValueFlag<std::string> _path_names_file(extract_opts, "FILE",
+                                                      "List of paths to consider in the extraction. The FILE must "
                                                       "contain one path name per line and a subset of all paths can be specified.",
                                                       {'p', "paths-to-extract"});
-
-        args::ValueFlag<std::string> _lace_paths_file(parser, "FILE",
-                                                       "list of paths to fully retain in the extracted graph; must "
+        args::ValueFlag<std::string> _lace_paths_file(extract_opts, "FILE",
+                                                       "List of paths to fully retain in the extracted graph. Must "
                                                        "contain one path name per line and a subset of all paths can be specified.",
                                                       {'R', "lace-paths"});
-
-        args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use (to embed the subpaths in parallel)",
+        args::Group threading_opts(parser, "[ Threading ]");
+        args::ValueFlag<uint64_t> nthreads(threading_opts, "N", "Number of threads to use for parallel operations.",
                                            {'t', "threads"});
-
-        args::Flag _show_progress(parser, "progress",
-                                  "print information about the operations and the progress to stderr",
+        args::Group processing_info_opts(parser, "[ Processing Information ]");
+        args::Flag _show_progress(processing_info_opts, "progress",
+                                  "pPint information about the operations and the progress to stderr.",
                                   {'P', "progress"});
+        args::Group program_info_opts(parser, "[ Program Information ]");
+        args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi extract.", {'h', "help"});
 
         try {
             parser.ParseCLI(argc, argv);

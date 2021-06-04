@@ -18,12 +18,16 @@ int main_groom(int argc, char** argv) {
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
-    args::ArgumentParser parser("resolve spurious inverting links");
-    args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-    args::ValueFlag<std::string> og_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-    args::ValueFlag<std::string> og_out_file(parser, "FILE", "store the graph self index in this file", {'o', "out"});
-    args::Flag use_dfs(parser, "use-dfs", "use depthh-first search for groom", {'d', "use-dfs"});
-    args::Flag progress(parser, "progress", "display progress of the grooming to stderr", {'P', "progress"});
+    args::ArgumentParser parser("Resolve spurious inverting links.");
+    args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+    args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+    args::ValueFlag<std::string> og_out_file(mandatory_opts, "FILE", "Write the groomed succinct variation graph in ODGI format to *FILE*. A file ending with *.og* is recommended.", {'o', "out"});
+    args::Group grooming_opts(parser, "[ Grooming Options ]");
+    args::Flag use_dfs(grooming_opts, "use-dfs", "Use depth-first search for grooming.", {'d', "use-dfs"});
+    args::Group processing_info_opts(parser, "[ Processing Information ]");
+    args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
+    args::Group program_info_opts(parser, "[ Program Information ]");
+    args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi groom.", {'h', "help"});
 
     try {
         parser.ParseCLI(argc, argv);

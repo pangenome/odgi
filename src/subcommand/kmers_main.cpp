@@ -23,14 +23,18 @@ int main_kmers(int argc, char** argv) {
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
-    args::ArgumentParser parser("show and characterize the kmer space of the graph");
-    args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-    args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-    args::ValueFlag<uint64_t> kmer_length(parser, "K", "the length of the kmers to generate", {'k', "kmer-length"});
-    args::ValueFlag<uint64_t> max_furcations(parser, "N", "break at edges that would be induce this many furcations in a kmer", {'e', "max-furcations"});
-    args::ValueFlag<uint64_t> max_degree(parser, "N", "remove nodes that have degree greater that this level", {'D', "max-degree"});
-    args::ValueFlag<int> threads(parser, "N", "number of threads to use", {'t', "threads"});
-    args::Flag kmers_stdout(parser, "", "write the kmers to stdout", {'c', "stdout"});
+    args::ArgumentParser parser("Display and characterize the kmer space of a graph.");
+    args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+    args::ValueFlag<uint64_t> kmer_length(mandatory_opts, "K", "The kmer length to generate kmers from.", {'k', "kmer-length"});
+    args::Group kmer_opts(parser, "[ Kmer Options ]");
+    args::ValueFlag<uint64_t> max_furcations(kmer_opts, "N", "Break at edges that would be induce this many furcations in a kmer.", {'e', "max-furcations"});
+    args::ValueFlag<uint64_t> max_degree(kmer_opts, "N", "Don't take nodes into account that have a degree greater than N.", {'D', "max-degree"});
+    args::Group threading_opts(parser, "[ Threading ]");
+    args::ValueFlag<int> threads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
+    args::Flag kmers_stdout(kmer_opts, "", "Write the kmers to stdout. Kmers are line-separated.", {'c', "stdout"});
+    args::Group program_info_opts(parser, "[ Program Information ]");
+    args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi kmers.", {'h', "help"});
 
     try {
         parser.ParseCLI(argc, argv);

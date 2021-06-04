@@ -4,7 +4,7 @@
 odgi kmers
 #########
 
-show and characterize the kmer space of the graph
+Display and characterize the kmer space of a graph.
 
 SYNOPSIS
 ========
@@ -21,21 +21,20 @@ edges or by not considering nodes above a given node degree limit.
 OPTIONS
 =======
 
-Graph Files IO
+MANDATORY ARGUMENTS
 --------------
 
 | **-i, --idx**\ =\ *FILE*
-| File containing the succinct variation graph to convert from. The file
-  name usually ends with *.og*.
+| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.
 
-| **-c, --stdout**\ =
-| Write the kmers to standard output. Kmers are line-separated.
+| **-k, --kmer-length**\ =\ *N*
+| The kmer length to generate kmers from.
 
 Kmer Options
 ------------
 
-| **-k, --kmer-length**\ =\ *N*
-| The kmer length to generate kmers from.
+| **-c, --stdout**
+| Write the kmers to standard output. Kmers are line-separated.
 
 | **-e, --max-furcations**\ =\ *N*
 | Break at edges that would induce this many furcations when generating
@@ -48,7 +47,7 @@ Threading
 ---------
 
 | **-t, --threads**\ =\ *N*
-| Number of threads to use.
+| Number of threads to use for parallel operations.
 
 Program Information
 -------------------
