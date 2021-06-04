@@ -18,16 +18,20 @@ namespace odgi {
         argv[0] = (char *) prog_name.c_str();
         --argc;
 
-        args::ArgumentParser parser("divide nodes into smaller pieces");
-        args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-        args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-        args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store the graph self index in this file",
+        args::ArgumentParser parser("Divide nodes into smaller pieces.");
+        args::Group mandatory_opts(parser, "[ MANDATORY ARGUMENTS ]");
+        args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+        args::ValueFlag<std::string> dg_out_file(mandatory_opts, "FILE", "Write the chopped succinct variation graph in ODGI format to *FILE*. A file ending of *.og* is recommended.",
                                                  {'o', "out"});
-        args::ValueFlag<uint64_t> chop_to(parser, "N", "divide nodes to be shorter than this length", {'c', "chop-to"});
-        args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel operations",
+        args::ValueFlag<uint64_t> chop_to(mandatory_opts, "N", "Divide nodes that are longer than *N* base pairs into nodes no longer than *N* while"
+                                                               " maintaining graph topology.", {'c', "chop-to"});
+        args::Group threading_opts(parser, "[ Threading ]");
+        args::ValueFlag<uint64_t> nthreads(threading_opts, "N", "Number of threads to use for parallel operations.",
                                            {'t', "threads"});
-        args::Flag debug(parser, "debug", "print information about the process to stderr.", {'d', "debug"});
-
+        args::Group processing_info_opts(parser, "[ Processing Information ]");
+        args::Flag debug(processing_info_opts, "debug", "Print information about the process to stderr.", {'d', "debug"});
+        args::Group program_info_opts(parser, "[ Program Information ]");
+        args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi chop.", {'h', "help"});
         try {
             parser.ParseCLI(argc, argv);
         } catch (args::Help) {

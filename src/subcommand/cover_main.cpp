@@ -17,18 +17,23 @@ namespace odgi {
         argv[0] = (char *) prog_name.c_str();
         --argc;
 
-        args::ArgumentParser parser("find a path cover of the graph");
-        args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-        args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-        args::ValueFlag<std::string> dg_out_file(parser, "FILE","store the graph with the generated paths in this file", {'o', "out"});
-        args::ValueFlag<double> hogwild_depth(parser, "DEPTH", "randomly cover the graph until it has reaches the given average DEPTH, specifying this option overwrites all other cover options except -I, --ignore-paths!",{'H', "hogwild-depth"});
-        args::ValueFlag<uint64_t> num_paths_per_component(parser, "N", "number of paths to generate per component",{'n', "num-paths-per-component"});
-        args::ValueFlag<uint64_t> node_window_size(parser, "N","size of the node window to check each time a new path is extended (it has to be greater than or equal to 2)",{'k', "node-window-size"});
-        args::ValueFlag<uint64_t> min_node_depth(parser, "N","minimum node depth to reach (it has to be greater than 0)",{'c', "min-node-depth"});
-        args::Flag ignore_paths(parser, "ignore-paths", "ignore the paths already embedded in the graph during the node depth initialization",{'I', "ignore-paths"});
-        args::ValueFlag<std::string> write_node_depth(parser, "FILE","write the node depth at the end of the paths generation in this file",{'w', "write-node-depth"});
-        args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for the parallel sorter", {'t', "threads"});
-        args::Flag debug(parser, "progress", "print information about the components and the progress to stderr",{'P', "progress"});
+        args::ArgumentParser parser("Cover the graph with paths.");
+        args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+        args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+        args::ValueFlag<std::string> dg_out_file(mandatory_opts, "FILE","Write the succinct variation graph with the generated paths in ODGI format to *FILE*. A file ending with *.og* is recommended.", {'o', "out"});
+        args::Group cover_opts("[ Cover Optoins ]");
+        args::ValueFlag<double> hogwild_depth(cover_opts, "DEPTH", "Randomly cover the graph until it reaches the given average DEPTH. Specifying this option overwrites all other cover options except -I, --ignore-paths!",{'H', "hogwild-depth"});
+        args::ValueFlag<uint64_t> num_paths_per_component(cover_opts, "N", "Number of paths to generate per component.",{'n', "num-paths-per-component"});
+        args::ValueFlag<uint64_t> node_window_size(cover_opts, "N","Size of the node window to check each time a new path is extended (it has to be greater than or equal to 2).",{'k', "node-window-size"});
+        args::ValueFlag<uint64_t> min_node_depth(cover_opts, "N","Minimum node depth to reach (it has to be greater than 0). There will be generated paths until the specified minimum node coverage is reached, or until the maximum number of allowed generated paths is reached (number of nodes in the input ODGI graph).",{'c', "min-node-depth"});
+        args::Flag ignore_paths(cover_opts, "ignore-paths", "Ignore the paths already embedded in the graph during the node depth initialization.",{'I', "ignore-paths"});
+        args::ValueFlag<std::string> write_node_depth(cover_opts, "FILE","Write the node depth at the end of the paths generation to FILE. The file will contain tab-separated values (header included), and have 3 columns: component_id, node_ide, coverage.",{'w', "write-node-depth"});
+        args::Group threading_opts(parser, "[ Threading ]");
+        args::ValueFlag<uint64_t> nthreads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
+        args::Group processing_info_opts(parser, "[ Processing Information ]");
+        args::Flag debug(processing_info_opts, "progress", "Print information about the components and the progress to stderr",{'P', "progress"});
+        args::Group program_info_opts(parser, "[ Program Information ]");
+        args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi cover.", {'h', "help"});
 
         try {
             parser.ParseCLI(argc, argv);

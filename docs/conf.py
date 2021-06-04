@@ -20,13 +20,13 @@ sys.path.insert(0, os.path.abspath('../lib/'))
 # -- Project information -----------------------------------------------------
 
 project = u'odgi'
-copyright = '2021, Erik Garrison. Revision v0.5.1-1364965'
+copyright = '2021, Erik Garrison. Revision v0.5.1-a344ddd'
 author = u'Andrea Guarracino, Simon Heumos, ... , Pjotr Prins, Erik Garrison'
 
 # The short X.Y version
 version = 'v0.5.1'
 # The full version, including alpha/beta/rc tags
-release = '1364965'
+release = 'a344ddd'
 
 
 # -- General configuration ---------------------------------------------------
@@ -141,17 +141,17 @@ EG = 'Erik Garrison'
 AG = 'Andrea Guarracino'
 SH = 'Simon Heumos'
 man_pages = [
-    ('man/odgi', 'odgi', u'dynamic succinct variation graph tool',
+    ('man/odgi', 'odgi', u'Dynamic succinct variation graph tool.',
      [author], 1),
-    ('man/odgi_bin', 'odgi_bin', u'binning of pangenome sequence and path information in the graph',
+    ('man/odgi_bin', 'odgi_bin', u'Binning of pangenome sequence and path information in the graph.',
      [EG, SH], 1),
-    ('man/odgi_break', 'odgi_break', u'break cycles in the graph and drop its paths',
+    ('man/odgi_break', 'odgi_break', u'Break cycles in the graph and drop its paths.',
      [EG], 1),
-    ('man/odgi_build', 'odgi_build', u'construct a dynamic succinct variation graph',
+    ('man/odgi_build', 'odgi_build', u'Construct a dynamic succinct variation graph in ODGI format from a GFAv1.',
      [EG], 1),
-    ('man/odgi_chop', 'odgi_chop', u'divide nodes into smaller pieces',
+    ('man/odgi_chop', 'odgi_chop', u'Divide nodes into smaller pieces.',
      [EG, AG], 1),
-    ('man/odgi_cover', 'odgi_cover', u'find a path cover of the variation graph',
+    ('man/odgi_cover', 'odgi_cover', u'Cover the graph with paths.',
      [AG], 1),
     ('man/odgi_degree', 'odgi_degree', u'describe the graph in terms of node degree',
      [EG], 1),

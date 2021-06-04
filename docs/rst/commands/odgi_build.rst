@@ -22,8 +22,8 @@ see https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md.
 OPTIONS
 =======
 
-Graph Files IO
---------------
+MANDATORY OPTIONS
+-----------------
 
 | **-g, --gfa**\ =\ *FILE*
 | GFAv1 *FILE* containing the nodes, edges and paths to build a dynamic
@@ -32,6 +32,9 @@ Graph Files IO
 | **-o, --out**\ =\ *FILE*
 | Write the dynamic succinct variation graph to this *FILE*. A file ending
   with *.og* is recommended.
+
+Gaph Files IO
+-------------
 
 | **-G, --to-gfa**
 | Write the graph to stdout in GFAv1 format.

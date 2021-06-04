@@ -33,13 +33,13 @@ int main_build(int argc, char** argv) {
                                         "  is used, which can handle components with no heads or tails. Here, both heads and tails are taken into account.", {'s', "sort"});
     args::Group threading(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
-    args::Group program_information(parser, "[ Program Information ]");
-    args::Flag progress(program_information, "progress", "Write the current progress to stderr.", {'P', "progress"});
-    args::HelpFlag help(program_information, "help", "Display this help summary.", {'h', "help"});
     args::Group processing_information(parser, "[ Processing Information ]");
+    args::Flag progress(processing_information, "progress", "Write the current progress to stderr.", {'P', "progress"});
     args::Flag debug(processing_information, "debug", "Verbosely print graph information to stderr. This includes the maximum"
                                                       "  node_id, the minimum node_id, the handle to node_id mapping, the"
                                                       "  deleted nodes and the path metadata.", {'d', "debug"});
+    args::Group program_information(parser, "[ Program Information ]");
+    args::HelpFlag help(program_information, "help", "Print a help message for odgi build.", {'h', "help"});
     try {
         parser.ParseCLI(argc, argv);
     } catch (args::Help) {

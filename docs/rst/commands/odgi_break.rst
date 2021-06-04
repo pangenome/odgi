@@ -4,7 +4,7 @@
 odgi break
 #########
 
-break cycles in the graph and drop its paths
+Break cycles in the graph and drop its paths.
 
 SYNOPSIS
 ========
@@ -22,24 +22,23 @@ breaks them, also dropping the graph’s paths.
 OPTIONS
 =======
 
-Graph Files IO
---------------
+MANDATORY OPTIONS
+-----------------
 
 | **-i, --idx**\ =\ *FILE*
-| File containing the succinct variation graph to break. The file name
-  usually ends with *.og*.
+| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.
 
 | **-o, --out**\ =\ *FILE*
-| Write the broken graph to *FILE*.
+| Write the broken graph in ODGI format to *FILE*. A file ending of *.og* is recommended.
 
 Cycle Options
 -------------
 
 | **-c, --cycle-max-bp**\ =\ *N*
-| The maximum cycle length at which to break.
+| The maximum cycle length at which to break (default: 0).
 
 | **-s, --max-search-bp**\ =\ *N*
-| The maximum search space of each BFS given in number of base pairs.
+| The maximum search space of each BFS given in number of base pairs (default: 0).
 
 | **-u, --repeat-up-to**\ =\ *N*
 | Iterate cycle breaking up to *N* times or stop if no new edges are

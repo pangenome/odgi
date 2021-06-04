@@ -4,7 +4,7 @@
 odgi cover
 #########
 
-find a path cover of the variation graph
+Cover the graph with paths.
 
 SYNOPSIS
 ========
@@ -21,16 +21,14 @@ a specified number of paths per component.
 OPTIONS
 =======
 
-Graph Files IO
+MANDATORY OPTIONS
 --------------
 
 | **-i, --idx**\ =\ *FILE*
-| File containing the succinct variation graph where find a path cover.
-  The file name usually ends with *.og*.
+| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.
 
 | **-o, --out**\ =\ *FILE*
-| Write the succinct variation graph with the generated paths to *FILE*.
-  The file name usually ends with *.og*.
+| Write the succinct variation graph with the generated paths in ODGI format to *FILE*. A file ending with *.og* is recommended.
 
 Cover Options
 -------------
@@ -65,7 +63,7 @@ Threading
 ---------
 
 | **-t, --threads**\ =\ *N*
-| Number of threads to use for the parallel sorter.
+| Number of threads to use for parallel operations.
 
 Processing Information
 ----------------------

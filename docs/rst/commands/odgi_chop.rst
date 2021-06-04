@@ -4,7 +4,7 @@
 odgi chop
 #########
 
-divide nodes into smaller pieces
+Divide nodes into smaller pieces.
 
 SYNOPSIS
 ========
@@ -21,22 +21,17 @@ preserving the graph topology and node order.
 OPTIONS
 =======
 
-Graph Files IO
+MANDATORY OPTIONS
 --------------
 
 | **-i, --idx**\ =\ *FILE*
-| File containing the succinct variation graph to chop. The file name
-  usually ends with *.og*.
+| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.
 
 | **-o, --out**\ =\ *FILE*
-| Write the chopped succinct variation graph to *FILE*. The file name
-  usually ends with *.og*.
-
-Chop Options
-------------
+| Write the chopped succinct variation graph in ODGI format to *FILE*. A file ending of *.og* is recommended.
 
 | **-c, --chop-to**\ =\ *N*
-| Divide nodes that longer than *N* into nodes no longer than *N* while
+| Divide nodes that are longer than *N* base pairs into nodes no longer than *N* while
   maintaining graph topology.
 
 Threading

@@ -4,7 +4,7 @@
 odgi bin
 #########
 
-binning of pangenome sequence and path information in the graph
+Binning of pangenome sequence and path information in the graph.
 
 SYNOPSIS
 ========
@@ -48,12 +48,11 @@ DESCRIPTION
 OPTIONS
 =======
 
-Graph Files IO
---------------
+MANDATORY OPTIONS
+-----------------
 
 | **-i, --idx**\ =\ *FILE*
-| File containing the succinct variation graph to investigate the bin
-  from. The file name usually ends with *.og*.
+| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.
 
 FASTA Options
 -------------
@@ -95,16 +94,16 @@ Bin Options
   stdout in order to save disk space.
 
 | **-g, --no-gap-links**
-| We divide links into 2 classes:
+| Don't include gap links in the output. We divide links into 2 classes:
 
-1. the links which help to follow complex variations. They need to be
+1. The links which help to follow complex variations. They need to be
    drawn, else one could not follow the sequence of a path.
 
-2. the links helping to follow simple variations. These links are called
+2. The links helping to follow simple variations. These links are called
    **gap-links**. Such links solely connecting a path from left to right
    may not be relevant to understand a path’s traversal through the
    bins. Therefore, when this option is set, the gap-links are left out
-   saving disk space
+   saving disk space.
 
 HaploBlocker Options
 --------------------
