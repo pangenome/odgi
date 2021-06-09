@@ -20,13 +20,13 @@ sys.path.insert(0, os.path.abspath('../lib/'))
 # -- Project information -----------------------------------------------------
 
 project = u'odgi'
-copyright = '2021, Erik Garrison. Revision v0.5.1-36a9408'
+copyright = '2021, Erik Garrison. Revision v0.5.1-1bc75ea'
 author = u'Andrea Guarracino, Simon Heumos, ... , Pjotr Prins, Erik Garrison'
 
 # The short X.Y version
 version = 'v0.5.1'
 # The full version, including alpha/beta/rc tags
-release = '36a9408'
+release = '1bc75ea'
 
 
 # -- General configuration ---------------------------------------------------
@@ -74,7 +74,7 @@ pygments_style = None
 # a list of builtin themes.
 #
 html_theme = 'sphinx_rtd_theme'
-html_theme_path = ["_themes",]
+html_theme_path = ["_themes", ]
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -161,7 +161,8 @@ man_pages = [
      [AG], 1),
     ('man/odgi_draw', 'odgi_draw', u'Draw previously-determined 2D layouts of the graph with diverse annotations.',
      [EG], 1),
-    ('man/odgi_explode', 'odgi_explode', u'Breaks a graph into connected components storing each component in its own file.',
+    ('man/odgi_explode', 'odgi_explode', u'Breaks a graph into connected components storing each component in its own '
+                                         u'file.',
      [AG], 1),
     ('man/odgi_extract', 'odgi_extract', u'Extract subgraphs or parts of a graph defined by query criteria.',
      [AG], 1),
@@ -171,7 +172,8 @@ man_pages = [
      [EG, AG], 1),
     ('man/odgi_kmers', 'odgi_kmers', u'Display and characterize the kmer space of a graph.',
      [EG], 1),
-    ('man/odgi_layout', 'odgi_layout', u'Establish 2D layouts of the graph using path-guided stochastic gradient descent (the graph must be sorted and id-compacted).',
+    ('man/odgi_layout', 'odgi_layout', u'Establish 2D layouts of the graph using path-guided stochastic gradient '
+                                       u'descent (the graph must be sorted and id-compacted).',
      [EG, AG, SH], 1),
     ('man/odgi_matrix', 'odgi_matrix', u'Write the graph topology in sparse matrix formats.',
      [EG], 1),
@@ -183,11 +185,13 @@ man_pages = [
      [SH], 1),
     ('man/odgi_pathindex', 'odgi_pathindex', u'Create a path index for a given graph.',
      [SH], 1),
-    ('man/odgi_paths', 'odgi_paths', u'embedded path interrogation',
+    ('man/odgi_paths', 'odgi_paths', u'Interrogate the embedded paths of a graph. Does not print anything to stdout '
+                                     u'by default!',
      [EG], 1),
-    ('man/odgi_position', 'odgi_position', u'position parts of the graph as defined by query criteria',
+    ('man/odgi_position', 'odgi_position', u'Find, translate, and liftover graph and path positions between graphs. '
+                                           u'Results are printed to stdout.',
      [EG], 1),
-    ('man/odgi_prune', 'odgi_prune', u'remove complex parts of the graph',
+    ('man/odgi_prune', 'odgi_prune', u'Remove complex parts of the graph.',
      [EG], 1),
     ('man/odgi_server', 'odgi_server', u'start a HTTP server with a given index file to query a',
      [SH], 1),
@@ -242,3 +246,6 @@ epub_title = project
 
 # A list of files that should not be packed into the epub file.
 epub_exclude_files = ['search.html']
+
+# we don't want smart quotes
+smartquotes = False

@@ -20,24 +20,33 @@ int main_position(int argc, char** argv) {
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
-    args::ArgumentParser parser("find, translate, and liftover graph and path positions between graphs");
-    args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-    args::ValueFlag<std::string> og_target_file(parser, "FILE", "describe positions in this graph", {'i', "target"});
-    args::ValueFlag<std::string> og_source_file(parser, "FILE", "translate positions from this graph into the target graph using common --lift-paths shared between both graphs [default: use the same source/target graph]", {'x', "source"});
-    //args::ValueFlag<std::string> og_out_file(parser, "FILE", "store the graph self index in this file", {'o', "out"});
-    args::ValueFlag<std::string> ref_path_name(parser, "PATH_NAME", "translate the given positions into positions relative to this reference path", {'r', "ref-path"});
-    args::ValueFlag<std::string> ref_path_file(parser, "FILE", "use the ref-paths in FILE", {'R', "ref-paths"});
-    args::ValueFlag<std::string> lift_path_name(parser, "PATH_NAME", "lift positions from --source to --target via coordinates in this path common to both graphs [default: all common paths between --source and --target]", {'l', "lift-path"});
-    args::ValueFlag<std::string> lift_path_file(parser, "FILE", "use the lift-paths in FILE", {'L', "lift-paths"});
-    args::ValueFlag<std::string> graph_pos(parser, "[node_id][,offset[,(+|-)]*]*", "a graph position, e.g. 42,10,+ or 302,0,-", {'g', "graph-pos"});
-    args::ValueFlag<std::string> graph_pos_file(parser, "FILE", "a file with one graph position per line", {'G', "graph-pos-file"});
-    args::ValueFlag<std::string> path_pos(parser, "[path_name][,offset[,(+|-)]*]*", "a path position, e.g. chr8,1337,+ or chrZ,3929,-", {'p', "path-pos"});
-    args::ValueFlag<std::string> path_pos_file(parser, "FILE", "a file with one path position per line", {'F', "path-pos-file"});
-    args::ValueFlag<std::string> bed_input(parser, "FILE", "a BED file of ranges in paths in the graph to lift into the target graph", {'b', "bed-input"});
-    args::Flag give_graph_pos(parser, "give-graph-pos", "emit graph positions (node,offset,strand) rather than path positions", {'v', "give-graph-pos"});
-    args::Flag all_immediate(parser, "all-immediate", "emit all positions immediately at the given graph/path position", {'I', "all-immediate"});
-    args::ValueFlag<uint64_t> _search_radius(parser, "DISTANCE", "limit coordinate conversion breadth-first search up to DISTANCE bp from each given position [default: 10000]", {'d',"search-radius"});
-    args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
+    args::ArgumentParser parser("Find, translate, and liftover graph and path positions between graphs. Results are printed to stdout.");
+    args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+    args::ValueFlag<std::string> og_target_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "target"});
+    args::Group position_opts(parser, "[ Position Options ]");
+    args::ValueFlag<std::string> og_source_file(position_opts, "FILE", "Translate positions from this *FILE graph into the target graph using common"
+                                                                " *-l, --lift-paths* shared between both graphs (default: use the same"
+                                                                " source/target graph).", {'x', "source"});
+    args::ValueFlag<std::string> ref_path_name(position_opts, "PATH_NAME", "Translate the given positions into positions relative to this reference path.", {'r', "ref-path"});
+    args::ValueFlag<std::string> ref_path_file(position_opts, "FILE", "Use the ref-paths in *FILE* for positional translation.", {'R', "ref-paths"});
+    args::ValueFlag<std::string> lift_path_name(position_opts, "PATH_NAME", "Lift positions from *-x, --source* to *-i, --target* via coordinates in"
+                                                                            " this path common to both graphs (default: all common paths between"
+                                                                            " *-x, --source* and *-i, --target*).", {'l', "lift-path"});
+    args::ValueFlag<std::string> lift_path_file(position_opts, "FILE", "Same as in *-l, --lift-paths*, but for all paths in *FILE*.", {'L', "lift-paths"});
+    args::ValueFlag<std::string> graph_pos(position_opts, "[node_id][,offset[,(+|-)]*]*", "A graph position, e.g. 42,10,+ or 302,0,-.", {'g', "graph-pos"});
+    args::ValueFlag<std::string> graph_pos_file(position_opts, "FILE", "Same as in *-g, --graph-pos*, but for all graph positions in *FILE*.", {'G', "graph-pos-file"});
+    args::ValueFlag<std::string> path_pos(position_opts, "[path_name][,offset[,(+|-)]*]*", "A path position, e.g. chr8,1337,+ or chrZ,3929,-.", {'p', "path-pos"});
+    args::ValueFlag<std::string> path_pos_file(position_opts, "FILE", "A *FILE* with one path position per line.", {'F', "path-pos-file"});
+    args::ValueFlag<std::string> bed_input(position_opts, "FILE", "A BED file of ranges in paths in the graph to lift into the target"
+                                                                  " graph *-v, --give-graph-pos* emit graph positions.", {'b', "bed-input"});
+    args::Flag give_graph_pos(position_opts, "give-graph-pos", "Emit graph positions (node, offset, strand) rather than path positions.", {'v', "give-graph-pos"});
+    args::Flag all_immediate(position_opts, "all-immediate", "Emit all positions immediately at the given graph/path position.", {'I', "all-immediate"});
+    args::ValueFlag<uint64_t> _search_radius(position_opts, "DISTANCE", "Limit coordinate conversion breadth-first search up to DISTANCE bp from each given position (default: 10000).", {'d',"search-radius"});
+    args::Group threading_opts(parser, "[ Threading ]");
+    args::ValueFlag<uint64_t> threads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
+    args::Group program_info_opts(parser, "[ Program Information ");
+    args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi position.", {'h', "help"});
+
 
     try {
         parser.ParseCLI(argc, argv);

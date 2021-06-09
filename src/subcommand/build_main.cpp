@@ -24,7 +24,7 @@ int main_build(int argc, char** argv) {
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
     args::ValueFlag<std::string> gfa_file(mandatory_opts, "FILE", "GFAv1 FILE containing the nodes, edges and "
                                                           "paths to build a dynamic succinct variation graph from.", {'g', "gfa"});
-    args::ValueFlag<std::string> dg_out_file(mandatory_opts, "FILE", "Write the dynamic succinct variation graph to this file. A file ending with *.og* is recommended.", {'o', "out"});
+    args::ValueFlag<std::string> dg_out_file(mandatory_opts, "FILE", "Write the dynamic succinct variation graph to this *FILE*. A file ending with *.og* is recommended.", {'o', "out"});
     args::Group graph_files_io(parser, "[ Graph Files IO ]");
     args::Flag to_gfa(graph_files_io, "to_gfa", "Write the graph to stdout in GFAv1 format.", {'G', "to-gfa"});
     args::Group graph_sorting(parser, "[ Graph Sorting ]");

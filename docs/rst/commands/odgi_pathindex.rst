@@ -39,9 +39,6 @@ MANDATORY OPTIONS
 Threading
 ---------
 
-Threading
----------
-
 | **-t, --threads**\ =\ *N*
 | Number of threads to use for parallel operations.
 
