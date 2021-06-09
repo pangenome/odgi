@@ -4,7 +4,7 @@
 odgi version
 #########
 
-display the version of odgi
+Print the version of ODGI to stdout.
 
 SYNOPSIS
 ========
@@ -14,7 +14,7 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-The odgi version(1) command prints the current git version with tags and
+The odgi version command prints the current git version with tags and
 codename to stdout (like *v-44-g89d022b “back to old ABI”*). Optionally,
 only the release, version or codename can be printed.
 
@@ -24,19 +24,19 @@ OPTIONS
 Version Options
 ---------------
 
-| **-v, –version**\ =
-| Print only the version (like *v-44-g89d022b*).
+| **-v, --version**\ =
+| Print only the version (like *v0.4.0-44-g89d022b*).
 
-| **-c, –codename**
+| **-c, --codename**
 | Print only the codename (like *back to old ABI*).
 
-| **-r, –release**
-| Print only the release (like *v*).
+| **-r, --release**
+| Print only the release (like *v0.4.0*).
 
 Program Information
 -------------------
 
-| **-h, –help**
+| **-h, --help**
 | Print a help message for **odgi version**.
 
 ..

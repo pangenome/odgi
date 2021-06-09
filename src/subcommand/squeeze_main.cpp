@@ -22,22 +22,29 @@ namespace odgi {
         --argc;
 
         args::ArgumentParser parser(
-                "squeezes multiple graphs into the same file");
-        args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-        args::ValueFlag<std::string> _input_graphs(parser, "FILE",
-                                                   "input file containing the list of graphs to squeeze into the same file; the file must contain one path per line.",
+                "Squeezes multiple graphs in ODGI format into the same file in ODGI format.");
+        args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+        args::ValueFlag<std::string> _input_graphs(mandatory_opts, "FILE",
+                                                   "Input file containing the list of graphs to squeeze into the same\n"
+                                                   "  file. The file must contain one path per line.",
                                                    {'f', "input-graphs"});
-        args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store all the input graphs in this file",
+        args::ValueFlag<std::string> dg_out_file(mandatory_opts, "FILE", "Store all the input graphs in this file. The file name usually ends with *.og*.",
                                                  {'o', "out"});
-        args::ValueFlag<char> _add_suffix(parser, "C",
-                                          "add the separator and the input file rank as suffix to the path names (to avoid path name collisions)",
+        args::Group squeeze_opt(parser, "[ Squeeze Options ]");
+        args::ValueFlag<char> _add_suffix(squeeze_opt, "STRING",
+                                          "Add the separator and the input file rank as suffix to the path names\n"
+                                          "  (to avoid path name collisions).",
                                           {'s', "rank-suffix"});
-        args::Flag _optimize(parser, "optimize", "compact the node ID space in each connected component",
+        args::Flag _optimize(parser, "optimize", "Compact the node ID space for each connected component before squeezing.",
                              {'O', "optimize"});
-        args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use",
+        args::Group threading_opts(parser, "[ Threading ]");
+        args::ValueFlag<uint64_t> nthreads(threading_opts, "N", "Number of threads to use for parallel operations.",
                                            {'t', "threads"});
-        args::Flag _debug(parser, "progress", "print information about the components and the progress to stderr",
+        args::Group processing_info_opts(parser, "[ Processing Information ]");
+        args::Flag _debug(parser, "progress", "Print information about the progress to stderr.",
                           {'P', "progress"});
+        args::Group program_info_opts(parser, "[ Program Information ]");
+        args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi squeeze.", {'h', "help"});
 
         try {
             parser.ParseCLI(argc, argv);

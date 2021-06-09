@@ -315,10 +315,7 @@ multiple graphs into the same file.
 | **odgi stats** [**-i, --idx**\ =\ *FILE*] [*OPTION*]…
 | The odgi stats command produces statistics of a variation graph.
   Among other metrics, it can calculate the #nodes, #edges, #paths and
-  the total nucleotide length of the graph. Various histogram summary
-  options complement the tool. If [**-B, --bed-multicov**\ =\ *BED*] is
-  set, the metrics will be produced for the intervals specified in the
-  BED.
+  the total nucleotide length of the graph.
 
 | **odgi test** [<TEST NAME|PATTERN|TAGS> …] [*OPTION*]…
 | The odgi test command starts all unit tests that are implemented in

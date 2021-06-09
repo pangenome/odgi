@@ -4,39 +4,38 @@
 odgi validate
 #########
 
-validate the graph (currently, it checks if the paths
-are consistent with the graph topology)
+Validate a graph checking if the paths are consistent with the graph topology.
 
 SYNOPSIS
 ========
 
-**odgi validate** [**-i, –input**\ =\ *FILE*] [*OPTION*]…
+**odgi validate** [**-i, --input**\ =\ *FILE*] [*OPTION*]…
 
 DESCRIPTION
 ===========
 
-The odgi validate(1) command validates the graph (currently, it checks
-if the paths are consistent with the graph topology).
+The odgi validate command validates the graph checking
+if the paths are consistent with the graph topology.
 
 OPTIONS
 =======
 
-Graph Files IO
+MANDATORY OPTIONS
 --------------
 
-| **-i, –input**\ =\ *FILE*
-| Validate this graph.
+| **-i, --input**\ =\ *FILE*
+| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.
 
 Threading
 ---------
 
-| **-t, –threads**\ =\ *N*
-| Number of threads to use.
+| **-t, --threads**\ =\ *N*
+| Number of threads to use for parallel operations.
 
 Program Information
 -------------------
 
-| **-h, –help**
+| **-h, --help**
 | Print a help message for **odgi validate**.
 
 ..

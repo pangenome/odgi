@@ -41,45 +41,89 @@ namespace odgi {
         argv[0] = (char *) prog_name.c_str();
         --argc;
 
-        args::ArgumentParser parser("variation graph visualizations");
-        args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-        args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the index from this file", {'i', "idx"});
-        args::ValueFlag<std::string> png_out_file(parser, "FILE", "write the output (png) to this file", {'o', "out"});
-        args::ValueFlag<uint64_t> image_width(parser, "N", "width in pixels of output image [default: 1500]", {'x', "width"});
-        args::ValueFlag<uint64_t> image_height(parser, "N", "height in pixels of output image [default: 500]", {'y', "height"});
-        args::ValueFlag<uint64_t> path_height(parser, "N", "path display height", {'P', "path-height"});
-        args::ValueFlag<uint64_t> path_x_pad(parser, "N", "path x padding", {'X', "path-x-padding"});
-        args::Flag pack_paths(parser, "bool", "pack the graphs rather than displaying a single path per row",{'R', "pack-paths"});
-        args::ValueFlag<float> link_path_pieces(parser, "FLOAT","show thin links of this relative width to connect path pieces",{'L', "link-path-pieces"});
-        args::ValueFlag<std::string> alignment_prefix(parser, "STRING","apply alignment-related visual motifs to paths with this name prefix (it affects the -S and -d options)",{'A', "alignment-prefix"});
-        args::Flag show_strands(parser, "bool","use reds and blues to show forward and reverse alignments",{'S', "show-strand"});
-        args::Flag color_by_mean_inversion_rate(parser, "color-by-mean-inversion-rate", "change the color respect to the node strandness (black for forward, red for reverse); in binned mode, change the color respect to the mean inversion rate of the path for each bin, from black (no inversions) to red (bin mean inversion rate equals to 1)", {'z', "color-by-mean-inversion-rate"});
-
-        args::ValueFlag<char> _color_by_prefix(parser, "C", "colors paths by their names looking at the prefix before the given character C",{'s', "color-by-prefix"});
-        args::ValueFlag<std::string> _name_prefixes(parser, "FILE", "merge paths beginning with prefixes listed (one per line) in FILE", {'M', "prefix-merges"});
-        args::ValueFlag<std::string> _ignore_prefix(parser, "PREFIX", "ignore paths starting with the given PREFIX", {'I', "ignore-prefix"});
+        args::ArgumentParser parser("Visualize a variation graph in 1D.");
+        args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+        args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+        args::ValueFlag<std::string> png_out_file(mandatory_opts, "FILE", "Write the visualization in PNG format to this *FILE*.", {'o', "out"});
+        args::Group viz_opts(parser, "[ Visualization Options ]");
+        args::ValueFlag<uint64_t> image_width(viz_opts, "N", "Set the width in pixels of the output image (default: 1500).", {'x', "width"});
+        args::ValueFlag<uint64_t> image_height(viz_opts, "N", "Set the height in pixels of the output image (default: 500).", {'y', "height"});
+        args::ValueFlag<uint64_t> path_height(viz_opts, "N", "The height in pixels for a path.", {'P', "path-height"});
+        args::ValueFlag<uint64_t> path_x_pad(viz_opts, "N", "The padding in pixels on the x-axis for a path.", {'X', "path-x-padding"});
+        args::Flag pack_paths(viz_opts, "bool", "Pack all paths rather than displaying a single path per row.",{'R', "pack-paths"});
+        args::ValueFlag<float> link_path_pieces(viz_opts, "FLOAT","Show thin links of this relative width to connect path pieces.",{'L', "link-path-pieces"});
+        args::ValueFlag<std::string> alignment_prefix(viz_opts, "STRING","Apply alignment related visual motifs to paths which have this name"
+                                                                         " prefix. It affects the [**-S, --show-strand**] and [**-d,"
+                                                                         " –change-darkness**] options.",{'A', "alignment-prefix"});
+        args::Flag show_strands(viz_opts, "bool","Use red and blue coloring to display forward and reverse alignments."
+                                                 " This parameter can be set in combination with [**-A,"
+                                                 " –alignment-prefix**=*STRING*].",{'S', "show-strand"});
+        args::Flag color_by_mean_inversion_rate(viz_opts, "color-by-mean-inversion-rate", "Change the color respect to the node strandness (black for forward,"
+                                                                                          " red for reverse); in binned mode (**-b, --binned-mode**), change the"
+                                                                                          " color respect to the mean inversion rate of the path for each bin,"
+                                                                                          " from black (no inversions) to red (bin mean inversion rate equals to"
+                                                                                          " 1).", {'z', "color-by-mean-inversion-rate"});
+        args::ValueFlag<char> _color_by_prefix(viz_opts, "CHAR", "Colors paths by their names looking at the prefix before the given"
+                                                                 " character CHAR.",{'s', "color-by-prefix"});
+        // TODO
+        args::ValueFlag<std::string> _name_prefixes(viz_opts, "FILE", "Merge paths beginning with prefixes listed (one per line) in *FILE*.", {'M', "prefix-merges"});
+        args::ValueFlag<std::string> _ignore_prefix(viz_opts, "PREFIX", "Ignore paths starting with the given *PREFIX*.", {'I', "ignore-prefix"});
 
         /// Range selection
-        args::ValueFlag<std::string> _nucleotide_range(parser, "STRING","nucleotide range to visualize: STRING=[PATH:]start-end. `*-end` for `[0,end]`; `start-*` for `[start,pangenome_length]`. If no PATH is specified, the nucleotide positions refer to the pangenome's sequence (i.e., the sequence obtained arranging all the graph's node from left to right).",{'r', "path-range"});
+        args::Group intervals_opts(parser, "[ Intervals Selection Options ]");
+        args::ValueFlag<std::string> _nucleotide_range(intervals_opts, "STRING","Nucleotide range to visualize: ``STRING=[PATH:]start-end``. ``\\*-end``"
+                                                                        " for ``[0,end]``; ``start-*`` for ``[start,pangenome_length]``. If no"
+                                                                        " PATH is specified, the nucleotide positions refer to the pangenome’s"
+                                                                        " sequence (i.e., the sequence obtained arranging all the graph’s node"
+                                                                        " from left to right).",{'r', "path-range"});
 
         /// Paths selection
-        args::ValueFlag<std::string> _path_names_file(parser, "FILE", "list of paths to display in the specified order; the file must contain one path name per line and a subset of all paths can be specified.", {'p', "paths-to-display"});
+        args::Group path_selection_opts(parser, "[ Path Selection Options ]");
+        args::ValueFlag<std::string> _path_names_file(path_selection_opts, "FILE", "List of paths to display in the specified order; the file must contain"
+                                                                                   " one path name per line and a subset of all paths can be specified.", {'p', "paths-to-display"});
 
         /// Path names
-        args::Flag hide_path_names(parser, "bool", "hide path names on the left",{'H', "hide-path-names"});
-        args::Flag color_path_names_background(parser, "bool", "color path names background with the same color as paths",{'C', "color-path-names-background"});
-        args::ValueFlag<uint64_t> _max_num_of_characters(parser, "N", "max number of characters to display for each path name (default: 20)",{'c', "max-num-of-characters"});
+        args::Group path_names_viz_opts(parser, "[ Path Names Viz Options ]");
+        args::Flag hide_path_names(path_names_viz_opts, "bool", "Hide the path names on the left of the generated image.",{'H', "hide-path-names"});
+        args::Flag color_path_names_background(path_names_viz_opts, "bool", "Color path names background with the same color as paths.",{'C', "color-path-names-background"});
+        args::ValueFlag<uint64_t> _max_num_of_characters(path_names_viz_opts, "N", "Maximum number of characters to display for each path name (max 128"
+                                                                                   " characters). The default value is *the length of the longest path"
+                                                                                   " name* (up to 32 characters).",{'c', "max-num-of-characters"});
 
         /// Binned mode
-        args::Flag binned_mode(parser, "binned-mode", "bin the variation graph before its visualization", {'b', "binned-mode"});
-        args::ValueFlag<uint64_t> bin_width(parser, "bp", "width of each bin in basepairs along the graph vector",{'w', "bin-width"});
-        args::Flag drop_gap_links(parser, "drop-gap-links", "don't include gap links in the output", {'g', "no-gap-links"});
-        args::Flag color_by_mean_depth(parser, "color-by-mean-depth", "change the color respect to the mean depth of the path in each bin, from black (no depth) to blue (max bin mean depth in the entire graph)", {'m', "color-by-mean-depth"});
+        args::Group bin_opts(parser, "[ Binned Mode Options ]");
+        args::Flag binned_mode(bin_opts, "binned-mode", "The variation graph is binned before its visualization. Each pixel in"
+                                                        " the output image will correspond to a bin. For more information about"
+                                                        " the binning process, please refer to odgi bin.", {'b', "binned-mode"});
+        args::ValueFlag<uint64_t> bin_width(bin_opts, "bp", "The bin width specifies the size of each bin in the binned mode. If it"
+                                                            " is not specified, the bin width is calculated from the width in pixels"
+                                                            " of the output image.r",{'w', "bin-width"});
+        args::Flag drop_gap_links(bin_opts, "drop-gap-links", "We divide links into 2 classes:"
+                                                              "1. The links which help to follow complex variations. They need to be"
+                                                              " drawn, else one could not follow the sequence of a path."
+                                                              "2. The links helping to follow simple variations. These links are called"
+                                                              " **gap-links**. Such links solely connecting a path from left to right"
+                                                              " may not be relevant to understand a path’s traversal through the"
+                                                              " bins. Therefore, when this option is set, the gap-links are not drawn"
+                                                              " in binned mode.", {'g', "no-gap-links"});
+        args::Flag color_by_mean_depth(bin_opts, "color-by-mean-depth", "Change the color with respect to the mean coverage of the path for each"
+                                                                        " bin, from black (no coverage) to blue (max bin mean coverage in the"
+                                                                        " entire graph).", {'m', "color-by-mean-depth"});
 
         /// Gradient mode
-        args::Flag change_darkness(parser, "change-darkness", "change the color darkness based on nucleotide position in the path", {'d', "change-darkness"});
-        args::Flag longest_path(parser, "longest-path", "use the longest path length to change the color darkness", {'l', "longest-path"});
-        args::Flag white_to_black(parser, "white-to-black", "change the color darkness from white (for the first nucleotide position) to black (for the last nucleotide position)", {'u', "white-to-black"});
+        args::Group grad_mode_opts(parser, "[ Gradient Mode Options ]");
+        args::Flag change_darkness(grad_mode_opts, "change-darkness", "Change the color darkness based on nucleotide position in the path."
+                                                                      " When it is used in binned mode, the mean inversion rate of the bin"
+                                                                      " node is considered to set the color gradient starting position: when"
+                                                                      " this rate is greater than 0.5, the bin is considered inverted, and the"
+                                                                      " color gradient starts from the right-end of the bin. This parameter"
+                                                                      " can be set in combination with [**-A,"
+                                                                      " –alignment-prefix**=*STRING*].", {'d', "change-darkness"});
+        args::Flag longest_path(grad_mode_opts, "longest-path", "Use the longest path length to change the color darkness.", {'l', "longest-path"});
+        args::Flag white_to_black(grad_mode_opts, "white-to-black", "Change the color darkness from white (for the first nucleotide"
+                                                                    " position) to black (for the last nucleotide position).", {'u', "white-to-black"});
+        args::Group program_information(parser, "[ Program Information ]");
+        args::HelpFlag help(program_information, "help", "Print a help message for odgi viz.", {'h', "help"});
 
         try {
             parser.ParseCLI(argc, argv);

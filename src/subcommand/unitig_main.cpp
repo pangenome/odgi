@@ -20,13 +20,17 @@ int main_unitig(int argc, char** argv) {
     argv[0] = (char*)prog_name.c_str();
     --argc;
 
-    args::ArgumentParser parser("output unitigs of the graph");
-    args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-    args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-    args::Flag fake_fastq(parser, "fake", "write unitigs as FASTQ with fixed quality", {'f', "fake-fastq"});
-    args::ValueFlag<uint64_t> unitig_to(parser, "N", "continue unitigs with a random walk in the graph so that they are at least this length", {'t', "sample-to"});
-    args::ValueFlag<uint64_t> unitig_plus(parser, "N", "continue unitigs with a random walk in the graph this far past their natural end", {'p', "sample-plus"});
-    args::ValueFlag<uint64_t> min_begin_node_length(parser, "N", "only begin unitigs from nodes of this length", {'l', "min-begin-node-length"});
+    args::ArgumentParser parser("Output unitigs of the graph.");
+    args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+    args::Group fastq_opts(parser, "[ FASTQ Options ]");
+    args::Flag fake_fastq(fastq_opts, "fake", "Write the unitigs in FASTQ format to stdout with a fixed quality value of *I*.", {'f', "fake-fastq"});
+    args::Group unitig_opts(parser, "[ Unitig Options ]");
+    args::ValueFlag<uint64_t> unitig_to(unitig_opts, "N", "Continue unitigs with a random walk in the graph so that they have at least the given *N* length.", {'t', "sample-to"});
+    args::ValueFlag<uint64_t> unitig_plus(unitig_opts, "N", "Continue unitigs with a random walk in the graph by *N* past their natural end.", {'p', "sample-plus"});
+    args::ValueFlag<uint64_t> min_begin_node_length(unitig_opts, "N", "Only begin unitigs collection from nodes which have at least length *N*.", {'l', "min-begin-node-length"});
+    args::Group program_information(parser, "[ Program Information ]");
+    args::HelpFlag help(program_information, "help", "Print a help message for odgi unitig.", {'h', "help"});
 
     try {
         parser.ParseCLI(argc, argv);

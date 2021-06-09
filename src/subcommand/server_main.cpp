@@ -18,11 +18,14 @@ namespace odgi {
         argv[0] = (char*)prog_name.c_str();
         --argc;
 
-        args::ArgumentParser parser("start a HTTP server with a given index file to query a pangenome position");
-        args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-        args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the index from this file", {'i', "idx"});
-        args::ValueFlag<std::string> port(parser, "N", "run the server under this port", {'p', "port"});
-        args::ValueFlag<std::string> ip_address(parser, "IP", "run the server under this IP address", {'a', "ip"});
+        args::ArgumentParser parser("Start a basic HTTP server with a given path index file to go from *path:position* to *pangenome:position* very efficiently.");
+        args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+        args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph index from this *FILE*. The file name usually ends with *.xp*.", {'i', "idx"});
+        args::ValueFlag<std::string> port(mandatory_opts, "N", "Run the server under this port.", {'p', "port"});
+        args::Group http_opts(parser, "[ HTTP Options ]");
+        args::ValueFlag<std::string> ip_address(http_opts, "IP", "Run the server under this IP address. If not specified, *IP* will be *localhost*.", {'a', "ip"});
+        args::Group program_information(parser, "[ Program Information ]");
+        args::HelpFlag help(program_information, "help", "Print a help message for odgi server.", {'h', "help"});
 
         try {
             parser.ParseCLI(argc, argv);

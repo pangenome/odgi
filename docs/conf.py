@@ -20,13 +20,13 @@ sys.path.insert(0, os.path.abspath('../lib/'))
 # -- Project information -----------------------------------------------------
 
 project = u'odgi'
-copyright = '2021, Erik Garrison. Revision v0.5.1-1bc75ea'
+copyright = '2021, Erik Garrison. Revision v0.5.1-e78e948'
 author = u'Andrea Guarracino, Simon Heumos, ... , Pjotr Prins, Erik Garrison'
 
 # The short X.Y version
 version = 'v0.5.1'
 # The full version, including alpha/beta/rc tags
-release = '1bc75ea'
+release = 'e78e948'
 
 
 # -- General configuration ---------------------------------------------------
@@ -193,27 +193,30 @@ man_pages = [
      [EG], 1),
     ('man/odgi_prune', 'odgi_prune', u'Remove complex parts of the graph.',
      [EG], 1),
-    ('man/odgi_server', 'odgi_server', u'start a HTTP server with a given index file to query a',
+    ('man/odgi_server', 'odgi_server', u'Start a basic HTTP server with a given path index file to go from '
+                                       u'*path:position* to *pangenome:position* very efficiently.',
      [SH], 1),
-    ('man/odgi_sort', 'odgi_sort', u'sort a variation graph',
+    ('man/odgi_sort', 'odgi_sort', u'Apply different kinds of sorting algorithms to a graph. The most prominent one '
+                                   u'is the PG-SGD sorting algorithm.',
      [SH, AG, EG], 1),
-    ('man/odgi_squeeze', 'odgi_squeeze', u'squeezes multiple graphs into the same file',
+    ('man/odgi_squeeze', 'odgi_squeeze', u'Squeezes multiple graphs in ODGI format into the same file in ODGI format.',
      [AG], 1),
-    ('man/odgi_stats', 'odgi_stats', u'metrics describing variation graphs',
+    ('man/odgi_stats', 'odgi_stats', u'Metrics describing a variation graph and its path relationship.',
      [EG, AG], 1),
-    ('man/odgi_test', 'odgi_test', u'run odgi unit tests',
+    ('man/odgi_test', 'odgi_test', u'Run ODGI unit tests.',
      [EG, SH, AG], 1),
-    ('man/odgi_unchop', 'odgi_unchop', u'merge unitigs into single nodes',
+    ('man/odgi_unchop', 'odgi_unchop', u'Merge unitigs into a single node preserving the node order.',
      [EG, AG], 1),
-    ('man/odgi_unitig', 'odgi_unitig', u'output unitigs of the graph',
+    ('man/odgi_unitig', 'odgi_unitig', u'Output unitigs of the graph.',
      [EG], 1),
-    ('man/odgi_validate', 'odgi_validate', u'validate the graph (currently, it checks if the paths',
+    ('man/odgi_validate', 'odgi_validate', u'Validate a graph checking if the paths are consistent with the graph '
+                                           u'topology.',
      [AG], 1),
-    ('man/odgi_version', 'odgi_version', u'display the version of odgi',
+    ('man/odgi_version', 'odgi_version', u'Print the version of ODGI to stdout.',
      [SH], 1),
-    ('man/odgi_view', 'odgi_view', u'projection of graphs into other formats',
+    ('man/odgi_view', 'odgi_view', u'Project a graph into other formats.',
      [EG], 1),
-    ('man/odgi_viz', 'odgi_viz', u'variation graph visualizations',
+    ('man/odgi_viz', 'odgi_viz', u'Visualize a variation graph in 1D.',
      [EG, AG], 1),
 ]
 

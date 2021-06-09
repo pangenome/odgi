@@ -21,11 +21,12 @@ namespace odgi {
         --argc;
 
         args::ArgumentParser parser(
-                "validate the graph (currently, it checks if the paths are consistent with the graph topology)");
-        args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-        args::ValueFlag<std::string> og_file(parser, "FILE", "validate this graph", {'i', "input"});
-
-        args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use", {'t', "threads"});
+                "Validate a graph checking if the paths are consistent with the graph topology.");
+        args::ValueFlag<std::string> og_file(parser, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "input"});
+        args::Group threading(parser, "[ Threading ]");
+        args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
+        args::Group program_information(parser, "[ Program Information ]");
+        args::HelpFlag help(program_information, "help", "Print a help message for odgi validate.", {'h', "help"});
 
         try {
             parser.ParseCLI(argc, argv);

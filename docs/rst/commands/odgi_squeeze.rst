@@ -4,59 +4,58 @@
 odgi squeeze
 #########
 
-squeezes multiple graphs into the same file
+Squeezes multiple graphs in ODGI format into the same file in ODGI format.
 
 SYNOPSIS
 ========
 
-**odgi squeeze** [**-f, –input-graphs**\ =\ *FILE*] [**-o,
+**odgi squeeze** [**-f, --input-graphs**\ =\ *FILE*] [**-o,
 –out**\ =\ *FILE*] [*OPTION*]…
 
 DESCRIPTION
 ===========
 
-The odgi squeeze(1) command merges multiple graphs into the same file.
+The odgi squeeze command merges multiple graphs into the same file.
 
 OPTIONS
 =======
 
-Graph Files IO
+MANDATORY OPTIONS
 --------------
 
-| **-f, –input-graphs**\ =\ *FILE*
+| **-f, --input-graphs**\ =\ *FILE*
 | Input file containing the list of graphs to squeeze into the same
   file. The file must contain one path per line.
 
-| **-o, –out**\ =\ *FILE*
-| Store all the input graphs in this file. The file name usually ends
-  with *.og*.
+| **-o, --out**\ =\ *FILE*
+| Store all the input graphs in this *FILE*. The file name usually ends with *.og*.
 
 Squeeze Options
 ---------------
 
-| **-s, –rank-suffix**\ =\ *STRING*
+| **-s, --rank-suffix**\ =\ *STRING*
 | Add the separator and the input file rank as suffix to the path names
   (to avoid path name collisions).
 
-| **-O, –optimize**
-| Compact the node ID space in each input file before imploding.
+| **-O, --optimize**
+| Compact the node ID space for each connected component before squeezing.
 
 Threading
 ---------
 
-| **-t, –threads**\ =\ *N*
-| Number of threads to use.
+| **-t, --threads**\ =\ *N*
+| Number of threads to use for parallel operations.
 
 Processing Information
 ----------------------
 
-| **-P, –progress**
+| **-P, --progress**
 | Print information about the progress to stderr.
 
 Program Information
 -------------------
 
-| **-h, –help**
+| **-h, --help**
 | Print a help message for **odgi squeeze**.
 
 ..

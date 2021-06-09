@@ -2,7 +2,6 @@
 #include "odgi.hpp"
 #include "args.hxx"
 #include "algorithms/topological_sort.hpp"
-#include "algorithms/eades_algorithm.hpp"
 #include "algorithms/cycle_breaking_sort.hpp"
 #include "algorithms/id_ordered_paths.hpp"
 #include "algorithms/dagify.hpp"
@@ -31,52 +30,85 @@ int main_sort(int argc, char** argv) {
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
-    args::ArgumentParser parser("sort a variation graph");
-    args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-    args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store the graph in this file", {'o', "out"});
-    args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-    args::ValueFlag<std::string> xp_in_file(parser, "FILE", "load the path index from this file", {'X', "path-index"});
-    //args::Flag show_sort(parser, "show", "write the sort order mapping", {'S', "show"});
-    args::ValueFlag<std::string> sort_order_in(parser, "FILE", "load the sort order from this file", {'s', "sort-order"});
-    args::Flag cycle_breaking(parser, "cycle_breaking", "use a cycle breaking sort", {'c', "cycle-breaking"});
-    args::Flag breadth_first(parser, "breadth_first", "use a breadth first topological sort", {'b', "breadth-first"});
-    args::Flag depth_first(parser, "depth_first", "use a chunked depth first topological sort", {'z', "depth-first"});
-    args::ValueFlag<uint64_t> breadth_first_chunk(parser, "N", "chunk size for breadth first topological sort", {'B', "breadth-first-chunk"});
-    args::ValueFlag<uint64_t> depth_first_chunk(parser, "N", "chunk size for depth first topological sort", {'Z', "depth-first-chunk"});
-    args::Flag dagify(parser, "dagify", "sort on the basis of the DAGified graph", {'d', "dagify-sort"});
+    args::ArgumentParser parser("Apply different kind of sorting algorithms to a graph. The most prominent one is the PG-SGD sorting algorithm.");
+    args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+    args::ValueFlag<std::string> dg_out_file(mandatory_opts, "FILE", "Write the sorted dynamic succinct variation graph to this file. A file"
+                                                             " ending with *.og* is recommended.", {'o', "out"});
+    args::Group files_io_opts(parser, "[ Files IO Options ]");
+    args::ValueFlag<std::string> xp_in_file(files_io_opts, "FILE", "Load the succinct variation graph index from this *FILE*. The file name usually ends with *.xp*.", {'X', "path-index"});
+    args::ValueFlag<std::string> sort_order_in(files_io_opts, "FILE", "*FILE* containing the sort order. Each line contains one node identifer.", {'s', "sort-order"});
+    args::Group topo_sorts_opts(parser, "[ Topological Sort Options ]");
+    args::Flag breadth_first(topo_sorts_opts, "breadth_first", "Use a (chunked) breadth first topological sort.", {'b', "breadth-first"});
+    args::ValueFlag<uint64_t> breadth_first_chunk(topo_sorts_opts, "N", "Chunk size for breadth first topological sort. Specify how many"
+                                                                        " nucleotides to grap at once in each BFS phase.", {'B', "breadth-first-chunk"});
+    args::Flag cycle_breaking(topo_sorts_opts, "cycle_breaking", "Use a cycle breaking sort.", {'c', "cycle-breaking"});
+    args::Flag depth_first(topo_sorts_opts, "depth_first", "Use a (chunked) depth first topological sort.", {'z', "depth-first"});
+    args::ValueFlag<uint64_t> depth_first_chunk(topo_sorts_opts, "N", "Chunk size for the depth first topological sort. Specify how many"
+                                                                      " nucleotides to grap at once in each DFS phase.", {'Z', "depth-first-chunk"});
+    args::Flag two(topo_sorts_opts, "two", "Use a two-way topological algorithm for sorting. It is a maximum of"
+                                           " head-first and tail-first topological sort.", {'w', "two-way"});
+    args::Flag no_seeds(topo_sorts_opts, "no-seeds", "Don't use heads or tails to seed the topological sort.", {'n', "no-seeds"});
     // other sorts
-    args::Flag two(parser, "two", "use two-way (max of head-first and tail-first) topological algorithm", {'w', "two-way"});
-    args::Flag randomize(parser, "random", "randomly sort the graph", {'r', "random"});
-    args::Flag no_seeds(parser, "no-seeds", "don't use heads or tails to seed topological sort", {'n', "no-seeds"});
+    args::Group random_sort_opts(parser, "[ Random Sort Options ]");
+    args::Flag randomize(random_sort_opts, "random", "Randomly sort the graph.", {'r', "random"});
+    args::Group dagify_sort_opts(parser, "[ DAGify Sort Options ]");
+    args::Flag dagify(dagify_sort_opts, "dagify", "Sort on the basis of a DAGified graph.", {'d', "dagify-sort"});
     /// path guided linear 1D SGD
-    args::Flag p_sgd(parser, "path-sgd", "apply path guided linear 1D SGD algorithm to organize graph", {'Y', "path-sgd"});
-    args::ValueFlag<std::string> p_sgd_in_file(parser, "FILE", "specify a line separated list of paths to sample from for the on the fly term generation process in the path guided linear 1D SGD (default: sample from all paths)", {'f', "path-sgd-use-paths"});
-    args::ValueFlag<double> p_sgd_min_term_updates_paths(parser, "N", "minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of the sum of total path steps (default: 1.0)", {'G', "path-sgd-min-term-updates-paths"});
-    args::ValueFlag<double> p_sgd_min_term_updates_num_nodes(parser, "N", "minimum number of terms to be updated before a new path guided linear 1D SGD iteration with adjusted learning rate eta starts, expressed as a multiple of the number of nodes (default: argument is not set, the default of -G=[N], path-sgd-min-term-updates-paths=[N] is used)", {'U', "path-sgd-min-term-updates-nodes"});
-    args::ValueFlag<double> p_sgd_delta(parser, "N", "threshold of maximum displacement approximately in bp at which to stop path guided linear 1D SGD (default: 0)", {'j', "path-sgd-delta"});
-    args::ValueFlag<double> p_sgd_eps(parser, "N", "final learning rate for path guided linear 1D SGD model (default: 0.01)", {'g', "path-sgd-eps"});
-    args::ValueFlag<double> p_sgd_eta_max(parser, "N", "first and maximum learning rate for path guided linear 1D SGD model (default: squared steps of longest path in the graph)", {'v', "path-sgd-eta-max"});
-    args::ValueFlag<double> p_sgd_zipf_theta(parser, "N", "the theta value for the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: 0.99)", {'a', "path-sgd-zipf-theta"});
-    args::ValueFlag<uint64_t> p_sgd_iter_max(parser, "N", "max number of iterations for path guided linear 1D SGD model (default: 30)", {'x', "path-sgd-iter-max"});
-    args::ValueFlag<uint64_t> p_sgd_iter_with_max_learning_rate(parser, "N", "iteration where the learning rate is max for path guided linear 1D SGD model (default: 0)", {'F', "iteration-max-learning-rate"});
-    args::ValueFlag<uint64_t> p_sgd_zipf_space(parser, "N", "the maximum space size of the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided linear 1D SGD model (default: longest path length)", {'k', "path-sgd-zipf-space"});
-    args::ValueFlag<uint64_t> p_sgd_zipf_space_max(parser, "N", "the maximum space size of the Zipfian distribution beyond which quantization occurs (default: 100)", {'I', "path-sgd-zipf-space-max"});
-    args::ValueFlag<uint64_t> p_sgd_zipf_space_quantization_step(parser, "N", "quantization step when the maximum space size of the Zipfian distribution is exceeded (default: 100)", {'l', "path-sgd-zipf-space-quantization-step"});
-    args::ValueFlag<uint64_t> p_sgd_zipf_max_number_of_distributions(parser, "N", "approximate maximum number of Zipfian distributions to calculate (default: 100)", {'y', "path-sgd-zipf-max-num-distributions"});
-    args::ValueFlag<std::string> p_sgd_seed(parser, "STRING", "set the base seed for the 1-threaded path guided linear 1D SGD model (default: pangenomic!)", {'q', "path-sgd-seed"});
-    args::ValueFlag<std::string> p_sgd_snapshot(parser, "STRING", "set the prefix to which each snapshot graph of a path guided 1D SGD iteration should be written to, no default", {'u', "path-sgd-snapshot"});
+    args::Group pg_sgd_opts(parser, "[ Path Guided 1D SGD Sort ]");
+    args::Flag p_sgd(pg_sgd_opts, "path-sgd", "Apply the path-guided linear 1D SGD algorithm to organize graph.", {'Y', "path-sgd"});
+    args::ValueFlag<std::string> p_sgd_in_file(pg_sgd_opts, "FILE", "Specify a line separated list of paths to sample from for the on the"
+                                                                    " fly term generation process in the path guided linear 1D SGD (default: sample from all paths).", {'f', "path-sgd-use-paths"});
+    args::ValueFlag<double> p_sgd_min_term_updates_paths(pg_sgd_opts, "N", "The minimum number of terms to be updated before a new path guided"
+                                                                           " linear 1D SGD iteration with adjusted learning rate eta starts,"
+                                                                           " expressed as a multiple of total path steps (default: *1.0*). Can be overwritten by *-U, -path-sgd-min-term-updates-nodes=N*.", {'G', "path-sgd-min-term-updates-paths"});
+    args::ValueFlag<double> p_sgd_min_term_updates_num_nodes(pg_sgd_opts, "N", "The minimum number of terms to be updated before a new path guided"
+                                                                               " linear 1D SGD iteration with adjusted learning rate eta starts,"
+                                                                               " expressed as a multiple of the number of nodes (default: NONE. *-G,path-sgd-min-term-updates-paths=N* is used).", {'U', "path-sgd-min-term-updates-nodes"});
+    args::ValueFlag<double> p_sgd_delta(pg_sgd_opts, "N", "The threshold of maximum displacement approximately in bp at which to"
+                                                          " stop path guided linear 1D SGD (default: *0.0*).", {'j', "path-sgd-delta"});
+    args::ValueFlag<double> p_sgd_eps(pg_sgd_opts, "N", "The final learning rate for path guided linear 1D SGD model (default: *0.01*).", {'g', "path-sgd-eps"});
+    args::ValueFlag<double> p_sgd_eta_max(pg_sgd_opts, "N", "The first and maximum learning rate for path guided linear 1D SGD"
+                                                            " model (default: *squared steps of longest path in graph*).", {'v', "path-sgd-eta-max"});
+    args::ValueFlag<double> p_sgd_zipf_theta(pg_sgd_opts, "N", "The theta value for the Zipfian distribution which is used as the"
+                                                               " sampling method for the second node of one term in the path guided"
+                                                               " linear 1D SGD model (default: *0.99*).", {'a', "path-sgd-zipf-theta"});
+    args::ValueFlag<uint64_t> p_sgd_iter_max(pg_sgd_opts, "N", "The maximum number of iterations for path guided linear 1D SGD model (default: 30).", {'x', "path-sgd-iter-max"});
+    args::ValueFlag<uint64_t> p_sgd_iter_with_max_learning_rate(pg_sgd_opts, "N", "The iteration where the learning rate is max for path guided linear 1D SGD model (default: *0*).", {'F', "iteration-max-learning-rate"});
+    args::ValueFlag<uint64_t> p_sgd_zipf_space(pg_sgd_opts, "N", "The maximum space size of the Zipfian distribution which is used as"
+                                                                 " the sampling method for the second node of one term in the path guided"
+                                                                 " linear 1D SGD model (default: *longest path length*).", {'k', "path-sgd-zipf-space"});
+    args::ValueFlag<uint64_t> p_sgd_zipf_space_max(pg_sgd_opts, "N", "The maximum space size of the Zipfian distribution beyond which"
+                                                                     " quantization occurs (default: *100*).", {'I', "path-sgd-zipf-space-max"});
+    args::ValueFlag<uint64_t> p_sgd_zipf_space_quantization_step(pg_sgd_opts, "N", "Quantization step size when the maximum space size of the Zipfian"
+                                                                                   " distribution is exceeded (default: *100*).", {'l', "path-sgd-zipf-space-quantization-step"});
+    args::ValueFlag<uint64_t> p_sgd_zipf_max_number_of_distributions(pg_sgd_opts, "N", "Approximate maximum number of Zipfian distributions to calculate (default: *100*).", {'y', "path-sgd-zipf-max-num-distributions"});
+    args::ValueFlag<std::string> p_sgd_seed(pg_sgd_opts, "STRING", "| Set the seed for the deterministic 1-threaded path guided linear 1D SGD model (default: *pangenomic!*).", {'q', "path-sgd-seed"});
+    args::ValueFlag<std::string> p_sgd_snapshot(pg_sgd_opts, "STRING", "Set the prefix to which each snapshot graph of a path guided 1D SGD"
+                                                                       " iteration should be written to. This is turned off per default. This"
+                                                                       " argument only works when *-Y, –path-sgd* was specified. Not applicable"
+                                                                       " in a pipeline of sorts.", {'u', "path-sgd-snapshot"});
     /// pipeline
-    args::ValueFlag<std::string> pipeline(parser, "STRING", "apply a series of sorts, based on single-character command line arguments to this command, adding 's' as the default topological sort, 'f' to reverse the sort order, and 'g' to apply graph grooming", {'p', "pipeline"});
+    args::Group pipeline_sort_opts(parser, "[ Pipeline Sorting Options ]");
+    args::ValueFlag<std::string> pipeline(pipeline_sort_opts, "STRING", "Apply a series of sorts, based on single character command line"
+                                                                        " arguments given to this command (default: NONE). *s*: Topolocigal sort, heads only. *n*: Topological sort, no heads, no tails. *d*: DAGify sort. *c*: Cycle breaking sort. *b*: Breadth first topological sort. *z*: Depth first topological sort. *w*: Two-way topological sort. *r*: Random sort. *Y*: PG-SGD 1D sort. *f*: Reverse order. *g*: Groom the graph. An example could be *Ygs*.", {'p', "pipeline"});
     /// paths
-    args::Flag paths_by_min_node_id(parser, "paths-min", "sort paths by their lowest contained node id", {'L', "paths-min"});
-    args::Flag paths_by_max_node_id(parser, "paths-max", "sort paths by their highest contained node id", {'M', "paths-max"});
-    args::Flag paths_by_avg_node_id(parser, "paths-avg", "sort paths by their average contained node id", {'A', "paths-avg"});
-    args::Flag paths_by_avg_node_id_rev(parser, "paths-avg-rev", "sort paths in reverse by their average contained node id", {'R', "paths-avg-rev"});
-    args::ValueFlag<std::string> path_delim(parser, "path-delim", "sort paths in bins by their prefix up to this delimiter", {'D', "path-delim"});
+    args::Group path_sorting_opts(parser, "[ Path Sorting Options ]");
+    args::Flag paths_by_min_node_id(path_sorting_opts, "paths-min", "Sort paths by their lowest contained node identifier.", {'L', "paths-min"});
+    args::Flag paths_by_max_node_id(path_sorting_opts, "paths-max", "Sort paths by their highest contained node identifier.", {'M', "paths-max"});
+    args::Flag paths_by_avg_node_id(path_sorting_opts, "paths-avg", "Sort paths by their average contained node identifier.", {'A', "paths-avg"});
+    args::Flag paths_by_avg_node_id_rev(path_sorting_opts, "paths-avg-rev", "Sort paths in reverse by their average contained node identifier.", {'R', "paths-avg-rev"});
+    args::ValueFlag<std::string> path_delim(path_sorting_opts, "path-delim", "Sort paths in bins by their prefix up to this delimiter.", {'D', "path-delim"});
     /// misc
-    args::Flag progress(parser, "progress", "display progress of the sort", {'P', "progress"});
-    args::Flag optimize(parser, "optimize", "use the MutableHandleGraph::optimize method", {'O', "optimize"});
-    args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel operations", {'t', "threads"});
+    args::Group optimize_opts(parser, "[ Optimize Options ]");
+    args::Flag optimize(optimize_opts, "optimize", "Use the MutableHandleGraph::optimize method to compact the node"
+                                                   " identifier space.", {'O', "optimize"});
+    args::Group threading_opts(parser, "[ Threading ]");
+    args::ValueFlag<uint64_t> nthreads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
+    args::Group processing_info_opts(parser, "[ Processing Information ]");
+    args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
+    args::Group program_info_opts(parser, "[ Program Information ]");
+    args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi sort.", {'h', "help"});
 
     try {
         parser.ParseCLI(argc, argv);
@@ -326,9 +358,6 @@ int main_sort(int argc, char** argv) {
                         break;
                     case 'n':
                         order = algorithms::topological_order(&graph, false, false, args::get(progress));
-                        break;
-                    case 'e':
-                        order = algorithms::eades_algorithm(&graph);
                         break;
                     case 'd': {
                         graph_t split, into;
