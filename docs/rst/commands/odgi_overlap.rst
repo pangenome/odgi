@@ -4,54 +4,54 @@
 odgi overlap
 #########
 
-find the paths touched by the input paths
+Find the paths touched by given input paths.
 
 SYNOPSIS
 ========
 
-**odgi overlap** [**-i, –input**\ =\ *FILE*] [*OPTION*]…
+**odgi overlap** [**-i, --input**\ =\ *FILE*] [*OPTION*]…
 
 DESCRIPTION
 ===========
 
-The odgi overlap(1) command finds the paths touched by the input paths.
+The odgi overlap command finds the paths touched by the input paths.
 
 OPTIONS
 =======
 
-Graph Files IO
+MANDATORY OPTIONS
 --------------
 
-| **-i, –input**\ =\ *FILE*
-| Perform the search in this graph.
+| **-i, --input**\ =\ *FILE*
+| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.
 
 Overlap Options
 ---------------
 
-| **-s, –subset-paths**\ =\ *FILE*
+| **-s, --subset-paths**\ =\ *FILE*
 | Perform the search considering only the paths specified in the FILE;
   the file must contain one path name per line and a subset of all paths
-  can be specified.
+  can be specified. When searching the overlaps, only these paths will be considered.
 
-| **-r, –path**\ =\ *STRING*
-| Perform the search of the given path in the graph.
+| **-r, --path**\ =\ *STRING*
+| Perform the search of the given path *STRING* in the graph.
 
-| **-R, –paths**\ =\ *FILE*
-| Perform the search for the paths listed in FILE
+| **-R, --paths**\ =\ *FILE*
+| Report the search results only for the paths listed in *FILE*.
 
-| **-b, –bed-input**\ =\ *FILE*
+| **-b, --bed-input**\ =\ *FILE*
 | A BED file of ranges in paths in the graph.
 
 Threading
 ---------
 
-| **-t, –threads**\ =\ *N*
-| Number of threads to use.
+| **-t, --threads**\ =\ *N*
+| Number of threads to use for parallel operations..
 
 Program Information
 -------------------
 
-| **-h, –help**
+| **-h, --help**
 | Print a help message for **odgi overlap**.
 
 ..

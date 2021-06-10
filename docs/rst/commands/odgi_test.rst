@@ -4,7 +4,7 @@
 odgi test
 #########
 
-run odgi unit tests
+Run ODGI unit tests.
 
 SYNOPSIS
 ========
@@ -14,9 +14,9 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-The odgi test(1) command starts all unit tests that are implemented in
+The odgi test command starts all unit tests that are implemented in
 odgi. For targeted testing, a subset of tests can be selected. odgi
-test(1) depends on `Catch2 <https://github.com/catchorg/Catch2>`__. In
+test depends on `Catch2 <https://github.com/catchorg/Catch2>`__. In
 the default setting, all results are printed to stdout.
 
 OPTIONS
@@ -25,57 +25,57 @@ OPTIONS
 Testing Options
 ---------------
 
-| **-l, –list-tests**
+| **-l, --list-tests**
 | List all test cases. If a pattern was specified, all matching test
   cases are listed.
 
-| **-t, –list-tags**
+| **-t, --list-tags**
 | List all tags. If a pattern was specified, all matching tags are
   listed.
 
-| **-s, –success**
+| **-s, --success**
 | Include successful tests in output.
 
-| **-b, –break**
+| **-b, --break**
 | Break into debugger mode upon failed test.
 
-| **-e, –nothrow**
+| **-e, --nothrow**
 | Skip exception tests.
 
-| **-i, –invisibles**
+| **-i, --invisibles**
 | Show invisibles like tabs or newlines.
 
-| **-o, –out**\ =\ *FILE*
+| **-o, --out**\ =\ *FILE*
 | Write all output to *FILE*.
 
-| **-r, –reporter**\ =\ *STRING*
+| **-r, --reporter**\ =\ *STRING*
 | Reporter to use. Default is console.
 
-| **-n, –name**\ =\ *STRING*
+| **-n, --name**\ =\ *STRING*
 | Suite name.
 
-| **-a, –abort**
+| **-a, --abort**
 | Abort at first failure.
 
-| **-x, –abortx**\ =\ *N*
+| **-x, --abortx**\ =\ *N*
 | Abort after *N* failures.
 
-| **-w, –warn**\ =\ *STRING*
+| **-w, --warn**\ =\ *STRING*
 | Enable warnings.
 
-| **-d, –durations**\ =\ *yes|no*
+| **-d, --durations**\ =\ *yes|no*
 | Show test durations. Default is *no*.
 
-| **-f, –input-file**\ =\ *FILE*
+| **-f, --input-file**\ =\ *FILE*
 | Load test names from a file.
 
-| **-#, –filenames-as-tags**
+| **-#, --filenames-as-tags**
 | Adds a tag for the file name.
 
-| **-c, –section**\ =\ *STRING*
+| **-c, --section**\ =\ *STRING*
 | Specify the section to run the tests on.
 
-| **-v, –verosity**\ =\ *quiet|normal|high*
+| **-v, --verosity**\ =\ *quiet|normal|high*
 | Set output verbosity. Default is *normal*.
 
 | **–list-test-names-only**
@@ -106,7 +106,7 @@ Testing Options
 Program Information
 -------------------
 
-| **-?, -h, –help**
+| **-?, -h, --help**
 | Print a help message for **odgi test**.
 
 ..

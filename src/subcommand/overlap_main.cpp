@@ -20,24 +20,27 @@ namespace odgi {
         argv[0] = (char *) prog_name.c_str();
         --argc;
 
-        args::ArgumentParser parser("find the paths touched by the input paths");
-        args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-        args::ValueFlag<std::string> og_file(parser, "FILE", "perform the search in this graph", {'i', "input"});
-
-        args::ValueFlag<std::string> subset_paths(parser, "FILE",
-                                                  "perform the search considering only the paths specified in the FILE; "
-                                                  "the file must contain one path name per line and a subset of all paths can be specified.",
+        args::ArgumentParser parser("Find the paths touched by given input paths.");
+        args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+        args::ValueFlag<std::string> og_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "input"});
+        args::Group overlap_opts(parser, "[ Overlap Options ]");
+        args::ValueFlag<std::string> subset_paths(overlap_opts, "FILE",
+                                                  "Perform the search considering only the paths specified in the FILE. "
+                                                  "The file must contain one path name per line and a subset of all paths can be specified."
+                                                  "When searching the overlaps, only these paths will be considered.",
                                                   {'s', "subset-paths"});
 
-        args::ValueFlag<std::string> path_name(parser, "PATH_NAME", "perform the search of the given path in the graph",
+        args::ValueFlag<std::string> path_name(overlap_opts, "PATH_NAME", "Perform the search of the given path STRING in the graph.",
                                                {'r', "path"});
-        args::ValueFlag<std::string> path_file(parser, "FILE", "perform the search for the paths listed in FILE",
+        args::ValueFlag<std::string> path_file(overlap_opts, "FILE", "Report the search results only for the paths listed in FILE.",
                                                {'R', "paths"});
 
-        args::ValueFlag<std::string> bed_input(parser, "FILE", "a BED file of ranges in paths in the graph",
+        args::ValueFlag<std::string> bed_input(overlap_opts, "FILE", "A BED FILE of ranges in paths in the graph.",
                                                {'b', "bed-input"});
-
-        args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use", {'t', "threads"});
+        args::Group threading_opts(parser, "[ Threading ]");
+        args::ValueFlag<uint64_t> nthreads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
+        args::Group program_info_opts(parser, "[ Program Information ]");
+        args::HelpFlag help(program_info_opts, "help", "display this help summary", {'h', "help"});
 
         try {
             parser.ParseCLI(argc, argv);

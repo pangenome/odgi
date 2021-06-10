@@ -20,15 +20,26 @@ int main_build(int argc, char** argv) {
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
-    args::ArgumentParser parser("construct a dynamic succinct variation graph");
-    args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-    args::ValueFlag<std::string> gfa_file(parser, "FILE", "construct the graph from this GFA input file", {'g', "gfa"});
-    args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store the graph self index in this file", {'o', "out"});
-    args::Flag to_gfa(parser, "to_gfa", "write the graph to stdout in GFA format", {'G', "to-gfa"});
-    args::Flag toposort(parser, "sort", "apply generalized topological sort to the graph and set node ids to order", {'s', "sort"});
-    args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel operations", {'t', "threads"});
-    args::Flag debug(parser, "debug", "enable debugging", {'d', "debug"});
-    args::Flag progress(parser, "progress", "show progress updates", {'P', "progress"});
+    args::ArgumentParser parser("Construct a dynamic succinct variation graph in ODGI format from a GFAv1.");
+    args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+    args::ValueFlag<std::string> gfa_file(mandatory_opts, "FILE", "GFAv1 FILE containing the nodes, edges and "
+                                                          "paths to build a dynamic succinct variation graph from.", {'g', "gfa"});
+    args::ValueFlag<std::string> dg_out_file(mandatory_opts, "FILE", "Write the dynamic succinct variation graph to this *FILE*. A file ending with *.og* is recommended.", {'o', "out"});
+    args::Group graph_files_io(parser, "[ Graph Files IO ]");
+    args::Flag to_gfa(graph_files_io, "to_gfa", "Write the graph to stdout in GFAv1 format.", {'G', "to-gfa"});
+    args::Group graph_sorting(parser, "[ Graph Sorting ]");
+    args::Flag toposort(graph_sorting, "sort", "Apply a general topological sort to the graph and order the node ids"
+                                        "  accordingly. A bidirected adaptation of Kahn’s topological sort (1962)"
+                                        "  is used, which can handle components with no heads or tails. Here, both heads and tails are taken into account.", {'s', "sort"});
+    args::Group threading(parser, "[ Threading ]");
+    args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
+    args::Group processing_information(parser, "[ Processing Information ]");
+    args::Flag progress(processing_information, "progress", "Write the current progress to stderr.", {'P', "progress"});
+    args::Flag debug(processing_information, "debug", "Verbosely print graph information to stderr. This includes the maximum"
+                                                      "  node_id, the minimum node_id, the handle to node_id mapping, the"
+                                                      "  deleted nodes and the path metadata.", {'d', "debug"});
+    args::Group program_information(parser, "[ Program Information ]");
+    args::HelpFlag help(program_information, "help", "Print a help message for odgi build.", {'h', "help"});
     try {
         parser.ParseCLI(argc, argv);
     } catch (args::Help) {
@@ -44,14 +55,6 @@ int main_build(int argc, char** argv) {
         return 1;
     }
 
-    /*
-    size_t n_threads = args::get(num_threads);
-    if (n_threads) {
-        omp_set_num_threads(args::get(num_threads));
-    } else {
-        omp_set_num_threads(1);
-    }
-    */
     graph_t graph;
     
     //make_graph();

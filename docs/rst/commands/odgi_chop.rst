@@ -4,57 +4,52 @@
 odgi chop
 #########
 
-divide nodes into smaller pieces
+Divide nodes into smaller pieces.
 
 SYNOPSIS
 ========
 
-**odgi chop** [**-i, –idx**\ =\ *FILE*] [**-o, –out**\ =\ *FILE*] [**-c,
+**odgi chop** [**-i, --idx**\ =\ *FILE*] [**-o, --out**\ =\ *FILE*] [**-c,
 –chop-to**\ =\ *N*] [*OPTION*]…
 
 DESCRIPTION
 ===========
 
-The odgi chop(1) command chops long nodes into short ones while
+The odgi chop command chops long nodes into short ones while
 preserving the graph topology and node order.
 
 OPTIONS
 =======
 
-Graph Files IO
+MANDATORY OPTIONS
 --------------
 
-| **-i, –idx**\ =\ *FILE*
-| File containing the succinct variation graph to chop. The file name
-  usually ends with *.og*.
+| **-i, --idx**\ =\ *FILE*
+| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.
 
-| **-o, –out**\ =\ *FILE*
-| Write the choped succinct variation graph to *FILE*. The file name
-  usually ends with *.og*.
+| **-o, --out**\ =\ *FILE*
+| Write the chopped succinct variation graph in ODGI format to *FILE*. A file ending of *.og* is recommended.
 
-Chop Options
-------------
-
-| **-c, –chop-to**\ =\ *N*
-| Divide nodes that longer than *N* into nodes no longer than *N* while
+| **-c, --chop-to**\ =\ *N*
+| Divide nodes that are longer than *N* base pairs into nodes no longer than *N* while
   maintaining graph topology.
 
 Threading
 ---------
 
-| **-t, –threads**\ =\ *N*
+| **-t, --threads**\ =\ *N*
 | Number of threads to use for the parallel operations.
 
 Processing Information
 ----------------------
 
-| **-d, –debug**
+| **-d, --debug**
 | Print information about the process to stderr.
 
 Program Information
 -------------------
 
-| **-h, –help**
+| **-h, --help**
 | Print a help message for **odgi chop**.
 
 ..

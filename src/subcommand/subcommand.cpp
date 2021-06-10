@@ -13,7 +13,7 @@ namespace subcommand {
 std::ostream& operator<<(std::ostream& out, const CommandCategory& category) {
     switch(category) {
     case PIPELINE:
-        out << "overview of available commands";
+        out << "Overview of available commands";
         break;
     case TOOLKIT:
         out << "useful graph tools";
@@ -77,7 +77,6 @@ const Subcommand* Subcommand::get(int argc, char** argv) {
         // We don't have a subcommand name
         return nullptr;
     }
-
     if(Subcommand::get_registry().count(argv[1])) {
         // We have a matching subcommand pointer, so return it.
         return Subcommand::get_registry()[argv[1]];

@@ -4,43 +4,47 @@
 odgi groom
 #########
 
-resolve spurious inverting links
+Resolve spurious inverting links.
 
 SYNOPSIS
 ========
 
-**odgi groom** [**-i, –idx**\ =\ *FILE*] [**-o, –out**\ =\ *FILE*]
+**odgi groom** [**-i, --idx**\ =\ *FILE*] [**-o, --out**\ =\ *FILE*]
 [*OPTION*]…
 
 DESCRIPTION
 ===========
 
-The odgi groom(1) command resolves spurious inverting links.
+The odgi groom command resolves spurious inverting links.
 
 OPTIONS
 =======
 
-Graph Files IO
+MANDATORY OPTIONS
 --------------
 
-| **-i, –idx**\ =\ *FILE*
-| File containing the succinct variation graph to groom. The file name
-  usually ends with *.og*.
+| **-i, --idx**\ =\ *FILE*
+| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.
 
-| **-o, –out**\ =\ *FILE*
-| Write the groomed succinct variation graph to *FILE*. The file name
-  usually ends with *.og*.
+| **-o, --out**\ =\ *FILE*
+| Write the groomed succinct variation graph in ODGI format to *FILE*. A file ending with *.og* is recommended.
+
+Grooming Options
+----------------
+
+| **-d, --use-dfs**
+| Use depth-first search for the grooming.
 
 Processing Information
 ----------------------
 
-| **-P, –progress**
-| Display progress of the grooming to stderr.
+| **-P, --progress**
+| Write the current progress to stderr.
 
 Program Information
 -------------------
 
-| **-h, –help**
+| **-h, --help**
 | Print a help message for **odgi groom**.
 
 ..

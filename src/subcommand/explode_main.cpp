@@ -20,28 +20,32 @@ namespace odgi {
         --argc;
 
         args::ArgumentParser parser(
-                "breaks a graph into connected components in their own files");
-        args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-        args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-        args::ValueFlag<std::string> _prefix(parser, "STRING",
-                                             "write each connected component in a file with the given prefix. "
+                "Breaks a graph into connected components storing each component in its own file.");
+        args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+        args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+        args::Group explode_opts(parser, "[ Explode Options ]");
+        args::ValueFlag<std::string> _prefix(explode_opts, "STRING",
+                                             "Write each connected component to a file with the given STRING prefix. "
                                              "The file for the component `i` will be named `STRING.i.og` "
-                                             "(default: `component`)", {'p', "prefix"});
-
-        args::ValueFlag<uint64_t> _write_biggest_components(parser, "N",
-                                                            "specify the number of the biggest connected components to write, sorted by decreasing size (default: disabled, for writing them all) ",
+                                             "(default: `component.i.og`).", {'p', "prefix"});
+        args::ValueFlag<uint64_t> _write_biggest_components(explode_opts, "N",
+                                                            "Specify the number of the biggest connected components to write, sorted by decreasing size (default: disabled, for writing them all).",
                                                             {'b', "biggest"});
-        args::ValueFlag<char> _size_metric(parser, "C",
-                                           "specify how to sort the connected components by size:\np) path mass (total number of path bases) (default)\nl) graph length (number of node bases)\nn) number of nodes\nP) longest path",
+        args::ValueFlag<char> _size_metric(explode_opts, "C",
+                                           "Specify how to sort the connected components by size:\np) Path mass (total number of path bases) (default).\nl) Graph length (number of node bases).\nn) Number of nodes.\nP) Longest path.",
                                            {'s', "sorting-criteria"});
 
-        args::Flag _optimize(parser, "optimize", "compact the node ID space in each connected component",
+        args::Flag _optimize(explode_opts, "optimize", "Compact the node ID space in each connected component.",
                              {'O', "optimize"});
-        args::ValueFlag<uint64_t> nthreads(parser, "N",
-                                           "number of threads to use (to write the components in parallel)",
+        args::Group threading_opts(parser, "[ Threading ]");
+        args::ValueFlag<uint64_t> nthreads(threading_opts, "N",
+                                           "Number of threads to use for parallel operations.",
                                            {'t', "threads"});
-        args::Flag _debug(parser, "progress", "print information about the components and the progress to stderr",
+        args::Group processing_info_opts(parser, "[ Processing Information ]");
+        args::Flag _debug(processing_info_opts, "progress", "Print information about the components and the progress to stderr.",
                           {'P', "progress"});
+        args::Group program_info_opts(parser, "[ Program Information ]");
+        args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi explode.", {'h', "help"});
 
         try {
             parser.ParseCLI(argc, argv);

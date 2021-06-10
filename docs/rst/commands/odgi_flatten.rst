@@ -4,48 +4,47 @@
 odgi flatten
 #########
 
-generate linearization of the graph
+Generate linearizations of a graph.
 
 SYNOPSIS
 ========
 
-**odgi flatten** [**-i, –idx**\ =\ *FILE*] [*OPTION*]…
+**odgi flatten** [**-i, --idx**\ =\ *FILE*] [*OPTION*]…
 
 DESCRIPTION
 ===========
 
-The odgi flatten(1) command projects the graph sequence and paths into
+The odgi flatten command projects the graph sequence and paths into
 FASTA and BED.
 
 OPTIONS
 =======
 
-Graph Files IO
+MANDATORY OPTIONS
 --------------
 
-| **-i, –idx**\ =\ *FILE*
-| File containing the succinct variation graph to flatten. The file name
-  usually ends with *.og*.
+| **-i, --idx**\ =\ *FILE*
+| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.
 
 Output Options
 --------------
 
-| **-f, –fasta**\ =\ *FILE*
+| **-f, --fasta**\ =\ *FILE*
 | Write the concatenated node sequences in FASTA format to *FILE*.
 
-| **-n, –name-seq**\ =\ *STRING*
+| **-n, --name-seq**\ =\ *STRING*
 | The name to use for the concatenated graph sequence. Default is the
   name of the input file which was specified via [**-i,
-  –idx**\ =\ *FILE*].
+  --idx**\ =\ *FILE*].
 
-| **-b, –bed**\ =\ *FILE*
+| **-b, --bed**\ =\ *FILE*
 | Write the mapping between graph paths and the linearized FASTA
   sequence in BED format to *FILE*.
 
 Program Information
 -------------------
 
-| **-h, –help**
+| **-h, --help**
 | Print a help message for **odgi flatten**.
 
 ..

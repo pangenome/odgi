@@ -17,11 +17,14 @@ namespace odgi {
         argv[0] = (char *) prog_name.c_str();
         --argc;
 
-        args::ArgumentParser parser("create a path index for a given graph");
-        args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-        args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-        args::ValueFlag<std::string> idx_out_file(parser, "FILE", "store the index in this file", {'o', "out"});
-        args::ValueFlag<std::uint64_t> nthreads(parser, "N", "number of threads to use for path index generation", {'t', "threads"});
+        args::ArgumentParser parser("Create a path index for a given graph.");
+        args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+        args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+        args::ValueFlag<std::string> idx_out_file(mandatory_opts, "FILE", "Write the succinct variation graph index to this FILE. A file ending with *.xp* is recommended.", {'o', "out"});
+        args::Group threading_opts(parser, "[ Threading ]");
+        args::ValueFlag<std::uint64_t> nthreads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
+        args::Group program_info_opts(parser, "[ Program Information ]");
+        args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi pathindex.", {'h', "help"});
 
         try {
             parser.ParseCLI(argc, argv);

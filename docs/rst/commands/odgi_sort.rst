@@ -4,18 +4,18 @@
 odgi sort
 #########
 
-sort a variation graph
+Apply different kinds of sorting algorithms to a graph. The most prominent one is the PG-SGD sorting algorithm.
 
 SYNOPSIS
 ========
 
-**odgi sort** [**-i, –idx**\ =\ *FILE*] [**-o, –out**\ =\ *FILE*]
+**odgi sort** [**-i, --idx**\ =\ *FILE*] [**-o, --out**\ =\ *FILE*]
 [*OPTION*]…
 
 DESCRIPTION
 ===========
 
-The odgi sort(1) command sorts a succinct variation graph. Odgi sort
+The odgi sort command sorts a succinct variation graph. Odgi sort
 offers a diverse palette of sorting algorithms to determine the node
 order:
 
@@ -35,14 +35,14 @@ order:
    pseudo-random <http://www.cplusplus.com/reference/random/mt19937/>`__
    generated numbers.
 
--  A 1D linear SGD sort: Odgi implements a 1D linear, variation graph
+-  A 1D linear SGD sort: ODGI implements a 1D linear, variation graph
    adjusted, multi-threaded version of the `Graph Drawing by Stochastic
    Gradient Descent <https://arxiv.org/abs/1710.04626>`__ algorithm. The
    force-directed graph drawing algorithm minimizes the graph’s energy
    function or stress level. It applies stochastic gradient descent
    (SGD) to move a single pair of nodes at a time.
 
--  A path guided, 1D linear SGD sort: Odgi implements a 1D linear,
+-  A path guided, 1D linear SGD sort: ODGI implements a 1D linear,
    variation graph adjusted, multi-threaded version of the `Graph
    Drawing by Stochastic Gradient
    Descent <https://arxiv.org/abs/1710.04626>`__ algorithm. The
@@ -60,185 +60,180 @@ within one parameter.
 OPTIONS
 =======
 
-Graph Files IO
+MANDATORY OPTIONS
 --------------
 
-| **-i, –idx**\ =\ *FILE*
-| File containing the succinct variation graph to sort. The file name
-  usually ends with *.og*.
+| **-i, --idx**\ =\ *FILE*
+| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.
 
-| **-o, –out**\ =\ *FILE*
+| **-o, --out**\ =\ *FILE*
 | Write the sorted dynamic succinct variation graph to this file. A file
   ending with *.og* is recommended.
 
-| **-s, –sort-order**\ =\ *FILE*
-| File containing the sort order. Each line contains one node
+Files IO Options
+---------------
+
+| **-X, --path-index**\ =\ *FILE*
+| Load the succinct variation graph index from this *FILE*. The file name usually ends with *.xp*.
+
+| **-s, --sort-order**\ =\ *FILE*
+| *FILE* containing the sort order. Each line contains one node
   identifier.
 
-Topological Sorts
+Topological Sort Options
 -----------------
 
-| **-b, –breadth-first**
+| **-b, --breadth-first**
 | Use a (chunked) breadth first topological sort.
 
-| **-B, –breadth-first-chunk**\ =\ *N*
+| **-B, --breadth-first-chunk**\ =\ *N*
 | Chunk size for breadth first topological sort. Specify how many
   nucleotides to grap at once in each BFS phase.
 
-| **-z, –depth-first**
+| **-c, --cycle-breaking**
+| Use a cycle breaking sort.
+
+| **-z, --depth-first**
 | Use a (chunked) depth first topological sort.
 
-| **-Z, –depth-first-chunk**\ =\ *N*
+| **-Z, --depth-first-chunk**\ =\ *N*
 | Chunk size for the depth first topological sort. Specify how many
-  nucleotides to grap at once in each DFS phace.
+  nucleotides to grap at once in each DFS phase.
 
-| **-w, –two-way**
+| **-w, --two-way**
 | Use a two-way topological algorithm for sorting. It is a maximum of
   head-first and tail-first topological sort.
 
-| **-n, –no-seeds**
+| **-n, --no-seeds**
 | Don’t use heads or tails to seed topological sort.
 
-| **-c, –cycle-breaking**
-| Use a cycle breaking sort.
-
-Random Sort
+Random Sort Options
 -----------
 
-| **-r, –random**
+| **-r, --random**
 | Randomly sort the graph.
+
+DAGify Sort Options
+-----------
+
+| **-d, --dagify-sort**
+| Sort on the basis of a DAGified graph.
 
 Path Guided 1D Linear SGD Sort
 ------------------------------
 
-| **-Y, –path-sgd**
-| Apply path guided 1D linear SGD algorithm to organize the graph.
+| **-Y, --path-sgd**
+| Apply the path-guided 1D linear SGD algorithm to organize the graph.
 
-| **-X, –path-index**\ =\ *FILE*
-| Load the path index from this *FILE*.
-
-| **-f, –path-sgd-use-paths**\ =FILE
+| **-f, --path-sgd-use-paths**\ =FILE
 | Specify a line separated list of paths to sample from for the on the
-  fly term generation process in the path guided linear 1D SGD. The
-  default value are *all paths*.
+  fly term generation process in the path guided linear 1D SGD (default: sample from all paths).
 
-| **-G, –path-sgd-min-term-updates-paths**\ =\ *N*
+| **-G, --path-sgd-min-term-updates-paths**\ =\ *N*
 | The minimum number of terms to be updated before a new path guided
   linear 1D SGD iteration with adjusted learning rate eta starts,
-  expressed as a multiple of total path steps. The default value is
-  *1.0*. Can be overwritten by *-U, -path-sgd-min-term-updates-nodes=N*.
+  expressed as a multiple of total path steps (default: *1.0*). Can be overwritten by *-U, -path-sgd-min-term-updates-nodes=N*.
 
-| **-U, –path-sgd-min-term-updates-nodes**\ =\ *N*
+| **-U, --path-sgd-min-term-updates-nodes**\ =\ *N*
 | The minimum number of terms to be updated before a new path guided
   linear 1D SGD iteration with adjusted learning rate eta starts,
-  expressed as a multiple of the number of nodes. Per default, the
-  argument is not set. The default of *-G,
-  path-sgd-min-term-updates-paths=N* is used).
+  expressed as a multiple of the number of nodes (default: NONE. *-G,path-sgd-min-term-updates-paths=N* is used).
 
-| **-j, –path-sgd-delta**\ =\ *N*
+| **-j, --path-sgd-delta**\ =\ *N*
 | The threshold of maximum displacement approximately in bp at which to
-  stop path guided linear 1D SGD. Default values is *0.0*.
+  stop path guided linear 1D SGD (default: *0.0*).
 
-| **-g, –path-sgd-eps**\ =\ *N*
-| The final learning rate for path guided linear 1D SGD model. The
-  default value is *0.01*.
+| **-g, --path-sgd-eps**\ =\ *N*
+| The final learning rate for path guided linear 1D SGD model (default: *0.01*).
 
-| **-v, –path-sgd-eta-max**\ =\ *N*
+| **-v, --path-sgd-eta-max**\ =\ *N*
 | The first and maximum learning rate for path guided linear 1D SGD
-  model. The default value is *squared steps of longest path in graph*.
+  model (default: *squared steps of longest path in graph*).
 
-| **-a, –path-sgd-zipf-theta**\ =\ *N*
+| **-a, --path-sgd-zipf-theta**\ =\ *N*
 | The theta value for the Zipfian distribution which is used as the
   sampling method for the second node of one term in the path guided
-  linear 1D SGD model. The default value is *0.99*.
+  linear 1D SGD model (default: *0.99*).
 
-| **-x, –path-sgd-iter-max**\ =\ *N*
-| The maximum number of iterations for path guided linear 1D SGD model.
-  The default value is *30*.
+| **-x, --path-sgd-iter-max**\ =\ *N*
+| The maximum number of iterations for path guided linear 1D SGD model (default: 30).
 
-| **-F, –iteration-max-learning-rate**\ =\ *N*
-| The iteration where the learning rate is max for path guided linear 1D
-  SGD model. The default value is *0*.
+| **-F, --iteration-max-learning-rate**\ =\ *N*
+| The iteration where the learning rate is max for path guided linear 1D SGD model (default: *0*).
 
-| **-k, –path-sgd-zipf-space**\ =\ *N*
+| **-k, --path-sgd-zipf-space**\ =\ *N*
 | The maximum space size of the Zipfian distribution which is used as
   the sampling method for the second node of one term in the path guided
-  linear 1D SGD model. The default value is the *longest path length*.
+  linear 1D SGD model (default: *longest path length*).
 
-| **-I, –path-sgd-zipf-space-max**\ =\ *N*
+| **-I, --path-sgd-zipf-space-max**\ =\ *N*
 | The maximum space size of the Zipfian distribution beyond which
-  quantization occurs. Default value is *100*.
+  quantization occurs (default: *100*).
 
-| **-l, –path-sgd-zipf-space-quantization-step**\ =\ *N*
+| **-l, --path-sgd-zipf-space-quantization-step**\ =\ *N*
 | Quantization step size when the maximum space size of the Zipfian
-  distribution is exceeded. Default value is *100*.
+  distribution is exceeded (default: *100*).
 
-| **-y, –path-sgd-zipf-max-num-distributions**\ =\ *N*
-| Approximate maximum number of Zipfian distributions to calculate. The
-  default value is *100*.
+| **-y, --path-sgd-zipf-max-num-distributions**\ =\ *N*
+| Approximate maximum number of Zipfian distributions to calculate (default: *100*).
 
-| **-q, –path-sgd-seed**\ =\ *N*
-| Set the seed for the deterministic 1-threaded path guided linear 1D
-  SGD model. The default value is *pangenomic!*.
+| **-q, --path-sgd-seed**\ =\ *N*
+| Set the seed for the deterministic 1-threaded path guided linear 1D SGD model (default: *pangenomic!*).
 
-| **-u, –path-sgd-snapshot**\ =\ *STRING*
+| **-u, --path-sgd-snapshot**\ =\ *STRING*
 | Set the prefix to which each snapshot graph of a path guided 1D SGD
   iteration should be written to. This is turned off per default. This
-  argument only works when *-Y, –path-sgd* was specified. Not applicable
+  argument only works when *-Y, --path-sgd* was specified. Not applicable
   in a pipeline of sorts.
+
+Pipeline Sorting Options
+----------------
+
+| **-p, --pipeline**\ =\ *STRING*
+| Apply a series of sorts, based on single character command line
+  arguments given to this command (default: NONE). *s*: Topolocigal sort, heads only. *n*: Topological sort, no heads, no tails. *d*: DAGify sort. *c*: Cycle breaking sort. *b*: Breadth first topological sort. *z*: Depth first topological sort. *w*: Two-way topological sort. *r*: Random sort. *Y*: PG-SGD 1D sort. *f*: Reverse order. *g*: Groom the graph. An example could be *Ygs*.
 
 Path Sorting Options
 --------------------
 
-| **-L, –paths-min**
+| **-L, --paths-min**
 | Sort paths by their lowest contained node identifier.
 
-| **-M, –paths-max**
+| **-M, --paths-max**
 | Sort paths by their highest contained node identifier.
 
-| **-A, –paths-avg**
+| **-A, --paths-avg**
 | Sort paths by their average contained node identifier.
 
-| **-R, –paths-avg-rev**
+| **-R, --paths-avg-rev**
 | Sort paths in reverse by their average contained node identifier.
 
-| **-D, –path-delim**\ =\ *path-delim*
+| **-D, --path-delim**\ =\ *path-delim*
 | Sort paths in bins by their prefix up to this delimiter.
 
-Pipeline Sorting
-----------------
-
-| **-p, –pipeline**\ =\ *STRING*
-| Apply a series of sorts, based on single character command line
-  arguments given to this command. The default sort is *s*. The reverse
-  sort would be specified via *f*.
-
-Additional Parameters
+Optimize Options
 ---------------------
 
-| **-d, –dagify-sort**
-| Sort on the basis of a DAGified graph.
-
-| **-O, –Optimize**
+| **-O, --Optimize**
 | Use the MutableHandleGraph::optimize method to compact the node
   identifier space.
 
 Threading
 ---------
 
-| **-t, –threads**\ =\ *N*
+| **-t, --threads**\ =\ *N*
 | Number of threads to use for the parallel operations.
 
 Processing Information
 ----------------------
 
-| **-P, –progress**
-| Print sort progress to stdout.
+| **-P, --progress**
+| Write the current progress to stderr.
 
 Program Information
 -------------------
 
-| **-h, –help**
+| **-h, --help**
 | Print a help message for **odgi sort**.
 
 ..

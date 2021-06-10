@@ -18,11 +18,17 @@ int main_view(int argc, char** argv) {
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
-    args::ArgumentParser parser("projection of graphs into other formats");
-    args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-    args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the index from this file", {'i', "idx"});
-    args::Flag to_gfa(parser, "to_gfa", "write the graph to stdout in GFA format", {'g', "to-gfa"});
-    args::Flag display(parser, "display", "show internal structures", {'d', "display"});
+    args::ArgumentParser parser("Project a graph into other formats.");
+    args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+    args::Group out_opts(parser, "[ Output Options ]");
+    args::Flag to_gfa(out_opts, "to_gfa", "Write the graph in GFAv1 format to standard output.", {'g', "to-gfa"});
+    args::Flag display(parser, "display", "Show the internal structures of a graph. Print to stdout the maximum"
+                                          " node identifier, the minimum node identifier, the nodes vector, the"
+                                          " delete nodes bit vector and the path metadata, each in a separate"
+                                          " line.", {'d', "display"});
+    args::Group program_information(parser, "[ Program Information ]");
+    args::HelpFlag help(program_information, "help", "Print a help message for odgi view.", {'h', "help"});
 
     try {
         parser.ParseCLI(argc, argv);

@@ -4,18 +4,18 @@
 odgi pathindex
 #########
 
-create a path index for a given path
+Create a path index for a given graph.
 
 SYNOPSIS
 ========
 
-**odgi pathindex** [**-i, –idx**\ =\ *FILE*] [**-o, –out**\ =\ *FILE*]
+**odgi pathindex** [**-i, --idx**\ =\ *FILE*] [**-o, --out**\ =\ *FILE*]
 [*OPTION*]…
 
 DESCRIPTION
 ===========
 
-The odgi pathindex(1) command generates a path index of a graph. It uses
+The odgi pathindex command generates a path index of a graph. It uses
 succinct data structures to encode the index. The path index represents
 a subset of the features of a fully realized `xg
 index <https://github.com/vgteam/xg>`__. Having a path index, we can use
@@ -27,20 +27,25 @@ navigating large graphs in an interactive manner like in the
 OPTIONS
 =======
 
-Graph Files IO
+MANDATORY OPTIONS
 --------------
 
-| **-i, –idx**\ =\ *FILE*
-| File containing the succinct variation graph to generate a path index
-  from. The file name usually ends with *.og*.
+| **-i, --idx**\ =\ *FILE*
+| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.
 
-| **-o, –out**\ =\ *FILE*
-| Write the path index to *FILE*.
+| **-o, --out**\ =\ *FILE*
+| Write the succinct variation graph index to this FILE. A file ending with *.xp* is recommended.
+
+Threading
+---------
+
+| **-t, --threads**\ =\ *N*
+| Number of threads to use for parallel operations.
 
 Program Information
 -------------------
 
-| **-h, –help**
+| **-h, --help**
 | Print a help message for **odgi pathindex**.
 
 ..

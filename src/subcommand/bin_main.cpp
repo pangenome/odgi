@@ -19,21 +19,47 @@ int main_bin(int argc, char** argv) {
     argv[0] = (char*)prog_name.c_str();
     --argc;
 
-    args::ArgumentParser parser("binning of path information in the graph");
-    args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-    args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-    args::ValueFlag<std::string> fa_out_file(parser, "FILE", "store the pangenome sequence in FASTA format in this file", {'f', "fasta"});
-    args::ValueFlag<std::string> path_delim(parser, "path-delim", "annotate rows by prefix and suffix of this delimiter", {'D', "path-delim"});
-    args::Flag output_json(parser, "write-json", "write JSON format output including additional path positional information", {'j', "json"});
-    args::Flag aggregate_delim(parser, "aggregate-delim", "aggregate on path prefix delimiter", {'a', "aggregate-delim"});
-    args::ValueFlag<uint64_t> num_bins(parser, "N", "number of bins", {'n', "num-bins"});
-    args::ValueFlag<uint64_t> bin_width(parser, "bp", "width of each bin in basepairs along the graph vector", {'w', "bin-width"});
-    args::Flag write_seqs_not(parser, "write-seqs-not", "don't write out the sequences for each bin", {'s', "no-seqs"});
-    args::Flag drop_gap_links(parser, "drop-gap-links", "don't include gap links in the output", {'g', "no-gap-links"});
-    args::Flag haplo_blocker(parser, "haplo-blocker", "write a TSV to stdout for input to HaploBlocker: Each row corresponds to a node. Each column corresponds to a path. Each value is the depth of a specific node of a specific path.", {'b', "haplo-blocker"});
-    args::ValueFlag<uint64_t> haplo_blocker_min_paths(parser, "N", "the minimum number of paths that are present in the bin to actually report that bin", {'p', "haplo-blocker-min-paths"});
-    args::ValueFlag<uint64_t> haplo_blocker_min_depth(parser, "N", "the minimum depth a path needs to have in a bin to actually report that bin", {'c', "haplo-blocker-min-depth"});
-    args::Flag progress(parser, "progress", "write current progress to stderr", {'P', "progress"});
+    args::ArgumentParser parser("Binning of pangenome sequence and path information in the graph.");
+    args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this FILE. The file name usually ends with *.og*.", {'i', "idx"});
+    args::Group fasta_opts(parser, "[ FASTA Options ]");
+    args::ValueFlag<std::string> fa_out_file(fasta_opts, "FILE", "Write the pangenome sequence to FILE in FASTA format.", {'f', "fasta"});
+    args::Group bin_opts(parser, "[ Bin Options ]");
+    args::ValueFlag<std::string> path_delim(bin_opts, "path-delim", "Annotate rows by prefix and suffix of this delimiter.", {'D', "path-delim"});
+    args::Flag aggregate_delim(bin_opts, "aggregate-delim", "Aggregate on path prefix delimiter. Argument depends on -D,--path-delim=[STRING].", {'a', "aggregate-delim"});
+    args::Flag output_json(bin_opts, "write-json", "Print bins and links to stdout in pseudo JSON format. "
+                                                 "Each line is a  valid JSON object, but the whole file is not a valid JSON! "
+                                                 "First, each  bin including its pangenome sequence is printed to stdout per line.  "
+                                                 "Second, for each path in the graph, its traversed bins including  metainformation: **bin** (bin identifier), "
+                                                 "**mean.cov** (mean coverage  of the path in this bin), "
+                                                 "**mean.inv** (mean inversion rate of this  path in this bin), "
+                                                 "**mean.pos** (mean nucleotide position of this path  in this bin), "
+                                                 "and an array of ranges determining the nucleotide  position of the path in this bin. "
+                                                 "Switching first and last nucleotide  in a range represents a complement "
+                                                 "reverse orientation of that  particular sequence.", {'j', "json"});
+    args::ValueFlag<uint64_t> num_bins(bin_opts, "N", "The number of bins the pangenome sequence should be chopped up to.", {'n', "num-bins"});
+    args::ValueFlag<uint64_t> bin_width(bin_opts, "bp", "The bin width specifies the size of each bin.", {'w', "bin-width"});
+    args::Flag write_seqs_not(bin_opts, "write-seqs-not", "If -j,--json is set, no nucleotide sequences will be printed to stdout in order to save disk space.", {'s', "no-seqs"});
+    args::Flag drop_gap_links(bin_opts, "drop-gap-links", "Don't include gap links in the output. "
+                                                          "We divide links into 2 classes:\n1. The links which help to follow complex variations. "
+                                                          "They need to be drawn, else one could not follow the sequence of a path.\n"
+                                                          "2. The links helping to follow simple variations. These links are called gap-links."
+                                                          " Such links solely connecting a path from left to right may not be"
+                                                          "relevant to understand a path's traveral through the bins. Therfore,"
+                                                          " when this option is set, the gap-links are left out saving disk space.", {'g', "no-gap-links"});
+    args::Group haplo_blocker_opts(parser, "[ HaploBlocker Options ]");
+    args::Flag haplo_blocker(haplo_blocker_opts, "haplo-blocker", "Write a TSV to stdout formatted in a "
+                                                                  "way ready for HaploBlocker: Each row corresponds to a node. "
+                                                                  "Each column corresponds to a path. Each value is the coverage of "
+                                                                  "a specific node of a specific path.", {'b', "haplo-blocker"});
+    args::ValueFlag<uint64_t> haplo_blocker_min_paths(haplo_blocker_opts, "N", "Specify the minimum number of paths "
+                                                                               "that need to be present in the bin to actually"
+                                                                               " report that bin (default: 1).", {'p', "haplo-blocker-min-paths"});
+    args::ValueFlag<uint64_t> haplo_blocker_min_depth(haplo_blocker_opts, "N", "Specify the minimum depth a path needs to have in a bin to actually report that bin (default: 1).", {'c', "haplo-blocker-min-depth"});
+    args::Group processing_info_opts(parser, "[ Processing Information ]");
+    args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
+    args::Group program_info_opts(parser, "[ Program Information ]");
+    args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi bin.", {'h', "help"});
     try {
         parser.ParseCLI(argc, argv);
     } catch (args::Help) {

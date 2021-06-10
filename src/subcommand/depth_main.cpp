@@ -23,63 +23,65 @@ namespace odgi {
         argv[0] = (char *) prog_name.c_str();
         --argc;
 
-        args::ArgumentParser parser("find the depth of graph as defined by query criteria");
-        args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-        args::ValueFlag<std::string> og_file(parser, "FILE", "compute path depths in this graph", {'i', "input"});
-
-        args::ValueFlag<std::string> _subset_paths(parser, "FILE",
-                                                  "compute the depth considering only the paths specified in the FILE; "
-                                                  "the file must contain one path name per line and a subset of all paths can be specified.",
+        args::ArgumentParser parser("Find the depth of a graph as defined by query criteria. Without specifying any non-mandatory options, it prints in a tab-delimited format path, start, end, and mean.depth to stdout.");
+        args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+        args::ValueFlag<std::string> og_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "input"});
+        args::Group depth_opts(parser, "[ Depth Options ]");
+        args::ValueFlag<std::string> _subset_paths(depth_opts, "FILE",
+                                                  "Compute the depth considering only the paths specified in the FILE. "
+                                                  "The file must contain one path name per line and a subset of all paths can be specified; "
+                                                  "If a step is of a path of the given list, it is taken into account when calculating a node's depth. Else not.",
                                                   {'s', "subset-paths"});
 
-        args::ValueFlag<std::string> path_name(parser, "PATH_NAME", "compute the depth of the given path in the graph",
+        args::ValueFlag<std::string> path_name(depth_opts, "PATH_NAME", "Compute the depth of the given path PATH_NAME in the graph.",
                                                {'r', "path"});
-        args::ValueFlag<std::string> path_file(parser, "FILE", "compute depth for the paths listed in FILE",
+        args::ValueFlag<std::string> path_file(depth_opts, "FILE", "Report the depth only for the paths listed in FILE.",
                                                {'R', "paths"});
-        args::ValueFlag<std::string> graph_pos(parser, "[node_id][,offset[,(+|-)]*]*",
-                                               "compute the depth at the given node, e.g. 7 or 3,4 or 42,10,+ or 302,0,-",
+        args::ValueFlag<std::string> graph_pos(depth_opts, "[node_id][,offset[,(+|-)]*]*",
+                                               "Compute the depth at the given node, e.g. 7 or 3,4 or 42,10,+ or 302,0,-.",
                                                {'g', "graph-pos"});
-        args::ValueFlag<std::string> graph_pos_file(parser, "FILE", "a file with one graph position per line",
+        args::ValueFlag<std::string> graph_pos_file(depth_opts, "FILE", "A file with one graph position per line.",
                                                     {'G', "graph-pos-file"});
-        args::ValueFlag<std::string> path_pos(parser, "[path_name][,offset[,(+|-)]*]*",
-                                              "return depth at the given path position e.g. chrQ or chr3,42 or chr8,1337,+ or chrZ,3929,-",
+        args::ValueFlag<std::string> path_pos(depth_opts, "[path_name][,offset[,(+|-)]*]*",
+                                              "Return depth at the given path position e.g. chrQ or chr3,42 or chr8,1337,+ or chrZ,3929,-.",
                                               {'p', "path-pos"});
-        args::ValueFlag<std::string> path_pos_file(parser, "FILE", "a file with one path position per line",
+        args::ValueFlag<std::string> path_pos_file(depth_opts, "FILE", "A file with one path position per line.",
                                                    {'F', "path-pos-file"});
-        args::ValueFlag<std::string> bed_input(parser, "FILE", "a BED file of ranges in paths in the graph",
+        args::ValueFlag<std::string> bed_input(depth_opts, "FILE", "A BED file of ranges in paths in the graph.",
                                                {'b', "bed-input"});
 
-        args::Flag graph_depth_table(parser, "graph-depth-table",
-                                     "compute the depth and unique depth on each node in the graph, writing a table by node",
+        args::Flag graph_depth_table(depth_opts, "graph-depth-table",
+                                     "Compute the depth and unique depth on each node in the graph, writing a table by node: node.id, depth, depth.uniq.",
                                      {'d', "graph-depth-table"});
 
-        args::Flag graph_depth_vec(parser, "graph-depth-vec",
-                                   "compute the depth on each node in the graph, writing a vector by base",
+        args::Flag graph_depth_vec(depth_opts, "graph-depth-vec",
+                                   "Compute the depth on each node in the graph, writing a vector by base in one line.",
                                    {'v', "graph-depth-vec"});
 
-        args::Flag path_depth(parser, "path-depth",
-                              "compute a vector of depth on each base in each path",
+        args::Flag path_depth(depth_opts, "path-depth",
+                              "Compute a vector of depth on each base of each path. Each line consists of a path name and subsequently the space-separated depth of each base.",
                               {'P', "path-depth"});
 
-        args::Flag self_depth(parser, "self-depth",
-                              "compute the depth of the path versus itself on each base in each path",
+        args::Flag self_depth(depth_opts, "self-depth",
+                              "Compute the depth of the path versus itself on each base in each path. Each line consists of a path name and subsequently the space-separated depth of each base.",
                               {'a', "self-depth"});
 
-        args::Flag summarize_depth(parser, "summarize-graph-depth",
-                                   "provide a summary of the depth distribution in the graph",
+        args::Flag summarize_depth(depth_opts, "summarize-graph-depth",
+                                   "Provide a summary of the depth distribution in the graph, in a tab-delimited format it prints to stdout: node.count, graph.length, step.count, path.length, mean.node.depth (step.count/node.count), and mean.graph.depth (path.length/graph.length).",
                                    {'S', "summarize"});
 
-        args::ValueFlag<std::string> _windows_in(parser, "LEN:MIN:MAX",
-                                                "write a BED file of path intervals where the depth is between MIN and MAX, "
-                                                "merging regions not separated by more than LEN bp",
+        args::ValueFlag<std::string> _windows_in(depth_opts, "LEN:MIN:MAX",
+                                                "Print to stdout a BED file of path intervals where the depth is between MIN and MAX, "
+                                                "merging regions not separated by more than LEN bp.",
                                                 {'w', "windows-in"});
-        args::ValueFlag<std::string> _windows_out(parser, "LEN:MIN:MAX",
-                                                 "write a BED file of path intervals where the depth is outside of MIN and MAX, "
-                                                 "merging regions not separated by more than LEN bp",
+        args::ValueFlag<std::string> _windows_out(depth_opts, "LEN:MIN:MAX",
+                                                 "Print to stdout a BED file of path intervals where the depth is outside of MIN and MAX, "
+                                                 "merging regions not separated by more than LEN bp.",
                                                  {'W', "windows-out"});
-
-        args::ValueFlag<uint64_t> _num_threads(parser, "N", "number of threads to use", {'t', "threads"});
-
+        args::Group threading_opts(parser, "[ Threading ] ");
+        args::ValueFlag<uint64_t> _num_threads(threading_opts, "N", "Number of threads to use in parallel operations.", {'t', "threads"});
+        args::Group program_info_opts(parser, "[ Program Information ]");
+        args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi depth.", {'h', "help"});
         try {
             parser.ParseCLI(argc, argv);
         } catch (args::Help) {

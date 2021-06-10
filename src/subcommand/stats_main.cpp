@@ -26,36 +26,47 @@ int main_stats(int argc, char** argv) {
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
-    args::ArgumentParser parser("metrics describing variation graphs and their path relationships");
-    args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-    args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the variation graph from this file", {'i', "idx"});
-    args::ValueFlag<std::string> layout_in_file(parser, "FILE", "read the layout coordinates from this file", {'c', "coords-in"});
+    args::ArgumentParser parser("Metrics describing a variation graph and its path relationship.");
+    args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+    args::Group summary_opts(parser, "[ Summary Options ]");
+    args::Flag _summarize(summary_opts, "summarize", "Summarize the graph properties and dimensions. Print to stdout the #nucleotides, #nodes, #edges, #paths in a tab-delimited format.", {'S', "summarize"});
 
-    args::Flag _summarize(parser, "summarize", "summarize the graph properties and dimensions", {'S', "summarize"});
+    args::Flag _weakly_connected_components(summary_opts, "show", "Shows the properties of the weakly connected components.", {'W', "weak-connected-components"});
 
-    args::Flag _weakly_connected_components(parser, "show", "shows the properties of the weakly connected components", {'W', "weak-connected-components"});
-
-    args::Flag _num_self_loops(parser, "show", "number of self-loops", {'L', "self-loops"});
-    args::Flag _show_nondeterministic_edges(parser, "show", "show nondeterministic edges (those that extend to the same next base)", {'N', "nondeterministic-edges"});
+    args::Flag _num_self_loops(summary_opts, "show", "Number of nodes with a self-loop.", {'L', "self-loops"});
+    args::Flag _show_nondeterministic_edges(summary_opts, "show", "Show nondeterministic edges (those that extend to the same next base).", {'N', "nondeterministic-edges"});
 
 
-    args::Flag base_content(parser, "base-content", "describe the base content of the graph", {'b', "base-content"});
+    args::Flag base_content(summary_opts, "base-content", "Describe the base content of the graph. Print to stdout the #A, #C, #G\n"
+                                                          "  and #T in a tab-delimited format.", {'b', "base-content"});
     //args::Flag path_coverage(parser, "coverage", "provide a histogram of path coverage over bases in the graph", {'C', "coverage"});
     //args::Flag path_setcov(parser, "setcov", "provide a histogram of coverage over unique sets of paths", {'V', "set-coverage"});
     //args::Flag path_setcov_count(parser, "setcountcov", "provide a histogram of coverage over counts of unique paths", {'Q', "set-count-coverage"});
     //args::Flag path_multicov(parser, "multicov", "provide a histogram of coverage over unique multisets of paths", {'M', "multi-coverage"});
     //args::Flag path_multicov_count(parser, "multicountcov", "provide a histogram of coverage over counts of paths", {'L', "multi-count-coverage"});
     //args::ValueFlag<std::string> path_bedmulticov(parser, "BED", "for each BED entry, provide a table of path coverage over unique multisets of paths in the graph. Each unique multiset of paths overlapping a given BED interval is described in terms of its length relative to the total interval, the number of path traversals, and unique paths involved in these traversals.", {'B', "bed-multicov"});
-
-    args::ValueFlag<std::string> path_delim(parser, "CHAR", "the part of each path name before this delimiter is a group identifier, which when specified will cause stats to be collected in a group-wise rather than path-wise fashion", {'D', "delim"});
-
-    args::Flag mean_links_length(parser, "mean_links_length", "calculate the mean links length", {'l', "mean-links-length"});
-    args::Flag dont_penalize_gap_links(parser, "dont-penalize-gap-links", "don't penalize gap links in the mean links length", {'g', "no-gap-links"});
-    args::Flag sum_of_path_node_distances(parser, "sum_of_path_node_distances", "calculate the sum of path nodes distances", {'s', "sum-path-nodes-distances"});
-    args::Flag penalize_diff_orientation(parser, "penalize_diff_orientation", "penalize links which connect nodes with different orientation", {'d', "penalize-different-orientation"});
-    args::Flag path_statistics(parser, "path_statistics", "display the statistics for each path", {'P', "path-statistics"});
-
-    args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
+    args::ValueFlag<std::string> path_delim(summary_opts, "STRING", "The part of each path name before this delimiter is a group identifier, which when specified will ensure that odgi stats collects the summary information per group and not per path.", {'D', "delim"});
+    args::Group sorting_goodness_evaluation_opts(parser, "[ Sorting Goodness Eval Options ]");
+    args::ValueFlag<std::string> layout_in_file(sorting_goodness_evaluation_opts, "FILE", "Load the 2D layout coordinates in binary layout format from this *FILE*. The file name usually ends with *.lay*. The sorting goodness evaluation will then be performed for this *FILE*. When the layout coordinates are provided, the mean links length and the sum path nodes distances statistics are evaluated in 2D, else in 1D. Such a file can be generated with *odgi layout*.", {'c', "coords-in"});
+    args::Flag mean_links_length(sorting_goodness_evaluation_opts, "mean_links_length", "Calculate the mean links length. This metric is path-guided and"
+                                                              " computable in 1D and 2D.", {'l', "mean-links-length"});
+    args::Flag dont_penalize_gap_links(sorting_goodness_evaluation_opts, "dont-penalize-gap-links", "Don’t penalize gap links in the mean links length. A gap link is a"
+                                                                                                    " link which connects two nodes that are consecutive in the linear"
+                                                                                                    " pangenomic order. This option is specifiable only to compute the mean"
+                                                                                                    " links length in 1D.", {'g', "no-gap-links"});
+    args::Flag sum_of_path_node_distances(sorting_goodness_evaluation_opts, "sum_of_path_node_distances", "Calculate the sum of path nodes distances. This metric is path-guided"
+                                                                                                          " and computable in 1D and 2D. For each path, it iterates from node to"
+                                                                                                          " node, summing their distances, and normalizing by the path length. In"
+                                                                                                          " 1D, if a link goes back in the linearized viewpoint of the graph, this"
+                                                                                                          " is penalized (adding 3 times its length in the sum).", {'s', "sum-path-nodes-distances"});
+    args::Flag penalize_diff_orientation(sorting_goodness_evaluation_opts, "penalize_diff_orientation", "If a link connects two nodes which have different orientations, this"
+                                                                                                        " is penalized (adding 2 times its length in the sum).", {'d', "penalize-different-orientation"});
+    args::Flag path_statistics(sorting_goodness_evaluation_opts, "path_statistics", "Display the statistics (mean links length or sum path nodes distances) for each path.", {'P', "path-statistics"});
+    args::Group processing_information(parser, "[ Processing Information ]");
+    args::ValueFlag<uint64_t> threads(processing_information, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
+    args::Group program_information(parser, "[ Program Information ]");
+    args::HelpFlag help(program_information, "help", "Print a help message for odgi stats.", {'h', "help"});
 
     try {
         parser.ParseCLI(argc, argv);
@@ -71,6 +82,12 @@ int main_stats(int argc, char** argv) {
         std::cout << parser;
         return 1;
     }
+
+    if (!dg_in_file) {
+        std::cerr << "[odgi::stats] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
+        return 1;
+    }
+
 
     if (!args::get(mean_links_length) && !args::get(sum_of_path_node_distances)){
         if (args::get(path_statistics)){

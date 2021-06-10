@@ -4,19 +4,18 @@
 odgi server
 #########
 
-start a HTTP server with a given index file to query a
-pangenome position
+Start a basic HTTP server with a given path index file to go from *path:position* to *pangenome:position* very efficiently.
 
 SYNOPSIS
 ========
 
-**odgi server** [**-i, –idx**\ =\ *FILE*] [**-p, –port**\ =\ *N*]
+**odgi server** [**-i, --idx**\ =\ *FILE*] [**-p, --port**\ =\ *N*]
 [*OPTION*]…
 
 DESCRIPTION
 ===========
 
-| The odgi server(1) command starts an HTTP server with a given path
+| The odgi server command starts an HTTP server with a given path
   index as input. The idea is that we can go from **path:position** →
   **pangenome:position** via GET requests to the HTTP server. The server
   headers do not block cross origin requests. Example GET request:
@@ -31,27 +30,26 @@ DESCRIPTION
 OPTIONS
 =======
 
-Graph Files IO
+MANDATORY OPTIONS
 --------------
 
-| **-i, –idx**\ =\ *FILE*
-| File containing the succinct variation graph index to host in a HTTP
-  server. The file name usually ends with *.xp*.
+| **-i, --idx**\ =\ *FILE*
+| Load the succinct variation graph index from this *FILE*. The file name usually ends with *.xp*.
+
+| **-p, --port**\ =\ *N*
+| Run the server under this port.
 
 HTTP Options
 ------------
 
-| **-p, –port**\ =\ *N*
-| Run the server under this port.
-
-| **-a, –ip**\ =\ *IP*
+| **-a, --ip**\ =\ *IP*
 | Run the server under this IP address. If not specified, *IP* will be
   *localhost*.
 
 Program Information
 -------------------
 
-| **-h, –help**
+| **-h, --help**
 | Print a help message for **odgi server**.
 
 ..

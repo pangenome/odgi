@@ -4,54 +4,53 @@
 odgi break
 #########
 
-break cycles in the graph and drop its paths
+Break cycles in the graph and drop its paths.
 
 SYNOPSIS
 ========
 
-**odgi break** [**-i, –idx**\ =\ *FILE*] [**-o, –out**\ =\ *FILE*]
+**odgi break** [**-i, --idx**\ =\ *FILE*] [**-o, --out**\ =\ *FILE*]
 [*OPTION*]…
 
 DESCRIPTION
 ===========
 
-The odgi break(1) command finds cycles in a graph via `breadth-first
+The odgi break command finds cycles in a graph via `breadth-first
 search (BFS) <https://en.wikipedia.org/wiki/Breadth-first_search>`__ and
 breaks them, also dropping the graph’s paths.
 
 OPTIONS
 =======
 
-Graph Files IO
---------------
+MANDATORY OPTIONS
+-----------------
 
-| **-i, –idx**\ =\ *FILE*
-| File containing the succinct variation graph to break. The file name
-  usually ends with *.og*.
+| **-i, --idx**\ =\ *FILE*
+| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.
 
-| **-o, –out**\ =\ *FILE*
-| Write the broken graph to *FILE*.
+| **-o, --out**\ =\ *FILE*
+| Write the broken graph in ODGI format to *FILE*. A file ending of *.og* is recommended.
 
 Cycle Options
 -------------
 
-| **-c, –cycle-max-bp**\ =\ *N*
-| The maximum cycle length at which to break.
+| **-c, --cycle-max-bp**\ =\ *N*
+| The maximum cycle length at which to break (default: 0).
 
-| **-s, –max-search-bp**\ =\ *N*
-| The maximum search space of each BFS given in number of base pairs.
+| **-s, --max-search-bp**\ =\ *N*
+| The maximum search space of each BFS given in number of base pairs (default: 0).
 
-| **-u, –repeat-up-to**\ =\ *N*
+| **-u, --repeat-up-to**\ =\ *N*
 | Iterate cycle breaking up to *N* times or stop if no new edges are
   removed.
 
-| **-d, –show**
+| **-d, --show**
 | Print the edges we would remove to stdout.
 
 Program Information
 -------------------
 
-| **-h, –help**
+| **-h, --help**
 | Print a help message for **odgi break**.
 
 ..

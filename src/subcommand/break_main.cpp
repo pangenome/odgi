@@ -18,15 +18,18 @@ int main_break(int argc, char** argv) {
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
-    args::ArgumentParser parser("break cycles in the graph (drops paths)");
-    args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-    args::ValueFlag<std::string> odgi_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-    args::ValueFlag<std::string> odgi_out_file(parser, "FILE", "store the graph in this file", {'o', "out"});
-    args::ValueFlag<uint64_t> max_cycle_size(parser, "N", "maximum cycle length to break [default: 0]", {'c', "cycle-max-bp"});
-    args::ValueFlag<uint64_t> max_search_bp(parser, "N", "maximum number of bp per BFS from any node [default: 0]", {'s', "max-search-bp"});
-    args::ValueFlag<uint64_t> repeat_up_to(parser, "N", "iterate cycle breaking up to N times, or stop if no new edges are removed", {'u', "repeat-up-to"});
-    args::Flag show(parser, "show", "print edges we would remove", {'d', "show"});
-
+    args::ArgumentParser parser("Break cycles in the graph and drop its paths.");
+    args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+    args::ValueFlag<std::string> odgi_in_file(mandatory_opts, "FILE", "Load the succinct variation graph "
+                                                                      "in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+    args::ValueFlag<std::string> odgi_out_file(mandatory_opts, "FILE", "Write the broken graph in ODGI format to FILE. A file ending of *.og* is recommended.", {'o', "out"});
+    args::Group cycle_opts(parser, "[ Cycle Options ]");
+    args::ValueFlag<uint64_t> max_cycle_size(cycle_opts, "N", "The maximum cycle length at which to break (default: 0).", {'c', "cycle-max-bp"});
+    args::ValueFlag<uint64_t> max_search_bp(cycle_opts, "N", "The maximum search space of each BFS given in number of base pairs (default: 0).", {'s', "max-search-bp"});
+    args::ValueFlag<uint64_t> repeat_up_to(cycle_opts, "N", "Iterate cycle breaking up to N times, or stop if no new edges are removed.", {'u', "repeat-up-to"});
+    args::Flag show(cycle_opts, "show", "print edges we would remove", {'d', "show"});
+    args::Group program_info_opts(parser, "[ Program Information ]");
+    args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi break.", {'h', "help"});
     try {
         parser.ParseCLI(argc, argv);
     } catch (args::Help) {
