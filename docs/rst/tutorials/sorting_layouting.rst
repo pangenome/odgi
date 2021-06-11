@@ -68,8 +68,8 @@ In this 1-Dimensional visualization:
 - The path names are visualized on the left.
 - The black lines under the paths are the links, which represent the graph topology.
 
-The graph is very complex and, in this form, the underlying structure is unclear. It is hard to reason from it.
-It is a perfect candidate for the 1D PG-SGD: It will find the best 1D node order effectively linearizing it.
+The graph is very complex and, in this form, the underlying structure is unclear, making it difficult to reason from it.
+`odgi` offers algorithms to find the best 1D node order effectively linearizing the graph.
 
 --------------------------------------------------------
 1D layout metrics of the unsorted DRB1-3123 graph
@@ -105,7 +105,7 @@ We observe on stdout:
 Sort the unsorted DRB1-3123 graph in 1D
 ---------------------------------------
 
-Let's sort the graph with the 1D PG-SGD algorithm:
+Let's sort the graph:
 
 .. code-block:: bash
 
@@ -142,8 +142,7 @@ Visualize the 1D sorted DRB1-3123 graph
 
 The graph lost it's complexity and is now linear.
 
-The following animation represents one sorting run. Each update of the learning rate is visualized. This might help
-to optimize the sorting parameters.
+**Bonus**: the following animation represents what happens during the PG-SGD sorting.
 
 .. image:: /img/DRB1-3123_sorted_snapshots.gif
 
@@ -166,7 +165,7 @@ This prints to stdout:
     path	in_node_space	in_nucleotide_space	nodes	nucleotides	num_penalties	num_penalties_different_orientation
     all_paths	4.66114	4.72171	21882	163416	5948	1
 
-Compared to before, these metrics show that the goodness of the sorting of the graph improved significantly. Great!
+Compared to before, these metrics show that the goodness of the sorting of the graph improved significantly.
 
 -----------------------------------------
 2D layout of the unsorted DRB1-3123 graph
@@ -190,8 +189,7 @@ Calculate the 2D layout:
 
 .. image:: /img/DRB1-3123_unsorted.og.lay.png
 
-The following animation represents one layout run. Each update of the learning rate is visualized. This might help
-to optimize the layout parameters.
+**Bonus**: the following animation represents what happens during the layout generation.
 
 .. image:: /img/DRB1-3123_sorted.lay_snapshots.gif
 
@@ -199,8 +197,8 @@ to optimize the layout parameters.
 Interactive 2D visualization with gfaestus
 -----------------------------------------------------------------------------
 
-`gfaestus <https://github.com/chfi/gfaestus>`_ is a Vulkan-accelerated 2D GFAv1 interactive visualization tool written in Rust.
-It requires a GFA and an accompanied layout file in TSV format from :ref:`odgi layout`.
+`gfaestus <https://github.com/chfi/gfaestus>`_ is a Vulkan-accelerated 2D GFAv1 interactive visualization tool.
+It currently requires a GFA and an accompanied layout file in TSV format from :ref:`odgi layout`.
 
 We can create the TSV with another run of :ref:`odgi draw`:
 
