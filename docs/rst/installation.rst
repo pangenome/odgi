@@ -4,9 +4,8 @@
 Installation
 ############
 
-.. ========
-.. Building
-.. ========
+Building from source
+====================
 
 It may be necessary to install several system-level libraries to build ``odgi``.
 On ``Ubuntu``, these can be installed using ``apt``:
@@ -14,6 +13,12 @@ On ``Ubuntu``, these can be installed using ``apt``:
 .. code-block:: bash
 
    sudo apt install build-essential cmake python3-distutils python3-dev libjemalloc-dev
+
+Alternatively, after ``sudo apt install guix`` start a GNU Guix build container with
+
+.. code-block:: bash
+
+    source .guix-build
 
 ``odgi`` requires a C++ version of 9.3 or higher. You can check your version via:
 
@@ -38,3 +43,19 @@ Finally, build ``odgi`` using ``cmake``:
 The ``-j`` argument determines the number of threads used for the compilation process. In the command above it is set to
 ``2``. As ``odgi`` is a fairly large project, it is recommended to set ``-j`` to the maximum number of available threads. This
 can reduce the compilation time significantly.
+
+BIOCONDA
+========
+
+As `CONDA <https://docs.conda.io/en/latest/>`_ switched to GCC version 9.3 ``ieri``, a
+`BIOCONDA <https://bioconda.github.io/index.html>`_ package of the current ``odgi`` release is still in the
+`making <https://github.com/bioconda/bioconda-recipes/pull/26189>`_.
+For an older version please take a look at https://anaconda.org/bioconda/odgi. You can install it directly with ``conda``:
+
+.. code-block:: bash
+
+    conda install -c bioconda odgi=0.4.1
+
+GUIX
+====
+
