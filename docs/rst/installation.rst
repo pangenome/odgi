@@ -59,3 +59,49 @@ For an older version please take a look at https://anaconda.org/bioconda/odgi. Y
 GUIX
 ====
 
+Installing via the guix-genomics git repository
+-----------------------------------------------
+
+First, clone the `guix-genomics <https://github.com/ekg/guix-genomics>`_ repository:
+
+.. code-block:: bash
+
+    git clone https://github.com/ekg/guix-genomics
+
+And install the ``odgi`` package to your default GUIX environment:
+
+.. code-block:: bash
+
+    GUIX_PACKAGE_PATH=. guix package -i odgi
+
+Now ODGI is available as a global binary installation.
+
+Installing via the guix-genomics channel
+----------------------------------------
+
+Add the following to your ``~/.config/guix/channels.scm``:
+
+.. code-block:: scm
+
+        (cons*
+      (channel
+        (name 'guix-genomics)
+        (url "https://github.com/ekg/guix-genomics.git")
+        (branch "master"))
+      %default-channels)
+
+First, pull all the packages, then install ``odgi`` to your default GUIX environment:
+
+.. code-block:: bash
+
+    guix pull
+    guix package -i odgi
+
+If you want to build an environment only consisting of the ``odgi`` binary, you can do:
+
+.. code-block:: bash
+
+    guix environment --ad-hoc odgi
+
+For more details about how to handle Guix channels, please go to
+`https://git.genenetwork.org/guix-bioinformatics/guix-bioinformatics.git <https://git.genenetwork.org/guix-bioinformatics/guix-bioinformatics.git#headline-1>`_.
