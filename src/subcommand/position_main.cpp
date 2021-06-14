@@ -386,7 +386,7 @@ int main_position(int argc, char** argv) {
                  s != path_end; s = graph.get_next_step(s)) {
                 handle_t h = graph.get_handle_of_step(s);
                 uint64_t node_length = graph.get_length(h);
-                if (walked + node_length >= pos.offset) {
+                if (walked + node_length - 1 >= pos.offset) {
                     return make_pos_t(graph.get_id(h), graph.get_is_reverse(h), pos.offset - walked);
                 }
                 walked += node_length;
@@ -643,6 +643,8 @@ int main_position(int argc, char** argv) {
 
         } else {
             //path_pos = _path_pos;
+            std::cerr << "HIT" << std::endl;
+            std::cerr << "path_pos.offset: " << path_pos.offset << std::endl;
             pos = get_graph_pos(target_graph, path_pos);
         }
         lift_result_t result;
