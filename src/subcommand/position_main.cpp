@@ -643,8 +643,6 @@ int main_position(int argc, char** argv) {
 
         } else {
             //path_pos = _path_pos;
-            std::cerr << "HIT" << std::endl;
-            std::cerr << "path_pos.offset: " << path_pos.offset << std::endl;
             pos = get_graph_pos(target_graph, path_pos);
         }
         lift_result_t result;
