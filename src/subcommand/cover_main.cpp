@@ -21,7 +21,7 @@ namespace odgi {
         args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
         args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
         args::ValueFlag<std::string> dg_out_file(mandatory_opts, "FILE","Write the succinct variation graph with the generated paths in ODGI format to *FILE*. A file ending with *.og* is recommended.", {'o', "out"});
-        args::Group cover_opts("[ Cover Optoins ]");
+        args::Group cover_opts(parser, "[ Cover Options ]");
         args::ValueFlag<double> hogwild_depth(cover_opts, "DEPTH", "Randomly cover the graph until it reaches the given average DEPTH. Specifying this option overwrites all other cover options except -I, --ignore-paths!",{'H', "hogwild-depth"});
         args::ValueFlag<uint64_t> num_paths_per_component(cover_opts, "N", "Number of paths to generate per component.",{'n', "num-paths-per-component"});
         args::ValueFlag<uint64_t> node_window_size(cover_opts, "N","Size of the node window to check each time a new path is extended (it has to be greater than or equal to 2).",{'k', "node-window-size"});

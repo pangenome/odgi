@@ -223,7 +223,8 @@ int main_position(int argc, char** argv) {
             if (vals.size() >= 2) {
                 offset = std::stoi(vals[1]);
                 handle_t h = graph.get_handle(id);
-                if (graph.get_length(h) < offset) {
+                // offsets are 0-based!
+                if ((graph.get_length(h) - 1) < offset) {
                     std::cerr << "[odgi::position] error: offset of " << offset << " lies beyond the end of node " << id << std::endl;
                     exit(1);
                 }
@@ -386,7 +387,7 @@ int main_position(int argc, char** argv) {
                  s != path_end; s = graph.get_next_step(s)) {
                 handle_t h = graph.get_handle_of_step(s);
                 uint64_t node_length = graph.get_length(h);
-                if (walked + node_length >= pos.offset) {
+                if (walked + node_length - 1 >= pos.offset) {
                     return make_pos_t(graph.get_id(h), graph.get_is_reverse(h), pos.offset - walked);
                 }
                 walked += node_length;
@@ -551,7 +552,11 @@ int main_position(int argc, char** argv) {
         } else if (all_immediate) {
             std::cout << "target.path.pos\tdist.to.ref\tstrand.vs.ref" << std::endl;
         } else {
-            std::cout << "target.path.pos\tdist.to.ref\tstrand.vs.ref" << std::endl;
+        	if (ref_path_name || ref_path_file) {
+				std::cout << "target.path.pos\tdist.to.ref\tstrand.vs.ref" << std::endl;
+        	} else {
+				std::cout << "target.path.pos\tdist.to.path\tstrand.vs.ref" << std::endl;
+        	}
         }
     }
     // for each position that we want to look up

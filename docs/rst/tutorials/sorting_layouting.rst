@@ -219,7 +219,7 @@ Now download the source code of ``gfaestus`` and compile the Rust code:
     git clone --recursive https://github.com/chfi/gfaestus.git
     cargo build --release
 
-Assuming you made the resulting binary in `target/release/gfaestus` globally available, you can run:
+Assuming you made the resulting binary in ``target/release/gfaestus`` globally available, you can run:
 
 .. code-block:: bash
 
