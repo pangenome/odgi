@@ -17,8 +17,13 @@ like:
 - What other paths are crossing it?
 - Is there variation going on?
 
-Once a key regions are identified, they can be extracted with :ref:`odgi extract` and visualized in 1D with :ref:`odgi viz` or in
+Once key regions are identified, they can be extracted with :ref:`odgi extract` and visualized in 1D with :ref:`odgi viz` or in
 2D with :ref:`odgi layout` and :ref:`odgi draw`.
+
+.. note::
+
+	In the following, all node identifiers are one-based. This means we start to enumerate them at 1. All nucleotide positions
+	and offsets are zero-based. This means the first nucleotide position or first offset is 0.
 
 http://hypervolu.me/~erik/advbioinfo/HPRCy1v2.MHC.fa.gz
 http://hypervolu.me/~erik/advbioinfo/HLA_genes.bed
@@ -41,28 +46,28 @@ format:
 
     vg view -F -p -d test/k.gfa > k.gfa.dot
 
-And use Graphviz to visualize the graph:
+And use Graphviz to obtain a nucleotide-level visualization:
 
 .. code-block:: bash
 
     dot -Tpng k.gfa.dot -o k.gfa.dot.png
 
+.. image:: /img/k.gfa.dot.png
+
 .. note::
     Ensure that you have a font package for emojis installed. `Noto Color Emoji <https://www.google.com/get/noto/help/emoji/>`_
     is recommended. Or see a list of `Ubuntu packages <https://packages.ubuntu.com/search?keywords=fonts-noto-color-emoji>`_.
-
-.. image:: /img/k.gfa.dot.png
 
 ----------------------------------
 Path to graph position mapping
 ----------------------------------
 
-Take a path position in a graph, and display its corresponding graph position.
-Let's find out the graph position of the path ``y`` at nucleotide position ``11``.
+Take a path position in a graph and display its corresponding graph position.
+Let's find out the graph position of the path ``y`` at nucleotide position ``10``.
 
 .. code-block:: bash
 
-	odgi position -i k.og -p y,11,+ -v
+	odgi position -i k.og -p y,10,+ -v
 
 Where:
 
@@ -79,7 +84,7 @@ We observe on stdout:
 .. code-block:: bash
 
 	#source.path.pos	target.graph.pos
-	y,11,+	6,1,+
+	y,10,+	6,0,+
 
 The graph position is encoded as a comma-separated triple: \
 
@@ -95,23 +100,146 @@ The red arrow highlights the found graph position.
 Path to path position mapping
 ----------------------------------
 
+Take a path position in a graph and display the nearest position and distance to that position of a given reference
+path. Let's find out the reference position of the path ``x`` by given path ``y`` at nucleotide position ``10``.
+
+.. code-block:: bash
+
+	odgi position -i k.og -p y,10,+ -r x
+
+Where:
+
+- ``-p`` specifies the path to find the graph position from as a comma-separated triple:
+
+  1. The name of the path.
+  2. The nucleotide position of the path.
+  3. The orientation at the give nucleotide position of the path.
+
+- ``-r`` specifies the reference path.
+
+We observe on stdout:
+
+.. code-block:: bash
+
+	#source.path.pos	target.path.pos dist.to.ref	strand.vs.ref
+	y,10,+	x,10,+	0	+
+
+.. image:: /img/k.gfa.dot_path2graph.png
+
+The red arrow highlights the found path position.
+
 ----------------------------------
 Graph to path position mapping
 ----------------------------------
 
-----------------------------------
-Offsets in nodes and paths
-----------------------------------
+Take a node identifier and display the path and position starting in this node.
+Let's find out a path position of the given node identifier ``6``.
+
+.. code-block:: bash
+
+	odgi position -i k.og -g 6
+
+Where:
+
+- ``-g`` specifies the node identifier to find the path position from.
+
+We observe on stdout:
+
+.. code-block:: bash
+
+	#target.graph.pos	target.path.pos dist.to.path	strand.vs.ref
+	6,0,+	x,10,+	0	+
+
+.. image:: /img/k.gfa.dot_path2graph.png
+
+The red arrow highlights the found path position.
 
 ----------------------------------
-Reference based mapping
+Graph offset to path position mapping
 ----------------------------------
 
+Take a node identifier and an offset in that node. Display the path and position starting in this node.
+Let's find out a path position of the given node identifier ``6`` and offset ``2``.
+
+.. code-block:: bash
+
+	odgi position -i k.og -g 6,2
+
+Where:
+
+- ``-g`` specifies the node identifier and offset to find the path position from.
+
+We observe on stdout:
+
+.. code-block:: bash
+
+	#target.graph.pos	target.path.pos dist.to.path	strand.vs.ref
+	6,2,+	x,12,+	0	+
+
+.. image:: /img/k.gfa.dot_offsets.png
+
+The red arrow highlights the found path position.
+
 ----------------------------------
-The lift: Graph to graph position mapping
+Graph to reference position mapping
 ----------------------------------
 
-Take a path position in a source graph, and use the common paths between the source and target to project it into the target graph.
+Take a node identifier and reference path. Display the reference path including position starting in this node.
+Let's find out a path position of the given node identifier ``4`` and reference path ``x``.
+
+.. code-block:: bash
+
+	odgi position -i k.og -g 4 -r x
+
+Where:
+
+- ``-g`` specifies the node identifier to find the path position from.
+- ``-r`` specifies the reference path.
+
+We observe on stdout:
+
+.. code-block:: bash
+
+	#target.graph.pos	target.path.pos	dist.to.ref	strand.vs.ref
+	4,0,+	x,9,+	1	+
+
+Traversing along the node identifier order, the next reference position from the given node is 1 nucleotide away. The
+walked distance to the reference is reported when it's > 0.
+
+.. image:: /img/k.gfa.dot_graph2ref.png
+
+The red arrow highlights the node we start our walk from to go to the next reference position.
+
+----------------------------------
+The Lift: Graph to graph position mapping
+----------------------------------
+
+Take a path position in a source graph, and use the common paths between the source and target to project it into the
+target graph. Let's find out the graph position in target graph ``q.chop.og`` by given path position ``y,10,+`` in source
+graph ``k.og``.
+
+.. code-block:: bash
+
+	odgi build -g test/q.chop.gfa -o q.chop.og
+	odgi position -i q.chop.og -x k.og -p y,10,+ -v
+
+Where:
+
+- ``-i`` specifies the target graph.
+- ``-x`` the source graph.
+- ``-v`` ensures that we actually receive graph positions instead of path positions.
+
+We observe on stdout:
+
+.. code-block:: bash
+
+	#source.path.pos	target.graph.pos
+	y,10,+	9,0,+
+
+.. image:: /img/k.gfa.dot_lift.png
+
+The red arrows show the translation process of the source path position to the target graph position.
+
 
 .. Translate path positions between graphs (odgi position application): we use that to go from a smoothed graph to a
 .. consensus graph and vice versa, but we need a more general example of 2 graphs (from different runs, for example).
