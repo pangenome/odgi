@@ -83,8 +83,8 @@ We observe on stdout:
 
 .. code-block:: bash
 
-	#source.path.pos	target.graph.pos
-	y,10,+	6,0,+
+    #source.path.pos  target.graph.pos
+    y,10,+            6,0,+
 
 The graph position is encoded as a comma-separated triple: \
 
@@ -121,8 +121,8 @@ We observe on stdout:
 
 .. code-block:: bash
 
-	#source.path.pos	target.path.pos dist.to.ref	strand.vs.ref
-	y,10,+	x,10,+	0	+
+    #source.path.pos  target.path.pos  dist.to.ref  strand.vs.ref
+    y,10,+            x,10,+           0            +
 
 .. image:: /img/k.gfa.dot_path2graph.png
 
@@ -147,8 +147,8 @@ We observe on stdout:
 
 .. code-block:: bash
 
-	#target.graph.pos	target.path.pos dist.to.path	strand.vs.ref
-	6,0,+	x,10,+	0	+
+    #target.graph.pos  target.path.pos  dist.to.path  strand.vs.ref
+    6,0,+              x,10,+           0             +
 
 .. image:: /img/k.gfa.dot_path2graph.png
 
@@ -173,8 +173,8 @@ We observe on stdout:
 
 .. code-block:: bash
 
-	#target.graph.pos	target.path.pos dist.to.path	strand.vs.ref
-	6,2,+	x,12,+	0	+
+    #target.graph.pos  target.path.pos  dist.to.path  strand.vs.ref
+    6,2,+              x,12,+           0             +
 
 .. image:: /img/k.gfa.dot_offsets.png
 
@@ -200,8 +200,8 @@ We observe on stdout:
 
 .. code-block:: bash
 
-	#target.graph.pos	target.path.pos	dist.to.ref	strand.vs.ref
-	4,0,+	x,9,+	1	+
+    #target.graph.pos  target.path.pos  dist.to.ref  strand.vs.ref
+    4,0,+              x,9,+            1            +
 
 Traversing along the node identifier order, the next reference position from the given node is 1 nucleotide away. The
 walked distance to the reference is reported when it's > 0.
@@ -233,8 +233,8 @@ We observe on stdout:
 
 .. code-block:: bash
 
-	#source.path.pos	target.graph.pos
-	y,10,+	9,0,+
+    #source.path.pos  target.graph.pos
+    y,10,+            9,0,+
 
 .. image:: /img/k.gfa.dot_lift.png
 
