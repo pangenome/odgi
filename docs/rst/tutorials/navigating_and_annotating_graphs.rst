@@ -25,9 +25,9 @@ Once key regions are identified, they can be extracted with :ref:`odgi extract` 
 	In the following, all node identifiers are one-based. This means we start to enumerate them at 1. All nucleotide positions
 	and offsets are zero-based. This means the first nucleotide position or first offset is 0.
 
-http://hypervolu.me/~erik/advbioinfo/HPRCy1v2.MHC.fa.gz
-http://hypervolu.me/~erik/advbioinfo/HLA_genes.bed
-http://hypervolu.me/~erik/advbioinfo/HPRCy1v2.MHC.HLA_genes.bed
+.. http://hypervolu.me/~erik/advbioinfo/HPRCy1v2.MHC.fa.gz
+.. http://hypervolu.me/~erik/advbioinfo/HLA_genes.bed
+.. http://hypervolu.me/~erik/advbioinfo/HPRCy1v2.MHC.HLA_genes.bed
 
 =====
 Steps
