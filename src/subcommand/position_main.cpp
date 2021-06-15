@@ -552,7 +552,11 @@ int main_position(int argc, char** argv) {
         } else if (all_immediate) {
             std::cout << "target.path.pos\tdist.to.ref\tstrand.vs.ref" << std::endl;
         } else {
-            std::cout << "target.path.pos\tdist.to.ref\tstrand.vs.ref" << std::endl;
+        	if (ref_path_name || ref_path_file) {
+				std::cout << "target.path.pos\tdist.to.ref\tstrand.vs.ref" << std::endl;
+        	} else {
+				std::cout << "target.path.pos\tdist.to.path\tstrand.vs.ref" << std::endl;
+        	}
         }
     }
     // for each position that we want to look up
