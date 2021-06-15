@@ -223,7 +223,8 @@ int main_position(int argc, char** argv) {
             if (vals.size() >= 2) {
                 offset = std::stoi(vals[1]);
                 handle_t h = graph.get_handle(id);
-                if (graph.get_length(h) < offset) {
+                // offsets are 0-based!
+                if ((graph.get_length(h) - 1) < offset) {
                     std::cerr << "[odgi::position] error: offset of " << offset << " lies beyond the end of node " << id << std::endl;
                     exit(1);
                 }
