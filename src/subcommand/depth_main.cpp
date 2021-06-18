@@ -25,7 +25,7 @@ namespace odgi {
 
         args::ArgumentParser parser("Find the depth of a graph as defined by query criteria. Without specifying any non-mandatory options, it prints in a tab-delimited format path, start, end, and mean.depth to stdout.");
         args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-        args::ValueFlag<std::string> og_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "input"});
+        args::ValueFlag<std::string> og_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "input"});
         args::Group depth_opts(parser, "[ Depth Options ]");
         args::ValueFlag<std::string> _subset_paths(depth_opts, "FILE",
                                                   "Compute the depth considering only the paths specified in the FILE. "
@@ -60,7 +60,7 @@ namespace odgi {
 
         args::Flag path_depth(depth_opts, "path-depth",
                               "Compute a vector of depth on each base of each path. Each line consists of a path name and subsequently the space-separated depth of each base.",
-                              {'P', "path-depth"});
+                              {'D', "path-depth"});
 
         args::Flag self_depth(depth_opts, "self-depth",
                               "Compute the depth of the path versus itself on each base in each path. Each line consists of a path name and subsequently the space-separated depth of each base.",
@@ -80,6 +80,8 @@ namespace odgi {
                                                  {'W', "windows-out"});
         args::Group threading_opts(parser, "[ Threading ] ");
         args::ValueFlag<uint64_t> _num_threads(threading_opts, "N", "Number of threads to use in parallel operations.", {'t', "threads"});
+		args::Group processing_info_opts(parser, "[ Processing Information ]");
+		args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
         args::Group program_info_opts(parser, "[ Program Information ]");
         args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi depth.", {'h', "help"});
         try {
@@ -123,20 +125,19 @@ namespace odgi {
             }
         }
 
-        odgi::graph_t graph;
+		const uint64_t num_threads = args::get(_num_threads) ? args::get(_num_threads) : 1;
+
+		odgi::graph_t graph;
         assert(argc > 0);
         if (!args::get(og_file).empty()) {
             const std::string infile = args::get(og_file);
             if (infile == "-") {
                 graph.deserialize(std::cin);
             } else {
-                ifstream f(infile.c_str());
-                graph.deserialize(f);
-                f.close();
+				utils::handle_gfa_odgi_input(infile, "depth", args::get(progress), num_threads, graph);
             }
         }
 
-        const uint64_t num_threads = args::get(_num_threads) ? args::get(_num_threads) : 1;
         omp_set_num_threads((int) num_threads);
 
         std::vector<bool> paths_to_consider;
