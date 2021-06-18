@@ -28,6 +28,6 @@ jobs:
         # https://stackoverflow.com/questions/59853730/asan-issue-with-asan-library-loading
         # https://gitmemory.com/issue/diasurgical/devilutionX/183/511474901
       - name: Disable ASan sanity checking
-        run: sudo echo '/usr/lib/x86_64-linux-gnu/libasan.so.5.0.0' > /etc/ld.so.preload && export ASAN_OPTIONS=verify_asan_link_order=0 && export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libasan.so.5.0.0
+        run: sudo rm -f /etc/ld.so.preload && sudo echo '/usr/lib/x86_64-linux-gnu/libasan.so.5.0.0' > /etc/ld.so.preload && export ASAN_OPTIONS=verify_asan_link_order=0 && export LD_PRELOAD=/usr/lib/x86_64-linux-gnu/libasan.so.5.0.0
       - name: Test python import
         run: cd lib && ls -l && python3.8 -c 'import odgi; g = odgi.graph()'
