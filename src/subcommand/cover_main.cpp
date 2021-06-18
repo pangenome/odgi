@@ -2,6 +2,7 @@
 #include "odgi.hpp"
 #include "args.hxx"
 #include "algorithms/cover.hpp"
+#include "utils.hpp"
 
 namespace odgi {
 
@@ -19,7 +20,7 @@ namespace odgi {
 
         args::ArgumentParser parser("Cover the graph with paths.");
         args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-        args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+        args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
         args::ValueFlag<std::string> dg_out_file(mandatory_opts, "FILE","Write the succinct variation graph with the generated paths in ODGI format to *FILE*. A file ending with *.og* is recommended.", {'o', "out"});
         args::Group cover_opts(parser, "[ Cover Options ]");
         args::ValueFlag<double> hogwild_depth(cover_opts, "DEPTH", "Randomly cover the graph until it reaches the given average DEPTH. Specifying this option overwrites all other cover options except -I, --ignore-paths!",{'H', "hogwild-depth"});
@@ -84,20 +85,18 @@ namespace odgi {
             return 1;
         }
 
-        graph_t graph;
+		const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+
+		graph_t graph;
         assert(argc > 0);
         if (!args::get(dg_in_file).empty()) {
             std::string infile = args::get(dg_in_file);
             if (infile == "-") {
                 graph.deserialize(std::cin);
             } else {
-                ifstream f(infile.c_str());
-                graph.deserialize(f);
-                f.close();
+				utils::handle_gfa_odgi_input(infile, "cover", args::get(debug), num_threads, graph);
             }
         }
-
-        const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
 
         if (hogwild_depth) {
             algorithms::hogwild_path_cover(graph, args::get(hogwild_depth), num_threads, args::get(ignore_paths), args::get(debug));
