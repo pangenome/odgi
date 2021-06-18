@@ -149,7 +149,7 @@ man_pages = [
      [EG], 1),
     ('man/odgi_build', 'odgi_build', u'Construct a dynamic succinct variation graph in ODGI format from a GFAv1.',
      [EG], 1),
-    ('man/odgi_chop', 'odgi_chop', u'Divide nodes into smaller pieces.',
+    ('man/odgi_chop', 'odgi_chop', u'Divide nodes into smaller pieces preserving node topology and order.',
      [EG, AG], 1),
     ('man/odgi_cover', 'odgi_cover', u'Cover the graph with paths.',
      [AG], 1),

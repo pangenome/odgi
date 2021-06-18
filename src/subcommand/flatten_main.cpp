@@ -131,7 +131,7 @@ int main_flatten(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand odgi_flatten("flatten", "project the graph sequence and paths into FASTA and BED",
+static Subcommand odgi_flatten("flatten", "Generate linearizations of a graph.",
                                PIPELINE, 3, main_flatten);
 
 

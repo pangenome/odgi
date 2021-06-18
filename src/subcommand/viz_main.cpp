@@ -1210,6 +1210,6 @@ namespace odgi {
         return 0;
     }
 
-    static Subcommand odgi_viz("viz", "visualize the graph",PIPELINE, 3, main_viz);
+    static Subcommand odgi_viz("viz", "Visualize a variation graph in 1D.",PIPELINE, 3, main_viz);
 
 }

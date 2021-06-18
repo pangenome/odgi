@@ -23,5 +23,4 @@ sed -i "s|$CUR_VER|$CUR_VER,|g" ../src/version.cpp
 LINE=$(($LINE + 1))
 sed -i "$LINE i \ \ \ \ {\"v$NEW_VER\", \"$NEW_CODENAME\"}" ../src/version.cpp
 
-cd ../docs/asciidocs/
-bash generate_asciidocs.sh
+# TODO generate updated documentation

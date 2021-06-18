@@ -221,7 +221,7 @@ namespace odgi {
         return 0;
     }
 
-    static Subcommand odgi_squeeze("squeeze", "squeezes multiple graphs into the same file",
+    static Subcommand odgi_squeeze("squeeze", "Squeezes multiple graphs in ODGI format into the same file in ODGI format.",
                                    PIPELINE, 3, main_squeeze);
 
 

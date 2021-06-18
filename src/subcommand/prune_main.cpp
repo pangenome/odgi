@@ -194,7 +194,7 @@ int main_prune(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand odgi_prune("prune", "prune the graph based on depth or topological complexity",
+static Subcommand odgi_prune("prune", "Remove complex parts of the graph.",
                               PIPELINE, 3, main_prune);
 
 

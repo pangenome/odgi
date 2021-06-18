@@ -94,7 +94,7 @@ int main_build(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand odgi_build("build", "build dynamic succinct variation graph",
+static Subcommand odgi_build("build", "Construct a dynamic succinct variation graph in ODGI format from a GFAv1.",
                               PIPELINE, 3, main_build);
 
 

@@ -572,7 +572,7 @@ namespace odgi {
         return 0;
     }
 
-    static Subcommand odgi_depth("depth", "find the depth of graph as defined by query criteria",
+    static Subcommand odgi_depth("depth", "Find the depth of a graph as defined by query criteria. Without specifying any non-mandatory options, it prints in a tab-delimited format path, start, end, and mean.depth to stdout.",
                                  PIPELINE, 3, main_depth);
 
 }

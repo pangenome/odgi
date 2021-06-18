@@ -52,7 +52,7 @@ namespace odgi {
         return 0;
     }
 
-    static Subcommand odgi_version("version", "get the git version of odgi",
+    static Subcommand odgi_version("version", "Print the version of ODGI to stdout.",
                                    PIPELINE, 3, main_version);
 
 }

@@ -113,7 +113,7 @@ int main_break(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand odgi_break("break", "break cycles in the graph",
+static Subcommand odgi_break("break", "Break cycles in the graph and drop its paths.",
                               PIPELINE, 3, main_break);
 
 

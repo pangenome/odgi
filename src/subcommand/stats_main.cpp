@@ -820,7 +820,7 @@ for (uint64_t k = 0; k < path_names.size(); ++k) {
     return 0;
 }
 
-static Subcommand odgi_stats("stats", "describe the graph and its path relationships",
+static Subcommand odgi_stats("stats", "Metrics describing a variation graph and its path relationship.",
                               PIPELINE, 3, main_stats);
 
 

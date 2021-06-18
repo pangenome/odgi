@@ -418,7 +418,7 @@ int main_layout(int argc, char **argv) {
     return 0;
 }
 
-static Subcommand odgi_layout("layout", "use path guided SGD to make 2D layouts of the graph",
+static Subcommand odgi_layout("layout", "Establish 2D layouts of the graph using path-guided stochastic gradient descent (the graph must be sorted and id-compacted).",
                                PIPELINE, 3, main_layout);
 
 

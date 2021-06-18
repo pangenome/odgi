@@ -90,7 +90,7 @@ int main_unchop(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand odgi_unchop("unchop", "merge unitigs into single nodes",
+static Subcommand odgi_unchop("unchop", "Merge unitigs into a single node preserving the node order.",
                               PIPELINE, 3, main_unchop);
 
 

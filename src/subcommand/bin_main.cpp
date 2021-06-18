@@ -295,7 +295,7 @@ int main_bin(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand odgi_bin("bin", "bin path information across the graph",
+static Subcommand odgi_bin("bin", "Binning of pangenome sequence and path information in the graph.",
                               PIPELINE, 3, main_bin);
 
 

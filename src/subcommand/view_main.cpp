@@ -72,7 +72,7 @@ int main_view(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand odgi_view("view", "projection of graphs into other formats",
+static Subcommand odgi_view("view", "Project a graph into other formats.",
                              PIPELINE, 3, main_view);
 
 

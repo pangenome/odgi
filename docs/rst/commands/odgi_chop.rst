@@ -4,7 +4,7 @@
 odgi chop
 #########
 
-Divide nodes into smaller pieces.
+Divide nodes into smaller pieces preserving node topology and order.
 
 SYNOPSIS
 ========

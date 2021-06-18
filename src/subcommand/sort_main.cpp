@@ -457,7 +457,7 @@ int main_sort(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand odgi_sort("sort", "sort a variation graph",
+static Subcommand odgi_sort("sort", "Apply different kind of sorting algorithms to a graph. The most prominent one is the PG-SGD sorting algorithm.",
                               PIPELINE, 3, main_sort);
 
 

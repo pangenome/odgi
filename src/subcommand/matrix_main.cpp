@@ -67,7 +67,7 @@ int main_matrix(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand odgi_matrix("matrix", "graph topology in sparse matrix form",
+static Subcommand odgi_matrix("matrix", "Write the graph topology in sparse matrix formats.",
                               PIPELINE, 3, main_matrix);
 
 
