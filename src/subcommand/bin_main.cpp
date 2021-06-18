@@ -3,8 +3,11 @@
 #include "args.hxx"
 #include "algorithms/bin_path_info.hpp"
 #include "algorithms/bin_path_depth.hpp"
+#include "gfa_to_handle.hpp"
+#include "utils.hpp"
 
 #include <regex>
+#include <filesystem>
 
 namespace odgi {
 
@@ -56,6 +59,8 @@ int main_bin(int argc, char** argv) {
                                                                                "that need to be present in the bin to actually"
                                                                                " report that bin (default: 1).", {'p', "haplo-blocker-min-paths"});
     args::ValueFlag<uint64_t> haplo_blocker_min_depth(haplo_blocker_opts, "N", "Specify the minimum depth a path needs to have in a bin to actually report that bin (default: 1).", {'c', "haplo-blocker-min-depth"});
+	args::Group threading(parser, "[ Threading ]");
+	args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
     args::Group processing_info_opts(parser, "[ Processing Information ]");
     args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
     args::Group program_info_opts(parser, "[ Program Information ]");
@@ -80,16 +85,33 @@ int main_bin(int argc, char** argv) {
         return 1;
     }
 
-    graph_t graph;
+	const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+
+	graph_t graph;
     assert(argc > 0);
     if (!args::get(dg_in_file).empty()) {
         std::string infile = args::get(dg_in_file);
         if (infile == "-") {
             graph.deserialize(std::cin);
         } else {
-            ifstream f(infile.c_str());
-            graph.deserialize(f);
-            f.close();
+        	if (!std::filesystem::exists(infile)) {
+				std::cerr << "[odgi::bin] error: the given file \"" << infile << "\" does not exist. Please specify an existing input file in ODGI format via -i=[FILE], --idx=[FILE]." << std::endl;
+				return 1;
+        	}
+        	if (utils::ends_with(infile, "gfa")) {
+        		if (progress) {
+					std::cerr << "[odgi::bin] warning: the given file \"" << infile << "\" is not in ODGI format. "
+																					   "To save time in the future, please use odgi build -i=[FILE], --idx=[FILE] -o=[FILE], --out=[FILE] "
+																					   "to generate a graph in ODGI format. Such a graph can be supplied to all ODGI subcommands. Building graph in ODGI format form given GFA." << std::endl;
+        		}
+				gfa_to_handle(infile, &graph, num_threads, args::get(progress));
+				std::this_thread::sleep_for(1ms);
+				graph.set_number_of_threads(num_threads);
+        	} else {
+				ifstream f(infile.c_str());
+				graph.deserialize(f);
+				f.close();
+        	}
         }
     }
 
