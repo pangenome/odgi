@@ -70,7 +70,7 @@ namespace utils {
 			if (progress) {
 				std::cerr << "[odgi::" << subcommmand_name << "] warning: the given file \"" << infile << "\" is not in ODGI format. "
 																				   "To save time in the future, please use odgi build -i=[FILE], --idx=[FILE] -o=[FILE], --out=[FILE] "
-																				   "to generate a graph in ODGI format. Such a graph can be supplied to all ODGI subcommands. Building graph in ODGI format form given GFA." << std::endl;
+																				   "to generate a graph in ODGI format. Such a graph can be supplied to all ODGI subcommands. Building graph in ODGI format from given GFA." << std::endl;
 			}
 			gfa_to_handle(infile, &graph, num_threads, progress);
 			graph.set_number_of_threads(num_threads);

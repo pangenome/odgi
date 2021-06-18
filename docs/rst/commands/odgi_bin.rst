@@ -121,14 +121,23 @@ HaploBlocker Options
 | Specify the minimum coverage a path needs to have in a bin to actually
   report that bin. The default value is 1.
 
+Threading
+---------
+
+| **-t, --threads**\ =\ *N*
+| Number of threads to use for parallel operations.
+
+Processing Information
+----------------------
+
+| **-P, --progress**
+| Print information about the operations and the progress to stderr.
+
 Program Information
 -------------------
 
 | **-h, --help**
 | Print a help message for **odgi bin**.
-
-| **-P, --progress**
-| Write the current progress to stderr.
 
 ..
 	EXIT STATUS
