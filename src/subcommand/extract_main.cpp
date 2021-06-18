@@ -543,7 +543,7 @@ namespace odgi {
         return 0;
     }
 
-    static Subcommand odgi_extract("extract", "extract parts of the graph using paths, positions, and nodes",
+    static Subcommand odgi_extract("extract", "Extract subgraphs or parts of a graph defined by query criteria.",
                                    PIPELINE, 3, main_extract);
 
 }

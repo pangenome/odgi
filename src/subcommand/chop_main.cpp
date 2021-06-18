@@ -18,7 +18,7 @@ namespace odgi {
         argv[0] = (char *) prog_name.c_str();
         --argc;
 
-        args::ArgumentParser parser("Divide nodes into smaller pieces.");
+        args::ArgumentParser parser("Divide nodes into smaller pieces preserving node topology and order.");
         args::Group mandatory_opts(parser, "[ MANDATORY ARGUMENTS ]");
         args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
         args::ValueFlag<std::string> dg_out_file(mandatory_opts, "FILE", "Write the chopped succinct variation graph in ODGI format to *FILE*. A file ending of *.og* is recommended.",
@@ -103,7 +103,7 @@ namespace odgi {
         return 0;
     }
 
-    static Subcommand odgi_chop("chop", "chop long nodes into short ones while preserving topology and node order",
+    static Subcommand odgi_chop("chop", "Divide nodes into smaller pieces preserving node topology and order.",
                                 PIPELINE, 3, main_chop);
 
 

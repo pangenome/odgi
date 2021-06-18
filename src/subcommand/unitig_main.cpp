@@ -203,7 +203,7 @@ int main_unitig(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand odgi_unitig("unitig", "emit the unitigs of the graph",
+static Subcommand odgi_unitig("unitig", "Output unitigs of the graph.",
                               PIPELINE, 3, main_unitig);
 
 

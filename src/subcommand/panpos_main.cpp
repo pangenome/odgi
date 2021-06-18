@@ -79,7 +79,7 @@ namespace odgi {
     }
 
     static Subcommand odgi_panpos("panpos",
-            "get the pangenome position for a given path and nucleotide position (1-based)",
+            "Get the pangenome position of a given path and nucleotide position (1-based).",
                                      PIPELINE, 3, main_panpos);
 
 }

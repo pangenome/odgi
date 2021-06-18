@@ -100,7 +100,7 @@ namespace odgi {
     }
 
     static Subcommand odgi_validate("validate",
-                                    "validate the graph (currently, it checks if the paths are consistent with the graph topology)",
+                                    "Validate a graph checking if the paths are consistent with the graph topology.",
                                     PIPELINE, 3, main_validate);
 
 }

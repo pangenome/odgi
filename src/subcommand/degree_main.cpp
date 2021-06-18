@@ -168,7 +168,7 @@ int main_degree(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand odgi_degree("degree", "node degree information",
+static Subcommand odgi_degree("degree", "Describe the graph in terms of node degree.",
                               PIPELINE, 3, main_degree);
 
 

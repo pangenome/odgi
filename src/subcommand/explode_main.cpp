@@ -271,7 +271,7 @@ namespace odgi {
         return 0;
     }
 
-    static Subcommand odgi_explode("explode", "breaks a graph into connected components",
+    static Subcommand odgi_explode("explode", "Breaks a graph into connected components storing each component in its own file.",
                                    PIPELINE, 3, main_explode);
 
 }

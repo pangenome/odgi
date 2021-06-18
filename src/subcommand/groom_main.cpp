@@ -87,7 +87,7 @@ int main_groom(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand odgi_groom("groom", "resolve spurious inverting links",
+static Subcommand odgi_groom("groom", "Resolve spurious inverting links.",
                               PIPELINE, 3, main_groom);
 
 

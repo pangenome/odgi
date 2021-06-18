@@ -344,7 +344,7 @@ int main_paths(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand odgi_paths("paths", "interrogation and manipulation of paths",
+static Subcommand odgi_paths("paths", "Interrogate the embedded paths of a graph. Does not print anything to stdout by default!",
                               PIPELINE, 3, main_paths);
 
 

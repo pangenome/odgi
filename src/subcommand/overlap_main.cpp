@@ -269,7 +269,7 @@ namespace odgi {
         return 0;
     }
 
-    static Subcommand odgi_overlap("overlap", "find the paths touched by the input paths",
+    static Subcommand odgi_overlap("overlap", "Find the paths touched by given input paths.",
                                  PIPELINE, 3, main_overlap);
 
 }

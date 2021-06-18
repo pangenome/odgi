@@ -154,7 +154,7 @@ int main_draw(int argc, char **argv) {
     return 0;
 }
 
-static Subcommand odgi_draw("draw", "draw previously-determined 2D layouts of the graph with diverse annotations",
+static Subcommand odgi_draw("draw", "Draw previously-determined 2D layouts of the graph with diverse annotations.",
                             PIPELINE, 3, main_draw);
 
 

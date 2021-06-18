@@ -98,7 +98,7 @@ namespace odgi {
         return 0;
     }
 
-    static Subcommand odgi_pathindex("pathindex", "create a path index for a given graph",
+    static Subcommand odgi_pathindex("pathindex", "Create a path index for a given graph.",
                                      PIPELINE, 3, main_pathindex);
 
 }

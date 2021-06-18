@@ -142,7 +142,7 @@ namespace odgi {
         return 0;
     }
 
-    static Subcommand odgi_cover("cover", "find a path cover of the graph",
+    static Subcommand odgi_cover("cover", "Cover the graph with paths.",
                                  PIPELINE, 3, main_cover);
 
 

@@ -742,7 +742,7 @@ int main_position(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand odgi_position("position", "coordinate projections between nodes and paths",
+static Subcommand odgi_position("position", "Find, translate, and liftover graph and path positions between graphs. Results are printed to stdout.",
                                 PIPELINE, 3, main_position);
 
 

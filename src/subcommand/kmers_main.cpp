@@ -171,7 +171,7 @@ int main_kmers(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand odgi_kmers("kmers", "process and dump the kmers of the graph",
+static Subcommand odgi_kmers("kmers", "Display and characterize the kmer space of a graph.",
                               PIPELINE, 3, main_kmers);
 
 

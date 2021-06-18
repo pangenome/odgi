@@ -94,7 +94,7 @@ int main_normalize(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand odgi_normalize("normalize", "compact unitigs and simplify redundant furcations",
+static Subcommand odgi_normalize("normalize", "Compact unitigs and simplify redundant furcations.",
                                  PIPELINE, 3, main_normalize);
 
 
