@@ -24,7 +24,7 @@ int main_bin(int argc, char** argv) {
 
     args::ArgumentParser parser("Binning of pangenome sequence and path information in the graph.");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this FILE. The file name usually ends with *.og*.", {'i', "idx"});
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this FILE. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::Group fasta_opts(parser, "[ FASTA Options ]");
     args::ValueFlag<std::string> fa_out_file(fasta_opts, "FILE", "Write the pangenome sequence to FILE in FASTA format.", {'f', "fasta"});
     args::Group bin_opts(parser, "[ Bin Options ]");
