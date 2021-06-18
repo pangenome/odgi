@@ -22,7 +22,7 @@ namespace odgi {
         args::ArgumentParser parser(
                 "Breaks a graph into connected components storing each component in its own file.");
         args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-        args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+        args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
         args::Group explode_opts(parser, "[ Explode Options ]");
         args::ValueFlag<std::string> _prefix(explode_opts, "STRING",
                                              "Write each connected component to a file with the given STRING prefix. "
@@ -69,23 +69,21 @@ namespace odgi {
             return 1;
         }
 
-        graph_t graph;
+		const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+
+		graph_t graph;
         assert(argc > 0);
         if (!args::get(dg_in_file).empty()) {
             std::string infile = args::get(dg_in_file);
             if (infile == "-") {
                 graph.deserialize(std::cin);
             } else {
-                ifstream f(infile.c_str());
-                graph.deserialize(f);
-                f.close();
+				utils::handle_gfa_odgi_input(infile, "explode", args::get(_debug), num_threads, graph);
             }
         }
 
         const bool debug = args::get(_debug);
         const bool optimize = args::get(_optimize);
-
-        const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
 
         std::string output_dir_plus_prefix = "./";
         if (!args::get(_prefix).empty()) {
