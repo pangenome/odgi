@@ -7,7 +7,6 @@
 #include "utils.hpp"
 
 #include <regex>
-#include <filesystem>
 
 namespace odgi {
 
@@ -94,24 +93,7 @@ int main_bin(int argc, char** argv) {
         if (infile == "-") {
             graph.deserialize(std::cin);
         } else {
-        	if (!std::filesystem::exists(infile)) {
-				std::cerr << "[odgi::bin] error: the given file \"" << infile << "\" does not exist. Please specify an existing input file in ODGI format via -i=[FILE], --idx=[FILE]." << std::endl;
-				return 1;
-        	}
-        	if (utils::ends_with(infile, "gfa")) {
-        		if (progress) {
-					std::cerr << "[odgi::bin] warning: the given file \"" << infile << "\" is not in ODGI format. "
-																					   "To save time in the future, please use odgi build -i=[FILE], --idx=[FILE] -o=[FILE], --out=[FILE] "
-																					   "to generate a graph in ODGI format. Such a graph can be supplied to all ODGI subcommands. Building graph in ODGI format form given GFA." << std::endl;
-        		}
-				gfa_to_handle(infile, &graph, num_threads, args::get(progress));
-				std::this_thread::sleep_for(1ms);
-				graph.set_number_of_threads(num_threads);
-        	} else {
-				ifstream f(infile.c_str());
-				graph.deserialize(f);
-				f.close();
-        	}
+			utils::handle_gfa_odgi_input(infile, "bin", args::get(progress), num_threads, graph);
         }
     }
 
