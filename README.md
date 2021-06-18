@@ -14,9 +14,18 @@ This allows them to be compressed with a variable length integer representation,
 
 The RAM and computational savings are substantial.  In partially ordered regions of the graph, most deltas will require only a single byte.
 
-## building
+## installation
 
-Clone the `odgi` git repository recursively because of many submodules and build with
+### building from source
+
+`odgi`requires a C++ version of 9.3 or higher. You can check your version via:
+
+``` bash
+gcc --version
+g++ --version
+```
+
+Clone the `odgi` git repository recursively because of the many submodules and build with:
 
 ```
 git clone --recursive https://github.com/pangenome/odgi.git
@@ -36,7 +45,65 @@ Static builds are unlikely to be supported on OSX, and require appropriate stati
 `odgi` pulls in a host of source repositories as dependencies. It may be necessary to install several system-level libraries to build odgi.
  On Ubuntu 20.04, these can be installed using apt: `sudo apt install build-essential cmake python3-distutils python3-dev libjemalloc-dev`.
 
-Alternatively, after `sudo apt install guix`, start a GNU Guix build container with "source [.guix-build](./.guix-build)".
+Alternatively, after `sudo apt install guix`, start a GNU Guix build container with:
+
+```bash
+source ./.guix-build
+```
+
+### Bioconda
+
+`odgi` recipes for Bioconda are available at https://bioconda.github.io/recipes/odgi/README.html. To install the latest version using `Conda` please execute:
+
+``` bash
+conda install -c bioconda odgi
+```
+### Guix
+
+
+#### installing via the guix-genomics git repository
+
+First, clone the guix-genomics repository:
+
+``` bash
+git clone https://github.com/ekg/guix-genomics
+```
+
+And install the `odgi` package to your default GUIX environment:
+
+``` bash
+GUIX_PACKAGE_PATH=. guix package -i odgi
+```
+
+Now `odgi` is available as a global binary installation.
+
+#### installing via the guix-genomics channel
+
+Add the following to your ~/.config/guix/channels.scm:
+
+``` scm
+  (cons*
+(channel
+  (name 'guix-genomics)
+  (url "https://github.com/ekg/guix-genomics.git")
+  (branch "master"))
+%default-channels)
+```
+
+First, pull all the packages, then install odgi to your default GUIX environment:
+
+``` bash
+guix pull
+guix package -i odgi
+```
+
+If you want to build an environment only consisting of the odgi binary, you can do:
+
+``` bash
+guix environment --ad-hoc odgi
+```
+
+For more details about how to handle Guix channels, please go to https://git.genenetwork.org/guix-bioinformatics/guix-bioinformatics.git.
 
 ## documentation
 
