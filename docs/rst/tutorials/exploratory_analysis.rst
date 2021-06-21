@@ -1,3 +1,5 @@
+.. _exploratory-analysis:
+
 ####################
 Exploratory analysis
 ####################

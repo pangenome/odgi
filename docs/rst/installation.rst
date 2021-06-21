@@ -47,14 +47,11 @@ can reduce the compilation time significantly.
 BIOCONDA
 ========
 
-As `CONDA <https://docs.conda.io/en/latest/>`_ switched to GCC version 9.3 ``ieri``, a
-`BIOCONDA <https://bioconda.github.io/index.html>`_ package of the current ``odgi`` release is still in the
-`making <https://github.com/bioconda/bioconda-recipes/pull/26189>`_.
-For an older version please take a look at https://anaconda.org/bioconda/odgi. You can install it directly with ``conda``:
+``odgi`` recipes for Bioconda are available at https://bioconda.github.io/recipes/odgi/README.html. To install the latest version using Conda please execute:
 
 .. code-block:: bash
 
-    conda install -c bioconda odgi=0.4.1
+conda install -c bioconda odgi
 
 GUIX
 ====
