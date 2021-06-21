@@ -22,7 +22,7 @@ int main_degree(int argc, char** argv) {
     
     args::ArgumentParser parser("Describe the graph in terms of node degree.");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-    args::ValueFlag<std::string> og_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "input"});
+    args::ValueFlag<std::string> og_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "input"});
     args::Group summary_opts(parser, "[ Summary Options ]");
     args::Flag _summarize(summary_opts, "summarize", "Summarize the graph properties and dimensions. Print to stdout the node.id and the node.degree.", {'S', "summarize"});
     args::ValueFlag<std::string> _windows_in(summary_opts, "LEN:MIN:MAX",
@@ -35,6 +35,8 @@ int main_degree(int argc, char** argv) {
                                               {'W', "windows-out"});
     args::Group threading_opts(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> _num_threads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
+	args::Group processing_info_opts(parser, "[ Processing Information ]");
+	args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
     args::Group program_info_opts(parser, "[ Program Information ]");
     args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi degree.", {'h', "help"});
     try {
@@ -83,20 +85,19 @@ int main_degree(int argc, char** argv) {
         }
     }
 
-    odgi::graph_t graph;
+	const uint64_t num_threads = args::get(_num_threads) ? args::get(_num_threads) : 1;
+
+	odgi::graph_t graph;
     assert(argc > 0);
     if (!args::get(og_file).empty()) {
         std::string infile = args::get(og_file);
         if (infile == "-") {
             graph.deserialize(std::cin);
         } else {
-            ifstream f(infile.c_str());
-            graph.deserialize(f);
-            f.close();
+			utils::handle_gfa_odgi_input(infile, "degree", args::get(progress), num_threads, graph);
         }
     }
 
-    const uint64_t num_threads = args::get(_num_threads) ? args::get(_num_threads) : 1;
     omp_set_num_threads((int) num_threads);
 
     if (_summarize) {

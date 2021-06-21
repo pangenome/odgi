@@ -25,7 +25,7 @@ MANDATORY OPTIONS
 
 | **-f, --input-graphs**\ =\ *FILE*
 | Input file containing the list of graphs to squeeze into the same
-  file. The file must contain one path per line.
+  file. The file must contain one graph per line. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!
 
 | **-o, --out**\ =\ *FILE*
 | Store all the input graphs in this *FILE*. The file name usually ends with *.og*.

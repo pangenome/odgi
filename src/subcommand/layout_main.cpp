@@ -9,6 +9,7 @@
 #include "algorithms/draw.hpp"
 #include "algorithms/layout.hpp"
 #include "hilbert.hpp"
+#include "utils.hpp"
 
 namespace odgi {
 
@@ -27,7 +28,7 @@ int main_layout(int argc, char **argv) {
     args::ArgumentParser parser(
         "Establish 2D layouts of the graph using path-guided stochastic gradient descent (the graph must be sorted and id-compacted).");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::Group files_io_opts(parser, "[ Files IO ]");
     args::ValueFlag<std::string> layout_out_file(files_io_opts, "FILE", "Write the layout coordinates to this FILE in .lay binary format.", {'o', "out"});
     args::ValueFlag<std::string> tsv_out_file(files_io_opts, "FILE", "Write the layout in TSV format to this FILE.", {'T', "tsv"});
@@ -114,23 +115,22 @@ int main_layout(int argc, char **argv) {
         return 1;
     }
 
-    graph_t graph;
+	const uint64_t num_threads = nthreads ? args::get(nthreads) : 1;
+
+	graph_t graph;
     assert(argc > 0);
     if (!args::get(dg_in_file).empty()) {
         std::string infile = args::get(dg_in_file);
         if (infile == "-") {
             graph.deserialize(std::cin);
         } else {
-            ifstream f(infile.c_str());
-            graph.deserialize(f);
-            f.close();
+			utils::handle_gfa_odgi_input(infile, "layout", args::get(progress), num_threads, graph);
         }
     }
 
     const uint64_t t_max = !p_sgd_iter_max ? 30 : args::get(p_sgd_iter_max);
     const double eps = !p_sgd_eps ? 0.01 : args::get(p_sgd_eps);
     const double sgd_delta = p_sgd_delta ? args::get(p_sgd_delta) : 0;
-    const uint64_t num_threads = nthreads ? args::get(nthreads) : 1;
     const bool show_progress = progress ? args::get(progress) : false;
     /// path guided linear 2D SGD sort helpers
     // TODO beautify this, maybe put into its own file

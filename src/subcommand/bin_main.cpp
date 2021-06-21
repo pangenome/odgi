@@ -3,6 +3,8 @@
 #include "args.hxx"
 #include "algorithms/bin_path_info.hpp"
 #include "algorithms/bin_path_depth.hpp"
+#include "gfa_to_handle.hpp"
+#include "utils.hpp"
 
 #include <regex>
 
@@ -21,7 +23,7 @@ int main_bin(int argc, char** argv) {
 
     args::ArgumentParser parser("Binning of pangenome sequence and path information in the graph.");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this FILE. The file name usually ends with *.og*.", {'i', "idx"});
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this FILE. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::Group fasta_opts(parser, "[ FASTA Options ]");
     args::ValueFlag<std::string> fa_out_file(fasta_opts, "FILE", "Write the pangenome sequence to FILE in FASTA format.", {'f', "fasta"});
     args::Group bin_opts(parser, "[ Bin Options ]");
@@ -56,6 +58,8 @@ int main_bin(int argc, char** argv) {
                                                                                "that need to be present in the bin to actually"
                                                                                " report that bin (default: 1).", {'p', "haplo-blocker-min-paths"});
     args::ValueFlag<uint64_t> haplo_blocker_min_depth(haplo_blocker_opts, "N", "Specify the minimum depth a path needs to have in a bin to actually report that bin (default: 1).", {'c', "haplo-blocker-min-depth"});
+	args::Group threading(parser, "[ Threading ]");
+	args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
     args::Group processing_info_opts(parser, "[ Processing Information ]");
     args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
     args::Group program_info_opts(parser, "[ Program Information ]");
@@ -80,16 +84,16 @@ int main_bin(int argc, char** argv) {
         return 1;
     }
 
-    graph_t graph;
+	const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+
+	graph_t graph;
     assert(argc > 0);
     if (!args::get(dg_in_file).empty()) {
         std::string infile = args::get(dg_in_file);
         if (infile == "-") {
             graph.deserialize(std::cin);
         } else {
-            ifstream f(infile.c_str());
-            graph.deserialize(f);
-            f.close();
+			utils::handle_gfa_odgi_input(infile, "bin", args::get(progress), num_threads, graph);
         }
     }
 

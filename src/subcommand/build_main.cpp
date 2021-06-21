@@ -4,6 +4,7 @@
 #include "args.hxx"
 #include <cstdio>
 #include <algorithm>
+#include <filesystem>
 #include "algorithms/topological_sort.hpp"
 
 namespace odgi {
@@ -59,11 +60,19 @@ int main_build(int argc, char** argv) {
     
     //make_graph();
     assert(argc > 0);
+    if (!gfa_file) {
+		std::cerr << "[odgi::build] error: please specify an input file to load the graph from via -g=[FILE], --gfa=[FILE]." << std::endl;
+		return 1;
+    }
     if (!dg_out_file) {
-        std::cerr << "Please specify an output file to store the graph via -o=[FILE], --out=[FILE]." << std::endl;
+        std::cerr << "[odgi::build] error: please specify an output file to store the graph via -o=[FILE], --out=[FILE]." << std::endl;
         return 1;
     }
     std::string gfa_filename = args::get(gfa_file);
+    if (!std::filesystem::exists(gfa_filename)) {
+    	std::cerr << "[odgi::build] error: the given file \"" << gfa_filename << "\" does not exist. Please specify an existing input file via -g=[FILE], --gfa=[FILE]." << std::endl;
+    	return 1;
+    }
     if (gfa_filename.size()) {
         gfa_to_handle(gfa_filename, &graph, args::get(nthreads), args::get(progress));
     }

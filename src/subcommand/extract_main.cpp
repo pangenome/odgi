@@ -26,7 +26,7 @@ namespace odgi {
 
         args::ArgumentParser parser("Extract subgraphs or parts of a graph defined by query criteria.");
         args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-        args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+        args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
         args::Group graph_files_io_opts(parser, "[ Graph Files IO ]");
         args::ValueFlag<std::string> og_out_file(graph_files_io_opts, "FILE", "Store all subgraphs in this FILE. The file name usually ends with *.og*.",
                                                  {'o', "out"});
@@ -129,7 +129,9 @@ namespace odgi {
             }
         }
 
-        graph_t graph;
+		const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+
+		graph_t graph;
         assert(argc > 0);
         {
             const std::string infile = args::get(og_in_file);
@@ -137,9 +139,7 @@ namespace odgi {
                 if (infile == "-") {
                     graph.deserialize(std::cin);
                 } else {
-                    ifstream f(infile.c_str());
-                    graph.deserialize(f);
-                    f.close();
+					utils::handle_gfa_odgi_input(infile, "extract", args::get(_show_progress), num_threads, graph);
                 }
             }
         }
@@ -320,7 +320,6 @@ namespace odgi {
         const bool show_progress = args::get(_show_progress);
         const uint64_t context_size = _context_size ? args::get(_context_size) : 0;
 
-        const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
         omp_set_num_threads(num_threads);
 
         auto prep_graph = [](graph_t &source, const std::vector<path_handle_t>& source_paths,

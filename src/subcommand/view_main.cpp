@@ -1,8 +1,7 @@
 #include "subcommand.hpp"
 #include "odgi.hpp"
-//#include "gfakluge.hpp"
 #include "args.hxx"
-//#include "io_helper.hpp"
+#include "utils.hpp"
 
 namespace odgi {
 
@@ -20,13 +19,17 @@ int main_view(int argc, char** argv) {
     
     args::ArgumentParser parser("Project a graph into other formats.");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::Group out_opts(parser, "[ Output Options ]");
     args::Flag to_gfa(out_opts, "to_gfa", "Write the graph in GFAv1 format to standard output.", {'g', "to-gfa"});
     args::Flag display(parser, "display", "Show the internal structures of a graph. Print to stdout the maximum"
                                           " node identifier, the minimum node identifier, the nodes vector, the"
                                           " delete nodes bit vector and the path metadata, each in a separate"
                                           " line.", {'d', "display"});
+	args::Group threading(parser, "[ Threading ]");
+	args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
+	args::Group processing_info_opts(parser, "[ Processing Information ]");
+	args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
     args::Group program_information(parser, "[ Program Information ]");
     args::HelpFlag help(program_information, "help", "Print a help message for odgi view.", {'h', "help"});
 
@@ -50,6 +53,8 @@ int main_view(int argc, char** argv) {
         return 1;
     }
 
+	const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+
     graph_t graph;
     assert(argc > 0);
     std::string infile = args::get(dg_in_file);
@@ -57,9 +62,7 @@ int main_view(int argc, char** argv) {
         if (infile == "-") {
             graph.deserialize(std::cin);
         } else {
-            ifstream f(infile.c_str());
-            graph.deserialize(f);
-            f.close();
+			utils::handle_gfa_odgi_input(infile, "view", args::get(progress), num_threads, graph);
         }
     }
     if (args::get(display)) {

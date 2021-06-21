@@ -3,6 +3,7 @@
 #include "args.hxx"
 #include <omp.h>
 #include "algorithms/groom.hpp"
+#include "utils.hpp"
 
 namespace odgi {
 
@@ -20,10 +21,12 @@ int main_groom(int argc, char** argv) {
     
     args::ArgumentParser parser("Resolve spurious inverting links.");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-    args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+    args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::ValueFlag<std::string> og_out_file(mandatory_opts, "FILE", "Write the groomed succinct variation graph in ODGI format to *FILE*. A file ending with *.og* is recommended.", {'o', "out"});
     args::Group grooming_opts(parser, "[ Grooming Options ]");
     args::Flag use_dfs(grooming_opts, "use-dfs", "Use depth-first search for grooming.", {'d', "use-dfs"});
+	args::Group threading(parser, "[ Threading ]");
+	args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
     args::Group processing_info_opts(parser, "[ Processing Information ]");
     args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
     args::Group program_info_opts(parser, "[ Program Information ]");
@@ -54,7 +57,9 @@ int main_groom(int argc, char** argv) {
         return 1;
     }
 
-    graph_t graph;
+	const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+
+	graph_t graph;
     assert(argc > 0);
     {
         const std::string infile = args::get(og_in_file);
@@ -62,9 +67,7 @@ int main_groom(int argc, char** argv) {
             if (infile == "-") {
                 graph.deserialize(std::cin);
             } else {
-                ifstream f(infile.c_str());
-                graph.deserialize(f);
-                f.close();
+				utils::handle_gfa_odgi_input(infile, "groom", args::get(progress), num_threads, graph);
             }
         }
     }

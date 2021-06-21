@@ -38,11 +38,20 @@ Normalize Options
 | **-I, --max-iterations**\ =\ *N*
 | Iterate the normalization up to *N* many times. The default is *10*.
 
+Threading
+---------
+
+| **-t, --threads**\ =\ *N*
+| Number of threads to use for parallel operations.
+
 Processing Information
 -----------------
 
 | **-d, --debug**
 | Print information about the normalization process to stdout.
+
+| **-P, --progress**
+| Print information about the operations and the progress to stderr.
 
 Program Information
 -------------------

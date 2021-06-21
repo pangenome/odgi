@@ -51,4 +51,34 @@ namespace utils {
                     });
                 });
     }
+
+	bool ends_with(const std::string &fullString, const std::string &ending) {
+		if (fullString.length() >= ending.length()) {
+			return (0 == fullString.compare (fullString.length() - ending.length(), ending.length(), ending));
+		} else {
+			return false;
+		}
+	}
+
+	int handle_gfa_odgi_input(const std::string infile, const std::string subcommmand_name, const bool progress,
+							const uint64_t num_threads, odgi::graph_t &graph) {
+		if (!std::filesystem::exists(infile)) {
+			std::cerr << "[odgi::" << subcommmand_name << "] error: the given file \"" << infile << "\" does not exist. Please specify an existing input file in ODGI format via -i=[FILE], --idx=[FILE]." << std::endl;
+			return 1;
+		}
+		if (utils::ends_with(infile, "gfa")) {
+			if (progress) {
+				std::cerr << "[odgi::" << subcommmand_name << "] warning: the given file \"" << infile << "\" is not in ODGI format. "
+																				   "To save time in the future, please use odgi build -i=[FILE], --idx=[FILE] -o=[FILE], --out=[FILE] "
+																				   "to generate a graph in ODGI format. Such a graph can be supplied to all ODGI subcommands. Building graph in ODGI format from given GFA." << std::endl;
+			}
+			gfa_to_handle(infile, &graph, num_threads, progress);
+			graph.set_number_of_threads(num_threads);
+		} else {
+			ifstream f(infile.c_str());
+			graph.deserialize(f);
+			f.close();
+		}
+		return 0;
+    }
 }

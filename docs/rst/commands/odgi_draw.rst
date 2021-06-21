@@ -25,7 +25,7 @@ MANDATORY OPTIONS
 -----------------
 
 | **-i, --idx**\ =\ *FILE*
-| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.
+| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!
 
 | **-c, --coords-in**\ =\ *FILE*
 | Read the layout coordinates from this .lay format *FILE* produced by :ref:`odgi layout`.
@@ -69,6 +69,18 @@ Visualization Options
 | **-S, --path-line-spacing**\ =\ *N*
 | Spacing between path lines in PNG layout (in approximate bp) (default
   0.0).
+
+Threading
+---------
+
+| **-t, --threads**\ =\ *N*
+| Number of threads to use for parallel operations.
+
+Processing Information
+----------------------
+
+| **-P, --progress**
+| Print information about the operations and the progress to stderr.
 
 Program Information
 -------------------

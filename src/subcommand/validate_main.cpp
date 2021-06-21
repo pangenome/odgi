@@ -5,6 +5,7 @@
 #include "split.hpp"
 #include "algorithms/bfs.hpp"
 #include <omp.h>
+#include "utils.hpp"
 
 namespace odgi {
 
@@ -22,9 +23,12 @@ namespace odgi {
 
         args::ArgumentParser parser(
                 "Validate a graph checking if the paths are consistent with the graph topology.");
-        args::ValueFlag<std::string> og_file(parser, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "input"});
+		args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+		args::ValueFlag<std::string> og_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "input"});
         args::Group threading(parser, "[ Threading ]");
         args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
+		args::Group processing_info_opts(parser, "[ Processing Information ]");
+		args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
         args::Group program_information(parser, "[ Program Information ]");
         args::HelpFlag help(program_information, "help", "Print a help message for odgi validate.", {'h', "help"});
 
@@ -49,20 +53,19 @@ namespace odgi {
             return 1;
         }
 
-        odgi::graph_t graph;
+		const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+
+		odgi::graph_t graph;
         assert(argc > 0);
         std::string infile = args::get(og_file);
         if (!infile.empty()) {
             if (infile == "-") {
                 graph.deserialize(std::cin);
             } else {
-                ifstream f(infile.c_str());
-                graph.deserialize(f);
-                f.close();
+				utils::handle_gfa_odgi_input(infile, "validate", args::get(progress), num_threads, graph);
             }
         }
 
-        uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
         omp_set_num_threads(num_threads);
 
         bool valid_graph = true;

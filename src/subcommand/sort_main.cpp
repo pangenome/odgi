@@ -32,7 +32,7 @@ int main_sort(int argc, char** argv) {
     
     args::ArgumentParser parser("Apply different kind of sorting algorithms to a graph. The most prominent one is the PG-SGD sorting algorithm.");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::ValueFlag<std::string> dg_out_file(mandatory_opts, "FILE", "Write the sorted dynamic succinct variation graph to this file. A file"
                                                              " ending with *.og* is recommended.", {'o', "out"});
     args::Group files_io_opts(parser, "[ Files IO Options ]");
@@ -142,16 +142,16 @@ int main_sort(int argc, char** argv) {
         return 1;
     }
 
-    graph_t graph;
+	const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+
+	graph_t graph;
     assert(argc > 0);
     std::string infile = args::get(dg_in_file);
     if (infile.size()) {
         if (infile == "-") {
             graph.deserialize(std::cin);
         } else {
-            ifstream f(infile.c_str());
-            graph.deserialize(f);
-            f.close();
+			utils::handle_gfa_odgi_input(infile, "sort", args::get(progress), num_threads, graph);
         }
     }
 
@@ -159,7 +159,6 @@ int main_sort(int argc, char** argv) {
     uint64_t df_chunk_size = args::get(depth_first_chunk) ? args::get(depth_first_chunk) : 1000;
     uint64_t bf_chunk_size = args::get(breadth_first_chunk) ? args::get(breadth_first_chunk) : std::numeric_limits<uint64_t>::max();
 
-    const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
     graph.set_number_of_threads(num_threads);
 
     /// path guided linear 1D SGD sort helpers

@@ -25,7 +25,7 @@ MANDATORY OPTIONS
 --------------
 
 | **-i, --input**\ =\ *FILE*
-| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.
+| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!
 
 Depth Options
 -------------
@@ -65,7 +65,7 @@ Depth Options
 | **-v, --graph-depth-vec**
 | Compute the depth on each node in the graph, writing a vector by base in one line.
 
-| **-P, --path-depth**
+| **-D, --path-depth**
 | Compute a vector of depth on each base of each path. Each line consists of a path name
  and subsequently the space-separated depth of each base.
 
@@ -91,6 +91,12 @@ Threading
 
 | **-t, --threads**\ =\ *N*
 | Number of threads to use in parallel operations.
+
+Processing Information
+----------------------
+
+| **-P, --progress**
+| Print information about the operations and the progress to stderr.
 
 Program Information
 -------------------
