@@ -8,6 +8,7 @@
 #include "algorithms/prune.hpp"
 #include "algorithms/remove_high_degree.hpp"
 #include <chrono>
+#include "utils.hpp"
 
 namespace odgi {
 
