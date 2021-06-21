@@ -1,0 +1,27 @@
+on: [ push ]
+
+name: build and python import
+
+jobs:
+  build_and_python_import:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install required packages
+        run: sudo apt-get update && sudo apt-get install -y
+          git
+          bash
+          cmake
+          make
+          g++
+          python3-dev
+          python3-distutils
+          autoconf
+          build-essential
+          libjemalloc-dev
+      - name: Init and update submodules
+        run: git submodule update --init --recursive
+      - name: Build odgi
+        run: cmake -H. -Bbuild && cmake --build build -- -j 2
+      - name: Test python import
+        run: export LD_PRELOAD=/lib/x86_64-linux-gnu/libjemalloc.so.2 && cd lib && ls -l && python3.8 -c 'import odgi; g = odgi.graph()'
