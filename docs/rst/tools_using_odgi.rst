@@ -38,7 +38,7 @@ in detail statistics about the burned graph. A visual analysis is possible with 
 Nextflow nf-core/pangenome pipeline
 ===================================
 
-A Nextflow version of ``PGGB`` is currently developed on nf-core. The `nf-core/pangenome <https://github.com/nf-core/pangenome>`_ pipeline makes us of the same
+A Nextflow version of ``PGGB`` is currently developed on nf-core. The `nf-core/pangenome <https://github.com/nf-core/pangenome>`_ pipeline makes use of the same
 ``odgi`` tools as the original ``PGGB``.
 
 Interactive 2D visualization of very large graphs - gfaestus
