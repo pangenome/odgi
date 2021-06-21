@@ -35,6 +35,12 @@ Grooming Options
 | **-d, --use-dfs**
 | Use depth-first search for the grooming.
 
+Threading
+---------
+
+| **-t, --threads**\ =\ *N*
+| Number of threads to use for parallel operations.
+
 Processing Information
 ----------------------
 

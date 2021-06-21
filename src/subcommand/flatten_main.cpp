@@ -3,6 +3,7 @@
 #include "args.hxx"
 #include <omp.h>
 #include "algorithms/linear_index.hpp"
+#include "utils.hpp"
 
 namespace odgi {
 
@@ -20,11 +21,15 @@ int main_flatten(int argc, char** argv) {
 
     args::ArgumentParser parser("Generate linearizations of a graph.");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-    args::ValueFlag<std::string> odgi_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+    args::ValueFlag<std::string> odgi_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::Group output_opts(parser, "[ Output Options ]");
     args::ValueFlag<std::string> fasta_out_file(output_opts, "FILE", "Write the concatenated node sequences in FASTA format to FILE.", {'f', "fasta"});
     args::ValueFlag<std::string> fasta_seq_name(output_opts, "FILE", "The name to use for the concatenated graph sequence (default: input file name which was specified via -i, --idx=[FILE]).", {'n', "name-seq"});
     args::ValueFlag<std::string> bed_out_file(output_opts, "FILE", "Write the mapping between graph paths and the linearized FASTA sequence in BED format to FILE.", {'b', "bed"});
+	args::Group threading(parser, "[ Threading ]");
+	args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
+	args::Group processing_info_opts(parser, "[ Processing Information ]");
+	args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
     args::Group program_info_opts(parser, "[ Program Information ]");
     args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi flatten.", {'h', "help"});
 
@@ -53,7 +58,9 @@ int main_flatten(int argc, char** argv) {
         return 2;
     }
 
-    graph_t graph;
+	const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+
+	graph_t graph;
     assert(argc > 0);
     {
         const std::string infile = args::get(odgi_in_file);
@@ -61,9 +68,7 @@ int main_flatten(int argc, char** argv) {
             if (infile == "-") {
                 graph.deserialize(std::cin);
             } else {
-                ifstream f(infile.c_str());
-                graph.deserialize(f);
-                f.close();
+				utils::handle_gfa_odgi_input(infile, "flatten", args::get(progress), num_threads, graph);;
             }
         }
     }

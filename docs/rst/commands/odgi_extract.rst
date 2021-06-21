@@ -84,7 +84,7 @@ Threading
 ---------
 
 | **-t, --threads**\ =\ *N*
-| Number of threads to use (to embed the subpaths in parallel).
+| Number of threads to use for parallel operations.
 
 Processing Information
 ----------------------
