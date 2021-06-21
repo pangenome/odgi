@@ -1,6 +1,6 @@
 on: [ push ]
 
-name: build and test
+name: build and python import
 
 jobs:
   build_and_test:
