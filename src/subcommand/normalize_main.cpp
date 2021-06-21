@@ -3,6 +3,7 @@
 #include "args.hxx"
 #include <omp.h>
 #include "algorithms/normalize.hpp"
+#include "utils.hpp"
 
 namespace odgi {
 
@@ -20,14 +21,17 @@ int main_normalize(int argc, char** argv) {
 
     args::ArgumentParser parser("Compact unitigs and simplify redundant furcations.");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-    args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+    args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::ValueFlag<std::string> og_out_file(mandatory_opts, "FILE", "Write the normalized dynamic succinct variation graph in ODGI format to this file. A"
                                                                      " file ending with *.og* is recommended.", {'o', "out"});
     args::Group norm_opts(parser, "[ Normalize Options ]");
     args::ValueFlag<uint64_t> max_iterations(norm_opts, "N", "Iterate the normalization up to N many times (default: 10).", {'I', "max-iterations"});
+	args::Group threading(parser, "[ Threading ]");
+	args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
     args::Group process_info_opts(parser, "[ Processing Information ]");
     args::Flag debug(process_info_opts, "debug", "Print information about the normalization process to stdout.", {'d', "debug"});
-    args::Group program_info_opts(parser, "[ Program Information ]");
+	args::Flag progress(process_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
+	args::Group program_info_opts(parser, "[ Program Information ]");
     args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi normalize.", {'h', "help"});
 
     try {
@@ -55,7 +59,9 @@ int main_normalize(int argc, char** argv) {
         return 1;
     }
 
-    graph_t graph;
+	const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+
+	graph_t graph;
     assert(argc > 0);
     {
         const std::string infile = args::get(og_in_file);
@@ -63,18 +69,10 @@ int main_normalize(int argc, char** argv) {
             if (infile == "-") {
                 graph.deserialize(std::cin);
             } else {
-                ifstream f(infile.c_str());
-                graph.deserialize(f);
-                f.close();
+				utils::handle_gfa_odgi_input(infile, "normalize", args::get(progress), num_threads, graph);
             }
         }
     }
-
-    /*
-    if (args::get(threads)) {
-        omp_set_num_threads(args::get(threads));
-    }
-    */
 
     algorithms::normalize(graph, args::get(max_iterations) ? args::get(max_iterations) : 10, args::get(debug));
 

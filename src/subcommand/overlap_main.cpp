@@ -5,6 +5,7 @@
 #include "split.hpp"
 #include <omp.h>
 #include <mutex>
+#include "utils.hpp"
 
 namespace odgi {
 
@@ -22,7 +23,7 @@ namespace odgi {
 
         args::ArgumentParser parser("Find the paths touched by given input paths.");
         args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-        args::ValueFlag<std::string> og_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "input"});
+        args::ValueFlag<std::string> og_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "input"});
         args::Group overlap_opts(parser, "[ Overlap Options ]");
         args::ValueFlag<std::string> subset_paths(overlap_opts, "FILE",
                                                   "Perform the search considering only the paths specified in the FILE. "
@@ -39,6 +40,8 @@ namespace odgi {
                                                {'b', "bed-input"});
         args::Group threading_opts(parser, "[ Threading ]");
         args::ValueFlag<uint64_t> nthreads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
+		args::Group processing_info_opts(parser, "[ Processing Information ]");
+		args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
         args::Group program_info_opts(parser, "[ Program Information ]");
         args::HelpFlag help(program_info_opts, "help", "display this help summary", {'h', "help"});
 
@@ -67,19 +70,17 @@ namespace odgi {
             return 1;
         }
 
+		const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+
         odgi::graph_t graph;
         assert(argc > 0);
         std::string infile = args::get(og_file);
         if (infile == "-") {
             graph.deserialize(std::cin);
         } else {
-            ifstream f(infile.c_str());
-            graph.deserialize(f);
-            f.close();
+			utils::handle_gfa_odgi_input(infile, "overlap", args::get(progress), num_threads, graph);
         }
 
-
-        uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
         omp_set_num_threads(num_threads);
 
         std::vector<path_handle_t> paths_to_consider;

@@ -2,6 +2,7 @@
 #include "odgi.hpp"
 #include "args.hxx"
 #include "algorithms/xp.hpp"
+#include "utils.hpp"
 
 namespace odgi {
 
@@ -23,6 +24,8 @@ namespace odgi {
         args::ValueFlag<std::string> idx_out_file(mandatory_opts, "FILE", "Write the succinct variation graph index to this FILE. A file ending with *.xp* is recommended.", {'o', "out"});
         args::Group threading_opts(parser, "[ Threading ]");
         args::ValueFlag<std::uint64_t> nthreads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
+		args::Group processing_info_opts(parser, "[ Processing Information ]");
+		args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
         args::Group program_info_opts(parser, "[ Program Information ]");
         args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi pathindex.", {'h', "help"});
 
@@ -53,7 +56,9 @@ namespace odgi {
             return 1;
         }
 
-        // read in the graph
+		const uint64_t num_threads = nthreads ? args::get(nthreads) : 1;
+
+		// read in the graph
         graph_t graph;
         assert(argc > 0);
         {
@@ -62,18 +67,17 @@ namespace odgi {
                 if (infile == "-") {
                     graph.deserialize(std::cin);
                 } else {
-                    ifstream f(infile.c_str());
-                    graph.deserialize(f);
-                    f.close();
+					utils::handle_gfa_odgi_input(infile, "pathindex", args::get(progress), num_threads, graph);
+
                 }
             }
         }
 
         XP path_index;
-        const uint64_t number_threads = nthreads ? args::get(nthreads) : 1;
-        path_index.from_handle_graph(graph, number_threads);
-
-        std::cout << "Indexed " << path_index.path_count << " path(s)." << std::endl;
+        path_index.from_handle_graph(graph, num_threads);
+		if (progress) {
+			std::cout << "Indexed " << path_index.path_count << " path(s)." << std::endl;
+		}
 
 #ifdef debug_pathindex
         size_t pangenome_pos = path_index.get_pangenome_pos("5", 1);
@@ -91,7 +95,9 @@ namespace odgi {
         // writ out the index
         std::ofstream out;
         out.open(args::get(idx_out_file));
-        std::cout << "Writing index to " << args::get(idx_out_file) << std::endl;
+        if (progress) {
+			std::cout << "Writing index to " << args::get(idx_out_file) << "." << std::endl;
+		}
         path_index.serialize_members(out);
         out.close();
 

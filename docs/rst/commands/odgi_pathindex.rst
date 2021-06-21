@@ -31,7 +31,7 @@ MANDATORY OPTIONS
 --------------
 
 | **-i, --idx**\ =\ *FILE*
-| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.
+| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!
 
 | **-o, --out**\ =\ *FILE*
 | Write the succinct variation graph index to this FILE. A file ending with *.xp* is recommended.
@@ -41,6 +41,12 @@ Threading
 
 | **-t, --threads**\ =\ *N*
 | Number of threads to use for parallel operations.
+
+Processing Information
+----------------------
+
+| **-P, --progress**
+| Print information about the operations and the progress to stderr.
 
 Program Information
 -------------------

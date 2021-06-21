@@ -5,6 +5,7 @@
 #include "split.hpp"
 #include "algorithms/bfs.hpp"
 #include <omp.h>
+#include "utils.hpp"
 
 namespace odgi {
 
@@ -22,11 +23,11 @@ int main_position(int argc, char** argv) {
     
     args::ArgumentParser parser("Find, translate, and liftover graph and path positions between graphs. Results are printed to stdout.");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-    args::ValueFlag<std::string> og_target_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "target"});
+    args::ValueFlag<std::string> og_target_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "target"});
     args::Group position_opts(parser, "[ Position Options ]");
     args::ValueFlag<std::string> og_source_file(position_opts, "FILE", "Translate positions from this *FILE graph into the target graph using common"
                                                                 " *-l, --lift-paths* shared between both graphs (default: use the same"
-                                                                " source/target graph).", {'x', "source"});
+                                                                " source/target graph). It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'x', "source"});
     args::ValueFlag<std::string> ref_path_name(position_opts, "PATH_NAME", "Translate the given positions into positions relative to this reference path.", {'r', "ref-path"});
     args::ValueFlag<std::string> ref_path_file(position_opts, "FILE", "Use the ref-paths in *FILE* for positional translation.", {'R', "ref-paths"});
     args::ValueFlag<std::string> lift_path_name(position_opts, "PATH_NAME", "Lift positions from *-x, --source* to *-i, --target* via coordinates in"
@@ -44,6 +45,8 @@ int main_position(int argc, char** argv) {
     args::ValueFlag<uint64_t> _search_radius(position_opts, "DISTANCE", "Limit coordinate conversion breadth-first search up to DISTANCE bp from each given position (default: 10000).", {'d',"search-radius"});
     args::Group threading_opts(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> threads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
+	args::Group processing_info_opts(parser, "[ Processing Information ]");
+	args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
     args::Group program_info_opts(parser, "[ Program Information ");
     args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi position.", {'h', "help"});
 
@@ -68,6 +71,9 @@ int main_position(int argc, char** argv) {
         return 1;
     }
 
+	const uint64_t num_threads = args::get(threads) ? args::get(threads) : 1;
+	omp_set_num_threads(num_threads);
+
     odgi::graph_t target_graph;
     assert(argc > 0);
     std::string infile = args::get(og_target_file);
@@ -75,9 +81,7 @@ int main_position(int argc, char** argv) {
         if (infile == "-") {
             target_graph.deserialize(std::cin);
         } else {
-            ifstream f(infile.c_str());
-            target_graph.deserialize(f);
-            f.close();
+			utils::handle_gfa_odgi_input(infile, "position", args::get(progress), num_threads, target_graph);
         }
     }
 
@@ -90,17 +94,9 @@ int main_position(int argc, char** argv) {
             if (infile == "-") {
                 source_graph.deserialize(std::cin);
             } else {
-                ifstream f(infile.c_str());
-                source_graph.deserialize(f);
-                f.close();
+				utils::handle_gfa_odgi_input(infile, "position", args::get(progress), num_threads, source_graph);
             }
         }
-    }
-
-    if (args::get(threads)) {
-        omp_set_num_threads(args::get(threads));
-    } else {
-        omp_set_num_threads(1);
     }
 
     // todo: load many positions from a file

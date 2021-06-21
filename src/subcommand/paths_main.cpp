@@ -1,12 +1,10 @@
 #include "subcommand.hpp"
 #include "odgi.hpp"
-//#include "IntervalTree.h"
-//#include "gfakluge.hpp"
 #include "args.hxx"
 #include "split.hpp"
-//#include "io_helper.hpp"
 #include "position.hpp"
 #include <omp.h>
+#include "utils.hpp"
 
 namespace odgi {
 
@@ -24,7 +22,7 @@ int main_paths(int argc, char** argv) {
     
     args::ArgumentParser parser("Interrogate the embedded paths of a graph. Does not print anything to stdout by default!");
     args::Group mandatory_opts(parser, "[ MANDATORY ARGUMENTS ]");
-    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::Group path_investigation_opts(parser, "[ Path Investigation Options ]");
     args::ValueFlag<std::string> overlaps_file(path_investigation_opts, "FILE", "Read in the path grouping *FILE* to generate the overlap statistics"
                                                                " from. The file must be tab-delimited. The first column lists a"
@@ -47,6 +45,8 @@ int main_paths(int argc, char** argv) {
     args::Flag write_fasta(path_investigation_opts, "fasta", "Print paths in FASTA format to stdout. One line for the FASTA header, another line for the whole sequence.", {'f', "fasta"});
     args::Group threading_opts(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> threads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
+	args::Group processing_info_opts(parser, "[ Processing Information ]");
+	args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
     args::Group program_info_opts(parser, "[ Program Information ]");
     args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi paths.", {'h', "help"});
 
@@ -65,27 +65,22 @@ int main_paths(int argc, char** argv) {
         return 1;
     }
 
-    if (args::get(threads)) {
-        omp_set_num_threads(args::get(threads));
-    } else {
-        omp_set_num_threads(1);
-    }
-
     if (!dg_in_file) {
         std::cerr << "[odgi::paths] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
         return 1;
     }
 
-    graph_t graph;
+	const uint64_t num_threads = args::get(threads) ? args::get(threads) : 1;
+    omp_set_num_threads(num_threads);
+
+	graph_t graph;
     assert(argc > 0);
     std::string infile = args::get(dg_in_file);
     if (infile.size()) {
         if (infile == "-") {
             graph.deserialize(std::cin);
         } else {
-            ifstream f(infile.c_str());
-            graph.deserialize(f);
-            f.close();
+			utils::handle_gfa_odgi_input(infile, "paths", args::get(progress), num_threads, graph);
         }
     }
 

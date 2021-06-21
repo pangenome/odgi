@@ -2,6 +2,7 @@
 #include "odgi.hpp"
 #include "args.hxx"
 #include "algorithms/matrix_writer.hpp"
+#include "utils.hpp"
 
 namespace odgi {
 
@@ -19,10 +20,14 @@ int main_matrix(int argc, char** argv) {
     
     args::ArgumentParser parser("Write the graph topology in sparse matrix formats.");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::Group matrix_opts(parser, "[ Matrix Options ]");
     args::Flag weight_by_edge_depth(matrix_opts, "edge-depth-weight", "Weigh edges by their path depth.", {'e', "edge-depth-weight"});
     args::Flag weight_by_edge_delta(matrix_opts, "delta-weight", "Weigh edges by the inverse id delta.", {'d', "delta-weight"});
+	args::Group threading(parser, "[ Threading ]");
+	args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
+	args::Group processing_info_opts(parser, "[ Processing Information ]");
+	args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
     args::Group program_info_opts(parser, "[ Program Information ]");
     args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi matrix.", {'h', "help"});
 
@@ -46,7 +51,9 @@ int main_matrix(int argc, char** argv) {
         return 1;
     }
 
-    graph_t graph;
+	const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+
+	graph_t graph;
     assert(argc > 0);
 
     {
@@ -55,9 +62,7 @@ int main_matrix(int argc, char** argv) {
             if (infile == "-") {
                 graph.deserialize(std::cin);
             } else {
-                ifstream f(infile.c_str());
-                graph.deserialize(f);
-                f.close();
+				utils::handle_gfa_odgi_input(infile, "matrix", args::get(progress), num_threads, graph);
             }
         }
     }
