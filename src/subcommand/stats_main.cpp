@@ -1,14 +1,13 @@
 #include "subcommand.hpp"
 #include "odgi.hpp"
 #include "IntervalTree.h"
-//#include "gfakluge.hpp"
 #include "args.hxx"
 #include "split.hpp"
-//#include "io_helper.hpp"
 #include <omp.h>
 #include "algorithms/layout.hpp"
 #include "algorithms/weakly_connected_components.hpp"
 #include "cover.hpp"
+#include "utils.hpp"
 
 //#define debug_odgi_stats
 
@@ -28,7 +27,7 @@ int main_stats(int argc, char** argv) {
     
     args::ArgumentParser parser("Metrics describing a variation graph and its path relationship.");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::Group summary_opts(parser, "[ Summary Options ]");
     args::Flag _summarize(summary_opts, "summarize", "Summarize the graph properties and dimensions. Print to stdout the #nucleotides, #nodes, #edges, #paths in a tab-delimited format.", {'S', "summarize"});
 
@@ -62,9 +61,11 @@ int main_stats(int argc, char** argv) {
                                                                                                           " is penalized (adding 3 times its length in the sum).", {'s', "sum-path-nodes-distances"});
     args::Flag penalize_diff_orientation(sorting_goodness_evaluation_opts, "penalize_diff_orientation", "If a link connects two nodes which have different orientations, this"
                                                                                                         " is penalized (adding 2 times its length in the sum).", {'d', "penalize-different-orientation"});
-    args::Flag path_statistics(sorting_goodness_evaluation_opts, "path_statistics", "Display the statistics (mean links length or sum path nodes distances) for each path.", {'P', "path-statistics"});
+    args::Flag path_statistics(sorting_goodness_evaluation_opts, "path_statistics", "Display the statistics (mean links length or sum path nodes distances) for each path.", {'p', "path-statistics"});
     args::Group processing_information(parser, "[ Processing Information ]");
     args::ValueFlag<uint64_t> threads(processing_information, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
+	args::Group processing_info_opts(parser, "[ Processing Information ]");
+	args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
     args::Group program_information(parser, "[ Program Information ]");
     args::HelpFlag help(program_information, "help", "Print a help message for odgi stats.", {'h', "help"});
 
@@ -125,11 +126,8 @@ int main_stats(int argc, char** argv) {
         }
     }
 
-    if (args::get(threads)) {
-        omp_set_num_threads(args::get(threads));
-    } else {
-        omp_set_num_threads(1);
-    }
+	const uint64_t num_threads = args::get(threads) ? args::get(threads) : 1;
+	omp_set_num_threads(num_threads);
 
     graph_t graph;
     assert(argc > 0);
@@ -138,9 +136,7 @@ int main_stats(int argc, char** argv) {
         if (infile == "-") {
             graph.deserialize(std::cin);
         } else {
-            ifstream f(infile.c_str());
-            graph.deserialize(f);
-            f.close();
+			utils::handle_gfa_odgi_input(infile, "stats", args::get(progress), num_threads, graph);
         }
     }
     ///graph.display();

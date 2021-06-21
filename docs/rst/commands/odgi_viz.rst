@@ -29,7 +29,7 @@ MANDATORY OPTIONS
 --------------
 
 | **-i, --idx**\ =\ *FILE*
-| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.
+| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!
 
 | **-o, --out**\ =\ *FILE*
 | Write the visualization in PNG format to this *FILE*.
@@ -43,7 +43,7 @@ Visualization Options
 | **-y, --height**\ =\ *N*
 | Set the height in pixels of the output image (default: 500).
 
-| **-P, --path-height**\ =\ *N*
+| **-c, --path-height**\ =\ *N*
 | The height in pixels for a path.
 
 | **-X, --path-x-padding**\ =\ *N*
@@ -157,6 +157,18 @@ Gradient Mode Options
 | **-u, --white-to-black**
 | Change the color darkness from white (for the first nucleotide
   position) to black (for the last nucleotide position).
+
+Threading
+---------
+
+| **-t, --threads**\ =\ *N*
+| Number of threads to use for parallel operations.
+
+Processing Information
+----------------------
+
+| **-P, --progress**
+| Print information about the operations and the progress to stderr.
 
 Program Information
 -------------------

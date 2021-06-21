@@ -7,6 +7,8 @@
 #include "args.hxx"
 #include <queue>
 
+#include "utils.hpp"
+
 namespace odgi {
 
     using namespace odgi::subcommand;
@@ -26,7 +28,7 @@ namespace odgi {
         args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
         args::ValueFlag<std::string> _input_graphs(mandatory_opts, "FILE",
                                                    "Input file containing the list of graphs to squeeze into the same\n"
-                                                   "  file. The file must contain one path per line.",
+                                                   "  file. The file must contain one graph per line. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!",
                                                    {'f', "input-graphs"});
         args::ValueFlag<std::string> dg_out_file(mandatory_opts, "FILE", "Store all the input graphs in this file. The file name usually ends with *.og*.",
                                                  {'o', "out"});
@@ -41,7 +43,7 @@ namespace odgi {
         args::ValueFlag<uint64_t> nthreads(threading_opts, "N", "Number of threads to use for parallel operations.",
                                            {'t', "threads"});
         args::Group processing_info_opts(parser, "[ Processing Information ]");
-        args::Flag _debug(parser, "progress", "Print information about the progress to stderr.",
+        args::Flag progress(parser, "progress", "Print information about the progress to stderr.",
                           {'P', "progress"});
         args::Group program_info_opts(parser, "[ Program Information ]");
         args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi squeeze.", {'h', "help"});
@@ -96,7 +98,7 @@ namespace odgi {
             return 1;
         }
 
-        bool debug = args::get(_debug);
+        bool debug = args::get(progress);
         bool optimize = args::get(_optimize);
 
         uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
@@ -128,9 +130,7 @@ namespace odgi {
             if (!line.empty()) {
                 graph_t graph;
 
-                ifstream f(line.c_str());
-                graph.deserialize(f);
-                f.close();
+				utils::handle_gfa_odgi_input(line, "squeeze", args::get(progress), num_threads, graph);
 
                 if (optimize) {
                     graph.optimize();

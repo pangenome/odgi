@@ -43,12 +43,12 @@ namespace odgi {
 
         args::ArgumentParser parser("Visualize a variation graph in 1D.");
         args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-        args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+        args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
         args::ValueFlag<std::string> png_out_file(mandatory_opts, "FILE", "Write the visualization in PNG format to this *FILE*.", {'o', "out"});
         args::Group viz_opts(parser, "[ Visualization Options ]");
         args::ValueFlag<uint64_t> image_width(viz_opts, "N", "Set the width in pixels of the output image (default: 1500).", {'x', "width"});
         args::ValueFlag<uint64_t> image_height(viz_opts, "N", "Set the height in pixels of the output image (default: 500).", {'y', "height"});
-        args::ValueFlag<uint64_t> path_height(viz_opts, "N", "The height in pixels for a path.", {'P', "path-height"});
+        args::ValueFlag<uint64_t> path_height(viz_opts, "N", "The height in pixels for a path.", {'c', "path-height"});
         args::ValueFlag<uint64_t> path_x_pad(viz_opts, "N", "The padding in pixels on the x-axis for a path.", {'X', "path-x-padding"});
         args::Flag pack_paths(viz_opts, "bool", "Pack all paths rather than displaying a single path per row.",{'R', "pack-paths"});
         args::ValueFlag<float> link_path_pieces(viz_opts, "FLOAT","Show thin links of this relative width to connect path pieces.",{'L', "link-path-pieces"});
@@ -122,6 +122,10 @@ namespace odgi {
         args::Flag longest_path(grad_mode_opts, "longest-path", "Use the longest path length to change the color darkness.", {'l', "longest-path"});
         args::Flag white_to_black(grad_mode_opts, "white-to-black", "Change the color darkness from white (for the first nucleotide"
                                                                     " position) to black (for the last nucleotide position).", {'u', "white-to-black"});
+		args::Group threading(parser, "[ Threading ]");
+		args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
+		args::Group processing_info_opts(parser, "[ Processing Information ]");
+		args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
         args::Group program_information(parser, "[ Program Information ]");
         args::HelpFlag help(program_information, "help", "Print a help message for odgi viz.", {'h', "help"});
 
@@ -205,6 +209,7 @@ namespace odgi {
             return 1;
         }
 
+		const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
 
         graph_t graph;
         assert(argc > 0);
@@ -213,9 +218,7 @@ namespace odgi {
             if (infile == "-") {
                 graph.deserialize(std::cin);
             } else {
-                ifstream f(infile.c_str());
-                graph.deserialize(f);
-                f.close();
+				utils::handle_gfa_odgi_input(infile, "viz", args::get(progress), num_threads, graph);
             }
         }
 

@@ -5,6 +5,7 @@
 #include "algorithms/simple_components.hpp"
 #include <random>
 #include <deque>
+#include "utils.hpp"
 
 namespace odgi {
 
@@ -22,13 +23,17 @@ int main_unitig(int argc, char** argv) {
 
     args::ArgumentParser parser("Output unitigs of the graph.");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::Group fastq_opts(parser, "[ FASTQ Options ]");
     args::Flag fake_fastq(fastq_opts, "fake", "Write the unitigs in FASTQ format to stdout with a fixed quality value of *I*.", {'f', "fake-fastq"});
     args::Group unitig_opts(parser, "[ Unitig Options ]");
     args::ValueFlag<uint64_t> unitig_to(unitig_opts, "N", "Continue unitigs with a random walk in the graph so that they have at least the given *N* length.", {'t', "sample-to"});
     args::ValueFlag<uint64_t> unitig_plus(unitig_opts, "N", "Continue unitigs with a random walk in the graph by *N* past their natural end.", {'p', "sample-plus"});
     args::ValueFlag<uint64_t> min_begin_node_length(unitig_opts, "N", "Only begin unitigs collection from nodes which have at least length *N*.", {'l', "min-begin-node-length"});
+	args::Group threading(parser, "[ Threading ]");
+	args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
+	args::Group processing_info_opts(parser, "[ Processing Information ]");
+	args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
     args::Group program_information(parser, "[ Program Information ]");
     args::HelpFlag help(program_information, "help", "Print a help message for odgi unitig.", {'h', "help"});
 
@@ -52,7 +57,9 @@ int main_unitig(int argc, char** argv) {
         return 1;
     }
 
-    graph_t graph;
+	const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+
+	graph_t graph;
     assert(argc > 0);
     {
         const std::string infile = args::get(dg_in_file);
@@ -60,9 +67,7 @@ int main_unitig(int argc, char** argv) {
             if (infile == "-") {
                 graph.deserialize(std::cin);
             } else {
-                ifstream f(infile.c_str());
-                graph.deserialize(f);
-                f.close();
+				utils::handle_gfa_odgi_input(infile, "unitig", args::get(progress), num_threads, graph);
             }
         }
     }

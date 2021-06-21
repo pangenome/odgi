@@ -3,6 +3,7 @@
 #include "args.hxx"
 #include <omp.h>
 #include "algorithms/unchop.hpp"
+#include "utils.hpp"
 
 namespace odgi {
 
@@ -20,12 +21,12 @@ int main_unchop(int argc, char** argv) {
     
     args::ArgumentParser parser("Merge unitigs into a single node preserving the node order.");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-    args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+    args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::ValueFlag<std::string> og_out_file(mandatory_opts, "FILE", "Write the unchopped dynamic succinct variation graph in ODGI format to this *FILE*. A file ending with *.og* is recommended.", {'o', "out"});
     args::Group threading_opts(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> nthreads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
     args::Group processing_info_opts(parser, "[ Processing Information ]");
-    args::Flag debug(processing_info_opts, "debug", "Print information about the process to stderr.", {'d', "debug"});
+    args::Flag debug(processing_info_opts, "progress", "Print information about the process to stderr.", {'P', "progress"});
     args::Group program_information(parser, "[ Program Information ]");
     args::HelpFlag help(program_information, "help", "Print a help message for odgi unchop.", {'h', "help"});
 
@@ -54,7 +55,9 @@ int main_unchop(int argc, char** argv) {
         return 1;
     }
 
-    graph_t graph;
+	const uint64_t num_threads = nthreads ? args::get(nthreads) : 1;
+
+	graph_t graph;
     assert(argc > 0);
     {
         const std::string infile = args::get(og_in_file);
@@ -62,15 +65,10 @@ int main_unchop(int argc, char** argv) {
             if (infile == "-") {
                 graph.deserialize(std::cin);
             } else {
-                ifstream f(infile.c_str());
-                graph.deserialize(f);
-                f.close();
+				utils::handle_gfa_odgi_input(infile, "unchop", args::get(debug), num_threads, graph);
             }
         }
     }
-
-    const uint64_t num_threads = nthreads ? args::get(nthreads) : 1;
-    graph.set_number_of_threads(num_threads);
 
     algorithms::unchop(graph, num_threads, args::get(debug));
 

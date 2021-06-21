@@ -8,6 +8,7 @@
 #include "algorithms/cut_tips.hpp"
 #include "algorithms/remove_isolated.hpp"
 #include "algorithms/expand_context.hpp"
+#include "utils.hpp"
 
 namespace odgi {
 
@@ -25,7 +26,7 @@ int main_prune(int argc, char** argv) {
     
     args::ArgumentParser parser("Remove complex parts of the graph.");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.", {'i', "idx"});
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::ValueFlag<std::string> dg_out_file(mandatory_opts, "FILE", "Write the pruned graph in ODGI format to *FILE*. A file ending with *.og* is recommended.", {'o', "out"});
     args::Group kmer_opts(parser, "[ Kmer Options ]");
     args::ValueFlag<uint64_t> kmer_length(kmer_opts, "K", "The length of the kmers to consider.", {'k', "kmer-length"});
@@ -50,7 +51,9 @@ int main_prune(int argc, char** argv) {
     args::Flag remove_isolated(path_opts, "bool", "Remove isolated nodes covered by a single path.", {'I', "remove-isolated"});
     args::Group threading_opts(parser, "[ Threading ]");
     args::ValueFlag<int> threads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
-    args::Group program_info_opts(parser, "[ Program Information ]");
+	args::Group processing_info_opts(parser, "[ Processing Information ]");
+	args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
+	args::Group program_info_opts(parser, "[ Program Information ]");
     args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi prune.", {'h', "help"});
 
     try {
@@ -82,21 +85,20 @@ int main_prune(int argc, char** argv) {
         return 1;
     }
 
-    graph_t graph;;
+	const int n_threads = threads ? args::get(threads) : 1;
+
+	graph_t graph;;
     {
         const std::string infile = args::get(dg_in_file);
         if (!infile.empty()) {
             if (infile == "-") {
                 graph.deserialize(std::cin);
             } else {
-                ifstream f(infile.c_str());
-                graph.deserialize(f);
-                f.close();
+				utils::handle_gfa_odgi_input(infile, "prune", args::get(progress), n_threads, graph);
             }
         }
     }
 
-    const int n_threads = threads ? args::get(threads) : 1;
     omp_set_num_threads(n_threads);
 
     if (args::get(max_degree)) {

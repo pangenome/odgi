@@ -2,6 +2,7 @@
 #include "args.hxx"
 #include "algorithms/xp.hpp"
 #include <httplib.h>
+#include <filesystem>
 
 namespace odgi {
 
@@ -53,6 +54,10 @@ namespace odgi {
         }
 
         XP path_index;
+		if (!std::filesystem::exists(args::get(dg_in_file))) {
+			std::cerr << "[odgi::" << "panpos" << "] error: the given file \"" << args::get(dg_in_file) << "\" does not exist. Please specify an existing input file in xp format via -i=[FILE], --idx=[FILE]." << std::endl;
+			return 1;
+		}
         std::ifstream in;
         in.open(args::get(dg_in_file));
         path_index.load(in);

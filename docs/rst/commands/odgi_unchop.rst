@@ -26,7 +26,7 @@ Graph Files IO
 
 | **-i, --idx**\ =\ *FILE*
 | File containing the succinct variation graph to unchop. The file name
-  usually ends with *.og*.
+  usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!
 
 | **-o, --out**\ =\ *FILE*
 | Write the unchopped dynamic succinct variation graph in ODGI format to this *FILE*. A file ending with *.og* is recommended.
@@ -40,7 +40,7 @@ Threading
 Processing Information
 ----------------------
 
-| **-d, --debug**
+| **-P, --progress**
 | Print information about the process to stderr.
 
 Program Information
