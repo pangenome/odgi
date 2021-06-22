@@ -9,4 +9,4 @@ COMMIT=$(git describe --always)
 
 sed -i ""$VERSION_LINE_NMBR"s/.*/version = '"$TAG"'/" conf.py
 sed -i ""$RELEASE_LINE_NMBR"s/.*/release = '"$COMMIT"'/" conf.py
-sed -i ""$COPYRIGHT_LINE_NMBR"s/.*/copyright = '2021, Erik Garrison. Revision "$TAG"-"$COMMIT"'/" conf.py
+sed -i ""$COPYRIGHT_LINE_NMBR"s/.*/copyright = '2021, Simon Heumos, Andrea Guarracino, Erik Garrison. Revision "$TAG"-"$COMMIT"'/" conf.py

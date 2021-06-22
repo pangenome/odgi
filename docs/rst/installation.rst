@@ -102,3 +102,15 @@ If you want to build an environment only consisting of the ``odgi`` binary, you 
 
 For more details about how to handle Guix channels, please go to
 `https://git.genenetwork.org/guix-bioinformatics/guix-bioinformatics.git <https://git.genenetwork.org/guix-bioinformatics/guix-bioinformatics.git#headline-1>`_.
+
+Docker
+========
+
+Thanks to our Bioconda recipe https://bioconda.github.io/recipes/odgi/README.html a docker image is generated for free.
+Pulling the latest ``odgi`` docker image:
+
+.. code-block:: bash
+
+    docker pull quay.io/biocontainers/odgi:<tag>
+
+Please see `odgi/tags <https://quay.io/repository/biocontainers/odgi?tab=tags>`_ for valid values for ``<tag>``.
