@@ -48,7 +48,7 @@ namespace odgi {
         args::Group viz_opts(parser, "[ Visualization Options ]");
         args::ValueFlag<uint64_t> image_width(viz_opts, "N", "Set the width in pixels of the output image (default: 1500).", {'x', "width"});
         args::ValueFlag<uint64_t> image_height(viz_opts, "N", "Set the height in pixels of the output image (default: 500).", {'y', "height"});
-        args::ValueFlag<uint64_t> path_height(viz_opts, "N", "The height in pixels for a path.", {'c', "path-height"});
+        args::ValueFlag<uint64_t> path_height(viz_opts, "N", "The height in pixels for a path.", {'a', "path-height"});
         args::ValueFlag<uint64_t> path_x_pad(viz_opts, "N", "The padding in pixels on the x-axis for a path.", {'X', "path-x-padding"});
         args::Flag pack_paths(viz_opts, "bool", "Pack all paths rather than displaying a single path per row.",{'R', "pack-paths"});
         args::ValueFlag<float> link_path_pieces(viz_opts, "FLOAT","Show thin links of this relative width to connect path pieces.",{'L', "link-path-pieces"});
