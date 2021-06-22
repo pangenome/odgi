@@ -43,7 +43,7 @@ Visualization Options
 | **-y, --height**\ =\ *N*
 | Set the height in pixels of the output image (default: 500).
 
-| **-c, --path-height**\ =\ *N*
+| **-a, --path-height**\ =\ *N*
 | The height in pixels for a path.
 
 | **-X, --path-x-padding**\ =\ *N*
