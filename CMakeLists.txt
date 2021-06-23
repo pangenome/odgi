@@ -390,6 +390,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/panpos_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/server_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/version_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/untangle_main.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/hash.cpp
@@ -436,7 +437,9 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/remove_isolated.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/expand_context.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/validate_main.cpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/groom.cpp src/unittest/edge.cpp)
+  ${CMAKE_SOURCE_DIR}/src/algorithms/untangle.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/groom.cpp
+  ${CMAKE_SOURCE_DIR}/src/unittest/edge.cpp)
 
 set(odgi_DEPS
     sdsl-lite
@@ -596,6 +599,7 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/algorithms/distance_to_head.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/is_single_stranded.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/shortest_cycle.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/untangle.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/progress.hpp)
 
 target_include_directories(odgi_objs PUBLIC ${odgi_INCLUDES})
