@@ -15,9 +15,11 @@ std::vector<step_handle_t> untangle_cuts(
     // this assumes that the end is not inclusive
     uint64_t start_pos = step_pos.find(start)->second;
     uint64_t end_pos = step_pos.find(end)->second;
+    /*
     std::cerr << "untangle_cuts(" << path_name << ", "
               << start_pos << ", "
               << end_pos << ")" << std::endl;
+    */
     std::vector<step_handle_t> cut_points;
     cut_points.push_back(start);
     // we go forward until we see a loop, where the other step has position < end_pos and > start_pos
@@ -141,7 +143,7 @@ std::vector<step_handle_t> merge_cuts(
     const ska::flat_hash_map<step_handle_t, uint64_t>& step_pos) {
     std::vector<step_handle_t> merged;
     uint64_t last = 0;
-    std::cerr << "dist is " << dist << std::endl;
+    //std::cerr << "dist is " << dist << std::endl;
     for (auto& step : cuts) {
         auto& pos = step_pos.find(step)->second;
         if (pos == 0 || pos > (last + dist)) {
@@ -238,27 +240,26 @@ segment_map_t::segment_map_t(
         // walk the path to get the segmentation
         uint64_t curr_segment_idx = 0;
         uint64_t segment_idx = segment_cut.size();
-        uint64_t pos = 0;
         uint64_t* curr_length = nullptr;
         for (step_handle_t step = graph.path_begin(path);
              step != graph.path_end(path);
              step = graph.get_next_step(step)) {
             if (step == cuts[curr_segment_idx]) {
+                segment_idx = segment_cut.size();
                 segment_cut.push_back(step);
                 segment_length.push_back(0);
                 curr_length = &segment_length.back();
                 ++curr_segment_idx;
-                ++segment_idx;
             }
             handle_t h = graph.get_handle_of_step(step);
             node_to_segment.push_back(
                 std::make_pair(graph.get_id(h), segment_idx));
             uint64_t node_length = graph.get_length(h);
-            pos += node_length;
             *curr_length += node_length;
-            
         }
     }
+    //std::cerr << "segment_cut.size() " << segment_cut.size() << std::endl;
+    //std::cerr << "segment_length.size() " << segment_length.size() << std::endl;
     ips4o::parallel::sort(node_to_segment.begin(),
                           node_to_segment.end(),
                           std::less<>(),
@@ -326,11 +327,12 @@ segment_map_t::get_matches(
     for (auto& p : target_isec) {
         auto& segment_id = p.first;
         auto& isec = p.second;
+        // intersection / union
         jaccards.push_back(
             std::make_pair(
                 (double)isec
                 / (double)(get_segment_length(segment_id)
-                           + query_length),
+                           + query_length - isec),
                 segment_id
                 ));
     }
@@ -365,7 +367,7 @@ void map_segments(
             auto& idx = best.second; // segment index
             auto& target_begin = target_segments.get_segment_cut(idx);
             auto& target_begin_pos = step_pos.find(target_begin)->second;
-            auto target_end_pos = begin_pos + target_segments.get_segment_length(idx);
+            auto target_end_pos = target_begin_pos + target_segments.get_segment_length(idx);
             path_handle_t target_path = graph.get_path_handle_of_step(target_begin);
             std::string target_name = graph.get_path_name(target_path);
             std::cout << query_name << "\t"
@@ -374,7 +376,8 @@ void map_segments(
                       << target_name << "\t"
                       << target_begin_pos << "\t"
                       << target_end_pos << "\t"
-                      << score << "\t" << target_mapping.size() << std::endl;
+                      << score << std::endl;
+                //"\t" << target_mapping.size() << std::endl;
             // todo: orientation
         }
     }
