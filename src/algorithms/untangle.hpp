@@ -32,7 +32,15 @@ public:
                   const size_t& num_threads);
     void for_segment_on_node(
         uint64_t node_id,
-        const std::function<void(const uint64_t& segment_id)>& func);
+        const std::function<void(const uint64_t& segment_id)>& func) const;
+    uint64_t get_segment_length(const uint64_t& segment_id) const;
+    std::vector<std::pair<double, uint64_t>> get_matches(
+        const PathHandleGraph& graph,
+        const step_handle_t& start,
+        const step_handle_t& end,
+        const uint64_t& query_length) const;
+    const step_handle_t& get_segment_cut(
+        const uint64_t& idx) const;
 };
 
 std::vector<step_handle_t> untangle_cuts(
@@ -59,6 +67,13 @@ void self_dotplot(
 ska::flat_hash_map<step_handle_t, uint64_t> make_step_index(
     const PathHandleGraph& graph,
     const std::vector<path_handle_t>& paths);
+
+void map_segments(
+    const PathHandleGraph& graph,
+    const path_handle_t& path,
+    const std::vector<step_handle_t>& cuts,
+    const segment_map_t& target_segments,
+    const ska::flat_hash_map<step_handle_t, uint64_t>& step_pos);
 
 void untangle(
     const PathHandleGraph& graph,

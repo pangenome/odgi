@@ -10,7 +10,6 @@ std::vector<step_handle_t> untangle_cuts(
     const step_handle_t& start,
     const step_handle_t& end,
     const ska::flat_hash_map<step_handle_t, uint64_t>& step_pos) {
-    //const uint64_t& min_length) {
     auto path = graph.get_path_handle_of_step(start);
     auto path_name = graph.get_path_name(path);
     // this assumes that the end is not inclusive
@@ -287,7 +286,7 @@ segment_map_t::segment_map_t(
 
 void segment_map_t::for_segment_on_node(
     uint64_t node_id,
-    const std::function<void(const uint64_t& segment_id)>& func) {
+    const std::function<void(const uint64_t& segment_id)>& func) const {
     uint64_t from = node_idx[node_id-1];
     uint64_t to = node_idx[node_id];
     for (uint64_t i = from; i < to; ++i) {
@@ -295,9 +294,94 @@ void segment_map_t::for_segment_on_node(
     }
 }
 
-// pair-BED projection of the graph
+uint64_t segment_map_t::get_segment_length(const uint64_t& segment_id) const {
+    return segment_length.at(segment_id);
+}
+
+std::vector<std::pair<double, uint64_t>>
+segment_map_t::get_matches(
+        const PathHandleGraph& graph,
+        const step_handle_t& start,
+        const step_handle_t& end,
+        const uint64_t& query_length) const {
+    // collect the target segments that overlap our segment
+    // computing the intersection size (in bp) as we go
+    // our final metric is jaccard of intersection over total length for each overlapped target
+    ska::flat_hash_map<uint64_t, uint64_t> target_isec;
+    for (step_handle_t step = start;
+         step != end;
+         step = graph.get_next_step(step)) {
+        handle_t h = graph.get_handle_of_step(step);
+        uint64_t node_id = graph.get_id(h);
+        uint64_t node_length = graph.get_length(h);
+        for_segment_on_node(
+            node_id,
+            [&](const uint64_t& segment_id) {
+                // HACK warning -- this doesn't handle multiplicity of our query path
+                target_isec[segment_id] += node_length;
+            });
+    }
+    // compute the jaccards
+    std::vector<std::pair<double, uint64_t>> jaccards;
+    for (auto& p : target_isec) {
+        auto& segment_id = p.first;
+        auto& isec = p.second;
+        jaccards.push_back(
+            std::make_pair(
+                (double)isec
+                / (double)(get_segment_length(segment_id)
+                           + query_length),
+                segment_id
+                ));
+    }
+    // sort the target segments by their jaccard with the query
+    std::sort(jaccards.rbegin(), jaccards.rend());
+    return jaccards;
+}
+
+const step_handle_t& segment_map_t::get_segment_cut(
+    const uint64_t& idx) const {
+    return segment_cut[idx];
+}
+
+void map_segments(
+    const PathHandleGraph& graph,
+    const path_handle_t& path,
+    const std::vector<step_handle_t>& cuts,
+    const segment_map_t& target_segments,
+    const ska::flat_hash_map<step_handle_t, uint64_t>& step_pos) {
+    std::string query_name = graph.get_path_name(path);
+    for (uint64_t i = 0; i < cuts.size()-1; ++i) {
+        auto& begin = cuts[i];
+        auto& end = cuts[i+1];
+        auto& begin_pos = step_pos.find(begin)->second;
+        auto& end_pos = step_pos.find(end)->second;
+        uint64_t length = end_pos - begin_pos;
+        std::vector<std::pair<double, uint64_t>> target_mapping =
+            target_segments.get_matches(graph, cuts[i], cuts[i+1], length);
+        if (!target_mapping.empty()) {
+            auto& best = target_mapping.front();
+            auto& score = best.first;
+            auto& idx = best.second; // segment index
+            auto& target_begin = target_segments.get_segment_cut(idx);
+            auto& target_begin_pos = step_pos.find(target_begin)->second;
+            auto target_end_pos = begin_pos + target_segments.get_segment_length(idx);
+            path_handle_t target_path = graph.get_path_handle_of_step(target_begin);
+            std::string target_name = graph.get_path_name(target_path);
+            std::cout << query_name << "\t"
+                      << begin_pos << "\t"
+                      << end_pos << "\t"
+                      << target_name << "\t"
+                      << target_begin_pos << "\t"
+                      << target_end_pos << "\t"
+                      << score << "\t" << target_mapping.size() << std::endl;
+            // todo: orientation
+        }
+    }
+}
+
+// BEDPE (pair-BED) projection of the graph
 // that describe nonlinear query : target relationships
-// but can be sorted according to their query or target axes
 void untangle(
     const PathHandleGraph& graph,
     const std::vector<path_handle_t>& queries,
@@ -305,16 +389,22 @@ void untangle(
     const uint64_t& merge_dist,
     const size_t& num_threads) {
 
+    std::vector<path_handle_t> paths;
+    paths.insert(paths.end(), queries.begin(), queries.end());
+    paths.insert(paths.end(), targets.begin(), targets.end());
+    auto step_pos = make_step_index(graph, paths);
+
+    //auto step_pos = make_step_index(graph, queries);
     // node to reference segmentation mapping
     segment_map_t target_segments(graph,
                                   targets,
-                                  make_step_index(graph, targets),
+                                  step_pos,
                                   merge_dist,
                                   num_threads);
 
     //show_steps(graph, step_pos);
     //std::cout << "path\tfrom\tto" << std::endl;
-    auto step_pos = make_step_index(graph, queries);
+    //auto step_pos = make_step_index(graph, queries);
     for (auto& query : queries) {
         std::vector<step_handle_t> cuts
             = merge_cuts(
@@ -324,10 +414,10 @@ void untangle(
                               step_pos),
                 merge_dist,
                 step_pos);
-        //std::vector<>
-        
-        write_cuts(graph, query, cuts, step_pos);
-        // 
+        map_segments(graph, query, cuts, target_segments, step_pos);
+
+        //map_segments(
+        //write_cuts(graph, query, cuts, step_pos);
     }
     //self_dotplot(graph, query, step_pos);
 }
