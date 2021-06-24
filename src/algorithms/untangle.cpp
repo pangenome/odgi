@@ -287,11 +287,11 @@ segment_map_t::segment_map_t(
 
 void segment_map_t::for_segment_on_node(
     uint64_t node_id,
-    const std::function<void(const uint64_t& segment_id)>& func) const {
+    const std::function<void(const uint64_t& segment_id, const bool& is_rev)>& func) const {
     uint64_t from = node_idx[node_id-1];
     uint64_t to = node_idx[node_id];
     for (uint64_t i = from; i < to; ++i) {
-        func(segments[i]);
+        func(segments[i], false);
     }
 }
 
@@ -299,7 +299,17 @@ uint64_t segment_map_t::get_segment_length(const uint64_t& segment_id) const {
     return segment_length.at(segment_id);
 }
 
-std::vector<std::pair<double, uint64_t>>
+struct isec_t {
+    uint64_t len = 0;
+    uint64_t inv = 0;
+    void incr(const uint64_t& l, const bool& is_inv) {
+        len += l;
+        inv += (is_inv ? l : 0);
+    }
+};
+
+
+std::vector<segment_mapping_t>
 segment_map_t::get_matches(
         const PathHandleGraph& graph,
         const step_handle_t& start,
@@ -308,7 +318,7 @@ segment_map_t::get_matches(
     // collect the target segments that overlap our segment
     // computing the intersection size (in bp) as we go
     // our final metric is jaccard of intersection over total length for each overlapped target
-    ska::flat_hash_map<uint64_t, uint64_t> target_isec;
+    ska::flat_hash_map<uint64_t, isec_t> target_isec;
     for (step_handle_t step = start;
          step != end;
          step = graph.get_next_step(step)) {
@@ -317,27 +327,35 @@ segment_map_t::get_matches(
         uint64_t node_length = graph.get_length(h);
         for_segment_on_node(
             node_id,
-            [&](const uint64_t& segment_id) {
+            [&](const uint64_t& segment_id, const bool& is_rev) {
                 // HACK warning -- this doesn't handle multiplicity of our query path
-                target_isec[segment_id] += node_length;
+                target_isec[segment_id].incr(node_length, is_rev);
             });
     }
     // compute the jaccards
-    std::vector<std::pair<double, uint64_t>> jaccards;
+    std::vector<segment_mapping_t> jaccards;
     for (auto& p : target_isec) {
         auto& segment_id = p.first;
-        auto& isec = p.second;
+        auto& isec = p.second.len;
+        //auto& inv = p.second.inv;
+        bool is_inv = (double)p.second.inv/(double)isec > 0.5;
         // intersection / union
         jaccards.push_back(
-            std::make_pair(
+            {
+                segment_id,
+                is_inv,
                 (double)isec
                 / (double)(get_segment_length(segment_id)
-                           + query_length - isec),
-                segment_id
-                ));
+                           + query_length - isec)
+            });
     }
     // sort the target segments by their jaccard with the query
-    std::sort(jaccards.rbegin(), jaccards.rend());
+    std::sort(jaccards.begin(), jaccards.end(),
+              [](const segment_mapping_t& a,
+                 const segment_mapping_t& b) {
+                  return std::tie(a.jaccard, a.segment_id, a.is_inv) >
+                      std::tie(b.jaccard, b.segment_id, b.is_inv);
+              });
     return jaccards;
 }
 
@@ -359,12 +377,12 @@ void map_segments(
         auto& begin_pos = step_pos.find(begin)->second;
         auto& end_pos = step_pos.find(end)->second;
         uint64_t length = end_pos - begin_pos;
-        std::vector<std::pair<double, uint64_t>> target_mapping =
+        std::vector<segment_mapping_t> target_mapping =
             target_segments.get_matches(graph, cuts[i], cuts[i+1], length);
         if (!target_mapping.empty()) {
             auto& best = target_mapping.front();
-            auto& score = best.first;
-            auto& idx = best.second; // segment index
+            auto& score = best.jaccard;
+            auto& idx = best.segment_id; // segment index
             auto& target_begin = target_segments.get_segment_cut(idx);
             auto& target_begin_pos = step_pos.find(target_begin)->second;
             auto target_end_pos = target_begin_pos + target_segments.get_segment_length(idx);

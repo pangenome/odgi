@@ -14,6 +14,12 @@ namespace algorithms {
     
 using namespace handlegraph;
 
+struct segment_mapping_t {
+    uint64_t segment_id = 0;
+    bool is_inv = false;
+    double jaccard = 0;
+};
+
 class segment_map_t {
 public:
     // each segment is identified by its starting step
@@ -32,9 +38,9 @@ public:
                   const size_t& num_threads);
     void for_segment_on_node(
         uint64_t node_id,
-        const std::function<void(const uint64_t& segment_id)>& func) const;
+        const std::function<void(const uint64_t& segment_id, const bool& is_rev)>& func) const;
     uint64_t get_segment_length(const uint64_t& segment_id) const;
-    std::vector<std::pair<double, uint64_t>> get_matches(
+    std::vector<segment_mapping_t> get_matches(
         const PathHandleGraph& graph,
         const step_handle_t& start,
         const step_handle_t& end,
