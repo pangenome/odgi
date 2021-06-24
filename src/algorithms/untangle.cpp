@@ -216,6 +216,61 @@ void show_steps(
     }
 }
 
+// compute the reference segmentations
+// and map them onto the graph using a static multiset index structure based on two arrays
+// we'll build up a big vector of node -> path segment pairings
+// then we'll sort them and build an index
+segment_map_t::segment_map_t(
+    const PathHandleGraph& graph,
+    const std::vector<path_handle_t>& paths,
+    const ska::flat_hash_map<step_handle_t, uint64_t>& step_pos,
+    const uint64_t& merge_dist,
+    const size_t& num_threads) {
+    std::vector<std::pair<uint64_t, uint64_t>> node_to_segment;
+    for (auto& path : paths) {
+        std::vector<step_handle_t> cuts =
+            merge_cuts(
+                untangle_cuts(graph,
+                              graph.path_begin(path),
+                              graph.path_back(path),
+                              step_pos),
+                merge_dist,
+                step_pos);
+        // walk the path to get the segmentation
+        uint64_t curr_segment_idx = 0;
+        uint64_t segment_idx = segment_cut.size();
+        uint64_t pos = 0;
+        for (step_handle_t step = graph.path_begin(path);
+             step != graph.path_end(path);
+             step = graph.get_next_step(step)) {
+            if (step == cuts[curr_segment_idx]) {
+                segment_cut.push_back(step);
+                ++curr_segment_idx;
+                ++segment_idx;
+            }
+            handle_t h = graph.get_handle_of_step(step);
+            node_to_segment.push_back(
+                std::make_pair(graph.get_id(h), segment_idx));
+            pos += graph.get_length(h);
+        }
+    }
+    ips4o::parallel::sort(node_to_segment.begin(),
+                          node_to_segment.end(),
+                          std::less<>(),
+                          num_threads);
+    // make the mapping
+    uint64_t prev_node = 0;
+    for (auto& node_segment : node_to_segment) {
+        auto& node_id = node_segment.first;
+        if (node_id > prev_node) {
+            node_idx.push_back(segments.size());
+        }
+        segments.push_back(node_segment.second);
+        prev_node = node_id;
+    }
+    node_idx.push_back(segments.size()); // to avoid special casing the last node
+}
+
 // pair-BED projection of the graph
 // that describe nonlinear query : target relationships
 // but can be sorted according to their query or target axes
@@ -225,39 +280,20 @@ void untangle(
     const std::vector<path_handle_t>& targets,
     const uint64_t& merge_dist,
     const size_t& num_threads) {
-    std::vector<path_handle_t> paths;
-    paths.insert(paths.end(), queries.begin(), queries.end());
-    paths.insert(paths.end(), targets.begin(), targets.end());
-    auto step_pos = make_step_index(graph, paths);
 
-    // compute the reference segmentations
-    // and map them onto the graph using a static multiset index structure based on two arrays
-    // we'll build up a big vector of node -> path segment pairings
-    // then we'll sort them and build an index
+    // node to reference segmentation mapping
+    segment_map_t target_segments(graph,
+                                  targets,
+                                  make_step_index(graph, targets),
+                                  merge_dist,
+                                  num_threads);
 
-    std::vector<std::vector<step_handle_t>> ref_cuts;
-    for (auto& target : targets) {
-        ref_cuts.push_back(
-            merge_cuts(
-                untangle_cuts(graph,
-                              graph.path_begin(target),
-                              graph.path_back(target),
-                              step_pos),
-                merge_dist,
-                step_pos));
-        auto& cuts = ref_cuts.back();
-        
-        //std::vector<>
-        //write_cuts(graph, query, step_pos);
-        // 
-    }
-    
     //
     // 
     // 
     //show_steps(graph, step_pos);
     //std::cout << "path\tfrom\tto" << std::endl;
-
+    auto step_pos = make_step_index(graph, queries);
     for (auto& query : queries) {
         std::vector<step_handle_t> cuts
             = merge_cuts(

@@ -7,11 +7,32 @@
 #include <set>
 #include <deque>
 #include "hash_map.hpp"
+#include "ips4o.hpp"
 
 namespace odgi {
 namespace algorithms {
     
 using namespace handlegraph;
+
+class segment_map_t {
+public:
+    // each segment is identified by its starting step
+    std::vector<step_handle_t> segment_cut;
+    // and a length
+    std::vector<uint64_t> segment_length;
+    // maps from node id-1 to idx in segments
+    std::vector<uint64_t> node_idx;
+    // stores segment assignments sorted by node
+    // segment ids stored here map into segment_cuts and segment_lengths
+    std::vector<uint64_t> segments;
+    segment_map_t(const PathHandleGraph& graph,
+                  const std::vector<path_handle_t>& paths,
+                  const ska::flat_hash_map<step_handle_t, uint64_t>& step_pos,    
+                  const uint64_t& merge_dist,
+                  const size_t& num_threads);
+    void for_each_segment(
+        );
+};
 
 std::vector<step_handle_t> untangle_cuts(
     const PathHandleGraph& graph,
