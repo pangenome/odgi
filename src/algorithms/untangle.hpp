@@ -30,7 +30,8 @@ public:
     std::vector<uint64_t> node_idx;
     // stores segment assignments sorted by node
     // segment ids stored here map into segment_cuts and segment_lengths
-    std::vector<uint64_t> segments;
+    // +/- indicates path orientation
+    std::vector<int64_t> segments;
     segment_map_t(const PathHandleGraph& graph,
                   const std::vector<path_handle_t>& paths,
                   const ska::flat_hash_map<step_handle_t, uint64_t>& step_pos,    

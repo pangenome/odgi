@@ -227,7 +227,7 @@ segment_map_t::segment_map_t(
     const ska::flat_hash_map<step_handle_t, uint64_t>& step_pos,
     const uint64_t& merge_dist,
     const size_t& num_threads) {
-    std::vector<std::pair<uint64_t, uint64_t>> node_to_segment;
+    std::vector<std::pair<uint64_t, int64_t>> node_to_segment;
     for (auto& path : paths) {
         std::vector<step_handle_t> cuts =
             merge_cuts(
@@ -252,8 +252,10 @@ segment_map_t::segment_map_t(
                 ++curr_segment_idx;
             }
             handle_t h = graph.get_handle_of_step(step);
+            bool is_rev = graph.get_is_reverse(h);
             node_to_segment.push_back(
-                std::make_pair(graph.get_id(h), segment_idx));
+                std::make_pair(graph.get_id(h),
+                               (is_rev ? -segment_idx : segment_idx)));
             uint64_t node_length = graph.get_length(h);
             *curr_length += node_length;
         }
@@ -291,7 +293,8 @@ void segment_map_t::for_segment_on_node(
     uint64_t from = node_idx[node_id-1];
     uint64_t to = node_idx[node_id];
     for (uint64_t i = from; i < to; ++i) {
-        func(segments[i], false);
+        auto& j = segments[i];
+        func(std::abs(j), j < 0);
     }
 }
 
@@ -325,11 +328,12 @@ segment_map_t::get_matches(
         handle_t h = graph.get_handle_of_step(step);
         uint64_t node_id = graph.get_id(h);
         uint64_t node_length = graph.get_length(h);
+        bool is_rev = graph.get_is_reverse(h);
         for_segment_on_node(
             node_id,
-            [&](const uint64_t& segment_id, const bool& is_rev) {
+            [&](const uint64_t& segment_id, const bool& segment_rev) {
                 // HACK warning -- this doesn't handle multiplicity of our query path
-                target_isec[segment_id].incr(node_length, is_rev);
+                target_isec[segment_id].incr(node_length, is_rev != segment_rev);
             });
     }
     // compute the jaccards
@@ -394,7 +398,10 @@ void map_segments(
                       << target_name << "\t"
                       << target_begin_pos << "\t"
                       << target_end_pos << "\t"
-                      << score << std::endl;
+                      << score << "\t"
+                //<< "+" << "\t" // the query is always in the positive frame
+                      << (best.is_inv ? "-" : "+")
+                      << std::endl;
                 //"\t" << target_mapping.size() << std::endl;
             // todo: orientation
         }
