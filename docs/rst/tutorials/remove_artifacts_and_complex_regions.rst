@@ -117,7 +117,7 @@ version of the input graph can be found in its biggest connected component. To o
 
 .. code-block:: bash
 
-    odgi explode -i chr8.pan.clean.og -p chr8.pan.clean.exp.8.og -b 1 -s P -O
+    odgi explode -i chr8.pan.clean.og -p chr8.pan.clean.exp -b 1 -s P -O
 
 The command creates a file called ``chr8.pan.clean.exp.8.og``, which contains the biggest connected component
 (the number 8 in this example) in ``odgi`` format. The ``-s P`` option specifies to consider as biggest component the
