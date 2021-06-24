@@ -30,8 +30,9 @@ public:
                   const ska::flat_hash_map<step_handle_t, uint64_t>& step_pos,    
                   const uint64_t& merge_dist,
                   const size_t& num_threads);
-    void for_each_segment(
-        );
+    void for_segment_on_node(
+        uint64_t node_id,
+        const std::function<void(const uint64_t& segment_id)>& func);
 };
 
 std::vector<step_handle_t> untangle_cuts(
@@ -50,6 +51,10 @@ void write_cuts(
     const path_handle_t& path,
     const std::vector<step_handle_t>& cuts,
     const ska::flat_hash_map<step_handle_t, uint64_t>& path_pos);
+
+void self_dotplot(
+    const PathHandleGraph& graph,
+    const path_handle_t& path);
 
 ska::flat_hash_map<step_handle_t, uint64_t> make_step_index(
     const PathHandleGraph& graph,

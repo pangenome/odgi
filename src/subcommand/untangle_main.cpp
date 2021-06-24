@@ -34,6 +34,9 @@ int main_untangle(int argc, char **argv) {
                        {'r', "reference-path"});
     args::ValueFlag<uint64_t> merge_dist(untangling_opts, "N", "Merge segments shorter than this length into previous segments.",
                                          {'m', "merge-dist"});
+    args::Group debugging_opts(parser, "[ Debugging Options ]");
+    args::Flag make_self_dotplot(debugging_opts, "DOTPLOT", "Render a table showing the positional dotplot of the query against itself.",
+                                 {'s', "self-dotplot"});
     args::Group threading(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> nthreads(
         threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
@@ -82,13 +85,16 @@ int main_untangle(int argc, char **argv) {
         }
     }
 
-    assert(query && reference);
-    
-    algorithms::untangle(graph,
-                         { graph.get_path_handle(args::get(query)) },
-                         { graph.get_path_handle(args::get(reference)) },
-                         args::get(merge_dist),
-                         num_threads);
+    if (make_self_dotplot) {
+        algorithms::self_dotplot(graph, graph.get_path_handle(args::get(query)));
+    } else {
+        assert(query && reference);
+        algorithms::untangle(graph,
+                             { graph.get_path_handle(args::get(query)) },
+                             { graph.get_path_handle(args::get(reference)) },
+                             args::get(merge_dist),
+                             num_threads);
+    }
 
     return 0;
 }

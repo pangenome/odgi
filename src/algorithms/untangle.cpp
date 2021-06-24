@@ -155,8 +155,8 @@ std::vector<step_handle_t> merge_cuts(
 
 void self_dotplot(
     const PathHandleGraph& graph,
-    const path_handle_t& path,
-    const ska::flat_hash_map<step_handle_t, uint64_t>& step_pos) {
+    const path_handle_t& path) {
+    auto step_pos = make_step_index(graph, { path });
     auto path_name = graph.get_path_name(path);
     std::cout << "name\tfrom\tto" << std::endl;
     graph.for_each_step_in_path(
@@ -240,18 +240,24 @@ segment_map_t::segment_map_t(
         uint64_t curr_segment_idx = 0;
         uint64_t segment_idx = segment_cut.size();
         uint64_t pos = 0;
+        uint64_t* curr_length = nullptr;
         for (step_handle_t step = graph.path_begin(path);
              step != graph.path_end(path);
              step = graph.get_next_step(step)) {
             if (step == cuts[curr_segment_idx]) {
                 segment_cut.push_back(step);
+                segment_length.push_back(0);
+                curr_length = &segment_length.back();
                 ++curr_segment_idx;
                 ++segment_idx;
             }
             handle_t h = graph.get_handle_of_step(step);
             node_to_segment.push_back(
                 std::make_pair(graph.get_id(h), segment_idx));
-            pos += graph.get_length(h);
+            uint64_t node_length = graph.get_length(h);
+            pos += node_length;
+            *curr_length += node_length;
+            
         }
     }
     ips4o::parallel::sort(node_to_segment.begin(),
@@ -263,12 +269,30 @@ segment_map_t::segment_map_t(
     for (auto& node_segment : node_to_segment) {
         auto& node_id = node_segment.first;
         if (node_id > prev_node) {
-            node_idx.push_back(segments.size());
+            while (prev_node < node_id) {
+                node_idx.push_back(segments.size());
+                ++prev_node;
+            }
         }
         segments.push_back(node_segment.second);
         prev_node = node_id;
     }
+    auto max_id = graph.get_node_count();
+    while (prev_node < max_id) {
+        node_idx.push_back(segments.size());
+        ++prev_node;
+    }
     node_idx.push_back(segments.size()); // to avoid special casing the last node
+}
+
+void segment_map_t::for_segment_on_node(
+    uint64_t node_id,
+    const std::function<void(const uint64_t& segment_id)>& func) {
+    uint64_t from = node_idx[node_id-1];
+    uint64_t to = node_idx[node_id];
+    for (uint64_t i = from; i < to; ++i) {
+        func(segments[i]);
+    }
 }
 
 // pair-BED projection of the graph
@@ -288,9 +312,6 @@ void untangle(
                                   merge_dist,
                                   num_threads);
 
-    //
-    // 
-    // 
     //show_steps(graph, step_pos);
     //std::cout << "path\tfrom\tto" << std::endl;
     auto step_pos = make_step_index(graph, queries);
