@@ -32,6 +32,8 @@ int main_untangle(int argc, char **argv) {
                        {'q', "query-path"});
     args::ValueFlag<std::string> reference(untangling_opts, "NAME", "Use this reference path.",
                        {'r', "reference-path"});
+    args::ValueFlag<uint64_t> merge_dist(untangling_opts, "N", "Merge segments shorter than this length into previous segments.",
+                                         {'m', "merge-dist"});
     args::Group threading(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> nthreads(
         threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
@@ -83,8 +85,9 @@ int main_untangle(int argc, char **argv) {
     assert(query && reference);
     
     algorithms::untangle(graph,
-                         graph.get_path_handle(args::get(query)),
-                         graph.get_path_handle(args::get(reference)),
+                         { graph.get_path_handle(args::get(query)) },
+                         { graph.get_path_handle(args::get(reference)) },
+                         args::get(merge_dist),
                          num_threads);
 
     return 0;

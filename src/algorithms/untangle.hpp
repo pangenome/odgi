@@ -13,20 +13,21 @@ namespace algorithms {
     
 using namespace handlegraph;
 
-struct range_t {
-    uint64_t begin;
-    uint64_t end;
-};
-
 std::vector<step_handle_t> untangle_cuts(
     const PathHandleGraph& graph,
     const step_handle_t& start,
     const step_handle_t& end,
     const ska::flat_hash_map<step_handle_t, uint64_t>& step_pos);
 
+std::vector<step_handle_t> merge_cuts(
+    const std::vector<step_handle_t>& cuts,
+    const uint64_t& dist,
+    const ska::flat_hash_map<step_handle_t, uint64_t>& step_pos);
+
 void write_cuts(
     const PathHandleGraph& graph,
     const path_handle_t& path,
+    const std::vector<step_handle_t>& cuts,
     const ska::flat_hash_map<step_handle_t, uint64_t>& path_pos);
 
 ska::flat_hash_map<step_handle_t, uint64_t> make_step_index(
@@ -35,8 +36,9 @@ ska::flat_hash_map<step_handle_t, uint64_t> make_step_index(
 
 void untangle(
     const PathHandleGraph& graph,
-    const path_handle_t& query,
-    const path_handle_t& target,
+    const std::vector<path_handle_t>& queries,
+    const std::vector<path_handle_t>& targets,
+    const uint64_t& merge_dist,
     const size_t& num_threads);
 
 }
