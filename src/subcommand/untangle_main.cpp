@@ -19,7 +19,7 @@ int main_untangle(int argc, char **argv) {
     argv[0] = (char *)prog_name.c_str();
     --argc;
 
-    args::ArgumentParser parser("Resolve spurious inverting links.");
+    args::ArgumentParser parser("Project paths into reference-relative BEDPE, to decompose paralogy relationships");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
     args::ValueFlag<std::string> og_in_file(
         mandatory_opts, "FILE",
