@@ -311,7 +311,6 @@ struct isec_t {
     }
 };
 
-
 std::vector<segment_mapping_t>
 segment_map_t::get_matches(
         const PathHandleGraph& graph,
@@ -321,6 +320,7 @@ segment_map_t::get_matches(
     // collect the target segments that overlap our segment
     // computing the intersection size (in bp) as we go
     // our final metric is jaccard of intersection over total length for each overlapped target
+    path_handle_t query_path = graph.get_path_handle_of_step(start);
     ska::flat_hash_map<uint64_t, isec_t> target_isec;
     for (step_handle_t step = start;
          step != end;
@@ -333,7 +333,10 @@ segment_map_t::get_matches(
             node_id,
             [&](const uint64_t& segment_id, const bool& segment_rev) {
                 // HACK warning -- this doesn't handle multiplicity of our query path
-                target_isec[segment_id].incr(node_length, is_rev != segment_rev);
+                // we skip self matches
+                if (query_path != graph.get_path_handle_of_step(get_segment_cut(segment_id))) {
+                    target_isec[segment_id].incr(node_length, is_rev != segment_rev);
+                }
             });
     }
     // compute the jaccards
