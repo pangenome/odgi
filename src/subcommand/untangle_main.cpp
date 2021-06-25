@@ -137,7 +137,7 @@ int main_untangle(int argc, char **argv) {
         });
     }
     if (_query_path) {
-        query_paths.push_back(graph.get_path_handle(args::get(_target_path)));
+        query_paths.push_back(graph.get_path_handle(args::get(_query_path)));
     } else if (_query_paths) {
         query_paths = load_paths(args::get(_query_paths));
     } else {

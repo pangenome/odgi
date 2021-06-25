@@ -54,18 +54,12 @@ std::vector<step_handle_t> untangle_cuts(
             if (found_loop) {
                 //  recurse this function into it, taking start as our current handle other side of the loop as our end
                 //  to cut_points we add the start position, the result from recursion, and our end position
-                /*
-                  if (step_pos.find(other)->second < step_pos.find(step)->second) {
-                  std::cerr << "impossible" << std::endl;
-                  abort();
-                  }
-                */
                 todo.push_back(std::make_pair(step, other));
                 //  we then step forward to the loop end and continue iterating
                 step = other;
             }
         }
-        // TODO this block is the same as the previous algorithm, but in reverse
+        // TODO this block is the same as the previous one, but in reverse
         // the differences in how positions are managed are subtle, making it hard to fold the
         // forward and reverse version together
         // now we reverse it
@@ -103,12 +97,6 @@ std::vector<step_handle_t> untangle_cuts(
             if (found_loop) {
                 //  recurse this function into it, taking start as our current handle other side of the loop as our end
                 //  to cut_points we add the start position, the result from recursion, and our end position
-                /*
-                  if (step_pos.find(other)->second > step_pos.find(step)->second) {
-                  std::cerr << "impossible" << std::endl;
-                  abort();
-                  }
-                */
                 todo.push_back(std::make_pair(other, step));
                 //  we then step forward to the loop end and continue iterating
                 step = other;
