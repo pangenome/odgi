@@ -793,14 +793,12 @@ namespace odgi {
         const bool _color_by_mean_inversion_rate = args::get(color_by_mean_inversion_rate);
 
         uint64_t longest_path_len = 0;
-        double max_mean_depth = 0.0;
         if ((_change_darkness && _longest_path) || (_binned_mode && _color_by_mean_depth)){
             graph.for_each_path_handle([&](const path_handle_t &path) {
                 int64_t path_rank = get_path_idx(path);
                 if (path_rank >= 0 && path_layout_y[path_rank] >= 0){
                     uint64_t curr_len = 0, p, hl;
                     handle_t h;
-                    std::map<uint64_t, algorithms::path_info_t> bins;
                     graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
                         h = graph.get_handle_of_step(occ);
                         hl = graph.get_length(h);
@@ -810,20 +808,12 @@ namespace odgi {
                         p = position_map[number_bool_packing::unpack_number(h)];
                         for (uint64_t k = 0; k < hl; ++k) {
                             int64_t curr_bin = (p + k) / _bin_width + 1;
-
-                            ++bins[curr_bin].mean_depth;
                         }
                     });
-
-                    for (auto &entry : bins) {
-                        max_mean_depth = std::max(entry.second.mean_depth, max_mean_depth);
-                    }
 
                     longest_path_len = std::max(longest_path_len, curr_len);
                 }
             });
-
-            max_mean_depth /= _bin_width;
         }
 
         std::unordered_set<pair<uint64_t, uint64_t>> edges_drawn;
@@ -945,10 +935,6 @@ namespace odgi {
                         path_r = 220;
                         path_g = 220;
                         path_b = 220;
-                    } else if (_binned_mode && _color_by_mean_depth) {
-                        path_r = 128;
-                        path_g = 255;
-                        path_b = 0;
                     } else if (_color_by_mean_inversion_rate) {
                         path_r = 255;
                         path_g = 0;
@@ -1028,7 +1014,35 @@ namespace odgi {
                                         uint64_t ii = bins[curr_bin].mean_inv > 0.5 ? (hl - k) : k;
                                         x = 1 - ( (float)(curr_len + ii) / (float)(path_len_to_use)) * 0.9;
                                     } else if (_color_by_mean_depth) {
-                                        x = bins[curr_bin].mean_depth / max_mean_depth;
+                                        if (bins[curr_bin].mean_depth <= 1) {
+                                            path_r = 0;
+                                            path_g = 0;
+                                            path_b = 0;
+                                        } else if (bins[curr_bin].mean_depth <= 2) {
+                                            path_r = 255;
+                                            path_g = 0;
+                                            path_b = 0;
+                                        } else if (bins[curr_bin].mean_depth <= 3) {
+                                            path_r = 0;
+                                            path_g = 0;
+                                            path_b = 255;
+                                        } else if (bins[curr_bin].mean_depth <= 4) {
+                                            path_r = 0;
+                                            path_g = 255;
+                                            path_b = 0;
+                                        } else if (bins[curr_bin].mean_depth <= 5) {
+                                            path_r = 255;
+                                            path_g = 255;
+                                            path_b = 0;
+                                        } else if (bins[curr_bin].mean_depth <= 6) {
+                                            path_r = 255;
+                                            path_g = 0;
+                                            path_b = 255;
+                                        } else {
+                                            path_r = 0;
+                                            path_g = 255;
+                                            path_b = 255;
+                                        }
                                     } else if (_color_by_mean_inversion_rate) {
                                         x = bins[curr_bin].mean_inv;
                                     }
