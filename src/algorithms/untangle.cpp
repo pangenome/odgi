@@ -118,6 +118,10 @@ std::vector<step_handle_t> untangle_cuts(
                   const step_handle_t& b) {
                   return step_pos.find(a)->second < step_pos.find(b)->second;
               });
+    // then take unique positions
+    cut_points.erase(std::unique(cut_points.begin(),
+                                 cut_points.end()),
+                     cut_points.end());
     return cut_points;
 }
 
@@ -236,6 +240,8 @@ segment_map_t::segment_map_t(
                     ),
                 merge_dist,
                 step_pos);
+        //std::cerr << "reference segmentation" << std::endl;
+        //write_cuts(graph, path, cuts, step_pos);
         // walk the path to get the segmentation
         uint64_t curr_segment_idx = 0;
         uint64_t segment_idx = segment_cut.size();
@@ -424,12 +430,34 @@ void untangle(
     paths.insert(paths.end(), targets.begin(), targets.end());
     auto step_pos = make_step_index(graph, paths);
 
+    // collect all possible cuts
+    // we'll use this to drive the subsequent segmentation
+    ska::flat_hash_set<uint64_t> cut_nodes;
+    for (auto& path : paths) {
+        std::vector<step_handle_t> cuts
+            = merge_cuts(
+                untangle_cuts(graph,
+                              graph.path_begin(path),
+                              graph.path_back(path),
+                              step_pos,
+                              [](const handle_t& h) { return false; }),
+                merge_dist,
+                step_pos);
+        for (auto& step : cuts) {
+            cut_nodes.insert(graph.get_id(graph.get_handle_of_step(step)));
+        }
+        //std::cerr << "setup" << std::endl;
+        //write_cuts(graph, path, cuts, step_pos);
+    }
+
     //auto step_pos = make_step_index(graph, queries);
     // node to reference segmentation mapping
     segment_map_t target_segments(graph,
                                   targets,
                                   step_pos,
-                                  [](const handle_t& h) { return false; },
+                                  [&cut_nodes,&graph](const handle_t& h) {
+                                      return cut_nodes.find(graph.get_id(h)) != cut_nodes.end();
+                                  },
                                   merge_dist,
                                   num_threads);
 
@@ -443,7 +471,9 @@ void untangle(
                               graph.path_begin(query),
                               graph.path_back(query),
                               step_pos,
-                              [](const handle_t& h) { return false; }),
+                              [&cut_nodes,&graph](const handle_t& h) {
+                                  return cut_nodes.find(graph.get_id(h)) != cut_nodes.end();
+                              }),
                 merge_dist,
                 step_pos);
         map_segments(graph, query, cuts, target_segments, step_pos);
