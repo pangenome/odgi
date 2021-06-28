@@ -11,7 +11,7 @@
 #include "flat_hash_map.hpp"
 
 #include "perfect_neighbors.hpp"
-#include "dset64-gccAtomic.hpp"
+#include "dset64.hpp"
 #include "BooPHF.h"
 
 namespace odgi {

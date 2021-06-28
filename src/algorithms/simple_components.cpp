@@ -20,7 +20,7 @@ std::vector<std::vector<handle_t>> simple_components(
     boophf_uint64_t bphf(data.size(),data,nthreads,2.0,false,false); // mapping structure for original node ids
 
     // todo check if we should or shouldn't use the gcc atomic primitives
-    std::vector<DisjointSets::Aint> simple_data(data.size()+1); // maps into this set of disjoint sets
+    std::vector<std::atomic<DisjointSets::Aint>> simple_data(data.size()+1); // maps into this set of disjoint sets
     auto simple_dset = DisjointSets(simple_data.data(), simple_data.size());
 
     bool in_parallel = nthreads > 1;
