@@ -9,7 +9,8 @@ std::vector<step_handle_t> untangle_cuts(
     const PathHandleGraph& graph,
     const step_handle_t& _start,
     const step_handle_t& _end,
-    const ska::flat_hash_map<step_handle_t, uint64_t>& step_pos) {
+    const ska::flat_hash_map<step_handle_t, uint64_t>& step_pos,
+    const std::function<bool(const handle_t&)>& is_cut) {
     auto path = graph.get_path_handle_of_step(_start);
     auto path_name = graph.get_path_name(path);
     // this assumes that the end is not inclusive
@@ -34,6 +35,9 @@ std::vector<step_handle_t> untangle_cuts(
             // TODO change this, it can be computed based on the node length
             const auto& curr_pos = step_pos.find(step)->second;
             handle_t handle = graph.get_handle_of_step(step);
+            if (is_cut(handle)) {
+                cut_points.push_back(step);
+            }
             bool found_loop = false;
             step_handle_t other;
             graph.for_each_step_on_handle(
@@ -75,6 +79,9 @@ std::vector<step_handle_t> untangle_cuts(
             // TODO change this, it can be computed based on the node length
             const auto& curr_pos = step_pos.find(step)->second;
             handle_t handle = graph.get_handle_of_step(step);
+            if (is_cut(handle)) {
+                cut_points.push_back(step);
+            }
             //std::cerr << "rev on step " << graph.get_id(handle) << " " << curr_pos << std::endl;
             bool found_loop = false;
             step_handle_t other;
@@ -214,6 +221,7 @@ segment_map_t::segment_map_t(
     const PathHandleGraph& graph,
     const std::vector<path_handle_t>& paths,
     const ska::flat_hash_map<step_handle_t, uint64_t>& step_pos,
+    const std::function<bool(const handle_t&)>& is_cut,
     const uint64_t& merge_dist,
     const size_t& num_threads) {
     std::vector<std::pair<uint64_t, int64_t>> node_to_segment;
@@ -223,7 +231,9 @@ segment_map_t::segment_map_t(
                 untangle_cuts(graph,
                               graph.path_begin(path),
                               graph.path_back(path),
-                              step_pos),
+                              step_pos,
+                              is_cut
+                    ),
                 merge_dist,
                 step_pos);
         // walk the path to get the segmentation
@@ -419,6 +429,7 @@ void untangle(
     segment_map_t target_segments(graph,
                                   targets,
                                   step_pos,
+                                  [](const handle_t& h) { return false; },
                                   merge_dist,
                                   num_threads);
 
@@ -431,7 +442,8 @@ void untangle(
                 untangle_cuts(graph,
                               graph.path_begin(query),
                               graph.path_back(query),
-                              step_pos),
+                              step_pos,
+                              [](const handle_t& h) { return false; }),
                 merge_dist,
                 step_pos);
         map_segments(graph, query, cuts, target_segments, step_pos);
