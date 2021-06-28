@@ -35,6 +35,7 @@ Commands
     commands/odgi_test
     commands/odgi_unchop
     commands/odgi_unitig
+    commands/odgi_untangle
     commands/odgi_validate
     commands/odgi_version
     commands/odgi_view

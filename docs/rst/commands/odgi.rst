@@ -81,6 +81,9 @@ graph.unchopped.og
 :ref:`odgi unitig` -i graph.og -f -t
 1324 -l 120
 
+:ref:`odgi untangle` -i graph.og -q "query_name"
+- r "reference_name" -m 1000 -t 16 -P
+
 :ref:`odgi validate` -i graph.og
 
 :ref:`odgi version`
@@ -333,9 +336,15 @@ multiple graphs into the same file.
   fixed sequence quality FASTQ format. Various parameters can refine the
   unitigs to print.
 
-**odgi validate** [**-i, --input**\ =\ *FILE*] [*OPTION*]… The odgi
-validate command validates the graph (currently, it checks if the
-paths are consistent with the graph topology).
+| **odgi untangle** [**-i, --input**\ =\ *FILE*] [*OPTION*]…
+| The odgi untangle command projects paths into a reference-relative BEDPE file,
+  decomposing paralogy relationships. During this process, it is
+  capable of untangling loopy region resulting in linearized pairs
+  of regions in the BEDPE file. A self dotplot assists in debugging and understanding
+  the untangle process.
+
+| **odgi validate** [**-i, --input**\ =\ *FILE*] [*OPTION*]…
+| The odgi validate command validates the graph (currently, it checks if the paths are consistent with the graph topology).
 
 | **odgi version** [*OPTION*]…
 | The odgi version command prints the current git version with tags
@@ -368,7 +377,7 @@ https://github.com/pangenome/odgi/issues.
 AUTHORS
 =======
 
-Erik Garrison from the University of California Santa Cruz wrote the
+Erik Garrison from the University of Tennessee wrote the
 whole **odgi** tool.
 
 Andrea Guarracino from the University of Rome Tor
