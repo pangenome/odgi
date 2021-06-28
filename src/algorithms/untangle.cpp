@@ -229,6 +229,7 @@ segment_map_t::segment_map_t(
     const uint64_t& merge_dist,
     const size_t& num_threads) {
     std::vector<std::pair<uint64_t, int64_t>> node_to_segment;
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
     for (auto& path : paths) {
         std::vector<step_handle_t> cuts =
             merge_cuts(
@@ -258,6 +259,7 @@ segment_map_t::segment_map_t(
             }
             handle_t h = graph.get_handle_of_step(step);
             bool is_rev = graph.get_is_reverse(h);
+#pragma omp critical (node_to_segment)
             node_to_segment.push_back(
                 std::make_pair(graph.get_id(h),
                                (is_rev ? -segment_idx : segment_idx)));
@@ -400,6 +402,7 @@ void map_segments(
             auto target_end_pos = target_begin_pos + target_segments.get_segment_length(idx);
             path_handle_t target_path = graph.get_path_handle_of_step(target_begin);
             std::string target_name = graph.get_path_name(target_path);
+#pragma omp critical (cout)
             std::cout << query_name << "\t"
                       << begin_pos << "\t"
                       << end_pos << "\t"
@@ -433,6 +436,7 @@ void untangle(
     // collect all possible cuts
     // we'll use this to drive the subsequent segmentation
     ska::flat_hash_set<uint64_t> cut_nodes;
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
     for (auto& path : paths) {
         std::vector<step_handle_t> cuts
             = merge_cuts(
@@ -443,6 +447,7 @@ void untangle(
                               [](const handle_t& h) { return false; }),
                 merge_dist,
                 step_pos);
+#pragma omp critical (cuts)
         for (auto& step : cuts) {
             cut_nodes.insert(graph.get_id(graph.get_handle_of_step(step)));
         }
@@ -464,6 +469,7 @@ void untangle(
     //show_steps(graph, step_pos);
     //std::cout << "path\tfrom\tto" << std::endl;
     //auto step_pos = make_step_index(graph, queries);
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
     for (auto& query : queries) {
         std::vector<step_handle_t> cuts
             = merge_cuts(
@@ -478,7 +484,6 @@ void untangle(
                 step_pos);
         map_segments(graph, query, cuts, target_segments, step_pos);
 
-        //map_segments(
         //write_cuts(graph, query, cuts, step_pos);
     }
     //self_dotplot(graph, query, step_pos);
