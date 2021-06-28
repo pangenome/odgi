@@ -8,10 +8,10 @@ project(odgi)
 set(CMAKE_CXX_STANDARD 17)
 
 # Use all standard-compliant optimizations
-set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -O3 -mcx16 -g")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -O3 -mcx16 -g")
-#set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O -mcx16 -g -fsanitize=address")
-#set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O -mcx16 -g -fsanitize=address")
+set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -O3 -g")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -O3 -g")
+#set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O -g -fsanitize=address")
+#set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O -g -fsanitize=address")
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   # assumes clang build
@@ -536,7 +536,6 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/dynamic_structs.hpp
   ${CMAKE_SOURCE_DIR}/src/position.hpp
   ${CMAKE_SOURCE_DIR}/src/dset64.hpp
-  ${CMAKE_SOURCE_DIR}/src/dset64-gccAtomic.hpp
   ${CMAKE_SOURCE_DIR}/src/lockfree_hashtable.hpp
   ${CMAKE_SOURCE_DIR}/src/reclaimer.hpp
   ${CMAKE_SOURCE_DIR}/src/unittest/driver.hpp
