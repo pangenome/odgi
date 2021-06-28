@@ -8,10 +8,10 @@ project(odgi)
 set(CMAKE_CXX_STANDARD 17)
 
 # Use all standard-compliant optimizations
-set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -O3 -mcx16 -g")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -O3 -mcx16 -g")
-#set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O -mcx16 -g -fsanitize=address")
-#set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O -mcx16 -g -fsanitize=address")
+set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -O3 -g")
+set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -O3 -g")
+#set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O -g -fsanitize=address")
+#set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O -g -fsanitize=address")
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   # assumes clang build
@@ -331,8 +331,8 @@ set(mio_INCLUDE "${SOURCE_DIR}/include")
 #set(pybind11_DIR ${SOURCE_DIR})
 #add_subdirectory(${pybind11_DIR})
 
-#set(CMAKE_BUILD_TYPE Release)
-set(CMAKE_BUILD_TYPE Debug)
+set(CMAKE_BUILD_TYPE Release)
+#set(CMAKE_BUILD_TYPE Debug)
 
 # set up our target executable and specify its dependencies and includes
 add_library(odgi_objs OBJECT
@@ -390,6 +390,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/panpos_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/server_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/version_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/untangle_main.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/hash.cpp
@@ -436,7 +437,9 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/remove_isolated.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/expand_context.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/validate_main.cpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/groom.cpp src/unittest/edge.cpp)
+  ${CMAKE_SOURCE_DIR}/src/algorithms/untangle.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/groom.cpp
+  ${CMAKE_SOURCE_DIR}/src/unittest/edge.cpp)
 
 set(odgi_DEPS
     sdsl-lite
@@ -533,7 +536,6 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/dynamic_structs.hpp
   ${CMAKE_SOURCE_DIR}/src/position.hpp
   ${CMAKE_SOURCE_DIR}/src/dset64.hpp
-  ${CMAKE_SOURCE_DIR}/src/dset64-gccAtomic.hpp
   ${CMAKE_SOURCE_DIR}/src/lockfree_hashtable.hpp
   ${CMAKE_SOURCE_DIR}/src/reclaimer.hpp
   ${CMAKE_SOURCE_DIR}/src/unittest/driver.hpp
@@ -596,6 +598,7 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/algorithms/distance_to_head.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/is_single_stranded.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/shortest_cycle.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/untangle.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/progress.hpp)
 
 target_include_directories(odgi_objs PUBLIC ${odgi_INCLUDES})
