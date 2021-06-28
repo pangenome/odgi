@@ -23,12 +23,12 @@ std::vector<step_handle_t> untangle_cuts(
     std::deque<std::pair<step_handle_t, step_handle_t>> todo;
     todo.push_back(std::make_pair(_start, _end));
     while (!todo.empty()) {
-        auto& start = todo.front().first;
-        auto& end = todo.front().second;
+        auto start = todo.front().first;
+        auto end = todo.front().second;
         uint64_t start_pos = step_pos.find(start)->second;
         uint64_t end_pos = step_pos.find(end)->second;
-        todo.pop_front();
         cut_points.push_back(start);
+        todo.pop_front();
         // we go forward until we see a loop, where the other step has position < end_pos and > start_pos
         for (step_handle_t step = start; step != end; step = graph.get_next_step(step)) {
             //  we take the first and shortest loop we find
@@ -157,7 +157,7 @@ std::vector<step_handle_t> merge_cuts(
 void self_dotplot(
     const PathHandleGraph& graph,
     const path_handle_t& path) {
-    auto step_pos = make_step_index(graph, { path });
+    auto step_pos = make_step_index(graph, { path }, 1);
     auto path_name = graph.get_path_name(path);
     std::cout << "name\tfrom\tto" << std::endl;
     graph.for_each_step_in_path(
@@ -188,17 +188,21 @@ void self_dotplot(
 
 ska::flat_hash_map<step_handle_t, uint64_t> make_step_index(
     const PathHandleGraph& graph,
-    const std::vector<path_handle_t>& paths) {
+    const std::vector<path_handle_t>& paths,
+    const size_t& num_threads) {
     ska::flat_hash_map<step_handle_t, uint64_t> step_pos;
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
     for (auto& path : paths) {
         uint64_t pos = 0;
         graph.for_each_step_in_path(
             path,
             [&](const step_handle_t& step) {
+#pragma omp critical (step_pos)
                 step_pos[step] = pos;
                 handle_t handle = graph.get_handle_of_step(step);
                 pos += graph.get_length(handle);
             });
+#pragma omp critical (step_pos)
         step_pos[graph.path_end(path)] = pos; // record the end position
     }
     return step_pos;
@@ -229,9 +233,11 @@ segment_map_t::segment_map_t(
     const uint64_t& merge_dist,
     const size_t& num_threads) {
     std::vector<std::pair<uint64_t, int64_t>> node_to_segment;
+    std::vector<std::vector<step_handle_t>> all_cuts(paths.size());
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
-    for (auto& path : paths) {
-        std::vector<step_handle_t> cuts =
+    for (uint64_t i = 0; i < paths.size(); ++i) { //auto& path : paths) {
+        auto& path = paths[i];
+        all_cuts[i] =
             merge_cuts(
                 untangle_cuts(graph,
                               graph.path_begin(path),
@@ -241,6 +247,11 @@ segment_map_t::segment_map_t(
                     ),
                 merge_dist,
                 step_pos);
+    }
+    // the index construction must be serial
+    for (uint64_t i = 0; i < paths.size(); ++i) {
+        auto& path = paths[i];
+        auto& cuts = all_cuts[i];
         //std::cerr << "reference segmentation" << std::endl;
         //write_cuts(graph, path, cuts, step_pos);
         // walk the path to get the segmentation
@@ -250,6 +261,7 @@ segment_map_t::segment_map_t(
         for (step_handle_t step = graph.path_begin(path);
              step != graph.path_end(path);
              step = graph.get_next_step(step)) {
+            // if we are at a segment cut
             if (step == cuts[curr_segment_idx]) {
                 segment_idx = segment_cut.size();
                 segment_cut.push_back(step);
@@ -259,7 +271,6 @@ segment_map_t::segment_map_t(
             }
             handle_t h = graph.get_handle_of_step(step);
             bool is_rev = graph.get_is_reverse(h);
-#pragma omp critical (node_to_segment)
             node_to_segment.push_back(
                 std::make_pair(graph.get_id(h),
                                (is_rev ? -segment_idx : segment_idx)));
@@ -431,7 +442,7 @@ void untangle(
     std::vector<path_handle_t> paths;
     paths.insert(paths.end(), queries.begin(), queries.end());
     paths.insert(paths.end(), targets.begin(), targets.end());
-    auto step_pos = make_step_index(graph, paths);
+    auto step_pos = make_step_index(graph, paths, num_threads);
 
     // collect all possible cuts
     // we'll use this to drive the subsequent segmentation

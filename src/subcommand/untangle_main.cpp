@@ -127,7 +127,14 @@ int main_untangle(int argc, char **argv) {
     std::vector<path_handle_t> target_paths;
     std::vector<path_handle_t> query_paths;
     if (_target_path) {
-        target_paths.push_back(graph.get_path_handle(args::get(_target_path)));
+        auto& path_name = args::get(_target_path);
+        if (graph.has_path(path_name)) {
+            target_paths.push_back(graph.get_path_handle(path_name));
+        } else {
+            std::cerr << "[odgi::untangle] error: no path "
+                      << path_name << " found in graph." << std::endl;
+            exit(1);
+        }
     } else if (_target_paths) {
         target_paths = load_paths(args::get(_target_paths));
     } else {
@@ -137,7 +144,14 @@ int main_untangle(int argc, char **argv) {
         });
     }
     if (_query_path) {
-        query_paths.push_back(graph.get_path_handle(args::get(_query_path)));
+        auto& path_name = args::get(_query_path);
+        if (graph.has_path(path_name)) {
+            query_paths.push_back(graph.get_path_handle(path_name));
+        } else {
+            std::cerr << "[odgi::untangle] error: no path "
+                      << path_name << " found in graph." << std::endl;
+            exit(1);
+        }
     } else if (_query_paths) {
         query_paths = load_paths(args::get(_query_paths));
     } else {

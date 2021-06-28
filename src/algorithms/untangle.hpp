@@ -75,7 +75,8 @@ void self_dotplot(
 
 ska::flat_hash_map<step_handle_t, uint64_t> make_step_index(
     const PathHandleGraph& graph,
-    const std::vector<path_handle_t>& paths);
+    const std::vector<path_handle_t>& paths,
+    const size_t& num_threads);
 
 void map_segments(
     const PathHandleGraph& graph,
