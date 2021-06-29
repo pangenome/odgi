@@ -52,6 +52,7 @@ namespace odgi {
         args::ValueFlag<uint64_t> image_height(viz_opts, "N", "Set the height in pixels of the output image (default: 500).", {'y', "height"});
         args::ValueFlag<uint64_t> path_height(viz_opts, "N", "The height in pixels for a path.", {'a', "path-height"});
         args::ValueFlag<uint64_t> path_x_pad(viz_opts, "N", "The padding in pixels on the x-axis for a path.", {'X', "path-x-padding"});
+        args::Flag no_path_borders(viz_opts, "bool", "Don't show path borders.", {'N', "no-path-borders"});
         args::Flag pack_paths(viz_opts, "bool", "Pack all paths rather than displaying a single path per row.",{'R', "pack-paths"});
         args::ValueFlag<float> link_path_pieces(viz_opts, "FLOAT","Show thin links of this relative width to connect path pieces.",{'L', "link-path-pieces"});
         args::ValueFlag<std::string> alignment_prefix(viz_opts, "STRING","Apply alignment related visual motifs to paths which have this name"
@@ -680,12 +681,9 @@ namespace odgi {
         };
 
         auto add_edge_from_handles = [&](const handle_t& h, const handle_t& o) {
+            // map into our bins
             const uint64_t _a = position_map[number_bool_packing::unpack_number(h) + !number_bool_packing::unpack_bit(h)] / _bin_width + 1;
             const uint64_t _b = position_map[number_bool_packing::unpack_number(o) + number_bool_packing::unpack_bit(o)] / _bin_width + 1;
-
-            //int64_t curr_bin = (p + k) / _bin_width + 1;
-            //if (curr_bin - 1 >= pangenomic_start_pos && curr_bin - 1 <= pangenomic_end_pos) {
-            //add_point(curr_bin - 1 - pangenomic_start_pos, 0, RGB_BIN_LINKS, RGB_BIN_LINKS, RGB_BIN_LINKS);
 
             const uint64_t a = std::min(_a, _b);
             const uint64_t b = std::max(_a, _b);
@@ -717,6 +715,7 @@ namespace odgi {
                 };
             }
 
+            /*
             if (_binned_mode){
                 graph.for_each_handle([&](const handle_t &h) {
                     if (!is_a_handle_to_hide(h)){
@@ -740,48 +739,63 @@ namespace odgi {
                         }
                     }
                 });
-
-                // The links are created later after the binning step.
-            }//else{
-                graph.for_each_handle([&](const handle_t &h) {
-                    if (!is_a_handle_to_hide(h)){
-                        uint64_t p = position_map[number_bool_packing::unpack_number(h)];
-                        uint64_t hl = graph.get_length(h);
-                        // make contents for the bases in the node
-                        for (uint64_t i = 0; i < hl; i += 1 / scale_x) {
-                            if ((p + i) >= pangenomic_start_pos && (p + i) <= pangenomic_end_pos) {
-                                add_point(p + i - pangenomic_start_pos, 0, 0, 0, 0);
-                            }
+            }
+            */
+            graph.for_each_handle([&](const handle_t &h) {
+                if (!is_a_handle_to_hide(h)){
+                    uint64_t p = position_map[number_bool_packing::unpack_number(h)];
+                    uint64_t hl = graph.get_length(h);
+                    // make contents for the bases in the node
+                    for (uint64_t i = 0; i < hl; i += 1 / scale_x) {
+                        if ((p + i) >= pangenomic_start_pos && (p + i) <= pangenomic_end_pos) {
+                            add_point(p + i - pangenomic_start_pos, 0, 0, 0, 0);
                         }
-
-                        // add contacts for the edges
-                        graph.follow_edges(h, false, [&](const handle_t& o) {
-                            if (!is_a_handle_to_hide(o)){
-                                add_edge_from_handles(h, o);
-                            }
-                        });
-                        graph.follow_edges(h, true, [&](const handle_t& o) {
-                            if (!is_a_handle_to_hide(o)){
-                                add_edge_from_handles(o, h);
-                            }
-                        });
                     }
-                });
-                //}
+
+                    // add contacts for the edges
+                    graph.follow_edges(h, false, [&](const handle_t& o) {
+                        if (!is_a_handle_to_hide(o)){
+                            add_edge_from_handles(h, o);
+                        }
+                    });
+                    graph.follow_edges(h, true, [&](const handle_t& o) {
+                        if (!is_a_handle_to_hide(o)){
+                            add_edge_from_handles(o, h);
+                        }
+                    });
+                }
+            });
         }
 
+        bool _no_path_borders = args::get(no_path_borders);
         auto add_path_step = [&](std::vector<uint8_t> &img, uint64_t width_img,
                 const uint64_t &_x, const uint64_t &_y,
                 const uint8_t &_r, const uint8_t &_g, const uint8_t &_b) {
             const uint64_t x = std::min((uint64_t) std::round(_x * scale_x), width - 1);
             const uint64_t t = _y * pix_per_path;
-            const uint64_t s = t + pix_per_path;
-
-            for (uint64_t y = t; y < s; ++y) {
-                img[4 * width_img * y + 4 * x + 0] = _r;
-                img[4 * width_img * y + 4 * x + 1] = _g;
-                img[4 * width_img * y + 4 * x + 2] = _b;
-                img[4 * width_img * y + 4 * x + 3] = 255;
+            uint64_t y = t;
+            if (_no_path_borders || pix_per_path < 3) {
+                const uint64_t s = t + pix_per_path;
+                for ( ; y < s; ++y) {
+                    img[4 * width_img * y + 4 * x + 0] = _r;
+                    img[4 * width_img * y + 4 * x + 1] = _g;
+                    img[4 * width_img * y + 4 * x + 2] = _b;
+                    img[4 * width_img * y + 4 * x + 3] = 255;
+                }
+            } else {
+                const uint64_t s = t + pix_per_path - 1;
+                for ( ; y < s; ++y) {
+                    img[4 * width_img * y + 4 * x + 0] = _r;
+                    img[4 * width_img * y + 4 * x + 1] = _g;
+                    img[4 * width_img * y + 4 * x + 2] = _b;
+                    img[4 * width_img * y + 4 * x + 3] = 255;
+                }
+                for ( ; y < s + 1; ++y) {
+                    img[4 * width_img * y + 4 * x + 0] = 0;
+                    img[4 * width_img * y + 4 * x + 1] = 0;
+                    img[4 * width_img * y + 4 * x + 2] = 0;
+                    img[4 * width_img * y + 4 * x + 3] = 255;
+                }
             }
         };
 
@@ -1137,6 +1151,7 @@ namespace odgi {
                     }
                 }
             }
+            //add_point(curr_bin - 1 - pangenomic_start_pos, 0, RGB_BIN_LINKS, RGB_BIN_LINKS, RGB_BIN_LINKS);
         });
 
         /*
