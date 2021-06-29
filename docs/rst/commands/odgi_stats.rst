@@ -80,6 +80,12 @@ Sorting Goodness Eval Options
 | **-p, --path-statistics**
 | Display the statistics (mean links length or sum path nodes distances) for each path.
 
+IO Format Options
+-----------------
+
+| **-y, --yaml**
+| Setting this option prints all statistics in YAML format instead of pseudo TSV to stdout. Not applicable to *-N,--nondeterministic-edges*!
+
 Threading
 ---------
 
