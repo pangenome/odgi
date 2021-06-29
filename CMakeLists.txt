@@ -331,8 +331,8 @@ set(mio_INCLUDE "${SOURCE_DIR}/include")
 #set(pybind11_DIR ${SOURCE_DIR})
 #add_subdirectory(${pybind11_DIR})
 
-set(CMAKE_BUILD_TYPE Release)
-#set(CMAKE_BUILD_TYPE Debug)
+#set(CMAKE_BUILD_TYPE Release)
+set(CMAKE_BUILD_TYPE Debug)
 
 # set up our target executable and specify its dependencies and includes
 add_library(odgi_objs OBJECT

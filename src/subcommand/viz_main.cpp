@@ -100,6 +100,7 @@ namespace odgi {
         args::ValueFlag<uint64_t> bin_width(bin_opts, "bp", "The bin width specifies the size of each bin in the binned mode. If it"
                                                             " is not specified, the bin width is calculated from the width in pixels"
                                                             " of the output image.r",{'w', "bin-width"});
+        /*
         args::Flag drop_gap_links(bin_opts, "drop-gap-links", "We divide links into 2 classes:"
                                                               "1. The links which help to follow complex variations. They need to be"
                                                               " drawn, else one could not follow the sequence of a path."
@@ -108,6 +109,7 @@ namespace odgi {
                                                               " may not be relevant to understand a path’s traversal through the"
                                                               " bins. Therefore, when this option is set, the gap-links are not drawn"
                                                               " in binned mode.", {'g', "no-gap-links"});
+        */
         args::Flag color_by_mean_depth(bin_opts, "color-by-mean-depth", "Change the color with respect to the mean coverage of the path for each"
                                                                         " bin, using the colorbrewer palette specified in -B --colorbrewer-palette",
                                                                         {'m', "color-by-mean-depth"});
@@ -163,6 +165,7 @@ namespace odgi {
             return 1;
         }
 
+        /*
         if (
                 !args::get(binned_mode) &&
                 ((args::get(bin_width) > 0) || args::get(drop_gap_links) ||
@@ -175,6 +178,7 @@ namespace odgi {
                     << std::endl;
             return 1;
         }
+        */
 
         if (!args::get(change_darkness) && (args::get(longest_path) || args::get(white_to_black))){
             std::cerr
@@ -392,7 +396,7 @@ namespace odgi {
         const float scale_y = (float) height / (float) len_to_visualize;
 
         float _bin_width = args::get(bin_width);
-        bool _binned_mode = args::get(binned_mode);
+        bool _binned_mode = true; //args::get(binned_mode);
         if (_binned_mode){
             if (_bin_width == 0){
                 _bin_width = 1 / scale_x; // It can be a float value.
@@ -676,13 +680,19 @@ namespace odgi {
         };
 
         auto add_edge_from_handles = [&](const handle_t& h, const handle_t& o) {
-            const uint64_t _a = position_map[number_bool_packing::unpack_number(h) + !number_bool_packing::unpack_bit(h)];
-            const uint64_t _b = position_map[number_bool_packing::unpack_number(o) + number_bool_packing::unpack_bit(o)];
+            const uint64_t _a = position_map[number_bool_packing::unpack_number(h) + !number_bool_packing::unpack_bit(h)] / _bin_width + 1;
+            const uint64_t _b = position_map[number_bool_packing::unpack_number(o) + number_bool_packing::unpack_bit(o)] / _bin_width + 1;
+
+            //int64_t curr_bin = (p + k) / _bin_width + 1;
+            //if (curr_bin - 1 >= pangenomic_start_pos && curr_bin - 1 <= pangenomic_end_pos) {
+            //add_point(curr_bin - 1 - pangenomic_start_pos, 0, RGB_BIN_LINKS, RGB_BIN_LINKS, RGB_BIN_LINKS);
+
             const uint64_t a = std::min(_a, _b);
             const uint64_t b = std::max(_a, _b);
 
 #ifdef debug_odgi_viz
-            std::cerr << graph.get_id(h) << " (" << number_bool_packing::unpack_bit(h) << ") --> " << b << " (" << number_bool_packing::unpack_bit(h) << ") " << std::endl;
+            std::cerr << graph.get_id(h) << " (" << number_bool_packing::unpack_bit(h) << ") --> " << graph.get_id(o) << " (" << number_bool_packing::unpack_bit(o) << ") " << std::endl;
+            std::cerr << "edge " << a << " --> " << b << std::endl;
 #endif
 
             add_edge_from_positions(a, b, 0);
@@ -732,7 +742,7 @@ namespace odgi {
                 });
 
                 // The links are created later after the binning step.
-            }else{
+            }//else{
                 graph.for_each_handle([&](const handle_t &h) {
                     if (!is_a_handle_to_hide(h)){
                         uint64_t p = position_map[number_bool_packing::unpack_number(h)];
@@ -757,7 +767,7 @@ namespace odgi {
                         });
                     }
                 });
-            }
+                //}
         }
 
         auto add_path_step = [&](std::vector<uint8_t> &img, uint64_t width_img,
@@ -1067,10 +1077,6 @@ namespace odgi {
                                     add_path_step(image, width, curr_bin - 1 - pangenomic_start_pos, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
                                 }
 
-                                if (std::abs(curr_bin - last_bin) > 1 || last_bin == 0) {
-                                    // bin cross!
-                                    links.push_back(std::make_pair(last_bin, curr_bin));
-                                }
                             }
 
                             last_bin = curr_bin;
@@ -1078,55 +1084,7 @@ namespace odgi {
 
                         curr_len += hl;
                     });
-                    links.push_back(std::make_pair(last_bin, 0));
 
-                    if (args::get(drop_gap_links)) {
-                        std::sort(bin_ids.begin(), bin_ids.end());
-                        total_links += links.size();
-
-                        uint64_t fill_pos = 0;
-
-                        for (uint64_t i = 0; i < links.size(); ++i) {
-                            auto link = links[i];
-
-                            if (link.first == 0 || link.second == 0)
-                                continue;
-
-                            if (link.first > link.second) {
-                                links[fill_pos++] = link;
-                                continue;
-                            }
-
-                            auto left_it = std::lower_bound(bin_ids.begin(), bin_ids.end(), link.first + 1);
-                            auto right_it = std::lower_bound(bin_ids.begin(), bin_ids.end(), link.second);
-                            if (right_it > left_it) {
-                                links[fill_pos++] = link;
-                            }
-                        }
-
-                        gap_links_removed += links.size() - fill_pos;
-                        links.resize(fill_pos);
-                    }
-
-                    for (auto const link : links) {
-#ifdef debug_odgi_viz
-                        std::cerr << link.first << " --> " << link.second << std::endl;
-#endif
-                        if( (link.first != 0) && (link.second != 0) && std::abs((int64_t)link.first - (int64_t)link.second) > 1){
-                            uint64_t a = std::min(link.first, link.second) - 1;
-                            uint64_t b = std::max(link.first, link.second) - 1;
-
-                            auto pair = make_pair(a, b);
-
-                            // Check if the edge is already displayed
-                            if (edges_drawn.find(pair) == edges_drawn.end()) {
-                                edges_drawn.insert(pair);
-
-                                // add contents for the edge
-                                add_edge_from_positions(a, b, RGB_BIN_LINKS);
-                            }
-                        }
-                    }
                 }else{
                     /// Loop over all the steps along a path, from first through last and draw them
                     graph.for_each_step_in_path(path, [&](const step_handle_t& occ) {
@@ -1181,12 +1139,14 @@ namespace odgi {
             }
         });
 
+        /*
         if (args::get(drop_gap_links)) {
             std::cerr << std::setprecision(4) << "[odgi::viz] Gap links removed: " << (100.0 *  ((double)gap_links_removed / (double)total_links))
             << "%, that is " << gap_links_removed << " gap links (" << path_count << " path start links + "
             << path_count << " path end links + " << (gap_links_removed - path_count * 2) << " inner gap links) of "
             << total_links << " total links" << std::endl;
         }
+        */
 
         // trim horizontal and vertical spaces to fit
         uint64_t min_x = width;

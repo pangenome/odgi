@@ -166,7 +166,6 @@ int main_untangle(int argc, char **argv) {
             algorithms::self_dotplot(graph, query);
         }
     } else {
-        assert(query && reference);
         algorithms::untangle(graph,
                              query_paths,
                              target_paths,
