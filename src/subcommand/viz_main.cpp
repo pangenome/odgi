@@ -53,6 +53,7 @@ namespace odgi {
         args::ValueFlag<uint64_t> path_height(viz_opts, "N", "The height in pixels for a path.", {'a', "path-height"});
         args::ValueFlag<uint64_t> path_x_pad(viz_opts, "N", "The padding in pixels on the x-axis for a path.", {'X', "path-x-padding"});
         args::Flag no_path_borders(viz_opts, "bool", "Don't show path borders.", {'N', "no-path-borders"});
+        args::Flag black_path_borders(viz_opts, "bool", "Draw path borders in black (default is white).", {'b', "black-path-borders"});
         args::Flag pack_paths(viz_opts, "bool", "Pack all paths rather than displaying a single path per row.",{'R', "pack-paths"});
         args::ValueFlag<float> link_path_pieces(viz_opts, "FLOAT","Show thin links of this relative width to connect path pieces.",{'L', "link-path-pieces"});
         args::ValueFlag<std::string> alignment_prefix(viz_opts, "STRING","Apply alignment related visual motifs to paths which have this name"
@@ -95,9 +96,11 @@ namespace odgi {
 
         /// Binned mode
         args::Group bin_opts(parser, "[ Binned Mode Options ]");
+        /*
         args::Flag binned_mode(bin_opts, "binned-mode", "The variation graph is binned before its visualization. Each pixel in"
                                                         " the output image will correspond to a bin. For more information about"
                                                         " the binning process, please refer to odgi bin.", {'b', "binned-mode"});
+        */
         args::ValueFlag<uint64_t> bin_width(bin_opts, "bp", "The bin width specifies the size of each bin in the binned mode. If it"
                                                             " is not specified, the bin width is calculated from the width in pixels"
                                                             " of the output image.r",{'w', "bin-width"});
@@ -768,6 +771,7 @@ namespace odgi {
         }
 
         bool _no_path_borders = args::get(no_path_borders);
+        bool _black_border = args::get(black_path_borders);
         auto add_path_step = [&](std::vector<uint8_t> &img, uint64_t width_img,
                 const uint64_t &_x, const uint64_t &_y,
                 const uint8_t &_r, const uint8_t &_g, const uint8_t &_b) {
@@ -790,11 +794,13 @@ namespace odgi {
                     img[4 * width_img * y + 4 * x + 2] = _b;
                     img[4 * width_img * y + 4 * x + 3] = 255;
                 }
-                for ( ; y < s + 1; ++y) {
-                    img[4 * width_img * y + 4 * x + 0] = 0;
-                    img[4 * width_img * y + 4 * x + 1] = 0;
-                    img[4 * width_img * y + 4 * x + 2] = 0;
-                    img[4 * width_img * y + 4 * x + 3] = 255;
+                if (_black_border) {
+                    for ( ; y < s + 1; ++y) {
+                        img[4 * width_img * y + 4 * x + 0] = 0;
+                        img[4 * width_img * y + 4 * x + 1] = 0;
+                        img[4 * width_img * y + 4 * x + 2] = 0;
+                        img[4 * width_img * y + 4 * x + 3] = 255;
+                    }
                 }
             }
         };
