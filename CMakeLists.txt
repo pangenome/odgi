@@ -538,6 +538,7 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/dset64.hpp
   ${CMAKE_SOURCE_DIR}/src/lockfree_hashtable.hpp
   ${CMAKE_SOURCE_DIR}/src/reclaimer.hpp
+  ${CMAKE_SOURCE_DIR}/src/colorbrewer.hpp
   ${CMAKE_SOURCE_DIR}/src/unittest/driver.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/linear_index.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/random_order.hpp
