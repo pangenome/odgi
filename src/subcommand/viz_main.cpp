@@ -10,6 +10,8 @@
 #include "picosha2.h"
 #include "algorithms/draw.hpp"
 #include "utils.hpp"
+#include "colorbrewer.hpp"
+#include "split.hpp"
 
 //#define debug_odgi_viz
 
@@ -107,8 +109,11 @@ namespace odgi {
                                                               " bins. Therefore, when this option is set, the gap-links are not drawn"
                                                               " in binned mode.", {'g', "no-gap-links"});
         args::Flag color_by_mean_depth(bin_opts, "color-by-mean-depth", "Change the color with respect to the mean coverage of the path for each"
-                                                                        " bin, from black (no coverage) to blue (max bin mean coverage in the"
-                                                                        " entire graph).", {'m', "color-by-mean-depth"});
+                                                                        " bin, using the colorbrewer palette specified in -B --colorbrewer-palette",
+                                                                        {'m', "color-by-mean-depth"});
+        args::ValueFlag<std::string> colorbrewer_palette(bin_opts, "SCHEME:N", "Use the colorbrewer palette specified by the given SCHEME, with the number of levels N."
+                                                                               "Specifiy 'show' to see available palettes.",
+                                                                               {'B', "colorbrewer-palette"});
 
         /// Gradient mode
         args::Group grad_mode_opts(parser, "[ Gradient Mode Options ]");
@@ -793,14 +798,12 @@ namespace odgi {
         const bool _color_by_mean_inversion_rate = args::get(color_by_mean_inversion_rate);
 
         uint64_t longest_path_len = 0;
-        double max_mean_depth = 0.0;
         if ((_change_darkness && _longest_path) || (_binned_mode && _color_by_mean_depth)){
             graph.for_each_path_handle([&](const path_handle_t &path) {
                 int64_t path_rank = get_path_idx(path);
                 if (path_rank >= 0 && path_layout_y[path_rank] >= 0){
                     uint64_t curr_len = 0, p, hl;
                     handle_t h;
-                    std::map<uint64_t, algorithms::path_info_t> bins;
                     graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
                         h = graph.get_handle_of_step(occ);
                         hl = graph.get_length(h);
@@ -810,20 +813,12 @@ namespace odgi {
                         p = position_map[number_bool_packing::unpack_number(h)];
                         for (uint64_t k = 0; k < hl; ++k) {
                             int64_t curr_bin = (p + k) / _bin_width + 1;
-
-                            ++bins[curr_bin].mean_depth;
                         }
                     });
-
-                    for (auto &entry : bins) {
-                        max_mean_depth = std::max(entry.second.mean_depth, max_mean_depth);
-                    }
 
                     longest_path_len = std::max(longest_path_len, curr_len);
                 }
             });
-
-            max_mean_depth /= _bin_width;
         }
 
         std::unordered_set<pair<uint64_t, uint64_t>> edges_drawn;
@@ -945,10 +940,6 @@ namespace odgi {
                         path_r = 220;
                         path_g = 220;
                         path_b = 220;
-                    } else if (_binned_mode && _color_by_mean_depth) {
-                        path_r = 128;
-                        path_g = 255;
-                        path_b = 0;
                     } else if (_color_by_mean_inversion_rate) {
                         path_r = 255;
                         path_g = 0;
@@ -998,6 +989,27 @@ namespace odgi {
                 uint64_t curr_len = 0;
                 double x = 1.0;
                 if (_binned_mode) {
+                    colorbrewer::palette_t cov_colors;
+                    std::vector<double> cov_cuts;
+                    if (_color_by_mean_depth) {
+                        // colorbrewer PRGn 8-color
+                        // https://colorbrewer2.org/?type=diverging&scheme=PRGn&n=8
+                        if (colorbrewer_palette) {
+                            const auto parts = split(args::get(colorbrewer_palette), ':');
+                            cov_colors = colorbrewer::get_palette(parts.front(), std::stoi(parts.back()));
+                        } else {
+                            cov_colors = colorbrewer::get_palette("Spectral", 11);
+                        }
+
+                        uint64_t i = 0;
+                        cov_cuts.resize(cov_colors.size());
+                        double depth = 0.5;
+                        for (auto& color : cov_colors) {
+                            cov_cuts[i++] = depth;
+                            depth += 1;
+                        }
+                    }
+
                     std::vector<std::pair<uint64_t, uint64_t>> links;
                     std::vector<uint64_t> bin_ids;
                     int64_t last_bin = 0; // flag meaning "null bin"
@@ -1028,7 +1040,24 @@ namespace odgi {
                                         uint64_t ii = bins[curr_bin].mean_inv > 0.5 ? (hl - k) : k;
                                         x = 1 - ( (float)(curr_len + ii) / (float)(path_len_to_use)) * 0.9;
                                     } else if (_color_by_mean_depth) {
-                                        x = bins[curr_bin].mean_depth / max_mean_depth;
+                                        auto& mean_depth = bins[curr_bin].mean_depth;
+                                        uint64_t j = 0;
+                                        for ( ; j < cov_cuts.size(); ++j) {
+                                            if (mean_depth <= cov_cuts[j]) {
+                                                auto& v = cov_colors[j];
+                                                path_r = v.red;
+                                                path_g = v.green;
+                                                path_b = v.blue;
+                                                break;
+                                            }
+                                        }
+                                        // take the max color
+                                        if (j == cov_cuts.size()) {
+                                            auto& v = cov_colors[j-1];
+                                            path_r = v.red;
+                                            path_g = v.green;
+                                            path_b = v.blue;
+                                        }
                                     } else if (_color_by_mean_inversion_rate) {
                                         x = bins[curr_bin].mean_inv;
                                     }
