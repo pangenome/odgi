@@ -62,6 +62,8 @@ int main_stats(int argc, char** argv) {
     args::Flag penalize_diff_orientation(sorting_goodness_evaluation_opts, "penalize_diff_orientation", "If a link connects two nodes which have different orientations, this"
                                                                                                         " is penalized (adding 2 times its length in the sum).", {'d', "penalize-different-orientation"});
     args::Flag path_statistics(sorting_goodness_evaluation_opts, "path_statistics", "Display the statistics (mean links length or sum path nodes distances) for each path.", {'p', "path-statistics"});
+    args::Group io_format_opts(parser, "[ IO Format Options ]");
+    args::Flag yaml(io_format_opts, "yaml", "Setting this option prints all statistics in YAML format instead of pseudo TSV to stdout. Not applicable to *-N,--nondeterministic-edges*!", {'y', "yaml"});
     args::Group processing_information(parser, "[ Processing Information ]");
     args::ValueFlag<uint64_t> threads(processing_information, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 	args::Group processing_info_opts(parser, "[ Processing Information ]");
@@ -140,6 +142,9 @@ int main_stats(int argc, char** argv) {
         }
     }
     ///graph.display();
+    if (yaml) {
+    	std::cout << "---" << std::endl;
+    }
 
     if (args::get(_summarize)) {
         uint64_t length_in_bp = 0, node_count = 0, edge_count = 0, path_count = 0;
@@ -154,22 +159,39 @@ int main_stats(int argc, char** argv) {
         graph.for_each_path_handle([&](const path_handle_t& p) {
                 ++path_count;
             });
-        std::cout << "#length\tnodes\tedges\tpaths" << std::endl;
-        std::cout << length_in_bp << "\t" << node_count << "\t" << edge_count << "\t" << path_count << std::endl;
+        if (yaml) {
+        	std::cout << "length: " << length_in_bp << std::endl;
+        	std::cout << "nodes: " << node_count << std::endl;
+        	std::cout << "edges: " << edge_count << std::endl;
+        	std::cout << "paths: " << path_count << std::endl;
+        } else {
+			std::cout << "#length\tnodes\tedges\tpaths" << std::endl;
+			std::cout << length_in_bp << "\t" << node_count << "\t" << edge_count << "\t" << path_count << std::endl;
+		}
     }
 
     if (args::get(_weakly_connected_components)) {
         std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components = algorithms::weakly_connected_components(&graph);
-
-        std::cout << "##num_weakly_connected_components: " << weak_components.size() << std::endl;
-        std::cout << "#component\tnodes\tis_acyclic" << std::endl;
+		if (yaml) {
+			std::cout << "num_weakly_connected_components: " << weak_components.size() << std::endl;
+			std::cout << "weakly_connected_components: " << std::endl;
+		} else {
+			std::cout << "##num_weakly_connected_components: " << weak_components.size() << std::endl;
+			std::cout << "#component\tnodes\tis_acyclic" << std::endl;
+		}
         for(uint64_t i = 0; i < weak_components.size(); ++i) {
             auto& weak_component = weak_components[i];
 
             ska::flat_hash_set<handlegraph::nid_t> head_nodes = algorithms::is_nice_and_acyclic(graph, weak_components[i]);
             bool acyclic = !(head_nodes.empty());
-
-            std::cout << i << "\t" << weak_components[i].size() << "\t" << (acyclic ? "yes" : "no") << std::endl;
+			if (yaml) {
+				std::cout << "  - component:" << std::endl;
+				std::cout << "      id: " << i << std::endl;
+				std::cout << "      nodes: " << weak_components[i].size() << std::endl;
+				std::cout << "      is_acyclic: " << (acyclic ? "'yes'" : "'no'") << std::endl;
+			} else {
+				std::cout << i << "\t" << weak_components[i].size() << "\t" << (acyclic ? "yes" : "no") << std::endl;
+			}
         }
     }
 
@@ -184,9 +206,15 @@ int main_stats(int argc, char** argv) {
         });
 
         // Should be these always equal?
-        cout << "#type\tnum" << endl;
-        cout << "total" << "\t" << total_self_loops << endl;
-        cout << "unique" << "\t" << loops.size() << endl;
+        if (yaml) {
+        	std::cout << "num_nodes_self_loops:" << std::endl;
+        	std::cout << "  total: " << total_self_loops << std::endl;
+        	std::cout << "  unique: " << loops.size() << std::endl;
+        } else {
+			cout << "#type\tnum" << endl;
+			cout << "total" << "\t" << total_self_loops << endl;
+			cout << "unique" << "\t" << loops.size() << endl;
+		}
     }
 
     if (_show_nondeterministic_edges) {
@@ -221,7 +249,11 @@ int main_stats(int argc, char** argv) {
             });
         for (uint64_t i = 0; i < 256; ++i) {
             if (chars[i]) {
-                std::cout << (char)i << "\t" << chars[i] << std::endl;
+            	if (yaml) {
+					std::cout << (char)i << ": " << chars[i] << std::endl;
+            	} else {
+					std::cout << (char)i << "\t" << chars[i] << std::endl;
+				}
             }
         }
     }
@@ -304,18 +336,22 @@ int main_stats(int argc, char** argv) {
             uint64_t num_all_links = 0;
             uint64_t num_all_gap_links = 0;
 
-            std::cout << "#mean_links_length" << std::endl;
-            if (layout_in_file) {
-                std::cout << "path\tin_2D_space\tnum_links_considered" << std::endl;
-            }else{
-                std::cout << "path\tin_node_space\tin_nucleotide_space\tnum_links_considered";
+            if (yaml) {
+            	std::cout << "mean_links_length:" << std::endl;
+            } else {
+				std::cout << "#mean_links_length" << std::endl;
+				if (layout_in_file) {
+					std::cout << "path\tin_2D_space\tnum_links_considered" << std::endl;
+				}else{
+					std::cout << "path\tin_node_space\tin_nucleotide_space\tnum_links_considered";
 
-                if (dont_penalize_gap_links){
-                    std::cout << "\tnum_gap_links_not_penalized" << std::endl;
-                }else{
-                    std::cout << std::endl;
-                }
-            }
+					if (dont_penalize_gap_links){
+						std::cout << "\tnum_gap_links_not_penalized" << std::endl;
+					}else{
+						std::cout << std::endl;
+					}
+				}
+			}
 
             graph.for_each_path_handle([&](const path_handle_t &path) {
                 std::set<uint64_t> ordered_unpacked_numbers_in_path; // ordered set to retain the positions order
@@ -388,18 +424,32 @@ int main_stats(int argc, char** argv) {
                             ratio_nt_space = (double)sum_nt_space / (double)num_links;
                         }
                     }
+					if (yaml) {
+						std::cout << "  - length:" << std::endl;
+						std::cout << "      path: " << graph.get_path_name(path) << std::endl;
+						if (layout_in_file) {
+							std::cout << "      in_2D_space: " << ratio_2D_space << std::endl;
+						} else {
+							std::cout << "      in_node_space: " << ratio_node_space << std::endl;
+							std::cout << "      in_nucleotide_space: " << ratio_nt_space << std::endl;
+						}
+						std::cout << "      num_links_considered: " << num_links << std::endl;
+						if (dont_penalize_gap_links) {
+							std::cout << "      num_gap_links_not_penalized: " << num_gap_links << std::endl;
+						}
+					} else {
+						if (layout_in_file) {
+							std::cout << graph.get_path_name(path) << "\t" << ratio_2D_space << "\t" << num_links << std::endl;
+						}else{
+							std::cout << graph.get_path_name(path) << "\t" << ratio_node_space << "\t" << ratio_nt_space << "\t" << num_links;
 
-                    if (layout_in_file) {
-                        std::cout << graph.get_path_name(path) << "\t" << ratio_2D_space << "\t" << num_links << std::endl;
-                    }else{
-                        std::cout << graph.get_path_name(path) << "\t" << ratio_node_space << "\t" << ratio_nt_space << "\t" << num_links;
-
-                        if (dont_penalize_gap_links){
-                            std::cout << "\t" << num_gap_links << std::endl;
-                        }else{
-                            std::cout << std::endl;
-                        }
-                    }
+							if (dont_penalize_gap_links){
+								std::cout << "\t" << num_gap_links << std::endl;
+							}else{
+								std::cout << std::endl;
+							}
+						}
+					}
                 }
 
                 sum_all_node_space += sum_node_space;
@@ -420,18 +470,32 @@ int main_stats(int argc, char** argv) {
                     ratio_nt_space = (double)sum_all_nt_space / (double)num_all_links;
                 }
             }
+			if (yaml) {
+				std::cout << "  - length:" << std::endl;
+				std::cout << "      path: " << "all_paths" << std::endl;
+				if (layout_in_file) {
+					std::cout << "      in_2D_space: " << ratio_2D_space << std::endl;
+				} else {
+					std::cout << "      in_node_space: " << ratio_node_space << std::endl;
+					std::cout << "      in_nucleotide_space: " << ratio_nt_space << std::endl;
+				}
+				std::cout << "      num_links_considered: " << num_all_links << std::endl;
+				if (dont_penalize_gap_links) {
+					std::cout << "      num_gap_links_not_penalized: " << num_all_gap_links << std::endl;
+				}
+			} else {
+				if (layout_in_file) {
+					std::cout << "all_paths\t" << ratio_2D_space << "\t" << num_all_links << std::endl;
+				}else{
+					std::cout << "all_paths\t" << ratio_node_space << "\t" << ratio_nt_space << "\t" << num_all_links;
 
-            if (layout_in_file) {
-                std::cout << "all_paths\t" << ratio_2D_space << "\t" << num_all_links << std::endl;
-            }else{
-                std::cout << "all_paths\t" << ratio_node_space << "\t" << ratio_nt_space << "\t" << num_all_links;
-
-                if (_dont_penalize_gap_links){
-                    std::cout << "\t" << num_all_gap_links << std::endl;
-                }else{
-                    std::cout << std::endl;
-                }
-            }
+					if (_dont_penalize_gap_links){
+						std::cout << "\t" << num_all_gap_links << std::endl;
+					}else{
+						std::cout << std::endl;
+					}
+				}
+			}
         }
 
         if (args::get(sum_of_path_node_distances)){
@@ -445,19 +509,23 @@ int main_stats(int argc, char** argv) {
             uint64_t num_all_penalties = 0;
             uint64_t num_all_penalties_diff_orientation = 0;
 
-            std::cout << "#sum_of_path_node_distances" << std::endl;
+            if (yaml) {
+            	std::cout << "sum_of_path_node_distances:" << std::endl;
+            } else {
+				std::cout << "#sum_of_path_node_distances" << std::endl;
 
-            if (layout_in_file) {
-                std::cout << "path\tin_2D_space_by_nodes\tin_2D_space_by_nucleotides\tnodes\tnucleotides";
-            }else{
-                std::cout << "path\tin_node_space\tin_nucleotide_space\tnodes\tnucleotides\tnum_penalties";
-            }
+				if (layout_in_file) {
+					std::cout << "path\tin_2D_space_by_nodes\tin_2D_space_by_nucleotides\tnodes\tnucleotides";
+				}else{
+					std::cout << "path\tin_node_space\tin_nucleotide_space\tnodes\tnucleotides\tnum_penalties";
+				}
 
-            if (_penalize_diff_orientation){
-                std::cout << "\tnum_penalties_different_orientation" << std::endl;
-            }else{
-                std::cout << std::endl;
-            }
+				if (_penalize_diff_orientation){
+					std::cout << "\tnum_penalties_different_orientation" << std::endl;
+				}else{
+					std::cout << std::endl;
+				}
+			}
 
             graph.for_each_path_handle([&](const path_handle_t &path) {
 #ifdef debug_odgi_stats
@@ -525,17 +593,37 @@ int main_stats(int argc, char** argv) {
                 });
 
                 if (args::get(path_statistics)) {
-                    if (layout_in_file) {
-                        std::cout << graph.get_path_name(path) << "\t" << (double)sum_path_node_dist_2D_space / (double)len_path_node_space << "\t" << (double)sum_path_node_dist_2D_space / (double)len_path_nt_space << "\t" << len_path_node_space << "\t" << len_path_nt_space;
-                    }else{
-                        std::cout << graph.get_path_name(path) << "\t" << (double)sum_path_node_dist_node_space / (double)len_path_node_space << "\t" << (double)sum_path_node_dist_nt_space / (double)len_path_nt_space << "\t" << len_path_node_space << "\t" << len_path_nt_space  << "\t" << num_penalties;
-                    }
+                	if (yaml) {
+						std::cout << "  - distance:" << std::endl;
+						std::cout << "      path: " << graph.get_path_name(path) << std::endl;
+						if (layout_in_file) {
+							std::cout << "      in_2D_space_by_nodes: " << (double)sum_path_node_dist_2D_space / (double)len_path_node_space << std::endl;
+							std::cout << "      in_2D_space_by_nucleotides: " << (double)sum_path_node_dist_2D_space / (double)len_path_nt_space << std::endl;
+							std::cout << "      nodes: " << len_path_node_space << std::endl;
+							std::cout << "      nucleotides: " << len_path_nt_space << std::endl;
+						} else {
+							std::cout << "      in_node_space: " << (double)sum_path_node_dist_node_space / (double)len_path_node_space << std::endl;
+							std::cout << "      in_nucleotide_space: " << (double)sum_path_node_dist_nt_space / (double)len_path_nt_space << std::endl;
+							std::cout << "      nodes: " << len_path_node_space << std::endl;
+							std::cout << "      nucleotides: " << len_path_nt_space << std::endl;
+							std::cout << "      num_penalites: " << num_penalties << std::endl;
+						}
+						if (_penalize_diff_orientation) {
+							std::cout << "      num_penalties_different_orientation: " << num_penalties_diff_orientation << std::endl;
+						}
+                	} else {
+						if (layout_in_file) {
+							std::cout << graph.get_path_name(path) << "\t" << (double)sum_path_node_dist_2D_space / (double)len_path_node_space << "\t" << (double)sum_path_node_dist_2D_space / (double)len_path_nt_space << "\t" << len_path_node_space << "\t" << len_path_nt_space;
+						}else{
+							std::cout << graph.get_path_name(path) << "\t" << (double)sum_path_node_dist_node_space / (double)len_path_node_space << "\t" << (double)sum_path_node_dist_nt_space / (double)len_path_nt_space << "\t" << len_path_node_space << "\t" << len_path_nt_space  << "\t" << num_penalties;
+						}
 
-                    if (_penalize_diff_orientation){
-                        std::cout << "\t" << num_penalties_diff_orientation << std::endl;
-                    }else{
-                        std::cout << std::endl;
-                    }
+						if (_penalize_diff_orientation){
+							std::cout << "\t" << num_penalties_diff_orientation << std::endl;
+						}else{
+							std::cout << std::endl;
+						}
+					}
                 }
 
                 sum_all_path_node_dist_node_space += sum_path_node_dist_node_space;
@@ -547,17 +635,38 @@ int main_stats(int argc, char** argv) {
                 num_all_penalties_diff_orientation += num_penalties_diff_orientation;
             });
 
-            if (layout_in_file) {
-                std::cout << "all_paths\t" << (double)sum_all_path_node_dist_2D_space / (double)len_all_path_node_space << "\t" << (double)sum_all_path_node_dist_2D_space / (double)len_all_path_nt_space << "\t" << len_all_path_node_space << "\t" << len_all_path_nt_space;
-            }else{
-                std::cout << "all_paths\t" << (double)sum_all_path_node_dist_node_space / (double)len_all_path_node_space << "\t" << (double)sum_all_path_node_dist_nt_space / (double)len_all_path_nt_space << "\t" << len_all_path_node_space << "\t" << len_all_path_nt_space << "\t" << num_all_penalties;
-            }
+            if (yaml) {
+				std::cout << "  - distance:" << std::endl;
+				std::cout << "      path: " << "all_paths" << std::endl;
+				if (layout_in_file) {
+					std::cout << "      in_2D_space_by_nodes: " << (double)sum_all_path_node_dist_2D_space / (double)len_all_path_node_space << std::endl;
+					std::cout << "      in_2D_space_by_nucleotides: " << (double)sum_all_path_node_dist_2D_space / (double)len_all_path_nt_space << std::endl;
+					std::cout << "      nodes: " << len_all_path_node_space << std::endl;
+					std::cout << "      nucleotides: " << len_all_path_nt_space << std::endl;
+				} else {
+					std::cout << "      in_node_space: " << (double)sum_all_path_node_dist_node_space / (double)len_all_path_node_space << std::endl;
+					std::cout << "      in_nucleotide_space: " << (double)sum_all_path_node_dist_nt_space / (double)len_all_path_nt_space << std::endl;
+					std::cout << "      nodes: " << len_all_path_node_space << std::endl;
+					std::cout << "      nucleotides: " << len_all_path_nt_space << std::endl;
+					std::cout << "      num_penalites: " << num_all_penalties << std::endl;
+				}
+				if (_penalize_diff_orientation) {
+					std::cout << "      num_penalties_different_orientation: " << num_all_penalties_diff_orientation << std::endl;
+				}
+            } else {
+				if (layout_in_file) {
+					std::cout << "all_paths\t" << (double)sum_all_path_node_dist_2D_space / (double)len_all_path_node_space << "\t" << (double)sum_all_path_node_dist_2D_space / (double)len_all_path_nt_space << "\t" << len_all_path_node_space << "\t" << len_all_path_nt_space;
+				}else{
+					std::cout << "all_paths\t" << (double)sum_all_path_node_dist_node_space / (double)len_all_path_node_space << "\t" << (double)sum_all_path_node_dist_nt_space / (double)len_all_path_nt_space << "\t" << len_all_path_node_space << "\t" << len_all_path_nt_space << "\t" << num_all_penalties;
+				}
 
-            if (_penalize_diff_orientation){
-                std::cout << "\t" << num_all_penalties_diff_orientation << std::endl;
-            }else{
-                std::cout << std::endl;
-            }
+				if (_penalize_diff_orientation){
+					std::cout << "\t" << num_all_penalties_diff_orientation << std::endl;
+				}else{
+					std::cout << std::endl;
+				}
+			}
+
         }
     }
 
