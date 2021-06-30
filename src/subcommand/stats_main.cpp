@@ -648,7 +648,7 @@ int main_stats(int argc, char** argv) {
 					std::cout << "      in_nucleotide_space: " << (double)sum_all_path_node_dist_nt_space / (double)len_all_path_nt_space << std::endl;
 					std::cout << "      nodes: " << len_all_path_node_space << std::endl;
 					std::cout << "      nucleotides: " << len_all_path_nt_space << std::endl;
-					std::cout << "      num_penalites: " << num_all_penalties << std::endl;
+					std::cout << "      num_penalties: " << num_all_penalties << std::endl;
 				}
 				if (_penalize_diff_orientation) {
 					std::cout << "      num_penalties_different_orientation: " << num_all_penalties_diff_orientation << std::endl;
