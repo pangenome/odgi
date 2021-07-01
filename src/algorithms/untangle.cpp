@@ -389,6 +389,30 @@ const step_handle_t& segment_map_t::get_segment_cut(
     return segment_cut[idx];
 }
 
+double self_mean_coverage(
+    const PathHandleGraph& graph,
+    const path_handle_t& path,
+    const step_handle_t& begin,
+    const step_handle_t& end) {
+    uint64_t sum = 0;
+    uint64_t bp = 0;
+    for (step_handle_t step = begin;
+         step != end;
+         step = graph.get_next_step(step)) {
+        handle_t handle = graph.get_handle_of_step(step);
+        uint64_t len = graph.get_length(handle);
+        bp += len;
+        graph.for_each_step_on_handle(
+            handle,
+            [&](const step_handle_t& s) {
+                if (graph.get_path_handle_of_step(s) == path) {
+                    sum += len;
+                }
+            });
+    }
+    return (double)sum / (double)bp;
+}
+
 void map_segments(
     const PathHandleGraph& graph,
     const path_handle_t& path,
@@ -405,6 +429,8 @@ void map_segments(
         std::vector<segment_mapping_t> target_mapping =
             target_segments.get_matches(graph, cuts[i], cuts[i+1], length);
         if (!target_mapping.empty()) {
+            // get the self coverage TODO
+            double self_coverage = self_mean_coverage(graph, path, begin, end);
             auto& best = target_mapping.front();
             auto& score = best.jaccard;
             auto& idx = best.segment_id; // segment index
@@ -422,7 +448,8 @@ void map_segments(
                       << target_end_pos << "\t"
                       << score << "\t"
                 //<< "+" << "\t" // the query is always in the positive frame
-                      << (best.is_inv ? "-" : "+")
+                      << (best.is_inv ? "-" : "+") << "\t"
+                      << self_coverage
                       << std::endl;
                 //"\t" << target_mapping.size() << std::endl;
             // todo: orientation
@@ -480,6 +507,7 @@ void untangle(
     //show_steps(graph, step_pos);
     //std::cout << "path\tfrom\tto" << std::endl;
     //auto step_pos = make_step_index(graph, queries);
+    std::cout << "#query.name\tquery.start\tquery.end\tref.name\tref.start\tref.end\tscore\tinv\tself.cov" << std::endl;
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
     for (auto& query : queries) {
         std::vector<step_handle_t> cuts
