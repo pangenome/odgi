@@ -350,11 +350,8 @@ segment_map_t::get_matches(
         for_segment_on_node(
             node_id,
             [&](const uint64_t& segment_id, const bool& segment_rev) {
-                // HACK warning -- this doesn't handle multiplicity of our query path
-                // we skip self matches
-                if (query_path != graph.get_path_handle_of_step(get_segment_cut(segment_id))) {
-                    target_isec[segment_id].incr(node_length, is_rev != segment_rev);
-                }
+                // n.b. we do not skip self matches
+                target_isec[segment_id].incr(node_length, is_rev != segment_rev);
             });
     }
     // compute the jaccards
@@ -469,6 +466,9 @@ void untangle(
     std::vector<path_handle_t> paths;
     paths.insert(paths.end(), queries.begin(), queries.end());
     paths.insert(paths.end(), targets.begin(), targets.end());
+    std::sort(paths.begin(), paths.end());
+    paths.erase(std::unique(paths.begin(), paths.end()),
+                paths.end());
     auto step_pos = make_step_index(graph, paths, num_threads);
 
     // collect all possible cuts
