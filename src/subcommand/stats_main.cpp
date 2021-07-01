@@ -63,7 +63,7 @@ int main_stats(int argc, char** argv) {
                                                                                                         " is penalized (adding 2 times its length in the sum).", {'d', "penalize-different-orientation"});
     args::Flag path_statistics(sorting_goodness_evaluation_opts, "path_statistics", "Display the statistics (mean links length or sum path nodes distances) for each path.", {'p', "path-statistics"});
     args::Group io_format_opts(parser, "[ IO Format Options ]");
-    args::Flag yaml(io_format_opts, "yaml", "Setting this option prints all statistics in YAML format instead of pseudo TSV to stdout. Not applicable to *-N,--nondeterministic-edges*!", {'y', "yaml"});
+    args::Flag yaml(io_format_opts, "yaml", "Setting this option prints all statistics in YAML format instead of pseudo TSV to stdout. This includes *-S,--summarize*, *-W,--weak-connected-components*, *-L,--self-loops*, *-b,--base-content*, *-l,--mean-links-length*, *-g,--no-gap-links*, *-s,--sum-path-nodes-distances*, and *-d,--penelize-different-orientation*. *-p,path-statistics* is still optional. Not applicable to *-N,--nondeterministic-edges*!", {'y', "yaml"});
     args::Group processing_information(parser, "[ Processing Information ]");
     args::ValueFlag<uint64_t> threads(processing_information, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 	args::Group processing_info_opts(parser, "[ Processing Information ]");
@@ -146,7 +146,7 @@ int main_stats(int argc, char** argv) {
     	std::cout << "---" << std::endl;
     }
 
-    if (args::get(_summarize)) {
+    if (args::get(_summarize) || yaml) {
         uint64_t length_in_bp = 0, node_count = 0, edge_count = 0, path_count = 0;
         graph.for_each_handle([&](const handle_t& h) {
                 length_in_bp += graph.get_length(h);
@@ -170,7 +170,7 @@ int main_stats(int argc, char** argv) {
 		}
     }
 
-    if (args::get(_weakly_connected_components)) {
+    if (args::get(_weakly_connected_components) || yaml) {
         std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components = algorithms::weakly_connected_components(&graph);
 		if (yaml) {
 			std::cout << "num_weakly_connected_components: " << weak_components.size() << std::endl;
@@ -195,7 +195,7 @@ int main_stats(int argc, char** argv) {
         }
     }
 
-    if (_num_self_loops) {
+    if (_num_self_loops || yaml) {
         uint64_t total_self_loops = 0;
         std::unordered_set<nid_t> loops;
         graph.for_each_edge([&](const edge_t& e) {
@@ -216,7 +216,7 @@ int main_stats(int argc, char** argv) {
 			cout << "unique" << "\t" << loops.size() << endl;
 		}
     }
-
+	/// we don't do this when `-y, --yaml` was specified
     if (_show_nondeterministic_edges) {
         // This edges could be compressed in principle
 
@@ -239,7 +239,7 @@ int main_stats(int argc, char** argv) {
         });
     }
 
-    if (args::get(base_content)) {
+    if (args::get(base_content) || yaml) {
         std::vector<uint64_t> chars(256);
         graph.for_each_handle([&](const handle_t& h) {
                 std::string seq = graph.get_sequence(h);
@@ -281,7 +281,7 @@ int main_stats(int argc, char** argv) {
         }
     }
     */
-    if (args::get(mean_links_length) || args::get(sum_of_path_node_distances)) {
+    if (args::get(mean_links_length) || args::get(sum_of_path_node_distances) || yaml) {
         // This vector is needed for computing the metrics in 1D and for detecting gap-links
         std::vector<uint64_t> position_map(graph.get_node_count() + 1);
 
@@ -327,7 +327,7 @@ int main_stats(int argc, char** argv) {
         });
         position_map[position_map.size() - 1] = len;
 
-        if (args::get(mean_links_length)){
+        if (args::get(mean_links_length) || yaml){
             bool _dont_penalize_gap_links = args::get(dont_penalize_gap_links);
 
             uint64_t sum_all_node_space = 0;
@@ -412,6 +412,7 @@ int main_stats(int argc, char** argv) {
                     }
                 });
 
+                /// this could land in the YAML, but we don't force it, because we don't need it for the MultiQC module
                 if (args::get(path_statistics)) {
                     double ratio_node_space = 0;
                     double ratio_nt_space = 0;
@@ -480,7 +481,7 @@ int main_stats(int argc, char** argv) {
 					std::cout << "      in_nucleotide_space: " << ratio_nt_space << std::endl;
 				}
 				std::cout << "      num_links_considered: " << num_all_links << std::endl;
-				if (dont_penalize_gap_links) {
+				if (dont_penalize_gap_links || yaml) {
 					std::cout << "      num_gap_links_not_penalized: " << num_all_gap_links << std::endl;
 				}
 			} else {
@@ -498,7 +499,7 @@ int main_stats(int argc, char** argv) {
 			}
         }
 
-        if (args::get(sum_of_path_node_distances)){
+        if (args::get(sum_of_path_node_distances) || yaml){
             bool _penalize_diff_orientation = args::get(penalize_diff_orientation);
 
             uint64_t sum_all_path_node_dist_node_space = 0;
@@ -592,6 +593,7 @@ int main_stats(int argc, char** argv) {
                     len_path_nt_space += graph.get_length(h);
                 });
 
+				/// this could land in the YAML, but we don't force it, because we don't need it for the MultiQC module
                 if (args::get(path_statistics)) {
                 	if (yaml) {
 						std::cout << "  - distance:" << std::endl;
@@ -608,7 +610,7 @@ int main_stats(int argc, char** argv) {
 							std::cout << "      nucleotides: " << len_path_nt_space << std::endl;
 							std::cout << "      num_penalties: " << num_penalties << std::endl;
 						}
-						if (_penalize_diff_orientation) {
+						if (_penalize_diff_orientation || yaml) {
 							std::cout << "      num_penalties_different_orientation: " << num_penalties_diff_orientation << std::endl;
 						}
                 	} else {
@@ -650,7 +652,7 @@ int main_stats(int argc, char** argv) {
 					std::cout << "      nucleotides: " << len_all_path_nt_space << std::endl;
 					std::cout << "      num_penalties: " << num_all_penalties << std::endl;
 				}
-				if (_penalize_diff_orientation) {
+				if (_penalize_diff_orientation || yaml) {
 					std::cout << "      num_penalties_different_orientation: " << num_all_penalties_diff_orientation << std::endl;
 				}
             } else {

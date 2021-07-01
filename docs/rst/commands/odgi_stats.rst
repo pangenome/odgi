@@ -84,7 +84,7 @@ IO Format Options
 -----------------
 
 | **-y, --yaml**
-| Setting this option prints all statistics in YAML format instead of pseudo TSV to stdout. Not applicable to *-N,--nondeterministic-edges*!
+| Setting this option prints all statistics in YAML format instead of pseudo TSV to stdout. This includes *-S,--summarize*, *-W,--weak-connected-components*, *-L,--self-loops*, *-b,--base-content*, *-l,--mean-links-length*, *-g,--no-gap-links*, *-s,--sum-path-nodes-distances*, and *-d,--penelize-different-orientation*. *-p,path-statistics* is still optional. Not applicable to *-N,--nondeterministic-edges*!
 
 Threading
 ---------
