@@ -78,6 +78,12 @@ ska::flat_hash_map<step_handle_t, uint64_t> make_step_index(
     const std::vector<path_handle_t>& paths,
     const size_t& num_threads);
 
+double self_mean_coverage(
+    const PathHandleGraph& graph,
+    const path_handle_t& path,
+    const step_handle_t& begin,
+    const step_handle_t& end);
+
 void map_segments(
     const PathHandleGraph& graph,
     const path_handle_t& path,
