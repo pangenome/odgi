@@ -463,16 +463,19 @@ void untangle(
     const uint64_t& merge_dist,
     const size_t& num_threads) {
 
+    std::cerr << "[odgi::algorithms::untangle] untangling " << queries.size() << " queries with " << targets.size() << " targets" << std::endl;
     std::vector<path_handle_t> paths;
     paths.insert(paths.end(), queries.begin(), queries.end());
     paths.insert(paths.end(), targets.begin(), targets.end());
     std::sort(paths.begin(), paths.end());
     paths.erase(std::unique(paths.begin(), paths.end()),
                 paths.end());
+    std::cerr << "[odgi::algorithms::untangle] building step index" << std::endl;
     auto step_pos = make_step_index(graph, paths, num_threads);
-
+    std::cerr << "[odgi::algorithms::untangle] step index contains " << step_pos.size() << " steps" << std::endl;
     // collect all possible cuts
     // we'll use this to drive the subsequent segmentation
+    std::cerr << "[odgi::algorithms::untangle] establishing initial cuts" << std::endl;
     ska::flat_hash_set<uint64_t> cut_nodes;
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
     for (auto& path : paths) {
@@ -495,6 +498,7 @@ void untangle(
 
     //auto step_pos = make_step_index(graph, queries);
     // node to reference segmentation mapping
+    std::cerr << "[odgi::algorithms::untangle] building target segment index" << std::endl;
     segment_map_t target_segments(graph,
                                   targets,
                                   step_pos,
@@ -507,6 +511,7 @@ void untangle(
     //show_steps(graph, step_pos);
     //std::cout << "path\tfrom\tto" << std::endl;
     //auto step_pos = make_step_index(graph, queries);
+    std::cerr << "[odgi::algorithms::untangle] writing pair BED for " << queries.size() << " queries" << std::endl;
     std::cout << "#query.name\tquery.start\tquery.end\tref.name\tref.start\tref.end\tscore\tinv\tself.cov" << std::endl;
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
     for (auto& query : queries) {
