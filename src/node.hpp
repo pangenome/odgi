@@ -175,7 +175,8 @@ public:
     void copy(const node_t& other);
     void apply_ordering(
         const std::function<uint64_t(uint64_t)>& get_new_id,
-        const std::function<bool(uint64_t)>& to_flip);
+        const std::function<bool(uint64_t)>& to_flip,
+        const nid_t id_increment);
     void apply_path_ordering(
         const std::function<uint64_t(uint64_t)>& get_new_path_id);
 

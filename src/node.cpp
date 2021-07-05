@@ -341,7 +341,8 @@ void node_t::copy(const node_t& other) {
 
 void node_t::apply_ordering(
     const std::function<uint64_t(uint64_t)>& get_new_id,
-    const std::function<bool(uint64_t)>& to_flip) {
+    const std::function<bool(uint64_t)>& to_flip,
+    const nid_t id_increment) {
     // flip the node sequence if needed
     bool flip = to_flip(id);
     if (flip) {
@@ -395,10 +396,10 @@ void node_t::apply_ordering(
             bool to_curr,
             bool on_rev) {
             //new_edges.
-            auto edge_type = edge_helper::pack(to_flip(other_id)^other_rev,
+            auto edge_type = edge_helper::pack(to_flip(other_id - id_increment)^other_rev,
                                                to_curr,
                                                flip^on_rev);
-            new_edges.push_back(get_new_id(other_id));
+            new_edges.push_back(get_new_id(other_id - id_increment) + id_increment);
             new_edges.push_back(edge_type);
             return true;
         });
