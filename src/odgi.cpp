@@ -807,16 +807,12 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
     // helpers to map from current to new id and orientation
     auto get_new_id =
         [&](uint64_t id) {
-            std::cerr << "get_new_id.id " << id << std::endl;
             return ids[id - 1].first;
         };
     auto to_flip =
         [&](uint64_t id) {
-            std::cerr << "to_flip.id " << id << std::endl;
             return ids[id - 1].second;
         };
-        std::cerr << "ids.size " << ids.size() << std::endl;
-        std::cerr << "_id_increment " << _id_increment << std::endl;
     // nodes, edges, and path steps
 #pragma omp parallel for schedule(static, 1) num_threads(_num_threads)
     for (uint64_t i = 0; i < node_v.size(); ++i) {
@@ -826,7 +822,6 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
             node.apply_ordering(get_new_id, to_flip, _id_increment);
         }
     }
-        std::cerr << "path metadata " << std::endl;
     // path metadata
 #pragma omp parallel for schedule(static, 1) num_threads(_num_threads)
     for (uint64_t i = 1; i <= _path_handle_next; ++i) {
@@ -843,14 +838,14 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
             step_handle_t f = old_meta.first.load();
             handle_t& f_h = as_handle((uint64_t&)as_integers(f)[0]);
             uint64_t f_id = get_id(f_h);
-            f_h = number_bool_packing::pack(get_new_id(f_id-_id_increment)-1, // note -1
-                                            get_is_reverse(f_h)^to_flip(f_id-_id_increment));
+            f_h = number_bool_packing::pack(get_new_id(f_id)-1, // note -1
+                                            get_is_reverse(f_h)^to_flip(f_id));
             p->first.store(f);
             step_handle_t l = old_meta.last.load();
             handle_t& l_h = as_handle((uint64_t&)as_integers(l)[0]);
             uint64_t l_id = get_id(l_h);
-            l_h = number_bool_packing::pack(get_new_id(l_id-_id_increment)-1, // note -1
-                                            get_is_reverse(l_h)^to_flip(l_id-_id_increment));
+            l_h = number_bool_packing::pack(get_new_id(l_id)-1, // note -1
+                                            get_is_reverse(l_h)^to_flip(l_id));
             p->last.store(l);
             p->name = old_meta.name;
             p->is_circular.store(old_meta.is_circular);
