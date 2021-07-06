@@ -3,6 +3,7 @@
 #include "args.hxx"
 #include <omp.h>
 #include "utils.hpp"
+#include "algorithms/stepindex.hpp"
 
 namespace odgi {
 
@@ -19,11 +20,11 @@ namespace odgi {
 		--argc;
 
 		args::ArgumentParser parser(
-				"Identifying break points positions relative to given (reference) path(s) of all the tips in the graph or of given path(s).");
+				"Identifying break points positions relative to given query (reference) path(s) of all the tips in the graph or of given path(s).");
 		args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
 		args::ValueFlag<std::string> og_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "input"});
 		args::Group tips_opts(parser, "[ Tips Options ]");
-		args::ValueFlag<std::string> path_in(tips_opts, "STRING", "Specify the (reference) path to which to walk from all path tips in the graph.", {'p', "path"});
+		args::ValueFlag<std::string> path_in(tips_opts, "STRING", "Specify the query (reference) path to which to walk from all path tips in the graph.", {'p', "path"});
 		args::Group threading(parser, "[ Threading ]");
 		args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 		args::Group processing_info_opts(parser, "[ Processing Information ]");
@@ -67,61 +68,81 @@ namespace odgi {
 
 		omp_set_num_threads(num_threads);
 
-		std::string ref_path = args::get(path_in);
+		std::string query_path = args::get(path_in);
 		// does the path exist in the graph?
-		if (!graph.has_path(ref_path)) {
-			std::cerr << "[odgi::tips] error: the given (reference) path '" << ref_path << "' is not in the graph! Please specify a valid path via -p=[FILE], --path=[FILE]."
+		if (!graph.has_path(query_path)) {
+			std::cerr << "[odgi::tips] error: the given query (reference) path '" << query_path << "' is not in the graph! Please specify a valid path via -p=[FILE], --path=[FILE]."
 					  << std::endl;
 			return 1;
 		}
-		path_handle_t ref_path_t = graph.get_path_handle(ref_path);
+		path_handle_t query_path_t = graph.get_path_handle(query_path);
 		// make bit vector across nodes to tell us if we have a hit
-		std::vector<bool> ref_handles;
-		ref_handles.reserve(graph.get_node_count());
-		graph.for_each_step_in_path(ref_path_t, [&](const step_handle_t &step) {
+		// this is a speed up compared to iterating through all steps of a potential node for each walked step
+		std::vector<bool> query_handles;
+		query_handles.reserve(graph.get_node_count());
+		graph.for_each_step_in_path(query_path_t, [&](const step_handle_t &step) {
 			handle_t h = graph.get_handle_of_step(step);
-			ref_handles[as_integer(h)] = true;
+			query_handles[number_bool_packing::unpack_number(h)] = true;
 		});
+		std::vector<path_handle_t> query_paths;
+		query_paths.reserve(1);
+		query_paths.push_back(query_path_t);
 
 		std::vector<path_handle_t> paths;
 		paths.reserve(graph.get_path_count());
 		graph.for_each_path_handle([&](const path_handle_t &path) {
 			paths.push_back(path);
 		});
+		algorithms::step_index_t step_index(graph, paths, num_threads);
 
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
 		for (auto path : paths) {
 			// prevent self tips
-			if (path == ref_path_t) {
+			if (path == query_path_t) {
 				continue;
 			}
-			bool tip_reached_reference = false;
+			bool tip_reached_query = false;
 			// collecting tips from the front
 			step_handle_t cur_step = graph.path_begin(path);
 			handle_t cur_h = graph.get_handle_of_step(cur_step);
-			while (!tip_reached_reference) {
+			while (!tip_reached_query) {
 				// did we already hit the given reference path?
-				if (ref_handles[as_integer(cur_h)]) {
+				if (query_handles[number_bool_packing::unpack_number(cur_h)]) {
+					std::vector<uint64_t> query_path_positions;
 					graph.for_each_step_on_handle(
 							cur_h,
 							[&](const step_handle_t& s) {
-								if (graph.get_path_handle_of_step(s) == ref_path_t) {
-#pragma omp critical (cout)
-									std::cerr << "[odgi::tips] error: We reached a tip from the front!" << std::endl;
+								if (graph.get_path_handle_of_step(s) == query_path_t) {
+//#pragma omp critical (cout)
+//									std::cerr << "[odgi::tips] error: We reached a tip from the front!" << std::endl;
 
-									// TODO we need to collect all steps and get the lowest one?!
-									// TODO use the XP index to get the path position quickly
-									tip_reached_reference = true;
+									// we collect all positions
+									// later we will get the smallest, the highest and the median from these
+									query_path_positions.push_back(step_index.get_position(s));
 								}
 							});
+					std::sort(query_path_positions.begin(),
+							  query_path_positions.end(),
+							  [&](const uint64_t & pos_a,
+								  const uint64_t & pos_b) {
+								  return pos_a < pos_b;
+							  });
+					double query_pos_median = utils::median_of_sorted_vec(query_path_positions);
+					uint64_t query_min_pos = query_path_positions[0]; // 0-based starting position in BED
+					uint64_t query_max_pos = query_path_positions[query_path_positions.size() - 1] + 1; // 1-based ending position in BED
+#pragma omp critical (cout)
+					std::cout << query_path << "\t" << query_min_pos << "\t" << query_max_pos << "\t"
+						<< query_pos_median << "\t" << graph.get_path_name(path) << "\t" << step_index.get_position(cur_step) << std::endl;
+					// TODO add BED record to queue of BED_writer_thread
+					tip_reached_query = true;
 				}
 				if (graph.has_next_step(cur_step)) {
 					cur_step = graph.get_next_step(cur_step);
 					cur_h = graph.get_handle_of_step(cur_step);
 				} else {
 					// did we iterate over all steps and we did not hit the reference?
-					tip_reached_reference = true;
-					// TODO emit a warning here
+					tip_reached_query = true;
+					// TODO emit a warning here on stderr
 				}
 			}
 
