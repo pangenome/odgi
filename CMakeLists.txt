@@ -438,6 +438,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/expand_context.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/validate_main.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/untangle.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/stepindex.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/groom.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/edge.cpp)
 
