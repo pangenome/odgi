@@ -6,6 +6,7 @@
 #include <vector>
 #include <set>
 #include <deque>
+#include <atomic_bitvector.hpp>
 #include "hash_map.hpp"
 #include "ips4o.hpp"
 #include "stepindex.hpp"

@@ -480,7 +480,7 @@ void untangle(
     // collect all possible cuts
     // we'll use this to drive the subsequent segmentation
     std::cerr << "[odgi::algorithms::untangle] establishing initial cuts" << std::endl;
-    ska::flat_hash_set<uint64_t> cut_nodes;
+    atomicbitvector::atomic_bv_t cut_nodes(graph.get_node_count()+1);
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
     for (auto& path : paths) {
         std::vector<step_handle_t> cuts
@@ -492,9 +492,8 @@ void untangle(
                               [](const handle_t& h) { return false; }),
                 merge_dist,
                 get_step_pos);
-#pragma omp critical (cuts)
         for (auto& step : cuts) {
-            cut_nodes.insert(graph.get_id(graph.get_handle_of_step(step)));
+            cut_nodes.set(graph.get_id(graph.get_handle_of_step(step)));
         }
         //std::cerr << "setup" << std::endl;
         //write_cuts(graph, path, cuts, step_pos);
@@ -507,7 +506,7 @@ void untangle(
                                   targets,
                                   get_step_pos,
                                   [&cut_nodes,&graph](const handle_t& h) {
-                                      return cut_nodes.find(graph.get_id(h)) != cut_nodes.end();
+                                      return cut_nodes[graph.get_id(h)] != 0;
                                   },
                                   merge_dist,
                                   num_threads);
@@ -526,7 +525,7 @@ void untangle(
                               graph.path_back(query),
                               get_step_pos,
                               [&cut_nodes,&graph](const handle_t& h) {
-                                  return cut_nodes.find(graph.get_id(h)) != cut_nodes.end();
+                                  return cut_nodes[graph.get_id(h)] != 0;
                               }),
                 merge_dist,
                 get_step_pos);
