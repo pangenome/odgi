@@ -347,7 +347,6 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/node.cpp
   ${CMAKE_SOURCE_DIR}/src/subgraph.cpp
   ${CMAKE_SOURCE_DIR}/src/version.cpp
-  #${CMAKE_SOURCE_DIR}/src/snarls.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/depth_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/overlap_main.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/driver.cpp
@@ -391,6 +390,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/server_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/version_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/untangle_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/tips_main.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/hash.cpp
