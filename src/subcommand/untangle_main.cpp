@@ -1,5 +1,4 @@
 #include "algorithms/untangle.hpp"
-#include "algorithms/xp.hpp"
 #include "args.hxx"
 #include "odgi.hpp"
 #include "subcommand.hpp"
@@ -39,8 +38,6 @@ int main_untangle(int argc, char **argv) {
                        {'R', "target-paths"});
     args::ValueFlag<uint64_t> merge_dist(untangling_opts, "N", "Merge segments shorter than this length into previous segments.",
                                          {'m', "merge-dist"});
-    args::ValueFlag<std::string> xp_in_file(untangling_opts, "FILE", "Load the succinct path position index from this *FILE*. "
-                                            "The file name usually ends with *.xp*.", {'X', "path-index"});
     args::Group debugging_opts(parser, "[ Debugging Options ]");
     args::Flag make_self_dotplot(debugging_opts, "DOTPLOT", "Render a table showing the positional dotplot of the query against itself.",
                                  {'s', "self-dotplot"});
@@ -164,25 +161,12 @@ int main_untangle(int argc, char **argv) {
         });
     }
 
-    xp::XP path_index;
-    if (xp_in_file) {
-        std::cerr << "[odgi::untangle] loading path index from " << args::get(xp_in_file) << std::endl;
-        std::ifstream in;
-        in.open(args::get(xp_in_file));
-        path_index.load(in);
-        in.close();
-    } else {
-        std::cerr << "[odgi::untangle] building path index" << std::endl;
-        path_index.from_handle_graph(graph, num_threads);
-    }
-
     if (make_self_dotplot) {
         for (auto& query : query_paths) {
             algorithms::self_dotplot(graph, query);
         }
     } else {
         algorithms::untangle(graph,
-                             path_index,
                              query_paths,
                              target_paths,
                              args::get(merge_dist),

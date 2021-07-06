@@ -458,7 +458,6 @@ void map_segments(
 // that describe nonlinear query : target relationships
 void untangle(
     const PathHandleGraph& graph,
-    const xp::XP& path_index,
     const std::vector<path_handle_t>& queries,
     const std::vector<path_handle_t>& targets,
     const uint64_t& merge_dist,
@@ -473,8 +472,9 @@ void untangle(
                 paths.end());
     //std::cerr << "[odgi::algorithms::untangle] building step index" << std::endl;
     //auto step_pos = make_step_index(graph, paths, num_threads);
-    auto get_step_pos = [&path_index](const step_handle_t& step) {
-        return (uint64_t)path_index.get_position_of_step(step);
+    step_index_t step_index(graph, paths, num_threads);
+    auto get_step_pos = [&](const step_handle_t& step) {
+        return step_index.get_position(step);
     };
     //std::cerr << "[odgi::algorithms::untangle] step index contains " << step_pos.size() << " steps" << std::endl;
     // collect all possible cuts

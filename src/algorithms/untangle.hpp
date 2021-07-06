@@ -8,7 +8,7 @@
 #include <deque>
 #include "hash_map.hpp"
 #include "ips4o.hpp"
-#include "xp.hpp"
+#include "stepindex.hpp"
 
 namespace odgi {
 namespace algorithms {
@@ -95,7 +95,6 @@ void map_segments(
 
 void untangle(
     const PathHandleGraph& graph,
-    const xp::XP& path_index,
     const std::vector<path_handle_t>& queries,
     const std::vector<path_handle_t>& targets,
     const uint64_t& merge_dist,
