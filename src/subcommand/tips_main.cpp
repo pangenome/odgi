@@ -122,8 +122,8 @@ namespace odgi {
 			if (graph.has_path(path_name)) {
 				target_paths.push_back(graph.get_path_handle(path_name));
 			} else {
-				std::cerr << "[odgi::tips] error: no target path "
-						  << path_name << " found in graph." << std::endl;
+				std::cerr << "[odgi::tips] error: no target path '"
+						  << path_name << "' found in graph." << std::endl;
 				exit(1);
 			}
 		} else if (_target_paths) {
@@ -139,8 +139,8 @@ namespace odgi {
 			if (graph.has_path(path_name)) {
 				query_paths.push_back(graph.get_path_handle(path_name));
 			} else {
-				std::cerr << "[odgi::tips] error: no query path "
-						  << path_name << " found in graph." << std::endl;
+				std::cerr << "[odgi::tips] error: no query path '"
+						  << path_name << "' found in graph." << std::endl;
 				exit(1);
 			}
 		} else if (_query_paths) {
