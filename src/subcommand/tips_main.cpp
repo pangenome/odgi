@@ -4,6 +4,7 @@
 #include <omp.h>
 #include "utils.hpp"
 #include "algorithms/stepindex.hpp"
+#include "algorithms/tips.hpp"
 
 namespace odgi {
 
@@ -95,59 +96,23 @@ namespace odgi {
 		});
 		algorithms::step_index_t step_index(graph, paths, num_threads);
 
-#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
-		for (auto path : paths) {
-			// prevent self tips
-			if (path == query_path_t) {
-				continue;
-			}
-			bool tip_reached_query = false;
-			// collecting tips from the front
-			step_handle_t cur_step = graph.path_begin(path);
-			handle_t cur_h = graph.get_handle_of_step(cur_step);
-			while (!tip_reached_query) {
-				// did we already hit the given reference path?
-				if (query_handles[number_bool_packing::unpack_number(cur_h)]) {
-					std::vector<uint64_t> query_path_positions;
-					graph.for_each_step_on_handle(
-							cur_h,
-							[&](const step_handle_t& s) {
-								if (graph.get_path_handle_of_step(s) == query_path_t) {
-//#pragma omp critical (cout)
-//									std::cerr << "[odgi::tips] error: We reached a tip from the front!" << std::endl;
+		auto get_path_begin = [&](const path_handle_t& path) {
+			return graph.path_begin(path);
+		};
+		auto get_next_step = [&](const step_handle_t& step) {
+			return graph.get_next_step(step);
+		};
+		/// walk from the front
+		algorithms::walk_tips(graph, paths, query_path_t, query_handles, step_index, num_threads, get_path_begin, get_next_step);
 
-									// we collect all positions
-									// later we will get the smallest, the highest and the median from these
-									query_path_positions.push_back(step_index.get_position(s));
-								}
-							});
-					std::sort(query_path_positions.begin(),
-							  query_path_positions.end(),
-							  [&](const uint64_t & pos_a,
-								  const uint64_t & pos_b) {
-								  return pos_a < pos_b;
-							  });
-					double query_pos_median = utils::median_of_sorted_vec(query_path_positions);
-					uint64_t query_min_pos = query_path_positions[0]; // 0-based starting position in BED
-					uint64_t query_max_pos = query_path_positions[query_path_positions.size() - 1] + 1; // 1-based ending position in BED
-#pragma omp critical (cout)
-					std::cout << query_path << "\t" << query_min_pos << "\t" << query_max_pos << "\t"
-						<< query_pos_median << "\t" << graph.get_path_name(path) << "\t" << step_index.get_position(cur_step) << std::endl;
-					// TODO add BED record to queue of BED_writer_thread
-					tip_reached_query = true;
-				}
-				if (graph.has_next_step(cur_step)) {
-					cur_step = graph.get_next_step(cur_step);
-					cur_h = graph.get_handle_of_step(cur_step);
-				} else {
-					// did we iterate over all steps and we did not hit the reference?
-					tip_reached_query = true;
-					// TODO emit a warning here on stderr
-				}
-			}
-
-			// TODO come from the back
-		}
+		auto get_path_back = [&](const path_handle_t& path) {
+			return graph.path_back(path);
+		};
+		auto get_prev_step = [&](const step_handle_t& step) {
+			return graph.get_previous_step(step);
+		};
+		/// walk from the back
+		algorithms::walk_tips(graph, paths, query_path_t, query_handles, step_index, num_threads, get_path_back, get_prev_step);
 
 		exit(0);
 	}
