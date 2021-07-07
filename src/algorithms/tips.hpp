@@ -34,6 +34,7 @@ namespace odgi {
 				 const uint64_t& num_threads,
 				 const std::function<step_handle_t(const path_handle_t&)>& get_path_end,
 				 const std::function<step_handle_t(const step_handle_t&)>& get_step,
+				 const std::function<bool(const step_handle_t&)>& has_step,
 				 algorithms::tips_bed_writer& bed_writer_thread,
 				 const bool progress,
 				 const bool walk_from_front);

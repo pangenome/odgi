@@ -6,6 +6,7 @@
 #include "algorithms/stepindex.hpp"
 #include "algorithms/tips.hpp"
 #include "algorithms/tips_bed_writer_thread.hpp"
+#include "vector"
 
 namespace odgi {
 
@@ -26,7 +27,14 @@ namespace odgi {
 		args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
 		args::ValueFlag<std::string> og_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "input"});
 		args::Group tips_opts(parser, "[ Tips Options ]");
-		args::ValueFlag<std::string> path_in(tips_opts, "STRING", "Specify the query (reference) path to which to walk from all path tips in the graph.", {'p', "path"});
+		args::ValueFlag<std::string> _query_path(tips_opts, "NAME", "Use this query path.",
+												 {'q', "query-path"});
+		args::ValueFlag<std::string> _target_path(tips_opts, "NAME", "Use this target (reference) path.",
+												  {'r', "target-path"});
+		args::ValueFlag<std::string> _query_paths(tips_opts, "FILE", "Use query paths listed (one per line) in FILE.",
+												  {'Q', "query-paths"});
+		args::ValueFlag<std::string> _target_paths(tips_opts, "FILE", "Use target (reference) paths listed (one per line) in FILE.",
+												   {'R', "target-paths"});
 		args::Group threading(parser, "[ Threading ]");
 		args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 		args::Group processing_info_opts(parser, "[ Processing Information ]");
@@ -70,25 +78,79 @@ namespace odgi {
 
 		omp_set_num_threads(num_threads);
 
-		std::string query_path = args::get(path_in);
-		// does the path exist in the graph?
-		if (!graph.has_path(query_path)) {
-			std::cerr << "[odgi::tips] error: the given query (reference) path '" << query_path << "' is not in the graph! Please specify a valid path via -p=[FILE], --path=[FILE]."
-					  << std::endl;
-			return 1;
-		}
-		path_handle_t query_path_t = graph.get_path_handle(query_path);
-		// make bit vector across nodes to tell us if we have a hit
-		// this is a speed up compared to iterating through all steps of a potential node for each walked step
-		std::vector<bool> query_handles;
-		query_handles.reserve(graph.get_node_count());
-		graph.for_each_step_in_path(query_path_t, [&](const step_handle_t &step) {
-			handle_t h = graph.get_handle_of_step(step);
-			query_handles[number_bool_packing::unpack_number(h)] = true;
-		});
+		// path loading
+		auto load_paths = [&](const std::string& path_names_file) {
+			std::ifstream path_names_in(path_names_file);
+			uint64_t num_of_paths_in_file = 0;
+			std::vector<bool> path_already_seen;
+			path_already_seen.resize(graph.get_path_count(), false);
+			std::string line;
+			std::vector<path_handle_t> paths;
+			while (std::getline(path_names_in, line)) {
+				if (!line.empty()) {
+					if (graph.has_path(line)) {
+						const path_handle_t path = graph.get_path_handle(line);
+						const uint64_t path_rank = as_integer(path) - 1;
+						if (!path_already_seen[path_rank]) {
+							path_already_seen[path_rank] = true;
+							paths.push_back(path);
+						} else {
+							std::cerr << "[odgi::tips] error: in the path list there are duplicated path names."
+									  << std::endl;
+							exit(1);
+						}
+					}
+					++num_of_paths_in_file;
+				}
+			}
+			path_names_in.close();
+			if (progress) {
+				std::cerr << "[odgi::tips] found " << paths.size() << "/" << num_of_paths_in_file
+						  << " paths to consider." << std::endl;
+			}
+			if (paths.empty()) {
+				std::cerr << "[odgi::tips] error: no path to consider." << std::endl;
+				exit(1);
+			}
+			return paths;
+		};
+
+		std::vector<path_handle_t> target_paths;
 		std::vector<path_handle_t> query_paths;
-		query_paths.reserve(1);
-		query_paths.push_back(query_path_t);
+		if (_target_path) {
+			auto& path_name = args::get(_target_path);
+			if (graph.has_path(path_name)) {
+				target_paths.push_back(graph.get_path_handle(path_name));
+			} else {
+				std::cerr << "[odgi::tips] error: no target path "
+						  << path_name << " found in graph." << std::endl;
+				exit(1);
+			}
+		} else if (_target_paths) {
+			target_paths = load_paths(args::get(_target_paths));
+		} else {
+			target_paths.reserve(graph.get_path_count());
+			graph.for_each_path_handle([&](const path_handle_t path) {
+				target_paths.push_back(path);
+			});
+		}
+		if (_query_path) {
+			auto& path_name = args::get(_query_path);
+			if (graph.has_path(path_name)) {
+				query_paths.push_back(graph.get_path_handle(path_name));
+			} else {
+				std::cerr << "[odgi::tips] error: no query path "
+						  << path_name << " found in graph." << std::endl;
+				exit(1);
+			}
+		} else if (_query_paths) {
+			query_paths = load_paths(args::get(_query_paths));
+		} else {
+			query_paths.reserve(graph.get_path_count());
+			graph.for_each_path_handle([&](const path_handle_t path) {
+				query_paths.push_back(path);
+			});
+		}
 
 		std::vector<path_handle_t> paths;
 		paths.reserve(graph.get_path_count());
@@ -96,31 +158,48 @@ namespace odgi {
 			paths.push_back(path);
 		});
 		algorithms::step_index_t step_index(graph, paths, num_threads, progress);
-
 		// open the bed writer thread
 		algorithms::tips_bed_writer bed_writer_thread;
 		bed_writer_thread.open_writer();
-
 		auto get_path_begin = [&](const path_handle_t& path) {
 			return graph.path_begin(path);
 		};
 		auto get_next_step = [&](const step_handle_t& step) {
 			return graph.get_next_step(step);
 		};
-		/// walk from the front
-		algorithms::walk_tips(graph, paths, query_path_t, query_handles, step_index, num_threads, get_path_begin,
-						get_next_step, bed_writer_thread, progress, true);
-
 		auto get_path_back = [&](const path_handle_t& path) {
 			return graph.path_back(path);
 		};
 		auto get_prev_step = [&](const step_handle_t& step) {
 			return graph.get_previous_step(step);
 		};
-		/// walk from the back
-		algorithms::walk_tips(graph, paths, query_path_t, query_handles, step_index, num_threads, get_path_back,
-						get_prev_step, bed_writer_thread, progress, false);
+		auto has_next_step = [&](const step_handle_t& step) {
+			return graph.has_next_step(step);
+		};
+		auto has_previous_step = [&](const step_handle_t& step) {
+			return graph.has_previous_step(step);
+		};
+
+		// TODO loop over query paths here
+		for (auto query_path_t : query_paths) {
+			// make bit vector across nodes to tell us if we have a hit
+			// this is a speed up compared to iterating through all steps of a potential node for each walked step
+			std::vector<bool> query_handles;
+			query_handles.resize(graph.get_node_count(), false);
+			graph.for_each_step_in_path(query_path_t, [&](const step_handle_t &step) {
+				handle_t h = graph.get_handle_of_step(step);
+				query_handles[number_bool_packing::unpack_number(h)] = true;
+			});
+
+			/// walk from the front
+			algorithms::walk_tips(graph, target_paths, query_path_t, query_handles, step_index, num_threads, get_path_begin,
+								  get_next_step, has_next_step, bed_writer_thread, progress, true);
+			/// walk from the back
+			algorithms::walk_tips(graph, target_paths, query_path_t, query_handles, step_index, num_threads, get_path_back,
+								  get_prev_step, has_previous_step, bed_writer_thread, progress, false);
+		}
 		bed_writer_thread.close_writer();
+
 		exit(0);
 	}
 

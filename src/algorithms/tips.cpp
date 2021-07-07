@@ -13,6 +13,7 @@ namespace odgi {
 					   const uint64_t& num_threads,
 					   const std::function<step_handle_t(const path_handle_t&)>& get_path_end,
 					   const std::function<step_handle_t(const step_handle_t&)>& get_step,
+					   const std::function<bool(const step_handle_t&)>& has_step,
 					   algorithms::tips_bed_writer& bed_writer_thread,
 					   const bool progress,
 					   const bool walk_from_front) {
@@ -79,13 +80,15 @@ namespace odgi {
 							   query_pos_median, target_path_name, step_index.get_position(cur_step));
 						tip_reached_query = true;
 					}
-					if (graph.has_next_step(cur_step)) {
+					if (has_step(cur_step)) {
 						cur_step = get_step(cur_step);
 						cur_h = graph.get_handle_of_step(cur_step);
 					} else {
 						// did we iterate over all steps and we did not hit the reference?
 						tip_reached_query = true;
-						// TODO emit a warning here on stderr
+						if (progress) {
+							std::cerr << "[odgi::tips::walk_tips] warning: For path '" << graph.get_path_name(path) << "' there was no hit!" << std::endl;
+						}
 					}
 				}
 				if (progress) {
