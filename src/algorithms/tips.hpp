@@ -2,6 +2,7 @@
 
 #include "utils.hpp"
 #include "algorithms/stepindex.hpp"
+#include "algorithms/tips_bed_writer_thread.hpp"
 #include "odgi.hpp"
 #include <omp.h>
 
@@ -32,7 +33,7 @@ namespace odgi {
 				 algorithms::step_index_t& step_index,
 				 const uint64_t& num_threads,
 				 const std::function<step_handle_t(const path_handle_t&)>& get_path_end,
-				 const std::function<step_handle_t(const step_handle_t&)>& get_step);
-
+				 const std::function<step_handle_t(const step_handle_t&)>& get_step,
+				 algorithms::tips_bed_writer& bed_writer_thread);
 	}
 }

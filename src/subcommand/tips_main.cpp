@@ -5,6 +5,7 @@
 #include "utils.hpp"
 #include "algorithms/stepindex.hpp"
 #include "algorithms/tips.hpp"
+#include "algorithms/tips_bed_writer_thread.hpp"
 
 namespace odgi {
 
@@ -96,6 +97,10 @@ namespace odgi {
 		});
 		algorithms::step_index_t step_index(graph, paths, num_threads);
 
+		// open the bed writer thread
+		algorithms::tips_bed_writer bed_writer_thread;
+		bed_writer_thread.open_writer();
+
 		auto get_path_begin = [&](const path_handle_t& path) {
 			return graph.path_begin(path);
 		};
@@ -103,7 +108,8 @@ namespace odgi {
 			return graph.get_next_step(step);
 		};
 		/// walk from the front
-		algorithms::walk_tips(graph, paths, query_path_t, query_handles, step_index, num_threads, get_path_begin, get_next_step);
+		algorithms::walk_tips(graph, paths, query_path_t, query_handles, step_index, num_threads, get_path_begin,
+						get_next_step, bed_writer_thread);
 
 		auto get_path_back = [&](const path_handle_t& path) {
 			return graph.path_back(path);
@@ -112,8 +118,9 @@ namespace odgi {
 			return graph.get_previous_step(step);
 		};
 		/// walk from the back
-		algorithms::walk_tips(graph, paths, query_path_t, query_handles, step_index, num_threads, get_path_back, get_prev_step);
-
+		algorithms::walk_tips(graph, paths, query_path_t, query_handles, step_index, num_threads, get_path_back,
+						get_prev_step, bed_writer_thread);
+		bed_writer_thread.close_writer();
 		exit(0);
 	}
 

@@ -12,7 +12,8 @@ namespace odgi {
 					   algorithms::step_index_t& step_index,
 					   const uint64_t& num_threads,
 					   const std::function<step_handle_t(const path_handle_t&)>& get_path_end,
-					   const std::function<step_handle_t(const step_handle_t&)>& get_step) {
+					   const std::function<step_handle_t(const step_handle_t&)>& get_step,
+					   algorithms::tips_bed_writer& bed_writer_thread) {
 
 			std::string query_path = graph.get_path_name(query_path_t);
 
@@ -22,6 +23,7 @@ namespace odgi {
 				if (path == query_path_t) {
 					continue;
 				}
+				std::string target_path_name = graph.get_path_name(path);
 				bool tip_reached_query = false;
 				// collecting tips from the front
 				step_handle_t cur_step = get_path_end(path);
@@ -53,10 +55,12 @@ namespace odgi {
 						double query_pos_median = utils::median_of_sorted_vec(query_path_positions);
 						uint64_t query_min_pos = query_path_positions[0]; // 0-based starting position in BED
 						uint64_t query_max_pos = query_path_positions[query_path_positions.size() - 1] + 1; // 1-based ending position in BED
-#pragma omp critical (cout)
-						std::cout << query_path << "\t" << query_min_pos << "\t" << query_max_pos << "\t"
-								  << query_pos_median << "\t" << graph.get_path_name(path) << "\t" << step_index.get_position(cur_step) << std::endl;
-						// TODO add BED record to queue of BED_writer_thread
+//#pragma omp critical (cout)
+						//std::cout << query_path << "\t" << query_min_pos << "\t" << query_max_pos << "\t"
+						//		  << query_pos_median << "\t" << graph.get_path_name(path) << "\t" << step_index.get_position(cur_step) << std::endl;
+						/// add BED record to queue of BED_writer_thread
+						bed_writer_thread.append(query_path, query_min_pos, query_max_pos,
+							   query_pos_median, target_path_name, step_index.get_position(cur_step));
 						tip_reached_query = true;
 					}
 					if (graph.has_next_step(cur_step)) {
