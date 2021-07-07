@@ -95,7 +95,7 @@ namespace odgi {
 		graph.for_each_path_handle([&](const path_handle_t &path) {
 			paths.push_back(path);
 		});
-		algorithms::step_index_t step_index(graph, paths, num_threads);
+		algorithms::step_index_t step_index(graph, paths, num_threads, progress);
 
 		// open the bed writer thread
 		algorithms::tips_bed_writer bed_writer_thread;
@@ -109,7 +109,7 @@ namespace odgi {
 		};
 		/// walk from the front
 		algorithms::walk_tips(graph, paths, query_path_t, query_handles, step_index, num_threads, get_path_begin,
-						get_next_step, bed_writer_thread);
+						get_next_step, bed_writer_thread, progress, true);
 
 		auto get_path_back = [&](const path_handle_t& path) {
 			return graph.path_back(path);
@@ -119,7 +119,7 @@ namespace odgi {
 		};
 		/// walk from the back
 		algorithms::walk_tips(graph, paths, query_path_t, query_handles, step_index, num_threads, get_path_back,
-						get_prev_step, bed_writer_thread);
+						get_prev_step, bed_writer_thread, progress, false);
 		bed_writer_thread.close_writer();
 		exit(0);
 	}

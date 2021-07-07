@@ -13,9 +13,25 @@ namespace odgi {
 					   const uint64_t& num_threads,
 					   const std::function<step_handle_t(const path_handle_t&)>& get_path_end,
 					   const std::function<step_handle_t(const step_handle_t&)>& get_step,
-					   algorithms::tips_bed_writer& bed_writer_thread) {
+					   algorithms::tips_bed_writer& bed_writer_thread,
+					   const bool progress,
+					   const bool walk_from_front) {
 
 			std::string query_path = graph.get_path_name(query_path_t);
+
+			std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress_meter;
+			if (progress) {
+				std::string end;
+				if (walk_from_front) {
+					end = "front";
+				} else {
+					end = "back";
+				}
+				std::string progress_message = "[odgi::tips::walk_tips] BED Progress for query path '"
+						+ graph.get_path_name(query_path_t) + "' walking from the " + end + " of all paths:";
+				progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+						paths.size(), progress_message);
+			}
 
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
 			for (auto path : paths) {
@@ -72,8 +88,13 @@ namespace odgi {
 						// TODO emit a warning here on stderr
 					}
 				}
+				if (progress) {
+					progress_meter->increment(1);
+				}
 			}
-
+			if (progress) {
+				progress_meter->finish();
+			}
 		}
 
 	}
