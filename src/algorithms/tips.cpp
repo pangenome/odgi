@@ -77,7 +77,7 @@ namespace odgi {
 						//		  << query_pos_median << "\t" << graph.get_path_name(path) << "\t" << step_index.get_position(cur_step) << std::endl;
 						/// add BED record to queue of BED_writer_thread
 						bed_writer_thread.append(query_path, query_min_pos, query_max_pos,
-							   query_pos_median, target_path_name, step_index.get_position(cur_step));
+							   query_pos_median, target_path_name, step_index.get_position(cur_step), walk_from_front);
 						tip_reached_query = true;
 					}
 					if (has_step(cur_step)) {

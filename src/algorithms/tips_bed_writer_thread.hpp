@@ -23,6 +23,7 @@ namespace odgi {
 				double query_pos_median;
 				std::string path;
 				uint64_t path_pos;
+				bool walking_dir;
 			};
 
 			std::thread writer_thread;
@@ -52,7 +53,8 @@ namespace odgi {
 									  << bed_record->chromEnd << "\t" // chromEnd
 									  << bed_record->query_pos_median << "\t"
 									  << bed_record->path << "\t"
-									  << bed_record->path_pos
+									  << bed_record->path_pos << "\t"
+									  << bed_record->walking_dir
 									  << std::endl;
 						} while (bed_record_queue.try_pop(bed_record));
 					} else {
@@ -84,8 +86,9 @@ namespace odgi {
 			/// write into our write buffer
 			/// open_writer() must be called first to set up our buffer and writer
 			void append(const std::string &chrom, const uint64_t &chromStart, const uint64_t &chromEnd,
-						const double &query_pos_median, const std::string &path, const uint64_t &path_pos) {
-				bed_record_queue.push(new tips_bed_record_t{chrom, chromStart, chromEnd, query_pos_median, path, path_pos});
+						const double &query_pos_median, const std::string &path, const uint64_t &path_pos, const bool walking_dir) {
+				bed_record_queue.push(new tips_bed_record_t{chrom, chromStart, chromEnd, query_pos_median,
+												path, path_pos, walking_dir});
 			}
 		};
 
