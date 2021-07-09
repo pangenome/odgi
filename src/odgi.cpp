@@ -819,7 +819,7 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
         handle_t h = number_bool_packing::pack(i,false);
         if (!is_deleted(h)) {
             auto& node = get_node_ref(h);
-            node.apply_ordering(get_new_id, to_flip, _id_increment);
+            node.apply_ordering(get_new_id, to_flip);
         }
     }
     // path metadata
