@@ -338,6 +338,7 @@ the graph or of tips of given path(s). Prints BED records to stdout. Each record
 - **median_range**: The 0-based median of the whole query path range of the node we hit. It is possible that a node contains several steps, so we want to mirror that here.
 - **path**: The name of the path we walked.
 - **path_pos**: The 0-based position of the path we walked when we hit the node of the query path.
+- **walk_from_front**: If `1` we walked from the front of the target path. Else it is `0`.
 
 | **odgi unchop** [**-i, --idx**\ =\ *FILE*] [**-o, --out**\ =\ *FILE*]
   [*OPTION*]…
