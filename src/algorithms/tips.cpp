@@ -15,10 +15,12 @@ namespace odgi {
 					   const std::function<step_handle_t(const step_handle_t&)>& get_step,
 					   const std::function<bool(const step_handle_t&)>& has_step,
 					   algorithms::tips_bed_writer& bed_writer_thread,
-					   const bool progress,
-					   const bool walk_from_front) {
+					   const bool& progress,
+					   const bool& walk_from_front,
+					   const bool& write_not_visited_to_tsv,
+					   algorithms::tsv_writer& tsv_writer) {
 
-			std::string query_path = graph.get_path_name(query_path_t);
+			const std::string query_path = graph.get_path_name(query_path_t);
 
 			std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress_meter;
 			if (progress) {
@@ -84,10 +86,15 @@ namespace odgi {
 						cur_step = get_step(cur_step);
 						cur_h = graph.get_handle_of_step(cur_step);
 					} else {
-						// did we iterate over all steps and we did not hit the reference?
+						// did we iterate over all steps and we did not hit the query path?
 						tip_reached_query = true;
-						if (progress) {
-							std::cerr << "[odgi::tips::walk_tips] warning: For path '" << graph.get_path_name(path) << "' there was no hit!" << std::endl;
+						if (write_not_visited_to_tsv) {
+							std::vector<std::string> tsv_vec;
+							tsv_writer.append(query_path, target_path_name, walk_from_front);
+							// the new line is written by the writer itself
+						} else if (progress) {
+#pragma omp critical (cout)
+							std::cerr << "[odgi::tips::walk_tips] warning: For target path '" << target_path_name << "' there was no hit!" << std::endl;
 						}
 					}
 				}

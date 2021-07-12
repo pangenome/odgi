@@ -3,6 +3,7 @@
 #include "utils.hpp"
 #include "algorithms/stepindex.hpp"
 #include "algorithms/tips_bed_writer_thread.hpp"
+#include "algorithms/tsv_writer_thread.hpp"
 #include "odgi.hpp"
 #include <omp.h>
 
@@ -36,7 +37,9 @@ namespace odgi {
 				 const std::function<step_handle_t(const step_handle_t&)>& get_step,
 				 const std::function<bool(const step_handle_t&)>& has_step,
 				 algorithms::tips_bed_writer& bed_writer_thread,
-				 const bool progress,
-				 const bool walk_from_front);
+				 const bool& progress,
+				 const bool& walk_from_front,
+				 const bool& write_not_visited_to_tsv,
+				 algorithms::tsv_writer& tsv_writer);
 	}
 }

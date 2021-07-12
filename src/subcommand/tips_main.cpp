@@ -6,6 +6,7 @@
 #include "algorithms/stepindex.hpp"
 #include "algorithms/tips.hpp"
 #include "algorithms/tips_bed_writer_thread.hpp"
+#include "algorithms/tsv_writer_thread.hpp"
 #include "vector"
 
 namespace odgi {
@@ -35,6 +36,8 @@ namespace odgi {
 												  {'Q', "query-paths"});
 		args::ValueFlag<std::string> _target_paths(tips_opts, "FILE", "Use target (reference) paths listed (one per line) in FILE.",
 												   {'R', "target-paths"});
+		args::ValueFlag<std::string> _not_visited_tsv(tips_opts, "FILE", "Write target path(s) that do not visit the query path(s) to this FILE.",
+												   {'v', "not-visited-tsv"});
 		args::Group threading(parser, "[ Threading ]");
 		args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 		args::Group processing_info_opts(parser, "[ Processing Information ]");
@@ -161,6 +164,12 @@ namespace odgi {
 		// open the bed writer thread
 		algorithms::tips_bed_writer bed_writer_thread;
 		bed_writer_thread.open_writer();
+		// open the tsv writer thread conditionally
+		algorithms::tsv_writer tsv_writer_thread;
+		if (_not_visited_tsv) {
+			tsv_writer_thread.open_writer(args::get(_not_visited_tsv));
+		}
+
 		auto get_path_begin = [&](const path_handle_t& path) {
 			return graph.path_begin(path);
 		};
@@ -193,12 +202,15 @@ namespace odgi {
 
 			/// walk from the front
 			algorithms::walk_tips(graph, target_paths, query_path_t, query_handles, step_index, num_threads, get_path_begin,
-								  get_next_step, has_next_step, bed_writer_thread, progress, true);
+								  get_next_step, has_next_step, bed_writer_thread, progress, true, _not_visited_tsv, tsv_writer_thread);
 			/// walk from the back
 			algorithms::walk_tips(graph, target_paths, query_path_t, query_handles, step_index, num_threads, get_path_back,
-								  get_prev_step, has_previous_step, bed_writer_thread, progress, false);
+								  get_prev_step, has_previous_step, bed_writer_thread, progress, false, _not_visited_tsv, tsv_writer_thread);
 		}
 		bed_writer_thread.close_writer();
+		if (_not_visited_tsv) {
+			tsv_writer_thread.close_writer();
+		}
 
 		exit(0);
 	}
