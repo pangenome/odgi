@@ -90,10 +90,10 @@ namespace odgi {
 #pragma omp critical (not_visited_set)
 						not_visited_set.insert(target_path_name);
 						// do we still want this?
-						if (progress) {
-#pragma omp critical (cout)
-							std::cerr << "[odgi::tips::walk_tips] warning: For target path '" << target_path_name << "' there was no hit!" << std::endl;
-						}
+//						if (progress) {
+//#pragma omp critical (cout)
+//							std::cerr << "[odgi::tips::walk_tips] warning: For target path '" << target_path_name << "' there was no hit!" << std::endl;
+//						}
 					}
 				}
 				if (progress) {
