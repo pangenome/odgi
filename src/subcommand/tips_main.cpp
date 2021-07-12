@@ -6,8 +6,8 @@
 #include "algorithms/stepindex.hpp"
 #include "algorithms/tips.hpp"
 #include "algorithms/tips_bed_writer_thread.hpp"
-#include "algorithms/tsv_writer_thread.hpp"
 #include "vector"
+#include "hash_map.hpp"
 
 namespace odgi {
 
@@ -164,10 +164,9 @@ namespace odgi {
 		// open the bed writer thread
 		algorithms::tips_bed_writer bed_writer_thread;
 		bed_writer_thread.open_writer();
-		// open the tsv writer thread conditionally
-		algorithms::tsv_writer tsv_writer_thread;
+		ofstream not_visited_out;
 		if (_not_visited_tsv) {
-			tsv_writer_thread.open_writer(args::get(_not_visited_tsv));
+			not_visited_out = ofstream(args::get(_not_visited_tsv));
 		}
 
 		auto get_path_begin = [&](const path_handle_t& path) {
@@ -199,17 +198,28 @@ namespace odgi {
 				handle_t h = graph.get_handle_of_step(step);
 				query_handles[number_bool_packing::unpack_number(h)] = true;
 			});
-
+			ska::flat_hash_set<std::string> not_visited_set;
 			/// walk from the front
 			algorithms::walk_tips(graph, target_paths, query_path_t, query_handles, step_index, num_threads, get_path_begin,
-								  get_next_step, has_next_step, bed_writer_thread, progress, true, _not_visited_tsv, tsv_writer_thread);
+								  get_next_step, has_next_step, bed_writer_thread, progress, true, not_visited_set);
+			std::vector<path_handle_t> visitable_target_paths;
+			for (auto target_path : target_paths) {
+				if (!not_visited_set.count(graph.get_path_name(target_path))) {
+					visitable_target_paths.push_back(target_path);
+				}
+			}
 			/// walk from the back
-			algorithms::walk_tips(graph, target_paths, query_path_t, query_handles, step_index, num_threads, get_path_back,
-								  get_prev_step, has_previous_step, bed_writer_thread, progress, false, _not_visited_tsv, tsv_writer_thread);
+			algorithms::walk_tips(graph, visitable_target_paths, query_path_t, query_handles, step_index, num_threads, get_path_back,
+								  get_prev_step, has_previous_step, bed_writer_thread, progress, false, not_visited_set);
+			/// let's write our paths we did not visit
+			std::string query_path = graph.get_path_name(query_path_t);
+			for (auto not_visited_path : not_visited_set) {
+				not_visited_out << query_path << "\t" << not_visited_path << std::endl;
+			}
 		}
 		bed_writer_thread.close_writer();
 		if (_not_visited_tsv) {
-			tsv_writer_thread.close_writer();
+			not_visited_out.close();
 		}
 
 		exit(0);

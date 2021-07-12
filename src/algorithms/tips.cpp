@@ -17,8 +17,7 @@ namespace odgi {
 					   algorithms::tips_bed_writer& bed_writer_thread,
 					   const bool& progress,
 					   const bool& walk_from_front,
-					   const bool& write_not_visited_to_tsv,
-					   algorithms::tsv_writer& tsv_writer) {
+					   ska::flat_hash_set<std::string>& not_visited_set) {
 
 			const std::string query_path = graph.get_path_name(query_path_t);
 
@@ -88,11 +87,10 @@ namespace odgi {
 					} else {
 						// did we iterate over all steps and we did not hit the query path?
 						tip_reached_query = true;
-						if (write_not_visited_to_tsv) {
-							std::vector<std::string> tsv_vec;
-							tsv_writer.append(query_path, target_path_name, walk_from_front);
-							// the new line is written by the writer itself
-						} else if (progress) {
+#pragma omp critical (not_visited_set)
+						not_visited_set.insert(target_path_name);
+						// do we still want this?
+						if (progress) {
 #pragma omp critical (cout)
 							std::cerr << "[odgi::tips::walk_tips] warning: For target path '" << target_path_name << "' there was no hit!" << std::endl;
 						}

@@ -604,8 +604,7 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/algorithms/untangle.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/progress.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/tips.hpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/tips_bed_writer_thread.hpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/tsv_writer_thread.hpp)
+  ${CMAKE_SOURCE_DIR}/src/algorithms/tips_bed_writer_thread.hpp)
 
 target_include_directories(odgi_objs PUBLIC ${odgi_INCLUDES})
 set_target_properties(odgi_objs PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
