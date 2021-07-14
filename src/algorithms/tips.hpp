@@ -28,8 +28,8 @@ namespace odgi {
 		/// #path_pos: The 0-based position of the path we walked when we hit the node of the query path.
 		void walk_tips(const graph_t& graph,
 				 const std::vector<path_handle_t>& paths,
-				 const path_handle_t& query_path_t,
-				 const std::vector<bool>& query_handles,
+				 const path_handle_t& target_path_t,
+				 const std::vector<bool>& target_handles,
 				 algorithms::step_index_t& step_index,
 				 const uint64_t& num_threads,
 				 const std::function<step_handle_t(const path_handle_t&)>& get_path_end,

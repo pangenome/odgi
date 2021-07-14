@@ -189,30 +189,30 @@ namespace odgi {
 		};
 
 		// TODO loop over query paths here
-		for (auto query_path_t : query_paths) {
+		for (auto target_path_t : target_paths) {
 			// make bit vector across nodes to tell us if we have a hit
 			// this is a speed up compared to iterating through all steps of a potential node for each walked step
-			std::vector<bool> query_handles;
-			query_handles.resize(graph.get_node_count(), false);
-			graph.for_each_step_in_path(query_path_t, [&](const step_handle_t &step) {
+			std::vector<bool> target_handles;
+			target_handles.resize(graph.get_node_count(), false);
+			graph.for_each_step_in_path(target_path_t, [&](const step_handle_t &step) {
 				handle_t h = graph.get_handle_of_step(step);
-				query_handles[number_bool_packing::unpack_number(h)] = true;
+				target_handles[number_bool_packing::unpack_number(h)] = true;
 			});
 			ska::flat_hash_set<std::string> not_visited_set;
 			/// walk from the front
-			algorithms::walk_tips(graph, target_paths, query_path_t, query_handles, step_index, num_threads, get_path_begin,
+			algorithms::walk_tips(graph, query_paths, target_path_t, target_handles, step_index, num_threads, get_path_begin,
 								  get_next_step, has_next_step, bed_writer_thread, progress, true, not_visited_set);
-			std::vector<path_handle_t> visitable_target_paths;
-			for (auto target_path : target_paths) {
-				if (!not_visited_set.count(graph.get_path_name(target_path))) {
-					visitable_target_paths.push_back(target_path);
+			std::vector<path_handle_t> visitable_query_paths;
+			for (auto query_path : query_paths) {
+				if (!not_visited_set.count(graph.get_path_name(query_path))) {
+					visitable_query_paths.push_back(query_path);
 				}
 			}
 			/// walk from the back
-			algorithms::walk_tips(graph, visitable_target_paths, query_path_t, query_handles, step_index, num_threads, get_path_back,
+			algorithms::walk_tips(graph, visitable_query_paths, target_path_t, target_handles, step_index, num_threads, get_path_back,
 								  get_prev_step, has_previous_step, bed_writer_thread, progress, false, not_visited_set);
 			/// let's write our paths we did not visit
-			std::string query_path = graph.get_path_name(query_path_t);
+			std::string query_path = graph.get_path_name(target_path_t);
 			for (auto not_visited_path : not_visited_set) {
 				not_visited_out << query_path << "\t" << not_visited_path << std::endl;
 			}
