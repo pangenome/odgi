@@ -656,13 +656,13 @@ namespace odgi {
             std::cerr << "Edge displayed" << std::endl;
             std::cerr << a << " --> " << b << std::endl;
 #endif
-            // In binned mode, the Links have to be tall to be visible; in standard mode, _bin_width is 1, so nothing changes here
-            const uint64_t dist = (b - a) * _bin_width;
-
-            double i = 0.0;
-
             // Show the link if at least one of its 2 extremes is visible
             if (a >= pangenomic_start_pos && a <= pangenomic_end_pos || b >= pangenomic_start_pos && b <= pangenomic_end_pos) {
+                // In binned mode, the Links have to be tall to be visible; in standard mode, _bin_width is 1, so nothing changes here
+                const uint64_t dist = (b - a) * _bin_width;
+
+                double i = 0.0;
+
                 for (; i < dist; i += 1.0 / scale_y) {
                     if (a >= pangenomic_start_pos && a <= pangenomic_end_pos) {
                         add_point(a - pangenomic_start_pos, i, rgb, rgb, rgb);
