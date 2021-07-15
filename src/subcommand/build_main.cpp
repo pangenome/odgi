@@ -29,6 +29,7 @@ int main_build(int argc, char** argv) {
     args::Group graph_files_io(parser, "[ Graph Files IO ]");
     args::Flag to_gfa(graph_files_io, "to_gfa", "Write the graph to stdout in GFAv1 format.", {'G', "to-gfa"});
     args::Group graph_sorting(parser, "[ Graph Sorting ]");
+    args::Flag optimize(graph_sorting, "optimize", "Compact the graph id space into a dense integer range.", {'O', "optimize"});
     args::Flag toposort(graph_sorting, "sort", "Apply a general topological sort to the graph and order the node ids"
                                         "  accordingly. A bidirected adaptation of Kahn’s topological sort (1962)"
                                         "  is used, which can handle components with no heads or tails. Here, both heads and tails are taken into account.", {'s', "sort"});
@@ -74,7 +75,7 @@ int main_build(int argc, char** argv) {
     	return 1;
     }
     if (gfa_filename.size()) {
-        gfa_to_handle(gfa_filename, &graph, args::get(nthreads), args::get(progress));
+        gfa_to_handle(gfa_filename, &graph, args::get(optimize), args::get(nthreads), args::get(progress));
     }
 
     const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
