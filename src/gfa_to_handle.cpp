@@ -26,6 +26,7 @@ std::map<char, uint64_t> gfa_line_counts(const char* filename) {
 
 void gfa_to_handle(const string& gfa_filename,
                    handlegraph::MutablePathMutableHandleGraph* graph,
+                   bool compact_ids,
                    uint64_t n_threads,
                    bool progress) {
 
@@ -52,12 +53,10 @@ void gfa_to_handle(const string& gfa_filename,
         line_counts = gfa_line_counts(filename);
         x.join();
     }
-    uint64_t id_increment = min_id - 1;
+    uint64_t id_increment = (compact_ids ? min_id - 1 : 0);
     uint64_t node_count = line_counts['S'];
     uint64_t edge_count = line_counts['L'];
     uint64_t path_count = line_counts['P'];
-    // set the min id as an offset
-    graph->set_id_increment(id_increment);
     // build the nodes
     {
         std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress_meter;
@@ -87,8 +86,8 @@ void gfa_to_handle(const string& gfa_filename,
             filename,
             [&](gfak::edge_elem e) {
                 if (e.source_name.empty()) return;
-                handlegraph::handle_t a = graph->get_handle(stol(e.source_name), !e.source_orientation_forward);
-                handlegraph::handle_t b = graph->get_handle(stol(e.sink_name), !e.sink_orientation_forward);
+                handlegraph::handle_t a = graph->get_handle(stol(e.source_name) - id_increment, !e.source_orientation_forward);
+                handlegraph::handle_t b = graph->get_handle(stol(e.sink_name) - id_increment, !e.sink_orientation_forward);
                 graph->create_edge(a, b);
                 if (progress) progress_meter->increment(1);
             });
@@ -115,7 +114,7 @@ void gfa_to_handle(const string& gfa_filename,
                         uint64_t i = 0;
                         for (auto& s : p->gfak.segment_names) {
                             graph->append_step(p->path,
-                                               graph->get_handle(std::stoi(s),
+                                               graph->get_handle(std::stoi(s) - id_increment,
                                                                  // in gfak, true == +
                                                                  !p->gfak.orientations[i++]));
                         }
@@ -153,5 +152,10 @@ void gfa_to_handle(const string& gfa_filename,
             progress_meter->finish();
         }
     }
+
+    if (compact_ids) {
+        graph->optimize();
+    }
+
 }
 }
