@@ -248,7 +248,7 @@ namespace odgi {
         uint64_t len = 0;
         {
             if (number_bool_packing::unpack_number(graph.get_handle(graph.max_node_id())) - shift >= graph.get_node_count()){
-                std::cerr << "[odgi::viz] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph" << std::endl;
+                std::cerr << "[odgi::viz] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
                 exit(1);
             }
 
@@ -256,7 +256,7 @@ namespace odgi {
             graph.for_each_handle([&](const handle_t &h) {
                 const nid_t node_id = graph.get_id(h);
                 if (node_id - last_node_id > 1) {
-                    std::cerr << "[odgi::viz] error: the node IDs are not contiguous. Please run 'odgi sort' using -O, --optimize to optimize the graph" << std::endl;
+                    std::cerr << "[odgi::viz] error: the node IDs are not contiguous. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
                     exit(1);
                 }
                 last_node_id = node_id;
