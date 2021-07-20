@@ -735,6 +735,14 @@ void graph_t::optimize(bool allow_id_reassignment) {
     apply_ordering({}, allow_id_reassignment);
 }
 
+bool graph_t::is_optimized(void) {
+	if (min_node_id() == 1 && max_node_id() == get_node_count()) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
 void graph_t::reassign_node_ids(const std::function<nid_t(const nid_t&)>& get_new_id) {
     assert(false); // to implement
     /*

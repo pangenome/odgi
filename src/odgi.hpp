@@ -310,6 +310,11 @@ public:
     /// Organize the graph for better performance and memory use
     void optimize(bool allow_id_reassignment = true);
 
+    /// is the graph optimized?
+    /// definition:
+    /// smallest node identifier is 1 and largest node identifier is equal to get_node_count()
+    bool is_optimized(void);
+
     /// Reassign the node ids
     void reassign_node_ids(const std::function<nid_t(const nid_t&)>& get_new_id);
 

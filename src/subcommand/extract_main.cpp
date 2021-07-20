@@ -145,18 +145,13 @@ namespace odgi {
         }
 
         if (_full_range) {
-            nid_t last_node_id = graph.min_node_id();
-            graph.for_each_handle([&](const handle_t &h) {
-                nid_t node_id = graph.get_id(h);
-                if (node_id - last_node_id > 1) {
-                    std::cerr
-                            << "[odgi::extract] error: the graph is not optimized. "
-                               "To extract the full ranges, please run 'odgi sort' using -O/--optimize first"
-                            << std::endl;
-                    exit(1);
-                }
-                last_node_id = node_id;
-            });
+        	if (!graph.is_optimized()) {
+				std::cerr
+						<< "[odgi::extract] error: the graph is not optimized. "
+						   "To extract the full ranges, please run 'odgi sort' using -O, --optimize."
+						<< std::endl;
+				exit(1);
+        	}
         }
 
 

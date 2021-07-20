@@ -98,6 +98,11 @@ int main_degree(int argc, char** argv) {
         }
     }
 
+    if (!graph.is_optimized()) {
+		std::cerr << "[odgi::degree] error: graph is not optimized, apply odgi sort -O, --optimize." << std::endl;
+		exit(1);
+    }
+
     omp_set_num_threads((int) num_threads);
 
     if (_summarize) {
@@ -130,11 +135,6 @@ int main_degree(int argc, char** argv) {
         graph.for_each_handle(
             [&](const handle_t& h) {
                 auto id = graph.get_id(h);
-                if (id >= degrees.size()) {
-                    // require optimized graph to use vector rather than a hash table
-                    std::cerr << "[odgi::degree] error: graph is not optimized, apply odgi sort -O" << std::endl;
-                    assert(false);
-                }
                 degrees[id] = graph.get_degree(h, false) + graph.get_degree(h, true);
             }, true);
 

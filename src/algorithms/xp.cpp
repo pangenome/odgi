@@ -20,12 +20,12 @@ namespace xp {
     }
 
     /// build the graph from a graph handle
-    void XP::from_handle_graph(const PathHandleGraph &graph, const uint64_t& nthreads) {
+    void XP::from_handle_graph(odgi::graph_t &graph, const uint64_t& nthreads) {
         std::string basename;
         from_handle_graph(graph, basename, nthreads);
     }
 
-    void XP::from_handle_graph(const PathHandleGraph &graph, std::string basename, const uint64_t& nthreads) {
+    void XP::from_handle_graph(odgi::graph_t &graph, std::string basename, const uint64_t& nthreads) {
         // create temporary file for path names
         if (basename.empty()) {
             basename = temp_file::create();
@@ -34,7 +34,11 @@ namespace xp {
         temp_file::cleanup(); // clean up our temporary files
     }
 
-    void XP::from_handle_graph_impl(const PathHandleGraph &graph, const std::string& basename, const uint64_t& nthreads) {
+    void XP::from_handle_graph_impl(odgi::graph_t &graph, const std::string& basename, const uint64_t& nthreads) {
+    	if (!graph.is_optimized()) {
+			std::cerr << "error [xp]: Graph to index is not optimized. Please run 'odgi sort' using -O, --optimize." << std::endl;
+			exit(1);
+    	}
         std::string path_names;
         // the graph must be compacted for this to work
         sdsl::int_vector<> position_map;
@@ -42,15 +46,9 @@ namespace xp {
         uint64_t len = 0;
         nid_t last_node_id = graph.min_node_id();
         graph.for_each_handle([&](const handle_t &h) {
-            nid_t node_id = graph.get_id(h);
-            if (node_id - last_node_id > 1) {
-                std::cerr << "error [xp]: Graph to index is not optimized. Please run 'odgi sort' using -O, --optimize" << std::endl;
-                exit(1);
-            }
             position_map[number_bool_packing::unpack_number(h)] = len;
             uint64_t hl = graph.get_length(h);
             len += hl;
-            last_node_id = node_id;
         });
         position_map[position_map.size() - 1] = len;
 #ifdef debug_from_handle_graph
