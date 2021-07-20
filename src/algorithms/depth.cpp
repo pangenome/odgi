@@ -131,15 +131,15 @@ void for_each_path_range_depth(const PathHandleGraph& graph,
     }
     // precompute depths for all handles in parallel
     std::vector<uint64_t> depths(graph.get_node_count() + 1);
+    const uint64_t shift = graph.min_node_id();
+    if (graph.max_node_id() - shift >= graph.get_node_count()){
+        std::cerr << "[depth::for_each_path_range_depth] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph" << std::endl;
+        exit(1);
+    }
     graph.for_each_handle(
         [&](const handle_t& h) {
             auto id = graph.get_id(h);
-            if (id >= depths.size()) {
-                // require optimized graph to use vector rather than a hash table
-                std::cerr << "[odgi::depth] error: graph is not optimized, apply odgi sort -O" << std::endl;
-                assert(false);
-            }
-            auto& d = depths[id];
+            auto& d = depths[id - shift];
             if (subset_paths) {
                 graph.for_each_step_on_handle(
                     h,
@@ -190,7 +190,7 @@ void for_each_path_range_depth(const PathHandleGraph& graph,
                     active_ranges.push_back(std::make_pair(*range_itr++, 0));
                 }
                 // compute coverage on node
-                auto& d = depths[graph.get_id(handle)];
+                auto& d = depths[graph.get_id(handle) - shift];
                 // add coverage to active ranges
                 for (auto& r : active_ranges) {
                     auto l = node_length;
