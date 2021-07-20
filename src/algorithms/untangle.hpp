@@ -36,7 +36,7 @@ public:
     std::vector<int64_t> segments;
     segment_map_t(const PathHandleGraph& graph,
                   const std::vector<path_handle_t>& paths,
-                  const std::function<uint64_t(const step_handle_t&)>& get_step_pos,
+                  const step_index_t& step_index,
                   const std::function<bool(const handle_t&)>& is_cut,
                   const uint64_t& merge_dist,
                   const size_t& num_threads);
@@ -57,20 +57,20 @@ std::vector<step_handle_t> untangle_cuts(
     const PathHandleGraph& graph,
     const step_handle_t& start,
     const step_handle_t& end,
-    const std::function<uint64_t(const step_handle_t&)>& get_step_pos,
-    //const ska::flat_hash_map<step_handle_t, uint64_t>& step_pos,
+    const step_index_t& step_index,
+    const path_step_index_t& self_index,
     const std::function<bool(const handle_t&)>& is_cut);
 
 std::vector<step_handle_t> merge_cuts(
     const std::vector<step_handle_t>& cuts,
     const uint64_t& dist,
-    const std::function<uint64_t(const step_handle_t&)>& get_step_pos);
+    const step_index_t& step_index);
 
 void write_cuts(
     const PathHandleGraph& graph,
     const path_handle_t& path,
     const std::vector<step_handle_t>& cuts,
-    const std::function<uint64_t(const step_handle_t&)>& get_step_pos);
+    const step_index_t& step_index);
 
 void self_dotplot(
     const PathHandleGraph& graph,
@@ -92,7 +92,7 @@ void map_segments(
     const path_handle_t& path,
     const std::vector<step_handle_t>& cuts,
     const segment_map_t& target_segments,
-    const std::function<uint64_t(const step_handle_t&)>& get_step_pos);
+    const step_index_t& step_index);
 
 void untangle(
     const PathHandleGraph& graph,

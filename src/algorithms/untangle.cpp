@@ -9,7 +9,8 @@ std::vector<step_handle_t> untangle_cuts(
     const PathHandleGraph& graph,
     const step_handle_t& _start,
     const step_handle_t& _end,
-    const std::function<uint64_t(const step_handle_t&)>& get_step_pos,
+    const step_index_t& step_index,
+    const path_step_index_t& self_index,
     const std::function<bool(const handle_t&)>& is_cut) {
     auto path = graph.get_path_handle_of_step(_start);
     auto path_name = graph.get_path_name(path);
@@ -25,31 +26,34 @@ std::vector<step_handle_t> untangle_cuts(
     while (!todo.empty()) {
         auto start = todo.front().first;
         auto end = todo.front().second;
-        uint64_t start_pos = get_step_pos(start);
-        uint64_t end_pos = get_step_pos(end);
+        uint64_t start_pos = step_index.get_position(start);
+        uint64_t end_pos = step_index.get_position(end);
         cut_points.push_back(start);
         todo.pop_front();
         // we go forward until we see a loop, where the other step has position < end_pos and > start_pos
         for (step_handle_t step = start; step != end; step = graph.get_next_step(step)) {
             //  we take the first and shortest loop we find
             // TODO change this, it can be computed based on the node length
-            auto curr_pos = get_step_pos(step);
+            auto curr_pos = step_index.get_position(step);
             handle_t handle = graph.get_handle_of_step(step);
             if (is_cut(handle)) {
                 cut_points.push_back(step);
             }
             bool found_loop = false;
             step_handle_t other;
+
+            // TODO just pass in the path's selfindex :facepalm:
+
             graph.for_each_step_on_handle(
                 handle,
                 [&](const step_handle_t& s) {
                     if (step != s // not the step we're on
                         && graph.get_path_handle_of_step(s) == path) {
-                        auto other_pos = get_step_pos(s);
+                        auto other_pos = step_index.get_position(s);
                         if (other_pos > start_pos
                             && other_pos < end_pos
                             && (!found_loop && other_pos > curr_pos
-                                || (found_loop && (get_step_pos(other) > other_pos)))) {
+                                || (found_loop && (step_index.get_position(other) > other_pos)))) {
                             found_loop = true;
                             other = s;
                         }
@@ -73,11 +77,11 @@ std::vector<step_handle_t> untangle_cuts(
         }
         //std::cerr << "reversing" << std::endl;
         for (step_handle_t step = end;
-             get_step_pos(step) > start_pos;
+             step_index.get_position(step) > start_pos;
              step = graph.get_previous_step(step)) {
             //  we take the first and shortest loop we find
             // TODO change this, it can be computed based on the node length
-            auto curr_pos = get_step_pos(step);
+            auto curr_pos = step_index.get_position(step);
             handle_t handle = graph.get_handle_of_step(step);
             if (is_cut(handle)) {
                 cut_points.push_back(step);
@@ -90,12 +94,12 @@ std::vector<step_handle_t> untangle_cuts(
                 [&](const step_handle_t& s) {
                     if (step != s // not the step we're on
                         && graph.get_path_handle_of_step(s) == path) {
-                        auto other_pos = get_step_pos(s);
+                        auto other_pos = step_index.get_position(s);
                         if (other_pos > start_pos
                             && other_pos < end_pos
                             && other_pos < curr_pos
                             && (!found_loop
-                                || (found_loop && (get_step_pos(other) < other_pos)))) {
+                                || (found_loop && (step_index.get_position(other) < other_pos)))) {
                             found_loop = true;
                             other = s;
                         }
@@ -116,7 +120,7 @@ std::vector<step_handle_t> untangle_cuts(
               cut_points.end(),
               [&](const step_handle_t& a,
                   const step_handle_t& b) {
-                  return get_step_pos(a) < get_step_pos(b);
+                  return step_index.get_position(a) < step_index.get_position(b);
               });
     // then take unique positions
     cut_points.erase(std::unique(cut_points.begin(),
@@ -129,23 +133,23 @@ void write_cuts(
     const PathHandleGraph& graph,
     const path_handle_t& path,
     const std::vector<step_handle_t>& cuts,
-    const std::function<uint64_t(const step_handle_t&)>& get_step_pos) {
+    const step_index_t& step_index) {
     auto path_name = graph.get_path_name(path);
     std::cout << "name\tcut" << std::endl;
     for (auto& step : cuts) {
-        std::cout << path_name << "\t" << get_step_pos(step) << std::endl;
+        std::cout << path_name << "\t" << step_index.get_position(step) << std::endl;
     }
 }
 
 std::vector<step_handle_t> merge_cuts(
     const std::vector<step_handle_t>& cuts,
     const uint64_t& dist,
-    const std::function<uint64_t(const step_handle_t&)>& get_step_pos) {
+    const step_index_t& step_index) {
     std::vector<step_handle_t> merged;
     uint64_t last = 0;
     //std::cerr << "dist is " << dist << std::endl;
     for (auto& step : cuts) {
-        auto pos = get_step_pos(step);
+        auto pos = step_index.get_position(step);
         if (pos == 0 || pos > (last + dist)) {
             merged.push_back(step);
             last = pos;
@@ -228,7 +232,7 @@ void show_steps(
 segment_map_t::segment_map_t(
     const PathHandleGraph& graph,
     const std::vector<path_handle_t>& paths,
-    const std::function<uint64_t(const step_handle_t&)>& get_step_pos,
+    const step_index_t& step_index,
     const std::function<bool(const handle_t&)>& is_cut,
     const uint64_t& merge_dist,
     const size_t& num_threads) {
@@ -237,16 +241,18 @@ segment_map_t::segment_map_t(
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
     for (uint64_t i = 0; i < paths.size(); ++i) { //auto& path : paths) {
         auto& path = paths[i];
+        auto self_index = path_step_index_t(graph, path, 1);
         all_cuts[i] =
             merge_cuts(
                 untangle_cuts(graph,
                               graph.path_begin(path),
                               graph.path_back(path),
-                              get_step_pos,
+                              step_index,
+                              self_index,
                               is_cut
                     ),
                 merge_dist,
-                get_step_pos);
+                step_index);
     }
     // the index construction must be serial
     for (uint64_t i = 0; i < paths.size(); ++i) {
@@ -415,13 +421,13 @@ void map_segments(
     const path_handle_t& path,
     const std::vector<step_handle_t>& cuts,
     const segment_map_t& target_segments,
-    const std::function<uint64_t(const step_handle_t&)>& get_step_pos) {
+    const step_index_t& step_index) {
     std::string query_name = graph.get_path_name(path);
     for (uint64_t i = 0; i < cuts.size()-1; ++i) {
         auto& begin = cuts[i];
         auto& end = cuts[i+1];
-        auto begin_pos = get_step_pos(begin);
-        auto end_pos = get_step_pos(end);
+        auto begin_pos = step_index.get_position(begin);
+        auto end_pos = step_index.get_position(end);
         uint64_t length = end_pos - begin_pos;
         std::vector<segment_mapping_t> target_mapping =
             target_segments.get_matches(graph, cuts[i], cuts[i+1], length);
@@ -432,7 +438,7 @@ void map_segments(
             auto& score = best.jaccard;
             auto& idx = best.segment_id; // segment index
             auto& target_begin = target_segments.get_segment_cut(idx);
-            auto target_begin_pos = get_step_pos(target_begin);
+            auto target_begin_pos = step_index.get_position(target_begin);
             auto target_end_pos = target_begin_pos + target_segments.get_segment_length(idx);
             path_handle_t target_path = graph.get_path_handle_of_step(target_begin);
             std::string target_name = graph.get_path_name(target_path);
@@ -473,9 +479,11 @@ void untangle(
     //std::cerr << "[odgi::algorithms::untangle] building step index" << std::endl;
     //auto step_pos = make_step_index(graph, paths, num_threads);
     step_index_t step_index(graph, paths, num_threads);
-    auto get_step_pos = [&](const step_handle_t& step) {
+    /*
+    auto get_position = [&](const step_handle_t& step) {
         return step_index.get_position(step);
     };
+    */
     //std::cerr << "[odgi::algorithms::untangle] step index contains " << step_pos.size() << " steps" << std::endl;
     // collect all possible cuts
     // we'll use this to drive the subsequent segmentation
@@ -483,15 +491,18 @@ void untangle(
     atomicbitvector::atomic_bv_t cut_nodes(graph.get_node_count()+1);
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
     for (auto& path : paths) {
+        // test path_step_index_t
+        auto self_index = path_step_index_t(graph, path, 1);
         std::vector<step_handle_t> cuts
             = merge_cuts(
                 untangle_cuts(graph,
                               graph.path_begin(path),
                               graph.path_back(path),
-                              get_step_pos,
+                              step_index,
+                              self_index,
                               [](const handle_t& h) { return false; }),
                 merge_dist,
-                get_step_pos);
+                step_index);
         for (auto& step : cuts) {
             cut_nodes.set(graph.get_id(graph.get_handle_of_step(step)));
         }
@@ -504,7 +515,7 @@ void untangle(
     std::cerr << "[odgi::algorithms::untangle] building target segment index" << std::endl;
     segment_map_t target_segments(graph,
                                   targets,
-                                  get_step_pos,
+                                  step_index,
                                   [&cut_nodes,&graph](const handle_t& h) {
                                       return cut_nodes[graph.get_id(h)] != 0;
                                   },
@@ -518,18 +529,20 @@ void untangle(
     std::cout << "#query.name\tquery.start\tquery.end\tref.name\tref.start\tref.end\tscore\tinv\tself.cov" << std::endl;
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
     for (auto& query : queries) {
+        auto self_index = path_step_index_t(graph, query, 1);
         std::vector<step_handle_t> cuts
             = merge_cuts(
                 untangle_cuts(graph,
                               graph.path_begin(query),
                               graph.path_back(query),
-                              get_step_pos,
+                              step_index,
+                              self_index,
                               [&cut_nodes,&graph](const handle_t& h) {
                                   return cut_nodes[graph.get_id(h)] != 0;
                               }),
                 merge_dist,
-                get_step_pos);
-        map_segments(graph, query, cuts, target_segments, get_step_pos);
+                step_index);
+        map_segments(graph, query, cuts, target_segments, step_index);
 
         //write_cuts(graph, query, cuts, step_pos);
     }
