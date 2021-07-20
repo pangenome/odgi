@@ -244,6 +244,7 @@ namespace odgi {
         const char *filename = args::get(png_out_file).c_str();
 
         std::vector<uint64_t> position_map(graph.get_node_count() + 1);
+        const uint64_t shift = number_bool_packing::unpack_number(graph.get_handle(graph.min_node_id()));
         uint64_t len = 0;
         {
             nid_t last_node_id = graph.min_node_id();
@@ -255,7 +256,7 @@ namespace odgi {
                 }
                 last_node_id = node_id;
 
-                position_map[number_bool_packing::unpack_number(h)] = len;
+                position_map[number_bool_packing::unpack_number(h) - shift] = len;
                 uint64_t hl = graph.get_length(h);
                 len += hl;
 
@@ -346,7 +347,7 @@ namespace odgi {
 
                     graph.for_each_step_in_path(path_handle, [&](const step_handle_t &occ) {
                         const handle_t h = graph.get_handle_of_step(occ);
-                        uint64_t h_pan_pos = position_map[number_bool_packing::unpack_number(h)];
+                        uint64_t h_pan_pos = position_map[number_bool_packing::unpack_number(h) - shift];
                         uint64_t h_len = graph.get_length(h);
 
                         //Todo dumb implementation: improve with the math later
@@ -569,7 +570,7 @@ namespace odgi {
                 uint64_t max_x = std::numeric_limits<uint64_t>::min(); // 0
                 graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
                     handle_t h = graph.get_handle_of_step(occ);
-                    uint64_t p = position_map[number_bool_packing::unpack_number(h)];
+                    uint64_t p = position_map[number_bool_packing::unpack_number(h) - shift];
 
                     if (p >= pangenomic_start_pos && p <= pangenomic_end_pos) {
                         min_x = std::min(min_x, (uint64_t) (p - pangenomic_start_pos));
@@ -685,8 +686,8 @@ namespace odgi {
 
         auto add_edge_from_handles = [&](const handle_t& h, const handle_t& o) {
             // map into our bins
-            const uint64_t _a = position_map[number_bool_packing::unpack_number(h) + !number_bool_packing::unpack_bit(h)] / _bin_width + 1;
-            const uint64_t _b = position_map[number_bool_packing::unpack_number(o) + number_bool_packing::unpack_bit(o)] / _bin_width + 1;
+            const uint64_t _a = position_map[number_bool_packing::unpack_number(h) + !number_bool_packing::unpack_bit(h) - shift] / _bin_width + 1;
+            const uint64_t _b = position_map[number_bool_packing::unpack_number(o) + number_bool_packing::unpack_bit(o) - shift] / _bin_width + 1;
 
             const uint64_t a = std::min(_a, _b);
             const uint64_t b = std::max(_a, _b);
@@ -722,7 +723,7 @@ namespace odgi {
             if (_binned_mode){
                 graph.for_each_handle([&](const handle_t &h) {
                     if (!is_a_handle_to_hide(h)){
-                        uint64_t p = position_map[number_bool_packing::unpack_number(h)];
+                        uint64_t p = position_map[number_bool_packing::unpack_number(h) - shift];
                         uint64_t hl = graph.get_length(h);
 
                         int64_t last_bin = 0; // flag meaning "null bin"
@@ -746,7 +747,7 @@ namespace odgi {
             */
             graph.for_each_handle([&](const handle_t &h) {
                 if (!is_a_handle_to_hide(h)){
-                    uint64_t p = position_map[number_bool_packing::unpack_number(h)];
+                    uint64_t p = position_map[number_bool_packing::unpack_number(h) - shift];
                     uint64_t hl = graph.get_length(h);
                     // make contents for the bases in the node
                     for (double i = 0.0; i < hl; i += 1.0 / scale_x) {
@@ -840,7 +841,7 @@ namespace odgi {
 
                         curr_len += hl;
 
-                        p = position_map[number_bool_packing::unpack_number(h)];
+                        p = position_map[number_bool_packing::unpack_number(h) - shift];
                         for (uint64_t k = 0; k < hl; ++k) {
                             int64_t curr_bin = (p + k) / _bin_width + 1;
                         }
@@ -925,7 +926,7 @@ namespace odgi {
                             }
 
                             if (_binned_mode && (_color_by_mean_depth || _color_by_mean_inversion_rate || _change_darkness)){
-                                p = position_map[number_bool_packing::unpack_number(h)];
+                                p = position_map[number_bool_packing::unpack_number(h) - shift];
                                 for (uint64_t k = 0; k < hl; ++k) {
                                     int64_t curr_bin = (p + k) / _bin_width + 1;
 
@@ -1049,7 +1050,7 @@ namespace odgi {
 
                     graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
                         h = graph.get_handle_of_step(occ);
-                        p = position_map[number_bool_packing::unpack_number(h)];
+                        p = position_map[number_bool_packing::unpack_number(h) - shift];
                         hl = graph.get_length(h);
 
                         // make contents for the bases in the node
@@ -1109,7 +1110,7 @@ namespace odgi {
                     /// Loop over all the steps along a path, from first through last and draw them
                     graph.for_each_step_in_path(path, [&](const step_handle_t& occ) {
                         handle_t h = graph.get_handle_of_step(occ);
-                        uint64_t p = position_map[number_bool_packing::unpack_number(h)];
+                        uint64_t p = position_map[number_bool_packing::unpack_number(h) - shift];
                         uint64_t hl = graph.get_length(h);
                         // make contects for the bases in the node
                         uint64_t path_y = path_layout_y[path_rank];
@@ -1145,7 +1146,7 @@ namespace odgi {
                     // In binned mode, the min/max_x values changes based on the bin width; in standard mode, _bin_width is 1, so nothing changes here
                     graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
                         handle_t h = graph.get_handle_of_step(occ);
-                        uint64_t p = position_map[number_bool_packing::unpack_number(h)];
+                        uint64_t p = position_map[number_bool_packing::unpack_number(h) - shift];
                         min_x = std::min(min_x, (uint64_t)(p / _bin_width));
                         max_x = std::max(max_x, (uint64_t)((p + graph.get_length(h)) / _bin_width));
                     });
