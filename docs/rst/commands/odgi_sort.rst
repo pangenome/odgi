@@ -214,7 +214,7 @@ Path Sorting Options
 Optimize Options
 ---------------------
 
-| **-O, --Optimize**
+| **-O, --optimize**
 | Use the MutableHandleGraph::optimize method to compact the node
   identifier space.
 

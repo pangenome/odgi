@@ -1,8 +1,8 @@
 .. _sorting-layouting:
 
-#####################
-Sorting and Layouting
-#####################
+###############
+Sort and Layout
+###############
 
 ========
 Synopsis
