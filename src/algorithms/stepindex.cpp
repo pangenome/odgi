@@ -8,10 +8,14 @@ step_index_t::step_index_t(const PathHandleGraph& graph,
                            const uint64_t& nthreads) {
     // iterate through the paths, recording steps in the structure we'll use to build the mphf
     std::vector<step_handle_t> steps;
+#pragma omp parallel for schedule(dynamic,1)
     for (auto& path : paths) {
+        std::vector<step_handle_t> my_steps;
         graph.for_each_step_in_path(
-            path, [&](const step_handle_t& step) { steps.push_back(step); });
-        steps.push_back(graph.path_end(path));
+            path, [&](const step_handle_t& step) { my_steps.push_back(step); });
+        my_steps.push_back(graph.path_end(path));
+#pragma omp critical (steps_collect)
+        steps.insert(steps.end(), my_steps.begin(), my_steps.end());
     }
     // sort the steps
     ips4o::parallel::sort(steps.begin(), steps.end(), std::less<>(), nthreads);
