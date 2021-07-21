@@ -498,12 +498,13 @@ void untangle(
     //std::cerr << "[odgi::algorithms::untangle] step index contains " << step_pos.size() << " steps" << std::endl;
     // collect all possible cuts
     // we'll use this to drive the subsequent segmentation
-    std::cerr << "[odgi::algorithms::untangle] establishing initial cuts" << std::endl;
+    int threads_per = std::max(1, (int)std::floor((double)num_threads/(double)paths.size()));
+    std::cerr << "[odgi::algorithms::untangle] establishing initial cuts for " << paths.size() << " paths" << std::endl;
     atomicbitvector::atomic_bv_t cut_nodes(graph.get_node_count()+1);
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
     for (auto& path : paths) {
         // test path_step_index_t
-        auto self_index = path_step_index_t(graph, path, 1);
+        auto self_index = path_step_index_t(graph, path, threads_per);
         std::vector<step_handle_t> cuts
             = merge_cuts(
                 untangle_cuts(graph,
@@ -540,7 +541,7 @@ void untangle(
     std::cout << "#query.name\tquery.start\tquery.end\tref.name\tref.start\tref.end\tscore\tinv\tself.cov" << std::endl;
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
     for (auto& query : queries) {
-        auto self_index = path_step_index_t(graph, query, 1);
+        auto self_index = path_step_index_t(graph, query, threads_per);
         std::vector<step_handle_t> cuts
             = merge_cuts(
                 untangle_cuts(graph,
