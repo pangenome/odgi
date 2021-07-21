@@ -92,13 +92,17 @@ void map_segments(
     const path_handle_t& path,
     const std::vector<step_handle_t>& cuts,
     const segment_map_t& target_segments,
-    const step_index_t& step_index);
+    const step_index_t& step_index,
+    const uint64_t& n_best,
+    const double& min_jaccard);
 
 void untangle(
     const PathHandleGraph& graph,
     const std::vector<path_handle_t>& queries,
     const std::vector<path_handle_t>& targets,
     const uint64_t& merge_dist,
+    const uint64_t& n_best,
+    const double& min_jaccard,
     const size_t& num_threads);
 
 }

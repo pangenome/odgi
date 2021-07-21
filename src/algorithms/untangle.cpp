@@ -432,7 +432,9 @@ void map_segments(
     const path_handle_t& path,
     const std::vector<step_handle_t>& cuts,
     const segment_map_t& target_segments,
-    const step_index_t& step_index) {
+    const step_index_t& step_index,
+    const uint64_t& n_best,
+    const double& min_jaccard) {
     std::string query_name = graph.get_path_name(path);
     for (uint64_t i = 0; i < cuts.size()-1; ++i) {
         auto& begin = cuts[i];
@@ -442,31 +444,35 @@ void map_segments(
         uint64_t length = end_pos - begin_pos;
         std::vector<segment_mapping_t> target_mapping =
             target_segments.get_matches(graph, cuts[i], cuts[i+1], length);
+        uint64_t nth_best = 0;
+        // todo for each target mapping, up to the Nth, emitting if they're >= min_jaccard
         if (!target_mapping.empty()) {
             // get the self coverage TODO
             double self_coverage = self_mean_coverage(graph, path, begin, end);
-            auto& best = target_mapping.front();
-            auto& score = best.jaccard;
-            auto& idx = best.segment_id; // segment index
-            auto& target_begin = target_segments.get_segment_cut(idx);
-            auto target_begin_pos = step_index.get_position(target_begin);
-            auto target_end_pos = target_begin_pos + target_segments.get_segment_length(idx);
-            path_handle_t target_path = graph.get_path_handle_of_step(target_begin);
-            std::string target_name = graph.get_path_name(target_path);
+            for (auto& mapping : target_mapping) {
+                ++nth_best;
+                if (nth_best > n_best) break;
+                auto& score = mapping.jaccard;
+                if (score >= min_jaccard) {
+                    auto& idx = mapping.segment_id; // segment index
+                    auto& target_begin = target_segments.get_segment_cut(idx);
+                    auto target_begin_pos = step_index.get_position(target_begin);
+                    auto target_end_pos = target_begin_pos + target_segments.get_segment_length(idx);
+                    path_handle_t target_path = graph.get_path_handle_of_step(target_begin);
+                    std::string target_name = graph.get_path_name(target_path);
 #pragma omp critical (cout)
-            std::cout << query_name << "\t"
-                      << begin_pos << "\t"
-                      << end_pos << "\t"
-                      << target_name << "\t"
-                      << target_begin_pos << "\t"
-                      << target_end_pos << "\t"
-                      << score << "\t"
-                //<< "+" << "\t" // the query is always in the positive frame
-                      << (best.is_inv ? "-" : "+") << "\t"
-                      << self_coverage
-                      << std::endl;
-                //"\t" << target_mapping.size() << std::endl;
-            // todo: orientation
+                    std::cout << query_name << "\t"
+                              << begin_pos << "\t"
+                              << end_pos << "\t"
+                              << target_name << "\t"
+                              << target_begin_pos << "\t"
+                              << target_end_pos << "\t"
+                              << score << "\t"
+                              << (mapping.is_inv ? "-" : "+") << "\t"
+                              << self_coverage << "\t"
+                              << nth_best << std::endl;
+                }
+            }
         }
     }
 }
@@ -478,6 +484,8 @@ void untangle(
     const std::vector<path_handle_t>& queries,
     const std::vector<path_handle_t>& targets,
     const uint64_t& merge_dist,
+    const uint64_t& n_best,
+    const double& min_jaccard,
     const size_t& num_threads) {
 
     std::cerr << "[odgi::algorithms::untangle] untangling " << queries.size() << " queries with " << targets.size() << " targets" << std::endl;
@@ -538,7 +546,7 @@ void untangle(
     //std::cout << "path\tfrom\tto" << std::endl;
     //auto step_pos = make_step_index(graph, queries);
     std::cerr << "[odgi::algorithms::untangle] writing pair BED for " << queries.size() << " queries" << std::endl;
-    std::cout << "#query.name\tquery.start\tquery.end\tref.name\tref.start\tref.end\tscore\tinv\tself.cov" << std::endl;
+    std::cout << "#query.name\tquery.start\tquery.end\tref.name\tref.start\tref.end\tscore\tinv\tself.cov\tnth.best" << std::endl;
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
     for (auto& query : queries) {
         auto self_index = path_step_index_t(graph, query, threads_per);
@@ -554,7 +562,7 @@ void untangle(
                               }),
                 merge_dist,
                 step_index);
-        map_segments(graph, query, cuts, target_segments, step_index);
+        map_segments(graph, query, cuts, target_segments, step_index, n_best, min_jaccard);
 
         //write_cuts(graph, query, cuts, step_pos);
     }
