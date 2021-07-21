@@ -17,9 +17,19 @@ std::vector<step_handle_t> untangle_cuts(
     // this assumes that the end is not inclusive
     /*
     std::cerr << "untangle_cuts(" << path_name << ", "
-              << start_pos << ", "
-              << end_pos << ")" << std::endl;
+              << step_index.get_position(_start) << ", "
+              << step_index.get_position(_end) << ")" << std::endl;
     */
+    // TODO make a vector of handles we've seen as segment starts and of segment ends
+    // to avoid duplicating work
+
+    std::vector<bool> seen_step(self_index.step_count);
+    auto is_seen_step = [&seen_step,&self_index](const step_handle_t& step) {
+        return seen_step[self_index.get_step_idx(step)];
+    };
+    auto mark_seen_step = [&seen_step,&self_index](const step_handle_t& step) {
+        seen_step[self_index.get_step_idx(step)] = true;
+    };
     std::vector<step_handle_t> cut_points;
     std::deque<std::pair<step_handle_t, step_handle_t>> todo;
     todo.push_back(std::make_pair(_start, _end));
@@ -36,33 +46,31 @@ std::vector<step_handle_t> untangle_cuts(
             // TODO change this, it can be computed based on the node length
             auto curr_pos = step_index.get_position(step);
             handle_t handle = graph.get_handle_of_step(step);
-            if (is_cut(handle)) {
+            if (is_cut(handle)
+                && !is_seen_step(step)) {
                 cut_points.push_back(step);
+                mark_seen_step(step);
             }
             bool found_loop = false;
             step_handle_t other;
-
-            // TODO just pass in the path's selfindex :facepalm:
-
-            graph.for_each_step_on_handle(
-                handle,
-                [&](const step_handle_t& s) {
-                    if (step != s // not the step we're on
-                        && graph.get_path_handle_of_step(s) == path) {
-                        auto other_pos = step_index.get_position(s);
-                        if (other_pos > start_pos
-                            && other_pos < end_pos
-                            && (!found_loop && other_pos > curr_pos
-                                || (found_loop && (step_index.get_position(other) > other_pos)))) {
-                            found_loop = true;
-                            other = s;
-                        }
-                    }
-                });
-            if (found_loop) {
+            auto x = self_index.get_next_step_on_node(graph.get_id(handle), step);
+            if (x.first) {
+                auto other_pos = step_index.get_position(x.second);
+                if (other_pos > start_pos
+                    && other_pos < end_pos
+                    && other_pos > curr_pos) {
+                    other = x.second;
+                    found_loop = true;
+                }
+            }
+            if (found_loop
+                && !(is_seen_step(step)
+                     && is_seen_step(other))) {
                 //  recurse this function into it, taking start as our current handle other side of the loop as our end
                 //  to cut_points we add the start position, the result from recursion, and our end position
                 todo.push_back(std::make_pair(step, other));
+                mark_seen_step(step);
+                mark_seen_step(other);
                 //  we then step forward to the loop end and continue iterating
                 step = other;
             }
@@ -83,32 +91,33 @@ std::vector<step_handle_t> untangle_cuts(
             // TODO change this, it can be computed based on the node length
             auto curr_pos = step_index.get_position(step);
             handle_t handle = graph.get_handle_of_step(step);
-            if (is_cut(handle)) {
+            if (is_cut(handle)
+                && !is_seen_step(step)) {
                 cut_points.push_back(step);
+                mark_seen_step(step);
             }
             //std::cerr << "rev on step " << graph.get_id(handle) << " " << curr_pos << std::endl;
             bool found_loop = false;
             step_handle_t other;
-            graph.for_each_step_on_handle(
-                handle,
-                [&](const step_handle_t& s) {
-                    if (step != s // not the step we're on
-                        && graph.get_path_handle_of_step(s) == path) {
-                        auto other_pos = step_index.get_position(s);
-                        if (other_pos > start_pos
-                            && other_pos < end_pos
-                            && other_pos < curr_pos
-                            && (!found_loop
-                                || (found_loop && (step_index.get_position(other) < other_pos)))) {
-                            found_loop = true;
-                            other = s;
-                        }
-                    }
-                });
-            if (found_loop) {
+
+            auto x = self_index.get_prev_step_on_node(graph.get_id(handle), step);
+            if (x.first) {
+                auto other_pos = step_index.get_position(x.second);
+                if (other_pos > start_pos
+                    && other_pos < end_pos
+                    && other_pos < curr_pos) {
+                    other = x.second;
+                    found_loop = true;
+                }
+            }
+            if (found_loop
+                && !(is_seen_step(step)
+                     && is_seen_step(other))) {
                 //  recurse this function into it, taking start as our current handle other side of the loop as our end
                 //  to cut_points we add the start position, the result from recursion, and our end position
                 todo.push_back(std::make_pair(other, step));
+                mark_seen_step(other);
+                mark_seen_step(step);
                 //  we then step forward to the loop end and continue iterating
                 step = other;
             }
@@ -122,10 +131,12 @@ std::vector<step_handle_t> untangle_cuts(
                   const step_handle_t& b) {
                   return step_index.get_position(a) < step_index.get_position(b);
               });
+    //auto prev_size = cut_points.size();
     // then take unique positions
     cut_points.erase(std::unique(cut_points.begin(),
                                  cut_points.end()),
                      cut_points.end());
+    //std::cerr << "prev_size " << prev_size << " curr_size " << cut_points.size() << std::endl;
     return cut_points;
 }
 

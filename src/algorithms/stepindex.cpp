@@ -131,10 +131,15 @@ uint64_t path_step_index_t::n_steps_on_node(const nid_t& id) const {
 
 std::pair<bool, step_handle_t>
 path_step_index_t::get_next_step_on_node(const nid_t& id, const step_handle_t& step) const {
+    //std::cerr << "path_step_index_t Get next step on node" << std::endl;
     auto node_idx = get_node_idx(id);
-    auto next_idx = get_node_idx(id+1);
+    //std::cerr << "path_step_index_t node_idx " << node_idx << std::endl;
+    auto next_idx = node_offset[node_idx+1];
+    //std::cerr << "path_step_index_t next_idx " << next_idx << std::endl;
     auto step_idx = get_step_idx(step);
+    //std::cerr << "path_step_index_t step_idx " << step_idx << std::endl;
     bool has_next = step_idx + 1 < next_idx;
+    //std::cerr << "path_step_index_t has_next " << has_next << std::endl;
     if (has_next) {
         return std::make_pair(true, node_steps[step_idx+1]);
     } else {
