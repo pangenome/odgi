@@ -89,6 +89,7 @@ path_step_index_t::path_step_index_t(const PathHandleGraph& graph,
         step_offset.resize(step_count+1);
         ips4o::parallel::sort(steps_by_node.begin(), steps_by_node.end(), std::less<>(), nthreads);
         uint64_t last_idx = 0;
+        node_offset[0] = 0; // first offset is 0 by definition
         for (auto& node_step : steps_by_node) {
             auto& idx = std::get<0>(node_step);
             //auto& offset = std::get<1>(node_step); // just used for sorting
@@ -131,15 +132,11 @@ uint64_t path_step_index_t::n_steps_on_node(const nid_t& id) const {
 
 std::pair<bool, step_handle_t>
 path_step_index_t::get_next_step_on_node(const nid_t& id, const step_handle_t& step) const {
-    //std::cerr << "path_step_index_t Get next step on node" << std::endl;
     auto node_idx = get_node_idx(id);
-    //std::cerr << "path_step_index_t node_idx " << node_idx << std::endl;
-    auto next_idx = node_offset[node_idx+1];
-    //std::cerr << "path_step_index_t next_idx " << next_idx << std::endl;
-    auto step_idx = get_step_idx(step);
-    //std::cerr << "path_step_index_t step_idx " << step_idx << std::endl;
-    bool has_next = step_idx + 1 < next_idx;
-    //std::cerr << "path_step_index_t has_next " << has_next << std::endl;
+    auto curr_steps = node_offset[node_idx];
+    auto next_steps = node_offset[node_idx+1];
+    auto step_idx = step_offset[get_step_idx(step)];
+    bool has_next = step_idx + 1 < next_steps;
     if (has_next) {
         return std::make_pair(true, node_steps[step_idx+1]);
     } else {
@@ -150,9 +147,9 @@ path_step_index_t::get_next_step_on_node(const nid_t& id, const step_handle_t& s
 
 std::pair<bool, step_handle_t>
 path_step_index_t::get_prev_step_on_node(const nid_t& id, const step_handle_t& step) const {
-    auto node_idx = get_node_idx(id);
-    auto step_idx = get_step_idx(step);
-    bool has_prev = step_idx > node_idx;
+    auto curr_steps = node_offset[get_node_idx(id)];
+    auto step_idx = step_offset[get_step_idx(step)];
+    bool has_prev = step_idx > curr_steps;
     if (has_prev) {
         return std::make_pair(true, node_steps[step_idx-1]);
     } else {
