@@ -112,6 +112,11 @@ For more details about how to handle Guix channels, please go to https://git.gen
 `odgi` includes a variety of tools for analyzing and manipulating large pangenome graphs.
 Read the full documentation at [https://odgi.readthedocs.io/](https://odgi.readthedocs.io/).
 
+## multiqc
+
+Since v1.11 [MultiQC](https://multiqc.info/) has an [ODGI module](https://multiqc.info/docs/#odgi). This module can only
+work with output from `odgi stats`! For more details take a look at the documentation at [odgi.readthedocs.io/multiqc](https://odgi.readthedocs.io/en/latest/rst/multiqc.html).
+
 ## tests
 
 Unittests from `vg` have been ported here and are used to validate the behavior of the algorithm.
