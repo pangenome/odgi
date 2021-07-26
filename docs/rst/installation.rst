@@ -51,7 +51,7 @@ BIOCONDA
 
 .. code-block:: bash
 
-conda install -c bioconda odgi
+	conda install -c bioconda odgi
 
 GUIX
 ====
