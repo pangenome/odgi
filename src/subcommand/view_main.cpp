@@ -22,7 +22,7 @@ int main_view(int argc, char** argv) {
     args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::Group out_opts(parser, "[ Output Options ]");
     args::Flag to_gfa(out_opts, "to_gfa", "Write the graph in GFAv1 format to standard output.", {'g', "to-gfa"});
-    args::Flag display(parser, "display", "Show the internal structures of a graph. Print to stdout the maximum"
+    args::Flag display(out_opts, "display", "Show the internal structures of a graph. Print to stdout the maximum"
                                           " node identifier, the minimum node identifier, the nodes vector, the"
                                           " delete nodes bit vector and the path metadata, each in a separate"
                                           " line.", {'d', "display"});
