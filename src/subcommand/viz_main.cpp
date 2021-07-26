@@ -1030,7 +1030,14 @@ namespace odgi {
                         } else {
                             cov_colors = colorbrewer::get_palette("Spectral", 11);
                         }
-
+                        {
+                            std::reverse(cov_colors.begin(),
+                                         cov_colors.end());
+                            cov_colors.push_back({128,128,128});
+                            cov_colors.push_back({196,196,196});
+                            std::reverse(cov_colors.begin(),
+                                         cov_colors.end());
+                        }
                         uint64_t i = 0;
                         cov_cuts.resize(cov_colors.size());
                         double depth = 0.5;
