@@ -118,7 +118,7 @@ namespace odgi {
                                                                         " bin, using the colorbrewer palette specified in -B --colorbrewer-palette",
                                                                         {'m', "color-by-mean-depth"});
         args::ValueFlag<std::string> colorbrewer_palette(bin_opts, "SCHEME:N", "Use the colorbrewer palette specified by the given SCHEME, with the number of levels N."
-                                                                               "Specifiy 'show' to see available palettes.",
+                                                                               " Specifiy 'show' to see available palettes.",
                                                                                {'B', "colorbrewer-palette"});
 
         /// Gradient mode
