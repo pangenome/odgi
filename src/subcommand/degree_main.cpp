@@ -99,6 +99,13 @@ int main_degree(int argc, char** argv) {
     }
 
     omp_set_num_threads((int) num_threads);
+	const uint64_t shift = graph.min_node_id();
+	if (_windows_in || _windows_out) {
+		if (graph.max_node_id() - shift >= graph.get_node_count()){
+			std::cerr << "[odgi::degree] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
+			exit(1);
+		}
+	}
 
     if (_summarize) {
         uint64_t total_edges = 0;
@@ -127,11 +134,6 @@ int main_degree(int argc, char** argv) {
 
         // precompute degrees for all handles in parallel
         std::vector<uint64_t> degrees(graph.get_node_count() + 1);
-        const uint64_t shift = graph.min_node_id();
-        if (graph.max_node_id() - shift >= graph.get_node_count()){
-            std::cerr << "[odgi::degree] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
-            exit(1);
-        }
         graph.for_each_handle(
             [&](const handle_t& h) {
                 auto id = graph.get_id(h);
