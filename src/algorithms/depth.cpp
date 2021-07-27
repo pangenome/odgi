@@ -98,14 +98,10 @@ std::vector<edge_t> keep_mutual_best_edges(const MutablePathDeletableHandleGraph
     return edges;
 }
 
-void for_each_path_range_depth(odgi::graph_t &graph,
+void for_each_path_range_depth(const PathHandleGraph& graph,
                                const std::vector<path_range_t>& _path_ranges,
                                const std::vector<bool>& paths_to_consider,
                                const std::function<void(const path_range_t&, const double&)>& func) {
-	if (!graph.is_optimized()) {
-		std::cerr << "[odgi::depth] error: graph is not optimized, apply odgi sort -O, --optimize." << std::endl;
-		exit(1);
-	}
     // are we subsetting?
     const bool subset_paths = !paths_to_consider.empty();
     // sort path ranges
@@ -138,6 +134,11 @@ void for_each_path_range_depth(odgi::graph_t &graph,
     graph.for_each_handle(
         [&](const handle_t& h) {
             auto id = graph.get_id(h);
+			if (id >= depths.size()) {
+			    // require optimized graph to use vector rather than a hash table
+				std::cerr << "[odgi::depth] error: graph is not optimized, apply odgi sort -O" << std::endl;
+				assert(false);
+			}
             auto& d = depths[id];
             if (subset_paths) {
                 graph.for_each_step_on_handle(

@@ -138,11 +138,6 @@ namespace odgi {
             }
         }
 
-        if (!graph.is_optimized()) {
-			std::cerr << "[odgi::depth] error: graph is not optimized, apply odgi sort -O, --optimize." << std::endl;
-			exit(1);
-        }
-
         omp_set_num_threads((int) num_threads);
 
         std::vector<bool> paths_to_consider;
@@ -478,7 +473,13 @@ namespace odgi {
             graph.for_each_handle(
                 [&](const handle_t& h) {
                     auto id = graph.get_id(h);
-                    depths[id] = get_graph_node_depth(graph, id, paths_to_consider).first;
+					if (id >= depths.size()) {
+						// require optimized graph to use vector rather than a hash table
+						std::cerr << "[odgi::depth] error: graph is not optimized, apply odgi sort -O" << std::endl;
+						assert(false);
+					}
+
+					depths[id] = get_graph_node_depth(graph, id, paths_to_consider).first;
                 }, true);
 
             auto in_bounds =

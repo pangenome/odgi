@@ -31,14 +31,10 @@ The command creates a file called ``DRB1-3123.og``, which contains the input gra
 
 	If you know in advance that your graph is ``not optimized``, and you want to run at least one of the following subcommands:
 
-		- :ref:`odgi degree`
-		- :ref:`odgi depth`
 		- :ref:`odgi extract`
 		- :ref:`odgi layout`
 		- :ref:`odgi pathindex`
 		- :ref:`odgi sort`
-		- :ref:`odgi stats`
-		- :ref:`odgi viz`
 
 	Then please execute :ref:`odgi build` with ``-O, --optimize`` in order
 	to ensure that you don't run into any problems later. :ref:`odgi sort` can optimize already built graphs.

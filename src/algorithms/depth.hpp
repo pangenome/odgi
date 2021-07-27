@@ -17,7 +17,6 @@
 #include <handlegraph/mutable_path_mutable_handle_graph.hpp>
 #include <handlegraph/deletable_handle_graph.hpp>
 #include <handlegraph/mutable_path_deletable_handle_graph.hpp>
-#include <odgi.hpp>
 
 namespace odgi {
 
@@ -35,7 +34,7 @@ std::vector<edge_t> find_edges_exceeding_depth_limits(const MutablePathDeletable
 std::vector<edge_t> keep_mutual_best_edges(const MutablePathDeletableHandleGraph& graph, uint64_t n_best);
 
 /// Provide depth of our given path ranges to callback, requires the graph to be optimized!
-void for_each_path_range_depth(odgi::graph_t &graph,
+void for_each_path_range_depth(const PathHandleGraph& graph,
                                const std::vector<path_range_t>& path_ranges,
                                const std::vector<bool>& paths_to_consider,
                                const std::function<void(const path_range_t&, const double&)>& func);
