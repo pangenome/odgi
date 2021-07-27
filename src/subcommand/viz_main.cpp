@@ -251,21 +251,12 @@ namespace odgi {
                 std::cerr << "[odgi::viz] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
                 exit(1);
             }
-
-            nid_t last_node_id = graph.min_node_id();
             graph.for_each_handle([&](const handle_t &h) {
-                const nid_t node_id = graph.get_id(h);
-                if (node_id - last_node_id > 1) {
-                    std::cerr << "[odgi::viz] error: the node IDs are not contiguous. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
-                    exit(1);
-                }
-                last_node_id = node_id;
-
                 position_map[number_bool_packing::unpack_number(h) - shift] = len;
                 uint64_t hl = graph.get_length(h);
                 len += hl;
 #ifdef debug_odgi_viz
-                std::cerr << "SEGMENT ID: " << graph.get_id(h) << " - " << as_integer(h) << " - index_in_position_map (" << number_bool_packing::unpack_number(h) << ") = " << len << std::endl;
+                std::cerr << "SEGMENT ID: " << graph.get_id(h) << " - " << as_integer(h) << " - index_in_position_map (" << (number_bool_packing::unpack_number(h) - shift) << ") = " << len << std::endl;
 #endif
             });
             position_map[position_map.size() - 1] = len;
