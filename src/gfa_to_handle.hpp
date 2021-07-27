@@ -33,7 +33,8 @@ std::map<char, uint64_t> gfa_line_counts(const char* filename);
 /// Handle graph must be empty when passed into function.
 void gfa_to_handle(const string& gfa_filename,
                    handlegraph::MutablePathMutableHandleGraph* graph,
-                   uint64_t n_threads = 1,
-                   bool show_progress = false);
+                   bool compact_ids,
+                   uint64_t n_threads,
+                   bool show_progress);
 
 }

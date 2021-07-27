@@ -118,8 +118,11 @@ namespace odgi {
                                                                         " bin, using the colorbrewer palette specified in -B --colorbrewer-palette",
                                                                         {'m', "color-by-mean-depth"});
         args::ValueFlag<std::string> colorbrewer_palette(bin_opts, "SCHEME:N", "Use the colorbrewer palette specified by the given SCHEME, with the number of levels N."
-                                                                               "Specifiy 'show' to see available palettes.",
+                                                                               " Specifiy 'show' to see available palettes.",
                                                                                {'B', "colorbrewer-palette"});
+        args::Flag no_grey_depth(bin_opts, "bool", "Use the colorbrewer palette for <0.5x and ~1x coverage bins."
+                                 " By default, these bins are light and neutral grey.",
+                                 {'G', "no-grey-depth"});
 
         /// Gradient mode
         args::Group grad_mode_opts(parser, "[ Gradient Mode Options ]");
@@ -396,14 +399,14 @@ namespace odgi {
         uint64_t width = std::min(len_to_visualize, (args::get(image_width) ? args::get(image_width) : 1500));
         const uint64_t height = std::min(len_to_visualize, (args::get(image_height) ? args::get(image_height) : 500) + bottom_padding);
 
-        float scale_x = (float) width / (float) len_to_visualize;
-        const float scale_y = (float) height / (float) len_to_visualize;
+        double scale_x = (double) width / (double) len_to_visualize;
+        const double scale_y = (double) height / (double) len_to_visualize;
 
-        float _bin_width = args::get(bin_width);
+        double _bin_width = args::get(bin_width);
         bool _binned_mode = true; //args::get(binned_mode);
         if (_binned_mode){
             if (_bin_width == 0){
-                _bin_width = 1 / scale_x; // It can be a float value.
+                _bin_width = 1.0 / scale_x; // It can be a double value.
             }else{
                 width = len_to_visualize / _bin_width;// + (len_to_visualize % bin_width ? 1 : 0);
             }
@@ -656,14 +659,14 @@ namespace odgi {
             std::cerr << "Edge displayed" << std::endl;
             std::cerr << a << " --> " << b << std::endl;
 #endif
-            // In binned mode, the Links have to be tall to be visible; in standard mode, _bin_width is 1, so nothing changes here
-            const uint64_t dist = (b - a) * _bin_width;
-
-            uint64_t i = 0;
-
             // Show the link if at least one of its 2 extremes is visible
             if (a >= pangenomic_start_pos && a <= pangenomic_end_pos || b >= pangenomic_start_pos && b <= pangenomic_end_pos) {
-                for (; i < dist; i += 1 / scale_y) {
+                // In binned mode, the Links have to be tall to be visible; in standard mode, _bin_width is 1, so nothing changes here
+                const uint64_t dist = (b - a) * _bin_width;
+
+                double i = 0.0;
+
+                for (; i < dist; i += 1.0 / scale_y) {
                     if (a >= pangenomic_start_pos && a <= pangenomic_end_pos) {
                         add_point(a - pangenomic_start_pos, i, rgb, rgb, rgb);
                     }
@@ -673,10 +676,10 @@ namespace odgi {
                     if (a >= pangenomic_start_pos && a <= pangenomic_end_pos) {
                         add_point(a - pangenomic_start_pos, i, rgb, rgb, rgb);
                     }
-                    a += 1 / scale_x;
+                    a += 1.0 / scale_x;
                 }
                 if (b >= pangenomic_start_pos && b <= pangenomic_end_pos) {
-                    for (uint64_t j = 0; j < dist; j += 1 / scale_y) {
+                    for (double j = 0.0; j < dist; j += 1.0 / scale_y) {
                         add_point(b - pangenomic_start_pos, j, rgb, rgb, rgb);
                     }
                 }
@@ -749,7 +752,7 @@ namespace odgi {
                     uint64_t p = position_map[number_bool_packing::unpack_number(h)];
                     uint64_t hl = graph.get_length(h);
                     // make contents for the bases in the node
-                    for (uint64_t i = 0; i < hl; i += 1 / scale_x) {
+                    for (double i = 0.0; i < hl; i += 1.0 / scale_x) {
                         if ((p + i) >= pangenomic_start_pos && (p + i) <= pangenomic_end_pos) {
                             add_point(p + i - pangenomic_start_pos, 0, 0, 0, 0);
                         }
@@ -996,7 +999,7 @@ namespace odgi {
 
                     if (_color_path_names_background){
                         for (uint32_t x = left_padding * char_size; x <= max_num_of_chars * char_size; x++){
-                            add_path_step(image_path_names, width_path_names, (float)(x + ratio) * (1 / scale_x), path_layout_y[path_rank], path_r, path_g, path_b);
+                            add_path_step(image_path_names, width_path_names, (double)(x + ratio) * (1.0 / scale_x), path_layout_y[path_rank], path_r, path_g, path_b);
                         }
                     }
 
@@ -1022,15 +1025,20 @@ namespace odgi {
                     colorbrewer::palette_t cov_colors;
                     std::vector<double> cov_cuts;
                     if (_color_by_mean_depth) {
-                        // colorbrewer PRGn 8-color
-                        // https://colorbrewer2.org/?type=diverging&scheme=PRGn&n=8
                         if (colorbrewer_palette) {
                             const auto parts = split(args::get(colorbrewer_palette), ':');
                             cov_colors = colorbrewer::get_palette(parts.front(), std::stoi(parts.back()));
                         } else {
                             cov_colors = colorbrewer::get_palette("Spectral", 11);
                         }
-
+                        if (!args::get(no_grey_depth)) {
+                            std::reverse(cov_colors.begin(),
+                                         cov_colors.end());
+                            cov_colors.push_back({128,128,128});
+                            cov_colors.push_back({196,196,196});
+                            std::reverse(cov_colors.begin(),
+                                         cov_colors.end());
+                        }
                         uint64_t i = 0;
                         cov_cuts.resize(cov_colors.size());
                         double depth = 0.5;
@@ -1068,7 +1076,7 @@ namespace odgi {
                                 if (is_aln) {
                                     if (_change_darkness){
                                         uint64_t ii = bins[curr_bin].mean_inv > 0.5 ? (hl - k) : k;
-                                        x = 1 - ( (float)(curr_len + ii) / (float)(path_len_to_use)) * 0.9;
+                                        x = 1.0 - ( (double)(curr_len + ii) / (double)(path_len_to_use)) * 0.9;
                                     } else if (_color_by_mean_depth) {
                                         auto& mean_depth = bins[curr_bin].mean_depth;
                                         uint64_t j = 0;
@@ -1117,7 +1125,7 @@ namespace odgi {
                             if (is_aln) {
                                 if (_change_darkness){
                                     uint64_t ii = graph.get_is_reverse(h) ? (hl - i) : i;
-                                    x = 1 - ((float)(curr_len + ii*scale_x) / (float)(path_len_to_use))*0.9;
+                                    x = 1.0 - ((double)(curr_len + ii*scale_x) / (double)(path_len_to_use))*0.9;
                                 } else if (_color_by_mean_inversion_rate) {
                                     if (graph.get_is_reverse(h)) {
                                         path_r = 255;
