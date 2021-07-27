@@ -141,7 +141,14 @@ int main_stats(int argc, char** argv) {
 			utils::handle_gfa_odgi_input(infile, "stats", args::get(progress), num_threads, graph);
         }
     }
-    ///graph.display();
+
+    /// we need to check in advance if the graph is compacted
+	const uint64_t shift = number_bool_packing::unpack_number(graph.get_handle(graph.min_node_id()));
+	if (number_bool_packing::unpack_number(graph.get_handle(graph.max_node_id())) - shift >= graph.get_node_count()){
+		std::cerr << "[odgi::stats] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
+		exit(1);
+	}
+
     if (yaml) {
     	std::cout << "---" << std::endl;
     }
@@ -257,34 +264,10 @@ int main_stats(int argc, char** argv) {
             }
         }
     }
-    /*
-    if (args::get(path_coverage)) {
-        std::map<uint64_t, uint64_t> full_histogram;
-        std::map<uint64_t, uint64_t> unique_histogram;
-        graph.for_each_handle([&](const handle_t& h) {
-                std::vector<uint64_t> paths_here;
-                graph.for_each_step_on_handle(h, [&](const step_handle_t& occ) {
-                        paths_here.push_back(as_integer(graph.get_path(occ)));
-                    });
-                std::sort(paths_here.begin(), paths_here.end());
-                std::vector<uint64_t> unique_paths = paths_here;
-                unique_paths.erase(std::unique(unique_paths.begin(), unique_paths.end()), unique_paths.end());
-                full_histogram[paths_here.size()] += graph.get_length(h);
-                unique_histogram[unique_paths.size()] += graph.get_length(h);
-            });
-        std::cout << "type\tcov\tN" << std::endl;
-        for (auto& p : full_histogram) {
-            std::cout << "full\t" << p.first << "\t" << p.second << std::endl;
-        }
-        for (auto& p : unique_histogram) {
-            std::cout << "uniq\t" << p.first << "\t" << p.second << std::endl;
-        }
-    }
-    */
+
     if (args::get(mean_links_length) || args::get(sum_of_path_node_distances) || yaml) {
         // This vector is needed for computing the metrics in 1D and for detecting gap-links
         std::vector<uint64_t> position_map(graph.get_node_count() + 1);
-        const uint64_t shift = number_bool_packing::unpack_number(graph.get_handle(graph.min_node_id()));
 
         // These vectors are needed for computing the metrics in 2D
         std::vector<double> X, Y;
@@ -309,20 +292,7 @@ int main_stats(int argc, char** argv) {
 
         {
             uint64_t len = 0;
-            if (number_bool_packing::unpack_number(graph.get_handle(graph.max_node_id())) - shift >= graph.get_node_count()){
-                std::cerr << "[odgi::stats] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
-                exit(1);
-            }
-
-            nid_t last_node_id = graph.min_node_id();
             graph.for_each_handle([&](const handle_t &h) {
-                const nid_t node_id = graph.get_id(h);
-                if (node_id - last_node_id > 1) {
-                    std::cerr << "[odgi::stats] error: the node IDs are not contiguous. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
-                    exit(1);
-                }
-                last_node_id = node_id;
-
                 position_map[number_bool_packing::unpack_number(h) - shift] = len;
                 uint64_t hl = graph.get_length(h);
                 len += hl;
