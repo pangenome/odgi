@@ -133,6 +133,9 @@ Binned Mode Options
 | **-B, --colorbrewer-palette**\ =\ *SCHEME:N*
 | Use the colorbrewer palette specified by the given *SCHEME*, with the number of levels *N*. Specifiy 'show' to see available palettes.
 
+| **-G, --no-grey-depth**
+| Use the colorbrewer palette specified for < 0.5x and ~1x coverage bins (default: these bins are light and neutral grey).
+
 Gradient Mode Options
 ---------------------------------------------------
 
