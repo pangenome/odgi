@@ -142,7 +142,15 @@ int main_stats(int argc, char** argv) {
         }
     }
 
-    if (yaml) {
+	const uint64_t shift = number_bool_packing::unpack_number(graph.get_handle(graph.min_node_id()));
+
+    if (args::get(mean_links_length) || args::get(sum_of_path_node_distances) || yaml) {
+		if (number_bool_packing::unpack_number(graph.get_handle(graph.max_node_id())) - shift >= graph.get_node_count()){
+			std::cerr << "[odgi::stats] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
+			exit(1);
+		}
+    }
+	if (yaml) {
     	std::cout << "---" << std::endl;
     }
 
@@ -261,11 +269,6 @@ int main_stats(int argc, char** argv) {
     if (args::get(mean_links_length) || args::get(sum_of_path_node_distances) || yaml) {
         // This vector is needed for computing the metrics in 1D and for detecting gap-links
         std::vector<uint64_t> position_map(graph.get_node_count() + 1);
-        const uint64_t shift = number_bool_packing::unpack_number(graph.get_handle(graph.min_node_id()));
-        if (number_bool_packing::unpack_number(graph.get_handle(graph.max_node_id())) - shift >= graph.get_node_count()){
-            std::cerr << "[odgi::stats] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
-            exit(1);
-        }
 
         // These vectors are needed for computing the metrics in 2D
         std::vector<double> X, Y;
