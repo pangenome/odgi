@@ -142,13 +142,6 @@ int main_stats(int argc, char** argv) {
         }
     }
 
-    /// we need to check in advance if the graph is compacted
-	const uint64_t shift = number_bool_packing::unpack_number(graph.get_handle(graph.min_node_id()));
-	if (number_bool_packing::unpack_number(graph.get_handle(graph.max_node_id())) - shift >= graph.get_node_count()){
-		std::cerr << "[odgi::stats] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
-		exit(1);
-	}
-
     if (yaml) {
     	std::cout << "---" << std::endl;
     }
