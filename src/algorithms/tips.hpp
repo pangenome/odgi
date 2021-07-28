@@ -5,6 +5,7 @@
 #include "algorithms/tips_bed_writer_thread.hpp"
 #include "odgi.hpp"
 #include <omp.h>
+#include "hash_map.hpp"
 
 /**
  * \file tips.hpp
@@ -38,6 +39,8 @@ namespace odgi {
 				 algorithms::tips_bed_writer& bed_writer_thread,
 				 const bool& progress,
 				 const bool& walk_from_front,
-				 ska::flat_hash_set<std::string>& not_visited_set);
+				 ska::flat_hash_set<std::string>& not_visited_set,
+				 const uint64_t& n_best_mappings,
+				 const uint64_t& walking_dist);
 	}
 }

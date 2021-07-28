@@ -20,9 +20,9 @@ namespace odgi {
 				std::string chrom;
 				uint64_t chromStart;
 				uint64_t chromEnd;
-				double query_pos_median;
 				std::string path;
 				uint64_t path_pos;
+				double jaccard;
 				bool walking_dir;
 			};
 
@@ -46,14 +46,14 @@ namespace odgi {
 					if (bed_record_queue.try_pop(bed_record)) {
 						do {
 							// BED files are 0-based http://genome.ucsc.edu/FAQ/FAQformat#format1
-							std::cout.precision(dbl::max_digits10);
-							std::cout << std::fixed
-									  << bed_record->chrom << "\t" // chrom
+							cout.setf(ios::fixed,ios::floatfield);
+							cout.precision(3);
+							std::cout << bed_record->chrom << "\t" // chrom
 									  << bed_record->chromStart << "\t" // chromStart
 									  << bed_record->chromEnd << "\t" // chromEnd
-									  << bed_record->query_pos_median << "\t"
 									  << bed_record->path << "\t"
 									  << bed_record->path_pos << "\t"
+									  << bed_record->jaccard << "\t"
 									  << bed_record->walking_dir
 									  << std::endl;
 						} while (bed_record_queue.try_pop(bed_record));
@@ -86,9 +86,10 @@ namespace odgi {
 			/// write into our write buffer
 			/// open_writer() must be called first to set up our buffer and writer
 			void append(const std::string &chrom, const uint64_t &chromStart, const uint64_t &chromEnd,
-						const double &query_pos_median, const std::string &path, const uint64_t &path_pos, const bool walking_dir) {
-				bed_record_queue.push(new tips_bed_record_t{chrom, chromStart, chromEnd, query_pos_median,
-												path, path_pos, walking_dir});
+						const std::string &path, const uint64_t &path_pos,
+						const double& jaccard, const bool& walking_dir) {
+				bed_record_queue.push(new tips_bed_record_t{chrom, chromStart, chromEnd,
+												path, path_pos, jaccard, walking_dir});
 			}
 		};
 

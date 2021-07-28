@@ -38,6 +38,11 @@ namespace odgi {
 												   {'R', "target-paths"});
 		args::ValueFlag<std::string> _not_visited_tsv(tips_opts, "FILE", "Write target path(s) that do not visit the query path(s) to this FILE.",
 												   {'v', "not-visited-tsv"});
+		args::ValueFlag<uint64_t> _best_n_mappings(tips_opts, "N", "Report up to the Nth best target (reference) mapping for each query path (default: 1).",
+												   {'n', "n-best"});
+		// TODO this needs a deeper explanation
+		args::ValueFlag<uint64_t> _walking_dist(tips_opts, "N", "Maximum walking distance in nucleotides for one orientation when finding the best target (reference) range for each query path (default: 10000). ",
+												   {'w', "walking-dist"});
 		args::Group threading(parser, "[ Threading ]");
 		args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 		args::Group processing_info_opts(parser, "[ Processing Information ]");
@@ -200,7 +205,9 @@ namespace odgi {
 			ska::flat_hash_set<std::string> not_visited_set;
 			/// walk from the front
 			algorithms::walk_tips(graph, query_paths, target_path_t, target_handles, step_index, num_threads, get_path_begin,
-								  get_next_step, has_next_step, bed_writer_thread, progress, true, not_visited_set);
+								  get_next_step, has_next_step, bed_writer_thread, progress, true, not_visited_set,
+								  (_best_n_mappings ? args::get(_best_n_mappings) : 1),
+								  (_walking_dist ? args::get(_walking_dist) : 10000));
 			std::vector<path_handle_t> visitable_query_paths;
 			for (auto query_path : query_paths) {
 				if (!not_visited_set.count(graph.get_path_name(query_path))) {
@@ -209,7 +216,9 @@ namespace odgi {
 			}
 			/// walk from the back
 			algorithms::walk_tips(graph, visitable_query_paths, target_path_t, target_handles, step_index, num_threads, get_path_back,
-								  get_prev_step, has_previous_step, bed_writer_thread, progress, false, not_visited_set);
+								  get_prev_step, has_previous_step, bed_writer_thread, progress, false, not_visited_set,
+								  (_best_n_mappings ? args::get(_best_n_mappings) : 1),
+								  (_walking_dist ? args::get(_walking_dist) : 10000));
 			/// let's write our paths we did not visit
 			std::string query_path = graph.get_path_name(target_path_t);
 			for (auto not_visited_path : not_visited_set) {
