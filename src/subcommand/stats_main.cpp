@@ -141,8 +141,16 @@ int main_stats(int argc, char** argv) {
 			utils::handle_gfa_odgi_input(infile, "stats", args::get(progress), num_threads, graph);
         }
     }
-    ///graph.display();
-    if (yaml) {
+
+	const uint64_t shift = number_bool_packing::unpack_number(graph.get_handle(graph.min_node_id()));
+
+    if (args::get(mean_links_length) || args::get(sum_of_path_node_distances) || yaml) {
+		if (number_bool_packing::unpack_number(graph.get_handle(graph.max_node_id())) - shift >= graph.get_node_count()){
+			std::cerr << "[odgi::stats] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
+			exit(1);
+		}
+    }
+	if (yaml) {
     	std::cout << "---" << std::endl;
     }
 
@@ -257,30 +265,7 @@ int main_stats(int argc, char** argv) {
             }
         }
     }
-    /*
-    if (args::get(path_coverage)) {
-        std::map<uint64_t, uint64_t> full_histogram;
-        std::map<uint64_t, uint64_t> unique_histogram;
-        graph.for_each_handle([&](const handle_t& h) {
-                std::vector<uint64_t> paths_here;
-                graph.for_each_step_on_handle(h, [&](const step_handle_t& occ) {
-                        paths_here.push_back(as_integer(graph.get_path(occ)));
-                    });
-                std::sort(paths_here.begin(), paths_here.end());
-                std::vector<uint64_t> unique_paths = paths_here;
-                unique_paths.erase(std::unique(unique_paths.begin(), unique_paths.end()), unique_paths.end());
-                full_histogram[paths_here.size()] += graph.get_length(h);
-                unique_histogram[unique_paths.size()] += graph.get_length(h);
-            });
-        std::cout << "type\tcov\tN" << std::endl;
-        for (auto& p : full_histogram) {
-            std::cout << "full\t" << p.first << "\t" << p.second << std::endl;
-        }
-        for (auto& p : unique_histogram) {
-            std::cout << "uniq\t" << p.first << "\t" << p.second << std::endl;
-        }
-    }
-    */
+
     if (args::get(mean_links_length) || args::get(sum_of_path_node_distances) || yaml) {
         // This vector is needed for computing the metrics in 1D and for detecting gap-links
         std::vector<uint64_t> position_map(graph.get_node_count() + 1);
@@ -305,26 +290,18 @@ int main_stats(int argc, char** argv) {
                 Y = layout.get_Y();
             }
         }
-
-        uint64_t len = 0;
-        nid_t last_node_id = graph.min_node_id();
-        graph.for_each_handle([&](const handle_t &h) {
-			nid_t node_id = graph.get_id(h);
-			if (node_id - last_node_id > 1) {
-				std::cerr << "[odgi::stats] error: The graph is not optimized. Please run 'odgi sort' using -O, --optimize" << std::endl;
-				exit(1);
-			}
-			last_node_id = node_id;
-			position_map[number_bool_packing::unpack_number(h)] = len;
-
-#ifdef debug_odgi_stats
-            std::cerr << "SEGMENT ID: " << graph.get_id(h) << " - " << as_integer(h) << " - index_in_position_map (" << number_bool_packing::unpack_number(h) << ") = " << len << std::endl;
+        {
+            uint64_t len = 0;
+            graph.for_each_handle([&](const handle_t &h) {
+                position_map[number_bool_packing::unpack_number(h) - shift] = len;
+                uint64_t hl = graph.get_length(h);
+                len += hl;
+#ifdef debug_odgi_viz
+                std::cerr << "SEGMENT ID: " << graph.get_id(h) << " - " << as_integer(h) << " - index_in_position_map (" << number_bool_packing::unpack_number(h) << ") = " << len << std::endl;
 #endif
-
-            uint64_t hl = graph.get_length(h);
-            len += hl;
-        });
-        position_map[position_map.size() - 1] = len;
+            });
+            position_map[position_map.size() - 1] = len;
+        }
 
         if (args::get(mean_links_length) || yaml){
             bool _dont_penalize_gap_links = args::get(dont_penalize_gap_links);
@@ -390,17 +367,17 @@ int main_stats(int argc, char** argv) {
 
                             if (layout_in_file) {
                                 // 2D metric
-                                double dx = X[2 * unpacked_h + number_bool_packing::unpack_number(h)] - X[2 * unpacked_i + number_bool_packing::unpack_bit(i)];
-                                double dy = Y[2 * unpacked_h + number_bool_packing::unpack_number(h)] - Y[2 * unpacked_i + number_bool_packing::unpack_bit(i)];
+                                double dx = X[2 * (unpacked_h - shift) + number_bool_packing::unpack_number(h)] - X[2 * (unpacked_i - shift) + number_bool_packing::unpack_bit(i)];
+                                double dy = Y[2 * (unpacked_h - shift) + number_bool_packing::unpack_number(h)] - Y[2 * (unpacked_i - shift) + number_bool_packing::unpack_bit(i)];
 
                                 sum_2D_space += sqrt(dx * dx + dy * dy);
                             }else{
                                 // 1D metric (in node space and int nucleotide space)
                                 sum_node_space += _info_b - _info_a;
-                                sum_nt_space += position_map[_info_b] - position_map[_info_a];
+                                sum_nt_space += position_map[_info_b - shift] - position_map[_info_a - shift];
 
 #ifdef debug_odgi_stats
-                                std::cerr << _info_b << " - " << _info_a << ": " << position_map[_info_b] - position_map[_info_a] << std::endl;
+                                std::cerr << _info_b << " - " << _info_a << ": " << position_map[_info_b - shift] - position_map[_info_a - shift] << std::endl;
 #endif
                             }
                         }else if (dont_penalize_gap_links){
@@ -552,8 +529,8 @@ int main_stats(int argc, char** argv) {
 
                         if (layout_in_file) {
                             // 2D metric
-                            double dx = X[2 * unpacked_a + number_bool_packing::unpack_number(h)] - X[2 * unpacked_b + number_bool_packing::unpack_bit(i)];
-                            double dy = Y[2 * unpacked_a + number_bool_packing::unpack_number(h)] - Y[2 * unpacked_b + number_bool_packing::unpack_bit(i)];
+                            double dx = X[2 * (unpacked_a - shift) + number_bool_packing::unpack_number(h)] - X[2 * (unpacked_b - shift) + number_bool_packing::unpack_bit(i)];
+                            double dy = Y[2 * (unpacked_a - shift) + number_bool_packing::unpack_number(h)] - Y[2 * (unpacked_b - shift) + number_bool_packing::unpack_bit(i)];
 
                             euclidean_distance_2D = sqrt(dx * dx + dy * dy);
                             sum_path_node_dist_2D_space += euclidean_distance_2D;
@@ -569,11 +546,11 @@ int main_stats(int argc, char** argv) {
                             }
 
 #ifdef debug_odgi_stats
-                            std::cerr << unpacked_b << " - " << unpacked_a << ": " << position_map[unpacked_b] - position_map[unpacked_a] << " * " << weight << std::endl;
+                            std::cerr << unpacked_b << " - " << unpacked_a << ": " << position_map[unpacked_b - shift] - position_map[unpacked_a - shift] << " * " << weight << std::endl;
 #endif
 
                             sum_path_node_dist_node_space += weight * (unpacked_b - unpacked_a);
-                            sum_path_node_dist_nt_space += weight * (position_map[unpacked_b] - position_map[unpacked_a]);
+                            sum_path_node_dist_nt_space += weight * (position_map[unpacked_b - shift] - position_map[unpacked_a - shift]);
                         }
 
                         if (_penalize_diff_orientation && (number_bool_packing::unpack_bit(h) != number_bool_packing::unpack_bit(i))){
@@ -581,7 +558,7 @@ int main_stats(int argc, char** argv) {
                                 sum_path_node_dist_2D_space += 2 * euclidean_distance_2D;
                             }else{
                                 sum_path_node_dist_node_space += 2 * (unpacked_b - unpacked_a);
-                                sum_path_node_dist_nt_space += 2 * (position_map[unpacked_b] - position_map[unpacked_a]);
+                                sum_path_node_dist_nt_space += 2 * (position_map[unpacked_b - shift] - position_map[unpacked_a - shift]);
                             }
 
                             num_penalties_diff_orientation++;

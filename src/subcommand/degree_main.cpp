@@ -99,6 +99,13 @@ int main_degree(int argc, char** argv) {
     }
 
     omp_set_num_threads((int) num_threads);
+	const uint64_t shift = graph.min_node_id();
+	if (_windows_in || _windows_out) {
+		if (graph.max_node_id() - shift >= graph.get_node_count()){
+			std::cerr << "[odgi::degree] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
+			exit(1);
+		}
+	}
 
     if (_summarize) {
         uint64_t total_edges = 0;
@@ -130,17 +137,12 @@ int main_degree(int argc, char** argv) {
         graph.for_each_handle(
             [&](const handle_t& h) {
                 auto id = graph.get_id(h);
-                if (id >= degrees.size()) {
-                	// require optimized graph to use vector rather than a hash table
-                	std::cerr << "[odgi::degree] error: graph is not optimized, apply 'odgi sort' with -O, --optimize." << std::endl;
-                	assert(false);
-                }
-                degrees[id] = graph.get_degree(h, false) + graph.get_degree(h, true);
+                degrees[id - shift] = graph.get_degree(h, false) + graph.get_degree(h, true);
             }, true);
 
         auto in_bounds =
             [&](const handle_t &handle) {
-                uint64_t degree = degrees[graph.get_id(handle)];
+                uint64_t degree = degrees[graph.get_id(handle) - shift];
                 return _windows_in ? (degree >= windows_in_min && degree <= windows_in_max) : (degree < windows_out_min || degree > windows_out_max);
             };
 
