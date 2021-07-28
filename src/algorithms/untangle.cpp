@@ -23,12 +23,19 @@ std::vector<step_handle_t> untangle_cuts(
     // TODO make a vector of handles we've seen as segment starts and of segment ends
     // to avoid duplicating work
 
-    std::vector<bool> seen_step(self_index.step_count);
-    auto is_seen_step = [&seen_step,&self_index](const step_handle_t& step) {
-        return seen_step[self_index.get_step_idx(step)];
+    std::vector<bool> seen_fwd_step(self_index.step_count);
+    std::vector<bool> seen_rev_step(self_index.step_count);
+    auto is_seen_fwd_step = [&seen_fwd_step,&self_index](const step_handle_t& step) {
+        return seen_fwd_step[self_index.get_step_idx(step)];
     };
-    auto mark_seen_step = [&seen_step,&self_index](const step_handle_t& step) {
-        seen_step[self_index.get_step_idx(step)] = true;
+    auto is_seen_rev_step = [&seen_rev_step,&self_index](const step_handle_t& step) {
+        return seen_rev_step[self_index.get_step_idx(step)];
+    };
+    auto mark_seen_fwd_step = [&seen_fwd_step,&self_index](const step_handle_t& step) {
+        seen_fwd_step[self_index.get_step_idx(step)] = true;
+    };
+    auto mark_seen_rev_step = [&seen_rev_step,&self_index](const step_handle_t& step) {
+        seen_rev_step[self_index.get_step_idx(step)] = true;
     };
     std::vector<step_handle_t> cut_points;
     std::deque<std::pair<step_handle_t, step_handle_t>> todo;
@@ -38,19 +45,22 @@ std::vector<step_handle_t> untangle_cuts(
         auto end = todo.front().second;
         uint64_t start_pos = step_index.get_position(start);
         uint64_t end_pos = step_index.get_position(end);
+        //std::cerr << "todo: " << start_pos << " " << end_pos << std::endl;
         cut_points.push_back(start);
         todo.pop_front();
         // we go forward until we see a loop, where the other step has position < end_pos and > start_pos
         for (step_handle_t step = start; step != end; step = graph.get_next_step(step)) {
             //  we take the first and shortest loop we find
             // TODO change this, it can be computed based on the node length
+            if (is_seen_fwd_step(step)) {
+                continue;
+            }
             auto curr_pos = step_index.get_position(step);
             handle_t handle = graph.get_handle_of_step(step);
-            if (is_cut(handle)
-                && !is_seen_step(step)) {
+            if (is_cut(handle)) {
                 cut_points.push_back(step);
-                mark_seen_step(step);
             }
+            mark_seen_fwd_step(step);
             bool found_loop = false;
             step_handle_t other;
             auto x = self_index.get_next_step_on_node(graph.get_id(handle), step);
@@ -58,19 +68,17 @@ std::vector<step_handle_t> untangle_cuts(
                 auto other_pos = step_index.get_position(x.second);
                 if (other_pos > start_pos
                     && other_pos < end_pos
-                    && other_pos > curr_pos) {
+                    && other_pos > curr_pos
+                    && !is_seen_fwd_step(x.second)) {
                     other = x.second;
                     found_loop = true;
                 }
             }
-            if (found_loop
-                && !(is_seen_step(step)
-                     && is_seen_step(other))) {
+            if (found_loop) {
                 //  recurse this function into it, taking start as our current handle other side of the loop as our end
                 //  to cut_points we add the start position, the result from recursion, and our end position
+                //std::cerr << "Found loop! " << step_index.get_position(step) << " " << step_index.get_position(other) << std::endl;
                 todo.push_back(std::make_pair(step, other));
-                mark_seen_step(step);
-                mark_seen_step(other);
                 //  we then step forward to the loop end and continue iterating
                 step = other;
             }
@@ -87,37 +95,35 @@ std::vector<step_handle_t> untangle_cuts(
         for (step_handle_t step = end;
              step_index.get_position(step) > start_pos;
              step = graph.get_previous_step(step)) {
+            if (is_seen_rev_step(step)) {
+                continue;
+            }
             //  we take the first and shortest loop we find
             // TODO change this, it can be computed based on the node length
             auto curr_pos = step_index.get_position(step);
             handle_t handle = graph.get_handle_of_step(step);
-            if (is_cut(handle)
-                && !is_seen_step(step)) {
+            if (is_cut(handle)) {
                 cut_points.push_back(step);
-                mark_seen_step(step);
             }
+            mark_seen_rev_step(step);
             //std::cerr << "rev on step " << graph.get_id(handle) << " " << curr_pos << std::endl;
             bool found_loop = false;
             step_handle_t other;
-
             auto x = self_index.get_prev_step_on_node(graph.get_id(handle), step);
             if (x.first) {
                 auto other_pos = step_index.get_position(x.second);
                 if (other_pos > start_pos
                     && other_pos < end_pos
-                    && other_pos < curr_pos) {
+                    && other_pos < curr_pos
+                    && !is_seen_rev_step(x.second)) {
                     other = x.second;
                     found_loop = true;
                 }
             }
-            if (found_loop
-                && !(is_seen_step(step)
-                     && is_seen_step(other))) {
+            if (found_loop) {
                 //  recurse this function into it, taking start as our current handle other side of the loop as our end
                 //  to cut_points we add the start position, the result from recursion, and our end position
                 todo.push_back(std::make_pair(other, step));
-                mark_seen_step(other);
-                mark_seen_step(step);
                 //  we then step forward to the loop end and continue iterating
                 step = other;
             }
@@ -537,7 +543,7 @@ void untangle(
                                   targets,
                                   step_index,
                                   [&cut_nodes,&graph](const handle_t& h) {
-                                      return cut_nodes[graph.get_id(h)] != 0;
+                                      return cut_nodes.test(graph.get_id(h));
                                   },
                                   merge_dist,
                                   num_threads);
@@ -558,7 +564,7 @@ void untangle(
                               step_index,
                               self_index,
                               [&cut_nodes,&graph](const handle_t& h) {
-                                  return cut_nodes[graph.get_id(h)] != 0;
+                                  return cut_nodes.test(graph.get_id(h));
                               }),
                 merge_dist,
                 step_index);
