@@ -39,6 +39,7 @@ For a light dive into ``odgi``, just visit the :ref:`quick_start` section.
     rst/quick_start
     rst/tutorials
     rst/commands
+    rst/multiqc
     rst/tools_using_odgi
     rst/binding
 
@@ -64,6 +65,9 @@ Core Functionalities
 
 .. |remove_artifacts_and_complex_regions| image:: img/chr8.pan.clean.sort.png
     :target: rst/tutorials/remove_artifacts_and_complex_regions.html
+
+.. |multiqc_module| image:: img/multiqc_example.png
+    :target: rst/multiqc.html
 
 .. list-table::
     :widths: 40 60
@@ -119,6 +123,13 @@ Core Functionalities
         + Remove identified regions
         + Display graph stats
         + Generate 1D visualization
+
+    * - |multiqc_module|
+      - **MultiQC Report of Graph Statistics**
+
+        + Create graph statistics
+        + Apply MultiQC to statistics YAML
+        + Integrate 1D and 2D visualizations into the report
 
 ------
 Index

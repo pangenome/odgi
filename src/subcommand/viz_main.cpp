@@ -118,8 +118,11 @@ namespace odgi {
                                                                         " bin, using the colorbrewer palette specified in -B --colorbrewer-palette",
                                                                         {'m', "color-by-mean-depth"});
         args::ValueFlag<std::string> colorbrewer_palette(bin_opts, "SCHEME:N", "Use the colorbrewer palette specified by the given SCHEME, with the number of levels N."
-                                                                               "Specifiy 'show' to see available palettes.",
+                                                                               " Specifiy 'show' to see available palettes.",
                                                                                {'B', "colorbrewer-palette"});
+        args::Flag no_grey_depth(bin_opts, "bool", "Use the colorbrewer palette for <0.5x and ~1x coverage bins."
+                                 " By default, these bins are light and neutral grey.",
+                                 {'G', "no-grey-depth"});
 
         /// Gradient mode
         args::Group grad_mode_opts(parser, "[ Gradient Mode Options ]");
@@ -1022,15 +1025,20 @@ namespace odgi {
                     colorbrewer::palette_t cov_colors;
                     std::vector<double> cov_cuts;
                     if (_color_by_mean_depth) {
-                        // colorbrewer PRGn 8-color
-                        // https://colorbrewer2.org/?type=diverging&scheme=PRGn&n=8
                         if (colorbrewer_palette) {
                             const auto parts = split(args::get(colorbrewer_palette), ':');
                             cov_colors = colorbrewer::get_palette(parts.front(), std::stoi(parts.back()));
                         } else {
                             cov_colors = colorbrewer::get_palette("Spectral", 11);
                         }
-
+                        if (!args::get(no_grey_depth)) {
+                            std::reverse(cov_colors.begin(),
+                                         cov_colors.end());
+                            cov_colors.push_back({128,128,128});
+                            cov_colors.push_back({196,196,196});
+                            std::reverse(cov_colors.begin(),
+                                         cov_colors.end());
+                        }
                         uint64_t i = 0;
                         cov_cuts.resize(cov_colors.size());
                         double depth = 0.5;

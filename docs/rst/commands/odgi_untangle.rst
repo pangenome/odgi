@@ -45,6 +45,13 @@ Untangling Options
 | **-m, --merge-dist**\ =\ *N*
 | Merge segments shorter than this length into previous segments.
 
+| **-n, --n-best**\ =\ *N*
+| Report up to the *N*th best target (reference) mapping for each query segment (default: *1*).
+
+
+| **-j, --min-jaccard**\ =\ *N*
+| Report target mappings >= the given jaccard threshold, with 0 <= *N* <= 1.0 (default: *0.0*):
+
 Debugging Options
 -----------------
 

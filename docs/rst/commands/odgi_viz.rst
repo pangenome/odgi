@@ -49,6 +49,12 @@ Visualization Options
 | **-X, --path-x-padding**\ =\ *N*
 | The padding in pixels on the x-axis for a path.
 
+| **-N, --no-path-borders**
+| Don't show path borders.
+
+| **-b, --black-path-borders**
+| Draw path borders in black (default: draw path borders in white).
+
 | **-R, --pack-paths**
 | Pack all paths rather than displaying a single path per row.
 
@@ -114,31 +120,21 @@ Path Names Viz Options
 Binned Mode Options
 -------------------
 
-| **-b, --binned-mode**
-| The variation graph is binned before its visualization. Each pixel in
-  the output image will correspond to a bin. For more information about
-  the binning process, please refer to `odgi
-  bin <#odgi_bin.adoc#_odgi_bin1>`__.
-
 | **-w, --bin-width**\ =\ *N*
 | The bin width specifies the size of each bin in the binned mode. If it
   is not specified, the bin width is calculated from the width in pixels
   of the output image.
 
-| **-g, --no-gap-links**
-| We divide links into 2 classes:
-1. The links which help to follow complex variations. They need to be
-   drawn, else one could not follow the sequence of a path.
-2. The links helping to follow simple variations. These links are called
-   **gap-links**. Such links solely connecting a path from left to right
-   may not be relevant to understand a path’s traversal through the
-   bins. Therefore, when this option is set, the gap-links are not drawn
-   in binned mode.
-
-| **-m, --color-by-mean-coverage**
+| **-m, --color-by-mean-depth**
 | Change the color with respect to the mean coverage of the path for each
   bin, from black (no coverage) to blue (max bin mean coverage in the
   entire graph).
+
+| **-B, --colorbrewer-palette**\ =\ *SCHEME:N*
+| Use the colorbrewer palette specified by the given *SCHEME*, with the number of levels *N*. Specifiy 'show' to see available palettes.
+
+| **-G, --no-grey-depth**
+| Use the colorbrewer palette specified for < 0.5x and ~1x coverage bins (default: these bins are light and neutral grey).
 
 Gradient Mode Options
 ---------------------------------------------------
