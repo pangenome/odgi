@@ -290,6 +290,7 @@ int main_stats(int argc, char** argv) {
                 Y = layout.get_Y();
             }
         }
+
         {
             uint64_t len = 0;
             graph.for_each_handle([&](const handle_t &h) {

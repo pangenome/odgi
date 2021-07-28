@@ -249,7 +249,7 @@ namespace odgi {
         std::vector<uint64_t> position_map(graph.get_node_count() + 1);
         const uint64_t shift = number_bool_packing::unpack_number(graph.get_handle(graph.min_node_id()));
         uint64_t len = 0;
-        {r
+        {
             if (number_bool_packing::unpack_number(graph.get_handle(graph.max_node_id())) - shift >= graph.get_node_count()){
                 std::cerr << "[odgi::viz] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
                 exit(1);
