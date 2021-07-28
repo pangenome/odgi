@@ -10,6 +10,11 @@ step_index_t::step_index_t(const PathHandleGraph& graph,
                            const bool progress) {
     // iterate through the paths, recording steps in the structure we'll use to build the mphf
     std::vector<step_handle_t> steps;
+	std::unique_ptr<algorithms::progress_meter::ProgressMeter> collecting_steps_progress_meter;
+	if (progress) {
+		collecting_steps_progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+				paths.size(), "[odgi::algorithms::stepindex] Collecting Steps Progress:");
+	}
 #pragma omp parallel for schedule(dynamic,1)
     for (auto& path : paths) {
         std::vector<step_handle_t> my_steps;
@@ -18,16 +23,22 @@ step_index_t::step_index_t(const PathHandleGraph& graph,
         my_steps.push_back(graph.path_end(path));
 #pragma omp critical (steps_collect)
         steps.insert(steps.end(), my_steps.begin(), my_steps.end());
+        if(progress) {
+        	collecting_steps_progress_meter->increment(1);
+        }
     }
+	if (progress) {
+		collecting_steps_progress_meter->finish();
+	}
     // sort the steps
     ips4o::parallel::sort(steps.begin(), steps.end(), std::less<>(), nthreads);
     // build the hash function (quietly)
     step_mphf = new boophf_step_t(steps.size(), steps, nthreads, 2.0, false, false);
     // use the hash function to record the step positions
     pos.resize(steps.size());
-	std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress_meter;
+	std::unique_ptr<algorithms::progress_meter::ProgressMeter> building_progress_meter;
 	if (progress) {
-		progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+		building_progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
 				paths.size(), "[odgi::algorithms::stepindex] Building Progress:");
 	}
 #pragma omp parallel for schedule(dynamic,1)
@@ -40,11 +51,11 @@ step_index_t::step_index_t(const PathHandleGraph& graph,
             });
         pos[step_mphf->lookup(graph.path_end(path))] = offset;
         if (progress) {
-        	progress_meter->increment(1);
+        	building_progress_meter->increment(1);
         }
     }
 	if (progress) {
-		progress_meter->finish();
+		building_progress_meter->finish();
 	}
 }
 

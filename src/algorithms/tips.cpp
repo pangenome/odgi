@@ -43,7 +43,7 @@ namespace odgi {
 				}
 				std::string query_path_name = graph.get_path_name(path);
 				bool tip_reached_query = false;
-				// collecting tips from the front
+				// collecting tips
 				step_handle_t cur_step = get_path_end(path);
 				handle_t cur_h = graph.get_handle_of_step(cur_step);
 				while (!tip_reached_query) {

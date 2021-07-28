@@ -188,7 +188,6 @@ namespace odgi {
 			return graph.has_previous_step(step);
 		};
 
-		// TODO loop over query paths here
 		for (auto target_path_t : target_paths) {
 			// make bit vector across nodes to tell us if we have a hit
 			// this is a speed up compared to iterating through all steps of a potential node for each walked step
