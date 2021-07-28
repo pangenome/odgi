@@ -67,11 +67,11 @@ namespace xp {
         ////////////////////////////////////////////////////////////////////////////
 
         /// Build the path index from a simple graph.
-        void from_handle_graph(const handlegraph::PathHandleGraph &graph, const uint64_t& nthreads);
-        void from_handle_graph(const handlegraph::PathHandleGraph &graph, std::string basename, const uint64_t& nthreads);
+        void from_handle_graph(odgi::graph_t &graph, const uint64_t& nthreads);
+        void from_handle_graph(odgi::graph_t &graph, std::string basename, const uint64_t& nthreads);
 
         /// helper to builder
-        void from_handle_graph_impl(const handlegraph::PathHandleGraph &graph, const std::string& basename, const uint64_t& nthreads);
+        void from_handle_graph_impl(odgi::graph_t &graph, const std::string& basename, const uint64_t& nthreads);
 
         /// Load this XP index from a stream. Throw an XPFormatError if the stream
         /// does not produce a valid XP file.

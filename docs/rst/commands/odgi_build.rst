@@ -48,6 +48,12 @@ Graph Sorting
   is used, which can handle components with no heads or tails. Here,
   both heads and tails are taken into account.
 
+Graph Optimization
+------------------
+| **-O, --optimize**
+| Use the MutableHandleGraph::optimize method to compact the node
+  identifier space.
+
 Threading
 ---------
 

@@ -481,7 +481,6 @@ namespace odgi {
             graph.for_each_handle(
                 [&](const handle_t& h) {
                     auto id = graph.get_id(h);
-
                     depths[id - shift] = get_graph_node_depth(graph, id, paths_to_consider).first;
                 }, true);
 
