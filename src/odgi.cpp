@@ -147,13 +147,13 @@ size_t graph_t::get_node_count() const {
 /// Return the smallest ID in the graph, or some smaller number if the
 /// smallest ID is unavailable. Return value is unspecified if the graph is empty.
 nid_t graph_t::min_node_id() const {
-    return _min_node_id;
+    return _min_node_id + _id_increment;
 }
 
 /// Return the largest ID in the graph, or some larger number if the
 /// largest ID is unavailable. Return value is unspecified if the graph is empty.
 nid_t graph_t::max_node_id() const {
-    return _max_node_id;
+    return _max_node_id + _id_increment;
 }
 
 ////////////////////////////////////////////////////////////////////////////
