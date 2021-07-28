@@ -128,6 +128,11 @@ int main_layout(int argc, char **argv) {
         }
     }
 
+    if (!graph.is_optimized()) {
+		std::cerr << "[odgi::layout] error: the graph is not optimized. Please run 'odgi sort' using -O, --optimize." << std::endl;
+		exit(1);
+    }
+
     const uint64_t t_max = !p_sgd_iter_max ? 30 : args::get(p_sgd_iter_max);
     const double eps = !p_sgd_eps ? 0.01 : args::get(p_sgd_eps);
     const double sgd_delta = p_sgd_delta ? args::get(p_sgd_delta) : 0;
@@ -263,13 +268,6 @@ int main_layout(int argc, char **argv) {
     uint64_t square_space = graph.get_node_count() * 2;
     uint64_t x, y;
     graph.for_each_handle([&](const handle_t &h) {
-          nid_t node_id = graph.get_id(h);
-          if (node_id - last_node_id > 1) {
-              std::cerr << "[odgi::layout] error: the graph is not optimized. Please run 'odgi sort' using -O, --optimize" << std::endl;
-              exit(1);
-          }
-          last_node_id = node_id;
-
           uint64_t pos = 2 * number_bool_packing::unpack_number(h);
           switch (layout_initialization) {
           case 'g': {

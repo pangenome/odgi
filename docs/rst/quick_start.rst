@@ -27,6 +27,20 @@ Assuming that your current working directory is the root of the ``odgi`` project
 
 The command creates a file called ``DRB1-3123.og``, which contains the input graph in ``odgi`` format.
 
+.. note::
+
+	If you know in advance that your graph is ``not optimized``, and you want to run at least one of the following subcommands:
+
+		- :ref:`odgi extract`
+		- :ref:`odgi layout`
+		- :ref:`odgi pathindex`
+		- :ref:`odgi sort`
+
+	Then please execute :ref:`odgi build` with ``-O, --optimize`` in order
+	to ensure that you don't run into any problems later. :ref:`odgi sort` can optimize already built graphs.
+
+	In an optimized graph the minimum node identifier is one and the maximum node identifier is equal to the number of nodes in the graph.
+
 -------------------
 Display graph stats
 -------------------

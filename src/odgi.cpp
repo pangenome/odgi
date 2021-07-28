@@ -147,13 +147,13 @@ size_t graph_t::get_node_count() const {
 /// Return the smallest ID in the graph, or some smaller number if the
 /// smallest ID is unavailable. Return value is unspecified if the graph is empty.
 nid_t graph_t::min_node_id() const {
-    return _min_node_id;
+    return _min_node_id + _id_increment;
 }
 
 /// Return the largest ID in the graph, or some larger number if the
 /// largest ID is unavailable. Return value is unspecified if the graph is empty.
 nid_t graph_t::max_node_id() const {
-    return _max_node_id;
+    return _max_node_id + _id_increment;
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -733,6 +733,14 @@ void graph_t::swap_handles(const handle_t& a, const handle_t& b) {
 
 void graph_t::optimize(bool allow_id_reassignment) {
     apply_ordering({}, allow_id_reassignment);
+}
+
+bool graph_t::is_optimized(void) {
+	if (min_node_id() == 1 && max_node_id() == get_node_count()) {
+		return true;
+	} else {
+		return false;
+	}
 }
 
 void graph_t::reassign_node_ids(const std::function<nid_t(const nid_t&)>& get_new_id) {

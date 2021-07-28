@@ -139,6 +139,13 @@ namespace odgi {
         }
 
         omp_set_num_threads((int) num_threads);
+		const uint64_t shift = graph.min_node_id();
+		if (_windows_in || _windows_out) {
+			if (graph.max_node_id() - shift >= graph.get_node_count()){
+				std::cerr << "[odgi::depth] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
+				exit(1);
+			}
+		}
 
         std::vector<bool> paths_to_consider;
         if (_subset_paths) {
@@ -470,20 +477,16 @@ namespace odgi {
 
             // precompute depths for all handles in parallel
             std::vector<uint64_t> depths(graph.get_node_count() + 1);
+
             graph.for_each_handle(
                 [&](const handle_t& h) {
                     auto id = graph.get_id(h);
-                    if (id >= depths.size()) {
-                        // require optimized graph to use vector rather than a hash table
-                        std::cerr << "[odgi::depth] error: graph is not optimized, apply odgi sort -O" << std::endl;
-                        assert(false);
-                    }
-                    depths[id] = get_graph_node_depth(graph, id, paths_to_consider).first;
+                    depths[id - shift] = get_graph_node_depth(graph, id, paths_to_consider).first;
                 }, true);
 
             auto in_bounds =
                 [&](const handle_t &handle) {
-                    uint64_t depth = depths[graph.get_id(handle)];
+                    uint64_t depth = depths[graph.get_id(handle) - shift];
                     return _windows_in ? (depth >= windows_in_min && depth <= windows_in_max) : (depth < windows_out_min || depth > windows_out_max);
                 };
 
