@@ -30,7 +30,7 @@ g++ --version
 Clone the `odgi` git repository recursively because of the many submodules and build with:
 
 ```
-sudo apt install libjemalloc-dev # ubuntu
+sudo apt install build-essential cmake python3-distutils python3-dev libjemalloc-dev
 sudo pacman -S jemalloc          # archlinux
 
 git clone --recursive https://github.com/pangenome/odgi.git
