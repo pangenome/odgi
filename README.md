@@ -20,7 +20,7 @@ The RAM and computational savings are substantial.  In partially ordered regions
 
 ### building from source
 
-`odgi`requires a C++ version of 9.3 or higher. You can check your version via:
+`odgi` requires a C++ version of 9.3 or higher. You can check your version via:
 
 ``` bash
 gcc --version
@@ -34,7 +34,7 @@ libraries to build `odgi`. On `Ubuntu 20.04`, these can be installed using `apt`
 sudo apt install build-essential cmake python3-distutils python3-dev libjemalloc-dev
 ```
 
-after installing the required dependencies, clone the `odgi` git repository recursively because of the many submodules
+After installing the required dependencies, clone the `odgi` git repository recursively because of the many submodules
 and build with:
 
 ```
