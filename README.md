@@ -27,21 +27,20 @@ gcc --version
 g++ --version
 ```
 
-Clone the `odgi` git repository recursively because of the many submodules and build with:
+`odgi` pulls in a host of source repositories as dependencies. It may be necessary to install several system-level 
+libraries to build `odgi`. On `Ubuntu 20.04`, these can be installed using `apt`:
 
 ```
-# dependencies
 sudo apt install build-essential cmake python3-distutils python3-dev libjemalloc-dev
+```
 
+after installing the required dependencies, clone the `odgi` git repository recursively because of the many submodules
+and build with:
+
+```
 git clone --recursive https://github.com/pangenome/odgi.git
 cd odgi
 cmake -H. -Bbuild && cmake --build build -- -j 3
-```
-
-**Note**: on `Arch Linux`, the `jemalloc` dependency can be installed with
-
-```
-sudo pacman -S jemalloc     # arch linux
 ```
 
 To build a static executable, use:
@@ -53,7 +52,17 @@ cmake -DBUILD_STATIC=1 -H. -Bbuild && cmake --build build -- -j 3
 You'll need to set this flag to 0 or remove and rebuild your build directory if you want to unset this build behavior and get a dynamic binary again.
 Static builds are unlikely to be supported on OSX, and require appropriate static libraries on linux.
 
-Alternatively, after `sudo apt install guix`, start a GNU Guix build container with:
+
+#### Notes on dependencies
+
+On `Arch Linux`, the `jemalloc` dependency can be installed with:
+
+```
+sudo pacman -S jemalloc     # arch linux
+```
+
+An alternative way to manage `odgi`'s dependencies is to use `GUIX`. After `sudo apt install guix`, start a GNU Guix
+build container with:
 
 ```bash
 source ./.guix-build
