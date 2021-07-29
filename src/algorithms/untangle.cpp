@@ -440,7 +440,9 @@ void map_segments(
     const segment_map_t& target_segments,
     const step_index_t& step_index,
     const uint64_t& n_best,
-    const double& min_jaccard) {
+    const double& min_jaccard,
+    const bool& paf_output,
+    ska::flat_hash_map<path_handle_t, uint64_t>& path_to_len) {
     std::string query_name = graph.get_path_name(path);
     for (uint64_t i = 0; i < cuts.size()-1; ++i) {
         auto& begin = cuts[i];
@@ -467,16 +469,38 @@ void map_segments(
                     path_handle_t target_path = graph.get_path_handle_of_step(target_begin);
                     std::string target_name = graph.get_path_name(target_path);
 #pragma omp critical (cout)
-                    std::cout << query_name << "\t"
-                              << begin_pos << "\t"
-                              << end_pos << "\t"
-                              << target_name << "\t"
-                              << target_begin_pos << "\t"
-                              << target_end_pos << "\t"
-                              << score << "\t"
-                              << (mapping.is_inv ? "-" : "+") << "\t"
-                              << self_coverage << "\t"
-                              << nth_best << std::endl;
+                    if (paf_output){
+                        // BEDPE format
+                        std::cout << query_name << "\t"
+                        << path_to_len[path] << "\t"
+                        << begin_pos << "\t"
+                        << end_pos - 1 << "\t"          // Query end (0-based; BED-like; open)
+                        << (mapping.is_inv ? "-" : "+") << "\t"
+                        << target_name << "\t"
+                        << path_to_len[target_path] << "\t"
+                        << target_begin_pos << "\t"
+                        << target_end_pos -1 << "\t"    // Target end (0-based; BED-like; open)
+                        << 0 << "\t"
+                        << std::max(target_end_pos - target_begin_pos, end_pos - begin_pos) << "\t"
+                        << 255 << "\t"
+                        << "jc:f:" << score << "\t"
+                        << "sc:f:" << self_coverage << "\t"
+                        << "nb:i:" << nth_best << "\t"
+                        << std::endl;
+                    } else {
+                        // BEDPE format
+                        std::cout << query_name << "\t"
+                        << begin_pos << "\t"
+                        << end_pos << "\t"              // chrom1 end (1-based)
+                        << target_name << "\t"
+                        << target_begin_pos << "\t"
+                        << target_end_pos << "\t"       // chrom2 end (1-based)
+                        << score << "\t"
+                        << (mapping.is_inv ? "-" : "+") << "\t"
+                        << self_coverage << "\t"
+                        << nth_best << std::endl;
+                    }
+
                 }
             }
         }
@@ -492,6 +516,7 @@ void untangle(
     const uint64_t& merge_dist,
     const uint64_t& n_best,
     const double& min_jaccard,
+    const bool& paf_output,
     const size_t& num_threads) {
 
     std::cerr << "[odgi::algorithms::untangle] untangling " << queries.size() << " queries with " << targets.size() << " targets" << std::endl;
@@ -548,11 +573,35 @@ void untangle(
                                   merge_dist,
                                   num_threads);
 
+    ska::flat_hash_map<path_handle_t, uint64_t> path_to_len;
+
     //show_steps(graph, step_pos);
     //std::cout << "path\tfrom\tto" << std::endl;
     //auto step_pos = make_step_index(graph, queries);
     std::cerr << "[odgi::algorithms::untangle] writing pair BED for " << queries.size() << " queries" << std::endl;
-    std::cout << "#query.name\tquery.start\tquery.end\tref.name\tref.start\tref.end\tscore\tinv\tself.cov\tnth.best" << std::endl;
+    if (!paf_output){
+        // BEDPE format
+        std::cout << "#query.name\tquery.start\tquery.end\tref.name\tref.start\tref.end\tscore\tinv\tself.cov\tnth.best" << std::endl;
+    }else{
+        // PAF format
+
+        auto get_path_length = [](const PathHandleGraph &graph, const path_handle_t &path_handle) {
+            uint64_t path_len = 0;
+            graph.for_each_step_in_path(path_handle, [&](const step_handle_t &s) {
+                path_len += graph.get_length(graph.get_handle_of_step(s));
+            });
+            return path_len;
+        };
+
+        for (auto& q_or_t_paths : {queries, targets}){
+            for (auto& p : q_or_t_paths) {
+                if (path_to_len.count(p) == 0){
+                    path_to_len[p] = get_path_length(graph, p);
+                }
+            }
+        }
+    }
+
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
     for (auto& query : queries) {
         auto self_index = path_step_index_t(graph, query, threads_per);
@@ -568,7 +617,7 @@ void untangle(
                               }),
                 merge_dist,
                 step_index);
-        map_segments(graph, query, cuts, target_segments, step_index, n_best, min_jaccard);
+        map_segments(graph, query, cuts, target_segments, step_index, n_best, min_jaccard, paf_output, path_to_len);
 
         //write_cuts(graph, query, cuts, step_pos);
     }

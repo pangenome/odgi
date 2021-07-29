@@ -19,7 +19,7 @@ int main_untangle(int argc, char **argv) {
     argv[0] = (char *)prog_name.c_str();
     --argc;
 
-    args::ArgumentParser parser("Project paths into reference-relative BEDPE, to decompose paralogy relationships.");
+    args::ArgumentParser parser("Project paths into reference-relative BEDPE (optionally PAF), to decompose paralogy relationships.");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
     args::ValueFlag<std::string> og_in_file(
         mandatory_opts, "FILE",
@@ -42,6 +42,8 @@ int main_untangle(int argc, char **argv) {
                                                {'n', "n-best"});
     args::ValueFlag<double> _jaccard_threshold(untangling_opts, "F", "Report target mappings >= the given jaccard threshold, with 0 <= F <= 1.0 (default: 0.0).",
                                                {'j', "min-jaccard"});
+    args::Flag paf_output(untangling_opts, "paf_output", "emit the output in PAF format.",
+                        {'p', "paf-output"});
     args::Group debugging_opts(parser, "[ Debugging Options ]");
     args::Flag make_self_dotplot(debugging_opts, "DOTPLOT", "Render a table showing the positional dotplot of the query against itself.",
                                  {'s', "self-dotplot"});
@@ -176,12 +178,13 @@ int main_untangle(int argc, char **argv) {
                              args::get(merge_dist),
                              (_best_n_mappings ? args::get(_best_n_mappings) : 1),
                              (_jaccard_threshold ? args::get(_jaccard_threshold) : 0.0),
+                             args::get(paf_output),
                              num_threads);
     }
 
     return 0;
 }
 
-static Subcommand odgi_untangle("untangle", "Project paths into reference-relative BEDPE, to decompose paralogy relationships.", PIPELINE, 3, main_untangle);
+static Subcommand odgi_untangle("untangle", "Project paths into reference-relative (optionally PAF), to decompose paralogy relationships.", PIPELINE, 3, main_untangle);
 
 } // namespace odgi
