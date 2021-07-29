@@ -42,5 +42,28 @@ namespace odgi {
 				 ska::flat_hash_set<std::string>& not_visited_set,
 				 const uint64_t& n_best_mappings,
 				 const uint64_t& walking_dist);
+
+		/// from the given start_step we walke the given distance in nucleotides left and right, collecting all nodes that we cross <key>
+		/// we also record, how many times we visited a node <value>
+		ska::flat_hash_map<nid_t , uint64_t> collect_nodes_in_walking_dist(const graph_t& graph,
+																		const uint64_t& walking_dist,
+																		const step_handle_t& start_step);
+
+		/// from a given target_set add the nodes into the union_set which might be not empty
+		void add_target_set_to_union_set(ska::flat_hash_map<nid_t , uint64_t>& union_set,
+								   const ska::flat_hash_map<nid_t , uint64_t>& target_set);
+
+		/// from a given target_set and a given query_set generate the intersection_set
+		/// we use the union_set as guidance
+		ska::flat_hash_map<nid_t, uint64_t> intersect_target_query_sets(ska::flat_hash_map<nid_t , uint64_t>& union_set,
+										 ska::flat_hash_map<nid_t , uint64_t>& target_set,
+										 ska::flat_hash_map<nid_t , uint64_t>& query_set);
+
+		/// calculate the jaccard index from an intersection_set and a union_set
+		/// 1. calculate the sequence lengths of both sets
+		/// 2. intersection_set_seq_len / union_set_seq_len
+		double jaccard_idx_from_intersect_union_sets(ska::flat_hash_map<nid_t , uint64_t>& intersection_set,
+															   ska::flat_hash_map<nid_t , uint64_t>& union_set,
+															   const graph_t& graph);
 	}
 }
