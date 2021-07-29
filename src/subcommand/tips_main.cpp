@@ -43,6 +43,7 @@ namespace odgi {
 		// TODO this needs a deeper explanation
 		args::ValueFlag<uint64_t> _walking_dist(tips_opts, "N", "Maximum walking distance in nucleotides for one orientation when finding the best target (reference) range for each query path (default: 10000). ",
 												   {'w', "walking-dist"});
+		args::Flag _report_additional_jaccards(tips_opts, "report_additional_jaccards", "If for a target (reference) path several matches are possible, also report the additional jaccard indices (default: false). In the resulting BED, an '.' is added, if set to 'false'.", {'j', "jaccards"});
 		args::Group threading(parser, "[ Threading ]");
 		args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 		args::Group processing_info_opts(parser, "[ Processing Information ]");
@@ -207,7 +208,8 @@ namespace odgi {
 			algorithms::walk_tips(graph, query_paths, target_path_t, target_handles, step_index, num_threads, get_path_begin,
 								  get_next_step, has_next_step, bed_writer_thread, progress, true, not_visited_set,
 								  (_best_n_mappings ? args::get(_best_n_mappings) : 1),
-								  (_walking_dist ? args::get(_walking_dist) : 10000));
+								  (_walking_dist ? args::get(_walking_dist) : 10000),
+								  (_report_additional_jaccards ? args::get(_report_additional_jaccards) : false));
 			std::vector<path_handle_t> visitable_query_paths;
 			for (auto query_path : query_paths) {
 				if (!not_visited_set.count(graph.get_path_name(query_path))) {
@@ -218,7 +220,8 @@ namespace odgi {
 			algorithms::walk_tips(graph, visitable_query_paths, target_path_t, target_handles, step_index, num_threads, get_path_back,
 								  get_prev_step, has_previous_step, bed_writer_thread, progress, false, not_visited_set,
 								  (_best_n_mappings ? args::get(_best_n_mappings) : 1),
-								  (_walking_dist ? args::get(_walking_dist) : 10000));
+								  (_walking_dist ? args::get(_walking_dist) : 10000),
+								  (_report_additional_jaccards ? args::get(_report_additional_jaccards) : false));
 			/// let's write our paths we did not visit
 			std::string query_path = graph.get_path_name(target_path_t);
 			for (auto not_visited_path : not_visited_set) {

@@ -41,7 +41,8 @@ namespace odgi {
 				 const bool& walk_from_front,
 				 ska::flat_hash_set<std::string>& not_visited_set,
 				 const uint64_t& n_best_mappings,
-				 const uint64_t& walking_dist);
+				 const uint64_t& walking_dist,
+				 const bool& report_additional_jaccards);
 
 		/// from the given start_step we walke the given distance in nucleotides left and right, collecting all nodes that we cross <key>
 		/// we also record, how many times we visited a node <value>

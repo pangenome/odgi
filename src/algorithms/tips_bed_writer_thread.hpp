@@ -24,6 +24,7 @@ namespace odgi {
 				uint64_t path_pos;
 				double jaccard;
 				bool walking_dir;
+				std::vector<double> additional_jaccards_to_report;
 			};
 
 			std::thread writer_thread;
@@ -54,8 +55,21 @@ namespace odgi {
 									  << bed_record->path << "\t"
 									  << bed_record->path_pos << "\t"
 									  << bed_record->jaccard << "\t"
-									  << bed_record->walking_dir
-									  << std::endl;
+									  << bed_record->walking_dir;
+							if (bed_record->additional_jaccards_to_report.size() != 0) {
+								cout.setf(ios::fixed,ios::floatfield);
+								cout.precision(3);
+								std::cout << "\t";
+								for (uint64_t i = 0; i < bed_record->additional_jaccards_to_report.size(); i++) {
+									if (i != 0) {
+										std::cout << ",";
+									}
+									std::cout << bed_record->additional_jaccards_to_report[i];
+								}
+							} else {
+								std::cout << "\t" << ".";
+							}
+							std::cout << std::endl;
 						} while (bed_record_queue.try_pop(bed_record));
 					} else {
 						std::this_thread::sleep_for(std::chrono::nanoseconds(1));
@@ -87,9 +101,10 @@ namespace odgi {
 			/// open_writer() must be called first to set up our buffer and writer
 			void append(const std::string &chrom, const uint64_t &chromStart, const uint64_t &chromEnd,
 						const std::string &path, const uint64_t &path_pos,
-						const double& jaccard, const bool& walking_dir) {
+						const double& jaccard, const bool& walking_dir,
+						const std::vector<double>& additional_jaccards_to_report) {
 				bed_record_queue.push(new tips_bed_record_t{chrom, chromStart, chromEnd,
-												path, path_pos, jaccard, walking_dir});
+												path, path_pos, jaccard, walking_dir, additional_jaccards_to_report});
 			}
 		};
 

@@ -19,7 +19,8 @@ namespace odgi {
 					   const bool& walk_from_front,
 					   ska::flat_hash_set<std::string>& not_visited_set,
 					   const uint64_t& n_best_mappings,
-					   const uint64_t& walking_dist) {
+					   const uint64_t& walking_dist,
+					   const bool& report_additional_jaccards) {
 
 			const std::string target_path = graph.get_path_name(target_path_t);
 
@@ -31,8 +32,8 @@ namespace odgi {
 				} else {
 					end = "back";
 				}
-				std::string progress_message = "[odgi::tips::walk_tips] BED Progress for query path '"
-											   + graph.get_path_name(target_path_t) + "' walking from the " + end + " of all paths:";
+				std::string progress_message = "[odgi::tips::walk_tips] BED Progress for target path '"
+											   + graph.get_path_name(target_path_t) + "' walking from the " + end + " of all query paths:";
 				progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
 						paths.size(), progress_message);
 			}
@@ -51,22 +52,13 @@ namespace odgi {
 				while (!tip_reached_target) {
 					// did we already hit the given reference path?
 					if (target_handles[number_bool_packing::unpack_number(cur_h)]) {
-						// TODO remove this
-						std::vector<uint64_t> target_path_start_positions;
-						std::vector<uint64_t> target_path_end_positions;
 						std::vector<step_handle_t> target_step_handles;
 						graph.for_each_step_on_handle(
 								cur_h,
 								[&](const step_handle_t& s) {
 									/// we can do these expensive iterations here, because we only have to do it once for each walk
 									if (graph.get_path_handle_of_step(s) == target_path_t) {
-										// TODO collect only the steps for the given target
-										// we collect all positions
-										// later we will get the smallest, the highest and the median from these
-										// TODO remove this
-										uint64_t pos = step_index.get_position(s);
-										target_path_start_positions.push_back(pos);
-										target_path_end_positions.push_back(pos + graph.get_length(cur_h) - 1); // 0-based
+										// collect only the steps for the given target
 										target_step_handles.push_back(s);
 									}
 								});
@@ -87,17 +79,22 @@ namespace odgi {
 							for (auto query_item : query_set) {
 								union_set[query_item.first] = query_item.second;
 							}
-							// TODO check sizes of union_set and query_set, hopefully we did not alter the query_set
+#ifdef debug_tips
 							std::cerr << "UNION SIZE BEFORE: " << union_set.size() << std::endl;
+#endif
 							add_target_set_to_union_set(union_set, target_set);
+#ifdef debug_tips
 							std::cerr << "UNION SIZE AFTER: " << union_set.size() << std::endl;
+#endif
 							/*
 							for (auto u : union_set) {
 								std::cerr << "node_id: " << u.first << " node_count: " << u.second << std::endl;
 							}
 							 */
 							ska::flat_hash_map<nid_t, uint64_t> intersection_set = intersect_target_query_sets(union_set, target_set, query_set);
+#ifdef debug_tips
 							std::cerr << "INTERSECT SIZE: " << intersection_set.size() << std::endl;
+#endif
 							/*
 							for (auto i : intersection_set) {
 								std::cerr << "node_id: " << i.first << " node_count: " << i.second << std::endl;
@@ -105,42 +102,50 @@ namespace odgi {
 							 */
 							double jaccard = jaccard_idx_from_intersect_union_sets(intersection_set, union_set, graph);
 							target_jaccard_indices.push_back({target_step, jaccard});
+#ifdef debug_tips
 #pragma omp critical (cout)
 							std::cerr << "Jaccard index of query " << query_path_name << " and target " << target_path << ": " << jaccard << ". Direction: " << walk_from_front << std::endl;
+#endif
 						}
-
-//#pragma omp critical (cout)
-//					std::cerr << "target_path_start_positions.size(): " << target_path_start_positions.size() << std::endl;
-						std::sort(target_path_start_positions.begin(),
-								  target_path_start_positions.end(),
-								  [&](const uint64_t & pos_a,
-									  const uint64_t & pos_b) {
-									  return pos_a < pos_b;
-								  });
-						std::sort(target_path_end_positions.begin(),
-								  target_path_end_positions.end(),
-								  [&](const uint64_t & pos_a,
-									  const uint64_t & pos_b) {
-									  return pos_a < pos_b;
-								  });
-
 						std::sort(target_jaccard_indices.begin(), target_jaccard_indices.end(),
 								  [&] (const step_jaccard_t & sjt_a,
 									   const step_jaccard_t & sjt_b) {
-									  return sjt_a.jaccard < sjt_b.jaccard;
+									  return sjt_a.jaccard > sjt_b.jaccard;
 								  });
-						// TODO report Nth final target step(s)
-						step_handle_t final_target_step = target_jaccard_indices[0].step;
-						double final_target_jaccard = target_jaccard_indices[0].jaccard;
+						uint64_t i = 0;
 
-						uint64_t target_min_pos = step_index.get_position(final_target_step); // 0-based starting position in BED
-						uint64_t target_max_pos = step_index.get_position(final_target_step) + graph.get_length(graph.get_handle_of_step(final_target_step)); // 1-based ending position in BED
+						// report other jaccards as a csv list in the BED
+						std::vector<double> additional_jaccards_to_report;
+						uint64_t start_index = 0 + n_best_mappings;
+						if (!report_additional_jaccards) {
+							start_index = target_jaccard_indices.size();
+						}
+						/// do we even have indices left for reporting?
+						if (!(start_index >= target_jaccard_indices.size())) {
+							for (uint64_t n = start_index; n < target_jaccard_indices.size(); n++) {
+								additional_jaccards_to_report.push_back(target_jaccard_indices[n].jaccard);
+							}
+						}
+						/// only report the Nth final steps
+						for (auto target_jaccard_index : target_jaccard_indices) {
+							if (i == n_best_mappings) {
+								break;
+							}
+							step_handle_t final_target_step = target_jaccard_index.step;
+							// TODO restrict by Jaccard
+							double final_target_jaccard = target_jaccard_index.jaccard;
+
+							uint64_t target_min_pos = step_index.get_position(final_target_step); // 0-based starting position in BED
+							uint64_t target_max_pos = step_index.get_position(final_target_step) + graph.get_length(graph.get_handle_of_step(final_target_step)); // 1-based ending position in BED
 //#pragma omp critical (cout)
-						//std::cout << target_path << "\t" << target_min_pos << "\t" << target_max_pos << "\t"
-						//		  << target_pos_median << "\t" << graph.get_path_name(path) << "\t" << step_index.get_position(cur_step) << std::endl;
-						/// add BED record to queue of BED_writer_thread
-						bed_writer_thread.append(target_path, target_min_pos, target_max_pos,
-							   query_path_name, step_index.get_position(cur_step), final_target_jaccard, walk_from_front);
+							//std::cout << target_path << "\t" << target_min_pos << "\t" << target_max_pos << "\t"
+							//		  << target_pos_median << "\t" << graph.get_path_name(path) << "\t" << step_index.get_position(cur_step) << std::endl;
+							/// add BED record to queue of
+							bed_writer_thread.append(target_path, target_min_pos, target_max_pos,
+													 query_path_name, step_index.get_position(cur_step),
+													 final_target_jaccard, walk_from_front, additional_jaccards_to_report);
+							i++;
+						}
 						tip_reached_target = true;
 					}
 					if (has_step(cur_step)) {
@@ -270,8 +275,10 @@ namespace odgi {
 				handle_t h = graph.get_handle(union_node_id);
 				union_seq_len += graph.get_length(h);
 			}
+#ifdef debug_tips
 			std::cerr << "intersect_seq_len: " << intersect_seq_len << std::endl;
 			std::cerr << "union_seq_len: " << union_seq_len << std::endl;
+#endif
 			jaccard_idx = (double) intersect_seq_len / (double) union_seq_len;
 			return jaccard_idx;
 		}
