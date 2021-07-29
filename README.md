@@ -32,11 +32,16 @@ Clone the `odgi` git repository recursively because of the many submodules and b
 ```
 # dependencies
 sudo apt install build-essential cmake python3-distutils python3-dev libjemalloc-dev
-sudo pacman -S jemalloc          # archlinux
 
 git clone --recursive https://github.com/pangenome/odgi.git
 cd odgi
 cmake -H. -Bbuild && cmake --build build -- -j 3
+```
+
+**Note**: on `Arch Linux`, the `jemalloc` dependency can be installed with
+
+```
+sudo pacman -S jemalloc     # arch linux
 ```
 
 To build a static executable, use:
