@@ -80,6 +80,7 @@ namespace odgi {
 //#pragma omp critical (cout)
 //							std::cerr << "first: " << pair.first << " second: " << pair.second << std::endl;
 //						}
+						std::vector<step_jaccard_t> target_jaccard_indices;
 						for (step_handle_t target_step : target_step_handles) {
 							ska::flat_hash_map<nid_t, uint64_t> target_set = collect_nodes_in_walking_dist(graph, walking_dist, target_step);
 							ska::flat_hash_map<nid_t, uint64_t> union_set;
@@ -103,6 +104,7 @@ namespace odgi {
 							}
 							 */
 							double jaccard = jaccard_idx_from_intersect_union_sets(intersection_set, union_set, graph);
+							target_jaccard_indices.push_back({target_step, jaccard});
 #pragma omp critical (cout)
 							std::cerr << "Jaccard index of query " << query_path_name << " and target " << target_path << ": " << jaccard << ". Direction: " << walk_from_front << std::endl;
 						}
@@ -121,14 +123,24 @@ namespace odgi {
 									  const uint64_t & pos_b) {
 									  return pos_a < pos_b;
 								  });
-						uint64_t target_min_pos = target_path_start_positions[0]; // 0-based starting position in BED
-						uint64_t target_max_pos = target_path_end_positions[target_path_end_positions.size() - 1] + 1; // 1-based ending position in BED
+
+						std::sort(target_jaccard_indices.begin(), target_jaccard_indices.end(),
+								  [&] (const step_jaccard_t & sjt_a,
+									   const step_jaccard_t & sjt_b) {
+									  return sjt_a.jaccard < sjt_b.jaccard;
+								  });
+						// TODO report Nth final target step(s)
+						step_handle_t final_target_step = target_jaccard_indices[0].step;
+						double final_target_jaccard = target_jaccard_indices[0].jaccard;
+
+						uint64_t target_min_pos = step_index.get_position(final_target_step); // 0-based starting position in BED
+						uint64_t target_max_pos = step_index.get_position(final_target_step) + graph.get_length(graph.get_handle_of_step(final_target_step)); // 1-based ending position in BED
 //#pragma omp critical (cout)
 						//std::cout << target_path << "\t" << target_min_pos << "\t" << target_max_pos << "\t"
 						//		  << target_pos_median << "\t" << graph.get_path_name(path) << "\t" << step_index.get_position(cur_step) << std::endl;
 						/// add BED record to queue of BED_writer_thread
 						bed_writer_thread.append(target_path, target_min_pos, target_max_pos,
-							   query_path_name, step_index.get_position(cur_step), 1.0, walk_from_front);
+							   query_path_name, step_index.get_position(cur_step), final_target_jaccard, walk_from_front);
 						tip_reached_target = true;
 					}
 					if (has_step(cur_step)) {

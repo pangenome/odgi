@@ -65,5 +65,9 @@ namespace odgi {
 		double jaccard_idx_from_intersect_union_sets(ska::flat_hash_map<nid_t , uint64_t>& intersection_set,
 															   ska::flat_hash_map<nid_t , uint64_t>& union_set,
 															   const graph_t& graph);
+		struct step_jaccard_t {
+			step_handle_t step;
+			double jaccard = 0.0;
+		};
 	}
 }
