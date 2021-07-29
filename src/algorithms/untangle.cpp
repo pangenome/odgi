@@ -470,7 +470,7 @@ void map_segments(
                     std::string target_name = graph.get_path_name(target_path);
 #pragma omp critical (cout)
                     if (paf_output){
-                        // BEDPE format
+                        // PAF format
                         std::cout << query_name << "\t"
                         << path_to_len[path] << "\t"
                         << begin_pos << "\t"
@@ -584,7 +584,6 @@ void untangle(
         std::cout << "#query.name\tquery.start\tquery.end\tref.name\tref.start\tref.end\tscore\tinv\tself.cov\tnth.best" << std::endl;
     }else{
         // PAF format
-
         auto get_path_length = [](const PathHandleGraph &graph, const path_handle_t &path_handle) {
             uint64_t path_len = 0;
             graph.for_each_step_in_path(path_handle, [&](const step_handle_t &s) {
