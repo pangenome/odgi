@@ -94,7 +94,9 @@ void map_segments(
     const segment_map_t& target_segments,
     const step_index_t& step_index,
     const uint64_t& n_best,
-    const double& min_jaccard);
+    const double& min_jaccard,
+    const bool& paf_output,
+    const ska::flat_hash_map<path_handle_t, uint64_t>& path_to_len);
 
 void untangle(
     const PathHandleGraph& graph,
@@ -103,6 +105,7 @@ void untangle(
     const uint64_t& merge_dist,
     const uint64_t& n_best,
     const double& min_jaccard,
+    const bool& paf_output,
     const size_t& num_threads);
 
 }
