@@ -44,7 +44,7 @@ namespace odgi {
         args::ValueFlag<uint64_t> _context_steps(extract_opts, "N",
                                                 "The number of steps (nodes) away from our initial subgraph that we should collect.",
                                                 {'c', "context-steps"});
-        args::Flag _context_bases(extract_opts, "context_bases",
+        args::ValueFlag<uint64_t> _context_bases(extract_opts, "N",
                                    "The number of bases away from our initial subgraph that we should collect.",
                                    {'L', "context-bases"});
         args::ValueFlag<std::string> _path_range(extract_opts, "STRING",
@@ -94,6 +94,12 @@ namespace odgi {
             std::cerr
                     << "[odgi::extract] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
                     << std::endl;
+            return 1;
+        }
+
+        if (_context_steps && _context_bases) {
+            std::cerr << "[odgi::extract] error: please specify the expanding context either in steps (with -c/--context-steps) or"
+                         "in bases (-L/--context-bases), not both." << std::endl;
             return 1;
         }
 
