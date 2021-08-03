@@ -52,13 +52,12 @@ Extract Options
 | **-n, --node**\ =\ *ID*
 | Specify a single node ID from which to begin our traversal.
 
-| **-c, --context**\ =\ *N*
-| The number of steps *N* away from our initial subgraph that we should
+| **-c, --context-steps**\ =\ *N*
+| The number of steps (nodes) *N* away from our initial subgraph that we should
   collect.
 
-| **-L, --use-length**
-| Treat the context size as a length in bases (and not as a number of
-  steps).
+| **-L, --context-bases**
+| The number of bases *N* away from our initial subgraph that we should collect.
 
 | **-r, --path-range**
 | Find the node(s) in the specified path range TARGET=path[:pos1[-pos2]]
