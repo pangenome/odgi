@@ -62,50 +62,83 @@ namespace odgi {
 										target_step_handles.push_back(s);
 									}
 								});
-						/// for the query:
-						// walk the given walking_dist first to the left (we might not be able to do the full walk)
-						// then walk the given walking_dist to the right
-						// in order to collect all the visited nodes and how often they were visited in a ska::flat_hash_map<uint64_t, uint64_t>
-						// the key is the node identifier, the value is the number of times this node was visited
-						ska::flat_hash_map<nid_t, uint64_t> query_set = collect_nodes_in_walking_dist(graph, walking_dist, cur_step);
+						/// collect the possible minimal and maximal walking distance in nucleotides from the query step and all possible target steps
+						/// we don't care about orientation here
+						std::pair<uint64_t , uint64_t> min_max_walk_dist = find_min_max_walk_dist_from_query_targets(graph, walking_dist, cur_step, target_step_handles);
+#ifdef debug_tips
+#pragma omp critical (cout)
+						std::cerr << "MIN: " << min_max_walk_dist.first << " MAX: " << min_max_walk_dist.second << std::endl;
+#endif
 //						for (auto pair : query_set) {
 //#pragma omp critical (cout)
 //							std::cerr << "first: " << pair.first << " second: " << pair.second << std::endl;
 //						}
 						std::vector<step_jaccard_t> target_jaccard_indices;
-						for (step_handle_t target_step : target_step_handles) {
-							ska::flat_hash_map<nid_t, uint64_t> target_set = collect_nodes_in_walking_dist(graph, walking_dist, target_step);
-							ska::flat_hash_map<nid_t, uint64_t> union_set;
-							for (auto query_item : query_set) {
-								union_set[query_item.first] = query_item.second;
-							}
+						if (min_max_walk_dist.first >= walking_dist && min_max_walk_dist.second >= walking_dist) {
+							/// for the query:
+							// walk the given walking_dist first to the left (we might not be able to do the full walk)
+							// then walk the given walking_dist to the right
+							// in order to collect all the visited nodes and how often they were visited in a ska::flat_hash_map<uint64_t, uint64_t>
+							// the key is the node identifier, the value is the number of times this node was visited
+							ska::flat_hash_map<nid_t, uint64_t> query_set = collect_nodes_in_walking_dist(graph, walking_dist, walking_dist, cur_step);
+							for (step_handle_t target_step : target_step_handles) {
+								ska::flat_hash_map<nid_t, uint64_t> target_set = collect_nodes_in_walking_dist(graph, walking_dist, walking_dist, target_step);
+								ska::flat_hash_map<nid_t, uint64_t> union_set;
+								for (auto query_item : query_set) {
+									union_set[query_item.first] = query_item.second;
+								}
 #ifdef debug_tips
-							std::cerr << "UNION SIZE BEFORE: " << union_set.size() << std::endl;
+								std::cerr << "UNION SIZE BEFORE: " << union_set.size() << std::endl;
 #endif
-							add_target_set_to_union_set(union_set, target_set);
+								add_target_set_to_union_set(union_set, target_set);
 #ifdef debug_tips
-							std::cerr << "UNION SIZE AFTER: " << union_set.size() << std::endl;
+								std::cerr << "UNION SIZE AFTER: " << union_set.size() << std::endl;
 #endif
-							/*
-							for (auto u : union_set) {
-								std::cerr << "node_id: " << u.first << " node_count: " << u.second << std::endl;
-							}
-							 */
-							ska::flat_hash_map<nid_t, uint64_t> intersection_set = intersect_target_query_sets(union_set, target_set, query_set);
+								/*
+								for (auto u : union_set) {
+									std::cerr << "node_id: " << u.first << " node_count: " << u.second << std::endl;
+								}
+								 */
+								ska::flat_hash_map<nid_t, uint64_t> intersection_set = intersect_target_query_sets(union_set, target_set, query_set);
 #ifdef debug_tips
-							std::cerr << "INTERSECT SIZE: " << intersection_set.size() << std::endl;
+								std::cerr << "INTERSECT SIZE: " << intersection_set.size() << std::endl;
 #endif
-							/*
-							for (auto i : intersection_set) {
-								std::cerr << "node_id: " << i.first << " node_count: " << i.second << std::endl;
-							}
-							 */
-							double jaccard = jaccard_idx_from_intersect_union_sets(intersection_set, union_set, graph);
-							target_jaccard_indices.push_back({target_step, jaccard});
+								/*
+								for (auto i : intersection_set) {
+									std::cerr << "node_id: " << i.first << " node_count: " << i.second << std::endl;
+								}
+								 */
+								double jaccard = jaccard_idx_from_intersect_union_sets(intersection_set, union_set, graph);
+								target_jaccard_indices.push_back({target_step, jaccard});
 #ifdef debug_tips
-#pragma omp critical (cout)
+								#pragma omp critical (cout)
 							std::cerr << "Jaccard index of query " << query_path_name << " and target " << target_path << ": " << jaccard << ". Direction: " << walk_from_front << std::endl;
 #endif
+							}
+						} else {
+							ska::flat_hash_map<nid_t, uint64_t> query_set_min_max = collect_nodes_in_walking_dist(graph,
+																							 min_max_walk_dist.first,
+																							 min_max_walk_dist.second,
+																							 cur_step);
+							ska::flat_hash_map<nid_t, uint64_t> query_set_max_min = collect_nodes_in_walking_dist(graph,
+																												  min_max_walk_dist.second,
+																												  min_max_walk_dist.first,
+																												  cur_step);
+							ska::flat_hash_map<nid_t, uint64_t> query_set = collect_nodes_in_walking_dist(graph,
+																					 						walking_dist,
+																										  	walking_dist,
+																										  	cur_step);
+							for (step_handle_t target_step : target_step_handles) {
+								ska::flat_hash_map<nid_t, uint64_t> target_set = collect_nodes_in_walking_dist(graph, walking_dist, walking_dist, target_step);
+								ska::flat_hash_map<nid_t, uint64_t> union_set;
+								for (auto query_item : query_set) {
+									union_set[query_item.first] = query_item.second;
+								}
+								add_target_set_to_union_set(union_set, target_set);
+								ska::flat_hash_map<nid_t, uint64_t> intersection_set = intersect_target_query_sets(union_set, target_set, query_set);
+								double jaccard = jaccard_idx_from_intersect_union_sets(intersection_set, union_set, graph);
+								target_jaccard_indices.push_back({target_step, jaccard});
+							}
 						}
 						std::sort(target_jaccard_indices.begin(), target_jaccard_indices.end(),
 								  [&] (const step_jaccard_t & sjt_a,
@@ -173,8 +206,9 @@ namespace odgi {
 		}
 
 		ska::flat_hash_map<nid_t , uint64_t> collect_nodes_in_walking_dist(const graph_t& graph,
-																			  const uint64_t& walking_dist,
-																			  const step_handle_t& start_step) {
+																		   const uint64_t& walking_dist_prev,
+																		   const uint64_t& walking_dist_next,
+																		   const step_handle_t& start_step) {
 			ska::flat_hash_map<nid_t, uint64_t> node_count_set;
 			/// first walk to previous steps up to the walking_dist
 			uint64_t dist_walked = 0;
@@ -187,7 +221,7 @@ namespace odgi {
 				dist_walked += graph.get_length(cur_h);
 				node_count_set[cur_id] = 1;
 			}
-			while (graph.has_previous_step(cur_step) && (dist_walked <= walking_dist)) {
+			while (graph.has_previous_step(cur_step) && (dist_walked < walking_dist_prev)) {
 				step_handle_t prev_step = graph.get_previous_step(cur_step);
 				handle_t prev_h = graph.get_handle_of_step(prev_step);
 				nid_t prev_id = graph.get_id(prev_h);
@@ -212,7 +246,7 @@ namespace odgi {
 			}
 			/// walking the next steps up to the walking_dist
 			cur_step = start_step;
-			while (graph.has_next_step(cur_step) && dist_walked <= walking_dist) {
+			while (graph.has_next_step(cur_step) && dist_walked < walking_dist_next) {
 				step_handle_t next_step = graph.get_next_step(cur_step);
 				handle_t next_h = graph.get_handle_of_step(next_step);
 				nid_t next_id = graph.get_id(next_h);
@@ -281,6 +315,52 @@ namespace odgi {
 #endif
 			jaccard_idx = (double) intersect_seq_len / (double) union_seq_len;
 			return jaccard_idx;
+		}
+
+		std::pair<uint64_t , uint64_t> find_min_max_walk_dist_from_query_targets(const graph_t& graph,
+																				 const uint64_t& walking_dist,
+																				 const step_handle_t& cur_step,
+																				 const std::vector<step_handle_t>& target_step_handles) {
+			std::pair<uint64_t, uint64_t> min_max_walk_dist = {walking_dist, walking_dist};
+			std::vector<step_handle_t> query_target_step_handles(target_step_handles);
+			query_target_step_handles.push_back(cur_step);
+			for (auto start_step : query_target_step_handles) {
+				/// first walk to previous steps up to the walking_dist
+				uint64_t dist_walked_prev = 0;
+				// where does our step come from
+				handle_t cur_h = graph.get_handle_of_step(start_step);
+				const bool is_rev = number_bool_packing::unpack_bit(cur_h);
+				step_handle_t cur_step = start_step;
+				nid_t cur_id = graph.get_id(cur_h);
+				if (is_rev) {
+					dist_walked_prev += graph.get_length(cur_h);
+				}
+				while (graph.has_previous_step(cur_step) && (dist_walked_prev < min_max_walk_dist.second)) {
+					step_handle_t prev_step = graph.get_previous_step(cur_step);
+					handle_t prev_h = graph.get_handle_of_step(prev_step);
+					nid_t prev_id = graph.get_id(prev_h);
+					dist_walked_prev += graph.get_length(prev_h);
+					cur_step = prev_step;
+				}
+				uint64_t dist_walked_next = 0;
+				// where does our step come from
+				if (!is_rev) {
+					dist_walked_next += graph.get_length(cur_h);
+				}
+				/// walking the next steps up to the walking_dist
+				cur_step = start_step;
+				while (graph.has_next_step(cur_step) && dist_walked_next < min_max_walk_dist.second) {
+					step_handle_t next_step = graph.get_next_step(cur_step);
+					handle_t next_h = graph.get_handle_of_step(next_step);
+					nid_t next_id = graph.get_id(next_h);
+					dist_walked_next += graph.get_length(next_h);
+					cur_step = next_step;
+				}
+				min_max_walk_dist.first = std::min(std::min(dist_walked_prev, dist_walked_next), min_max_walk_dist.first);
+				min_max_walk_dist.second = std::min(std::max(dist_walked_prev, dist_walked_next), min_max_walk_dist.second);
+			}
+
+			return min_max_walk_dist;
 		}
 
 	}
