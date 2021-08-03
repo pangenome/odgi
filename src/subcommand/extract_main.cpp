@@ -438,7 +438,9 @@ namespace odgi {
                 subgraph.create_edge(edge.first, edge.second);
             }
 
-            std::cerr << "[odgi::extract] fixed " << edges_to_create.size() << " edge(s)" << std::endl;
+            if (show_progress) {
+                std::cerr << "[odgi::extract] fixed " << edges_to_create.size() << " edge(s)" << std::endl;
+            }
 
             // This should not be necessary, if the extraction works correctly
             // subgraph.remove_orphan_edges();
