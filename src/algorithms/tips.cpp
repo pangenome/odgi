@@ -116,6 +116,8 @@ namespace odgi {
 #endif
 							}
 						} else {
+							// TODO we need to walk at least min + max walking dist or we don't take the jaccard into account
+							// TODO add bool to collect_nodes_in_walking_dist in order to force the full distance, else return an empty set
 							ska::flat_hash_map<nid_t, uint64_t> query_set_min_max = collect_nodes_in_walking_dist(graph,
 																							 min_max_walk_dist.first,
 																							 min_max_walk_dist.second,
@@ -124,20 +126,28 @@ namespace odgi {
 																												  min_max_walk_dist.second,
 																												  min_max_walk_dist.first,
 																												  cur_step);
-							ska::flat_hash_map<nid_t, uint64_t> query_set = collect_nodes_in_walking_dist(graph,
-																					 						walking_dist,
-																										  	walking_dist,
-																										  	cur_step);
 							for (step_handle_t target_step : target_step_handles) {
-								ska::flat_hash_map<nid_t, uint64_t> target_set = collect_nodes_in_walking_dist(graph, walking_dist, walking_dist, target_step);
+								// TODO we need to walk at least min + max walking dist or we don't take the jaccard into account
+								ska::flat_hash_map<nid_t, uint64_t> target_set_min_max = collect_nodes_in_walking_dist(graph,
+																							   min_max_walk_dist.first,
+																							   min_max_walk_dist.second,
+																							   target_step);
+								ska::flat_hash_map<nid_t, uint64_t> target_set_max_min = collect_nodes_in_walking_dist(graph,
+																													   min_max_walk_dist.second,
+																													   min_max_walk_dist.first,
+																													   target_step);
+								// TODO replace with get_jaccard for each min_max combination of query and target (in total 4)
+								/*
 								ska::flat_hash_map<nid_t, uint64_t> union_set;
 								for (auto query_item : query_set) {
 									union_set[query_item.first] = query_item.second;
 								}
 								add_target_set_to_union_set(union_set, target_set);
 								ska::flat_hash_map<nid_t, uint64_t> intersection_set = intersect_target_query_sets(union_set, target_set, query_set);
+
 								double jaccard = jaccard_idx_from_intersect_union_sets(intersection_set, union_set, graph);
 								target_jaccard_indices.push_back({target_step, jaccard});
+								 */
 							}
 						}
 						std::sort(target_jaccard_indices.begin(), target_jaccard_indices.end(),
