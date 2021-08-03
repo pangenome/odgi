@@ -41,12 +41,12 @@ namespace odgi {
         args::ValueFlag<uint64_t> _target_node(extract_opts, "ID", "A single node ID from which to begin our traversal.",
                                                {'n', "node"});
         args::ValueFlag<std::string> _node_list(extract_opts, "FILE", "A file with one node id per line. The node specified will be extracted from the input graph.", {'l', "node-list"});
-        args::ValueFlag<uint64_t> _context_size(extract_opts, "N",
-                                                "The number of steps away from our initial subgraph that we should collect.",
-                                                {'c', "context"});
-        args::Flag _use_length(extract_opts, "use_length",
-                               "Treat the context size as a length in bases (and not as a number of steps).",
-                               {'L', "use-length"});
+        args::ValueFlag<uint64_t> _context_steps(extract_opts, "N",
+                                                "The number of steps (nodes) away from our initial subgraph that we should collect.",
+                                                {'c', "context-steps"});
+        args::Flag _context_bases(extract_opts, "context_bases",
+                                   "The number of bases away from our initial subgraph that we should collect.",
+                                   {'L', "context-bases"});
         args::ValueFlag<std::string> _path_range(extract_opts, "STRING",
                                                  "Find the node(s) in the specified path range TARGET=path[:pos1[-pos2]] "
                                                  "(0-based coordinates).", {'r', "path-range"});
@@ -313,23 +313,24 @@ namespace odgi {
         }
 
         const bool show_progress = args::get(_show_progress);
-        const uint64_t context_size = _context_size ? args::get(_context_size) : 0;
+        const uint64_t context_steps = _context_steps ? args::get(_context_steps) : 0;
+        const uint64_t context_bases = _context_bases ? args::get(_context_bases) : 0;
 
         omp_set_num_threads(num_threads);
 
         auto prep_graph = [](graph_t &source, const std::vector<path_handle_t>& source_paths,
                              const std::vector<path_handle_t>& lace_paths, graph_t &subgraph,
-                             uint64_t context_size, bool use_length, bool full_range, bool inverse,
-                             uint64_t num_threads, bool show_progress) {
-            if (context_size > 0) {
+                             const uint64_t context_steps, const uint64_t context_bases, const bool full_range, const bool inverse,
+                             const uint64_t num_threads, const bool show_progress) {
+            if (context_steps > 0 || context_bases > 0) {
                 if (show_progress) {
                     std::cerr << "[odgi::extract] expansion and adding connecting edges" << std::endl;
                 }
 
-                if (use_length) {
-                    algorithms::expand_subgraph_by_length(source, subgraph, context_size, false);
+                if (context_steps) {
+                    algorithms::expand_subgraph_by_length(source, subgraph, context_steps, false);
                 } else {
-                    algorithms::expand_subgraph_by_steps(source, subgraph, context_size, false);
+                    algorithms::expand_subgraph_by_steps(source, subgraph, context_bases, false);
                 }
             }
 
@@ -463,7 +464,7 @@ namespace odgi {
                 }
                 algorithms::extract_path_range(graph, path_handle, path_range.begin.offset, path_range.end.offset , subgraph);
 
-                prep_graph(graph, paths, lace_paths, subgraph, context_size, _use_length, _full_range, false, num_threads, show_progress);
+                prep_graph(graph, paths, lace_paths, subgraph, context_steps, context_bases, _full_range, false, num_threads, show_progress);
 
                 string filename = graph.get_path_name(path_range.begin.path) + ":" + to_string(path_range.begin.offset) + "-" + to_string(path_range.end.offset) + ".og";
 
@@ -518,7 +519,7 @@ namespace odgi {
                 }
             }
 
-            prep_graph(graph, paths, lace_paths, subgraph, context_size, _use_length, _full_range, _inverse, num_threads, show_progress);
+            prep_graph(graph, paths, lace_paths, subgraph, context_steps, context_bases, _full_range, _inverse, num_threads, show_progress);
 
             {
                 const std::string outfile = args::get(og_out_file);
