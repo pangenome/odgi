@@ -182,34 +182,17 @@ namespace odgi {
 
         void extract_path_range(const graph_t &source, path_handle_t path_handle, int64_t start, int64_t end,
                                 graph_t &subgraph) {
-            //bool first_step = true;
-            uint64_t walked = 0;
-            auto path_end = source.path_end(path_handle);
-            for (step_handle_t cur_step = source.path_begin(path_handle);
-                 cur_step != path_end && walked <= end; cur_step = source.get_next_step(cur_step)) {
-                const handle_t cur_handle = source.get_handle_of_step(cur_step);
-                walked += source.get_length(cur_handle);
-                if (walked > start) {
-                    const nid_t id = source.get_id(cur_handle);
-                    if (!subgraph.has_node(id)) {
-                        subgraph.create_handle(
-                                source.get_sequence(
-                                        source.get_is_reverse(cur_handle) ? source.flip(cur_handle) : cur_handle),
-                                id);
-                    }
-
-                    // This code ensures that there are edges connecting the nodes the path crosses.
-                    // Commenting it, it is assumed that the topology of the graph is consistent with the path
-                    /*if (!first_step) {
-                        handle_t prev_handle = source.get_handle_of_step(source.get_previous_step(cur_step));
-                        subgraph.create_edge(
-                                subgraph.get_handle(source.get_id(prev_handle), source.get_is_reverse(prev_handle)),
-                                subgraph.get_handle(source.get_id(cur_handle), source.get_is_reverse(cur_handle)));
-                    } else {
-                        first_step = false;
-                    }*/
-                }
-            }
+            algorithms::for_handle_in_path_range(
+                    source, path_handle, start, end,
+                    [&](const handle_t& cur_handle) {
+                        const nid_t id = source.get_id(cur_handle);
+                        if (!subgraph.has_node(id)) {
+                            subgraph.create_handle(
+                                    source.get_sequence(
+                                            source.get_is_reverse(cur_handle) ? source.flip(cur_handle) : cur_handle),
+                                            id);
+                        }
+                    });
         }
 
         void for_handle_in_path_range(const graph_t &source, path_handle_t path_handle, int64_t start, int64_t end,

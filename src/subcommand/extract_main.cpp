@@ -225,7 +225,7 @@ namespace odgi {
             }
             path_names_in.close();
             if (lace_paths.empty()) {
-                std::cerr << "[odgi::extract] error: no path to consider." << std::endl;
+                std::cerr << "[odgi::extract] error: no path to fully retain." << std::endl;
                 exit(1);
             }
         }
@@ -333,10 +333,10 @@ namespace odgi {
                     std::cerr << "[odgi::extract] expansion and adding connecting edges" << std::endl;
                 }
 
-                if (context_steps) {
-                    algorithms::expand_subgraph_by_length(source, subgraph, context_steps, false);
+                if (context_steps > 0) {
+                    algorithms::expand_subgraph_by_steps(source, subgraph, context_steps, false);
                 } else {
-                    algorithms::expand_subgraph_by_steps(source, subgraph, context_bases, false);
+                    algorithms::expand_subgraph_by_length(source, subgraph, context_bases, false);
                 }
             }
 
@@ -382,6 +382,7 @@ namespace odgi {
                 if (show_progress) {
                     std::cerr << "[odgi::extract] adding " << lace_paths.size() << " lace paths" << std::endl;
                 }
+
                 algorithms::embed_lace_paths(source, subgraph, lace_paths);
             }
 
@@ -470,15 +471,17 @@ namespace odgi {
                               << "-"
                               << path_range.end.offset << std::endl;
                 }
-                algorithms::extract_path_range(graph, path_handle, path_range.begin.offset, path_range.end.offset , subgraph);
+
+                algorithms::extract_path_range(graph, path_handle, path_range.begin.offset, path_range.end.offset, subgraph);
 
                 prep_graph(graph, paths, lace_paths, subgraph, context_steps, context_bases, _full_range, false, num_threads, show_progress);
 
-                string filename = graph.get_path_name(path_range.begin.path) + ":" + to_string(path_range.begin.offset) + "-" + to_string(path_range.end.offset) + ".og";
+                const string filename = graph.get_path_name(path_range.begin.path) + ":" + to_string(path_range.begin.offset) + "-" + to_string(path_range.end.offset) + ".og";
 
                 if (show_progress) {
                     std::cerr << "[odgi::extract] writing " << filename << std::endl;
                 }
+
                 ofstream f(filename);
                 subgraph.serialize(f);
                 f.close();
@@ -489,6 +492,7 @@ namespace odgi {
                 progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
                     path_ranges.size(), "[odgi::extract] extracting path ranges");
             }
+
             graph_t subgraph;
             {
                 atomicbitvector::atomic_bv_t keep_bv(graph.get_node_count()+1);
@@ -511,6 +515,7 @@ namespace odgi {
                                            id);
                 }
             }
+
             if (show_progress) {
                 progress->finish();
             }
