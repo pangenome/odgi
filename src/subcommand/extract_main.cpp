@@ -53,7 +53,7 @@ namespace odgi {
         args::ValueFlag<std::string> _path_bed_file(extract_opts, "FILE",
                                                     "Find the node(s) in the path range(s) specified in the given BED FILE.",
                                                     {'b', "bed-file"});
-        args::Flag _full_range(extract_opts, "use_length",
+        args::Flag _full_range(extract_opts, "full_range",
                                "Collects all nodes in the sorted order of the graph in the min and max positions touched by the given path ranges. "
                                "Be careful to use it with very complex graphs.",
                                {'E', "full-range"});
