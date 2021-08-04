@@ -240,6 +240,7 @@ namespace odgi {
 			ska::flat_hash_map<nid_t, uint64_t> node_count_set;
 			/// first walk to previous steps up to the walking_dist
 			uint64_t dist_walked = 0;
+			uint64_t total_dist_walked = 0;
 			// where does our step come from
 			handle_t cur_h = graph.get_handle_of_step(start_step);
 			const bool is_rev = number_bool_packing::unpack_bit(cur_h);
@@ -262,6 +263,7 @@ namespace odgi {
 				dist_walked += graph.get_length(prev_h);
 				cur_step = prev_step;
 			}
+			total_dist_walked += dist_walked;
 			dist_walked = 0;
 			// where does our step come from
 			if (!is_rev) {
@@ -286,7 +288,8 @@ namespace odgi {
 				dist_walked += graph.get_length(next_h);
 				cur_step = next_step;
 			}
-			if (walked_walking_dist && (dist_walked < (walking_dist_prev + walking_dist_next))) {
+			total_dist_walked += dist_walked;
+			if (walked_walking_dist && (total_dist_walked < (walking_dist_prev + walking_dist_next))) {
 				return ska::flat_hash_map<nid_t, uint64_t>();
 			}
 			return node_count_set;
