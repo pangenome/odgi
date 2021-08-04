@@ -49,7 +49,8 @@ namespace odgi {
 		ska::flat_hash_map<nid_t , uint64_t> collect_nodes_in_walking_dist(const graph_t& graph,
 																		const uint64_t& walking_dist_prev,
 																		const uint64_t& walking_dist_next,
-																		const step_handle_t& start_step);
+																		const step_handle_t& start_step,
+																		const bool& walked_walking_dist = false);
 
 		/// from a given target_set add the nodes into the union_set which might be not empty
 		void add_target_set_to_union_set(ska::flat_hash_map<nid_t , uint64_t>& union_set,
@@ -60,6 +61,11 @@ namespace odgi {
 		ska::flat_hash_map<nid_t, uint64_t> intersect_target_query_sets(ska::flat_hash_map<nid_t , uint64_t>& union_set,
 										 ska::flat_hash_map<nid_t , uint64_t>& target_set,
 										 ska::flat_hash_map<nid_t , uint64_t>& query_set);
+
+		/// calculate the jaccard index from a given graph, a query set and a target set
+		/// invokes jaccard_idx_from_intersect_union_sets
+		double get_jaccard_index(const graph_t& graph, ska::flat_hash_map<nid_t , uint64_t>& query_set,
+								 ska::flat_hash_map<nid_t , uint64_t>& target_set);
 
 		/// calculate the jaccard index from an intersection_set and a union_set
 		/// 1. calculate the sequence lengths of both sets
