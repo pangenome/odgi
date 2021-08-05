@@ -246,10 +246,6 @@ namespace odgi {
 			const bool is_rev = number_bool_packing::unpack_bit(cur_h);
 			step_handle_t cur_step = start_step;
 			nid_t cur_id = graph.get_id(cur_h);
-			if (is_rev) {
-				dist_walked += graph.get_length(cur_h);
-				node_count_set[cur_id] = 1;
-			}
 			while (graph.has_previous_step(cur_step) && (dist_walked < walking_dist_prev)) {
 				step_handle_t prev_step = graph.get_previous_step(cur_step);
 				handle_t prev_h = graph.get_handle_of_step(prev_step);
@@ -265,15 +261,6 @@ namespace odgi {
 			}
 			total_dist_walked += dist_walked;
 			dist_walked = 0;
-			// where does our step come from
-			if (!is_rev) {
-				dist_walked += graph.get_length(cur_h);
-				if (node_count_set.count(cur_id) == 0) {
-					node_count_set[cur_id] = 1;
-				} else {
-					node_count_set[cur_id] = node_count_set[cur_id] + 1;
-				}
-			}
 			/// walking the next steps up to the walking_dist
 			cur_step = start_step;
 			while (graph.has_next_step(cur_step) && dist_walked < walking_dist_next) {
@@ -289,6 +276,12 @@ namespace odgi {
 				cur_step = next_step;
 			}
 			total_dist_walked += dist_walked;
+			// where does our step come from, we add id regardless of walking distance and orientation
+			if (node_count_set.count(cur_id) == 0) {
+				node_count_set[cur_id] = 1;
+			} else {
+				node_count_set[cur_id] = node_count_set[cur_id] + 1;
+			}
 			if (walked_walking_dist && (total_dist_walked < (walking_dist_prev + walking_dist_next))) {
 				return ska::flat_hash_map<nid_t, uint64_t>();
 			}
@@ -373,14 +366,10 @@ namespace odgi {
 			for (auto start_step : query_target_step_handles) {
 				/// first walk to previous steps up to the walking_dist
 				uint64_t dist_walked_prev = 0;
-				// where does our step come from
 				handle_t cur_h = graph.get_handle_of_step(start_step);
 				const bool is_rev = number_bool_packing::unpack_bit(cur_h);
 				step_handle_t cur_step = start_step;
 				nid_t cur_id = graph.get_id(cur_h);
-				if (is_rev) {
-					dist_walked_prev += graph.get_length(cur_h);
-				}
 				while (graph.has_previous_step(cur_step) && (dist_walked_prev < min_max_walk_dist.second)) {
 					step_handle_t prev_step = graph.get_previous_step(cur_step);
 					handle_t prev_h = graph.get_handle_of_step(prev_step);
@@ -389,10 +378,7 @@ namespace odgi {
 					cur_step = prev_step;
 				}
 				uint64_t dist_walked_next = 0;
-				// where does our step come from
-				if (!is_rev) {
-					dist_walked_next += graph.get_length(cur_h);
-				}
+
 				/// walking the next steps up to the walking_dist
 				cur_step = start_step;
 				while (graph.has_next_step(cur_step) && dist_walked_next < min_max_walk_dist.second) {
