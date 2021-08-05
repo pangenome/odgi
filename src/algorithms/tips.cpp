@@ -69,10 +69,6 @@ namespace odgi {
 #pragma omp critical (cout)
 						std::cerr << "MIN: " << min_max_walk_dist.first << " MAX: " << min_max_walk_dist.second << std::endl;
 #endif
-//						for (auto pair : query_set) {
-//#pragma omp critical (cout)
-//							std::cerr << "first: " << pair.first << " second: " << pair.second << std::endl;
-//						}
 						std::vector<step_jaccard_t> target_jaccard_indices;
 						if (min_max_walk_dist.first >= walking_dist && min_max_walk_dist.second >= walking_dist) {
 							/// for the query:
@@ -81,10 +77,10 @@ namespace odgi {
 							// in order to collect all the visited nodes and how often they were visited in a ska::flat_hash_map<uint64_t, uint64_t>
 							// the key is the node identifier, the value is the number of times this node was visited
 							ska::flat_hash_map<nid_t, uint64_t> query_set = collect_nodes_in_walking_dist(graph, walking_dist, walking_dist, cur_step);
-							for (step_handle_t target_step : target_step_handles) {
+							for (step_handle_t& target_step : target_step_handles) {
 								ska::flat_hash_map<nid_t, uint64_t> target_set = collect_nodes_in_walking_dist(graph, walking_dist, walking_dist, target_step);
 								ska::flat_hash_map<nid_t, uint64_t> union_set;
-								for (auto query_item : query_set) {
+								for (auto& query_item : query_set) {
 									union_set[query_item.first] = query_item.second;
 								}
 #ifdef debug_tips
@@ -127,8 +123,20 @@ namespace odgi {
 																												  min_max_walk_dist.second,
 																												  min_max_walk_dist.first,
 																												  cur_step,
-																												  true);
-							for (step_handle_t target_step : target_step_handles) {
+																				  true);
+
+							/*std::cerr << "q_min_max: " << query_set_min_max.size() << std::endl;
+							for (auto& pair : query_set_min_max) {
+#pragma omp critical (cout)
+								std::cerr << "first: " << pair.first << " second: " << pair.second << std::endl;
+							}
+							std::cerr << "q_max_min: " << query_set_max_min.size() << std::endl;
+							for (auto& pair : query_set_max_min) {
+#pragma omp critical (cout)
+								std::cerr << "first: " << pair.first << " second: " << pair.second << std::endl;
+							}
+							*/
+							for (step_handle_t& target_step : target_step_handles) {
 								// TODO we need to walk at least min + max walking dist or we don't take the jaccard into account
 								ska::flat_hash_map<nid_t, uint64_t> target_set_min_max = collect_nodes_in_walking_dist(graph,
 																							   min_max_walk_dist.first,
@@ -140,6 +148,18 @@ namespace odgi {
 																													   min_max_walk_dist.first,
 																													   target_step,
 																													   true);
+													/*
+								std::cerr << "t_min_max: " << target_set_min_max.size() << std::endl;
+								for (auto& pair : target_set_min_max) {
+#pragma omp critical (cout)
+									std::cerr << "first: " << pair.first << " second: " << pair.second << std::endl;
+								}
+								std::cerr << "t_max_min: " << target_set_max_min.size() << std::endl;
+								for (auto& pair : target_set_max_min) {
+#pragma omp critical (cout)
+									std::cerr << "first: " << pair.first << " second: " << pair.second << std::endl;
+								}
+													 */
 								// TODO replace with get_jaccard for each min_max combination of query and target (in total 4)
 								/// [0] -> q_min_max vs. t_min_max
 								/// [1] -> q_min_max vs. t_max_min
@@ -187,7 +207,7 @@ namespace odgi {
 							}
 						}
 						/// only report the Nth final steps
-						for (auto target_jaccard_index : target_jaccard_indices) {
+						for (auto& target_jaccard_index : target_jaccard_indices) {
 							if (i == n_best_mappings) {
 								break;
 							}
@@ -290,7 +310,7 @@ namespace odgi {
 
 		void add_target_set_to_union_set(ska::flat_hash_map<nid_t , uint64_t>& union_set,
 								   const ska::flat_hash_map<nid_t , uint64_t>& target_set) {
-			for (auto target_item : target_set) {
+			for (auto& target_item : target_set) {
 				nid_t node_id = target_item.first;
 				uint64_t node_count = target_item.second;
 				if (union_set.count(node_id) != 0) {
@@ -306,7 +326,7 @@ namespace odgi {
 										 ska::flat_hash_map<nid_t , uint64_t>& target_set,
 										 ska::flat_hash_map<nid_t , uint64_t>& query_set) {
 			ska::flat_hash_map<nid_t, uint64_t> intersect_set;
-			for (auto union_item : union_set) {
+			for (auto& union_item : union_set) {
 				nid_t union_node_id = union_item.first;
 				// node is present in both sets, we take the minimum count
 				if ((target_set.count(union_node_id) != 0) && (query_set.count(union_node_id) != 0)) {
@@ -321,7 +341,7 @@ namespace odgi {
 		double get_jaccard_index(const graph_t& graph, ska::flat_hash_map<nid_t , uint64_t>& query_set,
 								 ska::flat_hash_map<nid_t , uint64_t>& target_set) {
 			ska::flat_hash_map<nid_t, uint64_t> union_set;
-			for (auto query_item : query_set) {
+			for (auto& query_item : query_set) {
 				union_set[query_item.first] = query_item.second;
 			}
 			add_target_set_to_union_set(union_set, target_set);
@@ -336,18 +356,19 @@ namespace odgi {
 			double jaccard_idx = 0.0;
 			uint64_t intersect_seq_len = 0;
 			uint64_t union_seq_len = 0;
-			for (auto intersect_item : intersection_set) {
+			for (auto& intersect_item : intersection_set) {
 				nid_t intersect_node_id = intersect_item.first;
 				uint64_t intersect_node_count = intersect_item.second;
 				handle_t h = graph.get_handle(intersect_node_id);
-				intersect_seq_len += graph.get_length(h);
+				intersect_seq_len += graph.get_length(h)*intersect_node_count;
 			}
-			for (auto union_item : union_set) {
+			for (auto& union_item : union_set) {
 				nid_t union_node_id = union_item.first;
 				uint64_t union_node_count = union_item.second;
 				handle_t h = graph.get_handle(union_node_id);
-				union_seq_len += graph.get_length(h);
+				union_seq_len += graph.get_length(h)*union_node_count;
 			}
+// #define debug_tips
 #ifdef debug_tips
 			std::cerr << "intersect_seq_len: " << intersect_seq_len << std::endl;
 			std::cerr << "union_seq_len: " << union_seq_len << std::endl;
@@ -363,7 +384,7 @@ namespace odgi {
 			std::pair<uint64_t, uint64_t> min_max_walk_dist = {walking_dist, walking_dist};
 			std::vector<step_handle_t> query_target_step_handles(target_step_handles);
 			query_target_step_handles.push_back(cur_step);
-			for (auto start_step : query_target_step_handles) {
+			for (auto& start_step : query_target_step_handles) {
 				/// first walk to previous steps up to the walking_dist
 				uint64_t dist_walked_prev = 0;
 				handle_t cur_h = graph.get_handle_of_step(start_step);
