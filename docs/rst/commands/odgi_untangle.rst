@@ -74,7 +74,7 @@ Program Information
 -------------------
 
 | **-h, --help**
-| Print a help message for **odgi validate**.
+| Print a help message for **odgi untangle**.
 
 ..
 	EXIT STATUS
