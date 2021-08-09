@@ -17,14 +17,14 @@ DESCRIPTION
 The odgi tips command identifies break point positions relative to given query (reference) path(s) of all the tips in
 the graph or of tips of given path(s). Prints BED records to stdout. Each record consist of:
 
-- **chrom**: The query path name.
+- **chrom**: The target path name.
 - **start**: The 0-based start position of the query we hit in the node.
 - **end**: The 1-based end position of the query we hit in the node.
-- **median_range**: The 0-based median of the whole query path range of the node we hit. It is possible that a node contains several steps, so we want to mirror that here.
-- **path**: The name of the path we walked.
-- **path_pos**: The 0-based position of the path we walked when we hit the node of the query path.
-- **path_pos**: The 0-based position of the path we walked when we hit the node of the query path.
-- **walk_from_front**: If `1` we walked from the front of the target path. Else it is `0`.
+- **path**: The name of the query path we walked.
+- **path_pos**: The 0-based position of the query path we walked when we hit the node of the target path.
+- **jaccard**: The jaccard index of the query and target path around the region of the step where the query hit the target.
+- **walk_from_front**: If `1` we walked from the head of the target path. Else we walked from the tail and it is `0`.
+- **additional_jaccards**: The additional jaccards of candidate reference step(s). Comma-separated.
 
 OPTIONS
 =======
@@ -52,7 +52,16 @@ Tips Options
 | Use target (reference) paths list (one per line) in *FILE*.
 
 | **-v, --not-visited-tsv**\ =\ *FILE*
-| Write target path(s) that do not visit the query path(s) to this *FILE*.
+| Write query path(s) that do not visit the target path(s) to this *FILE*.
+
+| **-n, --n-best**\ =\ *N*
+| Report up to **N**th best target (reference) matches for each query path (default: 1).
+
+| **-w, --walking-dist**\ =\ *N*
+| Maximum walking distance in nucleotides for one orientation when finding the best target (reference) range for each query path (default: 10000). Note: If we walked 9999 base pairs and **w, --walking-dist** is **10000**, we will also include the next node, even if we overflow the actual limit.
+
+| **-j, --jaccards**
+| If for a target (reference) path several matches are possible, also report the additional jacard indices (default: false). In the resulting BED, an '.' is added, if set to 'false'.
 
 Threading
 ---------
