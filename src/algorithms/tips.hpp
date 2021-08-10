@@ -85,7 +85,8 @@ namespace odgi {
 																		   const step_handle_t& cur_step,
 																		   const std::vector<step_handle_t>& target_step_handles,
 																				 ska::flat_hash_map<step_handle_t, std::pair<uint64_t, uint64_t>>& steps_min_max_map,
-																				 ska::flat_hash_map<step_handle_t, std::pair<std::vector<nid_t>, std::vector<nid_t>>>& steps_nodes_prev_next_map);
+																				 ska::flat_hash_map<step_handle_t, std::pair<std::vector<nid_t>, std::vector<nid_t>>>& steps_nodes_prev_next_map,
+																				 ska::flat_hash_map<step_handle_t, ska::flat_hash_map<nid_t, uint64_t>>& steps_node_count_map);
 		struct step_jaccard_t {
 			step_handle_t step;
 			double jaccard = 0.0;
