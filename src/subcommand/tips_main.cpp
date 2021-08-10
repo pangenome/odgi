@@ -40,8 +40,7 @@ namespace odgi {
 												   {'v', "not-visited-tsv"});
 		args::ValueFlag<uint64_t> _best_n_mappings(tips_opts, "N", "Report up to the Nth best target (reference) mapping for each query path (default: 1).",
 												   {'n', "n-best"});
-		// TODO this needs a deeper explanation
-		args::ValueFlag<uint64_t> _walking_dist(tips_opts, "N", "Maximum walking distance in nucleotides for one orientation when finding the best target (reference) range for each query path (default: 10000). ",
+		args::ValueFlag<uint64_t> _walking_dist(tips_opts, "N", "Maximum walking distance in nucleotides for one orientation when finding the best target (reference) range for each query path (default: 10000). Note: If we walked 9999 base pairs and **w, --walking-dist** is **10000**, we will also include the next node, even if we overflow the actual limit.",
 												   {'w', "walking-dist"});
 		args::Flag _report_additional_jaccards(tips_opts, "report_additional_jaccards", "If for a target (reference) path several matches are possible, also report the additional jaccard indices (default: false). In the resulting BED, an '.' is added, if set to 'false'.", {'j', "jaccards"});
 		args::Group threading(parser, "[ Threading ]");
