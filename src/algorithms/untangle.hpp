@@ -106,7 +106,8 @@ void untangle(
     const uint64_t& n_best,
     const double& min_jaccard,
     const bool& paf_output,
-    const size_t& num_threads);
+    const size_t& num_threads,
+	const bool& progress);
 
 }
 }

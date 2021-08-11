@@ -517,7 +517,8 @@ void untangle(
     const uint64_t& n_best,
     const double& min_jaccard,
     const bool& paf_output,
-    const size_t& num_threads) {
+    const size_t& num_threads,
+    const bool& progress) {
 
     std::cerr << "[odgi::algorithms::untangle] untangling " << queries.size() << " queries with " << targets.size() << " targets" << std::endl;
     std::vector<path_handle_t> paths;
@@ -528,7 +529,7 @@ void untangle(
                 paths.end());
     //std::cerr << "[odgi::algorithms::untangle] building step index" << std::endl;
     //auto step_pos = make_step_index(graph, paths, num_threads);
-    step_index_t step_index(graph, paths, num_threads);
+    step_index_t step_index(graph, paths, num_threads, progress);
     /*
     auto get_position = [&](const step_handle_t& step) {
         return step_index.get_position(step);

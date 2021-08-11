@@ -46,7 +46,8 @@ typedef boomphf::mphf<uint64_t, boomphf::SingleHashFunctor<uint64_t>> boophf_uin
 struct step_index_t {
     step_index_t(const PathHandleGraph& graph,
                  const std::vector<path_handle_t>& paths,
-                 const uint64_t& nthreads);
+                 const uint64_t& nthreads,
+                 const bool progress);
     ~step_index_t(void);
     const uint64_t& get_position(const step_handle_t& step) const;
     // map from step to position in its path

@@ -179,7 +179,8 @@ int main_untangle(int argc, char **argv) {
                              (_best_n_mappings ? args::get(_best_n_mappings) : 1),
                              (_jaccard_threshold ? args::get(_jaccard_threshold) : 0.0),
                              args::get(paf_output),
-                             num_threads);
+                             num_threads,
+                             progress);
     }
 
     return 0;
