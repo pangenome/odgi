@@ -62,14 +62,8 @@ namespace odgi {
 										target_step_handles.push_back(s);
 									}
 								});
-						/// collect the min_max nucleotide length of each step
-						// TODO can we actually use this?!
-						ska::flat_hash_map<step_handle_t, std::pair<uint64_t, uint64_t>> steps_min_max_map;
 						/// collect the visited nodes in a vector, so we can do the additional interations faster
 						ska::flat_hash_map<step_handle_t, std::pair<std::vector<nid_t>, std::vector<nid_t>>> steps_nodes_prev_next_map;
-
-						/// collect all the possible sets, so if we reached the full walking distance in both directions, we don't have to collect them anymore
-						ska::flat_hash_map<step_handle_t, ska::flat_hash_map<nid_t, uint64_t>> steps_node_count_map;
 
 						/// collect the possible minimal and maximal walking distance in nucleotides from the query step and all possible target steps
 						/// we don't care about orientation here
@@ -77,9 +71,7 @@ namespace odgi {
 																								   walking_dist,
 																								   cur_step,
 																								   target_step_handles,
-																								   steps_min_max_map,
-																								   steps_nodes_prev_next_map,
-																								   steps_node_count_map);
+																								   steps_nodes_prev_next_map);
 #ifdef debug_tips
 #pragma omp critical (cout)
 						std::cerr << "MIN: " << min_max_walk_dist.first << " MAX: " << min_max_walk_dist.second << std::endl;
@@ -91,10 +83,10 @@ namespace odgi {
 							// then walk the given walking_dist to the right
 							// in order to collect all the visited nodes and how often they were visited in a ska::flat_hash_map<uint64_t, uint64_t>
 							// the key is the node identifier, the value is the number of times this node was visited
-							ska::flat_hash_map<nid_t, uint64_t> query_set = steps_node_count_map[cur_step];
+							ska::flat_hash_map<nid_t, uint64_t> query_set = collect_nodes_in_walking_dist(graph, walking_dist, walking_dist, cur_step);
 							// TODO we can precollect all sets so here we don't have to do the walks anymore
 							for (step_handle_t& target_step : target_step_handles) {
-								ska::flat_hash_map<nid_t, uint64_t> target_set = steps_node_count_map[target_step];
+								ska::flat_hash_map<nid_t, uint64_t> target_set = collect_nodes_in_walking_dist(graph, walking_dist, walking_dist, target_step);
 								ska::flat_hash_map<nid_t, uint64_t> union_set;
 								for (auto& query_item : query_set) {
 									union_set[query_item.first] = query_item.second;
@@ -427,14 +419,11 @@ namespace odgi {
 																				 const uint64_t& walking_dist,
 																				 const step_handle_t& cur_step,
 																				 const std::vector<step_handle_t>& target_step_handles,
-																				 ska::flat_hash_map<step_handle_t, std::pair<uint64_t, uint64_t>>& steps_min_max_map,
-																				 ska::flat_hash_map<step_handle_t, std::pair<std::vector<nid_t>, std::vector<nid_t>>>& steps_nodes_prev_next_map,
-																				 ska::flat_hash_map<step_handle_t, ska::flat_hash_map<nid_t, uint64_t>>& steps_node_count_map) {
+																				 ska::flat_hash_map<step_handle_t, std::pair<std::vector<nid_t>, std::vector<nid_t>>>& steps_nodes_prev_next_map) {
 			std::pair<uint64_t, uint64_t> min_max_walk_dist = {walking_dist, walking_dist};
 			std::vector<step_handle_t> query_target_step_handles(target_step_handles);
 			query_target_step_handles.push_back(cur_step);
 			for (auto& start_step : query_target_step_handles) {
-				ska::flat_hash_map<nid_t, uint64_t>& node_count_set = steps_node_count_map[start_step];
 				/// first walk to previous steps up to the walking_dist
 				uint64_t dist_walked_prev = 0;
 				handle_t cur_h = graph.get_handle_of_step(start_step);
@@ -446,11 +435,6 @@ namespace odgi {
 					handle_t prev_h = graph.get_handle_of_step(prev_step);
 					nid_t prev_id = graph.get_id(prev_h);
 					steps_nodes_prev_next_map[start_step].first.push_back(prev_id);
-					if (node_count_set.count(prev_id) == 0) {
-						node_count_set[prev_id] = 1;
-					} else {
-						node_count_set[prev_id] = node_count_set[prev_id] + 1;
-					}
 					dist_walked_prev += graph.get_length(prev_h);
 					cur_step = prev_step;
 				}
@@ -462,22 +446,10 @@ namespace odgi {
 					step_handle_t next_step = graph.get_next_step(cur_step);
 					handle_t next_h = graph.get_handle_of_step(next_step);
 					nid_t next_id = graph.get_id(next_h);
-					if (node_count_set.count(next_id) == 0) {
-						node_count_set[next_id] = 1;
-					} else {
-						node_count_set[next_id] = node_count_set[next_id] + 1;
-					}
 					steps_nodes_prev_next_map[start_step].second.push_back(next_id);
 					dist_walked_next += graph.get_length(next_h);
 					cur_step = next_step;
 				}
-				if (node_count_set.count(cur_id) == 0) {
-					node_count_set[cur_id] = 1;
-				} else {
-					node_count_set[cur_id] = node_count_set[cur_id] + 1;
-				}
-				steps_min_max_map[start_step].first = std::min(dist_walked_prev, dist_walked_next);
-				steps_min_max_map[start_step].second = std::max(dist_walked_prev, dist_walked_next);
 				min_max_walk_dist.first = std::min(std::min(dist_walked_prev, dist_walked_next), min_max_walk_dist.first);
 				min_max_walk_dist.second = std::min(std::max(dist_walked_prev, dist_walked_next), min_max_walk_dist.second);
 			}
