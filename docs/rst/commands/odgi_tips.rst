@@ -14,8 +14,8 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-The odgi tips command identifies break point positions relative to given query (reference) path(s) of all the tips in
-the graph or of tips of given path(s). Prints BED records to stdout. Each record consist of:
+The odgi tips command identifies break point positions relative to given target (reference) path(s) of all the tips in
+the graph or of tips of given query path(s). Prints BED records to stdout. Each record consist of:
 
 - **chrom**: The target path name.
 - **start**: The 0-based start position of the query we hit in the node.
