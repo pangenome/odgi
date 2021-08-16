@@ -379,6 +379,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/bin_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/matrix_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/chop_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/crush_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/groom_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/layout0_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/layout_main.cpp
@@ -440,6 +441,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/untangle.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/stepindex.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/groom.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/crush_n.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/edge.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/tips.cpp)
 
