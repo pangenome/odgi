@@ -15,7 +15,7 @@ int main_crush(int argc, char **argv) {
     for (uint64_t i = 1; i < argc - 1; ++i) {
         argv[i] = argv[i + 1];
     }
-    const std::string prog_name = "odgi chop";
+    const std::string prog_name = "odgi crush";
     argv[0] = (char *) prog_name.c_str();
     --argc;
 
