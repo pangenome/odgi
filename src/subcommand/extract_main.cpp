@@ -41,19 +41,19 @@ namespace odgi {
         args::ValueFlag<uint64_t> _target_node(extract_opts, "ID", "A single node ID from which to begin our traversal.",
                                                {'n', "node"});
         args::ValueFlag<std::string> _node_list(extract_opts, "FILE", "A file with one node id per line. The node specified will be extracted from the input graph.", {'l', "node-list"});
-        args::ValueFlag<uint64_t> _context_size(extract_opts, "N",
-                                                "The number of steps away from our initial subgraph that we should collect.",
-                                                {'c', "context"});
-        args::Flag _use_length(extract_opts, "use_length",
-                               "Treat the context size as a length in bases (and not as a number of steps).",
-                               {'L', "use-length"});
+        args::ValueFlag<uint64_t> _context_steps(extract_opts, "N",
+                                                "The number of steps (nodes) away from our initial subgraph that we should collect.",
+                                                {'c', "context-steps"});
+        args::ValueFlag<uint64_t> _context_bases(extract_opts, "N",
+                                   "The number of bases away from our initial subgraph that we should collect.",
+                                   {'L', "context-bases"});
         args::ValueFlag<std::string> _path_range(extract_opts, "STRING",
                                                  "Find the node(s) in the specified path range TARGET=path[:pos1[-pos2]] "
                                                  "(0-based coordinates).", {'r', "path-range"});
         args::ValueFlag<std::string> _path_bed_file(extract_opts, "FILE",
                                                     "Find the node(s) in the path range(s) specified in the given BED FILE.",
                                                     {'b', "bed-file"});
-        args::Flag _full_range(extract_opts, "use_length",
+        args::Flag _full_range(extract_opts, "full_range",
                                "Collects all nodes in the sorted order of the graph in the min and max positions touched by the given path ranges. "
                                "Be careful to use it with very complex graphs.",
                                {'E', "full-range"});
@@ -94,6 +94,12 @@ namespace odgi {
             std::cerr
                     << "[odgi::extract] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
                     << std::endl;
+            return 1;
+        }
+
+        if (_context_steps && _context_bases) {
+            std::cerr << "[odgi::extract] error: please specify the expanding context either in steps (with -c/--context-steps) or"
+                         "in bases (-L/--context-bases), not both." << std::endl;
             return 1;
         }
 
@@ -219,7 +225,7 @@ namespace odgi {
             }
             path_names_in.close();
             if (lace_paths.empty()) {
-                std::cerr << "[odgi::extract] error: no path to consider." << std::endl;
+                std::cerr << "[odgi::extract] error: no path to fully retain." << std::endl;
                 exit(1);
             }
         }
@@ -313,23 +319,24 @@ namespace odgi {
         }
 
         const bool show_progress = args::get(_show_progress);
-        const uint64_t context_size = _context_size ? args::get(_context_size) : 0;
+        const uint64_t context_steps = _context_steps ? args::get(_context_steps) : 0;
+        const uint64_t context_bases = _context_bases ? args::get(_context_bases) : 0;
 
         omp_set_num_threads(num_threads);
 
         auto prep_graph = [](graph_t &source, const std::vector<path_handle_t>& source_paths,
                              const std::vector<path_handle_t>& lace_paths, graph_t &subgraph,
-                             uint64_t context_size, bool use_length, bool full_range, bool inverse,
-                             uint64_t num_threads, bool show_progress) {
-            if (context_size > 0) {
+                             const uint64_t context_steps, const uint64_t context_bases, const bool full_range, const bool inverse,
+                             const uint64_t num_threads, const bool show_progress) {
+            if (context_steps > 0 || context_bases > 0) {
                 if (show_progress) {
                     std::cerr << "[odgi::extract] expansion and adding connecting edges" << std::endl;
                 }
 
-                if (use_length) {
-                    algorithms::expand_subgraph_by_length(source, subgraph, context_size, false);
+                if (context_steps > 0) {
+                    algorithms::expand_subgraph_by_steps(source, subgraph, context_steps, false);
                 } else {
-                    algorithms::expand_subgraph_by_steps(source, subgraph, context_size, false);
+                    algorithms::expand_subgraph_by_length(source, subgraph, context_bases, false);
                 }
             }
 
@@ -375,6 +382,7 @@ namespace odgi {
                 if (show_progress) {
                     std::cerr << "[odgi::extract] adding " << lace_paths.size() << " lace paths" << std::endl;
                 }
+
                 algorithms::embed_lace_paths(source, subgraph, lace_paths);
             }
 
@@ -431,7 +439,9 @@ namespace odgi {
                 subgraph.create_edge(edge.first, edge.second);
             }
 
-            std::cerr << "[odgi::extract] fixed " << edges_to_create.size() << " edge(s)" << std::endl;
+            if (show_progress) {
+                std::cerr << "[odgi::extract] fixed " << edges_to_create.size() << " edge(s)" << std::endl;
+            }
 
             // This should not be necessary, if the extraction works correctly
             // subgraph.remove_orphan_edges();
@@ -461,15 +471,17 @@ namespace odgi {
                               << "-"
                               << path_range.end.offset << std::endl;
                 }
-                algorithms::extract_path_range(graph, path_handle, path_range.begin.offset, path_range.end.offset , subgraph);
 
-                prep_graph(graph, paths, lace_paths, subgraph, context_size, _use_length, _full_range, false, num_threads, show_progress);
+                algorithms::extract_path_range(graph, path_handle, path_range.begin.offset, path_range.end.offset, subgraph);
 
-                string filename = graph.get_path_name(path_range.begin.path) + ":" + to_string(path_range.begin.offset) + "-" + to_string(path_range.end.offset) + ".og";
+                prep_graph(graph, paths, lace_paths, subgraph, context_steps, context_bases, _full_range, false, num_threads, show_progress);
+
+                const string filename = graph.get_path_name(path_range.begin.path) + ":" + to_string(path_range.begin.offset) + "-" + to_string(path_range.end.offset) + ".og";
 
                 if (show_progress) {
                     std::cerr << "[odgi::extract] writing " << filename << std::endl;
                 }
+
                 ofstream f(filename);
                 subgraph.serialize(f);
                 f.close();
@@ -480,6 +492,7 @@ namespace odgi {
                 progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
                     path_ranges.size(), "[odgi::extract] extracting path ranges");
             }
+
             graph_t subgraph;
             {
                 atomicbitvector::atomic_bv_t keep_bv(graph.get_node_count()+1);
@@ -502,6 +515,7 @@ namespace odgi {
                                            id);
                 }
             }
+
             if (show_progress) {
                 progress->finish();
             }
@@ -518,7 +532,7 @@ namespace odgi {
                 }
             }
 
-            prep_graph(graph, paths, lace_paths, subgraph, context_size, _use_length, _full_range, _inverse, num_threads, show_progress);
+            prep_graph(graph, paths, lace_paths, subgraph, context_steps, context_bases, _full_range, _inverse, num_threads, show_progress);
 
             {
                 const std::string outfile = args::get(og_out_file);
