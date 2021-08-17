@@ -200,7 +200,7 @@ namespace odgi {
             uint64_t walked = 0;
             const auto path_end = source.path_end(path_handle);
             for (step_handle_t cur_step = source.path_begin(path_handle);
-                 cur_step != path_end && walked <= end; cur_step = source.get_next_step(cur_step)) {
+                 cur_step != path_end && walked < end; cur_step = source.get_next_step(cur_step)) {
                 const handle_t cur_handle = source.get_handle_of_step(cur_step);
                 walked += source.get_length(cur_handle);
                 if (walked > start) {
