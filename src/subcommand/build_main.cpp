@@ -69,13 +69,15 @@ int main_build(int argc, char** argv) {
         std::cerr << "[odgi::build] error: please specify an output file to store the graph via -o=[FILE], --out=[FILE]." << std::endl;
         return 1;
     }
-    std::string gfa_filename = args::get(gfa_file);
-    if (!std::filesystem::exists(gfa_filename)) {
-    	std::cerr << "[odgi::build] error: the given file \"" << gfa_filename << "\" does not exist. Please specify an existing input file via -g=[FILE], --gfa=[FILE]." << std::endl;
-    	return 1;
-    }
-    if (gfa_filename.size()) {
-        gfa_to_handle(gfa_filename, &graph, args::get(optimize), args::get(nthreads), args::get(progress));
+    {
+        const std::string gfa_filename = args::get(gfa_file);
+        if (!std::filesystem::exists(gfa_filename)) {
+            std::cerr << "[odgi::build] error: the given file \"" << gfa_filename << "\" does not exist. Please specify an existing input file via -g=[FILE], --gfa=[FILE]." << std::endl;
+            return 1;
+        }
+        if (!gfa_filename.empty()) {
+            gfa_to_handle(gfa_filename, &graph, args::get(optimize), args::get(nthreads), args::get(progress));
+        }
     }
 
     const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
