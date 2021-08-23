@@ -16,7 +16,8 @@ DESCRIPTION
 
 The odgi stats command produces statistics of a variation graph.
 Among other metrics, it can calculate the #nodes, #edges, #paths and the
-total nucleotide length of the graph.
+total nucleotide length of the graph. It can also produce a YAML file that is perfectly curated for the input of
+`MultiQC's ODGI module <https://multiqc.info/docs/#odgi>`__.
 
 OPTIONS
 =======
@@ -49,6 +50,9 @@ Summary Options
 
 | **-D, --delim**\ =\ *STRING*
 | The part of each path name before this delimiter is a group identifier, which when specified will ensure that odgi stats collects the summary information per group and not per path.
+
+| **-f, --file-size**
+| Show the file size in bytes.
 
 Sorting Goodness Eval Options
 ---------------------------
@@ -84,7 +88,10 @@ IO Format Options
 -----------------
 
 | **-y, --yaml**
-| Setting this option prints all statistics in YAML format instead of pseudo TSV to stdout. This includes *-S,--summarize*, *-W,--weak-connected-components*, *-L,--self-loops*, *-b,--base-content*, *-l,--mean-links-length*, *-g,--no-gap-links*, *-s,--sum-path-nodes-distances*, and *-d,--penelize-different-orientation*. *-p,path-statistics* is still optional. Not applicable to *-N,--nondeterministic-edges*!
+| Setting this option prints all selected statistics in YAML format instead of pseudo TSV to stdout.
+
+| **-m, --multiqc**
+| Setting this option prints all! statistics in YAML format instead of pseudo TSV to stdout. This includes *-S,--summarize*, *-W,--weak-connected-components*, *-L,--self-loops*, *-b,--base-content*, *-l,--mean-links-length*, *-g,--no-gap-links*, *-s,--sum-path-nodes-distances*, *-f,--file-size*, and *-d,--penalize-different-orientation*. *-p,path-statistics* is still optional. Not applicable to *-N,--nondeterministic-edges*. Overwrites all other given OPTIONs! The output is perfectly curated for the `ODGI MultiQC module <https://multiqc.info/docs/#odgi>`__.
 
 Threading
 ---------
