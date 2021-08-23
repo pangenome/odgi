@@ -8,6 +8,7 @@
 #include "algorithms/weakly_connected_components.hpp"
 #include "cover.hpp"
 #include "utils.hpp"
+#include <filesystem>
 
 //#define debug_odgi_stats
 
@@ -31,12 +32,10 @@ int main_stats(int argc, char** argv) {
     args::Group summary_opts(parser, "[ Summary Options ]");
     args::Flag _summarize(summary_opts, "summarize", "Summarize the graph properties and dimensions. Print to stdout the #nucleotides, #nodes, #edges, #paths in a tab-delimited format.", {'S', "summarize"});
 
-    args::Flag _weakly_connected_components(summary_opts, "show", "Shows the properties of the weakly connected components.", {'W', "weak-connected-components"});
+    args::Flag _weakly_connected_components(summary_opts, "show-components", "Shows the properties of the weakly connected components.", {'W', "weak-connected-components"});
 
-    args::Flag _num_self_loops(summary_opts, "show", "Number of nodes with a self-loop.", {'L', "self-loops"});
-    args::Flag _show_nondeterministic_edges(summary_opts, "show", "Show nondeterministic edges (those that extend to the same next base).", {'N', "nondeterministic-edges"});
-
-
+    args::Flag _num_self_loops(summary_opts, "show-self-loops", "Number of nodes with a self-loop.", {'L', "self-loops"});
+    args::Flag _show_nondeterministic_edges(summary_opts, "show-edges", "Show nondeterministic edges (those that extend to the same next base).", {'N', "nondeterministic-edges"});
     args::Flag base_content(summary_opts, "base-content", "Describe the base content of the graph. Print to stdout the #A, #C, #G\n"
                                                           "  and #T in a tab-delimited format.", {'b', "base-content"});
     //args::Flag path_coverage(parser, "coverage", "provide a histogram of path coverage over bases in the graph", {'C', "coverage"});
@@ -62,7 +61,8 @@ int main_stats(int argc, char** argv) {
     args::Flag penalize_diff_orientation(sorting_goodness_evaluation_opts, "penalize_diff_orientation", "If a link connects two nodes which have different orientations, this"
                                                                                                         " is penalized (adding 2 times its length in the sum).", {'d', "penalize-different-orientation"});
     args::Flag path_statistics(sorting_goodness_evaluation_opts, "path_statistics", "Display the statistics (mean links length or sum path nodes distances) for each path.", {'p', "path-statistics"});
-    args::Group io_format_opts(parser, "[ IO Format Options ]");
+	args::Flag _file_size(summary_opts, "file-size", "Show the file size in bytes.", {'f', "file-size"});
+	args::Group io_format_opts(parser, "[ IO Format Options ]");
     args::Flag yaml(io_format_opts, "yaml", "Setting this option prints all statistics in YAML format instead of pseudo TSV to stdout. This includes *-S,--summarize*, *-W,--weak-connected-components*, *-L,--self-loops*, *-b,--base-content*, *-l,--mean-links-length*, *-g,--no-gap-links*, *-s,--sum-path-nodes-distances*, and *-d,--penelize-different-orientation*. *-p,path-statistics* is still optional. Not applicable to *-N,--nondeterministic-edges*!", {'y', "yaml"});
     args::Group processing_information(parser, "[ Processing Information ]");
     args::ValueFlag<uint64_t> threads(processing_information, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
@@ -647,6 +647,24 @@ int main_stats(int argc, char** argv) {
 			}
 
         }
+    }
+
+    // TODO
+    if (_file_size || yaml) {
+    	// 1. get the file size with error handling
+		const filesystem::path path_infile = infile;
+		std::error_code err_code;
+		std::uintmax_t file_size = filesystem::file_size(path_infile, err_code);
+		if (err_code) {
+			std::cerr << "[odgi::stats] error: " << infile << " : " << err_code.message() << std::endl;
+			exit(1);
+		} else {
+			if (yaml) {
+				std::cout << "file_size_in_bytes: " << file_size << std::endl;
+			} else {
+				std::cout << file_size << std::endl;
+			}
+		}
     }
 
     bool using_delim = !args::get(path_delim).empty();
