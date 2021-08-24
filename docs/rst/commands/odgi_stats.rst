@@ -16,7 +16,8 @@ DESCRIPTION
 
 The odgi stats command produces statistics of a variation graph.
 Among other metrics, it can calculate the #nodes, #edges, #paths and the
-total nucleotide length of the graph.
+total nucleotide length of the graph. It can also produce a YAML file that is perfectly curated for the input of
+`MultiQC's ODGI module <https://multiqc.info/docs/#odgi>`__.
 
 OPTIONS
 =======
@@ -49,6 +50,12 @@ Summary Options
 
 | **-D, --delim**\ =\ *STRING*
 | The part of each path name before this delimiter is a group identifier, which when specified will ensure that odgi stats collects the summary information per group and not per path.
+
+| **-f, --file-size**
+| Show the file size in bytes.
+
+| **-a, --pangenome-sequence-class-counts**\ =\ *DELIM,POS*
+| Show counted pangenome sequence class counts of all samples. Classes are Private (only one sample visiting the node), Core (all samples visiting the node), and Shell (not Core or Private). The given *OPTION* determines how to find the sample name in the path names: *DELIM,POS*. Split the whole path name by *DELIM* and access the actual sample name at *POS* of the split result. If the full path name is the sample name, select a *DELIM* that is not in the path names and set *POS* to 0. If *-m,--multiqc* was set, this *OPTION* has to be set implicitly.
 
 Sorting Goodness Eval Options
 ---------------------------
@@ -84,7 +91,10 @@ IO Format Options
 -----------------
 
 | **-y, --yaml**
-| Setting this option prints all statistics in YAML format instead of pseudo TSV to stdout. This includes *-S,--summarize*, *-W,--weak-connected-components*, *-L,--self-loops*, *-b,--base-content*, *-l,--mean-links-length*, *-g,--no-gap-links*, *-s,--sum-path-nodes-distances*, and *-d,--penelize-different-orientation*. *-p,path-statistics* is still optional. Not applicable to *-N,--nondeterministic-edges*!
+| Setting this option prints all selected statistics in YAML format instead of pseudo TSV to stdout.
+
+| **-m, --multiqc**
+| Setting this option prints all! statistics in YAML format instead of pseudo TSV to stdout. This includes *-S,--summarize*, *-W,--weak-connected-components*, *-L,--self-loops*, *-b,--base-content*, *-l,--mean-links-length*, *-g,--no-gap-links*, *-s,--sum-path-nodes-distances*, *-f,--file-size*, and *-d,--penalize-different-orientation*. *-p,path-statistics* is still optional. Not applicable to *-N,--nondeterministic-edges*. Overwrites all other given OPTIONs! The output is perfectly curated for the `ODGI MultiQC module <https://multiqc.info/docs/#odgi>`__.
 
 Threading
 ---------

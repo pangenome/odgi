@@ -71,7 +71,7 @@ graph.sorted.og -p bSnSnS
 :ref:`odgi squeeze` -f
 input_graphs.txt -o graphs.og
 
-:ref:`odgi stats` -i graph.og -S
+:ref:`odgi stats` -i graph.og -y
 
 :ref:`odgi test`
 
@@ -320,7 +320,8 @@ multiple graphs into the same file.
 | **odgi stats** [**-i, --idx**\ =\ *FILE*] [*OPTION*]…
 | The odgi stats command produces statistics of a variation graph.
   Among other metrics, it can calculate the #nodes, #edges, #paths and
-  the total nucleotide length of the graph.
+  the total nucleotide length of the graph. It can also produce a YAML file that is perfectly curated for the input of
+  `MultiQC's ODGI module <https://multiqc.info/docs/#odgi>`__.
 
 | **odgi test** [<TEST NAME|PATTERN|TAGS> …] [*OPTION*]…
 | The odgi test command starts all unit tests that are implemented in
