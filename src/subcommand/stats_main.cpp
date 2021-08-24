@@ -9,6 +9,7 @@
 #include "cover.hpp"
 #include "utils.hpp"
 #include <filesystem>
+#include "split.hpp"
 
 //#define debug_odgi_stats
 
@@ -46,6 +47,7 @@ int main_stats(int argc, char** argv) {
     //args::ValueFlag<std::string> path_bedmulticov(parser, "BED", "for each BED entry, provide a table of path coverage over unique multisets of paths in the graph. Each unique multiset of paths overlapping a given BED interval is described in terms of its length relative to the total interval, the number of path traversals, and unique paths involved in these traversals.", {'B', "bed-multicov"});
     args::ValueFlag<std::string> path_delim(summary_opts, "STRING", "The part of each path name before this delimiter is a group identifier, which when specified will ensure that odgi stats collects the summary information per group and not per path.", {'D', "delim"});
 	args::Flag _file_size(summary_opts, "file-size", "Show the file size in bytes.", {'f', "file-size"});
+	args::ValueFlag<std::string> _pangenome_sequence_class_counts(summary_opts, "DELIM,POS", "Show counted pangenome sequence class counts of all samples. Classes are Private (only one sample visiting the node), Core (all samples visiting the node), and Shell (not Core or Private). The given String determines how to find the sample name in the path names: DELIM,POS. Split the whole path name by DELIM and access the actual sample name at POS of the split result. If the full path name is the sample name, select a DELIM that is not in the path names and set POS to 0. If -m,--multiqc was set, this OPTION has to be set implicitly.", {'a', "pangenome-sequence-class-counts"});
 	args::Group sorting_goodness_evaluation_opts(parser, "[ Sorting Goodness Eval Options ]");
 	args::ValueFlag<std::string> layout_in_file(sorting_goodness_evaluation_opts, "FILE", "Load the 2D layout coordinates in binary layout format from this *FILE*. The file name usually ends with *.lay*. The sorting goodness evaluation will then be performed for this *FILE*. When the layout coordinates are provided, the mean links length and the sum path nodes distances statistics are evaluated in 2D, else in 1D. Such a file can be generated with *odgi layout*.", {'c', "coords-in"});
 	args::Flag mean_links_length(sorting_goodness_evaluation_opts, "mean_links_length", "Calculate the mean links length. This metric is path-guided and"
@@ -127,6 +129,16 @@ int main_stats(int argc, char** argv) {
                     << std::endl;
             return 1;
         }
+    }
+
+	const std::string pangenome_sequence_class_counts = args::get(_pangenome_sequence_class_counts);
+	std::vector<string> delim_pos = split(pangenome_sequence_class_counts, ',');
+    if (_pangenome_sequence_class_counts) {
+		if (delim_pos.size() != 2) {
+			std::cerr << "[odgi::stats] error: Argument for -a,--pangenome-sequence-classes malformed. Please follow DEL,POS. "
+						 "DEL is the delimiter in the paths and POS the position of the sample name after the split with the delimiter." << std::endl;
+			exit(1);
+		}
     }
 
 	const uint64_t num_threads = args::get(threads) ? args::get(threads) : 1;
@@ -267,6 +279,84 @@ int main_stats(int argc, char** argv) {
         }
     }
 
+	if (_file_size || _multiqc) {
+		// 1. get the file size with error handling
+		const filesystem::path path_infile = infile;
+		std::error_code err_code;
+		std::uintmax_t file_size = filesystem::file_size(path_infile, err_code);
+		if (err_code) {
+			std::cerr << "[odgi::stats] error: " << infile << " : " << err_code.message() << std::endl;
+			exit(1);
+		} else {
+			if (_multiqc || _yaml) {
+				std::cout << "file_size_in_bytes: " << file_size << std::endl;
+			} else {
+				std::cout << file_size << std::endl;
+			}
+		}
+	}
+
+	if (_pangenome_sequence_class_counts) {
+		const char delim = delim_pos[0][0];
+		uint64_t sample_pos = std::stoul(delim_pos[1]);
+		struct pangenome_seq_class_counts {
+			uint64_t core = 0;
+			uint64_t priv = 0;
+			uint64_t shell = 0;
+		};
+		ska::flat_hash_map<std::string, pangenome_seq_class_counts> sample_counts;
+		/// collect the path names in a map which goes *path_handle* -> *sample_name*
+		ska::flat_hash_map<path_handle_t, std::string> p_h_s_n_set;
+		ska::flat_hash_set<std::string> sample_names;
+		graph.for_each_path_handle([&](const path_handle_t &path) {
+			const std::string path_name = graph.get_path_name(path);
+			std::vector<string> path_name_split = split(path_name, delim);
+			const std::string sample_name = path_name_split[sample_pos];
+			p_h_s_n_set[path] = sample_name;
+			sample_names.insert(sample_name);
+		});
+		graph.for_each_handle([&](const handle_t &h) {
+			uint64_t hl = graph.get_length(h);
+			ska::flat_hash_set<std::string> samples;
+			graph.for_each_step_on_handle(h, [&](const step_handle_t &occ) {
+				const path_handle_t p_h = graph.get_path_handle_of_step(occ);
+				samples.insert(p_h_s_n_set[p_h]);
+			});
+			/// Private
+			if (samples.size() == 1) {
+				for (auto& sample_name : samples) {
+					sample_counts[sample_name].priv = sample_counts[sample_name].priv + hl;
+				}
+				/// Shell
+			} else if (samples.size() < sample_names.size()) {
+				for (auto& sample_name : samples) {
+					sample_counts[sample_name].shell = sample_counts[sample_name].shell + hl;
+				}
+				/// Core
+			} else {
+				for (auto& sample_name : samples) {
+					sample_counts[sample_name].core = sample_counts[sample_name].core + hl;
+				}
+			}
+		});
+		if (_yaml || _multiqc) {
+			std::cout << "pangenome_sequence_class_counts:" << std::endl;
+			for (auto& sample_count : sample_counts) {
+				std::cout << "  - sample: " << std::endl;
+				std::cout << "      name: " << sample_count.first << std::endl;
+				std::cout << "      core: " << sample_count.second.core << std::endl;
+				std::cout << "      private: " << sample_count.second.priv << std::endl;
+				std::cout << "      shell: " << sample_count.second.shell << std::endl;
+			}
+		} else {
+			for (auto& sample_count : sample_counts) {
+				std::cout << sample_count.first << "\t" << sample_count.second.core << "\t" << sample_count.second.priv
+				<< "\t" << sample_count.second.shell << std::endl;
+			}
+		}
+		// TODO clear all sets?
+	}
+
     if (args::get(mean_links_length) || args::get(sum_of_path_node_distances) || _multiqc) {
         // This vector is needed for computing the metrics in 1D and for detecting gap-links
         std::vector<uint64_t> position_map(graph.get_node_count() + 1);
@@ -331,6 +421,7 @@ int main_stats(int argc, char** argv) {
 				}
 			}
 
+            // TODO Could we run this in parallel?
             graph.for_each_path_handle([&](const path_handle_t &path) {
                 std::set<uint64_t> ordered_unpacked_numbers_in_path; // ordered set to retain the positions order
 
@@ -506,6 +597,7 @@ int main_stats(int argc, char** argv) {
 				}
 			}
 
+            // TODO Could we run this in parallel?
             graph.for_each_path_handle([&](const path_handle_t &path) {
 #ifdef debug_odgi_stats
                 std::cerr << "path_name: " << graph.get_path_name(path) << std::endl;
@@ -648,24 +740,6 @@ int main_stats(int argc, char** argv) {
 			}
 
         }
-    }
-
-    // TODO
-    if (_file_size || _multiqc) {
-    	// 1. get the file size with error handling
-		const filesystem::path path_infile = infile;
-		std::error_code err_code;
-		std::uintmax_t file_size = filesystem::file_size(path_infile, err_code);
-		if (err_code) {
-			std::cerr << "[odgi::stats] error: " << infile << " : " << err_code.message() << std::endl;
-			exit(1);
-		} else {
-			if (_multiqc || _yaml) {
-				std::cout << "file_size_in_bytes: " << file_size << std::endl;
-			} else {
-				std::cout << file_size << std::endl;
-			}
-		}
     }
 
     bool using_delim = !args::get(path_delim).empty();

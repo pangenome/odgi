@@ -54,6 +54,9 @@ Summary Options
 | **-f, --file-size**
 | Show the file size in bytes.
 
+| **-a, --pangenome-sequence-class-counts**\ =\ *DELIM,POS*
+| Show counted pangenome sequence class counts of all samples. Classes are Private (only one sample visiting the node), Core (all samples visiting the node), and Shell (not Core or Private). The given *OPTION* determines how to find the sample name in the path names: *DELIM,POS*. Split the whole path name by *DELIM* and access the actual sample name at *POS* of the split result. If the full path name is the sample name, select a *DELIM* that is not in the path names and set *POS* to 0. If *-m,--multiqc* was set, this *OPTION* has to be set implicitly.
+
 Sorting Goodness Eval Options
 ---------------------------
 
