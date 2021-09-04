@@ -12,7 +12,7 @@ std::map<char, uint64_t> gfa_line_counts(const char* filename) {
     }
     string line;
     size_t i = 0;
-    bool seen_newline = true;
+    //bool seen_newline = true;
     std::map<char, uint64_t> counts;
     while (i < gfa_filesize) {
         if (i == 0 || gfa_buf[i-1] == '\n') {
@@ -41,7 +41,7 @@ void gfa_to_handle(const string& gfa_filename,
     // in parallel scan over the file to count edges and sequences
     {
         std::thread x(
-            [&](void) {
+            [&]() {
                 gg.for_each_sequence_line_in_file(
                     filename,
                     [&](gfak::sequence_elem s) {
@@ -66,7 +66,7 @@ void gfa_to_handle(const string& gfa_filename,
         }
         gg.for_each_sequence_line_in_file(
             filename,
-            [&](gfak::sequence_elem s) {
+            [&](const gfak::sequence_elem& s) {
                 uint64_t id = stol(s.name);
                 graph->create_handle(s.sequence, id - id_increment);
                 if (progress) progress_meter->increment(1);
@@ -84,7 +84,7 @@ void gfa_to_handle(const string& gfa_filename,
         }
         gg.for_each_edge_line_in_file(
             filename,
-            [&](gfak::edge_elem e) {
+            [&](const gfak::edge_elem& e) {
                 if (e.source_name.empty()) return;
                 handlegraph::handle_t a = graph->get_handle(stol(e.source_name) - id_increment, !e.source_orientation_forward);
                 handlegraph::handle_t b = graph->get_handle(stol(e.sink_name) - id_increment, !e.sink_orientation_forward);
@@ -104,7 +104,7 @@ void gfa_to_handle(const string& gfa_filename,
         }
         gfa_path_queue_t path_queue;
         std::mutex logging_mutex;
-        std::atomic<bool> work_todo;
+        std::atomic<bool> work_todo{};
         uint64_t idx = 0;
         auto worker =
             [&](uint64_t tid) {
