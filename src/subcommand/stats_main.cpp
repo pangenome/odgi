@@ -342,8 +342,7 @@ int main_stats(int argc, char** argv) {
 		if (_yaml || _multiqc) {
 			std::cout << "pangenome_sequence_class_counts:" << std::endl;
 			for (auto& sample_count : sample_counts) {
-				std::cout << "  - sample: " << std::endl;
-				std::cout << "      name: " << sample_count.first << std::endl;
+				std::cout << "  - " << sample_count.first << ": " << std::endl;
 				std::cout << "      core: " << sample_count.second.core << std::endl;
 				std::cout << "      private: " << sample_count.second.priv << std::endl;
 				std::cout << "      shell: " << sample_count.second.shell << std::endl;
