@@ -867,6 +867,7 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
 
     // now we actually apply the ordering to our node_v, while removing deleted slots
     std::vector<node_t*> new_node_v; //(order->size());
+    _min_node_id = 1;
     if (compact_ids) {
         uint64_t j = 0;
         for (uint64_t i = 0; i < node_v.size(); ++i) {
