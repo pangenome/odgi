@@ -501,13 +501,13 @@ namespace odgi {
                     algorithms::for_handle_in_path_range(
                         graph, path_handle, path_range.begin.offset, path_range.end.offset,
                         [&](const handle_t& handle) {
-                            keep_bv.set(graph.get_id(handle));
+                            keep_bv.set(graph.get_id(handle) - shift);
                         });
                 }
-                for (auto id : keep_bv) {
-                    const handle_t h = graph.get_handle(id);
+                for (auto id_shifted : keep_bv) {
+                    const handle_t h = graph.get_handle(id_shifted + shift);
                     subgraph.create_handle(graph.get_sequence(h),
-                                           id);
+                                           id_shifted + shift);
                 }
             }
 
