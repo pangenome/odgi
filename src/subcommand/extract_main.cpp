@@ -150,16 +150,11 @@ namespace odgi {
             }
         }
 
-        if (_full_range) {
-        	if (!graph.is_optimized()) {
-				std::cerr
-						<< "[odgi::extract] error: the graph is not optimized. "
-						   "To extract the full ranges, please run 'odgi sort' using -O, --optimize."
-						<< std::endl;
-				exit(1);
-        	}
+        const uint64_t shift = graph.min_node_id();
+        if (graph.max_node_id() - shift >= graph.get_node_count()){
+            std::cerr << "[odgi::extract] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
+            exit(1);
         }
-
 
         // Prepare all paths for parallelize the next step (actually, not all paths are always present in the subgraph)
         std::vector<path_handle_t> paths;
