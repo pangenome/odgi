@@ -271,10 +271,10 @@ namespace odgi {
         {
             std::string nucleotide_range = args::get(_nucleotide_range);
             if (!nucleotide_range.empty()) {
-                const size_t foundFirstColon = nucleotide_range.find_last_of(':');
+                const size_t foundLastColon = nucleotide_range.find_last_of(':');
                 std::string path_name;
-                if (foundFirstColon != string::npos) {
-                    path_name = nucleotide_range.substr(0, foundFirstColon);
+                if (foundLastColon != string::npos) {
+                    path_name = nucleotide_range.substr(0, foundLastColon);
 
                     if (!graph.has_path(path_name)) {
                         std::cerr
@@ -283,7 +283,7 @@ namespace odgi {
                         return 1;
                     }
 
-                    nucleotide_range = nucleotide_range.substr(foundFirstColon + 1);
+                    nucleotide_range = nucleotide_range.substr(foundLastColon + 1);
                 }
 
                 const std::regex regex("-");
