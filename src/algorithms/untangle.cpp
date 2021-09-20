@@ -411,6 +411,7 @@ const step_handle_t& segment_map_t::get_segment_cut(
 
 double self_mean_coverage(
     const PathHandleGraph& graph,
+    const path_step_index_t& self_index,
     const path_handle_t& path,
     const step_handle_t& begin,
     const step_handle_t& end) {
@@ -422,13 +423,7 @@ double self_mean_coverage(
         handle_t handle = graph.get_handle_of_step(step);
         uint64_t len = graph.get_length(handle);
         bp += len;
-        graph.for_each_step_on_handle(
-            handle,
-            [&](const step_handle_t& s) {
-                if (graph.get_path_handle_of_step(s) == path) {
-                    sum += len;
-                }
-            });
+        sum += len * self_index.n_steps_on_node(graph.get_id(handle));
     }
     return (double)sum / (double)bp;
 }
@@ -439,6 +434,7 @@ void map_segments(
     const std::vector<step_handle_t>& cuts,
     const segment_map_t& target_segments,
     const step_index_t& step_index,
+    const path_step_index_t& self_index,
     const double& max_self_coverage,
     const uint64_t& n_best,
     const double& min_jaccard,
@@ -452,7 +448,7 @@ void map_segments(
         auto end_pos = step_index.get_position(end);
         uint64_t length = end_pos - begin_pos;
         // get the self coverage TODO
-        double self_coverage = self_mean_coverage(graph, path, begin, end);
+        double self_coverage = self_mean_coverage(graph, self_index, path, begin, end);
         if (max_self_coverage && self_coverage > max_self_coverage) continue;
         std::vector<segment_mapping_t> target_mapping =
             target_segments.get_matches(graph, cuts[i], cuts[i+1], length);
@@ -620,7 +616,7 @@ void untangle(
                               }),
                 merge_dist,
                 step_index);
-        map_segments(graph, query, cuts, target_segments, step_index, max_self_coverage, n_best, min_jaccard, paf_output, path_to_len);
+        map_segments(graph, query, cuts, target_segments, step_index, self_index, max_self_coverage, n_best, min_jaccard, paf_output, path_to_len);
 
         //write_cuts(graph, query, cuts, step_pos);
     }
