@@ -38,6 +38,8 @@ int main_untangle(int argc, char **argv) {
                        {'R', "target-paths"});
     args::ValueFlag<uint64_t> merge_dist(untangling_opts, "N", "Merge segments shorter than this length into previous segments.",
                                          {'m', "merge-dist"});
+    args::ValueFlag<double> _max_self_coverage(untangling_opts, "N", "Skip mappings with greater than this level of self-coverage.",
+                                               {'s', "max-self-coverage"});
     args::ValueFlag<uint64_t> _best_n_mappings(untangling_opts, "N", "Report up to the Nth best target (reference) mapping for each query segment (default: 1).",
                                                {'n', "n-best"});
     args::ValueFlag<double> _jaccard_threshold(untangling_opts, "F", "Report target mappings >= the given jaccard threshold, with 0 <= F <= 1.0 (default: 0.0).",
@@ -46,7 +48,7 @@ int main_untangle(int argc, char **argv) {
                         {'p', "paf-output"});
     args::Group debugging_opts(parser, "[ Debugging Options ]");
     args::Flag make_self_dotplot(debugging_opts, "DOTPLOT", "Render a table showing the positional dotplot of the query against itself.",
-                                 {'s', "self-dotplot"});
+                                 {'S', "self-dotplot"});
     args::Group threading(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> nthreads(
         threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
@@ -176,6 +178,7 @@ int main_untangle(int argc, char **argv) {
                              query_paths,
                              target_paths,
                              args::get(merge_dist),
+                             (_max_self_coverage ? args::get(_max_self_coverage) : 0),
                              (_best_n_mappings ? args::get(_best_n_mappings) : 1),
                              (_jaccard_threshold ? args::get(_jaccard_threshold) : 0.0),
                              args::get(paf_output),

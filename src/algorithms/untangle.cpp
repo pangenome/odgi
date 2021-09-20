@@ -439,6 +439,7 @@ void map_segments(
     const std::vector<step_handle_t>& cuts,
     const segment_map_t& target_segments,
     const step_index_t& step_index,
+    const double& max_self_coverage,
     const uint64_t& n_best,
     const double& min_jaccard,
     const bool& paf_output,
@@ -450,13 +451,14 @@ void map_segments(
         auto begin_pos = step_index.get_position(begin);
         auto end_pos = step_index.get_position(end);
         uint64_t length = end_pos - begin_pos;
+        // get the self coverage TODO
+        double self_coverage = self_mean_coverage(graph, path, begin, end);
+        if (max_self_coverage && self_coverage > max_self_coverage) continue;
         std::vector<segment_mapping_t> target_mapping =
             target_segments.get_matches(graph, cuts[i], cuts[i+1], length);
         uint64_t nth_best = 0;
         // todo for each target mapping, up to the Nth, emitting if they're >= min_jaccard
         if (!target_mapping.empty()) {
-            // get the self coverage TODO
-            double self_coverage = self_mean_coverage(graph, path, begin, end);
             for (auto& mapping : target_mapping) {
                 ++nth_best;
                 if (nth_best > n_best) break;
@@ -514,6 +516,7 @@ void untangle(
     const std::vector<path_handle_t>& queries,
     const std::vector<path_handle_t>& targets,
     const uint64_t& merge_dist,
+    const double& max_self_coverage,
     const uint64_t& n_best,
     const double& min_jaccard,
     const bool& paf_output,
@@ -617,7 +620,7 @@ void untangle(
                               }),
                 merge_dist,
                 step_index);
-        map_segments(graph, query, cuts, target_segments, step_index, n_best, min_jaccard, paf_output, path_to_len);
+        map_segments(graph, query, cuts, target_segments, step_index, max_self_coverage, n_best, min_jaccard, paf_output, path_to_len);
 
         //write_cuts(graph, query, cuts, step_pos);
     }
