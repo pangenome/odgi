@@ -151,6 +151,11 @@ is up to date, `odgi version` will not only print out the current tagged version
 This section is important for developers only. Each time we make a new release, we invoke [prepare_release.sh](./scripts/prepare_release.sh) (`cd` into folder [scripts](./scripts) first!)
 with a new release version and codename. [version.cpp](./src/version.cpp) is updated and the documentation version is bumped up.
 
+## presentations
+
+[@AndreaGuarracino](https://github.com/andreaguarracino) and [@subwaystation](https://github.com/subwaystation) 
+presented `odgi` at the German Bioinformatics Conference 2021: [ODGI - scalable tools for pangenome graphs](https://docs.google.com/presentation/d/1d52kaiOqeH4db4LyMHn7YNjv-mBKvhY2t2zQMNvzgno/edit#slide=id.p).
+
 ## name
 
 `odgi` is a play on the [Italian word "oggi" (/ˈɔd.dʒi/)](https://en.wiktionary.org/wiki/oggi), which means "today".
