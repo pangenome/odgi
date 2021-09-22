@@ -83,6 +83,7 @@ ska::flat_hash_map<step_handle_t, uint64_t> make_step_index(
 
 double self_mean_coverage(
     const PathHandleGraph& graph,
+    const path_step_index_t& self_index,
     const path_handle_t& path,
     const step_handle_t& begin,
     const step_handle_t& end);
@@ -93,6 +94,8 @@ void map_segments(
     const std::vector<step_handle_t>& cuts,
     const segment_map_t& target_segments,
     const step_index_t& step_index,
+    const path_step_index_t& self_index,
+    const double& max_self_coverage,
     const uint64_t& n_best,
     const double& min_jaccard,
     const bool& paf_output,
@@ -103,6 +106,7 @@ void untangle(
     const std::vector<path_handle_t>& queries,
     const std::vector<path_handle_t>& targets,
     const uint64_t& merge_dist,
+    const double& max_self_coverage,
     const uint64_t& n_best,
     const double& min_jaccard,
     const bool& paf_output,
