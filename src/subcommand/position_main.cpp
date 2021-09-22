@@ -376,7 +376,8 @@ int main_position(int argc, char** argv) {
 
     auto get_graph_pos =
         [](const odgi::graph_t& graph,
-           const path_pos_t& pos) {
+           const path_pos_t& pos,
+           step_handle_t& step) {
             auto path_end = graph.path_end(pos.path);
             uint64_t walked = 0;
             for (step_handle_t s = graph.path_begin(pos.path);
@@ -384,6 +385,7 @@ int main_position(int argc, char** argv) {
                 handle_t h = graph.get_handle_of_step(s);
                 uint64_t node_length = graph.get_length(h);
                 if (walked + node_length - 1 >= pos.offset) {
+                	step = s;
                     return make_pos_t(graph.get_id(h), graph.get_is_reverse(h), pos.offset - walked);
                 }
                 walked += node_length;
@@ -567,13 +569,15 @@ int main_position(int argc, char** argv) {
         pos_t pos;
         if (lifting) {
             if (get_position(source_graph, lift_path_set_source, _pos, source_result)) {
+            	step_handle_t step_handle_graph_pos;
                 pos = get_graph_pos(target_graph,
                                     { target_graph.get_path_handle(
                                             source_graph.get_path_name(
                                                 source_graph.get_path_handle_of_step(
                                                     source_result.ref_hit))),
                                       (uint64_t)source_result.path_offset,
-                                      source_result.is_rev_vs_ref });
+                                      source_result.is_rev_vs_ref },
+                                      step_handle_graph_pos);
             } else {
                 pos = make_pos_t(0,false,0); // couldn't lift
             }
@@ -626,10 +630,12 @@ int main_position(int argc, char** argv) {
     for (auto& path_pos : path_positions) {
         // TODO we need a better input format
         pos_t pos;
+		// TODO add the specific step_handle_t here
+		step_handle_t step_handle_graph_pos;
         // handle the lift into the target graph
         if (lifting) {
             lift_result_t source_result;
-            pos_t _pos = get_graph_pos(source_graph, path_pos);
+            pos_t _pos = get_graph_pos(source_graph, path_pos, step_handle_graph_pos);
             if (id(_pos) && get_position(source_graph, lift_path_set_source, _pos, source_result)) {
                 pos = get_graph_pos(target_graph,
                                     { target_graph.get_path_handle(
@@ -637,14 +643,15 @@ int main_position(int argc, char** argv) {
                                                 source_graph.get_path_handle_of_step(
                                                     source_result.ref_hit))),
                                       (uint64_t)source_result.path_offset,
-                                      source_result.is_rev_vs_ref });
+                                      source_result.is_rev_vs_ref },
+                                      step_handle_graph_pos);
             } else {
                 pos = make_pos_t(0,false,0); // couldn't lift
             }
 
         } else {
             //path_pos = _path_pos;
-            pos = get_graph_pos(target_graph, path_pos);
+            pos = get_graph_pos(target_graph, path_pos, step_handle_graph_pos);
         }
         lift_result_t result;
         //std::cerr << "Got graph pos " << id(pos) << std::endl;
@@ -672,10 +679,13 @@ int main_position(int argc, char** argv) {
     for (auto& path_range : path_ranges) {
         pos_t pos_begin, pos_end;
         // handle the lift into the target graph
+		// TODO add the specific step_handle_t here
+		step_handle_t step_handle_graph_pos_begin;
+		step_handle_t step_handle_graph_pos_end;
         if (lifting) {
             lift_result_t source_begin_result, source_end_result;
-            pos_t _pos_begin = get_graph_pos(source_graph, path_range.begin);
-            pos_t _pos_end = get_graph_pos(source_graph, path_range.end);
+            pos_t _pos_begin = get_graph_pos(source_graph, path_range.begin, step_handle_graph_pos_begin);
+            pos_t _pos_end = get_graph_pos(source_graph, path_range.end, step_handle_graph_pos_end);
             if (id(_pos_begin) && get_position(source_graph, lift_path_set_source, _pos_begin, source_begin_result)
                 && id(_pos_end) && get_position(source_graph, lift_path_set_source, _pos_end, source_end_result)) {
                 pos_begin = get_graph_pos(target_graph,
@@ -684,22 +694,24 @@ int main_position(int argc, char** argv) {
                                                       source_graph.get_path_handle_of_step(
                                                           source_begin_result.ref_hit))),
                                             (uint64_t)source_begin_result.path_offset,
-                                            source_begin_result.is_rev_vs_ref });
+                                            source_begin_result.is_rev_vs_ref },
+										  step_handle_graph_pos_begin);
                 pos_end = get_graph_pos(target_graph,
                                         { target_graph.get_path_handle(
                                                 source_graph.get_path_name(
                                                     source_graph.get_path_handle_of_step(
                                                         source_end_result.ref_hit))),
                                           (uint64_t)source_end_result.path_offset,
-                                          source_end_result.is_rev_vs_ref });
+                                          source_end_result.is_rev_vs_ref },
+										step_handle_graph_pos_end);
             } else {
                 pos_begin = make_pos_t(0,false,0); // couldn't lift
                 pos_end = make_pos_t(0,false,0); // couldn't lift
             }
         } else {
             //path_pos = _path_pos;
-            pos_begin = get_graph_pos(target_graph, path_range.begin);
-            pos_end = get_graph_pos(target_graph, path_range.end);
+            pos_begin = get_graph_pos(target_graph, path_range.begin, step_handle_graph_pos_begin);
+            pos_end = get_graph_pos(target_graph, path_range.end, step_handle_graph_pos_end);
         }
         if (id(pos_begin) && id(pos_end)) {
             lift_result_t lift_begin;
