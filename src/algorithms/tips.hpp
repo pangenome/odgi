@@ -89,5 +89,11 @@ namespace odgi {
 			step_handle_t step;
 			double jaccard = 0.0;
 		};
+
+		/// calculate all jaccard indices from a given target_step_handles and a current query step
+		std::vector<step_jaccard_t> jaccard_indices_from_step_handles(const graph_t& graph,
+																	  const uint64_t& walking_dist,
+																	  const step_handle_t& cur_step,
+																	  std::vector<step_handle_t>& target_step_handles);
 	}
 }

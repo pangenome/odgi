@@ -4,6 +4,7 @@
 #include "args.hxx"
 #include "split.hpp"
 #include "algorithms/bfs.hpp"
+#include "algorithms/tips.hpp"
 #include <omp.h>
 #include "utils.hpp"
 
@@ -43,6 +44,8 @@ int main_position(int argc, char** argv) {
     args::Flag give_graph_pos(position_opts, "give-graph-pos", "Emit graph positions (node, offset, strand) rather than path positions.", {'v', "give-graph-pos"});
     args::Flag all_immediate(position_opts, "all-immediate", "Emit all positions immediately at the given graph/path position.", {'I', "all-immediate"});
     args::ValueFlag<uint64_t> _search_radius(position_opts, "DISTANCE", "Limit coordinate conversion breadth-first search up to DISTANCE bp from each given position (default: 10000).", {'d',"search-radius"});
+	args::ValueFlag<uint64_t> _walking_dist(position_opts, "N", "Maximum walking distance in nucleotides for one orientation when finding the best target (reference) range for each query path (default: 10000). Note: If we walked 9999 base pairs and **w, --walking-dist** is **10000**, we will also include the next node, even if we overflow the actual limit.",
+											{'w', "walking-dist"});
     args::Group threading_opts(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> threads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 	args::Group processing_info_opts(parser, "[ Processing Information ]");
@@ -359,6 +362,7 @@ int main_position(int argc, char** argv) {
     // todo: bed files
 
     uint64_t search_radius = _search_radius ? args::get(_search_radius) : 10000;
+    uint64_t walking_dist = _walking_dist ? args::get(_walking_dist) : 10000;
 
     // make an hash set of our ref path ids for quicker lookup
     hash_set<uint64_t> ref_path_set;
@@ -456,9 +460,11 @@ int main_position(int argc, char** argv) {
         };
 
     auto get_position =
-        [&search_radius,&get_offset_in_path](const odgi::graph_t& graph,
+        [&search_radius,&get_offset_in_path,&walking_dist](const odgi::graph_t& graph,
                                              const hash_set<uint64_t>& path_set,
-                                             const pos_t& pos, lift_result_t& lift) {
+                                             const pos_t& pos, lift_result_t& lift,
+                                             const step_handle_t target_step_handle,
+                                             const bool path_jaccard) {
             // unpacking our args
             int64_t& path_offset = lift.path_offset;
             step_handle_t& ref_hit = lift.ref_hit;
@@ -529,9 +535,25 @@ int main_position(int argc, char** argv) {
                 if (found_hit) break; // if we got a hit, don't go bidirectional
             }
             if (found_hit) {
-                path_handle_t p = graph.get_path_handle_of_step(ref_hit);
-                // TODO ORIENTATION
-                path_offset = get_offset_in_path(graph, p, ref_hit) + adj_last_node;
+            	if (path_jaccard) {
+					std::vector<step_handle_t> query_step_handles;
+					// TODO iterate over the node to get the list of canditate query step handles
+					std::vector<algorithms::step_jaccard_t> target_jaccard_indices = algorithms::jaccard_indices_from_step_handles(graph,
+																																   walking_dist,
+																																   target_step_handle,
+																																   query_step_handles);
+					// TODO update the following when we found the best hit!
+					// path_offset;
+					// ref_hit;
+					// walked_to_hit_ref;
+					// is_rev_vs_ref;
+					// used_bidirectional;
+					// adj_last_node
+				} else {
+					path_handle_t p = graph.get_path_handle_of_step(ref_hit);
+					// TODO ORIENTATION
+					path_offset = get_offset_in_path(graph, p, ref_hit) + adj_last_node;
+				}
                 return true;
             } else {
                 path_offset = -1;
@@ -567,9 +589,10 @@ int main_position(int argc, char** argv) {
         lift_result_t source_result;
         //bool ok = false;
         pos_t pos;
+        // empty step handle
+		step_handle_t step_handle_graph_pos;
         if (lifting) {
-            if (get_position(source_graph, lift_path_set_source, _pos, source_result)) {
-            	step_handle_t step_handle_graph_pos;
+            if (get_position(source_graph, lift_path_set_source, _pos, source_result, step_handle_graph_pos, false)) {
                 pos = get_graph_pos(target_graph,
                                     { target_graph.get_path_handle(
                                             source_graph.get_path_name(
@@ -611,7 +634,7 @@ int main_position(int argc, char** argv) {
                               << result.walked_to_hit_ref << "\t" << (result.is_rev_vs_ref ? "-" : "+") << std::endl;
                 }
             }
-        } else if (get_position(target_graph, ref_path_set, pos, result)) {
+        } else if (get_position(target_graph, ref_path_set, pos, result, step_handle_graph_pos, false)) {
             bool ref_is_rev = false;
             path_handle_t p = target_graph.get_path_handle_of_step(result.ref_hit);
 #pragma omp critical (cout)
@@ -636,7 +659,7 @@ int main_position(int argc, char** argv) {
         if (lifting) {
             lift_result_t source_result;
             pos_t _pos = get_graph_pos(source_graph, path_pos, step_handle_graph_pos);
-            if (id(_pos) && get_position(source_graph, lift_path_set_source, _pos, source_result)) {
+            if (id(_pos) && get_position(source_graph, lift_path_set_source, _pos, source_result, step_handle_graph_pos, true)) {
                 pos = get_graph_pos(target_graph,
                                     { target_graph.get_path_handle(
                                             source_graph.get_path_name(
@@ -662,7 +685,7 @@ int main_position(int argc, char** argv) {
                           << (lifting ? source_graph.get_path_name(path_pos.path) : target_graph.get_path_name(path_pos.path))
                           << "," << path_pos.offset << "," << (path_pos.is_rev ? "-" : "+")
                           << "\t" << id(pos) << "," << offset(pos) << "," << (is_rev(pos) ? "-" : "+") << std::endl;
-            } else if (get_position(target_graph, ref_path_set, pos, result)) {
+            } else if (get_position(target_graph, ref_path_set, pos, result, step_handle_graph_pos, true)) {
                 bool ref_is_rev = false;
                 path_handle_t p = target_graph.get_path_handle_of_step(result.ref_hit);
 #pragma omp critical (cout)
@@ -686,8 +709,8 @@ int main_position(int argc, char** argv) {
             lift_result_t source_begin_result, source_end_result;
             pos_t _pos_begin = get_graph_pos(source_graph, path_range.begin, step_handle_graph_pos_begin);
             pos_t _pos_end = get_graph_pos(source_graph, path_range.end, step_handle_graph_pos_end);
-            if (id(_pos_begin) && get_position(source_graph, lift_path_set_source, _pos_begin, source_begin_result)
-                && id(_pos_end) && get_position(source_graph, lift_path_set_source, _pos_end, source_end_result)) {
+            if (id(_pos_begin) && get_position(source_graph, lift_path_set_source, _pos_begin, source_begin_result, step_handle_graph_pos_begin, true)
+                && id(_pos_end) && get_position(source_graph, lift_path_set_source, _pos_end, source_end_result, step_handle_graph_pos_end, true)) {
                 pos_begin = get_graph_pos(target_graph,
                                           { target_graph.get_path_handle(
                                                   source_graph.get_path_name(
@@ -723,8 +746,8 @@ int main_position(int argc, char** argv) {
                 std::cout << path_range.data << "\t"
                           << id(pos_begin) << "," << offset(pos_begin) << "," << (is_rev(pos_begin)?"-":"+") << "\t"
                           << id(pos_end) << "," << offset(pos_end) << "," << (is_rev(pos_end)?"-":"+") << std::endl;
-            } else if (get_position(target_graph, ref_path_set, pos_begin, lift_begin)
-                       && get_position(target_graph, ref_path_set, pos_end, lift_end)) {
+            } else if (get_position(target_graph, ref_path_set, pos_begin, lift_begin, step_handle_graph_pos_begin, true)
+                       && get_position(target_graph, ref_path_set, pos_end, lift_end, step_handle_graph_pos_end, true)) {
                 bool ref_is_rev = false;
                 path_handle_t p_begin = target_graph.get_path_handle_of_step(lift_begin.ref_hit);
                 path_handle_t p_end = target_graph.get_path_handle_of_step(lift_end.ref_hit);
