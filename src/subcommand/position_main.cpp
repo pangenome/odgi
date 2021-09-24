@@ -475,6 +475,8 @@ int main_position(int argc, char** argv) {
             bool found_hit = false;
             uint64_t adj_last_node = 0;
             hash_set<uint64_t> seen;
+            uint64_t d_bfs;
+            handle_t h_bfs;
             for (auto try_bidirectional : { false, true }) {
                 if (try_bidirectional) used_bidirectional = true;
                 odgi::algorithms::bfs(
@@ -491,8 +493,10 @@ int main_position(int argc, char** argv) {
                                        got_hit = true;
                                        hit = s;
                                        walked_to_hit_ref += l; // how far we came to get to this node
-                                       // this check is confusing, but it's due to us walking the reverse graph from our start position in the BFS
-                                       rev_vs_ref = graph.get_is_reverse(graph.get_handle_of_step(s)) == graph.get_is_reverse(h);
+									   d_bfs = d; // we need this for the path jaccard calculations
+									   h_bfs = h;
+									   // this check is confusing, but it's due to us walking the reverse graph from our start position in the BFS
+									   rev_vs_ref = graph.get_is_reverse(graph.get_handle_of_step(s)) == graph.get_is_reverse(h);
                                        if (d == 0) { // if we're on the start node
                                            if (rev_vs_ref) {
                                                // and if the path orientation is the same as our traversal orientation
@@ -537,23 +541,53 @@ int main_position(int argc, char** argv) {
             if (found_hit) {
             	if (path_jaccard) {
 					std::vector<step_handle_t> query_step_handles;
+					path_handle_t ref_hit_path = graph.get_path_handle_of_step(ref_hit);
+					graph.for_each_step_on_handle(
+							h_bfs,
+							[&](const step_handle_t& s) {
+								/// we can do these expensive iterations here, because we only have to do it once for each walk
+								if (graph.get_path_handle_of_step(s) == ref_hit_path) {
+									// collect only the steps for the given target
+									query_step_handles.push_back(s);
+								}
+							});
 					// TODO iterate over the node to get the list of canditate query step handles
 					std::vector<algorithms::step_jaccard_t> target_jaccard_indices = algorithms::jaccard_indices_from_step_handles(graph,
 																																   walking_dist,
 																																   target_step_handle,
 																																   query_step_handles);
-					// TODO update the following when we found the best hit!
-					// path_offset;
-					// ref_hit;
-					// walked_to_hit_ref;
-					// is_rev_vs_ref;
-					// used_bidirectional;
-					// adj_last_node
-				} else {
-					path_handle_t p = graph.get_path_handle_of_step(ref_hit);
-					// TODO ORIENTATION
-					path_offset = get_offset_in_path(graph, p, ref_hit) + adj_last_node;
+					ref_hit = target_jaccard_indices[0].step;
+					// TODO pack the following into a function that can be reused
+					rev_vs_ref = graph.get_is_reverse(graph.get_handle_of_step(ref_hit)) == graph.get_is_reverse(h_bfs);
+					if (d_bfs == 0) { // if we're on the start node
+						if (rev_vs_ref) {
+							// and if the path orientation is the same as our traversal orientation
+							// then we need to add the remaining distance from our original offset to the end of node
+							// to the final path position offset
+							adj_last_node = graph.get_length(h_bfs) - offset(pos);
+						} else {
+							// otherwise if the original path is in the same orientation
+							// then we add the original forward offset to the ref path offset
+							adj_last_node = offset(pos);
+						}
+					} else { // if we're not on the first node
+						if (rev_vs_ref) {
+							// and we come onto the result in the same orientation
+							// it means the ref pos is at the node end
+							adj_last_node = 0; // so we have no adjustment
+						} else {
+							// otherwise, it means the original path is in the same orientation
+							// then we need to adjust by the length of this stepb
+							// because we enter at node end, but we'll get the graph position for the step
+							// at the node beginning
+							adj_last_node = graph.get_length(h_bfs);
+						}
+					}
 				}
+
+				path_handle_t p = graph.get_path_handle_of_step(ref_hit);
+				// TODO ORIENTATION
+				path_offset = get_offset_in_path(graph, p, ref_hit) + adj_last_node;
                 return true;
             } else {
                 path_offset = -1;
