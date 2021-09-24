@@ -62,120 +62,12 @@ namespace odgi {
 										target_step_handles.push_back(s);
 									}
 								});
-						/// collect the visited nodes in a vector, so we can do the additional interations faster
-						ska::flat_hash_map<step_handle_t, std::pair<std::vector<nid_t>, std::vector<nid_t>>> steps_nodes_prev_next_map;
-
-						/// collect the possible minimal and maximal walking distance in nucleotides from the query step and all possible target steps
-						/// we don't care about orientation here
-						std::pair<uint64_t , uint64_t> min_max_walk_dist = find_min_max_walk_dist_from_query_targets(graph,
-																								   walking_dist,
-																								   cur_step,
-																								   target_step_handles,
-																								   steps_nodes_prev_next_map);
-#ifdef debug_tips
-#pragma omp critical (cout)
-						std::cerr << "MIN: " << min_max_walk_dist.first << " MAX: " << min_max_walk_dist.second << std::endl;
-#endif
-						std::vector<step_jaccard_t> target_jaccard_indices;
-						if (min_max_walk_dist.first >= walking_dist && min_max_walk_dist.second >= walking_dist) {
-							/// for the query:
-							// walk the given walking_dist first to the left (we might not be able to do the full walk)
-							// then walk the given walking_dist to the right
-							// in order to collect all the visited nodes and how often they were visited in a ska::flat_hash_map<uint64_t, uint64_t>
-							// the key is the node identifier, the value is the number of times this node was visited
-							ska::flat_hash_map<nid_t, uint64_t> query_set = collect_nodes_in_walking_dist(graph, walking_dist, walking_dist, cur_step);
-							// TODO we can precollect all sets so here we don't have to do the walks anymore
-							for (step_handle_t& target_step : target_step_handles) {
-								ska::flat_hash_map<nid_t, uint64_t> target_set = collect_nodes_in_walking_dist(graph, walking_dist, walking_dist, target_step);
-								ska::flat_hash_map<nid_t, uint64_t> union_set;
-								for (auto& query_item : query_set) {
-									union_set[query_item.first] = query_item.second;
-								}
-#ifdef debug_tips
-								std::cerr << "UNION SIZE BEFORE: " << union_set.size() << std::endl;
-#endif
-								add_target_set_to_union_set(union_set, target_set);
-#ifdef debug_tips
-								std::cerr << "UNION SIZE AFTER: " << union_set.size() << std::endl;
-
-
-								for (auto u : union_set) {
-									std::cerr << "node_id: " << u.first << " node_count: " << u.second << std::endl;
-								}
-#endif
-								ska::flat_hash_map<nid_t, uint64_t> intersection_set = intersect_target_query_sets(union_set, target_set, query_set);
-#ifdef debug_tips
-								std::cerr << "INTERSECT SIZE: " << intersection_set.size() << std::endl;
-
-								for (auto i : intersection_set) {
-									std::cerr << "node_id: " << i.first << " node_count: " << i.second << std::endl;
-								}
-#endif
-								double jaccard = jaccard_idx_from_intersect_union_sets(intersection_set, union_set, graph);
-								target_jaccard_indices.push_back({target_step, jaccard});
-#ifdef debug_tips
-								#pragma omp critical (cout)
-							std::cerr << "Jaccard index of query " << query_path_name << " and target " << target_path << ": " << jaccard << ". Direction: " << walk_from_front << std::endl;
-#endif
-							}
-						} else {
-							ska::flat_hash_map<nid_t, uint64_t> query_set_min_max = collect_nodes_in_walking_dist_from_map(
-									graph,
-									min_max_walk_dist.first,
-									min_max_walk_dist.second,
-									cur_step,
-									steps_nodes_prev_next_map);
-							ska::flat_hash_map<nid_t, uint64_t> query_set_max_min = collect_nodes_in_walking_dist_from_map(
-									graph,
-									min_max_walk_dist.second,
-									min_max_walk_dist.first,
-									cur_step,
-									steps_nodes_prev_next_map);
-
-							for (step_handle_t& target_step : target_step_handles) {
-								ska::flat_hash_map<nid_t, uint64_t> target_set_min_max = collect_nodes_in_walking_dist_from_map(
-										graph,
-										min_max_walk_dist.first,
-										min_max_walk_dist.second,
-										target_step,
-										steps_nodes_prev_next_map);
-								ska::flat_hash_map<nid_t, uint64_t> target_set_max_min = collect_nodes_in_walking_dist_from_map(
-										graph,
-										min_max_walk_dist.second,
-										min_max_walk_dist.first,
-										target_step,
-										steps_nodes_prev_next_map);
-
-								/// [0] -> q_min_max vs. t_min_max
-								/// [1] -> q_min_max vs. t_max_min
-								/// [2] -> q_max_min vs. t_min_max
-								/// [3] -> q_max_min vs. t_max_min
-								/// will be 0.0 if a combinations is not possible
-								std::vector<double> candidate_jaccards = {0.0, 0.0, 0.0, 0.0};
-								if (query_set_min_max.size() > 0) {
-									if (target_set_min_max.size() > 0) {
-										candidate_jaccards[0] = get_jaccard_index(graph, query_set_min_max, target_set_min_max);
-									}
-									if (target_set_max_min.size() > 0) {
-										candidate_jaccards[1] = get_jaccard_index(graph, query_set_min_max, target_set_max_min);
-									}
-								}
-								if (query_set_max_min.size() > 0) {
-									if (target_set_min_max.size() > 0) {
-										candidate_jaccards[2] = get_jaccard_index(graph, query_set_max_min, target_set_min_max);
-									}
-									if (target_set_max_min.size() > 0) {
-										candidate_jaccards[3] = get_jaccard_index(graph, query_set_max_min, target_set_max_min);
-									}
-								}
-								target_jaccard_indices.push_back({target_step, *max_element(candidate_jaccards.begin(), candidate_jaccards.end())});
-							}
-						}
-						std::sort(target_jaccard_indices.begin(), target_jaccard_indices.end(),
-								  [&] (const step_jaccard_t & sjt_a,
-									   const step_jaccard_t & sjt_b) {
-									  return sjt_a.jaccard > sjt_b.jaccard;
-								  });
+						// TODO start function wrapping here
+						std::vector<step_jaccard_t> target_jaccard_indices = jaccard_indices_from_step_handles(graph,
+																											   walking_dist,
+																											   cur_step,
+																											   target_step_handles);
+						// TODO end function wrapping here
 						uint64_t i = 0;
 
 						// report other jaccards as a csv list in the BED
@@ -455,6 +347,130 @@ namespace odgi {
 			}
 
 			return min_max_walk_dist;
+		}
+
+		/// calculate all jaccard indices from a given target_step_handles and a current query step
+		std::vector<step_jaccard_t> jaccard_indices_from_step_handles(const graph_t& graph,
+																	  const uint64_t& walking_dist,
+																	  const step_handle_t& cur_step,
+																	  std::vector<step_handle_t>& target_step_handles) {
+			/// collect the visited nodes in a vector, so we can do the additional interations faster
+			// this is very RAM intensive, maybe it should be made optional
+			// gives a speed up of ~1.5x
+			ska::flat_hash_map<step_handle_t, std::pair<std::vector<nid_t>, std::vector<nid_t>>> steps_nodes_prev_next_map;
+
+			/// collect the possible minimal and maximal walking distance in nucleotides from the query step and all possible target steps
+			/// we don't care about orientation here
+			std::pair<uint64_t , uint64_t> min_max_walk_dist = find_min_max_walk_dist_from_query_targets(graph,
+																										 walking_dist,
+																										 cur_step,
+																										 target_step_handles,
+																										 steps_nodes_prev_next_map);
+#ifdef debug_tips
+			#pragma omp critical (cout)
+						std::cerr << "MIN: " << min_max_walk_dist.first << " MAX: " << min_max_walk_dist.second << std::endl;
+#endif
+			std::vector<step_jaccard_t> target_jaccard_indices;
+			if (min_max_walk_dist.first >= walking_dist && min_max_walk_dist.second >= walking_dist) {
+				/// for the query:
+				// walk the given walking_dist first to the left (we might not be able to do the full walk)
+				// then walk the given walking_dist to the right
+				// in order to collect all the visited nodes and how often they were visited in a ska::flat_hash_map<uint64_t, uint64_t>
+				// the key is the node identifier, the value is the number of times this node was visited
+				ska::flat_hash_map<nid_t, uint64_t> query_set = collect_nodes_in_walking_dist(graph, walking_dist, walking_dist, cur_step);
+				// TODO we can precollect all sets so here we don't have to do the walks anymore
+				for (step_handle_t& target_step : target_step_handles) {
+					ska::flat_hash_map<nid_t, uint64_t> target_set = collect_nodes_in_walking_dist(graph, walking_dist, walking_dist, target_step);
+					ska::flat_hash_map<nid_t, uint64_t> union_set;
+					for (auto& query_item : query_set) {
+						union_set[query_item.first] = query_item.second;
+					}
+#ifdef debug_tips
+					std::cerr << "UNION SIZE BEFORE: " << union_set.size() << std::endl;
+#endif
+					add_target_set_to_union_set(union_set, target_set);
+#ifdef debug_tips
+					std::cerr << "UNION SIZE AFTER: " << union_set.size() << std::endl;
+
+
+								for (auto u : union_set) {
+									std::cerr << "node_id: " << u.first << " node_count: " << u.second << std::endl;
+								}
+#endif
+					ska::flat_hash_map<nid_t, uint64_t> intersection_set = intersect_target_query_sets(union_set, target_set, query_set);
+#ifdef debug_tips
+					std::cerr << "INTERSECT SIZE: " << intersection_set.size() << std::endl;
+
+								for (auto i : intersection_set) {
+									std::cerr << "node_id: " << i.first << " node_count: " << i.second << std::endl;
+								}
+#endif
+					double jaccard = jaccard_idx_from_intersect_union_sets(intersection_set, union_set, graph);
+					target_jaccard_indices.push_back({target_step, jaccard});
+#ifdef debug_tips
+					#pragma omp critical (cout)
+							std::cerr << "Jaccard index of query " << query_path_name << " and target " << target_path << ": " << jaccard << ". Direction: " << walk_from_front << std::endl;
+#endif
+				}
+			} else {
+				ska::flat_hash_map<nid_t, uint64_t> query_set_min_max = collect_nodes_in_walking_dist_from_map(
+						graph,
+						min_max_walk_dist.first,
+						min_max_walk_dist.second,
+						cur_step,
+						steps_nodes_prev_next_map);
+				ska::flat_hash_map<nid_t, uint64_t> query_set_max_min = collect_nodes_in_walking_dist_from_map(
+						graph,
+						min_max_walk_dist.second,
+						min_max_walk_dist.first,
+						cur_step,
+						steps_nodes_prev_next_map);
+
+				for (step_handle_t& target_step : target_step_handles) {
+					ska::flat_hash_map<nid_t, uint64_t> target_set_min_max = collect_nodes_in_walking_dist_from_map(
+							graph,
+							min_max_walk_dist.first,
+							min_max_walk_dist.second,
+							target_step,
+							steps_nodes_prev_next_map);
+					ska::flat_hash_map<nid_t, uint64_t> target_set_max_min = collect_nodes_in_walking_dist_from_map(
+							graph,
+							min_max_walk_dist.second,
+							min_max_walk_dist.first,
+							target_step,
+							steps_nodes_prev_next_map);
+
+					/// [0] -> q_min_max vs. t_min_max
+					/// [1] -> q_min_max vs. t_max_min
+					/// [2] -> q_max_min vs. t_min_max
+					/// [3] -> q_max_min vs. t_max_min
+					/// will be 0.0 if a combinations is not possible
+					std::vector<double> candidate_jaccards = {0.0, 0.0, 0.0, 0.0};
+					if (query_set_min_max.size() > 0) {
+						if (target_set_min_max.size() > 0) {
+							candidate_jaccards[0] = get_jaccard_index(graph, query_set_min_max, target_set_min_max);
+						}
+						if (target_set_max_min.size() > 0) {
+							candidate_jaccards[1] = get_jaccard_index(graph, query_set_min_max, target_set_max_min);
+						}
+					}
+					if (query_set_max_min.size() > 0) {
+						if (target_set_min_max.size() > 0) {
+							candidate_jaccards[2] = get_jaccard_index(graph, query_set_max_min, target_set_min_max);
+						}
+						if (target_set_max_min.size() > 0) {
+							candidate_jaccards[3] = get_jaccard_index(graph, query_set_max_min, target_set_max_min);
+						}
+					}
+					target_jaccard_indices.push_back({target_step, *max_element(candidate_jaccards.begin(), candidate_jaccards.end())});
+				}
+			}
+			std::sort(target_jaccard_indices.begin(), target_jaccard_indices.end(),
+					  [&] (const step_jaccard_t & sjt_a,
+						   const step_jaccard_t & sjt_b) {
+						  return sjt_a.jaccard > sjt_b.jaccard;
+					  });
+			return target_jaccard_indices;
 		}
 
 	}
