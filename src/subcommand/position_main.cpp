@@ -478,7 +478,10 @@ int main_position(int argc, char** argv) {
             uint64_t d_bfs;
             handle_t h_bfs;
             for (auto try_bidirectional : { false, true }) {
-                if (try_bidirectional) used_bidirectional = true;
+                if (try_bidirectional) {
+					used_bidirectional = true;
+					seen.erase(as_integer(graph.flip(start_handle)));
+                }
                 odgi::algorithms::bfs(
                     graph,
                     [&](const handle_t& h, const uint64_t& r, const uint64_t& l, const uint64_t& d) {
@@ -497,7 +500,7 @@ int main_position(int argc, char** argv) {
 									   h_bfs = h;
 									   // this check is confusing, but it's due to us walking the reverse graph from our start position in the BFS
 									   rev_vs_ref = graph.get_is_reverse(graph.get_handle_of_step(s)) == graph.get_is_reverse(h);
-                                       if (d == 0) { // if we're on the start node
+                                       if ((d_bfs == 0) || (d_bfs == graph.get_length(h_bfs) && used_bidirectional)) { // if we're on the start node
                                            if (rev_vs_ref) {
                                                // and if the path orientation is the same as our traversal orientation
                                                // then we need to add the remaining distance from our original offset to the end of node
@@ -533,7 +536,7 @@ int main_position(int argc, char** argv) {
                     [&found_hit](void) { return found_hit; },
                     { graph.flip(start_handle) },
                     { },
-                    try_bidirectional,
+                    used_bidirectional,
                     0,
                     search_radius);
                 if (found_hit) break; // if we got a hit, don't go bidirectional
@@ -559,7 +562,7 @@ int main_position(int argc, char** argv) {
 					ref_hit = target_jaccard_indices[0].step;
 					// TODO pack the following into a function that can be reused
 					rev_vs_ref = graph.get_is_reverse(graph.get_handle_of_step(ref_hit)) == graph.get_is_reverse(h_bfs);
-					if (d_bfs == 0) { // if we're on the start node
+					if ((d_bfs == 0) || (d_bfs == graph.get_length(h_bfs) && used_bidirectional)) { // if we're on the start node
 						if (rev_vs_ref) {
 							// and if the path orientation is the same as our traversal orientation
 							// then we need to add the remaining distance from our original offset to the end of node
