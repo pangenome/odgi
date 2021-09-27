@@ -62,12 +62,11 @@ namespace odgi {
 										target_step_handles.push_back(s);
 									}
 								});
-						// TODO start function wrapping here
+
 						std::vector<step_jaccard_t> target_jaccard_indices = jaccard_indices_from_step_handles(graph,
 																											   walking_dist,
 																											   cur_step,
 																											   target_step_handles);
-						// TODO end function wrapping here
 						uint64_t i = 0;
 
 						// report other jaccards as a csv list in the BED
@@ -470,6 +469,44 @@ namespace odgi {
 						   const step_jaccard_t & sjt_b) {
 						  return sjt_a.jaccard > sjt_b.jaccard;
 					  });
+
+			/// this ensures a deterministic selection of the best jaccard index and therefore step
+			// collect all the step_jaccard_t with the same jaccard
+			std::vector<step_jaccard_t> target_same_jaccard;
+			bool first_pos = false;
+			for (auto s_j_t : target_jaccard_indices) {
+				if (first_pos) {
+					if (s_j_t.jaccard == target_same_jaccard[target_same_jaccard.size() - 1].jaccard) {
+						target_same_jaccard.push_back(s_j_t);
+					} else {
+						break;
+					}
+				} else {
+					first_pos = true;
+					target_same_jaccard.push_back(s_j_t);
+				}
+			}
+			// sort by rank
+			std::sort(target_same_jaccard.begin(), target_same_jaccard.end(),
+					  [&] (const step_jaccard_t & sjt_a,
+						   const step_jaccard_t & sjt_b) {
+						  return as_integers(sjt_a.step)[1] < as_integers(sjt_b.step)[1];
+					  });
+			// take the one with array position arr_len/2; if arr_len%%2 !=0 then take the floor of the resulting value
+			uint64_t final_jaccard_position_in_same = target_same_jaccard.size() / 2;
+			step_jaccard_t final_jaccard = target_same_jaccard[final_jaccard_position_in_same];
+			uint64_t final_jaccard_position;
+			for (uint64_t i = 0; i < target_jaccard_indices.size(); i++) {
+				step_jaccard_t s_j_t = target_jaccard_indices[i];
+				if (s_j_t.jaccard == final_jaccard.jaccard
+				&& as_integers(s_j_t.step)[0] == as_integers(final_jaccard.step)[0]
+				&& as_integers(s_j_t.step)[1] == as_integers(final_jaccard.step)[1]) {
+					final_jaccard_position = i;
+					break;
+				}
+			}
+			// use std::swap to switch the found array position with the first position
+			std::swap(target_jaccard_indices[0], target_jaccard_indices[final_jaccard_position]);
 			return target_jaccard_indices;
 		}
 
