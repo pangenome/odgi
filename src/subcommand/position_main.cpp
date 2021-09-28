@@ -4,7 +4,7 @@
 #include "args.hxx"
 #include "split.hpp"
 #include "algorithms/bfs.hpp"
-#include "algorithms/tips.hpp"
+#include "algorithms/path_jaccard.hpp"
 #include <omp.h>
 #include "utils.hpp"
 
