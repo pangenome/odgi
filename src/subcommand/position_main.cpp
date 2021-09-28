@@ -413,6 +413,39 @@ int main_position(int argc, char** argv) {
             return walked;
         };
 
+	auto set_adj_last_node =
+			[](const odgi::graph_t& graph,
+			   const step_handle_t& ref_hit, const handle_t& h_bfs,
+			   const bool& used_bidirectional, const uint64_t& d_bfs, const pos_t& pos,
+			   bool& rev_vs_ref, uint64_t& adj_last_node) {
+				// this check is confusing, but it's due to us walking the reverse graph from our start position in the BFS
+				rev_vs_ref = graph.get_is_reverse(graph.get_handle_of_step(ref_hit)) == graph.get_is_reverse(h_bfs);
+				if ((d_bfs == 0) || (d_bfs == graph.get_length(h_bfs) && used_bidirectional)) { // if we're on the start node
+					if (rev_vs_ref) {
+						// and if the path orientation is the same as our traversal orientation
+						// then we need to add the remaining distance from our original offset to the end of node
+						// to the final path position offset
+						adj_last_node = graph.get_length(h_bfs) - offset(pos);
+					} else {
+						// otherwise if the original path is in the same orientation
+						// then we add the original forward offset to the ref path offset
+						adj_last_node = offset(pos);
+					}
+				} else { // if we're not on the first node
+					if (rev_vs_ref) {
+						// and we come onto the result in the same orientation
+						// it means the ref pos is at the node end
+						adj_last_node = 0; // so we have no adjustment
+					} else {
+						// otherwise, it means the original path is in the same orientation
+						// then we need to adjust by the length of this stepb
+						// because we enter at node end, but we'll get the graph position for the step
+						// at the node beginning
+						adj_last_node = graph.get_length(h_bfs);
+					}
+				}
+			};
+
     // TODO this part needs to include adjustments for in-node offsets vs. where we find the ref path
     // TODO should we always look "backwards" when seeking the ref pos?
 
@@ -460,7 +493,7 @@ int main_position(int argc, char** argv) {
         };
 
     auto get_position =
-        [&search_radius,&get_offset_in_path,&walking_dist](const odgi::graph_t& graph,
+        [&search_radius,&get_offset_in_path,&walking_dist,&set_adj_last_node](const odgi::graph_t& graph,
                                              const hash_set<uint64_t>& path_set,
                                              const pos_t& pos, lift_result_t& lift,
                                              const step_handle_t target_step_handle,
@@ -498,32 +531,7 @@ int main_position(int argc, char** argv) {
                                        walked_to_hit_ref += l; // how far we came to get to this node
 									   d_bfs = d; // we need this for the path jaccard calculations
 									   h_bfs = h;
-									   // this check is confusing, but it's due to us walking the reverse graph from our start position in the BFS
-									   rev_vs_ref = graph.get_is_reverse(graph.get_handle_of_step(s)) == graph.get_is_reverse(h);
-                                       if ((d_bfs == 0) || (d_bfs == graph.get_length(h_bfs) && used_bidirectional)) { // if we're on the start node
-                                           if (rev_vs_ref) {
-                                               // and if the path orientation is the same as our traversal orientation
-                                               // then we need to add the remaining distance from our original offset to the end of node
-                                               // to the final path position offset
-                                               adj_last_node = graph.get_length(h) - offset(pos);
-                                           } else {
-                                               // otherwise if the original path is in the same orientation
-                                               // then we add the original forward offset to the ref path offset
-                                               adj_last_node = offset(pos);
-                                           }
-                                       } else { // if we're not on the first node
-                                           if (rev_vs_ref) {
-                                               // and we come onto the result in the same orientation
-                                               // it means the ref pos is at the node end
-                                               adj_last_node = 0; // so we have no adjustment
-                                           } else {
-                                               // otherwise, it means the original path is in the same orientation
-                                               // then we need to adjust by the length of this stepb
-                                               // because we enter at node end, but we'll get the graph position for the step
-                                               // at the node beginning
-                                               adj_last_node = graph.get_length(h);
-                                           }
-                                       }
+									   set_adj_last_node(graph, s, h, used_bidirectional, d, pos, rev_vs_ref, adj_last_node);
                                    }
                                });
                         if (got_hit) {
@@ -554,38 +562,13 @@ int main_position(int argc, char** argv) {
 									query_step_handles.push_back(s);
 								}
 							});
-					// TODO iterate over the node to get the list of canditate query step handles
+					// iterate over the node to get the list of canditate query step handles
 					std::vector<algorithms::step_jaccard_t> target_jaccard_indices = algorithms::jaccard_indices_from_step_handles(graph,
 																																   walking_dist,
 																																   target_step_handle,
 																																   query_step_handles);
 					ref_hit = target_jaccard_indices[0].step;
-					// TODO pack the following into a function that can be reused
-					rev_vs_ref = graph.get_is_reverse(graph.get_handle_of_step(ref_hit)) == graph.get_is_reverse(h_bfs);
-					if ((d_bfs == 0) || (d_bfs == graph.get_length(h_bfs) && used_bidirectional)) { // if we're on the start node
-						if (rev_vs_ref) {
-							// and if the path orientation is the same as our traversal orientation
-							// then we need to add the remaining distance from our original offset to the end of node
-							// to the final path position offset
-							adj_last_node = graph.get_length(h_bfs) - offset(pos);
-						} else {
-							// otherwise if the original path is in the same orientation
-							// then we add the original forward offset to the ref path offset
-							adj_last_node = offset(pos);
-						}
-					} else { // if we're not on the first node
-						if (rev_vs_ref) {
-							// and we come onto the result in the same orientation
-							// it means the ref pos is at the node end
-							adj_last_node = 0; // so we have no adjustment
-						} else {
-							// otherwise, it means the original path is in the same orientation
-							// then we need to adjust by the length of this stepb
-							// because we enter at node end, but we'll get the graph position for the step
-							// at the node beginning
-							adj_last_node = graph.get_length(h_bfs);
-						}
-					}
+					set_adj_last_node(graph, ref_hit, h_bfs, used_bidirectional, d_bfs, pos, rev_vs_ref, adj_last_node);
 				}
 
 				path_handle_t p = graph.get_path_handle_of_step(ref_hit);
