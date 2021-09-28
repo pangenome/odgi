@@ -443,7 +443,8 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/groom.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/crush_n.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/edge.cpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/tips.cpp)
+  ${CMAKE_SOURCE_DIR}/src/algorithms/tips.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/path_jaccard.cpp)
 
 set(odgi_DEPS
     sdsl-lite
@@ -606,7 +607,8 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/algorithms/untangle.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/progress.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/tips.hpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/tips_bed_writer_thread.hpp)
+  ${CMAKE_SOURCE_DIR}/src/algorithms/tips_bed_writer_thread.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/path_jaccard.hpp)
 
 target_include_directories(odgi_objs PUBLIC ${odgi_INCLUDES})
 set_target_properties(odgi_objs PROPERTIES POSITION_INDEPENDENT_CODE TRUE)

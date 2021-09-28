@@ -3,6 +3,7 @@
 #include "utils.hpp"
 #include "algorithms/stepindex.hpp"
 #include "algorithms/tips_bed_writer_thread.hpp"
+#include "algorithms/path_jaccard.hpp"
 #include "odgi.hpp"
 #include <omp.h>
 #include "hash_map.hpp"
@@ -20,13 +21,15 @@ namespace odgi {
 
 		/// Iterate over the given paths. We walk from a chosen end (path_start or path_back) until we hit a node of the given query (reference) path(s).
 		/// We record the hit as a BED output.
-		/// #chrom #start #end #median_range #path_name #path_pos
+		/// #chrom #start #end #path_name #path_pos #jaccard #from_front #add_jaccards
 		/// #chrom: The query path name.
 		/// #start: The 0-based start position of the query we hit in the node.
 		/// #end: The 1-based end position of the query we hit in the node.
-		/// #median_range: The 0-based median of the whole query path range of the node we hit. It is possible that a node contains several steps, so we want to mirror that here.
 		/// #path: The name of the path we walked.
 		/// #path_pos: The 0-based position of the path we walked when we hit the node of the query path.
+		/// #jaccard: The jaccard index of the query and target path around the region of the step where the query hit the target.
+		/// #walk_from_front: If 1 we walked from the head of the target path. Else we walked from the tail and it is 0.
+		/// add_jaccards: The additional jaccards of candidate reference step(s). Comma-separated.
 		void walk_tips(const graph_t& graph,
 				 const std::vector<path_handle_t>& paths,
 				 const path_handle_t& target_path_t,
@@ -43,51 +46,5 @@ namespace odgi {
 				 const uint64_t& n_best_mappings,
 				 const uint64_t& walking_dist,
 				 const bool& report_additional_jaccards);
-
-		/// from the given start_step we walke the given distance in nucleotides left and right, collecting all nodes that we cross <key>
-		/// we also record, how many times we visited a node <value>
-		ska::flat_hash_map<nid_t , uint64_t> collect_nodes_in_walking_dist(const graph_t& graph,
-																		const uint64_t& walking_dist_prev,
-																		const uint64_t& walking_dist_next,
-																		const step_handle_t& start_step,
-																		const bool& walked_walking_dist = false);
-
-		ska::flat_hash_map<nid_t , uint64_t> collect_nodes_in_walking_dist_from_map(const graph_t& graph,
-																		   const uint64_t& walking_dist_prev,
-																		   const uint64_t& walking_dist_next,
-																		   const step_handle_t& start_step,
-																		   ska::flat_hash_map<step_handle_t, std::pair<std::vector<nid_t>, std::vector<nid_t>>>& steps_nodes_prev_next_map);
-
-		/// from a given target_set add the nodes into the union_set which might be not empty
-		void add_target_set_to_union_set(ska::flat_hash_map<nid_t , uint64_t>& union_set,
-								   const ska::flat_hash_map<nid_t , uint64_t>& target_set);
-
-		/// from a given target_set and a given query_set generate the intersection_set
-		/// we use the union_set as guidance
-		ska::flat_hash_map<nid_t, uint64_t> intersect_target_query_sets(ska::flat_hash_map<nid_t , uint64_t>& union_set,
-										 ska::flat_hash_map<nid_t , uint64_t>& target_set,
-										 ska::flat_hash_map<nid_t , uint64_t>& query_set);
-
-		/// calculate the jaccard index from a given graph, a query set and a target set
-		/// invokes jaccard_idx_from_intersect_union_sets
-		double get_jaccard_index(const graph_t& graph, ska::flat_hash_map<nid_t , uint64_t>& query_set,
-								 ska::flat_hash_map<nid_t , uint64_t>& target_set);
-
-		/// calculate the jaccard index from an intersection_set and a union_set
-		/// 1. calculate the sequence lengths of both sets
-		/// 2. intersection_set_seq_len / union_set_seq_len
-		double jaccard_idx_from_intersect_union_sets(ska::flat_hash_map<nid_t , uint64_t>& intersection_set,
-															   ska::flat_hash_map<nid_t , uint64_t>& union_set,
-															   const graph_t& graph);
-
-		std::pair<uint64_t , uint64_t> find_min_max_walk_dist_from_query_targets(const graph_t& graph,
-																		   const uint64_t& walking_dist,
-																		   const step_handle_t& cur_step,
-																		   const std::vector<step_handle_t>& target_step_handles,
-																		   ska::flat_hash_map<step_handle_t, std::pair<std::vector<nid_t>, std::vector<nid_t>>>& steps_nodes_prev_next_map);
-		struct step_jaccard_t {
-			step_handle_t step;
-			double jaccard = 0.0;
-		};
 	}
 }

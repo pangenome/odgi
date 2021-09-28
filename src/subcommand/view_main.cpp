@@ -49,7 +49,7 @@ int main_view(int argc, char** argv) {
     }
 
     if (!dg_in_file) {
-        std::cerr << "Please specify an input file to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
+        std::cerr << "[odgi::view] error: Please specify an input file to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
         return 1;
     }
 
