@@ -44,8 +44,8 @@ int main_position(int argc, char** argv) {
     args::Flag give_graph_pos(position_opts, "give-graph-pos", "Emit graph positions (node, offset, strand) rather than path positions.", {'v', "give-graph-pos"});
     args::Flag all_immediate(position_opts, "all-immediate", "Emit all positions immediately at the given graph/path position.", {'I', "all-immediate"});
     args::ValueFlag<uint64_t> _search_radius(position_opts, "DISTANCE", "Limit coordinate conversion breadth-first search up to DISTANCE bp from each given position (default: 10000).", {'d',"search-radius"});
-	args::ValueFlag<uint64_t> _walking_dist(position_opts, "N", "Maximum walking distance in nucleotides for one orientation when finding the best target (reference) range for each query path (default: 10000). Note: If we walked 9999 base pairs and **w, --walking-dist** is **10000**, we will also include the next node, even if we overflow the actual limit.",
-											{'w', "walking-dist"});
+	args::ValueFlag<uint64_t> _walking_dist(position_opts, "N", "Maximum walking distance in nucleotides for one orientation when finding the best target (reference) range for each query path (default: 10000). Note: If we walked 9999 base pairs and **w, --jaccard-context** is **10000**, we will also include the next node, even if we overflow the actual limit.",
+											{'w', "jaccard-context"});
     args::Group threading_opts(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> threads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 	args::Group processing_info_opts(parser, "[ Processing Information ]");
