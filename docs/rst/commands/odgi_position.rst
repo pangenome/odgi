@@ -80,8 +80,8 @@ Position Options
 | Limit coordinate conversion breadth-first search up to DISTANCE bp
   from each given position (default: 10000).
 
-| **-w, --walking-dist**\ =\ *N*
-| Maximum walking distance in nucleotides for one orientation when finding the best target (reference) range for each query path (default: 10000). Note: If we walked 9999 base pairs and **w, --walking-dist** is **10000**, we will also include the next node, even if we overflow the actual limit.
+| **-w, --jaccard-context**\ =\ *N*
+| Maximum walking distance in nucleotides for one orientation when finding the best target (reference) range for each query path (default: 10000). Note: If we walked 9999 base pairs and **w, --jaccard-context** is **10000**, we will also include the next node, even if we overflow the actual limit.
 
 Threading
 ---------
