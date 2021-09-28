@@ -1,0 +1,26 @@
+H	VN:Z:1.0
+S	1	CAA
+S	2	A
+S	3	G
+S	4	T
+S	5	C
+S	6	TTG
+S	7	A
+S	8	GAT
+S	9	GTC
+S	10	CATG
+P	target	3+,5+,6+,6+,8+,9+	1M,19M,1M,4M,1M
+P	query1	2+,4+,6+,7+	1M,19M,1M,4M
+P	query2	10+	1M
+P	query3	1+,2+,5+,6+,8+,9+	1M,19M,1M,4M,1M
+L	1	+	2	+	0M
+L	1	+	3	+	0M
+L	2	+	4	+	0M
+L	2	+	5	+	0M
+L	3	+	5	+	0M
+L	4	+	6	+	0M
+L	5	+	6	+	0M
+L	6	+	6	+	0M
+L	6	+	7	+	0M
+L	6	+	8	+	0M
+L	8	+	9	+	0M
