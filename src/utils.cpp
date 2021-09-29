@@ -64,7 +64,7 @@ namespace utils {
 							const uint64_t num_threads, odgi::graph_t &graph) {
 		if (!std::filesystem::exists(infile)) {
 			std::cerr << "[odgi::" << subcommmand_name << "] error: the given file \"" << infile << "\" does not exist. Please specify an existing input file in ODGI format via -i=[FILE], --idx=[FILE]." << std::endl;
-			return 1;
+			exit(1);
 		}
 		if (utils::ends_with(infile, "gfa")) {
 			if (progress) {
