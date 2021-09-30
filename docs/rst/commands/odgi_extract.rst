@@ -68,7 +68,7 @@ Extract Options
 
 | **-E, --full-range**
 | Collects all nodes in the sorted order of the graph in the min and max
-  position touched by the given path ranges. Be careful to use it with
+  position touched by the given path ranges. This ensures that all the paths of the subgraph are not split by node, but that the nodes are laced together again. Comparable to **-R, --lace-paths=FILE**, but specifically for all paths in the resulting subgraph. Be careful to use it with
   very complex graphs.
 
 | **-p, --paths-to-extract**\ =\ *FILE*
