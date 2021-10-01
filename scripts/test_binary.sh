@@ -26,3 +26,13 @@ else
     exit 1
 fi
 
+echo "[binary_tester] INFO: Running binary tests of odgi degree."
+bash "$SC"/degree.sh "$OG" "$TEST"
+ret=$?
+if [[ $ret -eq 0 ]]; then
+    echo "[binary_tester] SUCCESS: All binary tests for odgi degree passed."
+else
+    echo "[binary_tester] FAILED: At least one binary test for odgi degree failed."
+    exit 1
+fi
+
