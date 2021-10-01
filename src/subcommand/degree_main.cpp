@@ -50,19 +50,19 @@ int main_degree(int argc, char** argv) {
 
 	args::Flag graph_degree_table(degree_opts, "graph-degree-table",
 								  "Compute the degree on each node in the graph, writing a table by node: node.id, degree.",
-								  {'d', "graph-depth-table"});
+								  {'d', "graph-degree-table"});
 
 	args::Flag graph_degree_vec(degree_opts, "graph-degree-vec",
 								"Compute the degree on each node in the graph, writing a vector by base in one line.",
-								{'v', "graph-depth-vec"});
+								{'v', "graph-degree-vec"});
 
 	args::Flag path_degree(degree_opts, "path-degree",
 						   "Compute a vector of degree on each base of each path. Each line consists of a path name and subsequently the space-separated degree of each base.",
-						   {'D', "path-depth"});
+						   {'D', "path-degree"});
 
 	args::Flag self_degree(degree_opts, "self-degree",
 						   "Compute the degree of the path versus itself on each base in each path. Each line consists of a path name and subsequently the space-separated degree of each base.",
-						   {'a', "self-depth"});
+						   {'a', "self-degree"});
     args::Flag summarize_degree(degree_opts, "summarize", "Summarize the graph properties and dimensions. Print in tab-delimited format to stdout the node.count, edge.count, avg.degree, min.degree, max.degree.", {'S', "summarize-graph-degree"});
     args::ValueFlag<std::string> _windows_in(degree_opts, "LEN:MIN:MAX",
                                              "Print to stdout a BED file of path intervals where the degree is between MIN and MAX, "
@@ -512,13 +512,13 @@ int main_degree(int argc, char** argv) {
 
 	if (!graph_positions.empty()) {
 		std::cout << "#node.id\tnode.degree" << std::endl;
-		graph.for_each_handle(
-				[&](const handle_t& handle) {
+		for (auto& graph_pos : graph_positions) {
 #pragma omp critical (cout)
-					std::cout << graph.get_id(handle) << "\t"
-							  << graph.get_degree(handle, false) + graph.get_degree(handle, true)
-							  << std::endl;
-				}, num_threads > 1);
+			std::cout << id(graph_pos) << "\t"
+					  << graph.get_degree(graph.get_handle(id(graph_pos)), false) +
+					  graph.get_degree(graph.get_handle(id(graph_pos)), true)
+					  << std::endl;
+		}
 	}
 
 	if (!path_positions.empty()) {
