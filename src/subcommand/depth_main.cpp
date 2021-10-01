@@ -65,7 +65,6 @@ namespace odgi {
         args::Flag self_depth(depth_opts, "self-depth",
                               "Compute the depth of the path versus itself on each base in each path. Each line consists of a path name and subsequently the space-separated depth of each base.",
                               {'a', "self-depth"});
-
         args::Flag summarize_depth(depth_opts, "summarize-graph-depth",
                                    "Provide a summary of the depth distribution in the graph, in a tab-delimited format it prints to stdout: node.count, graph.length, step.count, path.length, mean.node.depth (step.count/node.count), and mean.graph.depth (path.length/graph.length).",
                                    {'S', "summarize"});

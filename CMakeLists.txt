@@ -399,6 +399,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/remove_high_degree.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/prune.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/depth.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/degree.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/cycle_breaking_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/random_order.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/eades_algorithm.cpp
@@ -595,6 +596,7 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/algorithms/sgd_layout.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/depth.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/degree.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/sorted_id_ranges.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/strongly_connected_components.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/mondriaan_sort.hpp
