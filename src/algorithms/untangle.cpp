@@ -458,8 +458,10 @@ void map_segments(
             for (auto& mapping : target_mapping) {
                 ++nth_best;
                 if (nth_best > n_best) break;
-                auto& score = mapping.jaccard;
-                if (score >= min_jaccard) {
+                double jaccard = mapping.jaccard > 1.0 ? 1.0 : mapping.jaccard;
+                if (jaccard >= min_jaccard) {
+                    double dist = -log(2.0 * jaccard / (1. + jaccard));
+                    if (dist > 1.0) dist = 1.0;
                     auto& idx = mapping.segment_id; // segment index
                     auto& target_begin = target_segments.get_segment_cut(idx);
                     auto target_begin_pos = step_index.get_position(target_begin);
@@ -481,7 +483,8 @@ void map_segments(
                         << 0 << "\t"
                         << std::max(target_end_pos - target_begin_pos, end_pos - begin_pos) << "\t"
                         << 255 << "\t"
-                        << "jc:f:" << score << "\t"
+                        << "id:f:" << (double) 1.0 - dist << "\t"
+                        << "jc:f:" << jaccard << "\t"
                         << "sc:f:" << self_coverage << "\t"
                         << "nb:i:" << nth_best << "\t"
                         << std::endl;
@@ -493,7 +496,7 @@ void map_segments(
                         << target_name << "\t"
                         << target_begin_pos << "\t"
                         << target_end_pos << "\t"       // chrom2 end (1-based)
-                        << score << "\t"
+                        << jaccard << "\t"
                         << (mapping.is_inv ? "-" : "+") << "\t"
                         << self_coverage << "\t"
                         << nth_best << std::endl;
