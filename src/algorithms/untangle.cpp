@@ -472,12 +472,12 @@ void map_segments(
                         std::cout << query_name << "\t"
                         << path_to_len[path] << "\t"
                         << begin_pos << "\t"
-                        << end_pos - 1 << "\t"          // Query end (0-based; BED-like; open)
+                        << end_pos << "\t"          // Query end (0-based; BED-like; open)
                         << (mapping.is_inv ? "-" : "+") << "\t"
                         << target_name << "\t"
                         << path_to_len[target_path] << "\t"
                         << target_begin_pos << "\t"
-                        << target_end_pos -1 << "\t"    // Target end (0-based; BED-like; open)
+                        << target_end_pos << "\t"    // Target end (0-based; BED-like; open)
                         << 0 << "\t"
                         << std::max(target_end_pos - target_begin_pos, end_pos - begin_pos) << "\t"
                         << 255 << "\t"
