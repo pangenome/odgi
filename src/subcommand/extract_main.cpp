@@ -70,7 +70,7 @@ namespace odgi {
                                            {'t', "threads"});
         args::Group processing_info_opts(parser, "[ Processing Information ]");
         args::Flag _show_progress(processing_info_opts, "progress",
-                                  "pPint information about the operations and the progress to stderr.",
+                                  "Print information about the operations and the progress to stderr.",
                                   {'P', "progress"});
         args::Group program_info_opts(parser, "[ Program Information ]");
         args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi extract.", {'h', "help"});
