@@ -640,7 +640,7 @@ namespace odgi {
             path_name_prefix_separator = args::get(_color_by_prefix);
         }
 
-        auto add_point = [&](const uint64_t &_x, const uint64_t &_y,
+        auto add_point = [&](const double &_x, const double &_y,
                              const uint8_t &_r, const uint8_t &_g, const uint8_t &_b) {
             uint64_t x = std::min((uint64_t) std::round(_x * scale_x), width - 1);
             uint64_t y = std::min((uint64_t) std::round(_y * scale_y), height - 1) + path_space;
@@ -650,7 +650,7 @@ namespace odgi {
             image[4 * width * y + 4 * x + 3] = 255;
         };
 
-        auto add_edge_from_positions = [&](uint64_t a, const uint64_t b, uint8_t rgb) {
+        auto add_edge_from_positions = [&](double a, const double b, uint8_t rgb) {
 #ifdef debug_odgi_viz
             std::cerr << "Edge displayed" << std::endl;
             std::cerr << a << " --> " << b << std::endl;
@@ -772,7 +772,7 @@ namespace odgi {
         bool _no_path_borders = args::get(no_path_borders);
         bool _black_border = args::get(black_path_borders);
         auto add_path_step = [&](std::vector<uint8_t> &img, uint64_t width_img,
-                const uint64_t &_x, const uint64_t &_y,
+                const double &_x, const double &_y,
                 const uint8_t &_r, const uint8_t &_g, const uint8_t &_b) {
             const uint64_t x = std::min((uint64_t) std::round(_x * scale_x), width - 1);
             const uint64_t t = _y * pix_per_path;
@@ -804,7 +804,7 @@ namespace odgi {
             }
         };
 
-        auto add_path_link = [&](const uint64_t &_x, const uint64_t &_y,
+        auto add_path_link = [&](const double &_x, const double &_y,
                                  const uint8_t &_r, const uint8_t &_g, const uint8_t &_b) {
             const uint64_t x = std::min((uint64_t) std::round(_x * scale_x), width - 1);
             const uint64_t t = _y * pix_per_path + link_pix_y;
