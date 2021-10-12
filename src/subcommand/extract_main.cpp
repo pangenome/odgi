@@ -323,6 +323,15 @@ namespace odgi {
                              const std::vector<path_handle_t>& lace_paths, graph_t &subgraph,
                              const uint64_t context_steps, const uint64_t context_bases, const bool full_range, const bool inverse,
                              const uint64_t num_threads, const bool show_progress) {
+
+            if (full_range) {
+                // Take the start and end node of this and fill things in
+                algorithms::extract_id_range(source, subgraph.min_node_id(), subgraph.max_node_id() , subgraph, show_progress
+                                                                                 ? "[odgi::extract] collecting all nodes in the path range"
+                                                                                 : "");
+            }
+
+            // we use context expansion after the full range extraction, to pick up missing bits that might be outside of our sort range
             if (context_steps > 0 || context_bases > 0) {
                 if (show_progress) {
                     std::cerr << "[odgi::extract] expansion and adding connecting edges" << std::endl;
@@ -333,13 +342,6 @@ namespace odgi {
                 } else {
                     algorithms::expand_subgraph_by_length(source, subgraph, context_bases, false);
                 }
-            }
-
-            if (full_range) {
-                // Take the start and end node of this and fill things in
-                algorithms::extract_id_range(source, subgraph.min_node_id(), subgraph.max_node_id() , subgraph, show_progress
-                                                                                 ? "[odgi::extract] collecting all nodes in the path range"
-                                                                                 : "");
             }
 
             if (inverse) {
