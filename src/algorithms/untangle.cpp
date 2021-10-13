@@ -483,7 +483,7 @@ void map_segments(
                         << 0 << "\t"
                         << std::max(target_end_pos - target_begin_pos, end_pos - begin_pos) << "\t"
                         << 255 << "\t"
-                        << "id:f:" << (double) 1.0 - dist * (double) 100 << "\t"
+                        << "id:f:" << ((double) 1.0 - dist) * (double) 100 << "\t"
                         << "jc:f:" << jaccard << "\t"
                         << "sc:f:" << self_coverage << "\t"
                         << "nb:i:" << nth_best << "\t"
