@@ -41,6 +41,10 @@ int main_position(int argc, char** argv) {
     args::ValueFlag<std::string> path_pos_file(position_opts, "FILE", "A *FILE* with one path position per line.", {'F', "path-pos-file"});
     args::ValueFlag<std::string> bed_input(position_opts, "FILE", "A BED file of ranges in paths in the graph to lift into the target"
                                                                   " graph *-v, --give-graph-pos* emit graph positions.", {'b', "bed-input"});
+	args::ValueFlag<std::string> gff_input(position_opts, "FILE", "A GFF/GTF file with annotation of ranges in paths in the graph to lift into the target"
+																  " (sub)graph emitting graph identifiers with annotation. The output is a CSV reading for the visualization within Bandage."
+																  " The first column is the node identifier, the second column the annotation. "
+																  "If several annotations exist for the same node, they are combined via ';'.", {'E', "gff-input"});
     args::Flag give_graph_pos(position_opts, "give-graph-pos", "Emit graph positions (node, offset, strand) rather than path positions.", {'v', "give-graph-pos"});
     args::Flag all_immediate(position_opts, "all-immediate", "Emit all positions immediately at the given graph/path position.", {'I', "all-immediate"});
     args::ValueFlag<uint64_t> _search_radius(position_opts, "DISTANCE", "Limit coordinate conversion breadth-first search up to DISTANCE bp from each given position (default: 10000).", {'d',"search-radius"});
@@ -132,6 +136,37 @@ int main_position(int argc, char** argv) {
         // using all the paths in the graph
         target_graph.for_each_path_handle([&](const path_handle_t& path) { ref_paths.push_back(path); });
     }
+
+	std::unordered_map<std::string, std::pair<uint64_t, uint64_t>> path_start_end_pos_map;
+	std::string gff_in_file;
+	std::vector<string> annotation; // we will store the annotation for each line of the GFF/GTF in this vector
+	if (gff_input) {
+		gff_in_file = args::get(gff_input);
+		if (!std::filesystem::exists(gff_in_file)) {
+			std::cerr << "[odgi::position] error: the given file \"" << gff_in_file << "\" does not exist. "
+																					   "Please specify an existing GFF/GTF file -E=[FILE], --gff-input=[FILE]." << std::endl;
+			exit(1);
+		}
+		target_graph.for_each_path_handle([&](const path_handle_t& path) {
+			uint64_t start_pos = 0;
+			uint64_t end_pos = 0;
+			std::string path_name = target_graph.get_path_name(path);
+			auto vals = split(path_name, ':');
+			// TODO what if we have a subgraph of a subgraph?
+			// do we have a subgraph in front of us?
+			if (vals.size() > 1) {
+				auto pos = split(vals[1], '-');
+				start_pos = std::stoi(pos[0]);
+				path_name = vals[0];
+				end_pos = std::stoi(pos[1]);
+			}
+			uint64_t len = 0;
+			target_graph.for_each_step_in_path(path, [&](const step_handle_t& step) {
+				len += target_graph.get_length(target_graph.get_handle_of_step(step));
+			});
+			path_start_end_pos_map[path_name] = std::make_pair(start_pos, end_pos);
+		});
+	}
 
     // for translating source to target
     std::vector<path_handle_t> lift_paths_source;
@@ -310,56 +345,141 @@ int main_position(int argc, char** argv) {
                 }
             }
         };
-    
-    if (graph_pos) {
-        // if we're given a graph_pos, we'll convert it into a path pos
-        if (lifting) {
-            add_graph_pos(source_graph, args::get(graph_pos));
-        } else {
-            add_graph_pos(target_graph, args::get(graph_pos));
-        }
-    } else if (graph_pos_file) {
-        std::ifstream gpos(args::get(graph_pos_file).c_str());
-        std::string buffer;
-        if (lifting) {
-            while (std::getline(gpos, buffer)) {
-                add_graph_pos(source_graph, buffer);
-            }
-        } else {
-            while (std::getline(gpos, buffer)) {
-                add_graph_pos(target_graph, buffer);
-            }
-        }
-    } else if (path_pos) {
-        // if given a path pos, we convert it into a path pos in our reference set
-        if (lifting) {
-            add_path_pos(source_graph, args::get(path_pos));
-        } else {
-            add_path_pos(target_graph, args::get(path_pos));
-        }
-    } else if (path_pos_file) {
-        // if we're given a file of path positions, we'll convert them all
-        std::ifstream refs(args::get(path_pos_file).c_str());
-        std::string buffer;
-        while (std::getline(refs, buffer)) {
-            if (lifting) {
-                add_path_pos(source_graph, buffer);
-            } else {
-                add_path_pos(target_graph, buffer);
-            }
-        }
-    } else if (bed_input) {
-        std::ifstream bed_in(args::get(bed_input).c_str());
-        std::string buffer;
-        while (std::getline(bed_in, buffer)) {
-            if (lifting) {
-                add_bed_range(source_graph, buffer);
-            } else {
-                add_bed_range(target_graph, buffer);
-            }
-        }
-    }
-    // todo: bed files
+
+	auto add_gff_range =
+			[&path_ranges](const odgi::graph_t& graph,
+						   const std::string& buffer,
+						   std::unordered_map<std::string, std::pair<uint64_t, uint64_t>> path_start_end_pos_map,
+						   std::vector<std::string> annotation) {
+				if (!buffer.empty() && buffer[0] != '#') {
+					auto vals = split(buffer, '\t');
+					/*
+					if (vals.size() != 3) {
+						std::cerr << "[odgi::position] error: path position record is incomplete" << std::endl;
+						std::cerr << "[odgi::position] error: got '" << buffer << "'" << std::endl;
+						exit(1); // bail
+					}
+					*/
+					auto& path_name = vals[0];
+					if (path_start_end_pos_map.count(path_name) == 0) {
+						std::cerr << "[odgi::position] error: GFF/GTF path " << path_name << " not found in path_start_end_pos_map!" << std::endl;
+						exit(1);
+					} else {
+						uint64_t start = vals.size() > 2 ? (uint64_t) std::stoi(vals[3]) : 0;
+						uint64_t end = 0;
+						if (vals.size() > 3) {
+							end = (uint64_t) std::stoi(vals[4]);
+						} else {
+							graph.for_each_step_in_path(graph.get_path_handle(path_name), [&](const step_handle_t &s) {
+								end += graph.get_length(graph.get_handle_of_step(s));
+							});
+						}
+
+						if (start > end) {
+							std::cerr << "[odgi::position::add_gff_range] error: wrong input coordinates in row: " << buffer << std::endl;
+							exit(1);
+						}
+
+						// in the GFF format, the start and end are 1-based.
+						// is the GFF entry actually within range?
+						// we have to adjust for the given subgraph range which:
+						// pos_in_gff - 1 - start_pos_(sub)graph + 1
+						uint64_t graph_start_pos = path_start_end_pos_map[path_name].first;
+						uint64_t graph_end_pos = path_start_end_pos_map[path_name].second;
+						// TODO the GFF/GTF can hit certain regions of the graph
+						if (start >= graph_end_pos || end <= graph_start_pos) {
+							// we do nothing here but return, because the GFF annotation is completely out of scope
+							return;
+						} else if (start <= graph_start_pos) {
+							start = graph_start_pos;
+						} else if (end >= graph_end_pos) {
+							end = graph_end_pos;
+						}
+
+						if (start > end) {
+							std::cerr << "[odgi::position::add_gff_range] error: wrong input coordinates in row: " << buffer << std::endl;
+							exit(1);
+						}
+
+						// TODO print start end in graph
+						// TODO we can store things in the path ranges, but then we need to traverse these differently
+
+						path_ranges.push_back(
+								{
+										{
+												graph.get_path_handle(path_name),
+												start,
+												false
+										},
+										{
+												graph.get_path_handle(path_name),
+												end,
+												false
+										},
+										(vals.size() > 5 && vals[6] == "-"),
+										buffer
+								});
+					}
+				}
+			};
+
+	if (!gff_input) {
+		if (graph_pos) {
+			// if we're given a graph_pos, we'll convert it into a path pos
+			if (lifting) {
+				add_graph_pos(source_graph, args::get(graph_pos));
+			} else {
+				add_graph_pos(target_graph, args::get(graph_pos));
+			}
+		} else if (graph_pos_file) {
+			std::ifstream gpos(args::get(graph_pos_file).c_str());
+			std::string buffer;
+			if (lifting) {
+				while (std::getline(gpos, buffer)) {
+					add_graph_pos(source_graph, buffer);
+				}
+			} else {
+				while (std::getline(gpos, buffer)) {
+					add_graph_pos(target_graph, buffer);
+				}
+			}
+		} else if (path_pos) {
+			// if given a path pos, we convert it into a path pos in our reference set
+			if (lifting) {
+				add_path_pos(source_graph, args::get(path_pos));
+			} else {
+				add_path_pos(target_graph, args::get(path_pos));
+			}
+		} else if (path_pos_file) {
+			// if we're given a file of path positions, we'll convert them all
+			std::ifstream refs(args::get(path_pos_file).c_str());
+			std::string buffer;
+			while (std::getline(refs, buffer)) {
+				if (lifting) {
+					add_path_pos(source_graph, buffer);
+				} else {
+					add_path_pos(target_graph, buffer);
+				}
+			}
+		} else if (bed_input) {
+			std::ifstream bed_in(args::get(bed_input).c_str());
+			std::string buffer;
+			while (std::getline(bed_in, buffer)) {
+				if (lifting) {
+					add_bed_range(source_graph, buffer);
+				} else {
+					add_bed_range(target_graph, buffer);
+				}
+			}
+		}
+	} else {
+		std::ifstream gff_in(gff_in_file.c_str());
+		std::string buffer;
+		while (std::getline(gff_in, buffer)) {
+			// TODO we have to add to our own vector, because we are doing something different
+			add_gff_range(target_graph, buffer, path_start_end_pos_map, annotation);
+		}
+	}
 
     uint64_t search_radius = _search_radius ? args::get(_search_radius) : 10000;
     uint64_t walking_dist = _walking_dist ? args::get(_walking_dist) : 10000;
@@ -673,7 +793,6 @@ int main_position(int argc, char** argv) {
     for (auto& path_pos : path_positions) {
         // TODO we need a better input format
         pos_t pos;
-		// TODO add the specific step_handle_t here
 		step_handle_t step_handle_graph_pos;
         // handle the lift into the target graph
         if (lifting) {
@@ -720,9 +839,8 @@ int main_position(int argc, char** argv) {
 
 #pragma omp parallel for schedule(dynamic,1)
     for (auto& path_range : path_ranges) {
-        pos_t pos_begin, pos_end;
+		pos_t pos_begin, pos_end;
         // handle the lift into the target graph
-		// TODO add the specific step_handle_t here
 		step_handle_t step_handle_graph_pos_begin;
 		step_handle_t step_handle_graph_pos_end;
         if (lifting) {
