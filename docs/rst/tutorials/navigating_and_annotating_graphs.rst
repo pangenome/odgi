@@ -25,10 +25,6 @@ Once key regions are identified, they can be extracted with :ref:`odgi extract` 
 	In the following, all node identifiers are one-based. This means we start to enumerate them at 1. All nucleotide positions
 	and offsets are zero-based. This means the first nucleotide position or first offset is 0.
 
-.. http://hypervolu.me/~erik/advbioinfo/HPRCy1v2.MHC.fa.gz
-.. http://hypervolu.me/~erik/advbioinfo/HLA_genes.bed
-.. http://hypervolu.me/~erik/advbioinfo/HPRCy1v2.MHC.HLA_genes.bed
-
 =====
 Steps
 =====
@@ -238,8 +234,34 @@ We observe on stdout:
 
 .. image:: /img/k.gfa.dot_lift.png
 
-The red arrows show the translation process of the source path position to the target graph position.
+----------------------------------
+Annotating the nodes with a GFF/GTF
+----------------------------------
 
+Take a (sub)graph, and a complementary GFF/GTF we can annotate each node in the graph producing a CSV ready for
+`Bandage <https://rrwick.github.io/Bandage/>`_. In the following, we will download a 90 haplotypes chromosome 6 human pangenome graph,
+extract the HLA region and produce a CSV to take a look at the annotated nodes in Bandage.
+
+.. code-block:: bash
+
+    wget https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2021_10_11_pggb_wgg.85/chroms/chr6.pan.fa.a2fb268.4030258.b5c839f.smooth.gfa.gz
+    gunzip chr6.pan.fa.a2fb268.4030258.b5c839f.smooth.gfa.gz
+    odgi build -g chr6.pan.fa.a2fb268.4030258.b5c839f.smooth.gfa -o chr6.pan.fa.a2fb268.4030258.b5c839f.smooth.gfa.og -P -t 28
+    odgi extract -i chr6.pan.fa.a2fb268.4030258.b5c839f.smooth.gfa.og -r grch38#chr6:29000000-34000000 -o - -t 28 -P -E | odgi sort -i - -o chr6.pan.fa.a2fb268.4030258.b5c839f.smooth.gfa.og.29-34.og -O
+
+We downloaded the graph, unpacked it, translated it into the `odgi` format and extracted the HLA region.
+
+.. code-block:: bash
+
+    wget https://hgdownload.soe.ucsc.edu/goldenPath/hg38/bigZips/genes/hg38.ncbiRefSeq.gtf.gz
+    gunzip hg38.ncbiRefSeq.gtf.gz
+    grep -P "chr6\t" hg38.ncbiRefSeq.gtf | less -S | grep -P "transcript\t" | cut -f 1 -d';'| less -S | sed 's/gene_id //g' | sed 's/"//g' | uniq | sed 's/chr6/grch38#chr6/g' > hg38.grch38#chr6.gtf
+    odgi position -i chr6.pan.fa.a2fb268.4030258.b5c839f.smooth.gfa.og.29-34.og -E hg38.grch38#chr6.gtf -t 16 > chr6.pan.fa.a2fb268.4030258.b5c839f.smooth.gfa.og.29-34.og.anno.csv
+
+We downloaded the annotation, set the correct reference identifier, only filtered for 'transcript, and only kept the actual gene identifier.
+:ref:`odgi position` then gave us the CSV ready for Bandage. Below you can see an example screenshot.
+
+.. image:: /img/HLA_Bandage.png
 
 .. Translate path positions between graphs (odgi position application): we use that to go from a smoothed graph to a
 .. consensus graph and vice versa, but we need a more general example of 2 graphs (from different runs, for example).
