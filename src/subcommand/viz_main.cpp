@@ -139,7 +139,7 @@ namespace odgi {
 		args::Group threading(parser, "[ Threading ]");
 		args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 		args::Group processing_info_opts(parser, "[ Processing Information ]");
-		args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
+		args::Flag _progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
         args::Group program_information(parser, "[ Program Information ]");
         args::HelpFlag help(program_information, "help", "Print a help message for odgi viz.", {'h', "help"});
 
@@ -234,7 +234,7 @@ namespace odgi {
             if (infile == "-") {
                 graph.deserialize(std::cin);
             } else {
-				utils::handle_gfa_odgi_input(infile, "viz", args::get(progress), num_threads, graph);
+                utils::handle_gfa_odgi_input(infile, "viz", args::get(_progress), num_threads, graph);
             }
         }
 
@@ -332,9 +332,11 @@ namespace odgi {
 
                 if (!path_name.empty()) {
                     // Convert the nucleotide path range in a nucleotide pangenomic range
-                    std::cerr
-                            << "[odgi::viz] Path range to pangenomic range conversion."
-                            << std::endl;
+                    if(_progress) {
+                        std::cerr
+                        << "[odgi::viz] Path range to pangenomic range conversion."
+                        << std::endl;
+                    }
 
                     double new_pangenomic_start_pos = (double) (len - 1);
                     double new_pangenomic_end_pos = 0;
@@ -374,9 +376,11 @@ namespace odgi {
                     return 1;
                 }
 
-                std::cerr
-                        << "[odgi::viz] Visualizing the graph in the pangenomic range [" << pangenomic_start_pos << ", " << pangenomic_end_pos << "]"
-                        << std::endl;
+                if(_progress) {
+                    std::cerr
+                    << "[odgi::viz] Visualizing the graph in the pangenomic range [" << pangenomic_start_pos << ", " << pangenomic_end_pos << "]"
+                    << std::endl;
+                }
             }
         }
 
@@ -413,9 +417,11 @@ namespace odgi {
             // Each pixel corresponds to a bin
             scale_x = 1; //scale_x*bin_width;
 
-            std::cerr << "[odgi::viz] Binned mode" << std::endl;
-            std::cerr << "[odgi::viz] bin width: " << _bin_width << std::endl;
-            std::cerr << "[odgi::viz] image width: " << width << std::endl;
+            if(_progress) {
+                std::cerr << "[odgi::viz] Binned mode" << std::endl;
+                std::cerr << "[odgi::viz] bin width: " << _bin_width << std::endl;
+                std::cerr << "[odgi::viz] image width: " << width << std::endl;
+            }
         }else{
             _bin_width = 1;
         }
@@ -429,7 +435,6 @@ namespace odgi {
         uint8_t max_num_of_chars = 0;
         uint8_t char_size = 0;
 
-        //_name_prefixes(parser, "FILE", "merge paths beginning with prefixes listed (one per line) in FILE", {'M', "prefix-merges"});
         std::vector<int64_t> path_group;
         std::vector<std::string> prefixes;
         bool group_paths = false;
@@ -534,7 +539,9 @@ namespace odgi {
 
                 path_names_in.close();
 
-                std::cerr << "[odgi::viz] Found " << rank_for_visualization << "/" << num_of_paths_in_file << " paths to display." << std::endl;
+                if (_progress){
+                    std::cerr << "[odgi::viz] Found " << rank_for_visualization << "/" << num_of_paths_in_file << " paths to display." << std::endl;
+                }
 
                 if (rank_for_visualization == 0){
                     std::cerr << "[odgi::viz] error: no path to display." << std::endl;
