@@ -137,7 +137,7 @@ int main_position(int argc, char** argv) {
         target_graph.for_each_path_handle([&](const path_handle_t& path) { ref_paths.push_back(path); });
     }
 
-	std::unordered_map<std::string, std::pair<uint64_t, uint64_t>> path_start_end_pos_map;
+	std::unordered_map<std::string, std::tuple<std::string, uint64_t, uint64_t>> path_start_end_pos_map;
 	std::string gff_in_file;
 	std::vector<string> annotation; // we will store the annotation for each line of the GFF/GTF in this vector
 	if (gff_input) {
@@ -151,20 +151,23 @@ int main_position(int argc, char** argv) {
 			uint64_t start_pos = 0;
 			uint64_t end_pos = 0;
 			std::string path_name = target_graph.get_path_name(path);
+			std::string short_path_name;
+			uint64_t len = 0;
 			auto vals = split(path_name, ':');
 			// TODO what if we have a subgraph of a subgraph?
 			// do we have a subgraph in front of us?
 			if (vals.size() > 1) {
 				auto pos = split(vals[1], '-');
 				start_pos = std::stoi(pos[0]);
-				path_name = vals[0];
+				short_path_name = vals[0];
 				end_pos = std::stoi(pos[1]);
+			} else {
+				target_graph.for_each_step_in_path(path, [&](const step_handle_t& step) {
+					len += target_graph.get_length(target_graph.get_handle_of_step(step));
+				});
+				end_pos = len -1; // 0-based
 			}
-			uint64_t len = 0;
-			target_graph.for_each_step_in_path(path, [&](const step_handle_t& step) {
-				len += target_graph.get_length(target_graph.get_handle_of_step(step));
-			});
-			path_start_end_pos_map[path_name] = std::make_pair(start_pos, end_pos);
+			path_start_end_pos_map[short_path_name] = std::make_tuple(path_name, start_pos, end_pos);
 		});
 	}
 
@@ -349,8 +352,8 @@ int main_position(int argc, char** argv) {
 	auto add_gff_range =
 			[&path_ranges](const odgi::graph_t& graph,
 						   const std::string& buffer,
-						   std::unordered_map<std::string, std::pair<uint64_t, uint64_t>> path_start_end_pos_map,
-						   std::vector<std::string> annotation) {
+						   std::unordered_map<std::string, std::tuple<std::string, uint64_t, uint64_t>>& path_start_end_pos_map,
+						   std::vector<std::string>& annotation) {
 				if (!buffer.empty() && buffer[0] != '#') {
 					auto vals = split(buffer, '\t');
 					/*
@@ -380,45 +383,56 @@ int main_position(int argc, char** argv) {
 							exit(1);
 						}
 
+
 						// in the GFF format, the start and end are 1-based.
 						// is the GFF entry actually within range?
 						// we have to adjust for the given subgraph range which:
 						// pos_in_gff - 1 - start_pos_(sub)graph + 1
-						uint64_t graph_start_pos = path_start_end_pos_map[path_name].first;
-						uint64_t graph_end_pos = path_start_end_pos_map[path_name].second;
-						// TODO the GFF/GTF can hit certain regions of the graph
+						uint64_t graph_start_pos = get_long_path_start(path_start_end_pos_map[path_name]);
+						uint64_t graph_end_pos = get_long_path_end(path_start_end_pos_map[path_name]);
+						// the GFF/GTF can hit certain regions of the graph
 						if (start >= graph_end_pos || end <= graph_start_pos) {
 							// we do nothing here but return, because the GFF annotation is completely out of scope
 							return;
-						} else if (start <= graph_start_pos) {
-							start = graph_start_pos;
-						} else if (end >= graph_end_pos) {
-							end = graph_end_pos;
+						} else if (start <= graph_start_pos && end <= graph_end_pos) {
+							start = 0; // graph_start_pos - graph_start_pos;
+							end = end - graph_start_pos - 1;
+						} else if (start >= graph_start_pos && end >= graph_end_pos) {
+							end = graph_end_pos - graph_start_pos - 1;
+							start = start - graph_start_pos - 1;
+						} else if (start >= graph_start_pos && end <= graph_end_pos) {
+							start = start - graph_start_pos - 1;
+							end = end - graph_start_pos - 1;
+						} else if (start <= graph_start_pos && end >= graph_end_pos) {
+							start = 0;
+							end = graph_end_pos - graph_start_pos;
+						} else {
+							return;
 						}
 
 						if (start > end) {
-							std::cerr << "[odgi::position::add_gff_range] error: wrong input coordinates in row: " << buffer << std::endl;
+							std::cerr << "[odgi::position::add_gff_range] error: wrong input coordinates in row: " << buffer <<
+							"for detected start: " << start << " and end: " << end << std::endl;
 							exit(1);
 						}
 
-						// TODO print start end in graph
-						// TODO we can store things in the path ranges, but then we need to traverse these differently
-
+						// we can store things in the path ranges, but then we need to traverse these differently
 						path_ranges.push_back(
 								{
 										{
-												graph.get_path_handle(path_name),
+												graph.get_path_handle(get_long_path_name(path_start_end_pos_map[path_name])),
 												start,
 												false
 										},
 										{
-												graph.get_path_handle(path_name),
+												graph.get_path_handle(get_long_path_name(path_start_end_pos_map[path_name])),
 												end,
 												false
 										},
 										(vals.size() > 5 && vals[6] == "-"),
 										buffer
 								});
+						annotation.push_back(vals[8]);
 					}
 				}
 			};
@@ -476,7 +490,7 @@ int main_position(int argc, char** argv) {
 		std::ifstream gff_in(gff_in_file.c_str());
 		std::string buffer;
 		while (std::getline(gff_in, buffer)) {
-			// TODO we have to add to our own vector, because we are doing something different
+			// we have to add to our own vector, because we are doing something different
 			add_gff_range(target_graph, buffer, path_start_end_pos_map, annotation);
 		}
 	}
@@ -515,7 +529,7 @@ int main_position(int argc, char** argv) {
                 walked += node_length;
             }
 #pragma omp critical (cout)
-            std::cerr << "[odgi::position] warning: position " << graph.get_path_name(pos.path) << ":" << pos.offset << " outside of path" << std::endl;
+            std::cerr << "[odgi::position] warning: position " << graph.get_path_name(pos.path) << ":" << pos.offset << " outside of path. Walked " << walked << std::endl;
             return make_pos_t(0, false, 0);
         };
 
@@ -871,8 +885,16 @@ int main_position(int argc, char** argv) {
             }
         } else {
             //path_pos = _path_pos;
-            pos_begin = get_graph_pos(target_graph, path_range.begin, step_handle_graph_pos_begin);
-            pos_end = get_graph_pos(target_graph, path_range.end, step_handle_graph_pos_end);
+			if (gff_input) {
+				// TODO SIMON
+
+				// FIXME this is just for testing
+				pos_begin = get_graph_pos(target_graph, path_range.begin, step_handle_graph_pos_begin);
+				pos_end = get_graph_pos(target_graph, path_range.end, step_handle_graph_pos_end);
+			} else {
+				pos_begin = get_graph_pos(target_graph, path_range.begin, step_handle_graph_pos_begin);
+				pos_end = get_graph_pos(target_graph, path_range.end, step_handle_graph_pos_end);
+			}
         }
         if (id(pos_begin) && id(pos_end)) {
             lift_result_t lift_begin;
@@ -881,6 +903,7 @@ int main_position(int argc, char** argv) {
             // TODO optionally list out the nodes in this particular range (e.g. those within it in our sort order)
             if (give_graph_pos) {
 #pragma omp critical (cout)
+				std::cout << target_graph.get_path_name(path_range.begin.path) << ":" << path_range.begin.offset << "-" << path_range.end.offset << std::endl;
                 std::cout << path_range.data << "\t"
                           << id(pos_begin) << "," << offset(pos_begin) << "," << (is_rev(pos_begin)?"-":"+") << "\t"
                           << id(pos_end) << "," << offset(pos_end) << "," << (is_rev(pos_end)?"-":"+") << std::endl;

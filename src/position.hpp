@@ -87,6 +87,18 @@ struct path_range_t {
     std::string data;
 };
 
+inline std::string& get_long_path_name(std::tuple<std::string, uint64_t, uint64_t> path_long_start_end) {
+	return std::get<0>(path_long_start_end);
+}
+
+inline uint64_t & get_long_path_start(std::tuple<std::string, uint64_t, uint64_t> path_long_start_end) {
+	return std::get<1>(path_long_start_end);
+}
+
+inline uint64_t & get_long_path_end(std::tuple<std::string, uint64_t, uint64_t> path_long_start_end) {
+	return std::get<2>(path_long_start_end);
+}
+
 }
 
 #endif
