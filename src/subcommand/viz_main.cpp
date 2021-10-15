@@ -439,7 +439,7 @@ namespace odgi {
         std::vector<std::string> prefixes;
         bool group_paths = false;
         if (_name_prefixes) {
-            path_group.resize(path_count, -1);
+            std::vector<std::string> prefixes_tmp;
             group_paths = true;
             auto& name_prefixes = args::get(_name_prefixes);
             ska::flat_hash_set<std::string> group_names;
@@ -451,29 +451,52 @@ namespace odgi {
                         if (group_names.count(line)) {
                             std::cerr << "[odgi::viz] duplicate group name found " << line << std::endl;
                         } else {
-                            prefixes.push_back(line);
+                            prefixes_tmp.push_back(line);
                             group_names.insert(line);
                         }
                     }
                 }
             }
+
+            path_group.resize(path_count, -1);
             graph.for_each_path_handle(
                 [&](const path_handle_t &path) {
                     uint64_t path_rank = as_integer(path) - 1;
                     // XXX quadratic
                     // could be O(N log N) if we use binary search on a sorted list
+
                     auto path_name = graph.get_path_name(path);
                     uint64_t group_idx = 0;
+                    bool found = false;
+
+                    // Search first in already validated prefixes
                     for (auto& prefix : prefixes) {
                         // check if it matches the start
                         if (path_name.find(prefix) == 0) {
-                            //std::cerr << path_name << " -> " << prefix << std::endl;
+                            found = true;
                             path_group[path_rank] = group_idx;
                             break;
                         }
                         ++group_idx;
                     }
+
+                    // If not found in the validated prefixes...
+                    if (!found) {
+                        // ... search in all read prefixes
+                        for (auto& prefix : prefixes_tmp) {
+                            // check if it matches the start
+                            if (path_name.find(prefix) == 0) {
+                                prefixes.push_back(prefix); // Add into the validated prefixes
+                                path_group[path_rank] = group_idx;
+                                break;
+                            }
+                        }
+                    }
                 });
+
+            if (_progress) {
+                std::cerr << "[odgi::viz] Read " << prefixes.size() << " valid prefixes." << std::endl;
+            }
         }
 
         const std::string ignore_prefix = _ignore_prefix ? args::get(_ignore_prefix) : "";
@@ -525,6 +548,7 @@ namespace odgi {
                             // todo here we need to do our grouping
                             int64_t path_rank = get_path_idx(graph.get_path_handle(line));
                             if (path_rank >= 0 && path_layout_y[path_rank] < 0) {
+                                std::cerr << "\t\tAAAA!\n";
                                 path_layout_y[path_rank] = rank_for_visualization++;
                                 //rank_for_visualization++;
                             } else if (!group_paths) {
@@ -554,7 +578,9 @@ namespace odgi {
                 for (uint64_t i = 0; i < path_count; ++i) {
                     // todo here we need to do our grouping
                     int64_t path_rank = get_path_idx(as_path_handle(i+1));
+                    //std::cerr << path_rank << " - " << path_layout_y[path_rank] << " - " << graph.get_path_name(as_path_handle(i+1)) << " --> " << rank_for_visualization << std::endl;
                     if (path_rank >= 0 && path_layout_y[path_rank] < 0) {
+                        std::cerr << "\t\tOK!\n";
                         path_layout_y[path_rank] = rank_for_visualization++;
                     }
                 }
@@ -596,6 +622,7 @@ namespace odgi {
                     path_layout_buf[width * path_y + i] = 1;
                 }
                 //std::cerr << "path_y " << graph.get_path_name(path) << " " << path_count - path_y - 1 << std::endl;
+                std::cerr << "\t\tBBB!\n";
                 path_layout_y[as_integer(path) - 1] = path_count - path_y - 1;
             }
         }
