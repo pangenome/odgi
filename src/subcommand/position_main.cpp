@@ -139,7 +139,6 @@ int main_position(int argc, char** argv) {
 
 	std::unordered_map<std::string, std::tuple<std::string, uint64_t, uint64_t>> path_start_end_pos_map;
 	std::string gff_in_file;
-	std::vector<string> annotation; // we will store the annotation for each line of the GFF/GTF in this vector
 	if (gff_input) {
 		gff_in_file = args::get(gff_input);
 		if (!std::filesystem::exists(gff_in_file)) {
@@ -352,8 +351,7 @@ int main_position(int argc, char** argv) {
 	auto add_gff_range =
 			[&path_ranges](const odgi::graph_t& graph,
 						   const std::string& buffer,
-						   std::unordered_map<std::string, std::tuple<std::string, uint64_t, uint64_t>>& path_start_end_pos_map,
-						   std::vector<std::string>& annotation) {
+						   std::unordered_map<std::string, std::tuple<std::string, uint64_t, uint64_t>>& path_start_end_pos_map) {
 				if (!buffer.empty() && buffer[0] != '#') {
 					auto vals = split(buffer, '\t');
 					/*
@@ -430,9 +428,8 @@ int main_position(int argc, char** argv) {
 												false
 										},
 										(vals.size() > 5 && vals[6] == "-"),
-										buffer
+										vals[8]
 								});
-						annotation.push_back(vals[8]);
 					}
 				}
 			};
@@ -491,7 +488,7 @@ int main_position(int argc, char** argv) {
 		std::string buffer;
 		while (std::getline(gff_in, buffer)) {
 			// we have to add to our own vector, because we are doing something different
-			add_gff_range(target_graph, buffer, path_start_end_pos_map, annotation);
+			add_gff_range(target_graph, buffer, path_start_end_pos_map);
 		}
 	}
 
@@ -532,6 +529,42 @@ int main_position(int argc, char** argv) {
             std::cerr << "[odgi::position] warning: position " << graph.get_path_name(pos.path) << ":" << pos.offset << " outside of path. Walked " << walked << std::endl;
             return make_pos_t(0, false, 0);
         };
+
+	auto get_graph_node_ids_annotation =
+			[](const odgi::graph_t& graph,
+			   const path_range_t& path_range) {
+				auto path_end = graph.path_end(path_range.begin.path);
+				std::unordered_map<uint64_t , std::set<std::string>> node_annotation_map;
+				uint64_t walked = 0;
+				uint64_t path_pos_start = path_range.begin.offset;
+				uint64_t path_pos_end = path_range.end.offset;
+				for (step_handle_t s = graph.path_begin(path_range.begin.path);
+					 s != path_end; s = graph.get_next_step(s)) {
+					handle_t h = graph.get_handle_of_step(s);
+					uint64_t nid = graph.get_id(h);
+					uint64_t node_length = graph.get_length(h);
+					uint64_t local_min_pos = walked;
+					uint64_t local_max_pos = local_min_pos + node_length - 1;
+					if ((path_pos_start >= local_min_pos && path_pos_start <= local_max_pos)
+						|| (path_pos_end <= local_max_pos && path_pos_end >= local_min_pos)) {
+						// TODO add to our hashmap of node_id -> hash_set of annotation
+						if (node_annotation_map.count(nid) == 0) {
+							std::set<std::string> anno_set;
+							anno_set.insert(path_range.data);
+							node_annotation_map[nid] = anno_set;
+							// we just blindly at the value again
+						} else {
+							std::set<std::string> anno_set = node_annotation_map[nid];
+							anno_set.insert(path_range.data);
+						}
+					} else if (local_min_pos > path_pos_end) {
+						// we can return here, nothing more to do
+						return node_annotation_map;
+					}
+					walked += node_length;
+				}
+				return node_annotation_map;
+			};
 
     auto get_offset_in_path =
         [](const odgi::graph_t& graph,
@@ -851,6 +884,8 @@ int main_position(int argc, char** argv) {
         }
     }
 
+	std::vector<std::unordered_map<uint64_t , std::set<std::string>>> node_annotation_maps;
+
 #pragma omp parallel for schedule(dynamic,1)
     for (auto& path_range : path_ranges) {
 		pos_t pos_begin, pos_end;
@@ -886,24 +921,21 @@ int main_position(int argc, char** argv) {
         } else {
             //path_pos = _path_pos;
 			if (gff_input) {
-				// TODO SIMON
-
-				// FIXME this is just for testing
-				pos_begin = get_graph_pos(target_graph, path_range.begin, step_handle_graph_pos_begin);
-				pos_end = get_graph_pos(target_graph, path_range.end, step_handle_graph_pos_end);
+				std::unordered_map<uint64_t , std::set<std::string>> node_annotation_map = get_graph_node_ids_annotation(target_graph, path_range);
+#pragma omp critical (node_annotation_maps)
+				node_annotation_maps.push_back(node_annotation_map);
 			} else {
 				pos_begin = get_graph_pos(target_graph, path_range.begin, step_handle_graph_pos_begin);
 				pos_end = get_graph_pos(target_graph, path_range.end, step_handle_graph_pos_end);
 			}
         }
-        if (id(pos_begin) && id(pos_end)) {
+        if (id(pos_begin) && id(pos_end) && !gff_input) {
             lift_result_t lift_begin;
             lift_result_t lift_end;
             // TODO add a GAF-style path to the record to say where the BED range walks in the graph
             // TODO optionally list out the nodes in this particular range (e.g. those within it in our sort order)
             if (give_graph_pos) {
 #pragma omp critical (cout)
-				std::cout << target_graph.get_path_name(path_range.begin.path) << ":" << path_range.begin.offset << "-" << path_range.end.offset << std::endl;
                 std::cout << path_range.data << "\t"
                           << id(pos_begin) << "," << offset(pos_begin) << "," << (is_rev(pos_begin)?"-":"+") << "\t"
                           << id(pos_end) << "," << offset(pos_end) << "," << (is_rev(pos_end)?"-":"+") << std::endl;
@@ -926,6 +958,30 @@ int main_position(int argc, char** argv) {
             }
         }
     }
+	// TODO clean up duplicates
+	std::unordered_map<uint64_t , std::set<std::string>> final_node_annotation_map;
+	std::cout << "NODE_ID,ANNOTATION" << std::endl;
+	for (auto& node_annotation_map : node_annotation_maps) {
+		for (auto& elem : node_annotation_map) {
+			if (final_node_annotation_map.count(elem.first) == 0) {
+				final_node_annotation_map[elem.first] = elem.second;
+			} else {
+				for (auto& anno : elem.second) {
+					final_node_annotation_map[elem.first].insert(anno);
+				}
+			}
+		}
+	}
+	for (auto& f_n : final_node_annotation_map) {
+		std::cout << f_n.first << "\t";
+		for(auto it = f_n.second.begin() ; it != f_n.second.end() ; ++it)
+		{
+			if(it != f_n.second.begin())
+				cout << ":";
+			cout << *it;
+		}
+		std::cout << std::endl;
+	}
 
     // todo - lift the position into another graph
     // requires an input of target paths in the final graph
