@@ -548,7 +548,6 @@ namespace odgi {
                             // todo here we need to do our grouping
                             int64_t path_rank = get_path_idx(graph.get_path_handle(line));
                             if (path_rank >= 0 && path_layout_y[path_rank] < 0) {
-                                std::cerr << "\t\tAAAA!\n";
                                 path_layout_y[path_rank] = rank_for_visualization++;
                                 //rank_for_visualization++;
                             } else if (!group_paths) {
@@ -580,7 +579,6 @@ namespace odgi {
                     int64_t path_rank = get_path_idx(as_path_handle(i+1));
                     //std::cerr << path_rank << " - " << path_layout_y[path_rank] << " - " << graph.get_path_name(as_path_handle(i+1)) << " --> " << rank_for_visualization << std::endl;
                     if (path_rank >= 0 && path_layout_y[path_rank] < 0) {
-                        std::cerr << "\t\tOK!\n";
                         path_layout_y[path_rank] = rank_for_visualization++;
                     }
                 }
@@ -622,7 +620,6 @@ namespace odgi {
                     path_layout_buf[width * path_y + i] = 1;
                 }
                 //std::cerr << "path_y " << graph.get_path_name(path) << " " << path_count - path_y - 1 << std::endl;
-                std::cerr << "\t\tBBB!\n";
                 path_layout_y[as_integer(path) - 1] = path_count - path_y - 1;
             }
         }
