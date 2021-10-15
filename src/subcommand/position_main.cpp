@@ -165,6 +165,7 @@ int main_position(int argc, char** argv) {
 					len += target_graph.get_length(target_graph.get_handle_of_step(step));
 				});
 				end_pos = len -1; // 0-based
+				short_path_name = path_name;
 			}
 			path_start_end_pos_map[short_path_name] = std::make_tuple(path_name, start_pos, end_pos);
 		});
@@ -546,7 +547,8 @@ int main_position(int argc, char** argv) {
 					uint64_t local_min_pos = walked;
 					uint64_t local_max_pos = local_min_pos + node_length - 1;
 					if ((path_pos_start >= local_min_pos && path_pos_start <= local_max_pos)
-						|| (path_pos_end <= local_max_pos && path_pos_end >= local_min_pos)) {
+						|| (path_pos_end <= local_max_pos && path_pos_end >= local_min_pos)
+						|| (path_pos_start <= local_min_pos && path_pos_end >= local_max_pos)) {
 						// TODO add to our hashmap of node_id -> hash_set of annotation
 						if (node_annotation_map.count(nid) == 0) {
 							std::set<std::string> anno_set;
@@ -973,7 +975,7 @@ int main_position(int argc, char** argv) {
 		}
 	}
 	for (auto& f_n : final_node_annotation_map) {
-		std::cout << f_n.first << "\t";
+		std::cout << f_n.first << ",";
 		for(auto it = f_n.second.begin() ; it != f_n.second.end() ; ++it)
 		{
 			if(it != f_n.second.begin())
