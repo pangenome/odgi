@@ -960,29 +960,31 @@ int main_position(int argc, char** argv) {
             }
         }
     }
-	// TODO clean up duplicates
-	std::unordered_map<uint64_t , std::set<std::string>> final_node_annotation_map;
-	std::cout << "NODE_ID,ANNOTATION" << std::endl;
-	for (auto& node_annotation_map : node_annotation_maps) {
-		for (auto& elem : node_annotation_map) {
-			if (final_node_annotation_map.count(elem.first) == 0) {
-				final_node_annotation_map[elem.first] = elem.second;
-			} else {
-				for (auto& anno : elem.second) {
-					final_node_annotation_map[elem.first].insert(anno);
+	if (gff_input) {
+		//  clean up duplicates
+		std::unordered_map<uint64_t , std::set<std::string>> final_node_annotation_map;
+		std::cout << "NODE_ID,ANNOTATION" << std::endl;
+		for (auto& node_annotation_map : node_annotation_maps) {
+			for (auto& elem : node_annotation_map) {
+				if (final_node_annotation_map.count(elem.first) == 0) {
+					final_node_annotation_map[elem.first] = elem.second;
+				} else {
+					for (auto& anno : elem.second) {
+						final_node_annotation_map[elem.first].insert(anno);
+					}
 				}
 			}
 		}
-	}
-	for (auto& f_n : final_node_annotation_map) {
-		std::cout << f_n.first << ",";
-		for(auto it = f_n.second.begin() ; it != f_n.second.end() ; ++it)
-		{
-			if(it != f_n.second.begin())
-				cout << ":";
-			cout << *it;
+		for (auto& f_n : final_node_annotation_map) {
+			std::cout << f_n.first << ",";
+			for(auto it = f_n.second.begin() ; it != f_n.second.end() ; ++it)
+			{
+				if(it != f_n.second.begin())
+					cout << ":";
+				cout << *it;
+			}
+			std::cout << std::endl;
 		}
-		std::cout << std::endl;
 	}
 
     // todo - lift the position into another graph
