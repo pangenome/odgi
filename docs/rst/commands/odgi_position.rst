@@ -70,6 +70,10 @@ Position Options
 | A BED file of ranges in paths in the graph to lift into the target
   graph *-v, --give-graph-pos* emit graph positions.
 
+| **-E, --gff-input**\ =\ *FILE*
+| A GFF/GTF file with annotation of ranges in paths in the graph to lift into the target (sub)graph emitting graph identifiers with annotation. The output is a CSV reading for the visualization within Bandage. The first column is the node identifier, the second column the annotation. If several annotations exist for the same node, they are combined via ';'.
+
+
 | **-v, --give-graph-pos**
 | Emit graph positions (node, offset, strand) rather than path positions.
 

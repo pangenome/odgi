@@ -99,8 +99,18 @@ echo " [binary_tester::position] INFO: Testing path to path mapping with jaccard
 diff -u "$TEST"/binary/position/path_path_mapping_jaccard <("$OG" position -i "$TEST"/overlap.gfa -r target -p query1,5 -w 2)
 ret=$?
 if [[ $ret -eq 0 ]]; then
-    echo " [binary_tester::position] SUCCESS: Testing path to path mapping with jacard."
+    echo " [binary_tester::position] SUCCESS: Testing path to path mapping with jaccard."
 else
     echo " [binary_tester::position] FAILED: Testing path to path mapping with jaccard."
+    exit 1
+fi
+
+echo " [binary_tester::position] INFO: Testing GFF lifting for Bandage."
+diff -u "$TEST"/binary/position/gff <("$OG" position -i "$TEST"/overlap.gfa -E "$TEST"/overlap.gtf)
+ret=$?
+if [[ $ret -eq 0 ]]; then
+    echo " [binary_tester::position] SUCCESS: Testing GFF lifting for Bandage."
+else
+    echo " [binary_tester::position] FAILED: Testing GFF lifting for Bandage."
     exit 1
 fi
