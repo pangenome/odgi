@@ -120,7 +120,7 @@ int main_bin(int argc, char** argv) {
     }
 
     if (haplo_blocker) {
-        std::cerr << "[odgi::bin] main: running in HaploBlocker mode. Ignoring input parameters -f/--fasta, -D/--path-delim, -j/--json, -a/--aggregate-delim, "
+        std::cerr << "[odgi::bin] main: running in HaploBlocker mode. Ignoring input parameters -D/--path-delim, -j/--json, -a/--aggregate-delim, "
                      "-n/--num-bins, -w/--bin-width, -s/--no-seqs, -g/--no-gap-links." << std::endl;
         // first pass: collect #nucleotides, fill in_all_bins_bv, unique_bins_bv
         uint64_t haplo_blocker_min_paths_ = args::get(haplo_blocker_min_paths) ? args::get(haplo_blocker_min_paths) : 1;
