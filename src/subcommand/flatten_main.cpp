@@ -23,7 +23,7 @@ int main_flatten(int argc, char** argv) {
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
     args::ValueFlag<std::string> odgi_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::Group output_opts(parser, "[ Output Options ]");
-    args::ValueFlag<std::string> fasta_out_file(output_opts, "FILE", "Write the concatenated node sequences in FASTA format to FILE.", {'f', "fasta"});
+    args::ValueFlag<std::string> fasta_out_file(output_opts, "FILE", "Write the concatenated node sequences (also known as pangenome sequence) in FASTA format to FILE.", {'f', "fasta"});
     args::ValueFlag<std::string> fasta_seq_name(output_opts, "FILE", "The name to use for the concatenated graph sequence (default: input file name which was specified via -i, --idx=[FILE]).", {'n', "name-seq"});
     args::ValueFlag<std::string> bed_out_file(output_opts, "FILE", "Write the mapping between graph paths and the linearized FASTA sequence in BED format to FILE.", {'b', "bed"});
 	args::Group threading(parser, "[ Threading ]");
