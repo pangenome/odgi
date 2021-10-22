@@ -24,8 +24,6 @@ int main_bin(int argc, char** argv) {
     args::ArgumentParser parser("Binning of pangenome sequence and path information in the graph.");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
     args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this FILE. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
-    args::Group fasta_opts(parser, "[ FASTA Options ]");
-    args::ValueFlag<std::string> fa_out_file(fasta_opts, "FILE", "Write the pangenome sequence to FILE in FASTA format.", {'f', "fasta"});
     args::Group bin_opts(parser, "[ Bin Options ]");
     args::ValueFlag<std::string> path_delim(bin_opts, "path-delim", "Annotate rows by prefix and suffix of this delimiter.", {'D', "path-delim"});
     args::Flag aggregate_delim(bin_opts, "aggregate-delim", "Aggregate on path prefix delimiter. Argument depends on -D,--path-delim=[STRING].", {'a', "aggregate-delim"});
@@ -122,7 +120,7 @@ int main_bin(int argc, char** argv) {
     }
 
     if (haplo_blocker) {
-        std::cerr << "[odgi::bin] main: running in HaploBlocker mode. Ignoring input parameters -f/--fasta, -D/--path-delim, -j/--json, -a/--aggregate-delim, "
+        std::cerr << "[odgi::bin] main: running in HaploBlocker mode. Ignoring input parameters -D/--path-delim, -j/--json, -a/--aggregate-delim, "
                      "-n/--num-bins, -w/--bin-width, -s/--no-seqs, -g/--no-gap-links." << std::endl;
         // first pass: collect #nucleotides, fill in_all_bins_bv, unique_bins_bv
         uint64_t haplo_blocker_min_paths_ = args::get(haplo_blocker_min_paths) ? args::get(haplo_blocker_min_paths) : 1;
@@ -159,32 +157,11 @@ int main_bin(int argc, char** argv) {
         std::function<void(const uint64_t&,
                            const std::string&)> write_seq_json
                 = [&](const uint64_t& bin_id, const std::string& seq) {
-                    if (args::get(write_seqs_not) || fa_out_file) {
+                    if (args::get(write_seqs_not)) {
                         std::cout << "{\"bin_id\":" << bin_id << "}" << std::endl;
                     } else {
                         std::cout << "{\"bin_id\":" << bin_id << ","
                                   << "\"sequence\":\"" << seq << "\"}" << std::endl;
-                    }
-                };
-
-        std::function<void(const std::string&)> write_fasta
-                = [&](const std::string& nuc_seq) {
-                    if (fa_out_file) {
-                        std::ofstream out(args::get(fa_out_file));
-                        std::string fa_out_name = args::get(fa_out_file).c_str();
-                        std::regex regex("/");
-                        std::vector<std::string> splitted(
-                                std::sregex_token_iterator(fa_out_name.begin(), fa_out_name.end(), regex, -1),
-                                std::sregex_token_iterator()
-                        );
-                        fa_out_name = splitted[splitted.size() - 1];
-                        // Write header
-                        out << ">" << fa_out_name << std::endl;
-                        // Write the actual sequences, 80 nucleotides per line
-                        for (unsigned i = 0; i < nuc_seq.length(); i += 80) {
-                            std:: string sub_nuc_seq = nuc_seq.substr(i, 80);
-                            out << sub_nuc_seq << std::endl;
-                        }
                     }
                 };
 
@@ -277,7 +254,7 @@ int main_bin(int argc, char** argv) {
 
         if (args::get(output_json)) {
             algorithms::bin_path_info(graph, (args::get(aggregate_delim) ? args::get(path_delim) : ""),
-                                      write_header_json,write_json, write_seq_json, write_fasta,
+                                      write_header_json,write_json, write_seq_json,
                                       args::get(num_bins), args::get(bin_width), args::get(drop_gap_links),
                                       args::get(progress));
         } else {
@@ -291,7 +268,7 @@ int main_bin(int argc, char** argv) {
                       << "first.nucl" << "\t"
                       << "last.nucl" << std::endl;
             algorithms::bin_path_info(graph, (args::get(aggregate_delim) ? args::get(path_delim) : ""),
-                                      write_header_tsv,write_tsv, write_seq_noop, write_fasta,
+                                      write_header_tsv,write_tsv, write_seq_noop,
                                       args::get(num_bins), args::get(bin_width), args::get(drop_gap_links),
                                       args::get(progress));
         }
