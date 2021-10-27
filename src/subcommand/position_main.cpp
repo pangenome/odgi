@@ -980,20 +980,27 @@ int main_position(int argc, char** argv) {
 				}
 			}
 		}
+		std::string prev_anno = "";
 		for (auto& f_n : final_node_annotation_map) {
 			std::cout << f_n.first << ",";
-			std::string anno = "";
+
 			// TODO only add annoation to string
-			// TODO check if we already saw the annotation: YES: don't print anno NO: print anno. And print previous anno.
-			// TODO extra case: we always emit the last annotation
-			for(auto it = f_n.second.begin() ; it != f_n.second.end() ; ++it)
-			{
-				if(it != f_n.second.begin())
-					cout << ";";
-					anno = anno + ";";
-				cout << *it;
-				anno = anno + *it;
+			std::string anno = "";
+			for(auto it = f_n.second.begin() ; it != f_n.second.end() ; ++it) {
+			    if(it != f_n.second.begin()) {
+			        anno += ";";
+			    }
+			    anno = anno + *it;
 			}
+
+			// TODO extra case: we always emit the last annotation
+			if (prev_anno != anno) {
+			    cout << anno;
+			} else {
+			    cout << "";
+			}
+			prev_anno = anno;
+
 			// use a sha256 to get a few bytes that we'll use for a color
 			picosha2::byte_t hashed[picosha2::k_digest_size];
 			picosha2::hash256(anno.begin(), anno.end(), hashed, hashed + picosha2::k_digest_size);
