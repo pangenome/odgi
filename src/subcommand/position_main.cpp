@@ -7,6 +7,7 @@
 #include "algorithms/path_jaccard.hpp"
 #include <omp.h>
 #include "utils.hpp"
+#include "picosha2.h"
 
 namespace odgi {
 
@@ -626,6 +627,10 @@ int main_position(int argc, char** argv) {
         bool used_bidirectional = false;
     };
 
+	auto createRGB = [](const int r, const int g, const int b) {
+		return ((r & 0xff) << 16) + ((g & 0xff) << 8) + (b & 0xff);
+	};
+
     // get the reference path positions right where we are
     auto get_immediate =
         [&search_radius,&get_offset_in_path](const odgi::graph_t& graph,
@@ -962,8 +967,8 @@ int main_position(int argc, char** argv) {
     }
 	if (gff_input) {
 		//  clean up duplicates
-		std::unordered_map<uint64_t , std::set<std::string>> final_node_annotation_map;
-		std::cout << "NODE_ID,ANNOTATION" << std::endl;
+		std::map<uint64_t , std::set<std::string>> final_node_annotation_map;
+		std::cout << "NODE_ID,ANNOTATION,COLOR" << std::endl;
 		for (auto& node_annotation_map : node_annotation_maps) {
 			for (auto& elem : node_annotation_map) {
 				if (final_node_annotation_map.count(elem.first) == 0) {
@@ -977,12 +982,28 @@ int main_position(int argc, char** argv) {
 		}
 		for (auto& f_n : final_node_annotation_map) {
 			std::cout << f_n.first << ",";
+			std::string anno = "";
+			// TODO only add annoation to string
+			// TODO check if we already saw the annotation: YES: don't print anno NO: print anno. And print previous anno.
+			// TODO extra case: we always emit the last annotation
 			for(auto it = f_n.second.begin() ; it != f_n.second.end() ; ++it)
 			{
 				if(it != f_n.second.begin())
-					cout << ":";
+					cout << ";";
+					anno = anno + ";";
 				cout << *it;
+				anno = anno + *it;
 			}
+			// use a sha256 to get a few bytes that we'll use for a color
+			picosha2::byte_t hashed[picosha2::k_digest_size];
+			picosha2::hash256(anno.begin(), anno.end(), hashed, hashed + picosha2::k_digest_size);
+
+			uint8_t path_r = hashed[24];
+			uint8_t path_g = hashed[8];
+			uint8_t path_b = hashed[16];
+
+			cout << "," << std::setfill('0') << std::setw(6) << std::hex << (path_r << 16 | path_g << 8 | path_b );
+
 			std::cout << std::endl;
 		}
 	}
