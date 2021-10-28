@@ -982,7 +982,7 @@ int main_position(int argc, char** argv) {
 		}
 		std::string prev_anno = "";
 		for (auto& f_n : final_node_annotation_map) {
-			std::cout << f_n.first << ",";
+		    std::cout << std::dec << f_n.first << ",";
 
 			// TODO only add annoation to string
 			std::string anno = "";
