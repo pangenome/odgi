@@ -627,10 +627,6 @@ int main_position(int argc, char** argv) {
         bool used_bidirectional = false;
     };
 
-	auto createRGB = [](const int r, const int g, const int b) {
-		return ((r & 0xff) << 16) + ((g & 0xff) << 8) + (b & 0xff);
-	};
-
     // get the reference path positions right where we are
     auto get_immediate =
         [&search_radius,&get_offset_in_path](const odgi::graph_t& graph,
@@ -981,23 +977,21 @@ int main_position(int argc, char** argv) {
 			}
 		}
 		std::string prev_anno = "";
-		for (auto& f_n : final_node_annotation_map) {
-		    std::cout << std::dec << f_n.first << ",";
-
-			// TODO only add annoation to string
+		uint64_t prev_node_id = -1;
+		std::map<uint64_t , std::set<std::string>>::iterator it_map;
+		for (it_map = final_node_annotation_map.begin(); it_map != final_node_annotation_map.end(); ++it_map) {
+			std::cout << std::dec << it_map->first << ",";
 			std::string anno = "";
-			for(auto it = f_n.second.begin() ; it != f_n.second.end() ; ++it) {
-			    if(it != f_n.second.begin()) {
+			for(auto it = it_map->second.begin() ; it != it_map->second.end() ; ++it) {
+			    if(it != it_map->second.begin()) {
 			        anno += ";";
 			    }
 			    anno = anno + *it;
 			}
 
 			// TODO extra case: we always emit the last annotation
-			if (prev_anno != anno) {
+			if ((prev_anno != anno) || (std::prev(final_node_annotation_map.end())->first == it_map->first)) {
 			    cout << anno;
-			} else {
-			    cout << "";
 			}
 			prev_anno = anno;
 
