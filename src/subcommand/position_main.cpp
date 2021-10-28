@@ -1009,8 +1009,7 @@ int main_position(int argc, char** argv) {
 			uint8_t path_g = hashed[8];
 			uint8_t path_b = hashed[16];
 
-			cout << "," << std::setfill('0') << std::setw(6) << std::hex << (path_r << 16 | path_g << 8 | path_b );
-
+			cout << ",#" << std::setfill('0') << std::setw(6) << std::hex << (path_r << 16 | path_g << 8 | path_b );
 			std::cout << std::endl;
 		}
 	}

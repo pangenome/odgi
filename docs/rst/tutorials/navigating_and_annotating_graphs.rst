@@ -257,9 +257,10 @@ We downloaded the graph, unpacked it, translated it into the `odgi` format and e
     gunzip hg38.ncbiRefSeq.gtf.gz
     grep -P "chr6\t" hg38.ncbiRefSeq.gtf | less -S | grep -P "transcript\t" | cut -f 1 -d';'| less -S | sed 's/gene_id //g' | sed 's/"//g' | uniq | sed 's/chr6/grch38#chr6/g' > hg38.grch38#chr6.gtf
     odgi position -i chr6.pan.fa.a2fb268.4030258.b5c839f.smooth.gfa.og.29-34.og -E hg38.grch38#chr6.gtf -t 16 > chr6.pan.fa.a2fb268.4030258.b5c839f.smooth.gfa.og.29-34.og.anno.csv
+    odgi view -i chr6.pan.fa.a2fb268.4030258.b5c839f.smooth.gfa.og.29-34.og -g >chr6.pan.fa.a2fb268.4030258.b5c839f.smooth.gfa.og.29-34.og.gfa
 
 We downloaded the annotation, set the correct reference identifier, only filtered for 'transcript, and only kept the actual gene identifier.
-:ref:`odgi position` then gave us the CSV ready for Bandage. Below you can see an example screenshot.
+:ref:`odgi position` then gave us the CSV ready for Bandage and :ref:`odgi view` translated our ODGI graph into the GFA format. Below you can see an example screenshot.
 
 .. image:: /img/HLA_Bandage.png
 
