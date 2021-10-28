@@ -977,23 +977,29 @@ int main_position(int argc, char** argv) {
 			}
 		}
 		std::string prev_anno = "";
+		std::set<std::string> prev_set;
 		uint64_t prev_node_id = -1;
 		std::map<uint64_t , std::set<std::string>>::iterator it_map;
 		for (it_map = final_node_annotation_map.begin(); it_map != final_node_annotation_map.end(); ++it_map) {
 			std::cout << std::dec << it_map->first << ",";
 			std::string anno = "";
 			for(auto it = it_map->second.begin() ; it != it_map->second.end() ; ++it) {
-			    if(it != it_map->second.begin()) {
-			        anno += ";";
-			    }
-			    anno = anno + *it;
+				if(it != it_map->second.begin()) {
+					anno += ";";
+				}
+				anno = anno + *it;
 			}
 
-			// TODO extra case: we always emit the last annotation
-			if ((prev_anno != anno) || (std::prev(final_node_annotation_map.end())->first == it_map->first)) {
-			    cout << anno;
+			// do we match with the previous set?
+			// do we match with the next set, if available
+			if (prev_set != it_map->second
+				|| (std::prev(final_node_annotation_map.end())->first == it_map->first)
+				|| (std::next(it_map)->second != it_map->second && std::next(it_map) != final_node_annotation_map.end())) {
+
+				cout << anno;
 			}
-			prev_anno = anno;
+
+			prev_set = it_map->second;
 
 			// use a sha256 to get a few bytes that we'll use for a color
 			picosha2::byte_t hashed[picosha2::k_digest_size];
