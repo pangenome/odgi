@@ -7,6 +7,7 @@
 #include "algorithms/path_jaccard.hpp"
 #include <omp.h>
 #include "utils.hpp"
+#include "picosha2.h"
 
 namespace odgi {
 
@@ -962,8 +963,8 @@ int main_position(int argc, char** argv) {
     }
 	if (gff_input) {
 		//  clean up duplicates
-		std::unordered_map<uint64_t , std::set<std::string>> final_node_annotation_map;
-		std::cout << "NODE_ID,ANNOTATION" << std::endl;
+		std::map<uint64_t , std::set<std::string>> final_node_annotation_map;
+		std::cout << "NODE_ID,ANNOTATION,COLOR" << std::endl;
 		for (auto& node_annotation_map : node_annotation_maps) {
 			for (auto& elem : node_annotation_map) {
 				if (final_node_annotation_map.count(elem.first) == 0) {
@@ -975,14 +976,40 @@ int main_position(int argc, char** argv) {
 				}
 			}
 		}
-		for (auto& f_n : final_node_annotation_map) {
-			std::cout << f_n.first << ",";
-			for(auto it = f_n.second.begin() ; it != f_n.second.end() ; ++it)
-			{
-				if(it != f_n.second.begin())
-					cout << ":";
-				cout << *it;
+		std::string prev_anno = "";
+		std::set<std::string> prev_set;
+		uint64_t prev_node_id = -1;
+		std::map<uint64_t , std::set<std::string>>::iterator it_map;
+		for (it_map = final_node_annotation_map.begin(); it_map != final_node_annotation_map.end(); ++it_map) {
+			std::cout << std::dec << it_map->first << ",";
+			std::string anno = "";
+			for(auto it = it_map->second.begin() ; it != it_map->second.end() ; ++it) {
+				if(it != it_map->second.begin()) {
+					anno += ";";
+				}
+				anno = anno + *it;
 			}
+
+			// do we match with the previous set?
+			// do we match with the next set, if available
+			if (prev_set != it_map->second
+				|| (std::prev(final_node_annotation_map.end())->first == it_map->first)
+				|| (std::next(it_map)->second != it_map->second && std::next(it_map) != final_node_annotation_map.end())) {
+
+				cout << anno;
+			}
+
+			prev_set = it_map->second;
+
+			// use a sha256 to get a few bytes that we'll use for a color
+			picosha2::byte_t hashed[picosha2::k_digest_size];
+			picosha2::hash256(anno.begin(), anno.end(), hashed, hashed + picosha2::k_digest_size);
+
+			uint8_t path_r = hashed[24];
+			uint8_t path_g = hashed[8];
+			uint8_t path_b = hashed[16];
+
+			cout << ",#" << std::setfill('0') << std::setw(6) << std::hex << (path_r << 16 | path_g << 8 | path_b );
 			std::cout << std::endl;
 		}
 	}
