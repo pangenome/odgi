@@ -296,7 +296,7 @@ namespace odgi {
                 std::cerr
                         << "[odgi::extract] error: path " << region.seq << " not found in the input graph."
                         << std::endl;
-                return 1;
+                exit(1);
             }
 
             // no coordinates given, we do whole thing (0,-1)
@@ -310,7 +310,7 @@ namespace odgi {
         if (_split_subgraphs && path_ranges.empty()) {
             std::cerr << "[odgi::extract] error: please specify at least one target when "
                          "one subgraph per given target is requested (with -s/--split-subgraphs)." << std::endl;
-            return 1;
+            exit(1);
         }
 
         const bool show_progress = args::get(_show_progress);
