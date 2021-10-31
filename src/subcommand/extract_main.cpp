@@ -54,7 +54,9 @@ namespace odgi {
                                                     "Find the node(s) in the path range(s) specified in the given BED FILE.",
                                                     {'b', "bed-file"});
         args::Flag _full_range(extract_opts, "full_range",
-                               "Collects all nodes in the sorted order of the graph in the min and max positions touched by the given path ranges. This ensures that all the paths of the subgraph are not split by node, but that the nodes are laced together again. Comparable to **-R, --lace-paths=FILE**, but specifically for all paths in the resulting subgraph. "
+                               "Collects all nodes in the sorted order of the graph in the min and max positions touched by the given path ranges. "
+                               "This ensures that all the paths of the subgraph are not split by node, but that the nodes are laced together again. "
+                               "Comparable to **-R, --lace-paths=FILE**, but specifically for all paths in the resulting subgraph. "
                                "Be careful to use it with very complex graphs.",
                                {'E', "full-range"});
         args::ValueFlag<std::string> _path_names_file(extract_opts, "FILE",
@@ -434,7 +436,7 @@ namespace odgi {
                 subgraph.create_edge(edge.first, edge.second);
             }
 
-            if (show_progress) {
+            if (show_progress && edges_to_create.size() > 0) {
                 std::cerr << "[odgi::extract] fixed " << edges_to_create.size() << " edge(s)" << std::endl;
             }
 

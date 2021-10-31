@@ -189,6 +189,6 @@ int main_untangle(int argc, char **argv) {
     return 0;
 }
 
-static Subcommand odgi_untangle("untangle", "Project paths into reference-relative (optionally PAF), to decompose paralogy relationships.", PIPELINE, 3, main_untangle);
+static Subcommand odgi_untangle("untangle", "Project paths into reference-relative, to decompose paralogy relationships.", PIPELINE, 3, main_untangle);
 
 } // namespace odgi
