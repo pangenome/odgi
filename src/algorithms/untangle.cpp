@@ -584,17 +584,17 @@ void untangle(
     //auto step_pos = make_step_index(graph, paths, num_threads);
     step_index_t step_index(graph, paths, num_threads, progress);
 
-	// which nodes are traversed by our target paths?
-	atomicbitvector::atomic_bv_t target_nodes(graph.get_node_count() + 1);
+    // which nodes are traversed by our target paths?
+    atomicbitvector::atomic_bv_t target_nodes(graph.get_node_count() + 1);
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
-	for (auto& target : targets) {
-		graph.for_each_step_in_path(
-				target, [&](const step_handle_t& step) {
-					target_nodes.set(graph.get_id(graph.get_handle_of_step(step)), true);
-				});
-	}
+    for (auto& target : targets) {
+        graph.for_each_step_in_path(
+            target, [&](const step_handle_t& step) {
+                target_nodes.set(graph.get_id(graph.get_handle_of_step(step)), true);
+            });
+    }
     /*
-    auto get_position = [&](const step_handle_t& step) {
+      auto get_position = [&](const step_handle_t& step) {
         return step_index.get_position(step);
     };
     */
@@ -621,15 +621,13 @@ void untangle(
         for (auto& step : cuts) {
             cut_nodes.set(graph.get_id(graph.get_handle_of_step(step)));
         }
-		// TODO also add the nodes here where the query path touches the target for the first time
-		// we start from the front until we found a target node
-		uint64_t node_id_front = query_hits_target_front(graph, path, target_nodes);
-		cut_nodes.set(node_id_front, true);
-		// we start from the back until we found a target node
-		uint64_t node_id_back = query_hits_target_back(graph, path, target_nodes);
-		cut_nodes.set(node_id_back, true);
-        //std::cerr << "setup" << std::endl;
-        //write_cuts(graph, path, cuts, step_pos);
+        // also add the nodes here where the query path touches the target for the first time
+        // we start from the front until we found a target node
+        uint64_t node_id_front = query_hits_target_front(graph, path, target_nodes);
+        cut_nodes.set(node_id_front, true);
+        // we start from the back until we found a target node
+        uint64_t node_id_back = query_hits_target_back(graph, path, target_nodes);
+        cut_nodes.set(node_id_back, true);
     }
 
     //auto step_pos = make_step_index(graph, queries);
