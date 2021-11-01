@@ -157,7 +157,7 @@ namespace odgi {
     }
 
     static Subcommand odgi_server("server",
-                                  "Start a basic HTTP server with a given path index file to go from *path:position* to *pangenome:position* very efficiently.",
+                                  "Start a basic HTTP server to lift coordinates between path and pangenomic positions.",
                                   PIPELINE, 3, main_server);
 
 }

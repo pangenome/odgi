@@ -4,7 +4,7 @@
 odgi matrix
 #########
 
-Write the graph topology in sparse matrix formats.
+Write the graph topology in sparse matrix format.
 
 SYNOPSIS
 ========

@@ -26,7 +26,7 @@ int main_layout(int argc, char **argv) {
     --argc;
 
     args::ArgumentParser parser(
-        "Establish 2D layouts of the graph using path-guided stochastic gradient descent (the graph must be sorted and id-compacted).");
+        "Establish 2D layouts of the graph using path-guided stochastic gradient descent. The graph must be sorted and id-compacted.");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
     args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::Group files_io_opts(parser, "[ Files IO ]");
@@ -416,7 +416,7 @@ int main_layout(int argc, char **argv) {
     return 0;
 }
 
-static Subcommand odgi_layout("layout", "Establish 2D layouts of the graph using path-guided stochastic gradient descent (the graph must be sorted and id-compacted).",
+static Subcommand odgi_layout("layout", "Establish 2D layouts of the graph using path-guided stochastic gradient descent.",
                                PIPELINE, 3, main_layout);
 
 

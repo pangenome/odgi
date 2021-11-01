@@ -236,7 +236,7 @@ namespace odgi {
 	}
 
 	static Subcommand odgi_tips("tips",
-									"Identifying break point positions relative to given query (reference) path(s) of all the tips in the graph or of tips of given path(s). Prints BED records to stdout.",
+									"Identifying break point positions relative to given references.",
 									PIPELINE, 3, main_tips);
 
 }

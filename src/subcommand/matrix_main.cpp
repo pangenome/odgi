@@ -18,7 +18,7 @@ int main_matrix(int argc, char** argv) {
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
-    args::ArgumentParser parser("Write the graph topology in sparse matrix formats.");
+    args::ArgumentParser parser("Write the graph topology in sparse matrix format.");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
     args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::Group matrix_opts(parser, "[ Matrix Options ]");
@@ -72,7 +72,7 @@ int main_matrix(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand odgi_matrix("matrix", "Write the graph topology in sparse matrix formats.",
+static Subcommand odgi_matrix("matrix", "Write the graph topology in sparse matrix format.",
                               PIPELINE, 3, main_matrix);
 
 
