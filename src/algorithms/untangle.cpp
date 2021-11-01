@@ -573,7 +573,10 @@ void untangle(
     const size_t& num_threads,
     const bool& progress) {
 
-    std::cerr << "[odgi::algorithms::untangle] untangling " << queries.size() << " queries with " << targets.size() << " targets" << std::endl;
+    if (progress) {
+        std::cerr << "[odgi::algorithms::untangle] untangling " << queries.size() << " queries with " << targets.size() << " targets" << std::endl;
+    }
+
     std::vector<path_handle_t> paths;
     paths.insert(paths.end(), queries.begin(), queries.end());
     paths.insert(paths.end(), targets.begin(), targets.end());
@@ -602,7 +605,11 @@ void untangle(
     // collect all possible cuts
     // we'll use this to drive the subsequent segmentation
     int threads_per = std::max(1, (int)std::floor((double)num_threads/(double)paths.size()));
-    std::cerr << "[odgi::algorithms::untangle] establishing initial cuts for " << paths.size() << " paths" << std::endl;
+
+    if (progress) {
+        std::cerr << "[odgi::algorithms::untangle] establishing initial cuts for " << paths.size() << " paths" << std::endl;
+    }
+
     atomicbitvector::atomic_bv_t cut_nodes(graph.get_node_count()+1);
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
     for (auto& path : paths) {
@@ -632,7 +639,10 @@ void untangle(
 
     //auto step_pos = make_step_index(graph, queries);
     // node to reference segmentation mapping
-    std::cerr << "[odgi::algorithms::untangle] building target segment index" << std::endl;
+    if (progress) {
+        std::cerr << "[odgi::algorithms::untangle] building target segment index" << std::endl;
+    }
+
     segment_map_t target_segments(graph,
                                   targets,
                                   step_index,
@@ -647,7 +657,10 @@ void untangle(
     //show_steps(graph, step_pos);
     //std::cout << "path\tfrom\tto" << std::endl;
     //auto step_pos = make_step_index(graph, queries);
-    std::cerr << "[odgi::algorithms::untangle] writing pair BED for " << queries.size() << " queries" << std::endl;
+    if (progress) {
+        std::cerr << "[odgi::algorithms::untangle] writing pair BED for " << queries.size() << " queries" << std::endl;
+    }
+
     if (!paf_output){
         // BEDPE format
         std::cout << "#query.name\tquery.start\tquery.end\tref.name\tref.start\tref.end\tscore\tinv\tself.cov\tnth.best" << std::endl;
