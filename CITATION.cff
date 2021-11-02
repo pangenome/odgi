@@ -20,5 +20,5 @@ license: MIT
 repository-code: "https://github.com/pangenome/odgi"
 keywords:
   - pangenome
-  - pangeome graph
+  - pangenome graph
   - variation graph

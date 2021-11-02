@@ -30,10 +30,13 @@ MANDATORY OPTIONS
 Explode Options
 ---------------
 
+| **-g, --to-gfa**
+| Write each connected component to a file in GFAv1 format.
+
 | **-p, --prefix**\ =\ *STRING*
 | Write each connected component in a file with the given *STRING* prefix. The
-  file for the component ``i`` will be named ``STRING.i.og`` (default:
-  ``component.i.og``).
+  file for the component number ``i`` will be named ``STRING.i.EXTENSION``
+(default: ``component.i.og`` or ``component.i.gfa``).
 
 | **-b, --biggest**\ =\ *N*
 | Specify the number of the biggest connected components to write,
