@@ -271,14 +271,17 @@ int main_sort(int argc, char** argv) {
         uint64_t max_path_step_count = get_max_path_step_count(path_sgd_use_paths, path_index);
         path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? args::get(p_sgd_zipf_space) : get_max_path_length(path_sgd_use_paths, path_index);
         path_sgd_zipf_space_max = args::get(p_sgd_zipf_space_max) ? args::get(p_sgd_zipf_space_max) : 100;
-        std::cerr << "path_sgd_zipf_space_max: " << path_sgd_zipf_space_max << std::endl;
 
         path_sgd_zipf_max_number_of_distributions = args::get(p_sgd_zipf_max_number_of_distributions) ? std::max(
                 (uint64_t) path_sgd_zipf_space_max + 1,
                 (uint64_t) args::get(p_sgd_zipf_max_number_of_distributions)
         ) : std::max((uint64_t) path_sgd_zipf_space_max + 1,
                      (uint64_t) MAX_NUMBER_OF_ZIPF_DISTRIBUTIONS);
-        std::cerr << "path_sgd_zipf_max_number_of_distributions: " << path_sgd_zipf_max_number_of_distributions << std::endl;
+
+        if (args::get(progress)) {
+            std::cerr << "path_sgd_zipf_space_max: " << path_sgd_zipf_space_max << std::endl;
+            std::cerr << "path_sgd_zipf_max_number_of_distributions: " << path_sgd_zipf_max_number_of_distributions << std::endl;
+        }
 
         if (args::get(p_sgd_zipf_space_quantization_step)) {
             path_sgd_zipf_space_quantization_step = std::max((uint64_t) 2, args::get(p_sgd_zipf_space_quantization_step));
@@ -299,8 +302,8 @@ int main_sort(int argc, char** argv) {
     // helper, TODO: move into its own file
 
     // did we groom the graph?
-    std::string outfile = args::get(dg_out_file);
-    if (outfile.size()) {
+    const std::string outfile = args::get(dg_out_file);
+    if (!outfile.empty()) {
         if (args::get(two)) {
             graph.apply_ordering(algorithms::two_way_topological_order(&graph), true);
         } else if (args::get(optimize)) {
