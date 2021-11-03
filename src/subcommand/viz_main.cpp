@@ -68,9 +68,9 @@ namespace odgi {
                                                                                           " from black (no inversions) to red (bin mean inversion rate equals to"
                                                                                           " 1).", {'z', "color-by-mean-inversion-rate"});
         args::Flag color_by_uncalled_bases(viz_opts, "bool", "Change the color with respect to the uncalled bases of the path for each"
-                                                              " bin, from white (all uncalled bases) to black (no uncalled bases)",
+                                                             " bin, from black (no uncalled bases) to green (all uncalled bases).",
                                                               {'N', "color-by-uncalled-bases"});
-        args::ValueFlag<char> _color_by_prefix(viz_opts, "CHAR", "Color paths by their names looking at the prefix before the given"
+        args::ValueFlag<char> color_by_prefix(viz_opts, "CHAR", "Color paths by their names looking at the prefix before the given"
                                                                  " character CHAR.",{'s', "color-by-prefix"});
         // TODO
         args::ValueFlag<std::string> _name_prefixes(viz_opts, "FILE", "Merge paths beginning with prefixes listed (one per line) in *FILE*.", {'M', "prefix-merges"});
@@ -197,7 +197,7 @@ namespace odgi {
             return 1;
         }
 
-        if ((args::get(_color_by_prefix) != 0) + args::get(show_strands) + args::get(white_to_black) + args::get(color_by_mean_depth) + args::get(color_by_mean_inversion_rate) + args::get(color_by_uncalled_bases)  > 1) {
+        if ((args::get(color_by_prefix) != 0) + args::get(show_strands) + args::get(white_to_black) + args::get(color_by_mean_depth) + args::get(color_by_mean_inversion_rate) + args::get(color_by_uncalled_bases)  > 1) {
             std::cerr
                     << "[odgi::viz] error: please specify only one of the following options: "
                        "-s/--color-by-prefix, -S/--show-strand, -u/--white-to-black, "
@@ -669,8 +669,8 @@ namespace odgi {
         }
 
         char path_name_prefix_separator = '\0';
-        if (_color_by_prefix) {
-            path_name_prefix_separator = args::get(_color_by_prefix);
+        if (color_by_prefix) {
+            path_name_prefix_separator = args::get(color_by_prefix);
         }
 
         auto add_point = [&](const double &_x, const double &_y,
@@ -909,7 +909,7 @@ namespace odgi {
                 }
                 // use a sha256 to get a few bytes that we'll use for a color
                 picosha2::byte_t hashed[picosha2::k_digest_size];
-                if (_color_by_prefix) {
+                if (color_by_prefix) {
                     std::string path_name_prefix = prefix(path_name, path_name_prefix_separator);
                     picosha2::hash256(path_name_prefix.begin(), path_name_prefix.end(), hashed, hashed + picosha2::k_digest_size);
                 } else {
@@ -933,7 +933,6 @@ namespace odgi {
                 uint64_t rev = 0;
                 uint64_t path_len_to_use = 0;
                 std::map<uint64_t, algorithms::path_info_t> bins;
-                std::map<uint64_t, double> bin_to_uncalled_ratio;
                 if (is_aln) {
                     if (
                             _show_strands ||
@@ -983,7 +982,8 @@ namespace odgi {
                                 for (uint64_t k = 0; k < hl; ++k) {
                                     int64_t curr_bin = (p + k) / _bin_width + 1;
 
-                                    bin_to_uncalled_ratio[curr_bin] += num_uncalled_bases;
+                                    // Use the `mean_depth` field as 'mean_Ns`
+                                    bins[curr_bin].mean_depth += num_uncalled_bases;
                                 }
                             }
                         });
@@ -995,8 +995,9 @@ namespace odgi {
                                 v.mean_depth /= _bin_width;
                             }
                         } else if (_binned_mode && _color_by_uncalled_bases) {
-                            for (auto &entry : bin_to_uncalled_ratio) {
-                                entry.second = entry.second / _bin_width;
+                            for (auto &entry : bins) {
+                                auto &v = entry.second;
+                                v.mean_depth /= _bin_width;
                             }
                         }
                     }
@@ -1155,7 +1156,7 @@ namespace odgi {
                                     } else if (_color_by_mean_inversion_rate) {
                                         x = bins[curr_bin].mean_inv;
                                     } else if (_color_by_uncalled_bases) {
-                                        x = bin_to_uncalled_ratio[curr_bin];
+                                        x = bins[curr_bin].mean_depth;
                                     }
                                 }
 

@@ -49,7 +49,7 @@ Visualization Options
 | **-X, --path-x-padding**\ =\ *N*
 | The padding in pixels on the x-axis for a path.
 
-| **-N, --no-path-borders**
+| **-n, --no-path-borders**
 | Don't show path borders.
 
 | **-b, --black-path-borders**
@@ -75,6 +75,10 @@ Visualization Options
   color respect to the mean inversion rate of the path for each bin,
   from black (no inversions) to red (bin mean inversion rate equals to
   1).
+
+| **-N, --color-by-uncalled-bases**
+| Change the color with respect to the uncalled bases of the path for each
+  bin, from black (no uncalled bases) to green (all uncalled bases).
 
 | **-s, --color-by-prefix**\ =\ *CHAR*
 | Color paths by their names looking at the prefix before the given
