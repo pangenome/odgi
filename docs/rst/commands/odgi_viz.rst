@@ -77,7 +77,7 @@ Visualization Options
   1).
 
 | **-s, --color-by-prefix**\ =\ *CHAR*
-| Colors paths by their names looking at the prefix before the given
+| Color paths by their names looking at the prefix before the given
   character *CHAR*.
 
 | **-M, --prefix-merges**\ =\ *FILE*

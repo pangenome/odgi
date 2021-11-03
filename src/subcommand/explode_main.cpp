@@ -24,17 +24,17 @@ namespace odgi {
         args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
         args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
         args::Group explode_opts(parser, "[ Explode Options ]");
+        args::Flag _to_gfa(explode_opts, "to_gfa", "Write each connected component to a file in GFAv1 format.", {'g', "to-gfa"});
         args::ValueFlag<std::string> _prefix(explode_opts, "STRING",
                                              "Write each connected component to a file with the given STRING prefix. "
-                                             "The file for the component `i` will be named `STRING.i.og` "
-                                             "(default: `component.i.og`).", {'p', "prefix"});
+                                             "The file for the component number `i` will be named `STRING.i.EXTENSION` "
+                                             "(default: `component.i.og` or `component.i.gfa`).", {'p', "prefix"});
         args::ValueFlag<uint64_t> _write_biggest_components(explode_opts, "N",
                                                             "Specify the number of the biggest connected components to write, sorted by decreasing size (default: disabled, for writing them all).",
                                                             {'b', "biggest"});
         args::ValueFlag<char> _size_metric(explode_opts, "C",
                                            "Specify how to sort the connected components by size:\np) Path mass (total number of path bases) (default).\nl) Graph length (number of node bases).\nn) Number of nodes.\nP) Longest path.",
                                            {'s', "sorting-criteria"});
-
         args::Flag _optimize(explode_opts, "optimize", "Compact the node ID space in each connected component.",
                              {'O', "optimize"});
         args::Group threading_opts(parser, "[ Threading ]");
@@ -42,7 +42,7 @@ namespace odgi {
                                            "Number of threads to use for parallel operations.",
                                            {'t', "threads"});
         args::Group processing_info_opts(parser, "[ Processing Information ]");
-        args::Flag _debug(processing_info_opts, "progress", "Print information about the components and the progress to stderr.",
+        args::Flag _progress(processing_info_opts, "progress", "Print information about the components and the progress to stderr.",
                           {'P', "progress"});
         args::Group program_info_opts(parser, "[ Program Information ]");
         args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi explode.", {'h', "help"});
@@ -69,7 +69,10 @@ namespace odgi {
             return 1;
         }
 
-		const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+        const bool to_gfa = args::get(_to_gfa);
+        const bool optimize = args::get(_optimize);
+        const bool progress = args::get(_progress);
+        const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
 
 		graph_t graph;
         assert(argc > 0);
@@ -78,12 +81,9 @@ namespace odgi {
             if (infile == "-") {
                 graph.deserialize(std::cin);
             } else {
-				utils::handle_gfa_odgi_input(infile, "explode", args::get(_debug), num_threads, graph);
+                utils::handle_gfa_odgi_input(infile, "explode", progress, num_threads, graph);
             }
         }
-
-        const bool debug = args::get(_debug);
-        const bool optimize = args::get(_optimize);
 
         std::string output_dir_plus_prefix = "./";
         if (!args::get(_prefix).empty()) {
@@ -205,7 +205,7 @@ namespace odgi {
         }
 
         std::unique_ptr<algorithms::progress_meter::ProgressMeter> component_progress;
-        if (debug) {
+        if (progress) {
             component_progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
                     weak_components.size(), "[odgi::explode] exploding component(s)");
 
@@ -241,11 +241,15 @@ namespace odgi {
                     subgraph.optimize();
                 }
 
-                const string filename = output_dir_plus_prefix + "." + to_string(component_index) + ".og";
+                const string filename = output_dir_plus_prefix + "." + to_string(component_index) + (to_gfa ? ".gfa" : ".og");
 
                 // Save the component
                 ofstream f(filename);
-                subgraph.serialize(f);
+                if (to_gfa){
+                    subgraph.to_gfa(f);
+                }else {
+                    subgraph.serialize(f);
+                }
                 f.close();
 
                 /*if (debug) {
@@ -257,12 +261,12 @@ namespace odgi {
                 }*/
             }
 
-            if (debug) {
+            if (progress) {
                 component_progress->increment(1);
             }
         }
 
-        if (debug) {
+        if (progress) {
             component_progress->finish();
         }
 

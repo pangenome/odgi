@@ -70,7 +70,7 @@ namespace odgi {
         args::Flag color_by_uncalled_bases(viz_opts, "bool", "Change the color with respect to the uncalled bases of the path for each"
                                                               " bin, from white (all uncalled bases) to black (no uncalled bases)",
                                                               {'N', "color-by-uncalled-bases"});
-        args::ValueFlag<char> _color_by_prefix(viz_opts, "CHAR", "Colors paths by their names looking at the prefix before the given"
+        args::ValueFlag<char> _color_by_prefix(viz_opts, "CHAR", "Color paths by their names looking at the prefix before the given"
                                                                  " character CHAR.",{'s', "color-by-prefix"});
         // TODO
         args::ValueFlag<std::string> _name_prefixes(viz_opts, "FILE", "Merge paths beginning with prefixes listed (one per line) in *FILE*.", {'M', "prefix-merges"});
@@ -230,6 +230,13 @@ namespace odgi {
 
 		const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
 
+        //NOTE: this sample will overwrite the file or test.png without warning!
+        //const char* filename = argc > 1 ? argv[1] : "test.png";
+        if (args::get(png_out_file).empty()) {
+            std::cerr << "[odgi::viz] error: output image required" << std::endl;
+            return 1;
+        }
+
         graph_t graph;
         assert(argc > 0);
         if (!args::get(dg_in_file).empty()) {
@@ -240,14 +247,6 @@ namespace odgi {
                 utils::handle_gfa_odgi_input(infile, "viz", args::get(_progress), num_threads, graph);
             }
         }
-
-        //NOTE: this sample will overwrite the file or test.png without warning!
-        //const char* filename = argc > 1 ? argv[1] : "test.png";
-        if (args::get(png_out_file).empty()) {
-            std::cerr << "[odgi::viz] error: output image required" << std::endl;
-            return 1;
-        }
-        const char *filename = args::get(png_out_file).c_str();
 
         std::vector<uint64_t> position_map(graph.get_node_count() + 1);
         const uint64_t shift = number_bool_packing::unpack_number(graph.get_handle(graph.min_node_id()));
@@ -1285,6 +1284,7 @@ namespace odgi {
             }
         }
 
+        const char *filename = args::get(png_out_file).c_str();
         png::encodeOneStep(filename, crop, crop_width, crop_height);
 
         return 0;

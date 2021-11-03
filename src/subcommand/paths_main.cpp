@@ -360,7 +360,7 @@ int main_paths(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand odgi_paths("paths", "Interrogate the embedded paths of a graph. Does not print anything to stdout by default!",
+static Subcommand odgi_paths("paths", "Interrogate the embedded paths of a graph.",
                               PIPELINE, 3, main_paths);
 
 

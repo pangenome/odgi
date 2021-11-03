@@ -428,6 +428,57 @@ double self_mean_coverage(
     return (double)sum / (double)bp;
 }
 
+uint64_t query_hits_target_front(
+		const PathHandleGraph& graph,
+		const path_handle_t& query,
+		const atomicbitvector::atomic_bv_t targets_node_idx) {
+	// currently we don't care about self mapping
+	bool tip_reached_target = false;
+	step_handle_t cur_step = graph.path_begin(query);
+	handle_t cur_h = graph.get_handle_of_step(cur_step);
+	uint64_t cur_id = graph.get_id(cur_h);
+	while (!tip_reached_target) {
+		if (targets_node_idx.test(cur_id)) {
+			tip_reached_target = true;
+			return cur_id;
+		}
+		if (graph.has_next_step(cur_step)) {
+			cur_step = graph.get_next_step(cur_step);
+			cur_h = graph.get_handle_of_step(cur_step);
+			cur_id = graph.get_id(cur_h);
+		} else {
+			tip_reached_target = true;
+		}
+	}
+	return 0;
+}
+
+uint64_t query_hits_target_back(
+		const PathHandleGraph& graph,
+		const path_handle_t& query,
+		const atomicbitvector::atomic_bv_t targets_node_idx) {
+	// currently we don't care about self mapping
+	bool tip_reached_target = false;
+	step_handle_t cur_step = graph.path_back(query);
+	handle_t cur_h = graph.get_handle_of_step(cur_step);
+	uint64_t cur_id = graph.get_id(cur_h);
+	while (!tip_reached_target) {
+		if (targets_node_idx.test(cur_id)) {
+			tip_reached_target = true;
+			return cur_id;
+		}
+		if (graph.has_previous_step(cur_step)) {
+			cur_step = graph.get_previous_step(cur_step);
+			cur_h = graph.get_handle_of_step(cur_step);
+			cur_id = graph.get_id(cur_h);
+		} else {
+			tip_reached_target = true;
+		}
+	}
+	return 0;
+}
+
+
 void map_segments(
     const PathHandleGraph& graph,
     const path_handle_t& path,
@@ -535,8 +586,18 @@ void untangle(
     //std::cerr << "[odgi::algorithms::untangle] building step index" << std::endl;
     //auto step_pos = make_step_index(graph, paths, num_threads);
     step_index_t step_index(graph, paths, num_threads, progress);
+
+    // which nodes are traversed by our target paths?
+    atomicbitvector::atomic_bv_t target_nodes(graph.get_node_count() + 1);
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
+    for (auto& target : targets) {
+        graph.for_each_step_in_path(
+            target, [&](const step_handle_t& step) {
+                target_nodes.set(graph.get_id(graph.get_handle_of_step(step)), true);
+            });
+    }
     /*
-    auto get_position = [&](const step_handle_t& step) {
+      auto get_position = [&](const step_handle_t& step) {
         return step_index.get_position(step);
     };
     */
@@ -567,8 +628,13 @@ void untangle(
         for (auto& step : cuts) {
             cut_nodes.set(graph.get_id(graph.get_handle_of_step(step)));
         }
-        //std::cerr << "setup" << std::endl;
-        //write_cuts(graph, path, cuts, step_pos);
+        // also add the nodes here where the query path touches the target for the first time
+        // we start from the front until we found a target node
+        uint64_t node_id_front = query_hits_target_front(graph, path, target_nodes);
+        cut_nodes.set(node_id_front, true);
+        // we start from the back until we found a target node
+        uint64_t node_id_back = query_hits_target_back(graph, path, target_nodes);
+        cut_nodes.set(node_id_back, true);
     }
 
     //auto step_pos = make_step_index(graph, queries);

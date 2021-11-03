@@ -27,6 +27,7 @@ namespace odgi {
 						std::cerr << "MIN: " << min_max_walk_dist.first << " MAX: " << min_max_walk_dist.second << std::endl;
 #endif
 			std::vector<step_jaccard_t> target_jaccard_indices;
+			// we were able to walk the given maximum walking distance in both directions, this greatly simplifies the algorithm
 			if (min_max_walk_dist.first >= walking_dist && min_max_walk_dist.second >= walking_dist) {
 				/// for the query:
 				// walk the given walking_dist first to the left (we might not be able to do the full walk)
@@ -36,6 +37,7 @@ namespace odgi {
 				ska::flat_hash_map<nid_t, uint64_t> query_set = collect_nodes_in_walking_dist(graph, walking_dist, walking_dist, cur_step);
 				// TODO we can precollect all sets so here we don't have to do the walks anymore
 				for (step_handle_t& target_step : target_step_handles) {
+					// we count which node identifier we saw how many times
 					ska::flat_hash_map<nid_t, uint64_t> target_set = collect_nodes_in_walking_dist(graph, walking_dist, walking_dist, target_step);
 					ska::flat_hash_map<nid_t, uint64_t> union_set;
 					for (auto& query_item : query_set) {
@@ -68,6 +70,7 @@ namespace odgi {
 							std::cerr << "Jaccard index of query " << query_path_name << " and target " << target_path << ": " << jaccard << ". Direction: " << walk_from_front << std::endl;
 #endif
 				}
+				// more complex algorithm
 			} else {
 				ska::flat_hash_map<nid_t, uint64_t> query_set_min_max = collect_nodes_in_walking_dist_from_map(
 						graph,
