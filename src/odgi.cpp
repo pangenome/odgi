@@ -1537,14 +1537,18 @@ void graph_t::display() const {
 
 }
 
-void graph_t::to_gfa(std::ostream& out) const {
+void graph_t::to_gfa(std::ostream& out, const bool& emit_node_annotation) const {
     out << "H\tVN:Z:1.0" << std::endl;
     // for each node
-    for_each_handle([&out,this](const handle_t& h) {
-            out << "S\t" << get_id(h) << "\t"
-                << get_sequence(h) << "\t"
+    for_each_handle([&out,&emit_node_annotation, this](const handle_t& h) {
+            out << "S\t" << get_id(h) << "\t" << get_sequence(h);
+            if (emit_node_annotation) {
+                out << "\t"
                 << "DP:i:" << get_step_count(h) << "\t"
-                << "RC:i:" << get_step_count(h) * get_length(h) << std::endl;
+                << "RC:i:" << get_step_count(h) * get_length(h);
+            }
+            out << std::endl;
+
             {
                 // use this direct iteration to avoid double counting edges
                 // we only consider write the edges relative to their start

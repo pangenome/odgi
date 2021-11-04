@@ -26,8 +26,6 @@ int main_build(int argc, char** argv) {
     args::ValueFlag<std::string> gfa_file(mandatory_opts, "FILE", "GFAv1 FILE containing the nodes, edges and "
                                                           "paths to build a dynamic succinct variation graph from.", {'g', "gfa"});
     args::ValueFlag<std::string> dg_out_file(mandatory_opts, "FILE", "Write the dynamic succinct variation graph to this *FILE*. A file ending with *.og* is recommended.", {'o', "out"});
-    args::Group graph_files_io(parser, "[ Graph Files IO ]");
-    args::Flag to_gfa(graph_files_io, "to_gfa", "Write the graph to stdout in GFAv1 format.", {'G', "to-gfa"});
     args::Group graph_sorting(parser, "[ Graph Sorting ]");
     args::Flag optimize(graph_sorting, "optimize", "Compact the graph id space into a dense integer range.", {'O', "optimize"});
     args::Flag toposort(graph_sorting, "sort", "Apply a general topological sort to the graph and order the node ids"
@@ -90,11 +88,8 @@ int main_build(int argc, char** argv) {
     if (args::get(debug)) {
         graph.display();
     }
-    if (args::get(to_gfa)) {
-        graph.to_gfa(std::cout);
-    }
-    std::string outfile = args::get(dg_out_file);
-    if (outfile.size()) {
+    const std::string outfile = args::get(dg_out_file);
+    if (!outfile.empty()) {
         if (outfile == "-") {
             graph.serialize(std::cout);
         } else {

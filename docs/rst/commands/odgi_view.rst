@@ -32,6 +32,9 @@ Output Options
 | **-g, --to-gfa**
 | Write the graph in GFAv1 format to standard output.
 
+| **-a, --node-annotation**
+| Emit node annotations for the graph in GFAv1 format.
+
 Summary Options
 ---------------
 
