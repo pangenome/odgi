@@ -75,7 +75,7 @@ input_graphs.txt -o graphs.og
 
 :ref:`odgi test`
 
-:ref: `odgi tips` -i graph.og -q "query_name"
+:ref:`odgi tips` -i graph.og -q "query_name"
 
 :ref:`odgi unchop` -i graph.og -o
 graph.unchopped.og
@@ -402,8 +402,9 @@ explode**, **odgi groom**, **odgi squeeze**, **odgi depth**, **odgi layout**, **
 and this documentation.
 
 Simon Heumos from the Quantitative Biology Center
-Tübingen wrote **odgi bin**, **odgi layout**, **odgi sort**, **odgi pathindex**, **odgi panpos**, **odgi server**,
-**odgi test**, **odgi version**, and
+Tübingen wrote **odgi bin**, **odgi degree**, **odgi layout**, **odgi sort**, **odgi pathindex**, **odgi panpos**,
+**odgi position**, **odgi server**, **odgi stats**,
+**odgi test**, **odgi tips**, **odgi version**, and
 this documentation.
 
 RESOURCES
