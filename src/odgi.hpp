@@ -403,7 +403,7 @@ public:
     void display(void) const;
 
     /// Convert to GFA (for debugging)
-    void to_gfa(std::ostream& out) const;
+    void to_gfa(std::ostream& out, const bool& emit_node_annotation = false) const;
 
     /// Magic number header for serialization
     uint32_t get_magic_number(void) const;

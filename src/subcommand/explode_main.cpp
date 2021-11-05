@@ -246,7 +246,7 @@ namespace odgi {
                 // Save the component
                 ofstream f(filename);
                 if (to_gfa){
-                    subgraph.to_gfa(f);
+                    subgraph.to_gfa(f, false);
                 }else {
                     subgraph.serialize(f);
                 }

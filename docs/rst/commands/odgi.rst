@@ -75,7 +75,7 @@ input_graphs.txt -o graphs.og
 
 :ref:`odgi test`
 
-:ref: `odgi tips` -i graph.og -q "query_name"
+:ref:`odgi tips` -i graph.og -q "query_name"
 
 :ref:`odgi unchop` -i graph.og -o
 graph.unchopped.og
@@ -393,17 +393,17 @@ AUTHORS
 =======
 
 Erik Garrison from the University of Tennessee wrote the
-whole **odgi** tool.
+whole **odgi** tool suite.
 
-Andrea Guarracino from the University of Rome Tor
-Vergata wrote **odgi viz**, **odgi extract**, **odgi cover**, **odgi
-explode**, **odgi groom**, **odgi squeeze**, **odgi depth**, **odgi layout**, **odgi sort**, **odgi stats**,
-**odgi overlap**, **odgi validate**, **odgi unchop**, **odgi test**,
+Andrea Guarracino from the Human Technopole wrote **odgi viz**, **odgi extract**, **odgi explode**, **odgi squeeze**,
+**odgi untangle**, **odgi position**, **odgi cover**, **odgi sort**, **odgi groom**, **odgi layout**, **odgi chop**,
+**odgi unchop**, **odgi depth**, **odgi degree**, **odgi stats**, **odgi overlap**, **odgi validate**, **odgi test**,
 and this documentation.
 
 Simon Heumos from the Quantitative Biology Center
-Tübingen wrote **odgi bin**, **odgi layout**, **odgi sort**, **odgi pathindex**, **odgi panpos**, **odgi server**,
-**odgi test**, **odgi version**, and
+Tübingen wrote **odgi bin**, **odgi degree**, **odgi layout**, **odgi sort**, **odgi pathindex**, **odgi panpos**,
+**odgi position**, **odgi server**, **odgi stats**,
+**odgi test**, **odgi tips**, **odgi version**, and
 this documentation.
 
 RESOURCES

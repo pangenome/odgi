@@ -26,7 +26,11 @@ of the node:
 To ensure minimal memory occupation, only the deltas of the neighbouring steps of a path are hold.
 
 ``odgi`` provides a set of tools ranging from graph building, manipulation, layouting, over graph statistics to graph
-visualization and gene annotation lift overs.
+visualization and gene annotation lift overs. The following figure gives an overview.
+
+.. image:: /img/odgi_tools.png
+
+Methods provided by ODGI (in black) and their supported input (in blue) and output (in red) data formats.
 
 For a light dive into ``odgi``, just visit the :ref:`quick_start` section.
 
