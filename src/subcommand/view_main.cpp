@@ -23,7 +23,7 @@ int main_view(int argc, char** argv) {
     args::Group out_opts(parser, "[ Output Options ]");
     args::Flag to_gfa(out_opts, "to_gfa", "Write the graph in GFAv1 format to standard output.", {'g', "to-gfa"});
     args::Flag emit_node_annotation(out_opts, "node_annotation", "Emit node annotations for the graph in GFAv1 format.", {'a', "node-annotation"});
-    args::Flag display(out_opts, "display", "Show the internal structures of a graph. Print to stdout the maximum"
+    args::Flag display(out_opts, "display", "Show the internal structures of a graph. Print to stderr the maximum"
                                           " node identifier, the minimum node identifier, the nodes vector, the"
                                           " delete nodes bit vector and the path metadata, each in a separate"
                                           " line.", {'d', "display"});

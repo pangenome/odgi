@@ -39,7 +39,7 @@ Summary Options
 ---------------
 
 | **-d, --display**
-| Show the internal structures of a graph. Print to stdout the maximum
+| Show the internal structures of a graph. Print to stderr the maximum
   node identifier, the minimum node identifier, the nodes vector, the
   delete nodes bit vector and the path metadata, each in a separate
   line.

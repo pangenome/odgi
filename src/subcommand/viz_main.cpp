@@ -52,7 +52,7 @@ namespace odgi {
         args::ValueFlag<uint64_t> image_height(viz_opts, "N", "Set the height in pixels of the output image (default: 500).", {'y', "height"});
         args::ValueFlag<uint64_t> path_height(viz_opts, "N", "The height in pixels for a path.", {'a', "path-height"});
         args::ValueFlag<uint64_t> path_x_pad(viz_opts, "N", "The padding in pixels on the x-axis for a path.", {'X', "path-x-padding"});
-        args::Flag no_path_borders(viz_opts, "bool", "Don't show path borders.", {'N', "no-path-borders"});
+        args::Flag no_path_borders(viz_opts, "bool", "Don't show path borders.", {'n', "no-path-borders"});
         args::Flag black_path_borders(viz_opts, "bool", "Draw path borders in black (default is white).", {'b', "black-path-borders"});
         args::Flag pack_paths(viz_opts, "bool", "Pack all paths rather than displaying a single path per row.",{'R', "pack-paths"});
         args::ValueFlag<float> link_path_pieces(viz_opts, "FLOAT","Show thin links of this relative width to connect path pieces.",{'L', "link-path-pieces"});
@@ -67,7 +67,10 @@ namespace odgi {
                                                                                           " color respect to the mean inversion rate of the path for each bin,"
                                                                                           " from black (no inversions) to red (bin mean inversion rate equals to"
                                                                                           " 1).", {'z', "color-by-mean-inversion-rate"});
-        args::ValueFlag<char> _color_by_prefix(viz_opts, "CHAR", "Color paths by their names looking at the prefix before the given"
+        args::Flag color_by_uncalled_bases(viz_opts, "bool", "Change the color with respect to the uncalled bases of the path for each"
+                                                             " bin, from black (no uncalled bases) to green (all uncalled bases).",
+                                                              {'N', "color-by-uncalled-bases"});
+        args::ValueFlag<char> color_by_prefix(viz_opts, "CHAR", "Color paths by their names looking at the prefix before the given"
                                                                  " character CHAR.",{'s', "color-by-prefix"});
         // TODO
         args::ValueFlag<std::string> _name_prefixes(viz_opts, "FILE", "Merge paths beginning with prefixes listed (one per line) in *FILE*.", {'M', "prefix-merges"});
@@ -194,7 +197,7 @@ namespace odgi {
             return 1;
         }
 
-        if ((args::get(_color_by_prefix) != 0) + args::get(show_strands) + args::get(white_to_black) + args::get(color_by_mean_depth) + args::get(color_by_mean_inversion_rate) > 1) {
+        if ((args::get(color_by_prefix) != 0) + args::get(show_strands) + args::get(white_to_black) + args::get(color_by_mean_depth) + args::get(color_by_mean_inversion_rate) + args::get(color_by_uncalled_bases)  > 1) {
             std::cerr
                     << "[odgi::viz] error: please specify only one of the following options: "
                        "-s/--color-by-prefix, -S/--show-strand, -u/--white-to-black, "
@@ -203,10 +206,10 @@ namespace odgi {
             return 1;
         }
 
-        if (args::get(change_darkness) && (args::get(color_by_mean_depth) || args::get(color_by_mean_inversion_rate))) {
+        if (args::get(change_darkness) && (args::get(color_by_mean_depth) || args::get(color_by_mean_inversion_rate) || args::get(color_by_uncalled_bases))) {
             std::cerr
                     << "[odgi::viz] error: please specify the -d/--change-darkness option without specifying "
-                       "-m/--color-by-mean-depth or -z/--color-by-mean-inversion."
+                       "-m/--color-by-mean-depth or -z/--color-by-mean-inversion or -N/--color-by-uncalled-bases."
                     << std::endl;
             return 1;
         }
@@ -666,8 +669,8 @@ namespace odgi {
         }
 
         char path_name_prefix_separator = '\0';
-        if (_color_by_prefix) {
-            path_name_prefix_separator = args::get(_color_by_prefix);
+        if (color_by_prefix) {
+            path_name_prefix_separator = args::get(color_by_prefix);
         }
 
         auto add_point = [&](const double &_x, const double &_y,
@@ -855,6 +858,7 @@ namespace odgi {
 
         const bool _color_by_mean_depth = args::get(color_by_mean_depth);
         const bool _color_by_mean_inversion_rate = args::get(color_by_mean_inversion_rate);
+        const bool _color_by_uncalled_bases = args::get(color_by_uncalled_bases);
 
         uint64_t longest_path_len = 0;
         if ((_change_darkness && _longest_path) || (_binned_mode && _color_by_mean_depth)){
@@ -905,7 +909,7 @@ namespace odgi {
                 }
                 // use a sha256 to get a few bytes that we'll use for a color
                 picosha2::byte_t hashed[picosha2::k_digest_size];
-                if (_color_by_prefix) {
+                if (color_by_prefix) {
                     std::string path_name_prefix = prefix(path_name, path_name_prefix_separator);
                     picosha2::hash256(path_name_prefix.begin(), path_name_prefix.end(), hashed, hashed + picosha2::k_digest_size);
                 } else {
@@ -933,15 +937,25 @@ namespace odgi {
                     if (
                             _show_strands ||
                             (_change_darkness && !_longest_path) ||
-                            (_binned_mode && (_color_by_mean_depth || _color_by_mean_inversion_rate || _change_darkness))
+                            (_binned_mode && (_color_by_mean_depth || _color_by_mean_inversion_rate || _change_darkness || _color_by_uncalled_bases))
                             ) {
                         handle_t h;
                         uint64_t hl, p;
                         bool is_rev;
+                        uint64_t num_uncalled_bases;
                         graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
                             h = graph.get_handle_of_step(occ);
                             is_rev = graph.get_is_reverse(h);
                             hl = graph.get_length(h);
+
+                            if (_color_by_uncalled_bases){
+                                num_uncalled_bases = 0;
+                                for(auto c : graph.get_sequence(h)) {
+                                    if (c == 'N' || c == 'n') {
+                                        num_uncalled_bases++;
+                                    }
+                                }
+                            }
 
                             if (_show_strands) {
                                 ++steps;
@@ -963,6 +977,14 @@ namespace odgi {
                                         ++bins[curr_bin].mean_inv;
                                     }
                                 }
+                            } else if (_binned_mode && _color_by_uncalled_bases) {
+                                p = position_map[number_bool_packing::unpack_number(h) - shift];
+                                for (uint64_t k = 0; k < hl; ++k) {
+                                    int64_t curr_bin = (p + k) / _bin_width + 1;
+
+                                    // Use the `mean_depth` field as 'mean_Ns`
+                                    bins[curr_bin].mean_depth += num_uncalled_bases;
+                                }
                             }
                         });
 
@@ -970,6 +992,11 @@ namespace odgi {
                             for (auto &entry : bins) {
                                 auto &v = entry.second;
                                 v.mean_inv /= (v.mean_depth ? v.mean_depth : 1);
+                                v.mean_depth /= _bin_width;
+                            }
+                        } else if (_binned_mode && _color_by_uncalled_bases) {
+                            for (auto &entry : bins) {
+                                auto &v = entry.second;
                                 v.mean_depth /= _bin_width;
                             }
                         }
@@ -1003,11 +1030,15 @@ namespace odgi {
                         path_r = 255;
                         path_g = 0;
                         path_b = 0;
+                    } else if (_color_by_uncalled_bases) {
+                        path_r = 0;
+                        path_g = 255;
+                        path_b = 0;
                     }
                 }
 
                 if (!(
-                        is_aln && (( _change_darkness && _white_to_black) || _color_by_mean_inversion_rate || (_binned_mode && (_color_by_mean_depth || _change_darkness)))
+                        is_aln && (( _change_darkness && _white_to_black) || _color_by_mean_inversion_rate || (_binned_mode && (_color_by_mean_depth || _change_darkness || _color_by_uncalled_bases)))
                         )) {
                     // brighten the color
                     float f = std::min(1.5, 1.0 / std::max(std::max(path_r_f, path_g_f), path_b_f));
@@ -1124,6 +1155,8 @@ namespace odgi {
                                         }
                                     } else if (_color_by_mean_inversion_rate) {
                                         x = bins[curr_bin].mean_inv;
+                                    } else if (_color_by_uncalled_bases) {
+                                        x = bins[curr_bin].mean_depth;
                                     }
                                 }
 
