@@ -33,12 +33,6 @@ MANDATORY OPTIONS
 | Write the dynamic succinct variation graph to this *FILE*. A file ending
   with *.og* is recommended.
 
-Gaph Files IO
--------------
-
-| **-G, --to-gfa**
-| Write the graph to stdout in GFAv1 format.
-
 Graph Sorting
 -------------
 
