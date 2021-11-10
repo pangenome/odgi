@@ -8,6 +8,7 @@ Tutorials
     tutorials/exploratory_analysis
     tutorials/detect_complex_regions
     tutorials/extract_selected_loci
+    tutorials/untangling_the_pangenome
     tutorials/sort_layout
     tutorials/navigating_and_annotating_graphs
     tutorials/remove_artifacts_and_complex_regions
