@@ -17,6 +17,7 @@ namespace odgi {
                                     const uint64_t &space,
                                     const uint64_t &space_max,
                                     const uint64_t &space_quantization_step,
+                                    const double &cooling_start,
                                     const uint64_t &nthreads,
                                     const bool &progress,
                                     const bool &snapshot,
@@ -30,7 +31,13 @@ namespace odgi {
             std::cerr << "eps: " << eps << std::endl;
             std::cerr << "theta: " << theta << std::endl;
             std::cerr << "space: " << space << std::endl;
+            std::cerr << "space_max: " << space_max << std::endl;
+            std::cerr << "space_quantization_step: " << space_quantization_step << std::endl;
+            std::cerr << "cooling_start: " << cooling_start << std::endl;
 #endif
+
+            uint64_t first_cooling_iteration = std::floor(cooling_start * (double)iter_max);
+            //std::cerr << "first cooling iteration " << first_cooling_iteration << std::endl;
 
             uint64_t total_term_updates = iter_max * min_term_updates;
             std::unique_ptr<progress_meter::ProgressMeter> progress_meter;
@@ -102,6 +109,12 @@ namespace odgi {
                 // learning rate
                 std::atomic<double> eta;
                 eta.store(etas.front());
+                // adaptive zip theta
+                std::atomic<double> adj_theta;
+                adj_theta.store(theta);
+                // if we're in a final cooling phase (last 10%) of iterations
+                std::atomic<bool> cooling;
+                cooling.store(false);
                 // our max delta
                 std::atomic<double> Delta_max;
                 Delta_max.store(0);
@@ -144,6 +157,11 @@ namespace odgi {
                                     } else {
                                         eta.store(etas[iteration]); // update our learning rate
                                         Delta_max.store(delta); // set our delta max to the threshold
+                                        if (iteration > first_cooling_iteration) {
+                                            //std::cerr << std::endl << "setting cooling!!" << std::endl;
+                                            adj_theta.store(0.01);
+                                            cooling.store(true);
+                                        }
                                     }
                                     term_updates.store(0);
                                 }
@@ -188,7 +206,7 @@ namespace odgi {
                                         continue;
                                     }
 
-                                    if (flip(gen)) {
+                                    if (cooling.load() || flip(gen)) {
                                         if (s_rank > 0 && flip(gen) || s_rank == path_step_count-1) {
                                             // go backward
                                             uint64_t jump_space = std::min(space, s_rank);

@@ -213,6 +213,7 @@ int main_sort(int argc, char** argv) {
     double path_sgd_eps = args::get(p_sgd_eps) ? args::get(p_sgd_eps) : 0.01;
     double path_sgd_delta = args::get(p_sgd_delta) ? args::get(p_sgd_delta) : 0;
     double path_sgd_max_eta = 0; // update below
+    double path_sgd_cooling_start = 2.0; // disabled
     // will be filled, if the user decides to write a snapshot of the graph after each sorting iteration
     std::vector<std::string> snapshots;
     const bool snapshot = p_sgd_snapshot;
@@ -338,6 +339,7 @@ int main_sort(int argc, char** argv) {
                                                       path_sgd_zipf_space,
                                                       path_sgd_zipf_space_max,
                                                       path_sgd_zipf_space_quantization_step,
+                                                      path_sgd_cooling_start,
                                                       num_threads,
                                                       progress,
                                                       path_sgd_seed,
@@ -399,6 +401,7 @@ int main_sort(int argc, char** argv) {
                                                                   path_sgd_zipf_space,
                                                                   path_sgd_zipf_space_max,
                                                                   path_sgd_zipf_space_quantization_step,
+                                                                  path_sgd_cooling_start,
                                                                   num_threads,
                                                                   progress,
                                                                   path_sgd_seed,

@@ -39,6 +39,7 @@ namespace odgi {
                                     const uint64_t &space,
                                     const uint64_t &space_max,
                                     const uint64_t &space_quantization_step,
+                                    const double &cooling_start,
                                     const uint64_t &nthreads,
                                     const bool &progress,
                                     const bool &snapshot,

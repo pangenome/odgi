@@ -198,6 +198,7 @@ int main_layout(int argc, char **argv) {
     std::vector<path_handle_t> path_sgd_use_paths;
     xp::XP path_index;
     bool first_time_index = true;
+    double path_sgd_cooling_threshold = 0.5;
 
     // take care of path index
     if (xp_in_file) {
@@ -328,6 +329,7 @@ int main_layout(int argc, char **argv) {
         path_sgd_zipf_space,
         path_sgd_zipf_space_max,
         path_sgd_zipf_space_quantization_step,
+        path_sgd_cooling_threshold,
         num_threads,
         show_progress,
         snapshot,

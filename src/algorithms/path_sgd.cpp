@@ -1,7 +1,7 @@
 #include "path_sgd.hpp"
 #include "dirty_zipfian_int_distribution.h"
 
-// #define debug_path_sgd
+//#define debug_path_sgd
 // #define eval_path_sgd
 // #define debug_schedule
 // # define debug_sample_from_nodes
@@ -21,6 +21,7 @@ namespace odgi {
                                             const uint64_t &space,
                                             const uint64_t &space_max,
                                             const uint64_t &space_quantization_step,
+                                            const double &cooling_start,
                                             const uint64_t &nthreads,
                                             const bool &progress,
                                             const bool &snapshot,
@@ -34,7 +35,11 @@ namespace odgi {
             std::cerr << "space: " << space << std::endl;
             std::cerr << "space_max: " << space_max << std::endl;
             std::cerr << "space_quantization_step: " << space_quantization_step << std::endl;
+            std::cerr << "cooling_start: " << cooling_start << std::endl;
 #endif
+
+            uint64_t first_cooling_iteration = std::floor(cooling_start * (double)iter_max);
+            //std::cerr << "first cooling iteration " << first_cooling_iteration << std::endl;
 
             uint64_t total_term_updates = iter_max * min_term_updates;
             std::unique_ptr<progress_meter::ProgressMeter> progress_meter;
@@ -77,8 +82,8 @@ namespace odgi {
                 std::cerr << path_name << std::endl;
                 std::cerr << as_integer(path) << std::endl;
 #endif
-                //size_t path_len = path_index.get_path_length(path);
 #ifdef debug_path_sgd
+                size_t path_len = path_index.get_path_length(path);
                 std::cerr << path_name << " has length: " << path_len << std::endl;
 #endif
                 //path_nucleotide_tree.add(total_path_len_in_nucleotides, total_path_len_in_nucleotides + path_len, path);
@@ -143,6 +148,12 @@ namespace odgi {
                 // learning rate
                 std::atomic<double> eta;
                 eta.store(etas.front());
+                // adaptive zip theta
+                std::atomic<double> adj_theta;
+                adj_theta.store(theta);
+                // if we're in a final cooling phase (last 10%) of iterations
+                std::atomic<bool> cooling;
+                cooling.store(false);
                 // our max delta
                 std::atomic<double> Delta_max;
                 Delta_max.store(0);
@@ -185,11 +196,15 @@ namespace odgi {
                                     } else {
                                         eta.store(etas[iteration]); // update our learning rate
                                         Delta_max.store(delta); // set our delta max to the threshold
+                                        if (iteration > first_cooling_iteration) {
+                                            std::cerr << std::endl << "setting cooling!!" << std::endl;
+                                            adj_theta.store(0.01);
+                                            cooling.store(true);
+                                        }
                                     }
                                     term_updates.store(0);
                                 }
                                 std::this_thread::sleep_for(1ms);
-
                             }
                         };
 
@@ -230,7 +245,8 @@ namespace odgi {
                                         continue;
                                     }
 
-                                    if (flip(gen)) {
+                                    if (cooling.load() || flip(gen)) {
+                                        auto _theta = adj_theta.load();
                                         if (s_rank > 0 && flip(gen) || s_rank == path_step_count-1) {
                                             // go backward
                                             uint64_t jump_space = std::min(space, s_rank);
@@ -238,7 +254,7 @@ namespace odgi {
                                             if (jump_space > space_max){
                                                 space = space_max + (jump_space - space_max) / space_quantization_step + 1;
                                             }
-                                            dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, theta, zetas[space]);
+                                            dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, _theta, zetas[space]);
                                             dirtyzipf::dirty_zipfian_int_distribution<uint64_t> z(z_p);
                                             uint64_t z_i = z(gen);
                                             //assert(z_i <= path_space);
@@ -251,7 +267,7 @@ namespace odgi {
                                             if (jump_space > space_max){
                                                 space = space_max + (jump_space - space_max) / space_quantization_step + 1;
                                             }
-                                            dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, theta, zetas[space]);
+                                            dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, _theta, zetas[space]);
                                             dirtyzipf::dirty_zipfian_int_distribution<uint64_t> z(z_p);
                                             uint64_t z_i = z(gen);
                                             //assert(z_i <= path_space);
@@ -474,6 +490,7 @@ namespace odgi {
                                                     const uint64_t &space,
                                                     const uint64_t &space_max,
                                                     const uint64_t &space_quantization_step,
+                                                    const double &cooling_start,
                                                     const uint64_t &nthreads,
                                                     const bool &progress,
                                                     const std::string &seed,
@@ -493,6 +510,7 @@ namespace odgi {
                                                          space,
                                                          space_max,
                                                          space_quantization_step,
+                                                         cooling_start,
                                                          nthreads,
                                                          progress,
                                                          snapshot,
