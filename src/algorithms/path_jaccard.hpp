@@ -32,7 +32,7 @@ namespace odgi {
 																	  const step_handle_t& cur_step,
 																	  std::vector<step_handle_t>& target_step_handles,
 																	  const bool& report_best_same_jaccards,
-																	  uint64_t best_same_jaccards);
+																	  uint64_t& best_same_jaccards);
 
 		/// from the given start step we walk the given distance in nucleotides left and right following the steps in the given graph graph, collecting all nodes that we cross <key>
 		/// we also record, how many times we visited a node <value>

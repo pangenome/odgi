@@ -11,7 +11,7 @@ namespace odgi {
 																	  const step_handle_t& cur_step,
 																	  std::vector<step_handle_t>& target_step_handles,
 																	  const bool& report_best_same_jaccards,
-																	  uint64_t best_same_jaccards) {
+																	  uint64_t& best_same_jaccards) {
 			/// collect the visited nodes in a vector, so we can do the additional interations faster
 			// this is very RAM intensive, maybe it should be made optional
 			// gives a speed up of ~1.5x
