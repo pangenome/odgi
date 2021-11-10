@@ -79,6 +79,8 @@ namespace odgi {
 							start_index = best_same_jaccards;
 							n_best_mappings = best_same_jaccards;
 						}
+						std::cerr << start_index << std::endl;
+
 						if (!report_additional_jaccards) {
 							start_index = target_jaccard_indices.size();
 						}
