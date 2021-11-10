@@ -8,7 +8,7 @@ Synopsis
 
 Human chromosomes have large regions of highly identical repeats. They can be found in as clusters centromeres,
 regions of segmental duplication, or in the acrocentric short arms of chromosomes.
-`Logsdon et al., Nature 2021 <https://doi.org/10.1038/s41586-021-03420-7>`__ showed that chromosome 8 carries a modestly sized
+`Logsdon et al., 2021 <https://doi.org/10.1038/s41586-021-03420-7>`_ showed that chromosome 8 carries a modestly sized
 centromere of approximately 1.5–2.2 Mb, in which AT-rich, 171-base-pair (bp) α-satellite
 repeats are organized into a well-defined higher-order repeat (HOR) array. ``odgi`` offers tools to detect and explore
 such regions.
