@@ -43,6 +43,7 @@ namespace odgi {
 		args::ValueFlag<uint64_t> _walking_dist(tips_opts, "N", "Maximum walking distance in nucleotides for one orientation when finding the best target (reference) range for each query path (default: 10000). Note: If we walked 9999 base pairs and **w, --jaccard-context** is **10000**, we will also include the next node, even if we overflow the actual limit.",
 												   {'w', "jaccard-context"});
 		args::Flag _report_additional_jaccards(tips_opts, "report_additional_jaccards", "If for a target (reference) path several matches are possible, also report the additional jaccard indices (default: false). In the resulting BED, an '.' is added, if set to 'false'.", {'j', "jaccards"});
+		args::Flag _report_best_same_jaccards(tips_opts, "report_best_same_jaccards", "If for a target (reference) path several matches are possible, report all best jaccards with the same value as full entries in the resulting BED (default: false).", {'b', "best-same-jaccards"});
 		args::Group threading(parser, "[ Threading ]");
 		args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 		args::Group processing_info_opts(parser, "[ Processing Information ]");
@@ -193,6 +194,8 @@ namespace odgi {
 			return graph.has_previous_step(step);
 		};
 
+		uint64_t n_best_mappings = _best_n_mappings ? args::get(_best_n_mappings) : 1;
+
 		for (auto target_path_t : target_paths) {
 			// make bit vector across nodes to tell us if we have a hit
 			// this is a speed up compared to iterating through all steps of a potential node for each walked step
@@ -206,9 +209,10 @@ namespace odgi {
 			/// walk from the front
 			algorithms::walk_tips(graph, query_paths, target_path_t, target_handles, step_index, num_threads, get_path_begin,
 								  get_next_step, has_next_step, bed_writer_thread, progress, true, not_visited_set,
-								  (_best_n_mappings ? args::get(_best_n_mappings) : 1),
+								  n_best_mappings,
 								  (_walking_dist ? args::get(_walking_dist) : 10000),
-								  (_report_additional_jaccards ? args::get(_report_additional_jaccards) : false));
+								  (_report_additional_jaccards ? args::get(_report_additional_jaccards) : false),
+								  (_report_best_same_jaccards ? args::get(_report_best_same_jaccards) : false));
 			std::vector<path_handle_t> visitable_query_paths;
 			for (auto query_path : query_paths) {
 				if (!not_visited_set.count(graph.get_path_name(query_path))) {
@@ -218,9 +222,10 @@ namespace odgi {
 			/// walk from the back
 			algorithms::walk_tips(graph, visitable_query_paths, target_path_t, target_handles, step_index, num_threads, get_path_back,
 								  get_prev_step, has_previous_step, bed_writer_thread, progress, false, not_visited_set,
-								  (_best_n_mappings ? args::get(_best_n_mappings) : 1),
+								  n_best_mappings,
 								  (_walking_dist ? args::get(_walking_dist) : 10000),
-								  (_report_additional_jaccards ? args::get(_report_additional_jaccards) : false));
+								  (_report_additional_jaccards ? args::get(_report_additional_jaccards) : false),
+								  (_report_best_same_jaccards ? args::get(_report_best_same_jaccards) : false));
 			/// let's write our paths we did not visit
 			std::string query_path = graph.get_path_name(target_path_t);
 			for (auto not_visited_path : not_visited_set) {

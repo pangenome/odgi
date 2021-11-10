@@ -9,7 +9,9 @@ namespace odgi {
 		std::vector<step_jaccard_t> jaccard_indices_from_step_handles(const graph_t& graph,
 																	  const uint64_t& walking_dist,
 																	  const step_handle_t& cur_step,
-																	  std::vector<step_handle_t>& target_step_handles) {
+																	  std::vector<step_handle_t>& target_step_handles,
+																	  const bool& report_best_same_jaccards,
+																	  uint64_t best_same_jaccards) {
 			/// collect the visited nodes in a vector, so we can do the additional interations faster
 			// this is very RAM intensive, maybe it should be made optional
 			// gives a speed up of ~1.5x
@@ -152,6 +154,9 @@ namespace odgi {
 						   const step_jaccard_t & sjt_b) {
 						  return as_integers(sjt_a.step)[1] < as_integers(sjt_b.step)[1];
 					  });
+			if (report_best_same_jaccards) {
+				best_same_jaccards = target_same_jaccard.size();
+			}
 			// take the one with array position arr_len/2; if arr_len%%2 !=0 then take the floor of the resulting value
 			uint64_t final_jaccard_position_in_same = target_same_jaccard.size() / 2;
 			step_jaccard_t final_jaccard = target_same_jaccard[final_jaccard_position_in_same];

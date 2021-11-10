@@ -18,9 +18,10 @@ namespace odgi {
 					   const bool& progress,
 					   const bool& walk_from_front,
 					   ska::flat_hash_set<std::string>& not_visited_set,
-					   const uint64_t& n_best_mappings,
+					   uint64_t& n_best_mappings,
 					   const uint64_t& walking_dist,
-					   const bool& report_additional_jaccards) {
+					   const bool& report_additional_jaccards,
+					   const bool& report_best_same_jaccards) {
 
 			const std::string target_path = graph.get_path_name(target_path_t);
 
@@ -62,16 +63,22 @@ namespace odgi {
 										target_step_handles.push_back(s);
 									}
 								});
-
+						uint64_t best_same_jaccards;
 						std::vector<step_jaccard_t> target_jaccard_indices = jaccard_indices_from_step_handles(graph,
 																											   walking_dist,
 																											   cur_step,
-																											   target_step_handles);
+																											   target_step_handles,
+																											   report_best_same_jaccards,
+																											   best_same_jaccards);
 						uint64_t i = 0;
 
 						// report other jaccards as a csv list in the BED
 						std::vector<double> additional_jaccards_to_report;
 						uint64_t start_index = 0 + n_best_mappings;
+						if (report_best_same_jaccards) {
+							start_index = best_same_jaccards;
+							n_best_mappings = best_same_jaccards;
+						}
 						if (!report_additional_jaccards) {
 							start_index = target_jaccard_indices.size();
 						}

@@ -43,8 +43,9 @@ namespace odgi {
 				 const bool& progress,
 				 const bool& walk_from_front,
 				 ska::flat_hash_set<std::string>& not_visited_set,
-				 const uint64_t& n_best_mappings,
+				 uint64_t& n_best_mappings,
 				 const uint64_t& walking_dist,
-				 const bool& report_additional_jaccards);
+				 const bool& report_additional_jaccards,
+				 const bool& report_best_same_jaccards);
 	}
 }

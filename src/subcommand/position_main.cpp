@@ -732,11 +732,14 @@ int main_position(int argc, char** argv) {
 									query_step_handles.push_back(s);
 								}
 							});
+					uint64_t best_same_jaccards;
 					// iterate over the node to get the list of canditate query step handles
 					std::vector<algorithms::step_jaccard_t> target_jaccard_indices = algorithms::jaccard_indices_from_step_handles(graph,
 																																   walking_dist,
 																																   target_step_handle,
-																																   query_step_handles);
+																																   query_step_handles,
+																																   false,
+																																   best_same_jaccards);
 					ref_hit = target_jaccard_indices[0].step;
 					set_adj_last_node(graph, ref_hit, h_bfs, used_bidirectional, d_bfs, pos, rev_vs_ref, adj_last_node);
 				}
