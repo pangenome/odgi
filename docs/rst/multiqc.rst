@@ -38,7 +38,7 @@ To see the full statistics in YAML format of the graph, execute:
 
 .. code-block:: bash
 
-    odgi stats -i DRB1-3123.gfa.og -y
+    odgi stats -i DRB1-3123.gfa.og -m
 
 This prints the following YAML to stdout:
 
@@ -89,7 +89,7 @@ Let's save the statistics this time:
 
 .. code-block:: bash
 
-	odgi stats -i DRB1-3123.gfa.og -y > DRB1-3123.gfa.og.stats.yaml
+	odgi stats -i DRB1-3123.gfa.og -m > DRB1-3123.gfa.og.stats.yaml
 
 .. note::
 
