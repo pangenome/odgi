@@ -81,11 +81,11 @@ To untangle the C4 graph, execute:
       tr ' ' '\t'   > chr6.C4.untangle.bed
 
 
-Take a look at the first rows of the ``chr6.C4.untangle.bed`` file:
+Take a look at the rows in the ``chr6.C4.untangle.bed`` file for the ``HG00438`` and ```HG01071`` individuals:
 
 .. code-block:: bash
 
-    head chr6.C4.untangle.bed -n 4 | column -t
+    cat <(head chr6.C4.untangle.bed -n 1) <(grep 'HG00438\|HG01071' chr6.C4.untangle.bed) | column -t
 
 .. code-block:: none
 
@@ -93,13 +93,29 @@ Take a look at the first rows of the ``chr6.C4.untangle.bed`` file:
     HG00438#1#JAHBCB010000040.1:24269348-24320210  0            9520       grch38#chr6:31972046-32055647  83302      74068    0.966446  -    1         1
     HG00438#1#JAHBCB010000040.1:24269348-24320210  9520         42026      grch38#chr6:31972046-32055647  74068      41573    0.997327  -    1         1
     HG00438#1#JAHBCB010000040.1:24269348-24320210  42026        50046      grch38#chr6:31972046-32055647  8685       0        0.890347  -    1         1
+    HG00438#2#JAHBCA010000042.1:24398231-24449090  0            9520       grch38#chr6:31972046-32055647  83302      74068    0.96521   -    1         1
+    HG00438#2#JAHBCA010000042.1:24398231-24449090  9520         42023      grch38#chr6:31972046-32055647  74068      41573    0.996989  -    1         1
+    HG00438#2#JAHBCA010000042.1:24398231-24449090  42023        50043      grch38#chr6:31972046-32055647  8685       0        0.890561  -    1         1
+    HG01071#1#JAHBCF010000017.1:706180-783405      0            9520       grch38#chr6:31972046-32055647  83302      74068    0.966446  -    1         1
+    HG01071#1#JAHBCF010000017.1:706180-783405      9520         35658      grch38#chr6:31972046-32055647  74068      41573    0.800215  -    1.98971   1
+    HG01071#1#JAHBCF010000017.1:706180-783405      35658        36005      grch38#chr6:31972046-32055647  41573      41214    0.955679  -    1.43228   1
+    HG01071#1#JAHBCF010000017.1:706180-783405      36005        68397      grch38#chr6:31972046-32055647  41214      8685     0.991564  -    1.79862   1
+    HG01071#1#JAHBCF010000017.1:706180-783405      68397        76409      grch38#chr6:31972046-32055647  8685       0        0.88752   -    1.01872   1
+    HG01071#2#JAHBCE010000076.1:7794179-7897781    0            9520       grch38#chr6:31972046-32055647  83302      74068    0.96624   -    1         1
+    HG01071#2#JAHBCE010000076.1:7794179-7897781    9520         35659      grch38#chr6:31972046-32055647  74068      41573    0.80019   -    2.98217   1
+    HG01071#2#JAHBCE010000076.1:7794179-7897781    35659        36006      grch38#chr6:31972046-32055647  41573      41214    0.955679  -    2.43516   1
+    HG01071#2#JAHBCE010000076.1:7794179-7897781    36006        62028      grch38#chr6:31972046-32055647  74068      41573    0.796543  -    2.99239   1
+    HG01071#2#JAHBCE010000076.1:7794179-7897781    62028        62375      grch38#chr6:31972046-32055647  41573      41214    0.955679  -    2.43516   1
+    HG01071#2#JAHBCE010000076.1:7794179-7897781    62375        94764      grch38#chr6:31972046-32055647  41214      8685     0.992205  -    2.59814   1
+    HG01071#2#JAHBCE010000076.1:7794179-7897781    94764        102786     grch38#chr6:31972046-32055647  8685       0        0.889077  -    1.03765   1
+
 
 
 For each segment in the query (``query.name``, ``query.start``, and ``query.end`` columns), the best match on the reference is reported
 (``ref.name``, ``ref.start``, and ``ref.end``), with information about the quality of the match (``score``), the strand (``inv``),
 the copy number status (``self.cov``), and its rank over all possible matches (``n.th``).
 
-To obtain a visualization of this output, execute:
+To obtain a visualization of the output for the ``HG00438`` and ```HG01071`` individuals, execute:
 
 .. code-block:: R
 
@@ -111,10 +127,10 @@ To obtain a visualization of this output, execute:
     ggplot(
       subset(x, query.name %in% c(
         "grch38#chr6",
+        "HG00438#1",
         "HG00438#2",
-        "HG01071#2",
-        "HG01952#1",
-        "HG01952#2"
+        "HG01071#1",
+        "HG01071#2"
         )
       ), aes(x=query.start, xend=query.end, y=ref.start, yend=ref.end)) +
         geom_segment(size=0.3) +
@@ -128,15 +144,15 @@ To obtain a visualization of this output, execute:
           xlab("Query start") +
           ylab("Reference start")
 
-    ggsave('chr6.C4..untangle.png', width = 32, height = 8,  units = "cm", dpi = 300,  bg = "transparent")
+    ggsave('chr6.C4.untangle.png', width = 32, height = 8,  units = "cm", dpi = 300,  bg = "transparent")
 
 
 To obtain the following PNG image:
 
-.. image:: /img/chr6.C4..untangle.png
+.. image:: /img/chr6.C4.untangle.png
 
 The plots show the copy number status of the haplotypes in the C4 region with respect to the grch38 reference sequence.
 On the grch38 reference, `C4A precedes C4B, and both are in single copy <http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&lastVirtModeType=default&lastVirtModeExtraState=&virtModeType=default&virtMode=0&nonVirtPosition=&position=chr6%3A31972057%2D32055418&hgsid=1211002763_taymHTHRXlpfFiqu51J8nWGyKv67>`_.
-``odgi untangle``'s output makes then clear, for example, that in ``HG00438#2`` the C4A gene is missing, while ``HG01071#2``
+``odgi untangle``'s output makes then clear, for example, that in ``HG00438`` the C4A gene is missing in both haplotypes, while ``HG01071#2``
 has two copies of C4B.
 
