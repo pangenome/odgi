@@ -197,8 +197,7 @@ namespace odgi {
                                         eta.store(etas[iteration]); // update our learning rate
                                         Delta_max.store(delta); // set our delta max to the threshold
                                         if (iteration > first_cooling_iteration) {
-                                            std::cerr << std::endl << "setting cooling!!" << std::endl;
-                                            adj_theta.store(0.01);
+                                            adj_theta.store(0.001);
                                             cooling.store(true);
                                         }
                                     }

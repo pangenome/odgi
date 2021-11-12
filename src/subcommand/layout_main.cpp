@@ -61,6 +61,9 @@ int main_layout(int argc, char **argv) {
     args::ValueFlag<uint64_t> p_sgd_iter_max(pg_sgd_opts, "N",
                                              "The maximum number of iterations N for the path guided 2D SGD model (default: 30).",
                                              {'x', "path-sgd-iter-max"});
+    args::ValueFlag<double> p_sgd_cooling(pg_sgd_opts, "N",
+                                          "Use this fraction of the iterations for layout annealing (default: 0.5).",
+                                          {'K', "path-sgd-cooling"});
     args::ValueFlag<uint64_t> p_sgd_iter_with_max_learning_rate(pg_sgd_opts, "N",
                                                                 "Specify the iteration N where the learning rate is max for path guided 2D SGD model (default: 0).",
                                                                 {'F', "path-sgd-iteration-max-learning-rate"});
@@ -185,6 +188,7 @@ int main_layout(int argc, char **argv) {
     double path_sgd_zipf_theta = p_sgd_zipf_theta ? args::get(p_sgd_zipf_theta) : 0.99;
     double path_sgd_eps = p_sgd_eps ? args::get(p_sgd_eps) : 0.01;
     double path_sgd_delta = p_sgd_delta ? args::get(p_sgd_delta) : 0;
+    double path_sgd_cooling = p_sgd_cooling ? args::get(p_sgd_cooling) : 0.5;
     // will be filled, if the user decides to write a snapshot of the graph after each sorting iterationn
     const bool snapshot = p_sgd_snapshot;
     std::string snapshot_prefix;
@@ -198,7 +202,6 @@ int main_layout(int argc, char **argv) {
     std::vector<path_handle_t> path_sgd_use_paths;
     xp::XP path_index;
     bool first_time_index = true;
-    double path_sgd_cooling_threshold = 0.5;
 
     // take care of path index
     if (xp_in_file) {
@@ -329,7 +332,7 @@ int main_layout(int argc, char **argv) {
         path_sgd_zipf_space,
         path_sgd_zipf_space_max,
         path_sgd_zipf_space_quantization_step,
-        path_sgd_cooling_threshold,
+        path_sgd_cooling,
         num_threads,
         show_progress,
         snapshot,
