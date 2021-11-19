@@ -59,8 +59,11 @@ int main_layout(int argc, char **argv) {
                                              "The theta value N for the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided 2D SGD model (default: 0.99).",
                                              {'a', "path-sgd-zipf-theta"});
     args::ValueFlag<uint64_t> p_sgd_iter_max(pg_sgd_opts, "N",
-                                             "The maximum number of iterations N for the path guided 2D SGD model (default: 30).",
+                                             "The maximum number of iterations N for the path guided 2D SGD model (default: 100).",
                                              {'x', "path-sgd-iter-max"});
+    args::ValueFlag<double> p_sgd_cooling(pg_sgd_opts, "N",
+                                          "Use this fraction of the iterations for layout annealing (default: 0.5).",
+                                          {'K', "path-sgd-cooling"});
     args::ValueFlag<uint64_t> p_sgd_iter_with_max_learning_rate(pg_sgd_opts, "N",
                                                                 "Specify the iteration N where the learning rate is max for path guided 2D SGD model (default: 0).",
                                                                 {'F', "path-sgd-iteration-max-learning-rate"});
@@ -133,7 +136,7 @@ int main_layout(int argc, char **argv) {
 		exit(1);
     }
 
-    const uint64_t t_max = !p_sgd_iter_max ? 30 : args::get(p_sgd_iter_max);
+    const uint64_t t_max = !p_sgd_iter_max ? 100 : args::get(p_sgd_iter_max);
     const double eps = !p_sgd_eps ? 0.01 : args::get(p_sgd_eps);
     const double sgd_delta = p_sgd_delta ? args::get(p_sgd_delta) : 0;
     const bool show_progress = progress ? args::get(progress) : false;
@@ -185,6 +188,7 @@ int main_layout(int argc, char **argv) {
     double path_sgd_zipf_theta = p_sgd_zipf_theta ? args::get(p_sgd_zipf_theta) : 0.99;
     double path_sgd_eps = p_sgd_eps ? args::get(p_sgd_eps) : 0.01;
     double path_sgd_delta = p_sgd_delta ? args::get(p_sgd_delta) : 0;
+    double path_sgd_cooling = p_sgd_cooling ? args::get(p_sgd_cooling) : 0.5;
     // will be filled, if the user decides to write a snapshot of the graph after each sorting iterationn
     const bool snapshot = p_sgd_snapshot;
     std::string snapshot_prefix;
@@ -328,6 +332,7 @@ int main_layout(int argc, char **argv) {
         path_sgd_zipf_space,
         path_sgd_zipf_space_max,
         path_sgd_zipf_space_quantization_step,
+        path_sgd_cooling,
         num_threads,
         show_progress,
         snapshot,

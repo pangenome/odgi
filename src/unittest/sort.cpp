@@ -196,6 +196,7 @@ TEST_CASE("Sorting a graph with paths 1 node long", "[sort]") {
     uint64_t path_sgd_zipf_space_max = 1000;
     uint64_t path_sgd_zipf_space_quantization_step = 100;
     std::string path_sgd_seed = "pangenomic!";
+    double path_sgd_cooling_start = 1.0;
 
     uint64_t path_sgd_iter_max_learning_rate = 0; // don't use this max iter stuff
 
@@ -213,6 +214,7 @@ TEST_CASE("Sorting a graph with paths 1 node long", "[sort]") {
             path_sgd_zipf_space,
             path_sgd_zipf_space_max,
             path_sgd_zipf_space_quantization_step,
+            path_sgd_cooling_start,
             2,
             false,
             path_sgd_seed,

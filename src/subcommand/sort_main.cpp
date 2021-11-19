@@ -73,7 +73,10 @@ int main_sort(int argc, char** argv) {
     args::ValueFlag<double> p_sgd_zipf_theta(pg_sgd_opts, "N", "The theta value for the Zipfian distribution which is used as the"
                                                                " sampling method for the second node of one term in the path guided"
                                                                " linear 1D SGD model (default: *0.99*).", {'a', "path-sgd-zipf-theta"});
-    args::ValueFlag<uint64_t> p_sgd_iter_max(pg_sgd_opts, "N", "The maximum number of iterations for path guided linear 1D SGD model (default: 30).", {'x', "path-sgd-iter-max"});
+    args::ValueFlag<uint64_t> p_sgd_iter_max(pg_sgd_opts, "N", "The maximum number of iterations for path guided linear 1D SGD model (default: 100).", {'x', "path-sgd-iter-max"});
+    args::ValueFlag<double> p_sgd_cooling(pg_sgd_opts, "N",
+                                          "Use this fraction of the iterations for layout annealing (default: 0.5).",
+                                          {'K', "path-sgd-cooling"});
     args::ValueFlag<uint64_t> p_sgd_iter_with_max_learning_rate(pg_sgd_opts, "N", "The iteration where the learning rate is max for path guided linear 1D SGD model (default: *0*).", {'F', "iteration-max-learning-rate"});
     args::ValueFlag<uint64_t> p_sgd_zipf_space(pg_sgd_opts, "N", "The maximum space size of the Zipfian distribution which is used as"
                                                                  " the sampling method for the second node of one term in the path guided"
@@ -207,12 +210,14 @@ int main_sort(int argc, char** argv) {
                      "Please either use -G=[N], path-sgd-min-term-updates-paths=[N] or -U=[N], path-sgd-min-term-updates-nodes=[N]." << std::endl;
         return 1;
     }
-    uint64_t path_sgd_iter_max = args::get(p_sgd_iter_max) ? args::get(p_sgd_iter_max) : 30;
+    uint64_t path_sgd_iter_max = args::get(p_sgd_iter_max) ? args::get(p_sgd_iter_max) : 100;
     uint64_t path_sgd_iter_max_learning_rate = args::get(p_sgd_iter_with_max_learning_rate) ? args::get(p_sgd_iter_with_max_learning_rate) : 0;
     double path_sgd_zipf_theta = args::get(p_sgd_zipf_theta) ? args::get(p_sgd_zipf_theta) : 0.99;
     double path_sgd_eps = args::get(p_sgd_eps) ? args::get(p_sgd_eps) : 0.01;
     double path_sgd_delta = args::get(p_sgd_delta) ? args::get(p_sgd_delta) : 0;
     double path_sgd_max_eta = 0; // update below
+    //double path_sgd_cooling_start = 2.0; // disabled
+    double path_sgd_cooling = p_sgd_cooling ? args::get(p_sgd_cooling) : 0.5;
     // will be filled, if the user decides to write a snapshot of the graph after each sorting iteration
     std::vector<std::string> snapshots;
     const bool snapshot = p_sgd_snapshot;
@@ -338,6 +343,7 @@ int main_sort(int argc, char** argv) {
                                                       path_sgd_zipf_space,
                                                       path_sgd_zipf_space_max,
                                                       path_sgd_zipf_space_quantization_step,
+                                                      path_sgd_cooling,
                                                       num_threads,
                                                       progress,
                                                       path_sgd_seed,
@@ -399,6 +405,7 @@ int main_sort(int argc, char** argv) {
                                                                   path_sgd_zipf_space,
                                                                   path_sgd_zipf_space_max,
                                                                   path_sgd_zipf_space_quantization_step,
+                                                                  path_sgd_cooling,
                                                                   num_threads,
                                                                   progress,
                                                                   path_sgd_seed,
