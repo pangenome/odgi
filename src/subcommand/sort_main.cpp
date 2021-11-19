@@ -8,7 +8,7 @@
 #include "algorithms/split_strands.hpp"
 #include "algorithms/dagify_sort.hpp"
 #include "algorithms/random_order.hpp"
-#include "algorithms/mondriaan_sort.hpp"
+//#include "algorithms/mondriaan_sort.hpp"
 #include "algorithms/linear_sgd.hpp"
 #include "algorithms/xp.hpp"
 #include "algorithms/path_sgd.hpp"

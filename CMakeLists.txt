@@ -244,13 +244,13 @@ ExternalProject_Add(sgd2
 ExternalProject_Get_property(sgd2 SOURCE_DIR)
 set(sgd2_INCLUDE "${SOURCE_DIR}/src")
 
-ExternalProject_Add(mondriaan
-  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/mondriaan"
-  UPDATE_COMMAND ""
-  INSTALL_COMMAND "")
-ExternalProject_Get_property(mondriaan SOURCE_DIR)
-set(mondriaan_INCLUDE "${SOURCE_DIR}/src")
-set(mondriaan_LIB "${SOURCE_DIR}/lib")
+#ExternalProject_Add(mondriaan
+#  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/mondriaan"
+#  UPDATE_COMMAND ""
+#  INSTALL_COMMAND "")
+#ExternalProject_Get_property(mondriaan SOURCE_DIR)
+#set(mondriaan_INCLUDE "${SOURCE_DIR}/src")
+#set(mondriaan_LIB "${SOURCE_DIR}/lib")
 
 ExternalProject_Add(libbf
   SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/libbf"
@@ -416,7 +416,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_info.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_depth.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/sgd_layout.cpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/mondriaan_sort.cpp
+#  ${CMAKE_SOURCE_DIR}/src/algorithms/mondriaan_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/matrix_writer.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/temp_file.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/linear_index.cpp
@@ -463,7 +463,7 @@ set(odgi_DEPS
     structures
     picosha256
     sgd2
-    mondriaan
+#    mondriaan
     libbf
     httplib
     random_distributions
@@ -498,7 +498,7 @@ set(odgi_INCLUDES
   "${structures_INCLUDE}"
   "${picosha256_INCLUDE}"
   "${sgd2_INCLUDE}"
-  "${mondriaan_INCLUDE}"
+#  "${mondriaan_INCLUDE}"
   "${libbf_INCLUDE}"
   "${httplib_INCLUDE}"
   "${random_distributions_INCLUDE}"
@@ -513,7 +513,7 @@ set(odgi_LIBS
   "${sdsl-lite-divsufsort_LIB}/libdivsufsort64.a"
   "${handlegraph_LIB}/libhandlegraph.a"
   "${lodepng_LIB}/liblodepng.a"
-  "${mondriaan_LIB}/libmondriaan.a"
+#  "${mondriaan_LIB}/libmondriaan.a"
   "${libbf_LIB}/libbf.a"
   "-ldl"
   "-latomic"
@@ -599,7 +599,7 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/algorithms/degree.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/sorted_id_ranges.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/strongly_connected_components.hpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/mondriaan_sort.hpp
+#  ${CMAKE_SOURCE_DIR}/src/algorithms/mondriaan_sort.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/hash.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/hilbert.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/groom.hpp
