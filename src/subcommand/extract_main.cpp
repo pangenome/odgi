@@ -53,6 +53,11 @@ namespace odgi {
         args::ValueFlag<std::string> _path_bed_file(extract_opts, "FILE",
                                                     "Find the node(s) in the path range(s) specified in the given BED FILE.",
                                                     {'b', "bed-file"});
+        args::ValueFlag<std::string> _pangenomic_range(extract_opts, "STRING",
+                                                       "Find the node(s) in the specified pangenomic range pos1-pos2 (0-based coordinates). "
+                                                       "The nucleotide positions refer to the pangenome’s sequence (i.e., "
+                                                       "the sequence obtained arranging all the graph’s node from left to right)."
+                                                       , {'q', "pangenomic-range"});
         args::Flag _full_range(extract_opts, "full_range",
                                "Collects all nodes in the sorted order of the graph in the min and max positions touched by the given path ranges. "
                                "This ensures that all the paths of the subgraph are not split by node, but that the nodes are laced together again. "
@@ -125,7 +130,13 @@ namespace odgi {
             }
 
             if (_inverse) {
-                std::cerr << "[odgi::extract] error: please do not specify an inverse query (with -I/--_inverse) when "
+                std::cerr << "[odgi::extract] error: please do not specify an inverse query (with -I/--inverse) when "
+                             "one subgraph per given target is requested (with -s/--split-subgraphs)." << std::endl;
+                return 1;
+            }
+
+            if (_pangenomic_range) {
+                std::cerr << "[odgi::extract] error: please do not specify a pangenomic range (with -q/--pangenomic-range) when "
                              "one subgraph per given target is requested (with -s/--split-subgraphs)." << std::endl;
                 return 1;
             }
@@ -309,6 +320,34 @@ namespace odgi {
             }
         }
 
+        std::pair<uint64_t, uint64_t> pangenomic_range = {0, 0};
+        if (_pangenomic_range && !args::get(_pangenomic_range).empty()) {
+            const std::string pangenomic_range_str = args::get(_pangenomic_range);
+
+            const std::regex regex("-");
+            const std::vector<std::string> splitted(
+                    std::sregex_token_iterator(pangenomic_range_str.begin(), pangenomic_range_str.end(), regex, -1),
+                    std::sregex_token_iterator()
+                    );
+
+            if (splitted.size() != 2) {
+                std::cerr
+                        << "[odgi::extract] error: please specify a valid pangenomic range: start-end."
+                        << std::endl;
+                return 1;
+            }
+
+            if (!utils::is_number(splitted[0]) || !utils::is_number(splitted[1]) || stoull(splitted[0]) > stoull(splitted[1])) {
+                std::cerr
+                << "[odgi::extract] error: please specify valid numbers for the pangenomic range."
+                << std::endl;
+                return 1;
+            }
+
+            pangenomic_range.first = stoull(splitted[0]);
+            pangenomic_range.second = stoull(splitted[1]);
+        }
+
         if (_split_subgraphs && path_ranges.empty()) {
             std::cerr << "[odgi::extract] error: please specify at least one target when "
                          "one subgraph per given target is requested (with -s/--split-subgraphs)." << std::endl;
@@ -319,7 +358,7 @@ namespace odgi {
         const uint64_t context_steps = _context_steps ? args::get(_context_steps) : 0;
         const uint64_t context_bases = _context_bases ? args::get(_context_bases) : 0;
 
-        omp_set_num_threads(num_threads);
+        omp_set_num_threads((int) num_threads);
 
         auto prep_graph = [](graph_t &source, const std::vector<path_handle_t>& source_paths,
                              const std::vector<path_handle_t>& lace_paths, graph_t &subgraph,
@@ -511,6 +550,23 @@ namespace odgi {
                     subgraph.create_handle(graph.get_sequence(h),
                                            id_shifted + shift);
                 }
+            }
+
+            // todo: to put in the parallel stuff or in the keep_bv stuff, to avoid checking has_node
+            if (_pangenomic_range) {
+                uint64_t len = 0;
+                graph.for_each_handle([&](const handle_t &h) {
+                    uint64_t hl = graph.get_length(h);
+
+                    if (len <= pangenomic_range.second && pangenomic_range.first <= len + hl) {
+                        nid_t hid = graph.get_id(h);
+                        if (!subgraph.has_node(hid)) {
+                            subgraph.create_handle(graph.get_sequence(h), hid);
+                        }
+                    }
+
+                    len += hl;
+                });
             }
 
             if (show_progress) {
