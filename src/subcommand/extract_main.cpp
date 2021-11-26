@@ -545,28 +545,23 @@ namespace odgi {
                             keep_bv.set(graph.get_id(handle) - shift);
                         });
                 }
+                if (_pangenomic_range) {
+                    uint64_t len = 0;
+                    graph.for_each_handle([&](const handle_t &h) {
+                        const uint64_t hl = graph.get_length(h);
+
+                        if (len <= pangenomic_range.second && pangenomic_range.first <= len + hl) {
+                            keep_bv.set(graph.get_id(h) - shift);
+                        }
+
+                        len += hl;
+                    });
+                }
                 for (auto id_shifted : keep_bv) {
                     const handle_t h = graph.get_handle(id_shifted + shift);
                     subgraph.create_handle(graph.get_sequence(h),
                                            id_shifted + shift);
                 }
-            }
-
-            // todo: to put in the parallel stuff or in the keep_bv stuff, to avoid checking has_node
-            if (_pangenomic_range) {
-                uint64_t len = 0;
-                graph.for_each_handle([&](const handle_t &h) {
-                    uint64_t hl = graph.get_length(h);
-
-                    if (len <= pangenomic_range.second && pangenomic_range.first <= len + hl) {
-                        nid_t hid = graph.get_id(h);
-                        if (!subgraph.has_node(hid)) {
-                            subgraph.create_handle(graph.get_sequence(h), hid);
-                        }
-                    }
-
-                    len += hl;
-                });
             }
 
             if (show_progress) {
