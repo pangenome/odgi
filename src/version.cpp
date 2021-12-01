@@ -39,7 +39,8 @@ const unordered_map<string, string> Version::codenames = {
     {"v0.5.1", "Phoenix"},
     {"0.6", "Domani"},
     {"v0.6.1", "Froggi"},
-    {"v0.6.2", "Auff"}
+    {"v0.6.2", "Auff"},
+	{"v0.6.3", "Pulizia"}
     // Add more codenames here
 };
 
