@@ -45,8 +45,7 @@ namespace odgi {
 		ska::flat_hash_map<nid_t , uint64_t> collect_nodes_in_walking_dist_from_map(const graph_t& graph,
 																		   const uint64_t& walking_dist_prev,
 																		   const uint64_t& walking_dist_next,
-																		   const step_handle_t& start_step,
-																		   ska::flat_hash_map<step_handle_t, std::pair<std::vector<nid_t>, std::vector<nid_t>>>& steps_nodes_prev_next_map);
+																		   const step_handle_t& start_step);
 
 		/// from a given target_set add the nodes into the union_set which might be not empty
 		void add_target_set_to_union_set(ska::flat_hash_map<nid_t , uint64_t>& union_set,
@@ -75,7 +74,6 @@ namespace odgi {
 		std::pair<uint64_t , uint64_t> find_min_max_walk_dist_from_query_targets(const graph_t& graph,
 																		   const uint64_t& walking_dist,
 																		   const step_handle_t& cur_step,
-																		   const std::vector<step_handle_t>& target_step_handles,
-																		   ska::flat_hash_map<step_handle_t, std::pair<std::vector<nid_t>, std::vector<nid_t>>>& steps_nodes_prev_next_map);
+																		   const std::vector<step_handle_t>& target_step_handles);
 	}
 }

@@ -13,15 +13,14 @@ namespace odgi {
 			/// collect the visited nodes in a vector, so we can do the additional interations faster
 			// this is very RAM intensive, maybe it should be made optional
 			// gives a speed up of ~1.5x
-			ska::flat_hash_map<step_handle_t, std::pair<std::vector<nid_t>, std::vector<nid_t>>> steps_nodes_prev_next_map;
+			// ska::flat_hash_map<step_handle_t, std::pair<std::vector<nid_t>, std::vector<nid_t>>> steps_nodes_prev_next_map;
 
 			/// collect the possible minimal and maximal walking distance in nucleotides from the query step and all possible target steps
 			/// we don't care about orientation here
 			std::pair<uint64_t , uint64_t> min_max_walk_dist = find_min_max_walk_dist_from_query_targets(graph,
 																										 walking_dist,
 																										 cur_step,
-																										 target_step_handles,
-																										 steps_nodes_prev_next_map);
+																										 target_step_handles);
 #ifdef debug_tips
 			#pragma omp critical (cout)
 						std::cerr << "MIN: " << min_max_walk_dist.first << " MAX: " << min_max_walk_dist.second << std::endl;
@@ -72,32 +71,27 @@ namespace odgi {
 				}
 				// more complex algorithm
 			} else {
-				ska::flat_hash_map<nid_t, uint64_t> query_set_min_max = collect_nodes_in_walking_dist_from_map(
+				ska::flat_hash_map<nid_t, uint64_t> query_set_min_max = collect_nodes_in_walking_dist(
 						graph,
 						min_max_walk_dist.first,
 						min_max_walk_dist.second,
-						cur_step,
-						steps_nodes_prev_next_map);
-				ska::flat_hash_map<nid_t, uint64_t> query_set_max_min = collect_nodes_in_walking_dist_from_map(
+						cur_step);
+				ska::flat_hash_map<nid_t, uint64_t> query_set_max_min = collect_nodes_in_walking_dist(
 						graph,
 						min_max_walk_dist.second,
 						min_max_walk_dist.first,
-						cur_step,
-						steps_nodes_prev_next_map);
-
+						cur_step);
 				for (step_handle_t& target_step : target_step_handles) {
-					ska::flat_hash_map<nid_t, uint64_t> target_set_min_max = collect_nodes_in_walking_dist_from_map(
+					ska::flat_hash_map<nid_t, uint64_t> target_set_min_max = collect_nodes_in_walking_dist(
 							graph,
 							min_max_walk_dist.first,
 							min_max_walk_dist.second,
-							target_step,
-							steps_nodes_prev_next_map);
-					ska::flat_hash_map<nid_t, uint64_t> target_set_max_min = collect_nodes_in_walking_dist_from_map(
+							target_step);
+					ska::flat_hash_map<nid_t, uint64_t> target_set_max_min = collect_nodes_in_walking_dist(
 							graph,
 							min_max_walk_dist.second,
 							min_max_walk_dist.first,
-							target_step,
-							steps_nodes_prev_next_map);
+							target_step);
 
 					/// [0] -> q_min_max vs. t_min_max
 					/// [1] -> q_min_max vs. t_max_min
@@ -181,7 +175,6 @@ namespace odgi {
 			uint64_t total_dist_walked = 0;
 			// where does our step come from
 			handle_t cur_h = graph.get_handle_of_step(start_step);
-			const bool is_rev = number_bool_packing::unpack_bit(cur_h);
 			step_handle_t cur_step = start_step;
 			nid_t cur_id = graph.get_id(cur_h);
 			while (graph.has_previous_step(cur_step) && (dist_walked < walking_dist_prev)) {
@@ -220,7 +213,7 @@ namespace odgi {
 			} else {
 				node_count_set[cur_id] = node_count_set[cur_id] + 1;
 			}
-			if (walked_walking_dist && (total_dist_walked < (walking_dist_prev + walking_dist_next))) {
+			if ((total_dist_walked < (walking_dist_prev + walking_dist_next))) {
 				return ska::flat_hash_map<nid_t, uint64_t>();
 			}
 			return node_count_set;
@@ -355,8 +348,7 @@ namespace odgi {
 		std::pair<uint64_t , uint64_t> find_min_max_walk_dist_from_query_targets(const graph_t& graph,
 																				 const uint64_t& walking_dist,
 																				 const step_handle_t& cur_step,
-																				 const std::vector<step_handle_t>& target_step_handles,
-																				 ska::flat_hash_map<step_handle_t, std::pair<std::vector<nid_t>, std::vector<nid_t>>>& steps_nodes_prev_next_map) {
+																				 const std::vector<step_handle_t>& target_step_handles) {
 			std::pair<uint64_t, uint64_t> min_max_walk_dist = {walking_dist, walking_dist};
 			std::vector<step_handle_t> query_target_step_handles(target_step_handles);
 			query_target_step_handles.push_back(cur_step);
@@ -364,14 +356,12 @@ namespace odgi {
 				/// first walk to previous steps up to the walking_dist
 				uint64_t dist_walked_prev = 0;
 				handle_t cur_h = graph.get_handle_of_step(start_step);
-				const bool is_rev = number_bool_packing::unpack_bit(cur_h);
 				step_handle_t cur_step = start_step;
 				nid_t cur_id = graph.get_id(cur_h);
 				while (graph.has_previous_step(cur_step) && (dist_walked_prev < min_max_walk_dist.second)) {
 					step_handle_t prev_step = graph.get_previous_step(cur_step);
 					handle_t prev_h = graph.get_handle_of_step(prev_step);
 					nid_t prev_id = graph.get_id(prev_h);
-					steps_nodes_prev_next_map[start_step].first.push_back(prev_id);
 					dist_walked_prev += graph.get_length(prev_h);
 					cur_step = prev_step;
 				}
@@ -383,7 +373,6 @@ namespace odgi {
 					step_handle_t next_step = graph.get_next_step(cur_step);
 					handle_t next_h = graph.get_handle_of_step(next_step);
 					nid_t next_id = graph.get_id(next_h);
-					steps_nodes_prev_next_map[start_step].second.push_back(next_id);
 					dist_walked_next += graph.get_length(next_h);
 					cur_step = next_step;
 				}
