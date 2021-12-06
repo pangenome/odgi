@@ -165,7 +165,8 @@ namespace odgi {
 		graph.for_each_path_handle([&](const path_handle_t &path) {
 			paths.push_back(path);
 		});
-		algorithms::step_index_t step_index(graph, paths, num_threads, progress);
+		// FIXME add the right number here later
+		algorithms::step_index_t step_index(graph, paths, num_threads, progress, 2);
 		// open the bed writer thread
 		algorithms::tips_bed_writer bed_writer_thread;
 		bed_writer_thread.open_writer();

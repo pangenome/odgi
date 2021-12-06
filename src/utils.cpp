@@ -81,4 +81,8 @@ namespace utils {
 		}
 		return 0;
     }
+
+	uint64_t modulo_two(const uint64_t n, const uint64_t d) {
+		return (n & (d - 1));
+	}
 }

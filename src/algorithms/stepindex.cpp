@@ -7,7 +7,15 @@ namespace algorithms {
 step_index_t::step_index_t(const PathHandleGraph& graph,
                            const std::vector<path_handle_t>& paths,
                            const uint64_t& nthreads,
-                           const bool progress) {
+                           const bool progress,
+						   const uint64_t sample_rate) {
+	// if the sample rate is not dividable by 2, the algorithm might be slow
+	if (sample_rate % 2 != 0) {
+		if (progress) {
+			std::cerr << "[odgi::algorithms::stepindex] Validating sample rate: The given sample rate of " << sample_rate << " is not dividable by 2. This will slow down the building and usage of the step index.0" << std::endl;
+		}
+	}
+	this->sample_rate = sample_rate;
     // iterate through the paths, recording steps in the structure we'll use to build the mphf
     std::vector<step_handle_t> steps;
 	std::unique_ptr<algorithms::progress_meter::ProgressMeter> collecting_steps_progress_meter;
@@ -19,8 +27,16 @@ step_index_t::step_index_t(const PathHandleGraph& graph,
     for (auto& path : paths) {
         std::vector<step_handle_t> my_steps;
         graph.for_each_step_in_path(
-            path, [&](const step_handle_t& step) { my_steps.push_back(step); });
-        my_steps.push_back(graph.path_end(path));
+            path, [&](const step_handle_t& step) {
+				// sampling
+				if (0 == utils::modulo_two(graph.get_id(graph.get_handle_of_step(step)), sample_rate)) {
+					my_steps.push_back(step);
+				}
+			});
+		// sampling
+		if (0 == utils::modulo_two(graph.get_id(graph.get_handle_of_step(graph.path_end(path))), sample_rate)) {
+			my_steps.push_back(graph.path_end(path));
+		}
 #pragma omp critical (steps_collect)
         steps.insert(steps.end(), my_steps.begin(), my_steps.end());
         if(progress) {
@@ -46,10 +62,16 @@ step_index_t::step_index_t(const PathHandleGraph& graph,
         uint64_t offset = 0;
         graph.for_each_step_in_path(
             path, [&](const step_handle_t& step) {
-                pos[step_mphf->lookup(step)] = offset;
-                offset += graph.get_length(graph.get_handle_of_step(step));
+				// sampling
+				if (0 == utils::modulo_two(graph.get_id(graph.get_handle_of_step(step)), sample_rate)) {
+					pos[step_mphf->lookup(step)] = offset;
+					offset += graph.get_length(graph.get_handle_of_step(step));
+				}
             });
-        pos[step_mphf->lookup(graph.path_end(path))] = offset;
+		// sampling
+		if (0 == utils::modulo_two(graph.get_id(graph.get_handle_of_step(graph.path_end(path))), sample_rate)) {
+			pos[step_mphf->lookup(graph.path_end(path))] = offset;
+		}
         if (progress) {
         	building_progress_meter->increment(1);
         }
@@ -57,10 +79,34 @@ step_index_t::step_index_t(const PathHandleGraph& graph,
 	if (progress) {
 		building_progress_meter->finish();
 	}
+	// TODO add path lengths here
 }
 
-const uint64_t& step_index_t::get_position(const step_handle_t& step) const {
-    return pos[step_mphf->lookup(step)];
+const uint64_t& step_index_t::get_position(const step_handle_t& step, const PathHandleGraph& graph) const {
+	// TODO now we need to change the lookup
+	// is our step already in a node that we indexed?
+	handle_t h = graph.get_handle_of_step(step);
+	uint64_t n_id = graph.get_id(h);
+	step_handle_t cur_step = step;
+	if (0 == utils::modulo_two(n_id, this->sample_rate)) {
+		return pos[step_mphf->lookup(step)];
+	} else {
+		// did we hit the first step anyhow?
+		uint64_t walked = 0;
+		if (!graph.has_previous_step(cur_step)) {
+			return 0;
+		}
+		while (graph.has_previous_step(cur_step)) {
+			step_handle_t prev_step = graph.get_previous_step(cur_step);
+			handle_t prev_h = graph.get_handle_of_step(prev_step);
+			uint64_t prev_n_id = graph.get_id(prev_h);
+			walked += graph.get_length(prev_h);
+			if (utils::modulo_two(n_id, this->sample_rate) == 0) {
+				return pos[step_mphf->lookup(prev_step)] + walked;
+			}
+			cur_step = prev_step;
+		}
+	}
 }
 
 step_index_t::~step_index_t(void) {

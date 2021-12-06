@@ -585,7 +585,8 @@ void untangle(
                 paths.end());
     //std::cerr << "[odgi::algorithms::untangle] building step index" << std::endl;
     //auto step_pos = make_step_index(graph, paths, num_threads);
-    step_index_t step_index(graph, paths, num_threads, progress);
+	// FIXME add the right number here later
+    step_index_t step_index(graph, paths, num_threads, progress, 8);
 
     // which nodes are traversed by our target paths?
     atomicbitvector::atomic_bv_t target_nodes(graph.get_node_count() + 1);
