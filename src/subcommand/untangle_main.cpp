@@ -49,6 +49,9 @@ int main_untangle(int argc, char **argv) {
     args::Group debugging_opts(parser, "[ Debugging Options ]");
     args::Flag make_self_dotplot(debugging_opts, "DOTPLOT", "Render a table showing the positional dotplot of the query against itself.",
                                  {'S', "self-dotplot"});
+	args::Group step_index_opts(parser, "[ Step Index Options ]");
+	args::ValueFlag<uint64_t> _step_index_sample_rate(step_index_opts, "N", "The sample rate when building the step index. We index a node only if mod(node_id, step-index-sample-rate) == 0! Number must be dividable by 2. (default: 8).",
+													  {'a', "step-index-sample-rate"});
     args::Group threading(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> nthreads(
         threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
@@ -82,6 +85,12 @@ int main_untangle(int argc, char **argv) {
     }
 
     const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+	// if the sample rate is not dividable by 2, the algorithm will not work
+	uint64_t  step_index_sample_rate = args::get(_step_index_sample_rate) ? args::get(_step_index_sample_rate) : 8;
+	if (step_index_sample_rate % 2 != 0) {
+			std::cerr << "[odgi::untangle] error: The given sample rate of " << step_index_sample_rate << " is not dividable by 2. Please provide a different sample rate." << std::endl;
+			exit(1);
+	}
 
     graph_t graph;
     assert(argc > 0);
@@ -183,7 +192,8 @@ int main_untangle(int argc, char **argv) {
                              (_jaccard_threshold ? args::get(_jaccard_threshold) : 0.0),
                              args::get(paf_output),
                              num_threads,
-                             progress);
+                             progress,
+							 step_index_sample_rate);
     }
 
     return 0;

@@ -43,8 +43,8 @@ std::vector<step_handle_t> untangle_cuts(
     while (!todo.empty()) {
         auto start = todo.front().first;
         auto end = todo.front().second;
-        uint64_t start_pos = step_index.get_position(start);
-        uint64_t end_pos = step_index.get_position(end);
+        uint64_t start_pos = step_index.get_position(start, graph);
+        uint64_t end_pos = step_index.get_position(end, graph);
         //std::cerr << "todo: " << start_pos << " " << end_pos << std::endl;
         cut_points.push_back(start);
         todo.pop_front();
@@ -55,7 +55,7 @@ std::vector<step_handle_t> untangle_cuts(
             if (is_seen_fwd_step(step)) {
                 continue;
             }
-            auto curr_pos = step_index.get_position(step);
+            auto curr_pos = step_index.get_position(step, graph);
             handle_t handle = graph.get_handle_of_step(step);
             if (is_cut(handle)) {
                 cut_points.push_back(step);
@@ -65,7 +65,7 @@ std::vector<step_handle_t> untangle_cuts(
             step_handle_t other;
             auto x = self_index.get_next_step_on_node(graph.get_id(handle), step);
             if (x.first) {
-                auto other_pos = step_index.get_position(x.second);
+                auto other_pos = step_index.get_position(x.second, graph);
                 if (other_pos > start_pos
                     && other_pos < end_pos
                     && other_pos > curr_pos
@@ -93,14 +93,14 @@ std::vector<step_handle_t> untangle_cuts(
         }
         //std::cerr << "reversing" << std::endl;
         for (step_handle_t step = end;
-             step_index.get_position(step) > start_pos;
+             step_index.get_position(step, graph) > start_pos;
              step = graph.get_previous_step(step)) {
             if (is_seen_rev_step(step)) {
                 continue;
             }
             //  we take the first and shortest loop we find
             // TODO change this, it can be computed based on the node length
-            auto curr_pos = step_index.get_position(step);
+            auto curr_pos = step_index.get_position(step, graph);
             handle_t handle = graph.get_handle_of_step(step);
             if (is_cut(handle)) {
                 cut_points.push_back(step);
@@ -111,7 +111,7 @@ std::vector<step_handle_t> untangle_cuts(
             step_handle_t other;
             auto x = self_index.get_prev_step_on_node(graph.get_id(handle), step);
             if (x.first) {
-                auto other_pos = step_index.get_position(x.second);
+                auto other_pos = step_index.get_position(x.second, graph);
                 if (other_pos > start_pos
                     && other_pos < end_pos
                     && other_pos < curr_pos
@@ -135,7 +135,7 @@ std::vector<step_handle_t> untangle_cuts(
               cut_points.end(),
               [&](const step_handle_t& a,
                   const step_handle_t& b) {
-                  return step_index.get_position(a) < step_index.get_position(b);
+                  return step_index.get_position(a, graph) < step_index.get_position(b, graph);
               });
     //auto prev_size = cut_points.size();
     // then take unique positions
@@ -154,19 +154,20 @@ void write_cuts(
     auto path_name = graph.get_path_name(path);
     std::cout << "name\tcut" << std::endl;
     for (auto& step : cuts) {
-        std::cout << path_name << "\t" << step_index.get_position(step) << std::endl;
+        std::cout << path_name << "\t" << step_index.get_position(step, graph) << std::endl;
     }
 }
 
 std::vector<step_handle_t> merge_cuts(
     const std::vector<step_handle_t>& cuts,
     const uint64_t& dist,
-    const step_index_t& step_index) {
+    const step_index_t& step_index,
+	const PathHandleGraph& graph) {
     std::vector<step_handle_t> merged;
     uint64_t last = 0;
     //std::cerr << "dist is " << dist << std::endl;
     for (auto& step : cuts) {
-        auto pos = step_index.get_position(step);
+        auto pos = step_index.get_position(step, graph);
         if (pos == 0 || pos > (last + dist)) {
             merged.push_back(step);
             last = pos;
@@ -269,7 +270,8 @@ segment_map_t::segment_map_t(
                               is_cut
                     ),
                 merge_dist,
-                step_index);
+                step_index,
+				graph);
     }
     // the index construction must be serial
     for (uint64_t i = 0; i < paths.size(); ++i) {
@@ -495,8 +497,8 @@ void map_segments(
     for (uint64_t i = 0; i < cuts.size()-1; ++i) {
         auto& begin = cuts[i];
         auto& end = cuts[i+1];
-        auto begin_pos = step_index.get_position(begin);
-        auto end_pos = step_index.get_position(end);
+        auto begin_pos = step_index.get_position(begin, graph);
+        auto end_pos = step_index.get_position(end, graph);
         uint64_t length = end_pos - begin_pos;
         // get the self coverage TODO
         double self_coverage = self_mean_coverage(graph, self_index, path, begin, end);
@@ -515,7 +517,7 @@ void map_segments(
                     if (dist > 1.0) dist = 1.0;
                     auto& idx = mapping.segment_id; // segment index
                     auto& target_begin = target_segments.get_segment_cut(idx);
-                    auto target_begin_pos = step_index.get_position(target_begin);
+                    auto target_begin_pos = step_index.get_position(target_begin, graph);
                     auto target_end_pos = target_begin_pos + target_segments.get_segment_length(idx);
                     path_handle_t target_path = graph.get_path_handle_of_step(target_begin);
                     std::string target_name = graph.get_path_name(target_path);
@@ -571,7 +573,8 @@ void untangle(
     const double& min_jaccard,
     const bool& paf_output,
     const size_t& num_threads,
-    const bool& progress) {
+    const bool& progress,
+	const uint64_t& step_index_sample_rate) {
 
     if (progress) {
         std::cerr << "[odgi::algorithms::untangle] untangling " << queries.size() << " queries with " << targets.size() << " targets" << std::endl;
@@ -586,7 +589,8 @@ void untangle(
     //std::cerr << "[odgi::algorithms::untangle] building step index" << std::endl;
     //auto step_pos = make_step_index(graph, paths, num_threads);
 	// FIXME add the right number here later
-    step_index_t step_index(graph, paths, num_threads, progress, 8);
+
+    step_index_t step_index(graph, paths, num_threads, progress, step_index_sample_rate);
 
     // which nodes are traversed by our target paths?
     atomicbitvector::atomic_bv_t target_nodes(graph.get_node_count() + 1);
@@ -625,7 +629,8 @@ void untangle(
                               self_index,
                               [](const handle_t& h) { return false; }),
                 merge_dist,
-                step_index);
+                step_index,
+				graph);
         for (auto& step : cuts) {
             cut_nodes.set(graph.get_id(graph.get_handle_of_step(step)));
         }
@@ -698,7 +703,8 @@ void untangle(
                                   return cut_nodes.test(graph.get_id(h));
                               }),
                 merge_dist,
-                step_index);
+                step_index,
+				graph);
         map_segments(graph, query, cuts, target_segments, step_index, self_index, max_self_coverage, n_best, min_jaccard, paf_output, path_to_len);
 
         //write_cuts(graph, query, cuts, step_pos);

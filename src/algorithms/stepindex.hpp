@@ -49,9 +49,9 @@ struct step_index_t {
                  const std::vector<path_handle_t>& paths,
                  const uint64_t& nthreads,
                  const bool progress,
-				 const uint64_t sample_rate);
+				 const uint64_t& sample_rate);
     ~step_index_t(void);
-    const uint64_t& get_position(const step_handle_t& step, const PathHandleGraph& graph) const;
+    const uint64_t get_position(const step_handle_t& step, const PathHandleGraph& graph) const;
     // map from step to position in its path
     boophf_step_t* step_mphf = nullptr;
     std::vector<uint64_t> pos;

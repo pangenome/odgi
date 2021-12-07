@@ -17,7 +17,7 @@ namespace utils {
 							  const uint64_t num_threads, odgi::graph_t &graph);
 	/// this function will return n % d
 	/// it is assumed that d is one of 1, 2, 4, 8, 16, 32, ....
-	uint64_t modulo_two(const uint64_t n, const uint64_t d);
+	uint64_t modulo(const uint64_t n, const uint64_t d);
 }
 
 

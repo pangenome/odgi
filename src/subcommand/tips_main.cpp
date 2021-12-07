@@ -43,6 +43,9 @@ namespace odgi {
 		args::ValueFlag<uint64_t> _walking_dist(tips_opts, "N", "Maximum walking distance in nucleotides for one orientation when finding the best target (reference) range for each query path (default: 10000). Note: If we walked 9999 base pairs and **w, --jaccard-context** is **10000**, we will also include the next node, even if we overflow the actual limit.",
 												   {'w', "jaccard-context"});
 		args::Flag _report_additional_jaccards(tips_opts, "report_additional_jaccards", "If for a target (reference) path several matches are possible, also report the additional jaccard indices (default: false). In the resulting BED, an '.' is added, if set to 'false'.", {'j', "jaccards"});
+		args::Group step_index_opts(parser, "[ Step Index Options ]");
+		args::ValueFlag<uint64_t> _step_index_sample_rate(step_index_opts, "N", "The sample rate when building the step index. We index a node only if mod(node_id, step-index-sample-rate) == 0! Number must be dividable by 2. (default: 8).",
+												{'a', "step-index-sample-rate"});
 		args::Group threading(parser, "[ Threading ]");
 		args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 		args::Group processing_info_opts(parser, "[ Processing Information ]");
@@ -72,6 +75,12 @@ namespace odgi {
 		}
 
 		const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+		// if the sample rate is not dividable by 2, the algorithm will not work
+		uint64_t  step_index_sample_rate = args::get(_step_index_sample_rate) ? args::get(_step_index_sample_rate) : 8;
+		if (step_index_sample_rate % 2 != 0) {
+				std::cerr << "[odgi::tips] error: The given sample rate of " << step_index_sample_rate << " is not dividable by 2. Please provide a different sample rate." << std::endl;
+				exit(1);
+		}
 
 		odgi::graph_t graph;
 		assert(argc > 0);
@@ -166,7 +175,7 @@ namespace odgi {
 			paths.push_back(path);
 		});
 		// FIXME add the right number here later
-		algorithms::step_index_t step_index(graph, paths, num_threads, progress, 2);
+		algorithms::step_index_t step_index(graph, paths, num_threads, progress, step_index_sample_rate);
 		// open the bed writer thread
 		algorithms::tips_bed_writer bed_writer_thread;
 		bed_writer_thread.open_writer();

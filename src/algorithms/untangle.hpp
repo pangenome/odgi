@@ -64,7 +64,8 @@ std::vector<step_handle_t> untangle_cuts(
 std::vector<step_handle_t> merge_cuts(
     const std::vector<step_handle_t>& cuts,
     const uint64_t& dist,
-    const step_index_t& step_index);
+    const step_index_t& step_index,
+	const PathHandleGraph& graph);
 
 void write_cuts(
     const PathHandleGraph& graph,
@@ -111,7 +112,8 @@ void untangle(
     const double& min_jaccard,
     const bool& paf_output,
     const size_t& num_threads,
-	const bool& progress);
+	const bool& progress,
+	const uint64_t& step_index_sample_rate);
 
 }
 }
