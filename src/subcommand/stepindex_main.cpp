@@ -27,6 +27,8 @@ namespace odgi {
 		args::ValueFlag<uint64_t> _step_index_sample_rate(step_index_opts, "N", "The sample rate when building the step index. We index a node only if mod(node_id, step-index-sample-rate) == 0! Number must be dividable by 2. (default: 8).",
 														  {'a', "step-index-sample-rate"});
 		args::Flag naked_run(step_index_opts, "naked-run", "Only read in the given graph and then exit gracefully", {'n', "naked-run"});
+		args::ValueFlag<uint64_t> _iterations(step_index_opts, "N", "The number of position fetching rounds. For each path step a position is fetched N times. (default: 10).",
+														  {'b', "iterations"});
 		args::Group threading(parser, "[ Threading ]");
 		args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 		args::Group processing_info_opts(parser, "[ Processing Information ]");
@@ -60,6 +62,8 @@ namespace odgi {
 			std::cerr << "[odgi::stepindex] error: The given sample rate of " << step_index_sample_rate << " is not dividable by 2. Please provide a different sample rate." << std::endl;
 			exit(1);
 		}
+
+		uint64_t iterations = args::get(_iterations) ? args::get(_iterations) : 10;
 
 		const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
 
@@ -118,10 +122,10 @@ namespace odgi {
 
 		std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress_meter;
 		if (progress) {
-			progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(paths.size()*10, "[odgi::stepindex::position_fetching] Progress:");
+			progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(paths.size()*iterations, "[odgi::stepindex::position_fetching] Progress:");
 		}
 
-		for (int i = 0; i < 10; i++) {
+		for (int i = 0; i < iterations; i++) {
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
 			for (auto path: paths) {
 				graph.for_each_step_in_path(path, [&](const step_handle_t &step) {
