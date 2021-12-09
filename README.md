@@ -132,6 +132,10 @@ Read the full documentation at [https://odgi.readthedocs.io/](https://odgi.readt
 Since v1.11 [MultiQC](https://multiqc.info/) has an [ODGI module](https://multiqc.info/docs/#odgi). This module can only
 work with output from `odgi stats`! For more details take a look at the documentation at [odgi.readthedocs.io/multiqc](https://odgi.readthedocs.io/en/latest/rst/multiqc.html).
 
+## Citation
+**Andrea Guarracino\*, Simon Heumos\*, Sven Nahnsen, Pjotr Prins, Erik Garrison**. [ODGI: understanding pangenome graphs](https://www.biorxiv.org/content/10.1101/2021.11.10.467921v1), bioRxiv, 2021\
+**\*Shared first authorship**
+
 ## tests
 
 Unittests from `vg` have been ported here and are used to validate the behavior of the algorithm.
