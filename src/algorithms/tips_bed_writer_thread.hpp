@@ -25,6 +25,7 @@ namespace odgi {
 				double jaccard;
 				bool walking_dir;
 				std::vector<double> additional_jaccards_to_report;
+				uint64_t actual_target_step_candidates;
 			};
 
 			std::thread writer_thread;
@@ -69,6 +70,7 @@ namespace odgi {
 							} else {
 								std::cout << "\t" << ".";
 							}
+							std::cout << "\t" << bed_record->actual_target_step_candidates;
 							std::cout << std::endl;
 						} while (bed_record_queue.try_pop(bed_record));
 					} else {
@@ -102,9 +104,11 @@ namespace odgi {
 			void append(const std::string &chrom, const uint64_t &chromStart, const uint64_t &chromEnd,
 						const std::string &path, const uint64_t &path_pos,
 						const double& jaccard, const bool& walking_dir,
-						const std::vector<double>& additional_jaccards_to_report) {
+						const std::vector<double>& additional_jaccards_to_report,
+						const uint64_t& actual_target_step_candidates) {
 				bed_record_queue.push(new tips_bed_record_t{chrom, chromStart, chromEnd,
-												path, path_pos, jaccard, walking_dir, additional_jaccards_to_report});
+												path, path_pos, jaccard, walking_dir, additional_jaccards_to_report,
+															actual_target_step_candidates});
 			}
 		};
 

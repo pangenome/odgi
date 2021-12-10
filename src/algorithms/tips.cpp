@@ -20,7 +20,8 @@ namespace odgi {
 					   ska::flat_hash_set<std::string>& not_visited_set,
 					   const uint64_t& n_best_mappings,
 					   const uint64_t& walking_dist,
-					   const bool& report_additional_jaccards) {
+					   const bool& report_additional_jaccards,
+					   const uint64_t& max_target_step_candidates) {
 
 			const std::string target_path = graph.get_path_name(target_path_t);
 
@@ -63,6 +64,11 @@ namespace odgi {
 									}
 								});
 
+						uint64_t actual_target_step_candidates = target_step_handles.size();
+						if (target_step_handles.size() > max_target_step_candidates) {
+							target_step_handles.resize(1);
+						}
+
 						std::vector<step_jaccard_t> target_jaccard_indices = jaccard_indices_from_step_handles(graph,
 																											   walking_dist,
 																											   cur_step,
@@ -95,7 +101,7 @@ namespace odgi {
 							/// add BED record to queue of the BED writer
 							bed_writer_thread.append(target_path, target_min_pos, target_max_pos,
 													 query_path_name, step_index.get_position(cur_step),
-													 final_target_jaccard, walk_from_front, additional_jaccards_to_report);
+													 final_target_jaccard, walk_from_front, additional_jaccards_to_report, actual_target_step_candidates);
 							i++;
 						}
 						tip_reached_target = true;

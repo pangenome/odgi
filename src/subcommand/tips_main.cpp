@@ -42,6 +42,8 @@ namespace odgi {
 												   {'n', "n-best"});
 		args::ValueFlag<uint64_t> _walking_dist(tips_opts, "N", "Maximum walking distance in nucleotides for one orientation when finding the best target (reference) range for each query path (default: 10000). Note: If we walked 9999 base pairs and **w, --jaccard-context** is **10000**, we will also include the next node, even if we overflow the actual limit.",
 												   {'w', "jaccard-context"});
+		args::ValueFlag<uint64_t> _max_target_step_candidates(tips_opts, "N", "Maximum number of target (reference) steps to evaluate in order to find the best hit (default: 10000). Note: If there are very deep nodes with more than the specified number of candidate steps, we just cut of the steps vector at max-target-step-candidates.",
+												{'a', "max-target-step-candidates"});
 		args::Flag _report_additional_jaccards(tips_opts, "report_additional_jaccards", "If for a target (reference) path several matches are possible, also report the additional jaccard indices (default: false). In the resulting BED, an '.' is added, if set to 'false'.", {'j', "jaccards"});
 		args::Group threading(parser, "[ Threading ]");
 		args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
@@ -208,7 +210,8 @@ namespace odgi {
 								  get_next_step, has_next_step, bed_writer_thread, progress, true, not_visited_set,
 								  (_best_n_mappings ? args::get(_best_n_mappings) : 1),
 								  (_walking_dist ? args::get(_walking_dist) : 10000),
-								  (_report_additional_jaccards ? args::get(_report_additional_jaccards) : false));
+								  (_report_additional_jaccards ? args::get(_report_additional_jaccards) : false),
+								  (_max_target_step_candidates ? args::get(_max_target_step_candidates) : 10000));
 			std::vector<path_handle_t> visitable_query_paths;
 			for (auto query_path : query_paths) {
 				if (!not_visited_set.count(graph.get_path_name(query_path))) {
@@ -220,7 +223,8 @@ namespace odgi {
 								  get_prev_step, has_previous_step, bed_writer_thread, progress, false, not_visited_set,
 								  (_best_n_mappings ? args::get(_best_n_mappings) : 1),
 								  (_walking_dist ? args::get(_walking_dist) : 10000),
-								  (_report_additional_jaccards ? args::get(_report_additional_jaccards) : false));
+								  (_report_additional_jaccards ? args::get(_report_additional_jaccards) : false),
+								  (_max_target_step_candidates ? args::get(_max_target_step_candidates) : 10000));
 			/// let's write our paths we did not visit
 			std::string query_path = graph.get_path_name(target_path_t);
 			for (auto not_visited_path : not_visited_set) {

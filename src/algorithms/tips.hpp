@@ -45,6 +45,7 @@ namespace odgi {
 				 ska::flat_hash_set<std::string>& not_visited_set,
 				 const uint64_t& n_best_mappings,
 				 const uint64_t& walking_dist,
-				 const bool& report_additional_jaccards);
+				 const bool& report_additional_jaccards,
+				 const uint64_t& max_target_step_candidates);
 	}
 }
