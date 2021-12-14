@@ -109,6 +109,7 @@ void untangle(
     const double& max_self_coverage,
     const uint64_t& n_best,
     const double& min_jaccard,
+    const uint64_t& cut_every,
     const bool& paf_output,
     const size_t& num_threads,
 	const bool& progress);
