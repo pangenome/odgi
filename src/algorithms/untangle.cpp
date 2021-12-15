@@ -681,14 +681,14 @@ void untangle(
                                   merge_dist,
                                   num_threads);
 
-    ska::flat_hash_map<path_handle_t, uint64_t> path_to_len;
-
     //show_steps(graph, step_pos);
     //std::cout << "path\tfrom\tto" << std::endl;
     //auto step_pos = make_step_index(graph, queries);
     if (progress) {
-        std::cerr << "[odgi::algorithms::untangle] writing pair BED for " << queries.size() << " queries" << std::endl;
+        std::cerr << "[odgi::algorithms::untangle] writing " << ( paf_output ? "PAF" : "pair BED" ) << " for " << queries.size() << " queries" << std::endl;
     }
+
+    ska::flat_hash_map<path_handle_t, uint64_t> path_to_len;
 
     if (!paf_output){
         // BEDPE format
@@ -703,12 +703,10 @@ void untangle(
             return path_len;
         };
 
-        for (auto& q_or_t_paths : {queries, targets}){
-            for (auto& p : q_or_t_paths) {
-                if (path_to_len.count(p) == 0){
-                    path_to_len[p] = get_path_length(graph, p);
-                }
-            }
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
+        for (uint64_t i = 0; i < paths.size(); ++i) {
+            auto& path = paths[i];
+            path_to_len[path] = get_path_length(graph, path);
         }
     }
 
