@@ -1,4 +1,5 @@
 #include "stepindex.hpp"
+#include "progress.hpp"
 
 namespace odgi {
 namespace algorithms {

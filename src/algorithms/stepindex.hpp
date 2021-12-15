@@ -6,6 +6,9 @@
 
 #include <iostream>
 #include <vector>
+#include <handlegraph/types.hpp>
+#include <handlegraph/util.hpp>
+#include <handlegraph/path_handle_graph.hpp>
 #include "ips4o.hpp"
 #include "BooPHF.h"
 #include "utils.hpp"

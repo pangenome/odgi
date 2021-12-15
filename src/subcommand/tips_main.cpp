@@ -2,7 +2,6 @@
 #include "odgi.hpp"
 #include "args.hxx"
 #include <omp.h>
-#include "utils.hpp"
 #include "algorithms/stepindex.hpp"
 #include "algorithms/tips.hpp"
 #include "algorithms/tips_bed_writer_thread.hpp"
