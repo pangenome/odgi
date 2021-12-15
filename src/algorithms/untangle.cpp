@@ -431,8 +431,8 @@ double self_mean_coverage(
 uint64_t query_hits_target_front(
 		const PathHandleGraph& graph,
 		const path_handle_t& query,
-		const atomicbitvector::atomic_bv_t targets_node_idx) {
-	// currently we don't care about self mapping
+		const atomicbitvector::atomic_bv_t& targets_node_idx) {
+	// currently, we don't care about self mapping
 	bool tip_reached_target = false;
 	step_handle_t cur_step = graph.path_begin(query);
 	handle_t cur_h = graph.get_handle_of_step(cur_step);
@@ -456,8 +456,8 @@ uint64_t query_hits_target_front(
 uint64_t query_hits_target_back(
 		const PathHandleGraph& graph,
 		const path_handle_t& query,
-		const atomicbitvector::atomic_bv_t targets_node_idx) {
-	// currently we don't care about self mapping
+		const atomicbitvector::atomic_bv_t& targets_node_idx) {
+	// currently, we don't care about self mapping
 	bool tip_reached_target = false;
 	step_handle_t cur_step = graph.path_back(query);
 	handle_t cur_h = graph.get_handle_of_step(cur_step);
