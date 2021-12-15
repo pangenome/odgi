@@ -1,10 +1,11 @@
 #pragma once
 
+// FIXME including this breaks the compilation
+#include <sdsl/enc_vector.hpp>
+// FIXME including this breaks the compilation
+
 #include <iostream>
 #include <vector>
-#include <handlegraph/types.hpp>
-#include <handlegraph/util.hpp>
-#include <handlegraph/path_handle_graph.hpp>
 #include "ips4o.hpp"
 #include "BooPHF.h"
 #include "utils.hpp"
@@ -54,6 +55,7 @@ struct step_index_t {
     const uint64_t get_position(const step_handle_t& step, const PathHandleGraph& graph) const;
     // map from step to position in its path
     boophf_step_t* step_mphf = nullptr;
+	// sdsl::int_vector<> alternative_pos;
     std::vector<uint64_t> pos;
 	uint64_t sample_rate;
 };

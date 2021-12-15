@@ -129,7 +129,7 @@ namespace odgi {
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
 			for (auto path: paths) {
 				graph.for_each_step_in_path(path, [&](const step_handle_t &step) {
-					step_index.get_position(step, graph);
+					std::cout << step_index.get_position(step, graph) << std::endl;
 				});
 				if (progress) {
 					progress_meter->increment(1);

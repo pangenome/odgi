@@ -1,5 +1,4 @@
 #include "stepindex.hpp"
-#include "progress.hpp"
 
 namespace odgi {
 namespace algorithms {
@@ -44,6 +43,25 @@ step_index_t::step_index_t(const PathHandleGraph& graph,
     ips4o::parallel::sort(steps.begin(), steps.end(), std::less<>(), nthreads);
     // build the hash function (quietly)
     step_mphf = new boophf_step_t(steps.size(), steps, nthreads, 2.0, false, false);
+	/*
+	steps.resize(1);
+	step_mphf = new boophf_step_t(steps.size(), steps, nthreads, 2.0, false, false);
+	std::ofstream outfile ("new.txt");
+	step_mphf->save(outfile);
+	outfile << std::endl;
+	step_mphf->save(outfile);
+	std::string line;
+	std::ifstream infile ("new.txt");
+	while (std::getline(infile, line)) {
+		std::cout << line << std::endl;
+	}
+	std::getline(infile, line);
+	std::istringstream is1(line);
+	step_mphf->load(is1);
+	std::getline(infile, line);
+	std::istringstream is2(line);
+	step_mphf->load(is2);
+*/
     // use the hash function to record the step positions
     pos.resize(steps.size());
 	std::unique_ptr<algorithms::progress_meter::ProgressMeter> building_progress_meter;
