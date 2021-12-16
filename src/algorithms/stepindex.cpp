@@ -115,19 +115,16 @@ const uint64_t step_index_t::get_path_len(const path_handle_t& path) const {
 	return path_len[as_integer(path) - 1];
 }
 
-void step_index_t::save(const std::string& prefix) const {
-	std::ofstream stpidx_mphf_out(prefix + "_stpidx.mphf");
-	step_mphf->save(stpidx_mphf_out);
-
-	std::ofstream sdsl_out(prefix + ".sdsl");
-	serialize_members(sdsl_out);
+void step_index_t::save(const std::string& name) const {
+	std::ofstream stpidx_out(name);
+	serialize_members(stpidx_out);
+	step_mphf->save(stpidx_out);
 }
 
-void step_index_t::load(const std::string& prefix) {
-	std::ifstream stpidx_mphf_in(prefix + "_stpidx.mphf");
-	step_mphf->load(stpidx_mphf_in);
-	std::ifstream sdsl_in(prefix + ".sdsl");
-	deserialize_members(sdsl_in);
+void step_index_t::load(const std::string& name) {
+	std::ifstream stpidx_in(name);
+	deserialize_members(stpidx_in);
+	step_mphf->load(stpidx_in);
 }
 
 void step_index_t::serialize_members(std::ostream &out) const {
