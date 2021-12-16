@@ -132,6 +132,7 @@ namespace odgi {
 		for (int i = 0; i < iterations; i++) {
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
 			for (auto path: paths) {
+				std::cout << graph.get_path_name(path) << ": " << step_index_1.get_path_len(path) << std::endl;
 				graph.for_each_step_in_path(path, [&](const step_handle_t &step) {
 					std::cout << step_index_1.get_position(step, graph) << std::endl;
 				});

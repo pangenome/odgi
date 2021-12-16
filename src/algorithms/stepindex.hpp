@@ -54,11 +54,13 @@ struct step_index_t {
 				 const uint64_t& sample_rate);
     ~step_index_t(void);
     const uint64_t get_position(const step_handle_t& step, const PathHandleGraph& graph) const;
+	const uint64_t get_path_len(const path_handle_t& path) const;
 	void save(const std::string& prefix) const;
 	void load(const std::string& prefix);
     // map from step to position in its path
     boophf_step_t* step_mphf = nullptr;
 	sdsl::int_vector<64> pos;
+	sdsl::int_vector<64> path_len;
 	uint64_t sample_rate;
 private:
 	/// the assumptions is that the magic number will be STEPsampling_rateINDEX, where the sampling rate encodes the actual
