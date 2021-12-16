@@ -125,11 +125,15 @@ namespace odgi {
 			progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(paths.size()*iterations, "[odgi::stepindex::position_fetching] Progress:");
 		}
 
+		step_index.save("overlap_test_step_index");
+		algorithms::step_index_t step_index_1;
+		step_index_1.load("overlap_test_step_index");
+
 		for (int i = 0; i < iterations; i++) {
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
 			for (auto path: paths) {
 				graph.for_each_step_in_path(path, [&](const step_handle_t &step) {
-					std::cout << step_index.get_position(step, graph) << std::endl;
+					std::cout << step_index_1.get_position(step, graph) << std::endl;
 				});
 				if (progress) {
 					progress_meter->increment(1);

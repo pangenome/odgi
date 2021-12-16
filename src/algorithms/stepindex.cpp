@@ -4,6 +4,10 @@
 namespace odgi {
 namespace algorithms {
 
+step_index_t::step_index_t() {
+	step_mphf = new boophf_step_t();
+}
+
 step_index_t::step_index_t(const PathHandleGraph& graph,
                            const std::vector<path_handle_t>& paths,
                            const uint64_t& nthreads,
@@ -44,25 +48,6 @@ step_index_t::step_index_t(const PathHandleGraph& graph,
     ips4o::parallel::sort(steps.begin(), steps.end(), std::less<>(), nthreads);
     // build the hash function (quietly)
     step_mphf = new boophf_step_t(steps.size(), steps, nthreads, 2.0, false, false);
-	/*
-	steps.resize(1);
-	step_mphf = new boophf_step_t(steps.size(), steps, nthreads, 2.0, false, false);
-	std::ofstream outfile ("new.txt");
-	step_mphf->save(outfile);
-	outfile << std::endl;
-	step_mphf->save(outfile);
-	std::string line;
-	std::ifstream infile ("new.txt");
-	while (std::getline(infile, line)) {
-		std::cout << line << std::endl;
-	}
-	std::getline(infile, line);
-	std::istringstream is1(line);
-	step_mphf->load(is1);
-	std::getline(infile, line);
-	std::istringstream is2(line);
-	step_mphf->load(is2);
-*/
     // use the hash function to record the step positions
     pos.resize(steps.size());
 	std::unique_ptr<algorithms::progress_meter::ProgressMeter> building_progress_meter;
@@ -119,6 +104,98 @@ const uint64_t step_index_t::get_position(const step_handle_t& step, const PathH
 			cur_step = prev_step;
 		}
 		return walked;
+	}
+}
+
+void step_index_t::save(const std::string& prefix) const {
+	std::ofstream stpidx_mphf_out(prefix + "_stpidx.mphf");
+	step_mphf->save(stpidx_mphf_out);
+
+	std::ofstream sdsl_out(prefix + ".sdsl");
+	serialize_members(sdsl_out);
+}
+
+void step_index_t::load(const std::string& prefix) {
+	std::ifstream stpidx_mphf_in(prefix + "_stpidx.mphf");
+	step_mphf->load(stpidx_mphf_in);
+	std::ifstream sdsl_in(prefix + ".sdsl");
+	deserialize_members(sdsl_in);
+}
+
+void step_index_t::serialize_members(std::ostream &out) const {
+	serialize_and_measure(out);
+}
+
+size_t step_index_t::serialize_and_measure(std::ostream &out, sdsl::structure_tree_node *s, std::string name) const {
+
+	sdsl::structure_tree_node *child = sdsl::structure_tree::add_child(s, name, sdsl::util::class_name(*this));
+	size_t written = 0;
+
+	// Do the magic number
+	std::string sample_rate = std::to_string(this->sample_rate);
+	out << "STEP" << sample_rate << "INDEX";
+	written += 9;
+	written += sample_rate.length();
+
+	// POSITION STUFF
+	written += pos.serialize(out, child, "path_position_map");
+	// TODO
+	// PATH LENGTH STUFF
+	//written += sdsl::write_member(path_count, out, child, "path_count");
+
+	sdsl::structure_tree::add_size(child, written);
+	return written;
+}
+
+void step_index_t::deserialize_members(std::istream &in) {
+	// simple alias to match an external interface
+	load_sdsl(in);
+}
+
+void step_index_t::load_sdsl(std::istream &in) {
+
+	if (!in.good()) {
+		throw std::runtime_error("[odgi::algorithms::stepindex] error: SDSL step index file does not exist or step index stream cannot be read.");
+	}
+
+	// We need to look for the magic value(s)
+	char buffer;
+	char * step_buffer = new char [4];
+	char * index_buffer = new char [4];
+	std::string sample_rate = "";
+	std::string index = "";
+	in.read(step_buffer, 4);
+	std::string step = std::string(step_buffer);
+	if (step == "STEP"){
+		// now we need collect all the characters which will form our sample rate
+		while(buffer != 'I') {
+			in.get(buffer);
+			sample_rate += buffer;
+		}
+		this->sample_rate = std::stoi(sample_rate);
+		index += buffer;
+		in.read(index_buffer, 4);
+		index += index_buffer;
+		if (index != "INDEX") {
+			throw std::runtime_error("[odgi::algorithms::stepindex] error: SDSL step index file does not have 'INDEX' in its magic value. The file must be malformed.");
+		}
+	} else  {
+		throw std::runtime_error("[odgi::algorithms::stepindex] error: SDSL step index file does not have 'STEP' in its magic value. The file must be malformed.");
+	}
+
+	try {
+		pos.load(in);
+	} catch (const std::runtime_error &e) {
+		// Pass XGFormatErrors through
+		throw e;
+	} catch (const std::bad_alloc &e) {
+		// We get std::bad_alloc generally if we try to read arbitrary data as an xg index.
+		std::cerr << "[odgi::algorithms::stepindex] error: SDSL step index input data not in correct format. " << std::endl;
+		exit(1);
+	} catch (const std::exception &e) {
+		// Other things will get re-thrown with a hint.
+		std::cerr << "[odgi::algorithms::stepindex] error: SDSL step index file malformed. Is it really on the correct format STEPsample_rateINDEX?" << std::endl;
+		throw e;
 	}
 }
 
