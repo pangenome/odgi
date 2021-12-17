@@ -571,6 +571,7 @@ void untangle(
     const double& max_self_coverage,
     const uint64_t& n_best,
     const double& min_jaccard,
+    const uint64_t& cut_every,
     const bool& paf_output,
     const size_t& num_threads,
     const bool& progress,
@@ -630,6 +631,34 @@ void untangle(
         // we start from the back until we found a target node
         uint64_t node_id_back = query_hits_target_back(graph, path, target_nodes);
         cut_nodes.set(node_id_back, true);
+    }
+
+    if (cut_every > 0) {
+        /*
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
+        for (auto& target : targets) {
+            uint64_t pos = 0;
+            uint64_t last = 0;
+            graph.for_each_step_in_path(
+                target, [&](const step_handle_t& step) {
+                });
+        }
+        */
+        // walk along the node space in sorted order
+        // marking nodes every cut_every bp
+        uint64_t pos = 0;
+        uint64_t last = 0;
+        graph.for_each_handle(
+            [&cut_nodes,&graph,&pos,&last,&cut_every](const handle_t& h) {
+                auto l = graph.get_length(h);
+                pos += l;
+                if (pos - last > cut_every) {
+                    last = pos;
+                    cut_nodes.set(
+                        graph.get_id(h),
+                        true);
+                }
+            });
     }
 
     //auto step_pos = make_step_index(graph, queries);

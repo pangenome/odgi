@@ -44,6 +44,8 @@ int main_untangle(int argc, char **argv) {
                                                {'n', "n-best"});
     args::ValueFlag<double> _jaccard_threshold(untangling_opts, "F", "Report target mappings >= the given jaccard threshold, with 0 <= F <= 1.0 (default: 0.0).",
                                                {'j', "min-jaccard"});
+    args::ValueFlag<uint64_t> _cut_every(untangling_opts, "N", "Start a segment boundary every Nbp of the sorted graph (default: 0/off).",
+                                         {'e', "cut-every"});
     args::Flag paf_output(untangling_opts, "paf_output", "emit the output in PAF format.",
                         {'p', "paf-output"});
     args::Group debugging_opts(parser, "[ Debugging Options ]");
@@ -199,6 +201,7 @@ int main_untangle(int argc, char **argv) {
 								 (_max_self_coverage ? args::get(_max_self_coverage) : 0),
 								 (_best_n_mappings ? args::get(_best_n_mappings) : 1),
 								 (_jaccard_threshold ? args::get(_jaccard_threshold) : 0.0),
+								 (_cut_every ? args::get(_cut_every) : 0),
 								 args::get(paf_output),
 								 num_threads,
 								 progress,
@@ -214,6 +217,7 @@ int main_untangle(int argc, char **argv) {
 								 (_max_self_coverage ? args::get(_max_self_coverage) : 0),
 								 (_best_n_mappings ? args::get(_best_n_mappings) : 1),
 								 (_jaccard_threshold ? args::get(_jaccard_threshold) : 0.0),
+								 (_cut_every ? args::get(_cut_every) : 0),
 								 args::get(paf_output),
 								 num_threads,
 								 progress,

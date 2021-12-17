@@ -47,6 +47,12 @@ For a light dive into ``odgi``, just visit the :ref:`quick_start` section.
     rst/tools_using_odgi
     rst/binding
 
+Citation
+--------
+
+| **Andrea Guarracino\*, Simon Heumos\*, Sven Nahnsen, Pjotr Prins, Erik Garrison**. `ODGI: understanding pangenome graphs <https://www.biorxiv.org/content/10.1101/2021.11.10.467921v1>`_, bioRxiv, 2021
+| **\*Shared first authorship**
+
 Core Functionalities
 --------------------
 
