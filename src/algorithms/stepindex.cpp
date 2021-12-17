@@ -164,8 +164,8 @@ void step_index_t::load_sdsl(std::istream &in) {
 
 	// We need to look for the magic value(s)
 	char buffer;
-	char * step_buffer = new char [4];
-	char * index_buffer = new char [4];
+	char * step_buffer = new char [5];
+	char * index_buffer = new char [5];
 	std::string sample_rate = "";
 	std::string index = "";
 	in.read(step_buffer, 4);
