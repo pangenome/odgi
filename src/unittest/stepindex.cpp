@@ -9,6 +9,8 @@
 #include "odgi.hpp"
 #include "stepindex.hpp"
 
+#include "algorithms/xp.hpp"
+
 namespace odgi {
 	namespace unittest {
 
@@ -625,6 +627,106 @@ namespace odgi {
 									break;
 								case 5:
 									REQUIRE(step_index_16.get_position(occ, graph) == 11);
+									break;
+							}
+							cur_step_rank++;
+						});
+					}
+				});
+			}
+
+			SECTION("The index can be saved and loaded. After loading, we can retrieve all the correct positions again.") {
+				step_index_t step_index_to_save(graph, paths, 1, false, 8);
+				// Write index to temporary file in preparation for the next tests.
+				std::string basename = xp::temp_file::create();
+				step_index_to_save.save(basename + "unittest.stpidx");
+
+				step_index_t step_index_loaded;
+				step_index_loaded.load(basename + "unittest.stpidx");
+
+				graph.for_each_path_handle([&](const path_handle_t path) {
+					std::string cur_path = graph.get_path_name(path);
+					if (cur_path == "target") {
+						uint64_t cur_step_rank = 0;
+						graph.for_each_step_in_path(path, [&](const step_handle_t& occ) {
+							switch(cur_step_rank) {
+								case 0:
+									REQUIRE(step_index_loaded.get_position(occ, graph) == 0);
+									break;
+								case 1:
+									REQUIRE(step_index_loaded.get_position(occ, graph) == 1);
+									break;
+								case 2:
+									REQUIRE(step_index_loaded.get_position(occ, graph) == 2);
+									break;
+								case 3:
+									REQUIRE(step_index_loaded.get_position(occ, graph) == 5);
+									break;
+								case 4:
+									REQUIRE(step_index_loaded.get_position(occ, graph) == 8);
+									break;
+								case 5:
+									REQUIRE(step_index_loaded.get_position(occ, graph) == 11);
+									break;
+							}
+							cur_step_rank++;
+						});
+					}
+
+					if (cur_path == "query1") {
+						uint64_t cur_step_rank = 0;
+						graph.for_each_step_in_path(path, [&](const step_handle_t& occ) {
+							switch(cur_step_rank) {
+								case 0:
+									REQUIRE(step_index_loaded.get_position(occ, graph) == 0);
+									break;
+								case 1:
+									REQUIRE(step_index_loaded.get_position(occ, graph) == 1);
+									break;
+								case 2:
+									REQUIRE(step_index_loaded.get_position(occ, graph) == 2);
+									break;
+								case 3:
+									REQUIRE(step_index_loaded.get_position(occ, graph) == 5);
+									break;
+							}
+							cur_step_rank++;
+						});
+					}
+
+					if (cur_path == "query2") {
+						uint64_t cur_step_rank = 0;
+						graph.for_each_step_in_path(path, [&](const step_handle_t& occ) {
+							switch(cur_step_rank) {
+								case 0:
+									REQUIRE(step_index_loaded.get_position(occ, graph) == 0);
+									break;
+							}
+							cur_step_rank++;
+						});
+					}
+
+					if (cur_path == "query3") {
+						uint64_t cur_step_rank = 0;
+						graph.for_each_step_in_path(path, [&](const step_handle_t& occ) {
+							switch(cur_step_rank) {
+								case 0:
+									REQUIRE(step_index_loaded.get_position(occ, graph) == 0);
+									break;
+								case 1:
+									REQUIRE(step_index_loaded.get_position(occ, graph) == 3);
+									break;
+								case 2:
+									REQUIRE(step_index_loaded.get_position(occ, graph) == 4);
+									break;
+								case 3:
+									REQUIRE(step_index_loaded.get_position(occ, graph) == 5);
+									break;
+								case 4:
+									REQUIRE(step_index_loaded.get_position(occ, graph) == 8);
+									break;
+								case 5:
+									REQUIRE(step_index_loaded.get_position(occ, graph) == 11);
 									break;
 							}
 							cur_step_rank++;
