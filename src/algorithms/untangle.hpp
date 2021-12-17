@@ -113,7 +113,8 @@ void untangle(
     const bool& paf_output,
     const size_t& num_threads,
 	const bool& progress,
-	const uint64_t& step_index_sample_rate);
+	const step_index_t& step_index,
+	const std::vector<path_handle_t>& paths);
 
 }
 }

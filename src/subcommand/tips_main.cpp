@@ -43,8 +43,8 @@ namespace odgi {
 												   {'w', "jaccard-context"});
 		args::Flag _report_additional_jaccards(tips_opts, "report_additional_jaccards", "If for a target (reference) path several matches are possible, also report the additional jaccard indices (default: false). In the resulting BED, an '.' is added, if set to 'false'.", {'j', "jaccards"});
 		args::Group step_index_opts(parser, "[ Step Index Options ]");
-		args::ValueFlag<uint64_t> _step_index_sample_rate(step_index_opts, "N", "The sample rate when building the step index. We index a node only if mod(node_id, step-index-sample-rate) == 0! Number must be dividable by 2. (default: 8).",
-												{'a', "step-index-sample-rate"});
+		args::ValueFlag<std::string> _step_index(step_index_opts, "FILE", "Load the step index from this *FILE*. The file name usually ends with *.stpidx*. (default: build the step index from scratch with a sampling rate of 8).",
+												{'a', "step-index"});
 		args::Group threading(parser, "[ Threading ]");
 		args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 		args::Group processing_info_opts(parser, "[ Processing Information ]");
@@ -74,12 +74,6 @@ namespace odgi {
 		}
 
 		const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
-		// if the sample rate is not dividable by 2, the algorithm will not work
-		uint64_t  step_index_sample_rate = args::get(_step_index_sample_rate) ? args::get(_step_index_sample_rate) : 8;
-		if (step_index_sample_rate % 2 != 0) {
-				std::cerr << "[odgi::tips] error: The given sample rate of " << step_index_sample_rate << " is not dividable by 2. Please provide a different sample rate." << std::endl;
-				exit(1);
-		}
 
 		odgi::graph_t graph;
 		assert(argc > 0);
@@ -173,8 +167,7 @@ namespace odgi {
 		graph.for_each_path_handle([&](const path_handle_t &path) {
 			paths.push_back(path);
 		});
-		// FIXME add the right number here later
-		algorithms::step_index_t step_index(graph, paths, num_threads, progress, step_index_sample_rate);
+
 		// open the bed writer thread
 		algorithms::tips_bed_writer bed_writer_thread;
 		bed_writer_thread.open_writer();
@@ -202,43 +195,97 @@ namespace odgi {
 			return graph.has_previous_step(step);
 		};
 
-		for (auto target_path_t : target_paths) {
-			// make bit vector across nodes to tell us if we have a hit
-			// this is a speed up compared to iterating through all steps of a potential node for each walked step
-			std::vector<bool> target_handles;
-			target_handles.resize(graph.get_node_count(), false);
-			graph.for_each_step_in_path(target_path_t, [&](const step_handle_t &step) {
-				handle_t h = graph.get_handle_of_step(step);
-				target_handles[number_bool_packing::unpack_number(h)] = true;
-			});
-			ska::flat_hash_set<std::string> not_visited_set;
-			/// walk from the front
-			algorithms::walk_tips(graph, query_paths, target_path_t, target_handles, step_index, num_threads, get_path_begin,
-								  get_next_step, has_next_step, bed_writer_thread, progress, true, not_visited_set,
-								  (_best_n_mappings ? args::get(_best_n_mappings) : 1),
-								  (_walking_dist ? args::get(_walking_dist) : 10000),
-								  (_report_additional_jaccards ? args::get(_report_additional_jaccards) : false));
-			std::vector<path_handle_t> visitable_query_paths;
-			for (auto query_path : query_paths) {
-				if (!not_visited_set.count(graph.get_path_name(query_path))) {
-					visitable_query_paths.push_back(query_path);
+		if (!_step_index) {
+			if (progress) {
+				std::cerr << "[odgi::tips] warning: no step index specified. Building one with a sample rate of 8. This may take additional time. "
+							 "A step index cstep_indexan be provided via -a, --step-index. A step index can be built using odgi stepindex." << std::endl;
+			}
+			algorithms::step_index_t step_index(graph, paths, num_threads, progress, 8);
+			for (auto target_path_t: target_paths) {
+				// make bit vector across nodes to tell us if we have a hit
+				// this is a speed up compared to iterating through all steps of a potential node for each walked step
+				std::vector<bool> target_handles;
+				target_handles.resize(graph.get_node_count(), false);
+				graph.for_each_step_in_path(target_path_t, [&](const step_handle_t &step) {
+					handle_t h = graph.get_handle_of_step(step);
+					target_handles[number_bool_packing::unpack_number(h)] = true;
+				});
+				ska::flat_hash_set<std::string> not_visited_set;
+				/// walk from the front
+				algorithms::walk_tips(graph, query_paths, target_path_t, target_handles, step_index, num_threads,
+									  get_path_begin,
+									  get_next_step, has_next_step, bed_writer_thread, progress, true, not_visited_set,
+									  (_best_n_mappings ? args::get(_best_n_mappings) : 1),
+									  (_walking_dist ? args::get(_walking_dist) : 10000),
+									  (_report_additional_jaccards ? args::get(_report_additional_jaccards) : false));
+				std::vector<path_handle_t> visitable_query_paths;
+				for (auto query_path: query_paths) {
+					if (!not_visited_set.count(graph.get_path_name(query_path))) {
+						visitable_query_paths.push_back(query_path);
+					}
+				}
+				/// walk from the back
+				algorithms::walk_tips(graph, visitable_query_paths, target_path_t, target_handles, step_index,
+									  num_threads, get_path_back,
+									  get_prev_step, has_previous_step, bed_writer_thread, progress, false,
+									  not_visited_set,
+									  (_best_n_mappings ? args::get(_best_n_mappings) : 1),
+									  (_walking_dist ? args::get(_walking_dist) : 10000),
+									  (_report_additional_jaccards ? args::get(_report_additional_jaccards) : false));
+				/// let's write our paths we did not visit
+				std::string query_path = graph.get_path_name(target_path_t);
+				for (auto not_visited_path: not_visited_set) {
+					not_visited_out << query_path << "\t" << not_visited_path << std::endl;
 				}
 			}
-			/// walk from the back
-			algorithms::walk_tips(graph, visitable_query_paths, target_path_t, target_handles, step_index, num_threads, get_path_back,
-								  get_prev_step, has_previous_step, bed_writer_thread, progress, false, not_visited_set,
-								  (_best_n_mappings ? args::get(_best_n_mappings) : 1),
-								  (_walking_dist ? args::get(_walking_dist) : 10000),
-								  (_report_additional_jaccards ? args::get(_report_additional_jaccards) : false));
-			/// let's write our paths we did not visit
-			std::string query_path = graph.get_path_name(target_path_t);
-			for (auto not_visited_path : not_visited_set) {
-				not_visited_out << query_path << "\t" << not_visited_path << std::endl;
+			bed_writer_thread.close_writer();
+			if (_not_visited_tsv) {
+				not_visited_out.close();
 			}
-		}
-		bed_writer_thread.close_writer();
-		if (_not_visited_tsv) {
-			not_visited_out.close();
+		} else {
+			algorithms::step_index_t step_index;
+			step_index.load(args::get(_step_index));
+			for (auto target_path_t: target_paths) {
+				// make bit vector across nodes to tell us if we have a hit
+				// this is a speed up compared to iterating through all steps of a potential node for each walked step
+				std::vector<bool> target_handles;
+				target_handles.resize(graph.get_node_count(), false);
+				graph.for_each_step_in_path(target_path_t, [&](const step_handle_t &step) {
+					handle_t h = graph.get_handle_of_step(step);
+					target_handles[number_bool_packing::unpack_number(h)] = true;
+				});
+				ska::flat_hash_set<std::string> not_visited_set;
+				/// walk from the front
+				algorithms::walk_tips(graph, query_paths, target_path_t, target_handles, step_index, num_threads,
+									  get_path_begin,
+									  get_next_step, has_next_step, bed_writer_thread, progress, true, not_visited_set,
+									  (_best_n_mappings ? args::get(_best_n_mappings) : 1),
+									  (_walking_dist ? args::get(_walking_dist) : 10000),
+									  (_report_additional_jaccards ? args::get(_report_additional_jaccards) : false));
+				std::vector<path_handle_t> visitable_query_paths;
+				for (auto query_path: query_paths) {
+					if (!not_visited_set.count(graph.get_path_name(query_path))) {
+						visitable_query_paths.push_back(query_path);
+					}
+				}
+				/// walk from the back
+				algorithms::walk_tips(graph, visitable_query_paths, target_path_t, target_handles, step_index,
+									  num_threads, get_path_back,
+									  get_prev_step, has_previous_step, bed_writer_thread, progress, false,
+									  not_visited_set,
+									  (_best_n_mappings ? args::get(_best_n_mappings) : 1),
+									  (_walking_dist ? args::get(_walking_dist) : 10000),
+									  (_report_additional_jaccards ? args::get(_report_additional_jaccards) : false));
+				/// let's write our paths we did not visit
+				std::string query_path = graph.get_path_name(target_path_t);
+				for (auto not_visited_path: not_visited_set) {
+					not_visited_out << query_path << "\t" << not_visited_path << std::endl;
+				}
+			}
+			bed_writer_thread.close_writer();
+			if (_not_visited_tsv) {
+				not_visited_out.close();
+			}
 		}
 
 		exit(0);

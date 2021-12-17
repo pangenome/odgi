@@ -8,6 +8,8 @@ step_index_t::step_index_t() {
 	step_mphf = new boophf_step_t();
 }
 
+
+
 step_index_t::step_index_t(const PathHandleGraph& graph,
                            const std::vector<path_handle_t>& paths,
                            const uint64_t& nthreads,
@@ -170,6 +172,7 @@ void step_index_t::load_sdsl(std::istream &in) {
 	std::string index = "";
 
 	in.read(step_buffer, 4);
+	// https://stackoverflow.com/questions/1195675/convert-a-char-to-stdstring/1195705#1195705
 	std::string step(step_buffer, 4);
 	if (step == "STEP"){
 		// now we need collect all the characters which will form our sample rate
@@ -188,10 +191,6 @@ void step_index_t::load_sdsl(std::istream &in) {
 	} else  {
 		throw std::runtime_error("[odgi::algorithms::stepindex] error: SDSL step index file does not have 'STEP' in its magic value. The file must be malformed.");
 	}
-
-
-	delete[] step_buffer;
-	delete[] index_buffer;
 
 	try {
 		pos.load(in);

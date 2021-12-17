@@ -574,23 +574,12 @@ void untangle(
     const bool& paf_output,
     const size_t& num_threads,
     const bool& progress,
-	const uint64_t& step_index_sample_rate) {
+	const step_index_t& step_index,
+	const std::vector<path_handle_t>& paths) {
 
     if (progress) {
         std::cerr << "[odgi::algorithms::untangle] untangling " << queries.size() << " queries with " << targets.size() << " targets" << std::endl;
     }
-
-    std::vector<path_handle_t> paths;
-    paths.insert(paths.end(), queries.begin(), queries.end());
-    paths.insert(paths.end(), targets.begin(), targets.end());
-    std::sort(paths.begin(), paths.end());
-    paths.erase(std::unique(paths.begin(), paths.end()),
-                paths.end());
-    //std::cerr << "[odgi::algorithms::untangle] building step index" << std::endl;
-    //auto step_pos = make_step_index(graph, paths, num_threads);
-	// FIXME add the right number here later
-
-    step_index_t step_index(graph, paths, num_threads, progress, step_index_sample_rate);
 
     // which nodes are traversed by our target paths?
     atomicbitvector::atomic_bv_t target_nodes(graph.get_node_count() + 1);
