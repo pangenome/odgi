@@ -164,12 +164,13 @@ void step_index_t::load_sdsl(std::istream &in) {
 
 	// We need to look for the magic value(s)
 	char buffer;
-	char * step_buffer = new char [5];
-	char * index_buffer = new char [5];
+	char * step_buffer = new char [4];
+	char * index_buffer = new char [4];
 	std::string sample_rate = "";
 	std::string index = "";
+
 	in.read(step_buffer, 4);
-	std::string step = std::string(step_buffer);
+	std::string step(step_buffer, 4);
 	if (step == "STEP"){
 		// now we need collect all the characters which will form our sample rate
 		while(buffer != 'I') {
@@ -179,13 +180,18 @@ void step_index_t::load_sdsl(std::istream &in) {
 		this->sample_rate = std::stoi(sample_rate);
 		index += buffer;
 		in.read(index_buffer, 4);
-		index += index_buffer;
+		std::string index_buffer_string(index_buffer, 4);
+		index += index_buffer_string;
 		if (index != "INDEX") {
 			throw std::runtime_error("[odgi::algorithms::stepindex] error: SDSL step index file does not have 'INDEX' in its magic value. The file must be malformed.");
 		}
 	} else  {
 		throw std::runtime_error("[odgi::algorithms::stepindex] error: SDSL step index file does not have 'STEP' in its magic value. The file must be malformed.");
 	}
+
+
+	delete[] step_buffer;
+	delete[] index_buffer;
 
 	try {
 		pos.load(in);
