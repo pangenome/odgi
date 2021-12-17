@@ -192,6 +192,9 @@ void step_index_t::load_sdsl(std::istream &in) {
 		throw std::runtime_error("[odgi::algorithms::stepindex] error: SDSL step index file does not have 'STEP' in its magic value. The file must be malformed.");
 	}
 
+	delete[] step_buffer;
+	delete[] index_buffer;
+
 	try {
 		pos.load(in);
 		path_len.load(in);
