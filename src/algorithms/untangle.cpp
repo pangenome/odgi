@@ -361,7 +361,7 @@ segment_map_t::get_matches(
     // collect the target segments that overlap our segment
     // computing the intersection size (in bp) as we go
     // our final metric is jaccard of intersection over total length for each overlapped target
-    path_handle_t query_path = graph.get_path_handle_of_step(start);
+    //path_handle_t query_path = graph.get_path_handle_of_step(start);
     ska::flat_hash_map<uint64_t, isec_t> target_isec;
     for (step_handle_t step = start;
          step != end;
@@ -571,6 +571,7 @@ void untangle(
     const double& min_jaccard,
     const uint64_t& cut_every,
     const bool& paf_output,
+    const std::string& cut_points_output,
     const size_t& num_threads,
     const bool& progress) {
 
@@ -730,6 +731,15 @@ void untangle(
         //write_cuts(graph, query, cuts, step_pos);
     }
     //self_dotplot(graph, query, step_pos);
+
+    // If requested, write cut points to a file
+    if (!cut_points_output.empty()) {
+        std::ofstream f(cut_points_output.c_str());
+        for (auto x : cut_nodes) {
+            f << x << std::endl;
+        }
+        f.close();
+    }
 }
 
 }
