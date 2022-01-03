@@ -580,28 +580,9 @@ void untangle(
         std::cerr << "[odgi::algorithms::untangle] untangling " << queries.size() << " queries with " << targets.size() << " targets" << std::endl;
     }
 
-    std::vector<path_handle_t> paths;
-    paths.insert(paths.end(), queries.begin(), queries.end());
-    paths.insert(paths.end(), targets.begin(), targets.end());
-    std::sort(paths.begin(), paths.end());
-    paths.erase(std::unique(paths.begin(), paths.end()),
-                paths.end());
-    //std::cerr << "[odgi::algorithms::untangle] building step index" << std::endl;
-    //auto step_pos = make_step_index(graph, paths, num_threads);
-    step_index_t step_index(graph, paths, num_threads, progress);
-
-    /*
-      auto get_position = [&](const step_handle_t& step) {
-        return step_index.get_position(step);
-    };
-    */
-    //std::cerr << "[odgi::algorithms::untangle] step index contains " << step_pos.size() << " steps" << std::endl;
-    // collect all possible cuts
-    // we'll use this to drive the subsequent segmentation
-    int threads_per = std::max(1, (int)std::floor((double)num_threads/(double)paths.size()));
-
     atomicbitvector::atomic_bv_t cut_nodes(graph.get_node_count()+1);
 
+    // Check input cut points before building the step_index (that can take time)
     if (!cut_points_input.empty()) {
         if (progress) {
             std::cerr << "[odgi::algorithms::untangle] loading input cuts" << std::endl;
@@ -622,7 +603,29 @@ void untangle(
                         true);
             }
         }
-    } else {
+    }
+
+    std::vector<path_handle_t> paths;
+    paths.insert(paths.end(), queries.begin(), queries.end());
+    paths.insert(paths.end(), targets.begin(), targets.end());
+    std::sort(paths.begin(), paths.end());
+    paths.erase(std::unique(paths.begin(), paths.end()),
+                paths.end());
+    //std::cerr << "[odgi::algorithms::untangle] building step index" << std::endl;
+    //auto step_pos = make_step_index(graph, paths, num_threads);
+    step_index_t step_index(graph, paths, num_threads, progress);
+
+    /*
+      auto get_position = [&](const step_handle_t& step) {
+        return step_index.get_position(step);
+    };
+    */
+    //std::cerr << "[odgi::algorithms::untangle] step index contains " << step_pos.size() << " steps" << std::endl;
+    // collect all possible cuts
+    // we'll use this to drive the subsequent segmentation
+    int threads_per = std::max(1, (int)std::floor((double)num_threads/(double)paths.size()));
+
+    if (cut_points_input.empty()) {
         if (progress) {
             std::cerr << "[odgi::algorithms::untangle] establishing initial cuts for " << paths.size() << " paths" << std::endl;
         }
