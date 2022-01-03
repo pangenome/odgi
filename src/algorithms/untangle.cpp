@@ -571,6 +571,7 @@ void untangle(
     const double& min_jaccard,
     const uint64_t& cut_every,
     const bool& paf_output,
+    const std::string& cut_points_input,
     const std::string& cut_points_output,
     const size_t& num_threads,
     const bool& progress) {
@@ -589,15 +590,6 @@ void untangle(
     //auto step_pos = make_step_index(graph, paths, num_threads);
     step_index_t step_index(graph, paths, num_threads, progress);
 
-    // which nodes are traversed by our target paths?
-    atomicbitvector::atomic_bv_t target_nodes(graph.get_node_count() + 1);
-#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
-    for (auto& target : targets) {
-        graph.for_each_step_in_path(
-            target, [&](const step_handle_t& step) {
-                target_nodes.set(graph.get_id(graph.get_handle_of_step(step)), true);
-            });
-    }
     /*
       auto get_position = [&](const step_handle_t& step) {
         return step_index.get_position(step);
@@ -608,63 +600,96 @@ void untangle(
     // we'll use this to drive the subsequent segmentation
     int threads_per = std::max(1, (int)std::floor((double)num_threads/(double)paths.size()));
 
-    if (progress) {
-        std::cerr << "[odgi::algorithms::untangle] establishing initial cuts for " << paths.size() << " paths" << std::endl;
-    }
-
     atomicbitvector::atomic_bv_t cut_nodes(graph.get_node_count()+1);
-#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
-    for (auto& path : paths) {
-        // test path_step_index_t
-        auto self_index = path_step_index_t(graph, path, threads_per);
-        std::vector<step_handle_t> cuts
-            = merge_cuts(
-                untangle_cuts(graph,
-                              graph.path_begin(path),
-                              graph.path_back(path),
-                              step_index,
-                              self_index,
-                              [](const handle_t& h) { return false; }),
-                merge_dist,
-                step_index);
-        for (auto& step : cuts) {
-            cut_nodes.set(graph.get_id(graph.get_handle_of_step(step)));
-        }
-        // also add the nodes here where the query path touches the target for the first time
-        // we start from the front until we found a target node
-        uint64_t node_id_front = query_hits_target_front(graph, path, target_nodes);
-        cut_nodes.set(node_id_front, true);
-        // we start from the back until we found a target node
-        uint64_t node_id_back = query_hits_target_back(graph, path, target_nodes);
-        cut_nodes.set(node_id_back, true);
-    }
 
-    if (cut_every > 0) {
-        /*
+    if (!cut_points_input.empty()) {
+        if (progress) {
+            std::cerr << "[odgi::algorithms::untangle] loading input cuts" << std::endl;
+        }
+        std::ifstream bed_in(cut_points_input.c_str());
+        std::string buffer;
+        while (std::getline(bed_in, buffer)) {
+            if (!buffer.empty()) {
+                const uint64_t handle_id = std::stoull(buffer);
+
+                if (!graph.has_node(handle_id)) {
+                    std::cerr << "[odgi::algorithms::untangle] error: node identifier " << handle_id << " not found in graph" << std::endl;
+                    exit(1);
+                }
+
+                cut_nodes.set(
+                        handle_id,
+                        true);
+            }
+        }
+    } else {
+        if (progress) {
+            std::cerr << "[odgi::algorithms::untangle] establishing initial cuts for " << paths.size() << " paths" << std::endl;
+        }
+
+        // which nodes are traversed by our target paths?
+        atomicbitvector::atomic_bv_t target_nodes(graph.get_node_count() + 1);
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
         for (auto& target : targets) {
+            graph.for_each_step_in_path(
+                    target, [&](const step_handle_t& step) {
+                        target_nodes.set(graph.get_id(graph.get_handle_of_step(step)), true);
+                    });
+        }
+
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
+        for (auto& path : paths) {
+            // test path_step_index_t
+            auto self_index = path_step_index_t(graph, path, threads_per);
+            std::vector<step_handle_t> cuts
+            = merge_cuts(
+                    untangle_cuts(graph,
+                                  graph.path_begin(path),
+                                  graph.path_back(path),
+                                  step_index,
+                                  self_index,
+                                  [](const handle_t& h) { return false; }),
+                                  merge_dist,
+                                  step_index);
+            for (auto& step : cuts) {
+                cut_nodes.set(graph.get_id(graph.get_handle_of_step(step)));
+            }
+            // also add the nodes here where the query path touches the target for the first time
+            // we start from the front until we found a target node
+            uint64_t node_id_front = query_hits_target_front(graph, path, target_nodes);
+            cut_nodes.set(node_id_front, true);
+            // we start from the back until we found a target node
+            uint64_t node_id_back = query_hits_target_back(graph, path, target_nodes);
+            cut_nodes.set(node_id_back, true);
+        }
+
+        if (cut_every > 0) {
+            /*
+    #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
+            for (auto& target : targets) {
+                uint64_t pos = 0;
+                uint64_t last = 0;
+                graph.for_each_step_in_path(
+                    target, [&](const step_handle_t& step) {
+                    });
+            }
+            */
+            // walk along the node space in sorted order
+            // marking nodes every cut_every bp
             uint64_t pos = 0;
             uint64_t last = 0;
-            graph.for_each_step_in_path(
-                target, [&](const step_handle_t& step) {
-                });
+            graph.for_each_handle(
+                    [&cut_nodes,&graph,&pos,&last,&cut_every](const handle_t& h) {
+                        auto l = graph.get_length(h);
+                        pos += l;
+                        if (pos - last > cut_every) {
+                            last = pos;
+                            cut_nodes.set(
+                                    graph.get_id(h),
+                                    true);
+                        }
+                    });
         }
-        */
-        // walk along the node space in sorted order
-        // marking nodes every cut_every bp
-        uint64_t pos = 0;
-        uint64_t last = 0;
-        graph.for_each_handle(
-            [&cut_nodes,&graph,&pos,&last,&cut_every](const handle_t& h) {
-                auto l = graph.get_length(h);
-                pos += l;
-                if (pos - last > cut_every) {
-                    last = pos;
-                    cut_nodes.set(
-                        graph.get_id(h),
-                        true);
-                }
-            });
     }
 
     //auto step_pos = make_step_index(graph, queries);

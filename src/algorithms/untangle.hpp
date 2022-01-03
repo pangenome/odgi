@@ -112,6 +112,7 @@ void untangle(
     const double& min_jaccard,
     const uint64_t& cut_every,
     const bool& paf_output,
+    const std::string& cut_points_input,
     const std::string& cut_points_output,
     const size_t& num_threads,
 	const bool& progress);
