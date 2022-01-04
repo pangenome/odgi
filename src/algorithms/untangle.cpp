@@ -678,17 +678,39 @@ void untangle(
             // marking nodes every cut_every bp
             uint64_t pos = 0;
             uint64_t last = 0;
+            uint64_t segment = 0;
+            std::vector<uint64_t> node_to_segment(graph.get_node_count()+1);
             graph.for_each_handle(
-                    [&cut_nodes,&graph,&pos,&last,&cut_every](const handle_t& h) {
-                        auto l = graph.get_length(h);
-                        pos += l;
-                        if (pos - last > cut_every) {
-                            last = pos;
-                            cut_nodes.set(
-                                    graph.get_id(h),
-                                    true);
+                [&](const handle_t& h) {
+                    auto l = graph.get_length(h);
+                    pos += l;
+                    if (pos - last > cut_every) {
+                        last = pos;
+                        // this is possible, but may introduce too many cut points
+                        //cut_nodes.set(graph.get_id(h), true);
+                        ++segment;
+                    }
+                    node_to_segment[graph.get_id(h)] = segment;
+                });
+            // todo: split up the graph space into regions of cut_every bp
+            // write a map from node ids to segments
+            // walk along every path
+            // mark cut points the first nodes in each segment that we get to
+    #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
+            for (auto& path : paths) {
+                uint64_t segment = 0;
+                uint64_t last = 0;
+                graph.for_each_step_in_path(
+                    path, [&](const step_handle_t& step) {
+                        auto h = graph.get_handle_of_step(step);
+                        auto id = graph.get_id(h);
+                        auto segment = node_to_segment[id];
+                        if (segment != last) {
+                            cut_nodes.set(id, true);
                         }
+                        last = segment;
                     });
+            }
         }
     }
 
