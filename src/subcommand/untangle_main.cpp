@@ -101,7 +101,7 @@ int main_untangle(int argc, char **argv) {
                                              graph);
             }
         }
-    }    
+    }
 
     // path loading
     auto load_paths = [&](const std::string& path_names_file) {
