@@ -53,6 +53,12 @@ struct step_index_t {
                  const bool progress,
 				 const uint64_t& sample_rate);
     ~step_index_t(void);
+	// We cannot move, assign, or copy until we add code to point SDSL supports at the new addresses for their vectors.
+	step_index_t(const step_index_t& other) = delete;
+	step_index_t(step_index_t&& other) = delete;
+	step_index_t& operator=(const step_index_t& other) = delete;
+	step_index_t& operator=(step_index_t&& other) = delete;
+
     const uint64_t get_position(const step_handle_t& step, const PathHandleGraph& graph) const;
 	const uint64_t get_path_len(const path_handle_t& path) const;
 	void save(const std::string& name) const;
