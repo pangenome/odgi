@@ -182,8 +182,7 @@ int main_untangle(int argc, char **argv) {
 	paths.insert(paths.end(), query_paths.begin(), query_paths.end());
 	paths.insert(paths.end(), target_paths.begin(), target_paths.end());
 	std::sort(paths.begin(), paths.end());
-	paths.erase(std::unique(paths.begin(), paths.end()),
-				paths.end());
+	paths.erase(std::unique(paths.begin(), paths.end()), paths.end());
 
     if (make_self_dotplot) {
         for (auto& query : query_paths) {
@@ -207,6 +206,8 @@ int main_untangle(int argc, char **argv) {
 								 (_jaccard_threshold ? args::get(_jaccard_threshold) : 0.0),
 								 (_cut_every ? args::get(_cut_every) : 0),
 								 args::get(paf_output),
+								 args::get(input_cut_points),
+								 args::get(output_cut_points),
 								 num_threads,
 								 progress,
 								 step_index,
@@ -223,23 +224,12 @@ int main_untangle(int argc, char **argv) {
 								 (_jaccard_threshold ? args::get(_jaccard_threshold) : 0.0),
 								 (_cut_every ? args::get(_cut_every) : 0),
 								 args::get(paf_output),
+								 args::get(input_cut_points),
+								 args::get(output_cut_points),
 								 num_threads,
 								 progress,
 								 step_index,paths);
 		}
-        algorithms::untangle(graph,
-                             query_paths,
-                             target_paths,
-                             args::get(merge_dist),
-                             (_max_self_coverage ? args::get(_max_self_coverage) : 0),
-                             (_best_n_mappings ? args::get(_best_n_mappings) : 1),
-                             (_jaccard_threshold ? args::get(_jaccard_threshold) : 0.0),
-                             (_cut_every ? args::get(_cut_every) : 0),
-                             args::get(paf_output),
-                             args::get(input_cut_points),
-                             args::get(output_cut_points),
-                             num_threads,
-                             progress);
     }
 
     return 0;

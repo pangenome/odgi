@@ -584,50 +584,11 @@ void untangle(
         std::cerr << "[odgi::algorithms::untangle] untangling " << queries.size() << " queries with " << targets.size() << " targets" << std::endl;
     }
 
-    atomicbitvector::atomic_bv_t cut_nodes(graph.get_node_count()+1);
+    int threads_per = std::max(1, (int)std::floor((double)num_threads/(double)paths.size()));
 
-    // Check input cut points before building the step_index (that can take time)
-    if (!cut_points_input.empty()) {
-        if (progress) {
-            std::cerr << "[odgi::algorithms::untangle] loading input cuts" << std::endl;
-        }
-        std::ifstream bed_in(cut_points_input.c_str());
-        std::string buffer;
-        while (std::getline(bed_in, buffer)) {
-            if (!buffer.empty()) {
-                const uint64_t handle_id = std::stoull(buffer);
-
-                if (!graph.has_node(handle_id)) {
-                    std::cerr << "[odgi::algorithms::untangle] error: node identifier " << handle_id << " not found in graph" << std::endl;
-                    exit(1);
-                }
-
-                cut_nodes.set(
-                        handle_id,
-                        true);
-            }
-        }
-    }
-
-    std::vector<path_handle_t> paths;
-    paths.insert(paths.end(), queries.begin(), queries.end());
-    paths.insert(paths.end(), targets.begin(), targets.end());
-    std::sort(paths.begin(), paths.end());
-    paths.erase(std::unique(paths.begin(), paths.end()),
-                paths.end());
-    //std::cerr << "[odgi::algorithms::untangle] building step index" << std::endl;
-    //auto step_pos = make_step_index(graph, paths, num_threads);
-    step_index_t step_index(graph, paths, num_threads, progress);
-
-    /*
-      auto get_position = [&](const step_handle_t& step) {
-        return step_index.get_position(step);
-    };
-    */
-    //std::cerr << "[odgi::algorithms::untangle] step index contains " << step_pos.size() << " steps" << std::endl;
     // collect all possible cuts
     // we'll use this to drive the subsequent segmentation
-    int threads_per = std::max(1, (int)std::floor((double)num_threads/(double)paths.size()));
+    atomicbitvector::atomic_bv_t cut_nodes(graph.get_node_count()+1);
 
     if (cut_points_input.empty()) {
         if (progress) {
@@ -657,7 +618,8 @@ void untangle(
                                   self_index,
                                   [](const handle_t& h) { return false; }),
                                   merge_dist,
-                                  step_index);
+                                  step_index,
+                                  graph);
             for (auto& step : cuts) {
                 cut_nodes.set(graph.get_id(graph.get_handle_of_step(step)));
             }
@@ -717,6 +679,26 @@ void untangle(
                         }
                         last = segment;
                     });
+            }
+        }
+    } else {
+        if (progress) {
+            std::cerr << "[odgi::algorithms::untangle] loading input cuts" << std::endl;
+        }
+        std::ifstream bed_in(cut_points_input.c_str());
+        std::string buffer;
+        while (std::getline(bed_in, buffer)) {
+            if (!buffer.empty()) {
+                const uint64_t handle_id = std::stoull(buffer);
+
+                if (!graph.has_node(handle_id)) {
+                    std::cerr << "[odgi::algorithms::untangle] error: node identifier " << handle_id << " not found in graph" << std::endl;
+                    exit(1);
+                }
+
+                cut_nodes.set(
+                        handle_id,
+                        true);
             }
         }
     }
