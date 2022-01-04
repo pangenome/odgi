@@ -89,12 +89,12 @@ namespace odgi {
 							step_handle_t final_target_step = target_jaccard_index.step;
 							double final_target_jaccard = target_jaccard_index.jaccard;
 
-							uint64_t target_min_pos = step_index.get_position(final_target_step); // 0-based starting position in BED
-							uint64_t target_max_pos = step_index.get_position(final_target_step) + graph.get_length(graph.get_handle_of_step(final_target_step)); // 1-based ending position in BED
+							uint64_t target_min_pos = step_index.get_position(final_target_step, graph); // 0-based starting position in BED
+							uint64_t target_max_pos = target_min_pos + graph.get_length(graph.get_handle_of_step(final_target_step)); // 1-based ending position in BED
 
 							/// add BED record to queue of the BED writer
 							bed_writer_thread.append(target_path, target_min_pos, target_max_pos,
-													 query_path_name, step_index.get_position(cur_step),
+													 query_path_name, step_index.get_position(cur_step, graph),
 													 final_target_jaccard, walk_from_front, additional_jaccards_to_report);
 							i++;
 						}

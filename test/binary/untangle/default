@@ -1,0 +1,9 @@
+#query.name	query.start	query.end	ref.name	ref.start	ref.end	score	inv	self.cov	nth.best
+target	0	2	target	0	2	1	+	1	1
+target	2	5	query1	2	5	1	+	2	1
+target	5	11	query3	5	11	1	+	1.5	1
+query1	0	2	query1	0	2	1	+	1	1
+query1	2	5	query1	2	5	1	+	1	1
+query3	0	3	query3	0	3	1	+	1	1
+query3	3	5	query3	3	5	1	+	1	1
+query3	5	11	query3	5	11	1	+	1	1

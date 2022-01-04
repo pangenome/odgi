@@ -9,8 +9,7 @@ Construct a dynamic succinct variation graph in ODGI format from a GFAv1
 SYNOPSIS
 ========
 
-**odgi build** [**-g, --gfa**\ =\ *FILE*] [**-o, --out**\ =\ *FILE*]
-[*OPTION*]…
+**odgi build** [**-g, --gfa**\ =\ *FILE*] [**-o, --out**\ =\ *FILE*] [*OPTION*]…
 
 DESCRIPTION
 ===========

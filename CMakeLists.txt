@@ -357,6 +357,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/unittest/pathindex.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/edge.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/extract.cpp
+  ${CMAKE_SOURCE_DIR}/src/unittest/stepindex.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/subcommand.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/build_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/test_main.cpp
@@ -392,6 +393,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/version_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/untangle_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/tips_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/stepindex_main.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/hash.cpp

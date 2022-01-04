@@ -1,5 +1,6 @@
 #pragma once
 
+#include <sdsl/enc_vector.hpp>
 #include <iostream>
 #include <vector>
 #include <handlegraph/types.hpp>
@@ -7,6 +8,7 @@
 #include <handlegraph/path_handle_graph.hpp>
 #include "ips4o.hpp"
 #include "BooPHF.h"
+#include "utils.hpp"
 
 namespace odgi {
 
@@ -44,15 +46,38 @@ typedef boomphf::mphf<step_handle_t, step_handle_hasher_t> boophf_step_t;
 typedef boomphf::mphf<uint64_t, boomphf::SingleHashFunctor<uint64_t>> boophf_uint64_t;
 
 struct step_index_t {
+	step_index_t();
     step_index_t(const PathHandleGraph& graph,
                  const std::vector<path_handle_t>& paths,
                  const uint64_t& nthreads,
-                 const bool progress);
+                 const bool progress,
+				 const uint64_t& sample_rate);
     ~step_index_t(void);
-    const uint64_t& get_position(const step_handle_t& step) const;
+    const uint64_t get_position(const step_handle_t& step, const PathHandleGraph& graph) const;
+	const uint64_t get_path_len(const path_handle_t& path) const;
+	void save(const std::string& name) const;
+	void load(const std::string& name);
     // map from step to position in its path
     boophf_step_t* step_mphf = nullptr;
-    std::vector<uint64_t> pos;
+	sdsl::int_vector<64> pos;
+	sdsl::int_vector<64> path_len;
+	uint64_t sample_rate;
+private:
+	/// the assumptions is that the magic number will be STEPsampling_rateINDEX, where the sampling rate encodes the actual
+	/// sampling rate of the index
+
+	/// Write the sdsl integer vectors of the step index to a stream.
+	size_t serialize_and_measure(std::ostream &out, sdsl::structure_tree_node *s = nullptr, std::string name = "") const;
+
+	/// Alias for serialize_and_measure().
+	void serialize_members(std::ostream &out) const;
+
+	/// Load the sdsl integer vectors of a step index from a stream. Throw an Error if the stream
+	/// does not produce a valid step index file.
+	void load_sdsl(std::istream &in);
+
+	/// Alias for load().
+	void deserialize_members(std::istream &in);
 };
 
 // index of a single path's steps designed for efficient iteration

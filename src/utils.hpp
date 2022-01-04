@@ -15,6 +15,9 @@ namespace utils {
 	bool ends_with(const std::string &fullString, const std::string &ending);
 	int handle_gfa_odgi_input(const std::string infile, const std::string subcommmand_name, const bool progress,
 							  const uint64_t num_threads, odgi::graph_t &graph);
+	/// this function will return n % d
+	/// it is assumed that d is one of 1, 2, 4, 8, 16, 32, ....
+	uint64_t modulo(const uint64_t n, const uint64_t d);
 }
 
 

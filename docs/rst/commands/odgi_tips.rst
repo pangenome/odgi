@@ -61,7 +61,13 @@ Tips Options
 | Maximum walking distance in nucleotides for one orientation when finding the best target (reference) range for each query path (default: 10000). Note: If we walked 9999 base pairs and **w, --jaccard-context** is **10000**, we will also include the next node, even if we overflow the actual limit.
 
 | **-j, --jaccards**
-| If for a target (reference) path several matches are possible, also report the additional jacard indices (default: false). In the resulting BED, an '.' is added, if set to 'false'.
+| If for a target (reference) path several matches are possible, also report the additional jaccard indices (default: false). In the resulting BED, an '.' is added, if set to 'false'.
+
+Step Index Options
+------------------
+
+| **-a, --step-index**\ =\ *FILE*
+| Load the step index from this *FILE*. The file name usually ends with *.stpidx*. (default: build the step index from scratch with a sampling rate of 8).
 
 Threading
 ---------

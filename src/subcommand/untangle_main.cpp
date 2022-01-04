@@ -51,6 +51,9 @@ int main_untangle(int argc, char **argv) {
     args::Group debugging_opts(parser, "[ Debugging Options ]");
     args::Flag make_self_dotplot(debugging_opts, "DOTPLOT", "Render a table showing the positional dotplot of the query against itself.",
                                  {'S', "self-dotplot"});
+	args::Group step_index_opts(parser, "[ Step Index Options ]");
+	args::ValueFlag<std::string> _step_index(step_index_opts, "FILE", "Load the step index from this *FILE*. The file name usually ends with *.stpidx*. (default: build the step index from scratch with a sampling rate of 8).",
+											 {'a', "step-index"});
     args::Group threading(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> nthreads(
         threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
@@ -171,22 +174,55 @@ int main_untangle(int argc, char **argv) {
         });
     }
 
+	std::vector<path_handle_t> paths;
+	paths.insert(paths.end(), query_paths.begin(), query_paths.end());
+	paths.insert(paths.end(), target_paths.begin(), target_paths.end());
+	std::sort(paths.begin(), paths.end());
+	paths.erase(std::unique(paths.begin(), paths.end()),
+				paths.end());
+
     if (make_self_dotplot) {
         for (auto& query : query_paths) {
             algorithms::self_dotplot(graph, query);
         }
     } else {
-        algorithms::untangle(graph,
-                             query_paths,
-                             target_paths,
-                             args::get(merge_dist),
-                             (_max_self_coverage ? args::get(_max_self_coverage) : 0),
-                             (_best_n_mappings ? args::get(_best_n_mappings) : 1),
-                             (_jaccard_threshold ? args::get(_jaccard_threshold) : 0.0),
-                             (_cut_every ? args::get(_cut_every) : 0),
-                             args::get(paf_output),
-                             num_threads,
-                             progress);
+		if (!_step_index) {
+			if (progress) {
+				std::cerr
+						<< "[odgi::tips] warning: no step index specified. Building one with a sample rate of 8. This may take additional time. "
+						   "A step index cstep_indexan be provided via -a, --step-index. A step index can be built using odgi stepindex."
+						<< std::endl;
+			}
+			algorithms::step_index_t step_index(graph, paths, num_threads, progress, 8);
+			algorithms::untangle(graph,
+								 query_paths,
+								 target_paths,
+								 args::get(merge_dist),
+								 (_max_self_coverage ? args::get(_max_self_coverage) : 0),
+								 (_best_n_mappings ? args::get(_best_n_mappings) : 1),
+								 (_jaccard_threshold ? args::get(_jaccard_threshold) : 0.0),
+								 (_cut_every ? args::get(_cut_every) : 0),
+								 args::get(paf_output),
+								 num_threads,
+								 progress,
+								 step_index,
+								 paths);
+		} else {
+			algorithms::step_index_t step_index;
+			step_index.load(args::get(_step_index));
+			algorithms::untangle(graph,
+								 query_paths,
+								 target_paths,
+								 args::get(merge_dist),
+								 (_max_self_coverage ? args::get(_max_self_coverage) : 0),
+								 (_best_n_mappings ? args::get(_best_n_mappings) : 1),
+								 (_jaccard_threshold ? args::get(_jaccard_threshold) : 0.0),
+								 (_cut_every ? args::get(_cut_every) : 0),
+								 args::get(paf_output),
+								 num_threads,
+								 progress,
+								 step_index,paths);
+		}
     }
 
     return 0;
