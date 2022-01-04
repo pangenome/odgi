@@ -48,15 +48,26 @@ Untangling Options
 | **-n, --n-best**\ =\ *N*
 | Report up to the *N*th best target (reference) mapping for each query segment (default: *1*).
 
-
 | **-j, --min-jaccard**\ =\ *N*
-| Report target mappings >= the given jaccard threshold, with 0 <= *N* <= 1.0 (default: *0.0*):
+| Report target mappings >= the given jaccard threshold, with 0 <= *N* <= 1.0 (default: *0.0*).
+
+| **-e, --cut-every**\ =\ *N*
+| Cut every *N* base pairs of the sorted graph (default: *0/OFF*).
+
+| **-p, --paf-output**
+| Emit the output in PAF format.
 
 Debugging Options
 -----------------
 
 | **-s, --self-dotplot**
 | Render a table showing the positional dotplot of the query against itself.
+
+Step Index Options
+------------------
+
+| **-a, --step-index**\ =\ *FILE*
+| Load the step index from this *FILE*. The file name usually ends with *.stpidx*. (default: build the step index from scratch with a sampling rate of 8).
 
 Threading
 ---------
