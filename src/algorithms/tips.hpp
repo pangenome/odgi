@@ -1,6 +1,5 @@
 #pragma once
 
-#include "utils.hpp"
 #include "algorithms/stepindex.hpp"
 #include "algorithms/tips_bed_writer_thread.hpp"
 #include "algorithms/path_jaccard.hpp"

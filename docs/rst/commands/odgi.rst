@@ -73,6 +73,8 @@ input_graphs.txt -o graphs.og
 
 :ref:`odgi stats` -i graph.og -y
 
+:ref:`odgi stepindex` -i graph.og -o graph.og.stpidx
+
 :ref:`odgi test`
 
 :ref:`odgi tips` -i graph.og -q "query_name"
@@ -294,20 +296,12 @@ criteria.
    pseudo-random <http://www.cplusplus.com/reference/random/mt19937/>`__
    generated numbers.
 
--  A sparse matrix mondriaan sort: We can partition a hypergraph with
-   integer weights and uniform hyperedge costs using the
-   `Mondriaan <http://www.staff.science.uu.nl/~bisse101/Mondriaan/>`__
-   partitioner.
-
 -  A 1D linear SGD sort: ODGI implements a 1D linear, variation graph
    adjusted, multi-threaded version of the `Graph Drawing by Stochastic
    Gradient Descent <https://arxiv.org/abs/1710.04626>`__ algorithm. The
    force-directed graph drawing algorithm minimizes the graph’s energy
    function or stress level. It applies stochastic gradient descent
    (SGD) to move a single pair of nodes at a time.
-
--  An eades algorithmic sort: Use `Peter Eades’ heuristic for graph
-   drawing <http://www.it.usyd.edu.au/~pead6616/old_spring_paper.pdf>`__.
 
 Sorting the paths in a graph my refine the sorting process. For the
 users’ convenience, it is possible to specify a whole pipeline of sorts
@@ -322,6 +316,17 @@ multiple graphs into the same file.
   Among other metrics, it can calculate the #nodes, #edges, #paths and
   the total nucleotide length of the graph. It can also produce a YAML file that is perfectly curated for the input of
   `MultiQC's ODGI module <https://multiqc.info/docs/#odgi>`__.
+
+| **odgi stepindex** [**-i, --idx**\ =\ *FILE*] [**-o, --out**\ =\ *FILE*] [*OPTION*]…
+| The odgi stepindex command generates a step index from a given graph. Such an index allows us to efficiently retrieve the nucleotide position of a given graph step.
+In order to save memory, a sampled step index is implemented here. We solve memory issues by only indexing every node with node identifier fitting **mod(node_id, step-index-sample-rate) == 0** in the graph.
+From a given step, we can find its position by walking backwards until a node fitting our sampling criteria is found. We can retrieve this position easily, adding up the walked distance to retrieve the actual position of the step.
+Effectively, the sample rate is only allowed to be a number by the power of 2, because we can use bit shift operations to calculate the modulo in O(1)! (`https://www.geeksforgeeks.org/compute-modulus-division-by-a-power-of-2-number/ <https://www.geeksforgeeks.org/compute-modulus-division-by-a-power-of-2-number/>`_).
+As `evaluated <https://docs.google.com/presentation/d/1a8bOnulta6fYnQ2DFmdzt4es2vaRGmgIxO3kCe-HXR8/edit#slide=id.p>`_, the default sample rate is 8, which represents a good compromise between performance and memory usage. For ultra large graphs with hundreds of gigabytes in size, a sample rate of 16 might suite better.
+
+As a bonus, the step index includes all the lengths of the paths, too. This allows us to efficiently get the length in nucleotides of a path by a given path handle.
+
+Current ODGI tools that work with a step index are :ref:`odgi untangle` and :ref:`odgi tips`.
 
 | **odgi test** [<TEST NAME|PATTERN|TAGS> …] [*OPTION*]…
 | The odgi test command starts all unit tests that are implemented in

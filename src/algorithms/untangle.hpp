@@ -65,7 +65,8 @@ std::vector<step_handle_t> untangle_cuts(
 std::vector<step_handle_t> merge_cuts(
     const std::vector<step_handle_t>& cuts,
     const uint64_t& dist,
-    const step_index_t& step_index);
+    const step_index_t& step_index,
+	const PathHandleGraph& graph);
 
 void write_cuts(
     const PathHandleGraph& graph,
@@ -115,7 +116,9 @@ void untangle(
     const std::string& cut_points_input,
     const std::string& cut_points_output,
     const size_t& num_threads,
-	const bool& progress);
+	const bool& progress,
+	const step_index_t& step_index,
+	const std::vector<path_handle_t>& paths);
 
 }
 }
