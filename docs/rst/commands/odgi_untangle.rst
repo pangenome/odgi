@@ -57,6 +57,12 @@ Untangling Options
 | **-p, --paf-output**
 | Emit the output in PAF format.
 
+| **-c, --cut-points-input**\ =\ *FILE*
+A text file of node identifiers (one identifier per row) where to start the segment boundaries. When specified, no further starting points will be added.
+
+| **-d, --cut-points-output**\ =\ *FILE*
+Emit node identifiers where segment boundaries started (one identifier per row).
+
 Debugging Options
 -----------------
 

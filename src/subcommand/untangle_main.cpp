@@ -49,8 +49,8 @@ int main_untangle(int argc, char **argv) {
     args::Flag paf_output(untangling_opts, "paf_output", "emit the output in PAF format.",
                         {'p', "paf-output"});
     args::ValueFlag<std::string> input_cut_points(untangling_opts, "FILE", "A text file of node identifiers (one identifier per row) where to start the segment boundaries."
-                                                                           "When specified, no further starting points will be added", {'c', "cut-points-input"});
-    args::ValueFlag<std::string> output_cut_points(untangling_opts, "FILE", "Emit node identifiers where segment boundaries started (one identifier per row)",
+                                                                           "When specified, no further starting points will be added.", {'c', "cut-points-input"});
+    args::ValueFlag<std::string> output_cut_points(untangling_opts, "FILE", "Emit node identifiers where segment boundaries started (one identifier per row).",
                                                   {'d', "cut-points-output"});
     args::Group debugging_opts(parser, "[ Debugging Options ]");
     args::Flag make_self_dotplot(debugging_opts, "DOTPLOT", "Render a table showing the positional dotplot of the query against itself.",
