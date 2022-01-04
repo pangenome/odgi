@@ -48,6 +48,10 @@ int main_untangle(int argc, char **argv) {
                                          {'e', "cut-every"});
     args::Flag paf_output(untangling_opts, "paf_output", "emit the output in PAF format.",
                         {'p', "paf-output"});
+    args::ValueFlag<std::string> input_cut_points(untangling_opts, "FILE", "A text file of node identifiers (one identifier per row) where to start the segment boundaries."
+                                                                           "When specified, no further starting points will be added.", {'c', "cut-points-input"});
+    args::ValueFlag<std::string> output_cut_points(untangling_opts, "FILE", "Emit node identifiers where segment boundaries started (one identifier per row).",
+                                                  {'d', "cut-points-output"});
     args::Group debugging_opts(parser, "[ Debugging Options ]");
     args::Flag make_self_dotplot(debugging_opts, "DOTPLOT", "Render a table showing the positional dotplot of the query against itself.",
                                  {'S', "self-dotplot"});
@@ -100,7 +104,7 @@ int main_untangle(int argc, char **argv) {
                                              graph);
             }
         }
-    }    
+    }
 
     // path loading
     auto load_paths = [&](const std::string& path_names_file) {
@@ -178,8 +182,7 @@ int main_untangle(int argc, char **argv) {
 	paths.insert(paths.end(), query_paths.begin(), query_paths.end());
 	paths.insert(paths.end(), target_paths.begin(), target_paths.end());
 	std::sort(paths.begin(), paths.end());
-	paths.erase(std::unique(paths.begin(), paths.end()),
-				paths.end());
+	paths.erase(std::unique(paths.begin(), paths.end()), paths.end());
 
     if (make_self_dotplot) {
         for (auto& query : query_paths) {
@@ -203,6 +206,8 @@ int main_untangle(int argc, char **argv) {
 								 (_jaccard_threshold ? args::get(_jaccard_threshold) : 0.0),
 								 (_cut_every ? args::get(_cut_every) : 0),
 								 args::get(paf_output),
+								 args::get(input_cut_points),
+								 args::get(output_cut_points),
 								 num_threads,
 								 progress,
 								 step_index,
@@ -219,6 +224,8 @@ int main_untangle(int argc, char **argv) {
 								 (_jaccard_threshold ? args::get(_jaccard_threshold) : 0.0),
 								 (_cut_every ? args::get(_cut_every) : 0),
 								 args::get(paf_output),
+								 args::get(input_cut_points),
+								 args::get(output_cut_points),
 								 num_threads,
 								 progress,
 								 step_index,paths);

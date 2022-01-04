@@ -3,6 +3,7 @@
 #include <handlegraph/path_handle_graph.hpp>
 #include <handlegraph/handle_graph.hpp>
 #include <handlegraph/util.hpp>
+#include <fstream>
 #include <vector>
 #include <set>
 #include <deque>
@@ -112,6 +113,8 @@ void untangle(
     const double& min_jaccard,
     const uint64_t& cut_every,
     const bool& paf_output,
+    const std::string& cut_points_input,
+    const std::string& cut_points_output,
     const size_t& num_threads,
 	const bool& progress,
 	const step_index_t& step_index,
