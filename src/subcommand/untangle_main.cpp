@@ -192,8 +192,8 @@ int main_untangle(int argc, char **argv) {
 		if (!_step_index) {
 			if (progress) {
 				std::cerr
-						<< "[odgi::tips] warning: no step index specified. Building one with a sample rate of 8. This may take additional time. "
-						   "A step index cstep_indexan be provided via -a, --step-index. A step index can be built using odgi stepindex."
+						<< "[odgi::untangle] warning: no step index specified. Building one with a sample rate of 8. This may take additional time. "
+						   "A step index can be provided via -a, --step-index. A step index can be built using odgi stepindex."
 						<< std::endl;
 			}
 			algorithms::step_index_t step_index(graph, paths, num_threads, progress, 8);
