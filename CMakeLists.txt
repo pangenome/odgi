@@ -645,7 +645,7 @@ target_link_libraries(odgi_pybind11 PRIVATE "${CMAKE_SOURCE_DIR}/lib/libodgi.a" 
 set_target_properties(odgi_pybind11 PROPERTIES OUTPUT_NAME "odgi")
 
 file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/include)
-execute_process(COMMAND bash scripts/generate_git_version.sh ${CMAKE_SOURCE_DIR}/include)
+execute_process(COMMAND bash ${CMAKE_SOURCE_DIR}/scripts/generate_git_version.sh ${CMAKE_SOURCE_DIR}/include)
 
 install(TARGETS odgi DESTINATION bin)
 install(TARGETS libodgi_static ARCHIVE DESTINATION lib LIBRARY DESTINATION lib PUBLIC_HEADER DESTINATION include/odgi)
