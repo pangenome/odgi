@@ -416,7 +416,8 @@ step_handle_t graph_t::get_previous_step(const step_handle_t& step_handle) const
     if (is_path_front_end(step_handle)) {
         return step_handle;
     } else if (is_path_end(step_handle)) {
-        curr_handle = get_handle_of_step(path_back(as_path_handle(as_integers(step_handle)[0])));
+        return path_back(as_path_handle(as_integers(step_handle)[0]));
+		// curr_handle = get_handle_of_step(path_back(as_path_handle(as_integers(step_handle)[0])));
     } else {
         curr_handle = get_handle_of_step(step_handle);
     }
