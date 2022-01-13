@@ -106,6 +106,10 @@ namespace odgi {
 							}
 							cur_step_rank++;
 						});
+						step_handle_t path_end = graph.path_end(path);
+						step_handle_t path_back_from_end = graph.get_previous_step(path_end);
+						REQUIRE(step_index_1.get_position(path_end, graph) == step_index_1.get_path_len(path));
+						REQUIRE(step_index_1.get_position(path_back_from_end, graph) == step_index_1.get_position(graph.path_back(path), graph));
 					}
 
 					if (cur_path == "query1") {
@@ -127,6 +131,10 @@ namespace odgi {
 							}
 							cur_step_rank++;
 						});
+						step_handle_t path_end = graph.path_end(path);
+						step_handle_t path_back_from_end = graph.get_previous_step(path_end);
+						REQUIRE(step_index_1.get_position(path_end, graph) == step_index_1.get_path_len(path));
+						REQUIRE(step_index_1.get_position(path_back_from_end, graph) == step_index_1.get_position(graph.path_back(path), graph));
 					}
 
 					if (cur_path == "query2") {
@@ -139,6 +147,10 @@ namespace odgi {
 							}
 							cur_step_rank++;
 						});
+						step_handle_t path_end = graph.path_end(path);
+						step_handle_t path_back_from_end = graph.get_previous_step(path_end);
+						REQUIRE(step_index_1.get_position(path_end, graph) == step_index_1.get_path_len(path));
+						REQUIRE(step_index_1.get_position(path_back_from_end, graph) == step_index_1.get_position(graph.path_back(path), graph));
 					}
 
 					if (cur_path == "query3") {
@@ -166,6 +178,10 @@ namespace odgi {
 							}
 							cur_step_rank++;
 						});
+						step_handle_t path_end = graph.path_end(path);
+						step_handle_t path_back_from_end = graph.get_previous_step(path_end);
+						REQUIRE(step_index_1.get_position(path_end, graph) == step_index_1.get_path_len(path));
+						REQUIRE(step_index_1.get_position(path_back_from_end, graph) == step_index_1.get_position(graph.path_back(path), graph));
 					}
 				});
 			}
