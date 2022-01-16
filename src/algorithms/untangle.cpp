@@ -625,11 +625,15 @@ void untangle(
             }
             // also add the nodes here where the query path touches the target for the first time
             // we start from the front until we found a target node
-            uint64_t node_id_front = query_hits_target_front(graph, path, target_nodes);
-            cut_nodes.set(node_id_front, true);
+            const uint64_t node_id_front = query_hits_target_front(graph, path, target_nodes);
+            if (graph.has_node(node_id_front)) {
+                cut_nodes.set(node_id_front, true);
+            }
             // we start from the back until we found a target node
-            uint64_t node_id_back = query_hits_target_back(graph, path, target_nodes);
-            cut_nodes.set(node_id_back, true);
+            const uint64_t node_id_back = query_hits_target_back(graph, path, target_nodes);
+            if (graph.has_node(node_id_back)) {
+                cut_nodes.set(node_id_back, true);
+            }
         }
 
         if (cut_every > 0) {
