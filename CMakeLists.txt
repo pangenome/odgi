@@ -394,6 +394,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/untangle_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/tips_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/stepindex_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/heaps_main.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/hash.cpp
@@ -445,6 +446,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/stepindex.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/groom.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/crush_n.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/heaps.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/edge.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/tips.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/path_jaccard.cpp)
