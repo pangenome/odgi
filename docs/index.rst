@@ -30,7 +30,9 @@ visualization and gene annotation lift overs. The following figure gives an over
 
 .. image:: /img/odgi_tools.png
 
-Methods provided by ODGI (in black) and their supported input (in blue) and output (in red) data formats.
+Methods provided by ``odgi`` (in black) and their supported input (in blue) and output (in red) data formats.
+:ref:`odgi build` transforms `GFAv1 <https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md>`_ graphs into ``odgi``'s binary, node-centric encoding format.
+Such a built graph represents everything that is in the input `GFAv1 <https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md>`_ graph, without any loss of information!
 
 For a light dive into ``odgi``, just visit the :ref:`quick_start` section.
 
@@ -50,7 +52,7 @@ For a light dive into ``odgi``, just visit the :ref:`quick_start` section.
 Citation
 --------
 
-| **Andrea Guarracino\*, Simon Heumos\*, Sven Nahnsen, Pjotr Prins, Erik Garrison**. `ODGI: understanding pangenome graphs <https://www.biorxiv.org/content/10.1101/2021.11.10.467921v1>`_, bioRxiv, 2021
+| **Andrea Guarracino\*, Simon Heumos\*, Sven Nahnsen, Pjotr Prins, Erik Garrison**. `ODGI: understanding pangenome graphs <https://www.biorxiv.org/content/10.1101/2021.11.10.467921v1>`_, bioRxiv, 2021.
 | **\*Shared first authorship**
 
 Core Functionalities
@@ -125,6 +127,7 @@ Core Functionalities
         + Graph offset to path position mapping
         + Graph to reference position mapping
         + Graph to graph position mapping
+        + Node annotation for Bandage
 
     * - |remove_artifacts_and_complex_regions|
       - **Remove Artifacts and Complex Regions**
