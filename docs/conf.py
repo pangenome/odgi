@@ -20,13 +20,13 @@ sys.path.insert(0, os.path.abspath('../lib/'))
 # -- Project information -----------------------------------------------------
 
 project = u'odgi'
-copyright = '2021, Simon Heumos, Andrea Guarracino, Erik Garrison. Revision v0.6.3-75aa190'
+copyright = '2021, Simon Heumos, Andrea Guarracino, Erik Garrison. Revision v0.6.3-7b866a5'
 author = u'Andrea Guarracino, Simon Heumos, ... , Pjotr Prins, Erik Garrison'
 
 # The short X.Y version
 version = 'v0.6.3'
 # The full version, including alpha/beta/rc tags
-release = '75aa190'
+release = '7b866a5'
 
 
 # -- General configuration ---------------------------------------------------
@@ -38,7 +38,7 @@ release = '75aa190'
 # Add any Sphinx extension module names here, as strings. They can be
 # extensions coming with Sphinx (named 'sphinx.ext.*') or your custom
 # ones.
-extensions = ['sphinx.ext.autodoc', 'm2r2']
+extensions = ['sphinx.ext.autodoc', 'm2r2', 'sphinx.ext.autosectionlabel']
 
 # Add any paths that contain templates here, relative to this directory.
 templates_path = ['_templates']
