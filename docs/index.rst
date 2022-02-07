@@ -37,12 +37,12 @@ Such a built graph represents everything that is in the input `GFAv1 <https://gi
 For a light dive into ``odgi``, just visit the :ref:`quick_start` section.
 
 .. warning::
-	``odgi`` **does not** construct graphs from scratch nor is it capable of extending them. A pangenome graph construction tool for
+	``odgi`` does not construct graphs from scratch nor is it capable of extending them! A pangenome graph construction tool for
 	long read input sequences is for example `PGGB <https://github.com/pangenome/pggb>`_.
 	A Reference-biased alternative would be `Minigraph <https://github.com/lh3/minigraph>`_. Which's output can then be plugged into
 	`Cactus <https://github.com/ComparativeGenomicsToolkit/cactus>`_.
 
-	If you want to extend an existing pangenome graph, please take a look at **TODO** - **Link to FAQ section: What if I have FASTQ/FASTA sequences**.
+	If you want to extend an existing pangenome graph, please take a look at :ref:`How can I import reads from a FASTQ or FASTA file into an existing graph?`
 
 .. toctree::
     :maxdepth: 1

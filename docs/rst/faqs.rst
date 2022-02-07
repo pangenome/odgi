@@ -7,6 +7,8 @@ FAQs
 .. toctree::
     :maxdepth: 1
 
+ .. _faq_import_reads_from_fastq:
+
 How can I import reads from a FASTQ or FASTA file into an existing graph?
 =========================================================================
 
@@ -44,4 +46,5 @@ file can be used with ``vg augment`` to extend the existing graph with the mappe
 Use `Graphaligner <https://github.com/maickrau/GraphAligner>`_ to align the long sequences against the graph and then use
 ``vg augment`` to extend the already existing graph.
 
+All of the above methods produce a pangenome graph in GFAv1 format which can then be analysed with ``odgi``.
 
