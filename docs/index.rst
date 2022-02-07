@@ -25,8 +25,8 @@ of the node:
 
 To ensure minimal memory occupation, only the deltas of the neighbouring steps of a path are hold.
 
-``odgi`` provides a set of tools ranging from graph building, manipulation, layouting, over graph statistics to graph
-visualization and gene annotation lift overs. The following figure gives an overview.
+``odgi`` provides a set of tools ranging from graph manipulation, layouting, extracting *loci*, over graph statistics to graph
+visualization, validation, and gene annotation lift overs. The following figure gives an overview.
 
 .. image:: /img/odgi_tools.png
 
@@ -35,6 +35,14 @@ Methods provided by ``odgi`` (in black) and their supported input (in blue) and 
 Such a built graph represents everything that is in the input `GFAv1 <https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md>`_ graph, without any loss of information!
 
 For a light dive into ``odgi``, just visit the :ref:`quick_start` section.
+
+.. warning::
+	``odgi`` **does not** construct graphs from scratch nor is it capable of extending them. A pangenome graph construction tool for
+	long read input sequences is for example `PGGB <https://github.com/pangenome/pggb>`_.
+	A Reference-biased alternative would be `Minigraph <https://github.com/lh3/minigraph>`_. Which's output can then be plugged into
+	`Cactus <https://github.com/ComparativeGenomicsToolkit/cactus>`_.
+
+	If you want to extend an existing pangenome graph, please take a look at **TODO** - **Link to FAQ section: What if I have FASTQ/FASTA sequences**.
 
 .. toctree::
     :maxdepth: 1
@@ -48,6 +56,7 @@ For a light dive into ``odgi``, just visit the :ref:`quick_start` section.
     rst/multiqc
     rst/tools_using_odgi
     rst/binding
+    rst/faqs
 
 Citation
 --------
