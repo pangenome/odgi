@@ -7,8 +7,6 @@ FAQs
 .. toctree::
     :maxdepth: 1
 
- .. _faq_import_reads_from_fastq:
-
 How can I import reads from a FASTQ or FASTA file into an existing graph?
 =========================================================================
 
@@ -47,4 +45,15 @@ Use `Graphaligner <https://github.com/maickrau/GraphAligner>`_ to align the long
 ``vg augment`` to extend the already existing graph.
 
 All of the above methods produce a pangenome graph in GFAv1 format which can then be analysed with ``odgi``.
+
+Why is ``odgi`` strictly limited to GFAv1? Why does it not support GFAv2 or rGFA?
+=================================================================================
+
+Although `GFAv2 is a superset of GFAv1 <http://gfa-spec.github.io/GFA-spec/GFA2.html#backward-compatibility-with-gfa-1>`_,
+GFAv2 was specifically designed for assembly graphs. The fields required to losslessly represent a variation graph are
+already specified in the more frequently used GFAv1.
+The `rGFA <https://github.com/lh3/gfatools/blob/master/doc/rGFA.md#the-reference-gfa-rgfa-format>`_ format requires a genomic sequence to be the reference
+sequence upon which all other sequences are related to. In GFAv1 we don't have that limitation and this is fundamental
+to implement reference-free approaches.
+
 
