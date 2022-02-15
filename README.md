@@ -27,9 +27,7 @@ gcc --version
 g++ --version
 ```
 
-`odgi` pulls in a host of source repositories as dependencies. It may be necessary to install several system-level 
-libraries to build `odgi`. On `Ubuntu 20.04`, these can be installed using `apt`:
-
+`odgi` pulls in a host of source repositories as dependencies. It may be necessary to install several system-level libraries to build `odgi`. On `Ubuntu 20.04`, these can be installed using `apt`:
 ```
 sudo apt install build-essential cmake python3-distutils python3-dev libjemalloc-dev
 ```
@@ -61,11 +59,14 @@ On `Arch Linux`, the `jemalloc` dependency can be installed with:
 sudo pacman -S jemalloc     # arch linux
 ```
 
-An alternative way to manage `odgi`'s dependencies is to use `GUIX`. After `sudo apt install guix`, start a GNU Guix
-build container with:
+An alternative way to manage `odgi`'s dependencies is to use `GUIX`. After `sudo apt install guix`, start a GNU Guix build container with:
 
 ```bash
+git submodule update --init --recursive
 source ./.guix-build
+cd build
+cmake ..
+make
 ```
 
 ### Bioconda
@@ -157,8 +158,7 @@ with a new release version and codename. [version.cpp](./src/version.cpp) is upd
 
 ## presentations
 
-[@AndreaGuarracino](https://github.com/andreaguarracino) and [@subwaystation](https://github.com/subwaystation) 
-presented `odgi` at the German Bioinformatics Conference 2021: [ODGI - scalable tools for pangenome graphs](https://docs.google.com/presentation/d/1d52kaiOqeH4db4LyMHn7YNjv-mBKvhY2t2zQMNvzgno/edit#slide=id.p).
+[@AndreaGuarracino](https://github.com/andreaguarracino) and [@subwaystation](https://github.com/subwaystation) presented `odgi` at the German Bioinformatics Conference 2021: [ODGI - scalable tools for pangenome graphs](https://docs.google.com/presentation/d/1d52kaiOqeH4db4LyMHn7YNjv-mBKvhY2t2zQMNvzgno/edit#slide=id.p).
 
 ## name
 
