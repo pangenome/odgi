@@ -59,14 +59,29 @@ On `Arch Linux`, the `jemalloc` dependency can be installed with:
 sudo pacman -S jemalloc     # arch linux
 ```
 
-An alternative way to manage `odgi`'s dependencies is to use `GUIX`. After `sudo apt install guix`, start a GNU Guix build container with:
+An alternative way to manage `odgi`'s dependencies is to use `GUIX`. After installing and updating guix, load the current profile with:
+
+```sh
+sudo apt install guix
+guix pull
+source ~/.config/guix/current/etc/profile
+```
+
+With the latest guix in the path start a GNU Guix build container with:
 
 ```bash
-git submodule update --init --recursive
+git clone --recursive https://github.com/pangenome/odgi.git
+cd odgi
 source ./.guix-build
 cd build
 cmake ..
 make
+```
+
+The alternative way of building odgi is with guix.scm:
+
+```sh
+guix build -f guix.scm
 ```
 
 ### Bioconda
