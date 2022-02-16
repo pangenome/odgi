@@ -56,4 +56,19 @@ The `rGFA <https://github.com/lh3/gfatools/blob/master/doc/rGFA.md#the-reference
 sequence upon which all other sequences are related to. In GFAv1 we don't have that limitation and this is fundamental
 to implement reference-free approaches.
 
+How is heterozygosity handled by ``odgi``? How polyploidy?
+======================================================
+
+The GFA format doesn’t store the metadata information. To overcome this limit, we store biosample information in the
+sequence names that become the path names in the graph, by following the `PanSN-spec convention <https://github.com/pangenome/PanSN-spec>`_.
+In more detail, we apply the following sequence naming scheme for sequences:
+
+``[sample_name][delimiter][haplotype_id][delimiter][contig_or_scaffold_name]``
+
+Where each field is optional. For instance, by using the character ‘#’ as delimiter, the sequence name 'HG002#1#ctg1234’
+names ‘ctg1234’ on the first haplotype (or phase group) of the HG002 individual, while ‘HG002#2#ctg9876’ is contig ‘ctg9876’
+on the other haplotype of the same individual. This can be naturally extended and applied for polyploid species as well.
+To give a concrete example: If one only wants to work with a graph containing the associated haplotypes,
+:ref:`odgi extract` can be restricted to the desired haplotypes with the `-p[FILE],--paths-to-extract=[FILE]` parameter.
+
 
