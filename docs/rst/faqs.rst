@@ -57,7 +57,7 @@ sequence upon which all other sequences are related to. In GFAv1 we don't have t
 to implement reference-free approaches.
 
 How is heterozygosity handled by ``odgi``? How polyploidy?
-======================================================
+==========================================================
 
 The GFA format doesn’t store the metadata information. To overcome this limit, we store biosample information in the
 sequence names that become the path names in the graph, by following the `PanSN-spec convention <https://github.com/pangenome/PanSN-spec>`_.
@@ -70,5 +70,18 @@ names ‘ctg1234’ on the first haplotype (or phase group) of the HG002 individ
 on the other haplotype of the same individual. This can be naturally extended and applied for polyploid species as well.
 To give a concrete example: If one only wants to work with a graph containing the associated haplotypes,
 :ref:`odgi extract` can be restricted to the desired haplotypes with the `-p[FILE],--paths-to-extract=[FILE]` parameter.
+
+How does :ref:`odgi position`'s GFF liftover work?
+==================================================
+
+The GFF file contains annotations for one or more paths in the graph. For each annotation, we know the start and end
+within that path. So we can annotate all nodes that are visited by such a path range with the information from the
+`attribute` field. If there are overlapping features, we append the annotation for each node. Using the same coloring
+schema as in :ref:`odgi viz` we generate a color for each annotated node by its collected annotation.
+
+If a subgraph was as a result from e.g. :ref:`odgi extract`, the path names are usually in the form of
+``name:start-end``. :ref:`odgi position` is able to automatically detect this and adjust the positions given in the GFF
+on the fly to the new positions given in the subgraph. For each GFF entry, it just subtracts the “missing” number of
+nucleotides from the `start` and end `field`. That’s how we adjust for the subgraph annotation.
 
 
