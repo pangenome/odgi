@@ -1,3 +1,5 @@
+.. _remove_artifacts_and_complex_regions:
+
 ####################################
 Remove artifacts and complex regions
 ####################################
