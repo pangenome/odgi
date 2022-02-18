@@ -27,6 +27,7 @@ class counter:
     total = 0
     def add(self, l):
         self.total += l
+
 s = counter()
 g.for_each_handle(lambda h: s.add(g.get_length(h)))
 print("graph length:", s.total)
@@ -45,7 +46,7 @@ def display_node_edges(h):
         h, True,
         lambda n:
         show_edge(n, h))
-    
+
 # displays all the edges twice, once for each of their ends
 g.for_each_handle(display_node_edges)
 
@@ -83,4 +84,3 @@ def show_steps(handle):
     print("node:", g.get_id(handle), "steps:", " ".join([step_str(s) for s in steps]))
 
 g.for_each_handle(show_steps)
-
