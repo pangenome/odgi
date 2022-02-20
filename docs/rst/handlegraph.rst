@@ -203,15 +203,9 @@ Transforming the graph into odgi’s succinct self index:
 
 We can now load this into python, using the odgi python module:
 
-First, we need to make sure our ``PYTHONPATH`` environment variable
-points to the directory where our python module file lives. Assuming we
-built ``odgi`` in our home directory, we could do this:
+To set up the `odgi` python module, see :ref:`bindings/usage`.
 
-.. code:: bash
-
-   PYTHONPATH=~/odgi/lib python3
-
-Now we can load the graph and check how big it is:
+Load the graph and check how big it is:
 
 .. code:: python
 
@@ -231,16 +225,16 @@ We can examine an individual node:
    h = g.get_handle(9)
    g.get_id(h) # returns 9
    g.get_is_reverse(h)  # False, by default, we get the forward handle
-   r = g.get_handle(9, True)  # get the reverse handle
+   r = g.get_handle(9, True)  # get the reverse complement handle
    g.get_is_reverse(r)  # True, this handle is reverse
    print(g.get_sequence(h))  # AAATTTTCTGGAGTTCTAT --- same as the node in the graph
    print(g.get_sequence(r))  # ATAGAACTCCAGAAAATTT --- the reverse complement
 
-And we can check which paths overlap nodes:
+And we can check which nodes are members of paths by iterating for paths linked to the handle and showing the path names:
 
 .. code:: python
 
-   h = g.get_handle(11)
+   h = g.get_handle(11)      # Get handle and step through path_handle_t
    g.for_each_step_on_handle(h,
        lambda s: print(g.get_path_name(g.get_path_handle_of_step(s))))
    # x
@@ -255,24 +249,22 @@ Iterating over graph elements
 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 Matching the C++ API, most of the methods of iterating over elements in
-the graph use callback functions (note our use of lambda’s above). In
+the graph use callback functions (note our use of lambda above). In
 the current version of the python API, this causes some difficulty, as
 python lacks true functional
 `closures <https://en.wikipedia.org/wiki/Closure_(computer_programming)>`__
 and prevents assignments within callbacks. Future versions of this API
-we provide generator functions thot support memory-efficient and
+may provide generator functions thot support memory-efficient
 pythonic iteration over graph elements.
 
-For instance, to iterate over our nodes, we can call
-``for_each_handle``, which will invoke a callback for each forward
-handle in our graph.
+For example, to iterate over nodes, we can call ``for_each_handle``, which will invoke a callback for each (forward) handle in our graph.
 
 .. code:: python
 
    g.for_each_handle(lambda h: print(g.get_id(h), g.get_sequence(h)))
-   # writes out each node id and its sequence
+   # write out each node id and its sequence
 
-We can enumerate the paths and get their names:
+Enumerate paths and get their names:
 
 .. code:: python
 
@@ -281,12 +273,11 @@ We can enumerate the paths and get their names:
    # y
    # z
 
-And we can iterate over the steps in a given path, finding which node
-and orientation each step has:
+Iterate over the steps in a given path, finding which node and orientation each step has:
 
 .. code:: python
 
-   # a function to call for each step in the path
+   # For each step in the path return id and orientation
    def process_step(s):
        h = g.get_handle_of_step(s) # gets the handle (both node and orientation) of the step
        is_rev = g.get_is_reverse(h)
@@ -299,7 +290,7 @@ and orientation each step has:
    print(g.get_path_name(p), ",".join(q))
    # z 1+,3+,5+,6+,7+,9+,10+,12+,13+,15+
 
-Modifying the graph
+Modify the graph
 -------------------
 
 It’s possible to add and delete nodes from the graph using the python
@@ -311,13 +302,13 @@ API:
    h = g.create_handle("GATTACA")
    g.get_node_count() # 16
 
-We can also add edges:
+Add edges:
 
 .. code:: python
 
    g.create_edge(g.get_handle(15), h) # connects node 15 to 16
 
-And add path steps:
+Add to path:
 
 .. code:: python
 
@@ -332,7 +323,7 @@ would yield:
 
    z 1+,3+,5+,6+,7+,9+,10+,12+,13+,15+,16+
 
-We can divide a node without breaking the paths that overlap it:
+Divide a node without breaking the paths that overlap it:
 
 .. code:: python
 
@@ -352,17 +343,5 @@ walk through new nodes 17, 18, and 19 in place of node 9.
 Summary
 -------
 
-In this document, we’ve covered the basic concepts in the HandleGraph
-abstraction and used the odgi python library to explore some of them
-interactively. Although this interface is a work in progress, it should
-already provide enough material for researchers in genomics who want to
-work with genome graph data structures. HandleGraph implementations like
-odgi demonstrate that we can work with genome graphs even when they are
-large, with dense variation. These models lift limitations on graph
-structure that have been a persistent feature of other genome graph
-implementations. We believe that these limitations were motivated mostly
-by difficulty in managing the memory requirements of genome graphs.
-Given that this issue is difficult to resolve, we hope to provide a
-generic solution to it. This should provide a generic foundation for the
-use of genome graphs in bioinformatics, genomics, and population
-genetics.
+In this document, we’ve covered the basic concepts in the HandleGraph abstraction and used the odgi python library to explore them interactively.
+The HandleGraph interface allows for easy access to genome graph data structures, even when they are large and complex.

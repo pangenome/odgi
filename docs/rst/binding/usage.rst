@@ -2,7 +2,7 @@
 Usage
 ######
 
-Install ``odgi`` (see :ref:`installation`).
+Install the ``odgi`` software that comes with the python module (see :ref:`installation`).
 
 ==========
 PYTHONPATH
@@ -29,4 +29,4 @@ For improved performance ``odgi`` makes effective use of ``jemalloc`` for in mem
 
     export LD_PRELOAD=/lib/x86_64-linux-gnu/libjemalloc.so.2
 
-that tells the dynamic linker to bind symbols provided by the ``jemalloc`` shared library before other libraries.
+that tells the dynamic linker to bind symbols provided by the ``jemalloc`` shared library before loading the other libraries.

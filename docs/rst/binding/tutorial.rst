@@ -1,8 +1,10 @@
 .. _python bindings tutorial:
 
 #########
-Tutorial
+ODGI Python Tutorial
 #########
+
+In this tutorial we use the python bindings to explore some basic concepts. We do note that the python bindings may be slow for larger graphs.
 
 ****************
 Creating Graphs
@@ -20,7 +22,7 @@ ODGI Objects
 
 Paths in the graph and accessed through :class:`odgi.path_handle`, which is a series of :class:`odgi.step_handle` linked together.  Each :class:`odgi.step_handle` points to the node in that step, and also contains directional information regarding the nodes preceeding and following it.
 
-Handles are pointers to specific pieces of the graph, and it is not possible to operate on them directly, aside from comparing whether the objects are equal.  To get information regarding the object that each handle is pointing to, it is necessary to use the corresponding `get` accessor method in :class:`odgi.graph`.
+Handles are pointers to specific pieces of the graph, and it is not possible to operate on them directly, aside from comparing whether the objects are equal.  To get information regarding the object that each handle is pointing to, use the `get` accessor method in :class:`odgi.graph`.
 
 Reference materials for these methods can be found at the :ref:`api`, as well as the :ref:`glossary`, which contains lists sorted by object type for :ref:`accessor`, :ref:`mutator`, and :ref:`iterator`.
 
@@ -63,7 +65,7 @@ If we wanted to traverse these edges, we could do it using the iterator method :
                 lis = []
                 gr.follow_edges(handle, False, lambda y: lis.append(y))
                 return lis
-        
+
         print(f'n0: {gr.get_sequence(n[0])}')
         next_node = next_node_list(n[0])[0]
         print(f'n1: {gr.get_sequence(next_node)}')
@@ -73,7 +75,7 @@ If we wanted to traverse these edges, we could do it using the iterator method :
 Which will output the following:
 
 .. code-block::
-        
+
         n0: CGA
         n1: TTGG
         n2: CCGT
@@ -110,7 +112,7 @@ To create the hilighted path, we would need to create a :class:`odgi.path_handle
         :func:`odgi.graph.append_step` will not stop you from appending nodes that are not connected to the preceeding node.
 
 .. code-block:: python
-        
+
         # the following code runs without error
         badpath = gr.create_path_handle("badpath")
         gr.append_step(badpath, n[0])
@@ -136,8 +138,8 @@ To traverse a path, we need to fetch a series of :class:`odgi.step_handle` from 
 
 Which will output the following:
 
-.. code-block:: 
-        
+.. code-block::
+
         CGA
         TTGG
         CCGT
@@ -152,11 +154,11 @@ Which will output the following:
         Manipulating a path
         ===================
         .. DANGER::
-                Right now none of this works, because insert_step seems to cause a memory leak. 
-        
+                Right now none of this works, because insert_step seems to cause a memory leak.
+
         Say you wanted to edit this path to add the following edges in blue:
         .. image:: /img/exampleGraphPath2.png
-        
+
         First, you need to get the step handles corresponding to `n6` and `n7`, and then insert the new nodes to the path with :func:`odgi.graph.insert_step`. *Note that if you had saved the step handles during path creation, it would not be necessary to traverse the path at this step. Decide which objects to save in memory depending on your application*
         .. code-block:: python
                 step = gr.path_begin(path)
@@ -167,30 +169,30 @@ Which will output the following:
                 step = gr.insert_step(step, next_step, n[8]) #1
                 step = gr.insert_step(step, next_step, n[5]) #2
                 step = gr.insert_step(step, next_step, n[6]) #3
-        Each call to :func:`odgi.graph.insert_step` returns the step handle pointing to the inserted node.  
+        Each call to :func:`odgi.graph.insert_step` returns the step handle pointing to the inserted node.
         During the process of amending the path, the graph looks as follows:
         .. figure:: /img/exampleGraphPath.png
                 :align: center
-                
+
                 Path before additions
         .. figure:: /img/exampleGraphPath3.png
                 :align: center
-                
+
                 Path after line #1
         .. figure:: /img/exampleGraphPath4.png
                 :align: center
-                
+
                 Path after line #2
         .. figure:: /img/exampleGraphPath2.png
                 :align: center
-        
+
                 Path after line #3
 
 *******************************
 Saving and Loading ODGI Graphs
 *******************************
 
-Graphs can be saved and loaded through the :func:`odgi.graph.serialize` and :func:`odgi.graph.load` methods.  
+Graphs can be saved and loaded through the :func:`odgi.graph.serialize` and :func:`odgi.graph.load` methods.
 
 Graph File Example
 ==================
@@ -204,7 +206,7 @@ If you wish to save the graph from the above session, that can be done with:
 This can be loaded into a new python session by using:
 
 .. code-block:: python
-        
+
         gr = odgi.graph()
         gr.load("example_graph.odgi")
 
@@ -214,7 +216,7 @@ Loading in Pre-Existing Data
 Provided that data has been serialized in ODGI format, it is possible to read it directly from a file.  Download a `*.odgi file` and load it into python with:
 
 .. code-block:: python
-        
+
         brca2 = odgi.graph()
         brca2.load("cactus-brca2.odgi")
 
@@ -222,10 +224,10 @@ We can poke around this data and get the sequence of the path with:
 
 .. code-block:: python
 
-        path_handle = [] 
+        path_handle = []
         handles = []
         brca2.for_each_path_handle(lambda y: path_handle.append(y))
-        brca2.for_each_step_in_path(path_handle[0], 
+        brca2.for_each_step_in_path(path_handle[0],
                 lambda y: handles.append(brca2.get_handle_of_step(y)))
         sequence = ""
         for handle in handles:

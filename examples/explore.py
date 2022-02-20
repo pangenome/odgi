@@ -1,7 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-# this shows some examples of how to use the python bindings to odgi
+# This file shows some code examples of how to use the python bindings to odgi.
+# See the odgi documentation for more information on the python bindings.
 
 import sys
 if len(sys.argv) is 1:
