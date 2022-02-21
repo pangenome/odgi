@@ -7,8 +7,8 @@
 import sys
 if len(sys.argv) is 1:
     print("usage: PYTHONPATH=../lib", sys.argv[0], "graph.og")
-    print("displays information about the graph, and iterates over it")
-    print("to build the input graph, use `odgi build -g graph.gfa -o graph.og`")
+    print("displays information about the graph and iterates over it")
+    print("to build an example input graph, use `odgi build -g graph.gfa -o graph.og`")
     exit(1)
 
 import odgi
