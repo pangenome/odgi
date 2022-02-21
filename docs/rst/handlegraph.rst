@@ -1,12 +1,9 @@
 Working with the HandleGraph abstraction
 ========================================
 
-*Variation graphs* combine sequences (usually DNA) with information
-about variation between them. They can be used to represent the mutual
-alignment of multiple genomes, or more simply, a single reference and
-variation found in a population. In these graphs, nodes are labeled with
-sequences. Edges represent allowed linkages between nodes. Paths, or
-walks traversing a series of nodes, represent sequences of interest.
+*Variation graphs* combine DNA/RNA sequences with information about variation between them. They are used to represent the mutual alignment of multiple genomes.
+In these graphs, nodes have sequences and edges link nodes.
+Paths traverse a series of nodes and represent (full) sequences of interest.
 
 Basic HandleGraph types
 -----------------------
