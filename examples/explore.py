@@ -20,8 +20,8 @@ g.load(sys.argv[1])
 print("node count:", g.get_node_count())
 print("path count:", g.get_path_count())
 
-# iterate over the nodes and sum the sequence length
-# we have to use a counter object to count
+# iterate over all nodes and sum the sequence length
+# we have to use a generic counter object to count
 # because in python you can't assign inside lambdas 🤦
 # and there are no true closures over local variables 😭
 class counter:
@@ -65,7 +65,6 @@ print("bp/edge", float(s.total) / float(e.total))
 path_names = []
 g.for_each_path_handle(lambda p: path_names.append(g.get_path_name(p)))
 print(path_names)
-
 
 # getting the path handle from a path name
 print([g.get_path_handle(name) for name in path_names])
