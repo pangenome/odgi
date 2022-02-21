@@ -4,7 +4,7 @@
 odgi depth
 #########
 
-Find the depth of a graph as defined by query criteria. Without specifying any non-mandatory options, it prints in a tab-delimited format path, start, end, and mean.depth to stdout.
+Find the depth of a graph as defined by query criteria. Depth can be node-depth computed by counting all defined paths that run through a node. By default it prints in a tab-delimited format path, start, end, and mean.depth to stdout.
 
 SYNOPSIS
 ========
@@ -31,9 +31,9 @@ Depth Options
 -------------
 
 | **-s, --subset-paths**\ =\ *FILE*
-| Compute the depth considering only the paths specified in the *FILE*.
+| Compute the depth considering only paths specified in *FILE*.
   The file must contain one path name per line and a subset of all paths
-  can be specified. If a step is of a path of the given list, it is taken into account when calculating a node's depth. Else not.
+  can be specified. If a step is of a path of the given list, it is taken into account when calculating a node's depth.
 
 | **-r, --path**\ =\ *STRING*
 | Compute the depth of the given path *STRING* in the graph.
@@ -42,7 +42,7 @@ Depth Options
 | Report the depth only for the paths listed in *FILE*.
 
 | **-g, --graph-pos**\ =\ *[[node_id][,offset[,(+|-)]\ *\ **]**\ *]*
-| Compute the depth at the given node, e.g. 7 or 3,4 or 42,10,+ or
+| Compute the depth at the given node e.g. 7 or 3,4 or 42,10,+ or
   302,0,-.
 
 | **-G, --graph-pos-file**\ =\ *FILE*
@@ -107,16 +107,16 @@ Program Information
 ..
 	EXIT STATUS
 	===========
-	
+
 	| **0**
 	| Success.
-	
+
 	| **1**
 	| Failure (syntax or usage error; parameter error; file processing
 	  failure; unexpected error).
-	
+
 	BUGS
 	====
-	
+
 	Refer to the **odgi** issue tracker at
 	https://github.com/pangenome/odgi/issues.

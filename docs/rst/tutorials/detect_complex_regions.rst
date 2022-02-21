@@ -6,7 +6,7 @@ Detect complex regions
 Synopsis
 ========
 
-Human chromosomes have large regions of highly identical repeats. They can be found in as clusters centromeres,
+Human chromosomes have large regions of highly identical repeats. They can be found in clusters, centromeres,
 regions of segmental duplication, or in the acrocentric short arms of chromosomes.
 `Logsdon et al., 2021 <https://doi.org/10.1038/s41586-021-03420-7>`_ showed that chromosome 8 carries a modestly sized
 centromere of approximately 1.5–2.2 Mb, in which AT-rich, 171-base-pair (bp) α-satellite
@@ -38,8 +38,8 @@ the contigs of 88 haploid, phased human genome assemblies from 44 individuals, p
 Obtain the depth over the pangenome
 -----------------------------------
 
-To identify the repetitive sequences, we can analyze the **depth** in the graph. Here we define as **node depth** the
-number of times in which the node is crossed by all the paths present in the graph.
+To identify repetitive sequences, we analyze the **depth** in the graph. Here we define **node depth** as the
+number of times in which a node is crossed by all paths in the graph.
 
 To obtain the depth over the pangenome graph, execute:
 
