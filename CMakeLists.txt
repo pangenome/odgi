@@ -644,15 +644,18 @@ add_executable(odgi
 target_link_libraries(odgi ${odgi_LIBS})
 set_target_properties(odgi PROPERTIES OUTPUT_NAME "odgi")
 
+
 if (NOT pybind11_FOUND)
   add_subdirectory(deps/pybind11)
-  pybind11_add_module(odgi_pybind11 "${CMAKE_SOURCE_DIR}/src/pythonmodule.cpp")
-  add_dependencies(odgi_pybind11 ${odgi_DEPS} libodgi_static)
-  target_include_directories(odgi_pybind11 PUBLIC ${odgi_INCLUDES})
-  target_link_libraries(odgi_pybind11 PRIVATE "${CMAKE_SOURCE_DIR}/lib/libodgi.a" "${odgi_LIBS}")
-  set_target_properties(odgi_pybind11 PROPERTIES OUTPUT_NAME "odgi")
-  install(TARGETS odgi_pybind11 LIBRARY DESTINATION lib)
 endif (NOT pybind11_FOUND)
+
+# Build Python module
+pybind11_add_module(odgi_pybind11 "${CMAKE_SOURCE_DIR}/src/pythonmodule.cpp")
+add_dependencies(odgi_pybind11 ${odgi_DEPS} libodgi_static)
+target_include_directories(odgi_pybind11 PUBLIC ${odgi_INCLUDES})
+target_link_libraries(odgi_pybind11 PRIVATE "${CMAKE_SOURCE_DIR}/lib/libodgi.a" "${odgi_LIBS}")
+set_target_properties(odgi_pybind11 PROPERTIES OUTPUT_NAME "odgi")
+install(TARGETS odgi_pybind11 LIBRARY DESTINATION lib)
 
 file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/include)
 execute_process(COMMAND bash ${CMAKE_SOURCE_DIR}/scripts/generate_git_version.sh ${CMAKE_SOURCE_DIR}/include)
