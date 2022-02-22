@@ -84,10 +84,20 @@ The alternative way of building odgi is with guix.scm:
 guix build -f guix.scm
 ```
 
-And to get a development shell
+And get a development shell with gdb:
 
 ```sh
 guix shell -C -D -f guix.scm
+cd build
+cmake -DCMAKE_BUILD_TYPE=Debug .. --verbose
+cmake --build . --
+```
+
+If you get any build issues try removing the CMakeCache files first
+
+```sh
+cd odgi
+find -name CMakeCache.txt|xargs rm -v
 ```
 
 For more see [guix.scm](./guix.scm).

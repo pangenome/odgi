@@ -9,6 +9,15 @@
 ;; For the tests you may need /usr/bin/env. In a container create it with
 ;;
 ;;   mkdir -p /usr/bin ; ln -s $GUIX_ENVIRONMENT/bin/env /usr/bin/env
+;;
+;; Note for python bindings you may need to run against gcc-11 with something
+;; like
+;;
+;;   env LD_LIBRARY_PATH=/gnu/store/*gcc-11*lib/lib PYTHONPATH=lib python3 examples/explore.py
+;;
+;; otherwise you get ImportError:
+;; /gnu/store/90lbavffg0csrf208nw0ayj1bz5knl47-gcc-10.3.0-lib/lib/libstdc++.so.6:
+;; version `GLIBCXX_3.4.29' not found because it tries to pick up from gcc-10.
 
 (use-modules
   ((guix licenses) #:prefix license:)
@@ -54,7 +63,7 @@
     (inputs
      `(
        ("coreutils" ,coreutils)
-       ("pybind11" ,pybind11)
+       ;; ("pybind11" ,pybind11) - prebuilt fails on gcc version 11
        ("jemalloc" ,jemalloc)
        ("gcc" ,gcc-11)
        ("gcc-toolchain" ,gcc-toolchain)
