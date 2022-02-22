@@ -84,6 +84,14 @@ The alternative way of building odgi is with guix.scm:
 guix build -f guix.scm
 ```
 
+And to get a development shell
+
+```sh
+guix shell -C -D -f guix.scm
+```
+
+For more see [guix.scm](./guix.scm).
+
 ### Bioconda
 
 `odgi` recipes for Bioconda are available at https://bioconda.github.io/recipes/odgi/README.html. To install the latest version using `Conda` please execute:

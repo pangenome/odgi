@@ -4,7 +4,7 @@
 ;;
 ;; To get a development container (emacs shell will work)
 ;;
-;;   guix shell -C -f guix.scm
+;;   guix shell -C -D -f guix.scm
 ;;
 ;; For the tests you may need /usr/bin/env. In a container create it with
 ;;
@@ -17,20 +17,22 @@
   (guix git-download)
   (guix build-system cmake)
   (guix utils)
-  (gnu packages algebra)
+  ;; (gnu packages algebra)
   (gnu packages base)
   (gnu packages compression)
   (gnu packages bioinformatics)
   (gnu packages build-tools)
+  (gnu packages commencement) ; gcc-toolchain
   (gnu packages curl)
+  (gnu packages gdb)
   (gnu packages gcc)
   (gnu packages jemalloc)
-  (gnu packages llvm)
+  ;; (gnu packages llvm)
   (gnu packages python)
   (gnu packages python-xyz)
-  (gnu packages parallel)
-  (gnu packages perl)
-  (gnu packages perl6)
+  ;; (gnu packages parallel)
+  ;; (gnu packages perl)
+  ;; (gnu packages perl6)
   (gnu packages pkg-config)
   (gnu packages tls)
   (gnu packages version-control)
@@ -51,10 +53,12 @@
     (build-system cmake-build-system)
     (inputs
      `(
-       ; ("pybind11" ,pybind11)
+       ("coreutils" ,coreutils)
+       ("pybind11" ,pybind11)
        ("jemalloc" ,jemalloc)
-                                        ; ("openssl" ,openssl)
        ("gcc" ,gcc-11)
+       ("gcc-toolchain" ,gcc-toolchain)
+       ("gdb" ,gdb)
        ("git" ,git)
        ("python" ,python)))
     (native-inputs
@@ -67,7 +71,7 @@
          ;; This stashes our build version in the executable
          (add-after 'unpack 'set-version
            (lambda _
-             (mkdir "include")
+             (mkdir-p "include")
              (with-output-to-file "include/odgi_git_version.hpp"
                (lambda ()
                  (format #t "#define ODGI_GIT_VERSION \"~a\"~%" version)))

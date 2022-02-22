@@ -5,7 +5,7 @@
 # See the odgi documentation for more information on the python bindings.
 
 import sys
-if len(sys.argv) is 1:
+if len(sys.argv) == 1:
     print("usage: PYTHONPATH=../lib", sys.argv[0], "graph.og")
     print("displays information about the graph and iterates over it")
     print("to build an example input graph, use `odgi build -g graph.gfa -o graph.og`")
