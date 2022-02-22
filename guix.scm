@@ -28,6 +28,11 @@
 ;; otherwise you get ImportError:
 ;; /gnu/store/90lbavffg0csrf208nw0ayj1bz5knl47-gcc-10.3.0-lib/lib/libstdc++.so.6:
 ;; version `GLIBCXX_3.4.29' not found because it tries to pick up from gcc-10.
+;;
+;; In debug mode with AddressSanitizer you may need to preload libasan.so:
+;;   env LD_PRELOAD=/gnu/store/8ya5i2ll3by937rlm7nv7d78730n837d-gcc-11.2.0-lib/lib/libasan.so etc.
+;;
+;; Python may show memory leaks, see https://bugs.python.org/issue43303
 
 (use-modules
   ((guix licenses) #:prefix license:)
