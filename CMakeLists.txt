@@ -17,11 +17,25 @@ feature_summary(
   FATAL_ON_MISSING_REQUIRED_PACKAGES
   WHAT REQUIRED_PACKAGES_NOT_FOUND)
 
-# Use all standard-compliant optimizations
-set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -O3 -g")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -O3 -g")
-#set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O -g -fsanitize=address")
-#set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O -g -fsanitize=address")
+if (NOT CMAKE_BUILD_TYPE) # default build to Release
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
+if (${CMAKE_BUILD_TYPE} MATCHES "Release")
+  # Use all standard-compliant optimizations
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -O3 -g")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -O3 -g")
+endif ()
+
+# set(CMAKE_BUILD_TYPE Debug) -- don't uncomment this, instead run
+#   cmake -DCMAKE_BUILD_TYPE=Debug ..
+
+if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O -g -fsanitize=address")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O -g -fsanitize=address")
+endif ()
+
+message(STATUS "ODGI CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   # assumes clang build
@@ -328,9 +342,6 @@ ExternalProject_Add(mio
         CONFIGURE_COMMAND "")
 ExternalProject_Get_property(mio SOURCE_DIR)
 set(mio_INCLUDE "${SOURCE_DIR}/include")
-
-set(CMAKE_BUILD_TYPE Release)
-# set(CMAKE_BUILD_TYPE Debug)
 
 # set up our target executable and specify its dependencies and includes
 add_library(odgi_objs OBJECT

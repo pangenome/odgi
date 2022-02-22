@@ -89,8 +89,8 @@ And get a development shell with gdb:
 ```sh
 guix shell -C -D -f guix.scm
 cd build
-cmake -DCMAKE_BUILD_TYPE=Debug .. --verbose
-cmake --build . --
+cmake -DCMAKE_BUILD_TYPE=Debug ..
+cmake --build . --verbose
 ```
 
 If you get any build issues try removing the CMakeCache files first
