@@ -6,6 +6,16 @@
 ;;
 ;;   guix shell -C -D -f guix.scm
 ;;
+;; and build
+;;
+;;   find -name CMakeCache.txt|xargs rm -v
+;;   cd build
+;;   cmake -DCMAKE_BUILD_TYPE=Debug ..
+;;   cmake --build . --verbose
+```
+
+
+;;
 ;; For the tests you may need /usr/bin/env. In a container create it with
 ;;
 ;;   mkdir -p /usr/bin ; ln -s $GUIX_ENVIRONMENT/bin/env /usr/bin/env
@@ -63,7 +73,7 @@
     (inputs
      `(
        ("coreutils" ,coreutils)
-       ;; ("pybind11" ,pybind11) - prebuilt fails on gcc version 11
+       ("pybind11" ,pybind11) ;; see libstd++ note in remarks above
        ("jemalloc" ,jemalloc)
        ("gcc" ,gcc-11)
        ("gcc-toolchain" ,gcc-toolchain)
