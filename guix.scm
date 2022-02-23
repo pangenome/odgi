@@ -26,6 +26,7 @@
 ;;   env LD_LIBRARY_PATH=/gnu/store/*gcc-11*lib/lib PYTHONPATH=lib python3 examples/explore.py
 ;;
 ;; otherwise you get ImportError:
+;;
 ;; /gnu/store/90lbavffg0csrf208nw0ayj1bz5knl47-gcc-10.3.0-lib/lib/libstdc++.so.6:
 ;; version `GLIBCXX_3.4.29' not found because it tries to pick up from gcc-10.
 ;;
@@ -78,13 +79,18 @@
     (inputs
      `(
        ("coreutils" ,coreutils)
+       ; ("cpp-httplib" ,cpp-httplib) later!
        ("pybind11" ,pybind11) ;; see libstd++ note in remarks above
+       ; ("intervaltree" ,intervaltree) later!
        ("jemalloc" ,jemalloc)
        ("gcc" ,gcc-11)
        ("gcc-toolchain" ,gcc-toolchain)
        ("gdb" ,gdb)
        ("git" ,git)
-       ("python" ,python)))
+       ; ("lodepng" ,lodepng) later!
+       ("python" ,python)
+       ; ("sdsl-lite" ,sdsl-lite) later!
+       ))
     (native-inputs
      `(("pkg-config" ,pkg-config)
        ))
