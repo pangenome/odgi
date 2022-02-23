@@ -91,9 +91,10 @@ guix shell -C -D -f guix.scm
 cd build
 cmake -DCMAKE_BUILD_TYPE=Debug ..
 cmake --build . --verbose
+make
 ```
 
-If you get any build issues try removing the CMakeCache files first
+If you get any build issues try removing the CMakeCache files before running cmake
 
 ```sh
 cd odgi
