@@ -10,7 +10,7 @@
 #include <cstring>
 #include <cassert>
 #include <atomic>
-#include "bmap.hpp"
+// #include "bmap.hpp"
 #include "dynamic.hpp"
 #include "varint.hpp"
 #include "dna.hpp"

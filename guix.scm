@@ -4,11 +4,36 @@
 ;;
 ;; To get a development container (emacs shell will work)
 ;;
-;;   guix shell -C -f guix.scm
+;;   guix shell -C -D -f guix.scm
+;;
+;; and build
+;;
+;;   find -name CMakeCache.txt|xargs rm -v
+;;   cd build
+;;   cmake -DCMAKE_BUILD_TYPE=Debug ..
+;;   cmake --build . --verbose
+```
+
+
 ;;
 ;; For the tests you may need /usr/bin/env. In a container create it with
 ;;
 ;;   mkdir -p /usr/bin ; ln -s $GUIX_ENVIRONMENT/bin/env /usr/bin/env
+;;
+;; Note for python bindings you may need to run against gcc-11 with something
+;; like
+;;
+;;   env LD_LIBRARY_PATH=/gnu/store/*gcc-11*lib/lib PYTHONPATH=lib python3 examples/explore.py
+;;
+;; otherwise you get ImportError:
+;;
+;; /gnu/store/90lbavffg0csrf208nw0ayj1bz5knl47-gcc-10.3.0-lib/lib/libstdc++.so.6:
+;; version `GLIBCXX_3.4.29' not found because it tries to pick up from gcc-10.
+;;
+;; In debug mode with AddressSanitizer you may need to preload libasan.so:
+;;   env LD_PRELOAD=/gnu/store/8ya5i2ll3by937rlm7nv7d78730n837d-gcc-11.2.0-lib/lib/libasan.so etc.
+;;
+;; Python may show memory leaks, see https://bugs.python.org/issue43303
 
 (use-modules
   ((guix licenses) #:prefix license:)
@@ -17,20 +42,22 @@
   (guix git-download)
   (guix build-system cmake)
   (guix utils)
-  (gnu packages algebra)
+  ;; (gnu packages algebra)
   (gnu packages base)
   (gnu packages compression)
   (gnu packages bioinformatics)
   (gnu packages build-tools)
+  (gnu packages commencement) ; gcc-toolchain
   (gnu packages curl)
+  (gnu packages gdb)
   (gnu packages gcc)
   (gnu packages jemalloc)
-  (gnu packages llvm)
+  ;; (gnu packages llvm)
   (gnu packages python)
   (gnu packages python-xyz)
-  (gnu packages parallel)
-  (gnu packages perl)
-  (gnu packages perl6)
+  ;; (gnu packages parallel)
+  ;; (gnu packages perl)
+  ;; (gnu packages perl6)
   (gnu packages pkg-config)
   (gnu packages tls)
   (gnu packages version-control)
@@ -51,12 +78,19 @@
     (build-system cmake-build-system)
     (inputs
      `(
-       ; ("pybind11" ,pybind11)
+       ("coreutils" ,coreutils)
+       ; ("cpp-httplib" ,cpp-httplib) later!
+       ("pybind11" ,pybind11) ;; see libstd++ note in remarks above
+       ; ("intervaltree" ,intervaltree) later!
        ("jemalloc" ,jemalloc)
-                                        ; ("openssl" ,openssl)
        ("gcc" ,gcc-11)
+       ("gcc-toolchain" ,gcc-toolchain)
+       ("gdb" ,gdb)
        ("git" ,git)
-       ("python" ,python)))
+       ; ("lodepng" ,lodepng) later!
+       ("python" ,python)
+       ; ("sdsl-lite" ,sdsl-lite) later!
+       ))
     (native-inputs
      `(("pkg-config" ,pkg-config)
        ))
@@ -67,7 +101,7 @@
          ;; This stashes our build version in the executable
          (add-after 'unpack 'set-version
            (lambda _
-             (mkdir "include")
+             (mkdir-p "include")
              (with-output-to-file "include/odgi_git_version.hpp"
                (lambda ()
                  (format #t "#define ODGI_GIT_VERSION \"~a\"~%" version)))

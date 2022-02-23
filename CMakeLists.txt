@@ -7,11 +7,36 @@ project(odgi)
 # We build using c++17
 set(CMAKE_CXX_STANDARD 17)
 
-# Use all standard-compliant optimizations
-set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -O3 -g")
-set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -O3 -g")
-#set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O -g -fsanitize=address")
-#set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O -g -fsanitize=address")
+include(ExternalProject)
+include(FeatureSummary)
+
+find_package(PkgConfig REQUIRED)
+find_package(pybind11 CONFIG)
+
+feature_summary(
+  FATAL_ON_MISSING_REQUIRED_PACKAGES
+  WHAT REQUIRED_PACKAGES_NOT_FOUND)
+
+if (NOT CMAKE_BUILD_TYPE) # default build to Release
+  set(CMAKE_BUILD_TYPE Release)
+endif()
+
+if (${CMAKE_BUILD_TYPE} MATCHES "Release")
+  # Use all standard-compliant optimizations
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -O3 -g")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -O3 -g")
+endif ()
+
+# set(CMAKE_BUILD_TYPE Debug) -- don't uncomment this, instead run
+#   cmake -DCMAKE_BUILD_TYPE=Debug ..
+
+if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
+  # Debug use the defaults (by default) - so commenting out:
+  # set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O -fsanitize=address")
+  # set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O -fsanitize=address")
+endif ()
+
+message(STATUS "ODGI CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   # assumes clang build
@@ -55,7 +80,7 @@ include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 # the external projects into their prefixes and working with the installed
 # files. Instead we're building but not installing them and trying to work with
 # the non-installed build trees.
-# 
+#
 # Hence the blanked out INSTALL_COMMANDs to suppress the install step.
 #
 # We need to NOT blank out UPDATE_COMMAND or we can never change the Git revision we point to.
@@ -318,21 +343,6 @@ ExternalProject_Add(mio
         CONFIGURE_COMMAND "")
 ExternalProject_Get_property(mio SOURCE_DIR)
 set(mio_INCLUDE "${SOURCE_DIR}/include")
-
-# pybind11
-#ExternalProject_Add(pybind11
-#    GIT_REPOSITORY https://github.com/pybind/pybind11.git 
-#    GIT_TAG v2.2.4
-#    CONFIGURE_COMMAND ""
-#    BUILD_COMMAND ""
-#    INSTALL_COMMAND "")
-#ExternalProject_Get_Property(pybind11 SOURCE_DIR)
-#set(pybind11_INCLUDE_DIRS ${SOURCE_DIR}/include)
-#set(pybind11_DIR ${SOURCE_DIR})
-#add_subdirectory(${pybind11_DIR})
-
-set(CMAKE_BUILD_TYPE Release)
-#set(CMAKE_BUILD_TYPE Debug)
 
 # set up our target executable and specify its dependencies and includes
 add_library(odgi_objs OBJECT
@@ -635,16 +645,18 @@ add_executable(odgi
 target_link_libraries(odgi ${odgi_LIBS})
 set_target_properties(odgi PROPERTIES OUTPUT_NAME "odgi")
 
-if (NOT EXISTS ${CMAKE_SOURCE_DIR}/deps/pybind11/CMakeLists.txt)
-  execute_process(COMMAND git submodule update --init --recursive)
-endif()
 
-add_subdirectory(deps/pybind11)
+if (NOT pybind11_FOUND)
+  add_subdirectory(deps/pybind11)
+endif (NOT pybind11_FOUND)
+
+# Build Python module
 pybind11_add_module(odgi_pybind11 "${CMAKE_SOURCE_DIR}/src/pythonmodule.cpp")
 add_dependencies(odgi_pybind11 ${odgi_DEPS} libodgi_static)
 target_include_directories(odgi_pybind11 PUBLIC ${odgi_INCLUDES})
 target_link_libraries(odgi_pybind11 PRIVATE "${CMAKE_SOURCE_DIR}/lib/libodgi.a" "${odgi_LIBS}")
 set_target_properties(odgi_pybind11 PROPERTIES OUTPUT_NAME "odgi")
+install(TARGETS odgi_pybind11 LIBRARY DESTINATION lib)
 
 file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/include)
 execute_process(COMMAND bash ${CMAKE_SOURCE_DIR}/scripts/generate_git_version.sh ${CMAKE_SOURCE_DIR}/include)
@@ -652,7 +664,6 @@ execute_process(COMMAND bash ${CMAKE_SOURCE_DIR}/scripts/generate_git_version.sh
 install(TARGETS odgi DESTINATION bin)
 install(TARGETS libodgi_static ARCHIVE DESTINATION lib LIBRARY DESTINATION lib PUBLIC_HEADER DESTINATION include/odgi)
 install(TARGETS libodgi_shared ARCHIVE DESTINATION lib LIBRARY DESTINATION lib PUBLIC_HEADER DESTINATION include/odgi)
-install(TARGETS odgi_pybind11 LIBRARY DESTINATION lib)
 
 if (APPLE)
 elseif (TRUE)
