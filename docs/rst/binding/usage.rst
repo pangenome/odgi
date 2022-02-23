@@ -35,6 +35,8 @@ that tells the dynamic linker to bind symbols provided by the ``jemalloc`` share
 Debug with gdb
 ==============
 
+First compile odgi with debug information. See the README.
+
 To be able to step through odgi code load the python3 interpreter after setting a breakpoint. E.g.
 
 .. code-block:: python

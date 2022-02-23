@@ -31,8 +31,9 @@ endif ()
 #   cmake -DCMAKE_BUILD_TYPE=Debug ..
 
 if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
-  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O -g -fsanitize=address")
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O -g -fsanitize=address")
+  # Debug use the defaults (by default) - so commenting out:
+  # set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O -fsanitize=address")
+  # set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O -fsanitize=address")
 endif ()
 
 message(STATUS "ODGI CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
