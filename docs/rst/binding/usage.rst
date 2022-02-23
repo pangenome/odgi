@@ -30,3 +30,22 @@ For improved performance ``odgi`` makes effective use of ``jemalloc`` for in mem
     export LD_PRELOAD=/lib/x86_64-linux-gnu/libjemalloc.so.2
 
 that tells the dynamic linker to bind symbols provided by the ``jemalloc`` shared library before loading the other libraries.
+
+==============
+Debug with gdb
+==============
+
+To be able to step through odgi code load the python3 interpreter after setting a breakpoint. E.g.
+
+.. code-block:: python
+
+   gdb python3
+   b src/odgi.cpp:143
+   r
+   > Python 3.9.6
+   import odgi
+   g = odgi.graph()
+   g.load("test/DRB1-3123_sorted.og")
+   g.get_node_count()
+
+Reached breakpoint 1, odgi::graph_t::get_node_count (this=0x60f0000008b0) at src/odgi.cpp:143
