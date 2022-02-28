@@ -58,7 +58,6 @@
   (gnu packages python)
   (gnu packages python-xyz)
   (gnu packages pkg-config)
-  (gnu packages ruby)
   (gnu packages tls)
   (gnu packages version-control)
 )
@@ -88,9 +87,6 @@
        ; ("lodepng" ,lodepng) later!
        ("python" ,python)
        ; ("sdsl-lite" ,sdsl-lite) later!
-       ;; require the following when using the Ruby bindings
-       ; ("ruby" ,ruby)
-       ; ("ruby-ffi" ,ruby-ffi)
        ))
     (native-inputs
      `(("pkg-config" ,pkg-config)
