@@ -347,6 +347,7 @@ set(mio_INCLUDE "${SOURCE_DIR}/include")
 # set up our target executable and specify its dependencies and includes
 add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/odgi.cpp
+  ${CMAKE_SOURCE_DIR}/src/odgi-api.cpp
   ${CMAKE_SOURCE_DIR}/src/reclaimer.cpp
   ${CMAKE_SOURCE_DIR}/src/utils.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/subgraph/region.cpp
@@ -539,6 +540,7 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/include/odgi_git_version.hpp
   ${CMAKE_SOURCE_DIR}/src/hash_map.hpp
   ${CMAKE_SOURCE_DIR}/src/odgi.hpp
+  ${CMAKE_SOURCE_DIR}/src/odgi-api.hpp
   ${CMAKE_SOURCE_DIR}/src/node.hpp
   ${CMAKE_SOURCE_DIR}/src/bmap.hpp
   ${CMAKE_SOURCE_DIR}/src/subgraph.hpp
