@@ -76,6 +76,7 @@ source ./.guix-build
 cd build
 cmake ..
 make
+ctest .
 ```
 
 The alternative way of building odgi is with guix.scm:
@@ -174,7 +175,11 @@ work with output from `odgi stats`! For more details take a look at the document
 ## tests
 
 Unittests from `vg` have been ported here and are used to validate the behavior of the algorithm.
-They can be run via `odgi test`.
+They can be run via `odgi test` which is invoked by
+
+```
+ctest .
+```
 
 ## API
 

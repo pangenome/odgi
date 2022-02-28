@@ -19,14 +19,14 @@ using namespace std;
 using namespace handlegraph;
 
 TEST_CASE("Large random handle with high path depth work", "[fuzz]") {
-    
+
     vector<MutablePathDeletableHandleGraph*> implementations;
-    
+
     graph_t dg;
     implementations.push_back(&dg);
 
     for(MutablePathDeletableHandleGraph* implementation : implementations) {
-        
+
         MutablePathDeletableHandleGraph& graph = *implementation;
         std::vector<handle_t> handles;
         std::mt19937 rng(87);

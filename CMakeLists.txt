@@ -671,3 +671,9 @@ elseif (TRUE)
     set(CMAKE_EXE_LINKER_FLAGS "-static")
   endif()
 endif()
+
+# ---- Add tests
+enable_testing()
+add_test(NAME odgi-test COMMAND odgi test)
+# timed on Intel(R) Core(TM) i7-2620M CPU @ 2.70GHz
+# set_tests_properties(odgi-test PROPERTIES TIMEOUT 200)
