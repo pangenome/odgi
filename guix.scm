@@ -12,9 +12,6 @@
 ;;   cd build
 ;;   cmake -DCMAKE_BUILD_TYPE=Debug ..
 ;;   cmake --build . --verbose
-```
-
-
 ;;
 ;; For the tests you may need /usr/bin/env. In a container create it with
 ;;
@@ -35,14 +32,19 @@
 ;;
 ;; Python may show memory leaks, see https://bugs.python.org/issue43303
 
+;  #:use-module (guix utils)
+
+
 (use-modules
+  (ice-9 popen)
+  (ice-9 rdelim)
   ((guix licenses) #:prefix license:)
   (guix gexp)
   (guix packages)
+  (guix download)
   (guix git-download)
   (guix build-system cmake)
   (guix utils)
-  ;; (gnu packages algebra)
   (gnu packages base)
   (gnu packages compression)
   (gnu packages bioinformatics)
@@ -52,23 +54,19 @@
   (gnu packages gdb)
   (gnu packages gcc)
   (gnu packages jemalloc)
-  ;; (gnu packages llvm)
+  (gnu packages libffi)
   (gnu packages python)
   (gnu packages python-xyz)
-  ;; (gnu packages parallel)
-  ;; (gnu packages perl)
-  ;; (gnu packages perl6)
   (gnu packages pkg-config)
+  (gnu packages ruby)
   (gnu packages tls)
   (gnu packages version-control)
-  (srfi srfi-1)
-  (ice-9 popen)
-  (ice-9 rdelim))
+)
 
 (define %source-dir (dirname (current-filename)))
 
 (define %git-commit
-    (read-string (open-pipe "git show HEAD | head -1 | cut -d ' ' -f 2" OPEN_READ)))
+  (read-string (open-pipe "git show HEAD | head -1 | cut -d ' ' -f 2" OPEN_READ)))
 
 (define-public odgi-git
   (package
@@ -90,6 +88,9 @@
        ; ("lodepng" ,lodepng) later!
        ("python" ,python)
        ; ("sdsl-lite" ,sdsl-lite) later!
+       ;; require the following when using the Ruby bindings
+       ; ("ruby" ,ruby)
+       ; ("ruby-ffi" ,ruby-ffi)
        ))
     (native-inputs
      `(("pkg-config" ,pkg-config)
