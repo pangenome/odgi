@@ -59,7 +59,17 @@ On `Arch Linux`, the `jemalloc` dependency can be installed with:
 sudo pacman -S jemalloc     # arch linux
 ```
 
-An alternative way to manage `odgi`'s dependencies is to use `GUIX`. After installing and updating guix, load the current profile with:
+### Bioconda
+
+`odgi` recipes for Bioconda are available at https://bioconda.github.io/recipes/odgi/README.html. To install the latest version using `Conda` please execute:
+
+``` bash
+conda install -c bioconda odgi
+```
+
+### Guix
+
+An alternative way to manage `odgi`'s dependencies is by using the `GNU GUIX` package manager. After installing and updating guix, load the current profile with:
 
 ```sh
 sudo apt install guix
@@ -79,7 +89,7 @@ make
 ctest .
 ```
 
-The alternative way of building odgi is with guix.scm:
+Another way of building odgi is with guix.scm:
 
 ```sh
 guix build -f guix.scm
@@ -104,17 +114,10 @@ find -name CMakeCache.txt|xargs rm -v
 
 For more see [guix.scm](./guix.scm).
 
-### Bioconda
-
-`odgi` recipes for Bioconda are available at https://bioconda.github.io/recipes/odgi/README.html. To install the latest version using `Conda` please execute:
-
-``` bash
-conda install -c bioconda odgi
-```
-### Guix
-
 
 #### installing via the guix-genomics git repository
+
+guix genomics also contains a package definition of odgi.
 
 First, clone the guix-genomics repository:
 
