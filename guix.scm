@@ -20,20 +20,9 @@
 ;; Note for python bindings you may need to run against gcc-11 with something
 ;; like
 ;;
-;;   env LD_LIBRARY_PATH=/gnu/store/*gcc-11*lib/lib PYTHONPATH=lib python3 examples/explore.py
+;;   env PYTHONPATH=lib python3 -c 'import odgi'
+;;   env PYTHONPATH=lib python3 examples/explore.py
 ;;
-;; otherwise you get ImportError:
-;;
-;; /gnu/store/90lbavffg0csrf208nw0ayj1bz5knl47-gcc-10.3.0-lib/lib/libstdc++.so.6:
-;; version `GLIBCXX_3.4.29' not found because it tries to pick up from gcc-10.
-;;
-;; In debug mode with AddressSanitizer you may need to preload libasan.so:
-;;   env LD_PRELOAD=/gnu/store/8ya5i2ll3by937rlm7nv7d78730n837d-gcc-11.2.0-lib/lib/libasan.so etc.
-;;
-;; Python may show memory leaks, see https://bugs.python.org/issue43303
-
-;  #:use-module (guix utils)
-
 
 (use-modules
   (ice-9 popen)
@@ -82,6 +71,7 @@
        ; ("intervaltree" ,intervaltree) later!
        ("jemalloc" ,jemalloc)
        ("gcc" ,gcc-11)
+       ("gcc-lib" ,gcc-11 "lib")
        ("gcc-toolchain" ,gcc-toolchain)
        ("gdb" ,gdb)
        ("git" ,git)
@@ -109,11 +99,11 @@
              #t))
          (delete 'check))
         #:make-flags (list ,(string-append "CC=" (cc-for-target)))))
-     (synopsis "odgi optimized dynamic sequence graph implementation")
+     (synopsis "odgi pangenome optimized dynamic sequence graph implementation")
      (description
-"odgi provides an efficient, succinct dynamic DNA sequence graph model, as well
-as a host of algorithms that allow the use of such graphs in bioinformatic
-analyses.")
+"odgi pangenome graph tooling provides an efficient, succinct dynamic
+DNA sequence graph model, as well as a host of algorithms that allow
+the use of such graphs.")
      (home-page "https://github.com/vgteam/odgi")
      (license license:expat)))
 
