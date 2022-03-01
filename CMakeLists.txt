@@ -540,7 +540,7 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/include/odgi_git_version.hpp
   ${CMAKE_SOURCE_DIR}/src/hash_map.hpp
   ${CMAKE_SOURCE_DIR}/src/odgi.hpp
-  ${CMAKE_SOURCE_DIR}/src/odgi-api.hpp
+  ${CMAKE_SOURCE_DIR}/src/odgi-api.h
   ${CMAKE_SOURCE_DIR}/src/node.hpp
   ${CMAKE_SOURCE_DIR}/src/bmap.hpp
   ${CMAKE_SOURCE_DIR}/src/subgraph.hpp
