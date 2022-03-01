@@ -20,9 +20,10 @@
 ;; Note for python bindings you may need to run against gcc-11 with something
 ;; like
 ;;
-;;   env PYTHONPATH=lib python3 -c 'import odgi'
-;;   env PYTHONPATH=lib python3 examples/explore.py
+;; env LD_LIBRARY_PATH=$GUIX_ENVIRONMENT/lib LD_PRELOAD=libjemalloc.so.2 python3 -c 'import odgi'
 ;;
+;; this is because the underlying libraries were built with gcc-10 and
+;; jemalloc needs to be preloaded.
 
 (use-modules
   (ice-9 popen)
@@ -40,6 +41,7 @@
   (gnu packages build-tools)
   (gnu packages commencement) ; gcc-toolchain
   (gnu packages curl)
+  (gnu packages datastructures)
   (gnu packages gdb)
   (gnu packages gcc)
   (gnu packages jemalloc)
@@ -76,7 +78,8 @@
        ("git" ,git)
        ; ("lodepng" ,lodepng) later!
        ("python" ,python)
-       ; ("sdsl-lite" ,sdsl-lite) later!
+       ("sdsl-lite" ,sdsl-lite)
+       ("libdivsufsort" ,libdivsufsort)
        ))
     (native-inputs
      `(("pkg-config" ,pkg-config)

@@ -17,6 +17,9 @@ feature_summary(
   FATAL_ON_MISSING_REQUIRED_PACKAGES
   WHAT REQUIRED_PACKAGES_NOT_FOUND)
 
+pkg_check_modules(SDSLLITE sdsl-lite)
+pkg_check_modules(LIBDIVSUFSORT libdivsufsort)
+
 if (NOT CMAKE_BUILD_TYPE) # default build to Release
   set(CMAKE_BUILD_TYPE Release)
 endif()
@@ -86,17 +89,19 @@ include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 # We need to NOT blank out UPDATE_COMMAND or we can never change the Git revision we point to.
 # The cost of this is that we have to re-configure on every build if we do update.
 
-# sdsl-lite (full build using its cmake config)
-ExternalProject_Add(sdsl-lite
-  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/sdsl-lite"
-  CMAKE_ARGS "${CMAKE_ARGS};-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>"
-  UPDATE_COMMAND ""
-  INSTALL_COMMAND "")
-ExternalProject_Get_property(sdsl-lite INSTALL_DIR)
-set(sdsl-lite_INCLUDE "${INSTALL_DIR}/src/sdsl-lite-build/include")
-set(sdsl-lite-divsufsort_INCLUDE "${INSTALL_DIR}/src/sdsl-lite-build/external/libdivsufsort/include")
-set(sdsl-lite_LIB "${INSTALL_DIR}/src/sdsl-lite-build/lib")
-set(sdsl-lite-divsufsort_LIB "${INSTALL_DIR}/src/sdsl-lite-build/external/libdivsufsort/lib")
+if (NOT SDSLLITE_FOUND)
+  # sdsl-lite (full build using its cmake config)
+  ExternalProject_Add(sdsl-lite
+    SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/sdsl-lite"
+    CMAKE_ARGS "${CMAKE_ARGS};-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>"
+    UPDATE_COMMAND ""
+    INSTALL_COMMAND "")
+  ExternalProject_Get_property(sdsl-lite INSTALL_DIR)
+  set(SDSLLITE_INCLUDE_DIRS "${INSTALL_DIR}/src/sdsl-lite-build/include")
+  set(LIBDIVSUFSORT_INCLUDE_DIRS "${INSTALL_DIR}/src/sdsl-lite-build/external/libdivsufsort/include")
+  set(SDSLLITE_LINK_LIBRARIES "${INSTALL_DIR}/src/sdsl-lite-build/lib/libsdsl.a")
+  set(LIBDIVSUFSORT_LINK_LIBRARIES "${INSTALL_DIR}/src/sdsl-lite-build/external/libdivsufsort/lib/libdivsufsort.a" "${INSTALL_DIR}/src/sdsl-lite-build/external/libdivsufsort/lib/libdivsufsort64.a")
+endif (NOT SDSLLITE_FOUND)
 
 # DYNAMIC (full build using its cmake config)
 ExternalProject_Add(dynamic
@@ -463,7 +468,6 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/path_jaccard.cpp)
 
 set(odgi_DEPS
-    sdsl-lite
     dynamic
     hopscotch_map
     gfakluge
@@ -478,7 +482,6 @@ set(odgi_DEPS
     structures
     picosha256
     sgd2
-#    mondriaan
     libbf
     httplib
     random_distributions
@@ -488,13 +491,18 @@ set(odgi_DEPS
     xoshiro
     atomicqueue
     mio)
+
+if (NOT SDSLLITE_FOUND)
+    list(APPEND odgi_DEPS sdsl-lite)
+endif (NOT SDSLLITE_FOUND)
+
 add_dependencies(odgi_objs ${odgi_DEPS})
 
 set(odgi_INCLUDES
   "${CMAKE_SOURCE_DIR}/src"
   "${CMAKE_SOURCE_DIR}/src/algorithms"
-  "${sdsl-lite_INCLUDE}"
-  "${sdsl-lite-divsufsort_INCLUDE}"
+  "${SDSLLITE_INCLUDE_DIRS}"
+  "${LIBDIVSUFSORT_INCLUDE_DIRS}"
   "${dynamic_INCLUDE}"
   "${hopscotch_map_INCLUDE}"
   "${gfakluge_INCLUDE}"
@@ -523,9 +531,8 @@ set(odgi_INCLUDES
   "${mio_INCLUDE}")
 
 set(odgi_LIBS
-  "${sdsl-lite_LIB}/libsdsl.a"
-  "${sdsl-lite-divsufsort_LIB}/libdivsufsort.a"
-  "${sdsl-lite-divsufsort_LIB}/libdivsufsort64.a"
+  ${SDSLLITE_LINK_LIBRARIES}
+  ${LIBDIVSUFSORT_LINK_LIBRARIES}
   "${handlegraph_LIB}/libhandlegraph.a"
   "${lodepng_LIB}/liblodepng.a"
 #  "${mondriaan_LIB}/libmondriaan.a"
