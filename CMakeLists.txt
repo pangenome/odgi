@@ -7,6 +7,9 @@ project(odgi)
 # We build using c++17
 set(CMAKE_CXX_STANDARD 17)
 
+# Command line switches
+option(INLINE_HANDLEGRAPH_SOURCES "Compile handlegraph sources inline" OFF)
+
 include(ExternalProject)
 include(FeatureSummary)
 
@@ -26,8 +29,8 @@ endif()
 
 if (${CMAKE_BUILD_TYPE} MATCHES "Release")
   # Use all standard-compliant optimizations
-  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -O3 -g")
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -O3 -g")
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -O3 -g -Wl,--no-undefined")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -O3 -g -Wl,--no-undefined")
 endif ()
 
 # set(CMAKE_BUILD_TYPE Debug) -- don't uncomment this, instead run
@@ -137,13 +140,17 @@ set(gfakluge_tinyFA_INCLUDE "${SOURCE_DIR}/src/tinyFA")
 ExternalProject_Get_property(gfakluge INSTALL_DIR)
 set(gfakluge_LIB "${INSTALL_DIR}/src/gfakluge")
 
-# libhandlegraph (full build using its cmake config)
-ExternalProject_Add(handlegraph
-  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/libhandlegraph"
-  CMAKE_ARGS "${CMAKE_ARGS};-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>")
-ExternalProject_Get_property(handlegraph INSTALL_DIR)
-set(handlegraph_INCLUDE "${INSTALL_DIR}/include")
-set(handlegraph_LIB "${INSTALL_DIR}/lib")
+if (NOT INLINE_HANDLEGRAPH_SOURCES)
+  # libhandlegraph (full build using its cmake config)
+  ExternalProject_Add(handlegraph
+    SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/libhandlegraph"
+    CMAKE_ARGS "${CMAKE_ARGS};-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>")
+  ExternalProject_Get_property(handlegraph INSTALL_DIR)
+  set(handlegraph_INCLUDE "${INSTALL_DIR}/include")
+  set(handlegraph_LIB "${INSTALL_DIR}/lib")
+else (NOT INLINE_HANDLEGRAPH_SOURCES)
+  MESSAGE(STATUS "ODGI inlining handlegraph sources")
+endif (NOT INLINE_HANDLEGRAPH_SOURCES)
 
 # taywee's C++ args library, header only
 ExternalProject_Add(tayweeargs
@@ -471,7 +478,6 @@ set(odgi_DEPS
     dynamic
     hopscotch_map
     gfakluge
-    handlegraph
     tayweeargs
     bbhash
     sparsepp
@@ -495,6 +501,10 @@ set(odgi_DEPS
 if (NOT SDSLLITE_FOUND)
     list(APPEND odgi_DEPS sdsl-lite)
 endif (NOT SDSLLITE_FOUND)
+
+if (NOT INLINE_HANDLEGRAPH_SOURCES)
+    list(APPEND odgi_DEPS handlegraph)
+endif (NOT INLINE_HANDLEGRAPH_SOURCES)
 
 add_dependencies(odgi_objs ${odgi_DEPS})
 
@@ -533,7 +543,6 @@ set(odgi_INCLUDES
 set(odgi_LIBS
   ${SDSLLITE_LINK_LIBRARIES}
   ${LIBDIVSUFSORT_LINK_LIBRARIES}
-  "${handlegraph_LIB}/libhandlegraph.a"
   "${lodepng_LIB}/liblodepng.a"
 #  "${mondriaan_LIB}/libmondriaan.a"
   "${libbf_LIB}/libbf.a"
@@ -542,6 +551,10 @@ set(odgi_LIBS
   jemalloc)
   #"-lefence") # for malloc error checking
   #"-ltcmalloc") # for heap profiling
+
+if (NOT INLINE_HANDLEGRAPH_SOURCES)
+    list(APPEND odgi_LIBS "${handlegraph_LIB}/libhandlegraph.a")
+endif (NOT INLINE_HANDLEGRAPH_SOURCES)
 
 set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/include/odgi_git_version.hpp
@@ -642,6 +655,7 @@ add_library(libodgi_static STATIC $<TARGET_OBJECTS:odgi_objs>)
 set_target_properties(libodgi_static PROPERTIES OUTPUT_NAME "odgi")
 set_target_properties(libodgi_static PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 add_library(libodgi_shared SHARED $<TARGET_OBJECTS:odgi_objs> src/algorithms/fonts/field8.h src/algorithms/fonts/font5x8.h)
+# target_link_options(libodgi_shared PRIVATE "LINKER:${handlegraph_LIB}/libhandlegraph.a")
 set_target_properties(libodgi_shared PROPERTIES OUTPUT_NAME "odgi")
 set_target_properties(libodgi_shared PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 
