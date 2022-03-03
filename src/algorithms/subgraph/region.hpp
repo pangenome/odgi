@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 #include <sstream>
+#include "position.hpp"
 
 namespace odgi {
 
@@ -36,6 +37,9 @@ namespace odgi {
             std::vector<Region> &out_regions,
             std::vector<std::string> *out_names = nullptr);
 
+    void add_bed_range(std::vector<odgi::path_range_t>& path_ranges,
+                       const odgi::graph_t &graph,
+                       const std::string &buffer);
 }
 
 #endif //ODGI_REGION_H
