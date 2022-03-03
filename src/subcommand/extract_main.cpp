@@ -229,8 +229,6 @@ namespace odgi {
 
         std::vector<odgi::path_range_t> path_ranges;
 
-
-
         // handle targets from BED
         if (_path_bed_file && !args::get(_path_bed_file).empty()) {
             std::ifstream bed_in(args::get(_path_bed_file));
