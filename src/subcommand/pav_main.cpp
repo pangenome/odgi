@@ -7,6 +7,7 @@
 #include "utils.hpp"
 #include "split.hpp"
 #include "subgraph/region.hpp"
+#include "IITree.h"
 
 namespace odgi {
 
@@ -29,13 +30,12 @@ int main_pav(int argc, char **argv) {
     args::ValueFlag<std::string> _path_bed_file(pav_opts, "FILE",
                                                 "Find PAVs in the path range(s) specified in the given BED FILE.",
                                                 {'b', "bed-file"});
-    args::ValueFlag<std::string> _path_groups(pav_opts, "FILE", "Group paths as described in two-column FILE, with columns path.name and group.name.",
-                                              {'p', "path-groups"});
+//    args::ValueFlag<std::string> _path_groups(pav_opts, "FILE", "Group paths as described in two-column FILE, with columns path.name and group.name.",
+//                                              {'p', "path-groups"});
     args::Group threading_opts(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> nthreads(threading_opts, "N", "Number of threads to use for parallel operations.",
                                        {'t', "threads"});
     args::Group processing_info_opts(parser, "[ Processing Information ]");
-    args::Flag debug(processing_info_opts, "debug", "Print information about the process to stderr.", {'d', "debug"});
     args::Flag _progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
     args::Group program_info_opts(parser, "[ Program Information ]");
     args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi pav.", {'h', "help"});
@@ -83,7 +83,7 @@ int main_pav(int argc, char **argv) {
 
     std::vector<odgi::path_range_t> path_ranges;
 
-    // handle targets from BED
+    // Read target paths from BED
     if (_path_bed_file && !args::get(_path_bed_file).empty()) {
         std::ifstream bed_in(args::get(_path_bed_file));
         std::string line;
@@ -92,93 +92,130 @@ int main_pav(int argc, char **argv) {
         }
     }
 
+    if (path_ranges.empty()) {
+        std::cerr
+            << "[odgi::pav] error: please specify path ranges via -b/--bed-file."
+            << std::endl;
+        return 1;
+    }
+
     std::vector<unordered_set<handle_t>> path_range_node_handles;
     path_range_node_handles.resize(path_ranges.size());
 
-    if (!path_ranges.empty()) {
-        std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress;
-        if (show_progress) {
-            progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
-                    path_ranges.size(), "[odgi::pav] collect node handles for the path range");
-        }
-        #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
-        for (uint64_t i = 0; i < path_ranges.size(); ++i) {
-            auto &path_range = path_ranges[i];
+    // Check the min/max coordinates for each target path
+    ska::flat_hash_map<path_handle_t, std::pair<uint64_t, uint64_t>> path_name_2_min_max;
+    for (uint64_t i = 0; i < path_ranges.size(); ++i) {
+        auto &path_range = path_ranges[i];
+        path_name_2_min_max[path_range.begin.path] = { std::numeric_limits<uint64_t>::max(), 0 };
+    }
+    for (uint64_t i = 0; i < path_ranges.size(); ++i) {
+        auto &path_range = path_ranges[i];
+        const uint64_t begin = path_range.begin.offset;
+        const uint64_t end = path_range.end.offset;
 
-            algorithms::for_handle_in_path_range(
-                    graph, path_range.begin.path, path_range.begin.offset, path_range.end.offset,
-                    [&](const handle_t& cur_handle) {
-                        path_range_node_handles[i].insert(cur_handle);
-                    });
-            if (show_progress) {
-                progress->increment(1);
-            }
+        if (begin < path_name_2_min_max[path_range.begin.path].first) {
+            path_name_2_min_max[path_range.begin.path].first = begin;
         }
-        if (show_progress) {
-            progress->finish();
+        if (end > path_name_2_min_max[path_range.begin.path].second) {
+            path_name_2_min_max[path_range.begin.path].second = end;
         }
     }
 
-    // Prepare all paths for parallelize the next step
-    // todo to support subsets?
-//    std::vector<path_handle_t> paths;
-//    paths.reserve(graph.get_path_count());
-//    graph.for_each_path_handle([&](const path_handle_t path) {
-//        paths.push_back(path);
-//    });
+    // Prepare target path handles to run in parallel on them
+    ska::flat_hash_map<path_handle_t, uint64_t> path_handle_2_index;
+    std::vector<path_handle_t> path_handles;
+    path_handles.reserve(path_name_2_min_max.size());
+    uint64_t i = 0;
+    for (auto& p2mm : path_name_2_min_max) {
+        path_handles.push_back(p2mm.first);
+        path_handle_2_index[p2mm.first] = i++;
+    }
 
+    // Prepare the interval trees to query target path ranges
+    std::vector<IITree<uint64_t, uint64_t>> trees;
+    trees.resize(path_handles.size());
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
+    for (uint64_t i = 0; i < path_handles.size(); ++i) {
+        const auto& path_handle = path_handles[i];
+        const uint64_t min = path_name_2_min_max[path_handle].first;
+        const uint64_t max = path_name_2_min_max[path_handle].second;
+
+        const uint64_t index = path_handle_2_index[path_handle];
+        auto& tree = trees[index];
+
+        uint64_t walked = 0;
+        const auto path_end = graph.path_end(path_handle);
+        for (step_handle_t cur_step = graph.path_begin(path_handle);
+        cur_step != path_end && walked < max; cur_step = graph.get_next_step(cur_step)) {
+            const handle_t cur_handle = graph.get_handle_of_step(cur_step);
+            const uint64_t len_cur_handle = graph.get_length(cur_handle);
+            walked += len_cur_handle;
+            if (walked > min) {
+                tree.add(walked - len_cur_handle, walked, graph.get_id(cur_handle));
+            }
+        }
+
+        tree.index(); // index
+    }
+
+    // Emit the PAV matrix
     //todo we are not managing the strandness... should we?
-    //todo we are still managing entire nodes, not chunks
     std::cout << "chrom" << "\t"
-              << "start" << "\t"
-              << "end";
+    << "start" << "\t"
+    << "end";
     graph.for_each_path_handle([&](const path_handle_t path_handle) {
-        std::cout << graph.get_path_name(path_handle) << "\t";
+        std::cout << "\t" << graph.get_path_name(path_handle);
     });
     std::cout << std::endl;
 
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
     for (uint64_t i = 0; i < path_ranges.size(); ++i) {
         auto &path_range = path_ranges[i];
+        const uint64_t begin = path_range.begin.offset;
+        const uint64_t end = path_range.end.offset;
 
-        uint64_t len_unique_nodes_in_range = 0;
-        std::vector<uint64_t> len_unique_nodes_in_range_each_path(graph.get_path_count(), 0);
+        const uint64_t index = path_handle_2_index[path_range.begin.path];
+        auto& tree = trees[index];
 
-        // For each node in the range
-        for (const auto& handle : path_range_node_handles[i]) {
-            // Get paths that cross the node
-            unordered_set<uint64_t> path_handles_on_handle;
-            graph.for_each_step_on_handle(handle, [&](const step_handle_t &source_step) {
-                const auto& path_handle = graph.get_path_handle_of_step(source_step);
-                const uint64_t path_rank = as_integer(path_handle) - 1;
-                path_handles_on_handle.insert(path_rank);
-            });
+        std::vector<uint64_t> node_ids_info;
+        tree.overlap(begin, end, node_ids_info); // retrieve overlaps
+        if (!node_ids_info.empty()) {
+            uint64_t len_unique_nodes_in_range = 0;
+            std::vector<uint64_t> len_unique_nodes_in_range_each_path(graph.get_path_count(), 0);
 
-            const uint64_t len_handle = graph.get_length(handle);
-            for (const auto& path_rank: path_handles_on_handle) {
-                len_unique_nodes_in_range_each_path[path_rank] += len_handle;
+            // For each node in the range
+            for (const auto& node_id_info : node_ids_info) {
+                const auto& node_id = tree.data(node_id_info);
+                const auto& handle = graph.get_handle(node_id);
+
+                // Get paths that cross the node
+                unordered_set<uint64_t> path_handles_on_handle;
+                graph.for_each_step_on_handle(handle, [&](const step_handle_t &source_step) {
+                    const auto& path_handle = graph.get_path_handle_of_step(source_step);
+                    const uint64_t path_rank = as_integer(path_handle) - 1;
+                    path_handles_on_handle.insert(path_rank);
+                });
+
+                const uint64_t len_handle = graph.get_length(handle);
+                for (const auto& path_rank: path_handles_on_handle) {
+                    len_unique_nodes_in_range_each_path[path_rank] += len_handle;
+                }
+
+                len_unique_nodes_in_range += len_handle;
             }
-
-            len_unique_nodes_in_range += len_handle;
-        }
 
 #pragma omp critical (cout)
-        {
-            std::cout << std::setprecision(5)
-                      << graph.get_path_name(path_range.begin.path) << "\t"
-                      << path_range.begin.offset << "\t"
-                      << path_range.end.offset;
-            for (auto& x: len_unique_nodes_in_range_each_path) {
-                std::cout << "\t" << (double) x / (double) len_unique_nodes_in_range;
+            {
+                std::cout << std::setprecision(5)
+                << graph.get_path_name(path_range.begin.path) << "\t"
+                << path_range.begin.offset << "\t"
+                << path_range.end.offset;
+                for (auto& x: len_unique_nodes_in_range_each_path) {
+                    std::cout << "\t" << (double) x / (double) len_unique_nodes_in_range;
+                }
+                std::cout << std::endl;
             }
-            std::cout << std::endl;
         }
-
-//        if (path_handle == path_range.begin.path) {
-//            continue; // Skip itself
-//        }
-//#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
-//        for (uint64_t path_rank = 0; path_rank < paths.size(); ++path_rank) {
     }
 
     return 0;
@@ -186,6 +223,5 @@ int main_pav(int argc, char **argv) {
 
 static Subcommand odgi_pav("pav", "Presence/absence variants (PAVs).",
                              PIPELINE, 3, main_pav);
-
 
 }
