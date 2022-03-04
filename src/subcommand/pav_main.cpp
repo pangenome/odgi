@@ -23,13 +23,15 @@ int main_pav(int argc, char **argv) {
     argv[0] = (char *) prog_name.c_str();
     --argc
 ;
-    args::ArgumentParser parser("Presence/absence variants (PAVs).");
+    args::ArgumentParser parser("Presence/absence variants (PAVs). It prints to stdout a matrix with the PAVs ratios.");
     args::Group mandatory_opts(parser, "[ MANDATORY ARGUMENTS ]");
     args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::Group pav_opts(parser, "[ Pav Options ]");
     args::ValueFlag<std::string> _path_bed_file(pav_opts, "FILE",
                                                 "Find PAVs in the path range(s) specified in the given BED FILE.",
                                                 {'b', "bed-file"});
+    args::ValueFlag<double> _binary_matrix(pav_opts, "THRESHOLD", "Emit a binary matrix, with 1 if the PAV ratio is greater than or equal to the specified THRESHOLD, else 0.",
+                                       {'B', "binary-matrix"});
 //    args::ValueFlag<std::string> _path_groups(pav_opts, "FILE", "Group paths as described in two-column FILE, with columns path.name and group.name.",
 //                                              {'p', "path-groups"});
     args::Group threading_opts(parser, "[ Threading ]");
@@ -80,6 +82,16 @@ int main_pav(int argc, char **argv) {
         }
     }
     graph.set_number_of_threads(num_threads);
+
+    if (args::get(_binary_matrix) && (args::get(_binary_matrix) < 0 || args::get(_binary_matrix) > 1)) {
+        std::cerr
+            << "[odgi::pav] error: the PAV ratio must be greather than 0 and lower than 1."
+            << std::endl;
+        return 1;
+    }
+
+    const double binary_threshold = args::get(_binary_matrix) ? args::get(_binary_matrix) : 0;
+    const bool emit_binary_matrix = binary_threshold != 0;
 
     std::vector<odgi::path_range_t> path_ranges;
 
@@ -211,7 +223,8 @@ int main_pav(int argc, char **argv) {
                 << path_range.begin.offset << "\t"
                 << path_range.end.offset;
                 for (auto& x: len_unique_nodes_in_range_each_path) {
-                    std::cout << "\t" << (double) x / (double) len_unique_nodes_in_range;
+                    const double pav_ratio = (double) x / (double) len_unique_nodes_in_range;
+                    std::cout << "\t" << (emit_binary_matrix ? pav_ratio >= binary_threshold : pav_ratio);
                 }
                 std::cout << std::endl;
             }
