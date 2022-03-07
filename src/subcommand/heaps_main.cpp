@@ -115,7 +115,9 @@ int main_heaps(int argc, char **argv) {
             std::cout << perm_id << "\t" << ++i << "\t" << v << std::endl;
         }
     };
-    algorithms::for_each_heap_permutation(graph, path_groups, n_permutations, handle_output);
+    ska::flat_hash_map<path_handle_t, std::vector<algorithms::interval_t>> x;
+    
+    algorithms::for_each_heap_permutation(graph, path_groups, x, n_permutations, handle_output);
 
     return 0;
 }
