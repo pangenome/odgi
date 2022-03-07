@@ -204,7 +204,8 @@ int main_pav(int argc, char **argv) {
     //todo we are not managing the strandness... should we?
     std::cout << "chrom" << "\t"
               << "start" << "\t"
-              << "end";
+              << "end" << "\t"
+              << "name";
     if (_path_groups) {
         for (auto& x : group_2_index) {
             std::cout << "\t" << x.first;
@@ -261,7 +262,8 @@ int main_pav(int argc, char **argv) {
                 std::cout << std::setprecision(5)
                 << graph.get_path_name(path_range.begin.path) << "\t"
                 << path_range.begin.offset << "\t"
-                << path_range.end.offset;
+                << path_range.end.offset << "\t"
+                << path_range.name;
                 for (auto& x: len_unique_nodes_in_range_for_each_group) {
                     const double pav_ratio = (double) x / (double) len_unique_nodes_in_range;
                     std::cout << "\t" << (emit_binary_matrix ? pav_ratio >= binary_threshold : pav_ratio);

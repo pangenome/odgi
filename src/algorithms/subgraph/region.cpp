@@ -116,6 +116,7 @@ namespace odgi {
                                 false
                             },
                             (vals.size() > 5 && vals[5] == "-"),
+                            vals.size() > 3 ? vals[3] : ".",
                             buffer
                         });
             }
