@@ -26,6 +26,8 @@ int main_heaps(int argc, char **argv) {
     args::Group heaps_opts(parser, "[ Heaps Options ]");
     args::ValueFlag<std::string> _path_groups(heaps_opts, "FILE", "Group paths as described in two-column FILE, with columns path.name and group.name.",
                                               {'p', "path-groups"});
+    args::Flag group_by_sample(heaps_opts, "bool", "Following PanSN naming (sample#hap#ctg), group by sample (1st field).", {'S', "group-by-sample"});
+    args::Flag group_by_haplotype(heaps_opts, "bool", "Following PanSN naming (sample#hap#ctg), group by haplotype (2nd field).", {'H', "group-by-haplotype"});
     args::ValueFlag<std::string> _bed_targets(heaps_opts, "FILE", "BED file over path space of the graph, describing a subset of the graph to consider.",
                                               {'b', "bed-targets"});
     args::ValueFlag<uint64_t> _n_permutations(heaps_opts, "N", "Number of permutations to run.",
@@ -79,33 +81,55 @@ int main_heaps(int argc, char **argv) {
     }
 
     std::vector<std::vector<path_handle_t>> path_groups;
-    if (_path_groups) {
-        std::unordered_map<std::string, std::vector<path_handle_t>> path_groups_map;
-        std::ifstream refs(args::get(_path_groups).c_str());
-        std::string line;
-        while (std::getline(refs, line)) {
-            if (!line.empty()) {
-                auto vals = split(line, '\t');
-                if (vals.size() != 2) {
-                    std::cerr << "[odgi::heaps] line does not have a path.name and path.group value:"
-                              << std::endl << line << std::endl;
-                    return 1;
+    {
+        ska::flat_hash_map<std::string, std::vector<path_handle_t>> path_groups_map;
+        if (_path_groups) {
+            std::ifstream refs(args::get(_path_groups).c_str());
+            std::string line;
+            while (std::getline(refs, line)) {
+                if (!line.empty()) {
+                    auto vals = split(line, '\t');
+                    if (vals.size() != 2) {
+                        std::cerr << "[odgi::heaps] line does not have a path.name and path.group value:"
+                                  << std::endl << line << std::endl;
+                        return 1;
+                    }
+                    auto& path_name = vals.front();
+                    auto& group = vals.back();
+                    if (!graph.has_path(vals.front())) {
+                        std::cerr << "[odgi::heaps] no path '" << path_name << "' in graph" << std::endl;
+                        return 1;
+                    }
+                    path_groups_map[group].push_back(graph.get_path_handle(path_name));
                 }
-                auto& path_name = vals.front();
-                auto& group = vals.back();
-                if (!graph.has_path(vals.front())) {
-                    std::cerr << "[odgi::heaps] no path '" << path_name << "' in graph" << std::endl;
-                    return 1;
-                }
-                path_groups_map[group].push_back(graph.get_path_handle(path_name));
             }
+        } else if (group_by_haplotype) {
+            graph.for_each_path_handle([&](const path_handle_t& p) {
+                auto path_name = graph.get_path_name(p);
+                // split and decide
+                auto vals = split(path_name, '#');
+                if (vals.size() == 1) { // ctg
+                    path_groups_map[vals.front()].push_back(p);
+                } else if (vals.size() == 2) { // sample#ctg
+                    path_groups_map[vals.front()].push_back(p);
+                } else if (vals.size() == 3) { // sample#hap#ctg
+                    auto key = vals[0] + vals[1];
+                    path_groups_map[key].push_back(p);
+                }
+            });
+        } else if (group_by_sample) {
+            graph.for_each_path_handle([&](const path_handle_t& p) {
+                auto path_name = graph.get_path_name(p);
+                // split and decide
+                auto vals = split(path_name, '#');
+                path_groups_map[vals.front()].push_back(p);
+            });
         }
         path_groups.reserve(path_groups_map.size());
         for (auto& g : path_groups_map) {
             path_groups.push_back(g.second);
         }
     }
-
 
     ska::flat_hash_map<path_handle_t, std::vector<algorithms::interval_t>> intervals;
     if (_bed_targets) {

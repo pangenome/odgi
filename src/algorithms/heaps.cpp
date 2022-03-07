@@ -38,7 +38,7 @@ void for_each_heap_permutation(const PathHandleGraph& graph,
     if (path_intervals.size() == 0) {
         // keep everything if we aren't given intervals to guide subset
         for (uint64_t i = 0; i < graph.get_node_count(); ++i) {
-            target_nodes.set(i, false);
+            target_nodes.set(i, true);
         }
     } else {
         std::vector<path_handle_t> paths;
@@ -55,19 +55,25 @@ void for_each_heap_permutation(const PathHandleGraph& graph,
                 graph.for_each_step_in_path(
                     path,
                     [&](const step_handle_t& step) {
+                        // remove intervals that ended before this node
                         while (interval_ends.size()
                                && *interval_ends.begin() < pos) {
                             interval_ends.erase(interval_ends.begin());
                         }
-                        while (ival->first >= pos) {
-                            interval_ends.insert(ival->second);
-                        }
                         auto h = graph.get_handle_of_step(step);
+                        auto len = graph.get_length(h);
+                        // add intervals that start on this node
+                        while (ival != intervals.end()
+                               && ival->first >= pos
+                               && ival->first < pos + len) {
+                            interval_ends.insert(ival->second);
+                            ++ival;
+                        }
                         uint64_t rank = graph.get_id(h)-1; // assumes compaction!
                         if (interval_ends.size()) {
                             target_nodes.set(rank, true);
                         }
-                        pos += graph.get_length(h);
+                        pos += len;
                     });
             }
         }
