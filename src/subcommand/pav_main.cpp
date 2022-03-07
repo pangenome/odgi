@@ -26,14 +26,14 @@ int main_pav(int argc, char **argv) {
     args::ArgumentParser parser("Presence/absence variants (PAVs). It prints to stdout a matrix with the PAVs ratios.");
     args::Group mandatory_opts(parser, "[ MANDATORY ARGUMENTS ]");
     args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
-    args::Group pav_opts(parser, "[ Pav Options ]");
-    args::ValueFlag<std::string> _path_bed_file(pav_opts, "FILE",
+    args::ValueFlag<std::string> _path_bed_file(mandatory_opts, "FILE",
                                                 "Find PAVs in the path range(s) specified in the given BED FILE.",
                                                 {'b', "bed-file"});
+    args::Group pav_opts(parser, "[ Pav Options ]");
+    args::ValueFlag<std::string> _path_groups(pav_opts, "FILE", "Group paths as described in two-column FILE, with columns path.name and group.name.",
+                                              {'p', "path-groups"});
     args::ValueFlag<double> _binary_matrix(pav_opts, "THRESHOLD", "Emit a binary matrix, with 1 if the PAV ratio is greater than or equal to the specified THRESHOLD, else 0.",
                                        {'B', "binary-matrix"});
-//    args::ValueFlag<std::string> _path_groups(pav_opts, "FILE", "Group paths as described in two-column FILE, with columns path.name and group.name.",
-//                                              {'p', "path-groups"});
     args::Group threading_opts(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> nthreads(threading_opts, "N", "Number of threads to use for parallel operations.",
                                        {'t', "threads"});
@@ -59,7 +59,7 @@ int main_pav(int argc, char **argv) {
 
     if (!og_in_file) {
         std::cerr
-        << "[odgi::pav] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
+            << "[odgi::pav] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
             << std::endl;
         return 1;
     }
@@ -89,13 +89,43 @@ int main_pav(int argc, char **argv) {
             << std::endl;
         return 1;
     }
-
     const double binary_threshold = args::get(_binary_matrix) ? args::get(_binary_matrix) : 0;
     const bool emit_binary_matrix = binary_threshold != 0;
 
-    std::vector<odgi::path_range_t> path_ranges;
+    // Read path groups
+    ska::flat_hash_map<path_handle_t, std::string> path_2_group; // General, but heavy, solution
+    std::map<std::string, uint64_t> group_2_index;               // Ordered map to keep group names' order
+    if (_path_groups) {
+        std::ifstream refs(args::get(_path_groups).c_str());
+        std::string line;
+        while (std::getline(refs, line)) {
+            if (!line.empty()) {
+                auto vals = split(line, '\t');
+                if (vals.size() != 2) {
+                    std::cerr << "[odgi::pav] line does not have a path.name and path.group value:"
+                              << std::endl << line << std::endl;
+                    return 1;
+                }
+                auto& path_name = vals.front();
+                auto& group = vals.back();
+                if (!graph.has_path(path_name)) {
+                    std::cerr << "[odgi::pav] no path '" << path_name << "'" << std::endl;
+                    return 1;
+                }
+                path_2_group[graph.get_path_handle(path_name)] = group;
+                group_2_index[group] = 0;
+            }
+        }
+        refs.close();
+
+        uint64_t group_index = 0;
+        for (auto& x : group_2_index) {
+            x.second = group_index++;
+        }
+    }
 
     // Read target paths from BED
+    std::vector<odgi::path_range_t> path_ranges;
     if (_path_bed_file && !args::get(_path_bed_file).empty()) {
         std::ifstream bed_in(args::get(_path_bed_file));
         std::string line;
@@ -173,11 +203,17 @@ int main_pav(int argc, char **argv) {
     // Emit the PAV matrix
     //todo we are not managing the strandness... should we?
     std::cout << "chrom" << "\t"
-    << "start" << "\t"
-    << "end";
-    graph.for_each_path_handle([&](const path_handle_t path_handle) {
-        std::cout << "\t" << graph.get_path_name(path_handle);
-    });
+              << "start" << "\t"
+              << "end";
+    if (_path_groups) {
+        for (auto& x : group_2_index) {
+            std::cout << "\t" << x.first;
+        }
+    } else {
+        graph.for_each_path_handle([&](const path_handle_t path_handle) {
+            std::cout << "\t" << graph.get_path_name(path_handle);
+        });
+    }
     std::cout << std::endl;
 
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
@@ -193,7 +229,9 @@ int main_pav(int argc, char **argv) {
         tree.overlap(begin, end, node_ids_info); // retrieve overlaps
         if (!node_ids_info.empty()) {
             uint64_t len_unique_nodes_in_range = 0;
-            std::vector<uint64_t> len_unique_nodes_in_range_each_path(graph.get_path_count(), 0);
+            std::vector<uint64_t> len_unique_nodes_in_range_for_each_group(
+                    _path_groups ? group_2_index.size() : graph.get_path_count(),
+                    0);
 
             // For each node in the range
             for (const auto& node_id_info : node_ids_info) {
@@ -201,16 +239,18 @@ int main_pav(int argc, char **argv) {
                 const auto& handle = graph.get_handle(node_id);
 
                 // Get paths that cross the node
-                unordered_set<uint64_t> path_handles_on_handle;
+                unordered_set<uint64_t> group_ranks_on_node_handle;
                 graph.for_each_step_on_handle(handle, [&](const step_handle_t &source_step) {
                     const auto& path_handle = graph.get_path_handle_of_step(source_step);
-                    const uint64_t path_rank = as_integer(path_handle) - 1;
-                    path_handles_on_handle.insert(path_rank);
+                    const uint64_t group_rank = _path_groups ?
+                            group_2_index[path_2_group[path_handle]] :
+                            as_integer(path_handle) - 1;
+                    group_ranks_on_node_handle.insert(group_rank);
                 });
 
                 const uint64_t len_handle = graph.get_length(handle);
-                for (const auto& path_rank: path_handles_on_handle) {
-                    len_unique_nodes_in_range_each_path[path_rank] += len_handle;
+                for (const auto& group_rank: group_ranks_on_node_handle) {
+                    len_unique_nodes_in_range_for_each_group[group_rank] += len_handle;
                 }
 
                 len_unique_nodes_in_range += len_handle;
@@ -222,7 +262,7 @@ int main_pav(int argc, char **argv) {
                 << graph.get_path_name(path_range.begin.path) << "\t"
                 << path_range.begin.offset << "\t"
                 << path_range.end.offset;
-                for (auto& x: len_unique_nodes_in_range_each_path) {
+                for (auto& x: len_unique_nodes_in_range_for_each_group) {
                     const double pav_ratio = (double) x / (double) len_unique_nodes_in_range;
                     std::cout << "\t" << (emit_binary_matrix ? pav_ratio >= binary_threshold : pav_ratio);
                 }
