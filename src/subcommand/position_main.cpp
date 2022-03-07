@@ -379,6 +379,7 @@ int main_position(int argc, char** argv) {
 												false
 										},
 										(vals.size() > 6 && vals[6] == "-"),
+										vals[8],
 										vals[8]
 								});
 					}
