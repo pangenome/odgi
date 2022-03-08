@@ -228,48 +228,48 @@ int main_pav(int argc, char **argv) {
 
         std::vector<uint64_t> node_ids_info;
         tree.overlap(begin, end, node_ids_info); // retrieve overlaps
-        if (!node_ids_info.empty()) {
-            uint64_t len_unique_nodes_in_range = 0;
-            std::vector<uint64_t> len_unique_nodes_in_range_for_each_group(
-                    _path_groups ? group_2_index.size() : graph.get_path_count(),
-                    0);
 
-            // For each node in the range
-            for (const auto& node_id_info : node_ids_info) {
-                const auto& node_id = tree.data(node_id_info);
-                const auto& handle = graph.get_handle(node_id);
+        uint64_t len_unique_nodes_in_range = 0;
+        std::vector<uint64_t> len_unique_nodes_in_range_for_each_group(
+                _path_groups ? group_2_index.size() : graph.get_path_count(),
+                0);
 
-                // Get paths that cross the node
-                unordered_set<uint64_t> group_ranks_on_node_handle;
-                graph.for_each_step_on_handle(handle, [&](const step_handle_t &source_step) {
-                    const auto& path_handle = graph.get_path_handle_of_step(source_step);
-                    const uint64_t group_rank = _path_groups ?
-                            group_2_index[path_2_group[path_handle]] :
-                            as_integer(path_handle) - 1;
-                    group_ranks_on_node_handle.insert(group_rank);
-                });
+        // For each node in the range
+        for (const auto& node_id_info : node_ids_info) {
+            const auto& node_id = tree.data(node_id_info);
+            const auto& handle = graph.get_handle(node_id);
 
-                const uint64_t len_handle = graph.get_length(handle);
-                for (const auto& group_rank: group_ranks_on_node_handle) {
-                    len_unique_nodes_in_range_for_each_group[group_rank] += len_handle;
-                }
+            // Get paths that cross the node
+            unordered_set<uint64_t> group_ranks_on_node_handle;
+            graph.for_each_step_on_handle(handle, [&](const step_handle_t &source_step) {
+                const auto& path_handle = graph.get_path_handle_of_step(source_step);
+                const uint64_t group_rank = _path_groups ?
+                        group_2_index[path_2_group[path_handle]] :
+                        as_integer(path_handle) - 1;
+                group_ranks_on_node_handle.insert(group_rank);
+            });
 
-                len_unique_nodes_in_range += len_handle;
+            const uint64_t len_handle = graph.get_length(handle);
+            for (const auto& group_rank: group_ranks_on_node_handle) {
+                len_unique_nodes_in_range_for_each_group[group_rank] += len_handle;
             }
+
+            len_unique_nodes_in_range += len_handle;
+        }
 
 #pragma omp critical (cout)
-            {
-                std::cout << std::setprecision(5)
-                << graph.get_path_name(path_range.begin.path) << "\t"
-                << path_range.begin.offset << "\t"
-                << path_range.end.offset << "\t"
-                << path_range.name;
-                for (auto& x: len_unique_nodes_in_range_for_each_group) {
-                    const double pav_ratio = (double) x / (double) len_unique_nodes_in_range;
-                    std::cout << "\t" << (emit_binary_matrix ? pav_ratio >= binary_threshold : pav_ratio);
-                }
-                std::cout << std::endl;
+        {
+            std::cout << std::setprecision(5)
+            << graph.get_path_name(path_range.begin.path) << "\t"
+            << path_range.begin.offset << "\t"
+            << path_range.end.offset << "\t"
+            << path_range.name;
+            for (auto& x: len_unique_nodes_in_range_for_each_group) {
+                const double pav_ratio = len_unique_nodes_in_range == 0 ?
+                        0 : (double) x / (double) len_unique_nodes_in_range;
+                std::cout << "\t" << (emit_binary_matrix ? pav_ratio >= binary_threshold : pav_ratio);
             }
+            std::cout << std::endl;
         }
     }
 
