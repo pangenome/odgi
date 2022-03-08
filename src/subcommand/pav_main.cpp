@@ -118,6 +118,13 @@ int main_pav(int argc, char **argv) {
         }
         refs.close();
 
+        if (group_2_index.empty()) {
+            std::cerr
+                << "[odgi::pav] error: 0 path groups were read. Please specify at least one path group via -p/--path-groups."
+                << std::endl;
+            return 1;
+        }
+
         uint64_t group_index = 0;
         for (auto& x : group_2_index) {
             x.second = group_index++;
@@ -243,10 +250,13 @@ int main_pav(int argc, char **argv) {
             unordered_set<uint64_t> group_ranks_on_node_handle;
             graph.for_each_step_on_handle(handle, [&](const step_handle_t &source_step) {
                 const auto& path_handle = graph.get_path_handle_of_step(source_step);
-                const uint64_t group_rank = _path_groups ?
-                        group_2_index[path_2_group[path_handle]] :
-                        as_integer(path_handle) - 1;
-                group_ranks_on_node_handle.insert(group_rank);
+                // Check if the paths are grouped and there are paths that do not belong to any group
+                if (!_path_groups || path_2_group.find(path_handle) != path_2_group.end()) {
+                    const uint64_t group_rank = _path_groups ?
+                            group_2_index[path_2_group[path_handle]] :
+                            as_integer(path_handle) - 1;
+                    group_ranks_on_node_handle.insert(group_rank);
+                }
             });
 
             const uint64_t len_handle = graph.get_length(handle);
