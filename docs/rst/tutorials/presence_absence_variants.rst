@@ -11,6 +11,10 @@ Synopsis
 The term presence/absence variation (PAV) is used to describe sequences that are present in one genome, but
 entirely missing in another genome, and is an important source of genetic divergence and diversity.
 
+=====
+Steps
+=====
+
 -----------------------------
 Build the Lipoprotein A graph
 -----------------------------
@@ -32,7 +36,7 @@ Presence/absence variants (PAVs)
 -----------------------
 
 Any path in the graph can be used as a reference to identify PAVs. In this example, we have chosen the ``chm13__LPA__tig00000001``
-path. To obtain contains 1000 bp interval windows across the chosen reference, execute:
+path. To obtain 1000 bp interval windows across the chosen reference, execute:
 
 .. code-block:: bash
 
@@ -134,3 +138,31 @@ Then, to group the PAVs by sample, execute:
     chm13__LPA__tig00000001  6000   7000  .     1      1        1        1        0        0        1
     chm13__LPA__tig00000001  7000   8000  .     1      1        1        1        1        0        1
     chm13__LPA__tig00000001  8000   9000  .     1      1        1        1        1        0        1
+
+
+-----------------------
+Alternative workflow
+-----------------------
+
+Instead of splitting in windows the path(s) chosen as a reference(s), an alternative way to obtain a BED file for ``odgi pav``
+is to use ``odgi untangle`` (see the corresponding tutorial :ref:`untangling_the_pangenome` for more information on how it works).
+
+.. code-block:: bash
+
+    odgi untangle -i LPA.og -r chm13__LPA__tig00000001 | sed '1d' | cut -f 4,5,6 > LPA.untangle.bed
+    odgi pav -i LPA.og -b LPA.untangle.bed > LPA.untangle.pavs.txt
+
+    head LPA.untangle.pavs.txt | cut -f 1-8 | column -t
+
+.. code-block:: none
+
+    chrom                    start  end    name  chm13__LPA__tig00000001  HG002__LPA__tig00000001  HG002__LPA__tig00000005  HG00733__LPA__tig00000001
+    chm13__LPA__tig00000001  0      5045   .     1                        0                        0                        0
+    chm13__LPA__tig00000001  5045   5586   .     1                        0                        0.99815                  0
+    chm13__LPA__tig00000001  5586   5827   .     1                        0.99585                  0.99585                  0
+    chm13__LPA__tig00000001  5827   6550   .     1                        1                        1                        0.54772
+    chm13__LPA__tig00000001  6550   7430   .     1                        0.99886                  1                        0.98182
+    chm13__LPA__tig00000001  7430   9096   .     1                        0.9994                   0.9994                   0.9922
+    chm13__LPA__tig00000001  9096   9884   .     1                        0.99873                  1                        0.99873
+    chm13__LPA__tig00000001  9884   10346  .     1                        0.99784                  1                        1
+    chm13__LPA__tig00000001  10346  47024  .     1                        0.98863                  0.9889                   0.98844
