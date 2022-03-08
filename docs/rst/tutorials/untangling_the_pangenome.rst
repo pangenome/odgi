@@ -1,3 +1,5 @@
+.. _untangling_the_pangenome:
+
 ######################
 Untangling the pangenome
 ######################
