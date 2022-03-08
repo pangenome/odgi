@@ -2,7 +2,7 @@
 #include "odgi.hpp"
 #include "position.hpp"
 #include "args.hxx"
-#include "split.hpp"
+#include "subgraph/region.hpp"
 #include <omp.h>
 #include <mutex>
 #include "utils.hpp"
@@ -108,71 +108,20 @@ namespace odgi {
 
         std::vector<odgi::path_range_t> path_ranges;
 
-        auto add_bed_range = [&path_ranges](const odgi::graph_t &graph,
-                                            const std::string &buffer) {
-            if (!buffer.empty() && buffer[0] != '#') {
-                auto vals = split(buffer, '\t');
-                /*
-                if (vals.size() != 3) {
-                    std::cerr << "[odgi::overlap] error: path position record is incomplete" << std::endl;
-                    std::cerr << "[odgi::overlap] error: got '" << buffer << "'" << std::endl;
-                    exit(1); // bail
-                }
-                */
-                auto &path_name = vals[0];
-                if (!graph.has_path(path_name)) {
-                    std::cerr << "[odgi::overlap] error: path " << path_name << " not found in graph" << std::endl;
-                    exit(1);
-                } else {
-                    uint64_t start = vals.size() > 1 ? (uint64_t) std::stoi(vals[1]) : 0;
-                    uint64_t end = 0;
-                    if (vals.size() > 2) {
-                        end = (uint64_t) std::stoi(vals[2]);
-                    } else {
-                        // In the BED format, the end is non-inclusive, unlike start
-                        graph.for_each_step_in_path(graph.get_path_handle(path_name), [&](const step_handle_t &s) {
-                            end += graph.get_length(graph.get_handle_of_step(s));
-                        });
-                    }
-
-                    if (start > end) {
-                        std::cerr << "[odgi::overlap] error: wrong input coordinates in row: " << buffer << std::endl;
-                        exit(1);
-                    }
-
-                    path_ranges.push_back(
-                            {
-                                    {
-                                            graph.get_path_handle(path_name),
-                                            start,
-                                            false
-                                    },
-                                    {
-                                            graph.get_path_handle(path_name),
-                                            end,
-                                            false
-                                    },
-                                    (vals.size() > 3 && vals[3] == "-"),
-                                    buffer
-                            });
-                }
-            }
-        };
-
         if (path_name) {
-            add_bed_range(graph, args::get(path_name));
+            add_bed_range(path_ranges, graph, args::get(path_name));
         } else if (path_file) {
             // for thing in things
             std::ifstream refs(args::get(path_file));
             std::string line;
             while (std::getline(refs, line)) {
-                add_bed_range(graph, line);
+                add_bed_range(path_ranges, graph, line);
             }
         } else {// if (bed_input) {
             std::ifstream bed_in(args::get(bed_input));
             std::string line;
             while (std::getline(bed_in, line)) {
-                add_bed_range(graph, line);
+                add_bed_range(path_ranges, graph, line);
             }
         }
 

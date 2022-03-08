@@ -91,13 +91,14 @@ int main_heaps(int argc, char **argv) {
                 }
                 auto& path_name = vals.front();
                 auto& group = vals.back();
-                if (!graph.has_path(vals.front())) {
+                if (!graph.has_path(path_name)) {
                     std::cerr << "[odgi::heaps] no path '" << path_name << "'" << std::endl;
                     return 1;
                 }
                 path_groups_map[group].push_back(graph.get_path_handle(path_name));
             }
         }
+        refs.close();
         path_groups.reserve(path_groups_map.size());
         for (auto& g : path_groups_map) {
             path_groups.push_back(g.second);
