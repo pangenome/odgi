@@ -37,7 +37,7 @@ int main(int argc, char *argv[]) {
 
     if (argc == 1) {
         odgi_help(argv);
-        return 1;
+        return 0;
     }
 
     const auto* subcommand = odgi::subcommand::Subcommand::get(argc, argv);
