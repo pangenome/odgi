@@ -6,8 +6,10 @@ namespace algorithms {
 
 void for_each_heap_permutation(const PathHandleGraph& graph,
                                const std::vector<std::vector<path_handle_t>>& path_groups,
+                               const ska::flat_hash_map<path_handle_t, std::vector<interval_t>>& path_intervals,
                                uint64_t n_permutations,
                                const std::function<void(const std::vector<uint64_t>&, uint64_t)>& func) {
+    //const std::function<bool(const path_handle_t&, _t)>& in_range) {
     //std::vector<std::vector<path_handle_t>>
     auto get_permutation = [&](void) {
         std::random_device rd;
@@ -30,6 +32,53 @@ void for_each_heap_permutation(const PathHandleGraph& graph,
         }
     });
 
+    // which nodes are traversed by our target paths?
+    atomicbitvector::atomic_bv_t target_nodes(graph.get_node_count() + 1);
+
+    if (path_intervals.size() == 0) {
+        // keep everything if we aren't given intervals to guide subset
+        for (uint64_t i = 0; i < graph.get_node_count(); ++i) {
+            target_nodes.set(i, true);
+        }
+    } else {
+        std::vector<path_handle_t> paths;
+        graph.for_each_path_handle([&](const path_handle_t& path) {
+            paths.push_back(path);
+        });
+#pragma omp parallel for
+        for (auto& path : paths) {
+            if (path_intervals.find(path) != path_intervals.end()) {
+                auto& intervals = path_intervals.find(path)->second;
+                auto ival = intervals.begin();
+                std::set<uint64_t> interval_ends;
+                uint64_t pos = 0;
+                graph.for_each_step_in_path(
+                    path,
+                    [&](const step_handle_t& step) {
+                        // remove intervals that ended before this node
+                        while (interval_ends.size()
+                               && *interval_ends.begin() < pos) {
+                            interval_ends.erase(interval_ends.begin());
+                        }
+                        auto h = graph.get_handle_of_step(step);
+                        auto len = graph.get_length(h);
+                        // add intervals that start on this node
+                        while (ival != intervals.end()
+                               && ival->first >= pos
+                               && ival->first < pos + len) {
+                            interval_ends.insert(ival->second);
+                            ++ival;
+                        }
+                        uint64_t rank = graph.get_id(h)-1; // assumes compaction!
+                        if (interval_ends.size()) {
+                            target_nodes.set(rank, true);
+                        }
+                        pos += len;
+                    });
+            }
+        }
+    }
+
 #pragma omp parallel for
     for (uint64_t i = 0; i < n_permutations; ++i) {
         auto permutation = get_permutation();
@@ -40,21 +89,24 @@ void for_each_heap_permutation(const PathHandleGraph& graph,
         for (auto& j : permutation) {
             auto& paths = path_groups[j];
             for (auto& path : paths) {
+                uint64_t pos = 0;
                 graph.for_each_step_in_path(
                     path,
                     [&](const step_handle_t& step) {
                         auto h = graph.get_handle_of_step(step);
                         uint64_t rank = graph.get_id(h)-1; // assumes compaction!
-                        if (!seen_nodes[rank]) {
+                        if (target_nodes[rank] && !seen_nodes[rank]) {
                             seen_nodes[rank] = 1;
                             seen_bp += graph.get_length(h);
                         }
+                        pos += graph.get_length(h);
                     });
             }
             vals.push_back(seen_bp);
         }
         func(vals, i);
     }
+
 }
 
 }
