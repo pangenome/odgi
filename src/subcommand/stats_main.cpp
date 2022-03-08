@@ -898,102 +898,102 @@ for (auto& p : multisetcov_count) {
 }
 
 
-if (!args::get(path_bedmulticov).empty()) {
-std::string line;
-typedef std::map<std::vector<uint64_t>, uint64_t> setcov_t;
-typedef IntervalTree<uint64_t, std::pair<std::string, setcov_t*> > itree_t;
-map<std::string, itree_t::interval_vector> intervals;
-auto& x = args::get(path_bedmulticov);
-std::ifstream bed_in(x);
-while (std::getline(bed_in, line)) {
-    // BED is base-numbered, 0-origin, half-open.  This parse turns that
-    // into base-numbered, 0-origin, fully-closed for internal use.  All
-    // coordinates used internally should be in the latter, and coordinates
-    // from the user in the former should be converted immediately to the
-    // internal format.
-    std::vector<string> fields = split(line, '\t');
-    intervals[fields[0]].push_back(
-        itree_t::interval(
-            std::stoul(fields[1]),
-            std::stoul(fields[2]),
-            make_pair(fields[3], new setcov_t())));
-}
+    if (!args::get(path_bedmulticov).empty()) {
+        std::string line;
+        typedef std::map<std::vector<uint64_t>, uint64_t> setcov_t;
+        typedef IntervalTree<uint64_t, std::pair<std::string, setcov_t*> > itree_t;
+        map<std::string, itree_t::interval_vector> intervals;
+        auto& x = args::get(path_bedmulticov);
+        std::ifstream bed_in(x);
+        while (std::getline(bed_in, line)) {
+            // BED is base-numbered, 0-origin, half-open.  This parse turns that
+            // into base-numbered, 0-origin, fully-closed for internal use.  All
+            // coordinates used internally should be in the latter, and coordinates
+            // from the user in the former should be converted immediately to the
+            // internal format.
+            std::vector<string> fields = split(line, '\t');
+            intervals[fields[0]].push_back(
+                itree_t::interval(
+                    std::stoul(fields[1]),
+                    std::stoul(fields[2]),
+                    make_pair(fields[3], new setcov_t())));
+        }
 
-std::vector<std::string> path_names;
-path_names.reserve(intervals.size());
-for(auto const& i : intervals) {
-    path_names.push_back(i.first);
-}
+        std::vector<std::string> path_names;
+        path_names.reserve(intervals.size());
+        for(auto const& i : intervals) {
+            path_names.push_back(i.first);
+        }
 
-// the header
-std::cout << "path.name" << "\t"
-          << "bed.name" << "\t"
-          << "bed.start" << "\t"
-          << "bed.stop" << "\t"
-          << "bed.len" << "\t"
-          << "path.set.state.len" << "\t"
-          << "path.set.frac" << "\t"
-          << "path.traversals" << "\t"
-          << "uniq.paths.in.state" << "\t"
-          << "path.multiset" << std::endl;
+        // the header
+        std::cout << "path.name" << "\t"
+                  << "bed.name" << "\t"
+                  << "bed.start" << "\t"
+                  << "bed.stop" << "\t"
+                  << "bed.len" << "\t"
+                  << "path.set.state.len" << "\t"
+                  << "path.set.frac" << "\t"
+                  << "path.traversals" << "\t"
+                  << "uniq.paths.in.state" << "\t"
+                  << "path.multiset" << std::endl;
 
-#pragma omp parallel for
-for (uint64_t k = 0; k < path_names.size(); ++k) {
-    auto& path_name = path_names.at(k);
-    auto& path_ivals = intervals[path_name];
-    path_handle_t path = graph.get_path_handle(path_name);
-    // build the intervals for each path we'll query
-    itree_t itree(std::move(path_ivals)); //, 16, 1);
-    uint64_t pos = 0;
-    graph.for_each_step_in_path(graph.get_path_handle(x), [&](const step_handle_t& occ) {
-            std::vector<uint64_t> paths_here;
-            handle_t h = graph.get_handle_of_step(occ);
-            graph.for_each_step_on_handle(
-                h,
-                [&](const step_handle_t& occ) {
-                    paths_here.push_back(get_path_id(graph.get_path(occ)));
-                });
-            uint64_t len = graph.get_length(h);
-            // check each position in the node
-            auto hits = itree.findOverlapping(pos, pos+len);
-            if (hits.size()) {
-                for (auto& h : hits) {
-                    auto& q = *h.value.second;
-                    // adjust length for overlap length
-                    uint64_t ovlp = len - (h.start > pos ? h.start - pos : 0) - (h.stop < pos+len ? pos+len - h.stop : 0);
-                    q[paths_here] += ovlp;
-                }
-            }
-            pos += len;
-        });
-    itree.visit_all([&](const itree_t::interval& ival) {
-            auto& name = ival.value.first;
-            auto& setcov = *ival.value.second;
-            for (auto& p : setcov) {
-                std::set<uint64_t> u(p.first.begin(), p.first.end());
-#pragma omp critical (cout)
-                {
-                    std::cout << path_name << "\t" << name << "\t" << ival.start << "\t" << ival.stop << "\t"
-                              << ival.stop - ival.start << "\t"
-                              << p.second << "\t"
-                              << (float)p.second/(ival.stop-ival.start) << "\t"
-                              << p.first.size() << "\t"
-                              << u.size() << "\t";
-                    bool first = true;
-                    for (auto& i : p.first) {
-                        std::cout << (first ? (first=false, "") :",") << get_path_name(i);
+        #pragma omp parallel for
+        for (uint64_t k = 0; k < path_names.size(); ++k) {
+            auto& path_name = path_names.at(k);
+            auto& path_ivals = intervals[path_name];
+            // build the intervals for each path we'll query
+            itree_t itree(std::move(path_ivals)); //, 16, 1);
+            uint64_t pos = 0;
+            graph.for_each_step_in_path(graph.get_path_handle(path_name), [&](const step_handle_t& occ) {
+                    std::vector<uint64_t> paths_here;
+                    handle_t h = graph.get_handle_of_step(occ);
+                    graph.for_each_step_on_handle(
+                        h,
+                        [&](const step_handle_t& occ) {
+                            paths_here.push_back(get_path_id(graph.get_path(occ)));
+                        });
+                    uint64_t len = graph.get_length(h);
+                    // check each position in the node
+                    auto hits = itree.findOverlapping(pos, pos+len);
+                    if (hits.size()) {
+                        for (auto& h : hits) {
+                            auto& q = *h.value.second;
+                            // adjust length for overlap length
+                            uint64_t ovlp = len - (h.start > pos ? h.start - pos : 0) - (h.stop < pos+len ? pos+len - h.stop : 0);
+                            q[paths_here] += ovlp;
+                        }
                     }
-                    std::cout << std::endl;
-                }
+                    pos += len;
+                });
+            itree.visit_all([&](const itree_t::interval& ival) {
+                    auto& name = ival.value.first;
+                    auto& setcov = *ival.value.second;
+                    for (auto& p : setcov) {
+                        std::set<uint64_t> u(p.first.begin(), p.first.end());
+        #pragma omp critical (cout)
+                        {
+                            std::cout << path_name << "\t" << name << "\t" << ival.start << "\t" << ival.stop << "\t"
+                                      << ival.stop - ival.start << "\t"
+                                      << p.second << "\t"
+                                      << (float)p.second/(ival.stop-ival.start) << "\t"
+                                      << p.first.size() << "\t"
+                                      << u.size() << "\t";
+                            bool first = true;
+                            for (auto& i : p.first) {
+                                std::cout << (first ? (first=false, "") :",") << get_path_name(i);
+                            }
+                            std::cout << std::endl;
+                        }
+                    }
+            });
+            for (auto& ival : path_ivals) {
+                delete ival.value.second;
             }
-    });
-    for (auto& ival : path_ivals) {
-        delete ival.value.second;
-    }
-}
-}
-*/
+        }
 
+        //todo there is still a memory leak somewhere
+    }
+*/
     return 0;
 }
 

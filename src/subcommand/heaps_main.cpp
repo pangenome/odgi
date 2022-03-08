@@ -144,7 +144,7 @@ int main_heaps(int argc, char **argv) {
                               << std::endl << line << std::endl;
                     return 1;
                 }
-                auto& path_name = vals[0];;
+                auto& path_name = vals[0];
                 uint64_t start = std::stoul(vals[1]);
                 uint64_t end = std::stoul(vals[2]);
                 if (!graph.has_path(path_name)) {
@@ -157,8 +157,6 @@ int main_heaps(int argc, char **argv) {
         }
     }
 
-
-    
     graph.set_number_of_threads(num_threads);
 
     std::cout << "permutation\tnth.genome\tbase.pairs" << std::endl;

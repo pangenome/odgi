@@ -25,6 +25,7 @@ Commands
     commands/odgi_overlap
     commands/odgi_panpos
     commands/odgi_pathindex
+    commands/odgi_pav
     commands/odgi_paths
     commands/odgi_position
     commands/odgi_prune

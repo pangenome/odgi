@@ -12,9 +12,6 @@
 ;;   cd build
 ;;   cmake -DCMAKE_BUILD_TYPE=Debug ..
 ;;   cmake --build . --verbose
-```
-
-
 ;;
 ;; For the tests you may need /usr/bin/env. In a container create it with
 ;;
@@ -23,52 +20,44 @@
 ;; Note for python bindings you may need to run against gcc-11 with something
 ;; like
 ;;
-;;   env LD_LIBRARY_PATH=/gnu/store/*gcc-11*lib/lib PYTHONPATH=lib python3 examples/explore.py
+;; env LD_LIBRARY_PATH=$GUIX_ENVIRONMENT/lib LD_PRELOAD=libjemalloc.so.2 python3 -c 'import odgi'
 ;;
-;; otherwise you get ImportError:
-;;
-;; /gnu/store/90lbavffg0csrf208nw0ayj1bz5knl47-gcc-10.3.0-lib/lib/libstdc++.so.6:
-;; version `GLIBCXX_3.4.29' not found because it tries to pick up from gcc-10.
-;;
-;; In debug mode with AddressSanitizer you may need to preload libasan.so:
-;;   env LD_PRELOAD=/gnu/store/8ya5i2ll3by937rlm7nv7d78730n837d-gcc-11.2.0-lib/lib/libasan.so etc.
-;;
-;; Python may show memory leaks, see https://bugs.python.org/issue43303
+;; this is because the underlying libraries were built with gcc-10 and
+;; jemalloc needs to be preloaded.
 
 (use-modules
+  (ice-9 popen)
+  (ice-9 rdelim)
   ((guix licenses) #:prefix license:)
   (guix gexp)
   (guix packages)
+  (guix download)
   (guix git-download)
   (guix build-system cmake)
   (guix utils)
-  ;; (gnu packages algebra)
   (gnu packages base)
   (gnu packages compression)
   (gnu packages bioinformatics)
   (gnu packages build-tools)
   (gnu packages commencement) ; gcc-toolchain
   (gnu packages curl)
+  (gnu packages datastructures)
   (gnu packages gdb)
   (gnu packages gcc)
   (gnu packages jemalloc)
-  ;; (gnu packages llvm)
+  (gnu packages libffi)
   (gnu packages python)
   (gnu packages python-xyz)
-  ;; (gnu packages parallel)
-  ;; (gnu packages perl)
-  ;; (gnu packages perl6)
   (gnu packages pkg-config)
+  (gnu packages ruby)
   (gnu packages tls)
   (gnu packages version-control)
-  (srfi srfi-1)
-  (ice-9 popen)
-  (ice-9 rdelim))
+)
 
 (define %source-dir (dirname (current-filename)))
 
 (define %git-commit
-    (read-string (open-pipe "git show HEAD | head -1 | cut -d ' ' -f 2" OPEN_READ)))
+  (read-string (open-pipe "git show HEAD | head -1 | cut -d ' ' -f 2" OPEN_READ)))
 
 (define-public odgi-git
   (package
@@ -84,12 +73,14 @@
        ; ("intervaltree" ,intervaltree) later!
        ("jemalloc" ,jemalloc)
        ("gcc" ,gcc-11)
+       ("gcc-lib" ,gcc-11 "lib")
        ("gcc-toolchain" ,gcc-toolchain)
        ("gdb" ,gdb)
        ("git" ,git)
        ; ("lodepng" ,lodepng) later!
        ("python" ,python)
-       ; ("sdsl-lite" ,sdsl-lite) later!
+       ("sdsl-lite" ,sdsl-lite)
+       ("libdivsufsort" ,libdivsufsort)
        ))
     (native-inputs
      `(("pkg-config" ,pkg-config)
@@ -108,11 +99,11 @@
              #t))
          (delete 'check))
         #:make-flags (list ,(string-append "CC=" (cc-for-target)))))
-     (synopsis "odgi optimized dynamic sequence graph implementation")
+     (synopsis "odgi pangenome optimized dynamic sequence graph implementation")
      (description
-"odgi provides an efficient, succinct dynamic DNA sequence graph model, as well
-as a host of algorithms that allow the use of such graphs in bioinformatic
-analyses.")
+"odgi pangenome graph tooling provides an efficient, succinct dynamic
+DNA sequence graph model, as well as a host of algorithms that allow
+the use of such graphs.")
      (home-page "https://github.com/vgteam/odgi")
      (license license:expat)))
 

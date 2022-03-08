@@ -23,11 +23,23 @@ Alternatively, add the module to the ``Python`` path through ``sys.path.append``
 Optimise
 ========
 
+If python3 segfaults on
+
+.. code-block:: bash
+
+    env PYTHONPATH=lib python3 -c 'import odgi'
+
 For improved performance ``odgi`` makes effective use of ``jemalloc`` for in memory data structures. One way is to preload the library, e.g.
 
 .. code-block:: bash
 
-    export LD_PRELOAD=/lib/x86_64-linux-gnu/libjemalloc.so.2
+    export LD_PRELOAD=/lib/x86_64-linux-gnu/libjemalloc.so.2 PYTHONPATH=lib python3 -c 'import odgi'
+
+or
+
+.. code-block:: bash
+
+    env LD_PRELOAD=libjemalloc.so.2 PYTHONPATH=lib python3 -c 'import odgi'
 
 that tells the dynamic linker to bind symbols provided by the ``jemalloc`` shared library before loading the other libraries.
 

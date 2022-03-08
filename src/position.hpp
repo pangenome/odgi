@@ -84,6 +84,7 @@ struct path_range_t {
     path_pos_t begin;
     path_pos_t end;
     bool is_rev;
+    std::string name;
     std::string data;
 };
 
