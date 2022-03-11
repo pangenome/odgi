@@ -108,11 +108,11 @@ int main_heaps(int argc, char **argv) {
                 auto path_name = graph.get_path_name(p);
                 // split and decide
                 auto vals = split(path_name, '#');
-                if (vals.size() == 1) { // ctg
+                if (vals.size() == 1) { // Assume ctg
                     path_groups_map[vals.front()].push_back(p);
-                } else if (vals.size() == 2) { // sample#ctg
+                } else if (vals.size() == 2) { // Assume sample#ctg
                     path_groups_map[vals.front()].push_back(p);
-                } else if (vals.size() == 3) { // sample#hap#ctg
+                } else if (vals.size() == 3) { // Assume sample#hap#ctg
                     auto key = vals[0] + vals[1];
                     path_groups_map[key].push_back(p);
                 }

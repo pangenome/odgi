@@ -5,7 +5,9 @@ odgi pav
 #########
 
 Presence/absence variants (PAVs).
-It prints to stdout a matrix with the PAVs ratios.
+It prints to stdout a matrix with the `PAV ratios`.
+For a given path range ``PR`` and path ``P``, the `PAV ratio` is the ratio between the sum of the lengths of the nodes
+in ``PR`` that are crossed by ``P`` divided by the sum of the lengths of all the nodes in ``PR``.
 
 SYNOPSIS
 ========
@@ -35,6 +37,12 @@ Pav Options
 
 | **-p, --path-groups**\ =\ *FILE*
 | Group paths as described in two-column *FILE*, with columns `path.name` and `group.name`.
+
+| **-S, --group-by-sample**
+| Following `PanSN <https://github.com/pangenome/PanSN-spec>`_ naming (`sample#hap#ctg`), group by sample (1st field).
+
+| **-H, --group-by-haplotype**
+| Following `PanSN <https://github.com/pangenome/PanSN-spec>`_ naming (`sample#hap#ctg`), group by haplotype (2nd field).
 
 | **-B, --binary-matrix**\ =\ *THRESHOLD*
 | Emit a binary matrix, with 1 if the PAV ratio is greater than or equal to the specified THRESHOLD, else 0.

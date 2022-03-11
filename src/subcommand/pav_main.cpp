@@ -21,9 +21,12 @@ int main_pav(int argc, char **argv) {
     }
     const std::string prog_name = "odgi pav";
     argv[0] = (char *) prog_name.c_str();
-    --argc
-;
-    args::ArgumentParser parser("Presence/absence variants (PAVs). It prints to stdout a matrix with the PAVs ratios.");
+    --argc;
+
+    args::ArgumentParser parser("Presence/absence variants (PAVs). It prints to stdout a matrix with the 'PAV ratios'. "
+                                "For a given path range 'PR' and path 'P', the 'PAV ratio' is the ratio between the sum of the lengths "
+                                "of the nodes in 'PR' that are crossed by 'P' divided by the sum of the lengths"
+                                " of all the nodes in 'PR'. Each node is considered only once.");
     args::Group mandatory_opts(parser, "[ MANDATORY ARGUMENTS ]");
     args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::ValueFlag<std::string> _path_bed_file(mandatory_opts, "FILE",
@@ -32,6 +35,8 @@ int main_pav(int argc, char **argv) {
     args::Group pav_opts(parser, "[ Pav Options ]");
     args::ValueFlag<std::string> _path_groups(pav_opts, "FILE", "Group paths as described in two-column FILE, with columns path.name and group.name.",
                                               {'p', "path-groups"});
+    args::Flag _group_by_sample(pav_opts, "bool", "Following PanSN naming (sample#hap#ctg), group by sample (1st field).", {'S', "group-by-sample"});
+    args::Flag _group_by_haplotype(pav_opts, "bool", "Following PanSN naming (sample#hap#ctg), group by haplotype (2nd field).", {'H', "group-by-haplotype"});
     args::ValueFlag<double> _binary_matrix(pav_opts, "THRESHOLD", "Emit a binary matrix, with 1 if the PAV ratio is greater than or equal to the specified THRESHOLD, else 0.",
                                        {'B', "binary-matrix"});
     args::Group threading_opts(parser, "[ Threading ]");
@@ -85,44 +90,82 @@ int main_pav(int argc, char **argv) {
 
     if (args::get(_binary_matrix) && (args::get(_binary_matrix) < 0 || args::get(_binary_matrix) > 1)) {
         std::cerr
-            << "[odgi::pav] error: the PAV ratio must be greather than 0 and lower than 1."
+            << "[odgi::pav] error: the PAV ratio threshold must be greater than 0 and lower than 1."
             << std::endl;
         return 1;
     }
     const double binary_threshold = args::get(_binary_matrix) ? args::get(_binary_matrix) : 0;
     const bool emit_binary_matrix = binary_threshold != 0;
 
-    // Read path groups
-    ska::flat_hash_map<path_handle_t, std::string> path_2_group; // General, but heavy, solution
-    std::map<std::string, uint64_t> group_2_index;               // Ordered map to keep group names' order
-    if (_path_groups) {
-        std::ifstream refs(args::get(_path_groups).c_str());
-        std::string line;
-        while (std::getline(refs, line)) {
-            if (!line.empty()) {
-                auto vals = split(line, '\t');
-                if (vals.size() != 2) {
-                    std::cerr << "[odgi::pav] line does not have a path.name and path.group value:"
-                              << std::endl << line << std::endl;
-                    return 1;
-                }
-                auto& path_name = vals.front();
-                auto& group = vals.back();
-                if (!graph.has_path(path_name)) {
-                    std::cerr << "[odgi::pav] no path '" << path_name << "'" << std::endl;
-                    return 1;
-                }
-                path_2_group[graph.get_path_handle(path_name)] = group;
-                group_2_index[group] = 0;
-            }
-        }
-        refs.close();
+    if (_path_groups + _group_by_sample + _group_by_haplotype > 1) {
+        std::cerr
+            << "[odgi::pav] error: select only one grouping option (-p/--path-groups, -S/--group-by-sample, or -H/--group-by-haplotype)."
+            << std::endl;
+        return 1;
+    }
 
-        if (group_2_index.empty()) {
-            std::cerr
+    // Read path groups
+    const bool group_paths = _path_groups || _group_by_sample || _group_by_haplotype;
+    ska::flat_hash_map<path_handle_t, std::string> path_2_group; // General, but potentially heavy solution
+    std::map<std::string, uint64_t> group_2_index;               // Ordered map to keep group names' order
+    if (group_paths) {
+        if (_path_groups) {
+            std::ifstream refs(args::get(_path_groups).c_str());
+            std::string line;
+            while (std::getline(refs, line)) {
+                if (!line.empty()) {
+                    auto vals = split(line, '\t');
+                    if (vals.size() != 2) {
+                        std::cerr << "[odgi::pav] line does not have a path.name and path.group value:"
+                        << std::endl << line << std::endl;
+                        return 1;
+                    }
+                    auto& path_name = vals.front();
+                    auto& group = vals.back();
+                    if (!graph.has_path(path_name)) {
+                        std::cerr << "[odgi::pav] no path '" << path_name << "'" << std::endl;
+                        return 1;
+                    }
+                    path_2_group[graph.get_path_handle(path_name)] = group;
+                    group_2_index[group] = 0;
+                }
+            }
+            refs.close();
+
+            if (group_2_index.empty()) {
+                std::cerr
                 << "[odgi::pav] error: 0 path groups were read. Please specify at least one path group via -p/--path-groups."
                 << std::endl;
-            return 1;
+                return 1;
+            }
+        } else if (_group_by_sample) {
+            graph.for_each_path_handle([&](const path_handle_t& p) {
+                auto path_name = graph.get_path_name(p);
+                // split and decide
+                const auto vals = split(path_name, '#');
+                const auto group = vals.front();
+                path_2_group[p] = group;
+                group_2_index[group] = 0;
+            });
+        } else if (_group_by_haplotype) {
+            graph.for_each_path_handle([&](const path_handle_t& p) {
+                auto path_name = graph.get_path_name(p);
+                // split and decide
+                const auto vals = split(path_name, '#');
+                if (vals.size() == 1) { // Assume ctg
+                    const auto group = vals.front();
+                    path_2_group[p] = group;
+                    group_2_index[group] = 0;
+                } else if (vals.size() == 2) { // Assume sample#ctg
+                    const auto group = vals.front();
+                    path_2_group[p] = group;
+                    group_2_index[group] = 0;
+                } else if (vals.size() == 3) { // Assume sample#hap#ctg
+                    const auto group = vals[0] + '#' + vals[1];
+                    path_2_group[p] = group;
+                    group_2_index[group] = 0;
+                }
+            });
         }
 
         uint64_t group_index = 0;
@@ -213,7 +256,7 @@ int main_pav(int argc, char **argv) {
               << "start" << "\t"
               << "end" << "\t"
               << "name";
-    if (_path_groups) {
+    if (group_paths) {
         for (auto& x : group_2_index) {
             std::cout << "\t" << x.first;
         }
@@ -238,7 +281,7 @@ int main_pav(int argc, char **argv) {
 
         uint64_t len_unique_nodes_in_range = 0;
         std::vector<uint64_t> len_unique_nodes_in_range_for_each_group(
-                _path_groups ? group_2_index.size() : graph.get_path_count(),
+                group_paths ? group_2_index.size() : graph.get_path_count(),
                 0);
 
         // For each node in the range
@@ -251,8 +294,8 @@ int main_pav(int argc, char **argv) {
             graph.for_each_step_on_handle(handle, [&](const step_handle_t &source_step) {
                 const auto& path_handle = graph.get_path_handle_of_step(source_step);
                 // Check if the paths are grouped and there are paths that do not belong to any group
-                if (!_path_groups || path_2_group.find(path_handle) != path_2_group.end()) {
-                    const uint64_t group_rank = _path_groups ?
+                if (!group_paths || path_2_group.find(path_handle) != path_2_group.end()) {
+                    const uint64_t group_rank = group_paths ?
                             group_2_index[path_2_group[path_handle]] :
                             as_integer(path_handle) - 1;
                     group_ranks_on_node_handle.insert(group_rank);
@@ -275,6 +318,7 @@ int main_pav(int argc, char **argv) {
             << path_range.end.offset << "\t"
             << path_range.name;
             for (auto& x: len_unique_nodes_in_range_for_each_group) {
+                // Check if there were nodes in the range
                 const double pav_ratio = len_unique_nodes_in_range == 0 ?
                         0 : (double) x / (double) len_unique_nodes_in_range;
                 std::cout << "\t" << (emit_binary_matrix ? pav_ratio >= binary_threshold : pav_ratio);
