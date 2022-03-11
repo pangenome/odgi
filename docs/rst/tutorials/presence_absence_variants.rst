@@ -141,7 +141,7 @@ Then, to group the PAVs by sample, execute:
 
 
 -----------------------
-Alternative workflow
+How to get a BED file: ``odgi untangle``
 -----------------------
 
 Instead of splitting in windows the path(s) chosen as a reference(s), an alternative way to obtain a BED file for ``odgi pav``
@@ -193,3 +193,33 @@ all paths as reference paths, execute:
     HG02572__LPA__tig00000001  0      35     .     0                        0                        0                        0
     NA19239__LPA__tig00000006  0      1665   .     1                        0.9994                   0.9994                   0.99219
     NA19240__LPA__tig00000001  0      36676  .     0.99954                  0.98871                  0.98901                  0.98849
+
+
+-----------------------
+How to get a BED file: ``odgi flatten``
+-----------------------
+
+Similarly, we can obtain a BED file for ``odgi pav`` also by applying ``odgi flatten``. For example, to identify the PAVs
+for all nodes crossed by all paths in the graph, execute:
+
+.. code-block:: bash
+
+    odgi flatten -i LPA.og -b LPA.flatten.tsv
+    sed '1d'  LPA.flatten.tsv | awk -v OFS='\t' '{print($4,$2,$3,"step.rank_"$6,".",$5)}' > LPA.flatten.bed
+    odgi pav -i LPA.og -b LPA.flatten.bed > LPA.flatten.pavs.txt
+
+    # Sort by starting position, but keeping the header line at the top
+    awk 'NR == 1; NR > 1 {print $0 | "sort -k 2n"}' LPA.flatten.pavs.txt | head | cut -f 1-8 | column -t
+
+.. code-block:: none
+
+    chrom                      start  end  name         chm13__LPA__tig00000001  HG002__LPA__tig00000001  HG002__LPA__tig00000005  HG00733__LPA__tig00000001
+    HG02572__LPA__tig00000001  0      35   step.rank_0  0                        0                        0                        0
+    HG02572__LPA__tig00000001  35     38   step.rank_1  0                        0                        0                        0
+    HG02572__LPA__tig00000005  35     38   step.rank_0  1                        0                        0                        0
+    chm13__LPA__tig00000001    38     43   step.rank_0  1                        0                        0                        0
+    HG02572__LPA__tig00000001  38     43   step.rank_2  1                        0                        0                        0
+    HG02572__LPA__tig00000005  38     43   step.rank_1  1                        0                        0                        0
+    chm13__LPA__tig00000001    43     44   step.rank_1  1                        0                        0                        0
+    HG02572__LPA__tig00000005  43     44   step.rank_2  1                        0                        0                        0
+    HG02572__LPA__tig00000001  44     45   step.rank_3  1                        0                        0                        0
