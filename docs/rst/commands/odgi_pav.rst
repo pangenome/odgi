@@ -36,6 +36,12 @@ Pav Options
 | **-p, --path-groups**\ =\ *FILE*
 | Group paths as described in two-column *FILE*, with columns `path.name` and `group.name`.
 
+| **-S, --group-by-sample**
+| Following `PanSN <https://github.com/pangenome/PanSN-spec>`_ naming (`sample#hap#ctg`), group by sample (1st field).
+
+| **-H, --group-by-haplotype**
+| Following `PanSN <https://github.com/pangenome/PanSN-spec>`_ naming (`sample#hap#ctg`), group by haplotype (2nd field).
+
 | **-B, --binary-matrix**\ =\ *THRESHOLD*
 | Emit a binary matrix, with 1 if the PAV ratio is greater than or equal to the specified THRESHOLD, else 0.
 
