@@ -23,7 +23,10 @@ int main_pav(int argc, char **argv) {
     argv[0] = (char *) prog_name.c_str();
     --argc;
 
-    args::ArgumentParser parser("Presence/absence variants (PAVs). It prints to stdout a matrix with the PAVs ratios.");
+    args::ArgumentParser parser("Presence/absence variants (PAVs). It prints to stdout a matrix with the 'PAV ratios'. "
+                                "For a given path range 'PR' and path 'P', the 'PAV ratio' is the ratio between the sum of the lengths "
+                                "of the nodes in 'PR' that are crossed by 'P' divided by the sum of the lengths"
+                                " of all the nodes in 'PR'. Each node is considered only once.");
     args::Group mandatory_opts(parser, "[ MANDATORY ARGUMENTS ]");
     args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::ValueFlag<std::string> _path_bed_file(mandatory_opts, "FILE",
@@ -87,7 +90,7 @@ int main_pav(int argc, char **argv) {
 
     if (args::get(_binary_matrix) && (args::get(_binary_matrix) < 0 || args::get(_binary_matrix) > 1)) {
         std::cerr
-            << "[odgi::pav] error: the PAV ratio must be greather than 0 and lower than 1."
+            << "[odgi::pav] error: the PAV ratio treshold must be greather than 0 and lower than 1."
             << std::endl;
         return 1;
     }
@@ -315,6 +318,7 @@ int main_pav(int argc, char **argv) {
             << path_range.end.offset << "\t"
             << path_range.name;
             for (auto& x: len_unique_nodes_in_range_for_each_group) {
+                // Check if there were nodes in the range
                 const double pav_ratio = len_unique_nodes_in_range == 0 ?
                         0 : (double) x / (double) len_unique_nodes_in_range;
                 std::cout << "\t" << (emit_binary_matrix ? pav_ratio >= binary_threshold : pav_ratio);

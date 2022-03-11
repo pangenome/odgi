@@ -93,7 +93,7 @@ namespace odgi {
 	}
 
 	static Subcommand odgi_stepindex("stepindex",
-									"Generate a step index and access the position of each step of each path once. Prints the run time of each the index generation and the position fetching to stdout.",
+									"Generate a step index and access the position of each step of each path once.",
 									PIPELINE, 3, main_stepindex);
 
 }

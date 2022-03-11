@@ -5,7 +5,9 @@ odgi pav
 #########
 
 Presence/absence variants (PAVs).
-It prints to stdout a matrix with the PAVs ratios.
+It prints to stdout a matrix with the `PAV ratios`.
+For a given path range ``PR`` and path ``P``, the `PAV ratio` is the ratio between the sum of the lengths of the nodes
+in ``PR`` that are crossed by ``P`` divided by the sum of the lengths of all the nodes in ``PR``.
 
 SYNOPSIS
 ========

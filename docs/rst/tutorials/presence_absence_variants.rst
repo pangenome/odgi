@@ -9,7 +9,8 @@ Synopsis
 ========
 
 The term presence/absence variation (PAV) is used to describe sequences that are present in one genome, but
-entirely missing in another genome, and is an important source of genetic divergence and diversity.
+entirely missing in another genome, and is an important source of genetic divergence and diversity. ``odgi pav`` allows
+users to identify PAVs with respect to one or multiple paths in the pangenome graph.
 
 =====
 Steps
@@ -50,7 +51,11 @@ To identify the PAVs, execute:
 
     odgi pav -i LPA.og -b LPA.w1kbp.bed > LPA.w1kbp.pavs.txt
 
-By default, ``odgi pav`` prints to stdout a matrix with the PAVs ratios.
+By default, ``odgi pav`` prints to stdout a matrix with the `PAV ratios`.
+For a given path range ``PR`` and path ``P``, the `PAV ratio` is the ratio between the sum of the lengths of the nodes
+in ``PR`` that are crossed by ``P`` divided by the sum of the lengths of all the nodes in ``PR``.
+Each node is considered only once.
+
 To take a look at the first rows and columns of the matrix in the ``LPA.w1kbp.pavs.txt`` file, execute:
 
 .. code-block:: bash
