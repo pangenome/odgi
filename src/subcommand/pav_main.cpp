@@ -90,7 +90,7 @@ int main_pav(int argc, char **argv) {
 
     if (args::get(_binary_matrix) && (args::get(_binary_matrix) < 0 || args::get(_binary_matrix) > 1)) {
         std::cerr
-            << "[odgi::pav] error: the PAV ratio threshold must be greather than 0 and lower than 1."
+            << "[odgi::pav] error: the PAV ratio threshold must be greater than 0 and lower than 1."
             << std::endl;
         return 1;
     }
