@@ -147,6 +147,8 @@ Alternative workflow
 Instead of splitting in windows the path(s) chosen as a reference(s), an alternative way to obtain a BED file for ``odgi pav``
 is to use ``odgi untangle`` (see the corresponding tutorial :ref:`untangling_the_pangenome` for more information on how it works).
 
+For example, to identify the PAVs by considering ``chm13__LPA__tig00000001`` as reference path, execute:
+
 .. code-block:: bash
 
     odgi untangle -i LPA.og -r chm13__LPA__tig00000001 | sed '1d' | cut -f 4,5,6 > LPA.untangle.bed
@@ -166,3 +168,28 @@ is to use ``odgi untangle`` (see the corresponding tutorial :ref:`untangling_the
     chm13__LPA__tig00000001  9096   9884   .     1                        0.99873                  1                        0.99873
     chm13__LPA__tig00000001  9884   10346  .     1                        0.99784                  1                        1
     chm13__LPA__tig00000001  10346  47024  .     1                        0.98863                  0.9889                   0.98844
+
+Of note, ``odgi pav`` is not constrained to use a single reference. As further example, to identify the PAVs by considering
+all paths as reference paths, execute:
+
+.. code-block:: bash
+
+    odgi paths -i LPA.og -L > LPA.paths.txt
+    odgi untangle -i LPA.og -R LPA.paths.txt | sed '1d' | cut -f 4,5,6 > LPA.untangle.multiple_references.bed
+    odgi pav -i LPA.og -b LPA.untangle.bed > LPA.untangle.multiple_references.pavs.txt
+
+    # Sort by starting position, but keeping the header line at the top
+    awk 'NR == 1; NR > 1 {print $0 | "sort -k 2n"}' LPA.untangle.multiple_references.pavs.txt | head | cut -f 1-8 | column -t
+
+.. code-block:: none
+
+    chrom                      start  end    name  chm13__LPA__tig00000001  HG002__LPA__tig00000001  HG002__LPA__tig00000005  HG00733__LPA__tig00000001
+    chm13__LPA__tig00000001    0      5045   .     1                        0                        0                        0
+    HG002__LPA__tig00000001    0      241    .     0.99585                  1                        0.9917                   0
+    HG002__LPA__tig00000005    0      540    .     1                        0                        1                        0
+    HG00733__LPA__tig00000001  0      403    .     0.98263                  0.98263                  0.98263                  1
+    HG00733__LPA__tig00000008  0      93388  .     0.99935                  0.99954                  0.99769                  0.99908
+    HG01358__LPA__tig00000002  0      880    .     0.99886                  0.99773                  0.99886                  0.98068
+    HG02572__LPA__tig00000001  0      35     .     0                        0                        0                        0
+    NA19239__LPA__tig00000006  0      1665   .     1                        0.9994                   0.9994                   0.99219
+    NA19240__LPA__tig00000001  0      36676  .     0.99954                  0.98871                  0.98901                  0.98849
