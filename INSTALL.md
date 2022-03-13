@@ -1,6 +1,10 @@
 # INSTALL ODGI
 
-## Guix
+This document describes creating a build environment, development and performance tuning options.
+
+## Creating a build environment
+
+### Install and build with GNU Guix
 
 An alternative way to manage `odgi`'s dependencies is by using the `GNU GUIX` package manager. We use Guix to develop, test and deploy odgi on our systems.
 For more information see [INSTALL](./INSTALL.md).
@@ -97,3 +101,155 @@ guix environment --ad-hoc odgi
 ```
 
 For more details about how to handle Guix channels, please go to https://git.genenetwork.org/guix-bioinformatics/guix-bioinformatics.git.
+
+## Development
+
+WIP
+
+## ODGI performance tuning
+
+odgi is a high-performance computing tool and some tuning can improve speed greater than 20%.
+In this section we describe the different optimization parts we explored.
+But first we describe the actions to take to optimize the code output by gcc>11.
+
+### Optimize for preformance
+
+The default odgi build path uses position independent code (PIC) throughout to be able to use the shared libs. So
+
+```
+cd build
+cmake ..
+```
+
+To build the binary without PIC makes it slightly faster
+
+```
+cmake -DNOPIC=ON ..
+```
+
+Adding machine flags can improve speed by 10%
+
+```
+cmake -DNOPIC=ON -DEXTRA_FLAGS="-Ofast -march=native -pipe -msse4.2 -funroll-all-loops" ..
+```
+
+To make use of profiler generated optimization (PGO) compile ODGI twice(!) Run the tests (or your favorite job) after compiling with
+
+```
+cmake -DNOPIC=ON -DEXTRA_FLAGS="-Ofast -march=native -pipe -msse4.2 -funroll-all-loops -fprofile-generate=../pgo" ..
+make -j 8
+for x in 1 2 3 ; do ctest . ; done
+```
+
+With the profiling data in ../pgo we can now ask gcc to optimize compiler output with
+
+```
+cmake -DNOPIC=ON -DEXTRA_FLAGS="-Ofast -march=native -pipe -msse4.2 -funroll-all-loops -fprofile-use=../pgo" ..
+make -j 8
+for x in 1 2 3 ; do ctest . ; done
+```
+
+This should gain the odgi binary another 10% of speed. To optimize the shared libs run both steps with PIC (i.e. -DNOPIC=OFF).
+
+### Position independent code
+
+Normally compilation with position independent code (`-fPIC` option for `gcc`) is  detrimental to performance. In general this is true for odgi too, so to build the binary tool we default.
+
+* On epysode the current master runs at slightly over 25.0s.
+* Disabling fPIC on odgi-obj drops to 24.6s
+
+### Native compilation
+
+With native compilation we gain a little on AMD EPYC 3251 8-Core Processor
+
+* Native compilation march=native at 24.5s
+
+### Extra flags
+
+Tested on AMD EPYC 3251 8-Core Processor
+
+* -mavx2 has impact (down to 22.6s)
+* -msse4.2 has impact (down to 22.4s)
+* -funroll-all-loops has a little impact
+
+The following flags have no impact
+
+* -pipe does not help runtime performance, but helps compile time
+* -fomit-frame-pointer
+* -ffast-math
+* -march=native
+* -fforce-addr
+* -D_GLIBCXX_PARALLEL
+
+Current build flags
+
+```
+cmake -DEXTRA_FLAGS="-Ofast -march=native -pipe -msse4.2 -funroll-all-loops" ..
+```
+
+result in
+
+```
+CXX_FLAGS = -fopenmp -Ofast -march=native -pipe -msse4.2 -funroll-all-loops -fopenmp -fopenmp -DNDEBUG -std=gnu++17
+```
+
+### Profile guided optimizations
+
+* Run profile guided optimizations, e.g. https://stackoverflow.com/questions/14492436/g-optimization-beyond-o3-ofast
+  + 190s run of odgi test to generate profile
+  + PGO goes at 20s. So the overall gain is greater than 20%.
+
+### Static library (libodgi.a) and shared library (libodgi.so)
+
+The optimal build of odgi is with `-DPIC=OFF` that adds the switch `-fPIC`.
+Therefore the binary always builds with library `libodgi.a`.
+
+To build the shared library use the default, i.e., `-DPIC=ON`. Still, the odgi binary won't use that.
+This may change in the future.
+
+### Looking at the libs
+
+After all this the CMake flags are not honoured by libhandlegraph. It builds with
+
+```
+CXX_FLAGS =  -O3 -g -fPIC -std=gnu++14
+```
+
+Compiling with inlined sources, however, made no dent.
+
+Above metrics were using sdsl-lite which also does not honour global flags with
+
+```
+CXX_FLAGS =  -std=c++11 -Wall -Wextra -DNDEBUG -O3 -DNDEBUG
+```
+
+this build is also at 22.4s. Let's try adding our flags with the following patch
+
+```patch
+diff --git a/CMakeLists.txt b/CMakeLists.txt
+index 657949f..97a6863 100644
+--- a/CMakeLists.txt
++++ b/CMakeLists.txt
+@@ -43,7 +43,10 @@ else()
+   message(STATUS "Compiler is recent enough to support C++11.")
+ endif()
+
+-if( CMAKE_COMPILER_IS_GNUCXX )
++set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG")
++set (CMAKE_CXX_FLAGS "${OpenMP_CXX_FLAGS} -Ofast -pipe -msse4.2 -funroll-all-loops")
++
++if( CMAKE_COMPILER_IS_GNUCXXU )
+     append_cxx_compiler_flags("-std=c++11 -Wall -Wextra -DNDEBUG" "GCC" CMAKE_CXX_FLAGS)
+     append_cxx_compiler_flags("-O3 -ffast-math -funroll-loops" "GCC" CMAKE_CXX_OPT_FLAGS)
+     if ( CODE_COVERAGE )
+```
+
+resulting in
+
+```
+CXX_FLAGS =  -Ofast -pipe -msse4.2 -funroll-all-loops -DNDEBUG
+```
+
+improved speed from 22.7s to 22.4s. That points out that these switches help AND that the native sdsl-lite libs are somehow optimally compiled.
+
+I am not sure what the impact can be of the other libs, but we will find that out after profiling the code.
