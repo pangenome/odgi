@@ -1,13 +1,31 @@
 # Specify the minimum version for CMake
+#
+# Accepted cmake flags are:
+#
+#   (default builds all with -fPIC and -g, not optimal!)
+#
+# For best performance with gcc>=11 compile the binary with
+#
+#     cmake -DPIC=OFF -DEXTRA_FLAGS="-Ofast -march=native -pipe -msse4.2 -funroll-all-loops" ..
+# To build the smallest possible executable use (from 8.6Mb to 5.5Mb at a cost of 25% speed)
+#
+#     cmake -DPIC=OFF -DEXTRA_FLAGS="-Os -ffunction-sections -fdata-sections -march=native -pipe -msse4.2 -Wl,--gc-sections" ..
+#
+# These architecture specific flags can not be the default.
+#
+# For the performance of the odgi binary it pays to compile -DPIC=OFF and run performance guided optimization (PGO).
+#
+# For more information see ./INSTALL.md
 
 cmake_minimum_required(VERSION 3.1)
 
 # Project's name
 project(odgi)
-# We build using c++17
+# Enforce c++17
 set(CMAKE_CXX_STANDARD 17)
 
-# Command line switches
+# Command line switches. Compile with cmake -DINLINE_HANDLEGRAPH_SOURCES=ON
+option(PIC "Compile all odgi sources with -fPIC - required for shared libs" ON)
 option(INLINE_HANDLEGRAPH_SOURCES "Compile handlegraph sources inline" OFF)
 
 include(ExternalProject)
@@ -15,6 +33,7 @@ include(FeatureSummary)
 
 find_package(PkgConfig REQUIRED)
 find_package(pybind11 CONFIG)
+find_package(OpenMP)
 
 feature_summary(
   FATAL_ON_MISSING_REQUIRED_PACKAGES
@@ -27,20 +46,32 @@ if (NOT CMAKE_BUILD_TYPE) # default build to Release
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
+if (PIC)
+  message(STATUS "Compiling odgi sources with PIC=ON")
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+endif (PIC)
+
+# Set optimization through command line; see INSTALL.md
+# set(EXTRA_FLAGS "-Ofast -march=native -pipe -msse4.2 -funroll-all-loops") #  -fprofile-generate=../pgo")
+
 if (${CMAKE_BUILD_TYPE} MATCHES "Release")
-  # Use all standard-compliant optimizations
-  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -O3 -g -Wl,--no-undefined")
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -O3 -g -Wl,--no-undefined")
+  if (EXTRA_FLAGS)
+    set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG") # reset CXX_FLAGS to replace -O3 with -Ofast
+  endif (EXTRA_FLAGS)
+  # Use all standard-compliant optimizations - always add these:
+  set (CMAKE_C_FLAGS "${OpenMP_C_FLAGS} ${PIC_FLAG} ${EXTRA_FLAGS}")
+  set (CMAKE_CXX_FLAGS "${OpenMP_CXX_FLAGS} ${PIC_FLAG} ${EXTRA_FLAGS}")
 endif ()
 
 # set(CMAKE_BUILD_TYPE Debug) -- don't uncomment this, instead run
 #   cmake -DCMAKE_BUILD_TYPE=Debug ..
 
 if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
-  # Debug use the defaults (by default) - so commenting out:
+  # Debug use the defaults - so commenting out:
   # set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O -fsanitize=address")
   # set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O -fsanitize=address")
 endif ()
+
 
 message(STATUS "ODGI CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
@@ -150,6 +181,39 @@ if (NOT INLINE_HANDLEGRAPH_SOURCES)
   set(handlegraph_LIB "${INSTALL_DIR}/lib")
 else (NOT INLINE_HANDLEGRAPH_SOURCES)
   MESSAGE(STATUS "ODGI inlining handlegraph sources")
+  set(handlegraph_INCLUDE "${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/include")
+
+  set(handlegraph_sources
+  ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/append_graph.cpp
+  ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/apply_orientations.cpp
+  ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/are_equivalent.cpp
+  ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/copy_graph.cpp
+  ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/count_walks.cpp
+  ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/dagify.cpp
+  ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/deletable_handle_graph.cpp
+  ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/dijkstra.cpp
+  ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/eades_algorithm.cpp
+  ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/extend.cpp
+  ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/find_shortest_paths.cpp
+  ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/find_tips.cpp
+  ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/handle_graph.cpp
+  ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/is_acyclic.cpp
+  ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/is_single_stranded.cpp
+  ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/mutable_handle_graph.cpp
+  ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/path_handle_graph.cpp
+  ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/path_position_handle_graph.cpp
+  ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/ranked_handle_graph.cpp
+  ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/reverse_complement.cpp
+  ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/serializable.cpp
+  ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/snarl_decomposition.cpp
+  ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/split_strands.cpp
+  ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/strongly_connected_components.cpp
+  ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/topological_sort.cpp
+  ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/trivially_serializable.cpp
+  ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/types.cpp
+  ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/unchop.cpp
+  ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/weakly_connected_components.cpp
+)
 endif (NOT INLINE_HANDLEGRAPH_SOURCES)
 
 # taywee's C++ args library, header only
@@ -418,7 +482,6 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/tips_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/stepindex_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/heaps_main.cpp
-  ${CMAKE_SOURCE_DIR}/src/subcommand/pav_main.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/hash.cpp
@@ -473,7 +536,9 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/heaps.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/edge.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/tips.cpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/path_jaccard.cpp)
+  ${CMAKE_SOURCE_DIR}/src/algorithms/path_jaccard.cpp
+  ${handlegraph_sources}
+)
 
 set(odgi_DEPS
     dynamic
@@ -636,7 +701,6 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/algorithms/degree.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/sorted_id_ranges.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/strongly_connected_components.hpp
-#  ${CMAKE_SOURCE_DIR}/src/algorithms/mondriaan_sort.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/hash.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/hilbert.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/groom.hpp
@@ -650,18 +714,18 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/algorithms/path_jaccard.hpp)
 
 target_include_directories(odgi_objs PUBLIC ${odgi_INCLUDES})
-set_target_properties(odgi_objs PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
 
 add_library(libodgi_static STATIC $<TARGET_OBJECTS:odgi_objs>)
 set_target_properties(libodgi_static PROPERTIES OUTPUT_NAME "odgi")
-set_target_properties(libodgi_static PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
-add_library(libodgi_shared SHARED $<TARGET_OBJECTS:odgi_objs> src/algorithms/fonts/field8.h src/algorithms/fonts/font5x8.h)
-# target_link_options(libodgi_shared PRIVATE "LINKER:${handlegraph_LIB}/libhandlegraph.a")
-set_target_properties(libodgi_shared PROPERTIES OUTPUT_NAME "odgi")
-set_target_properties(libodgi_shared PROPERTIES POSITION_INDEPENDENT_CODE TRUE)
-
 set_target_properties(libodgi_static PROPERTIES PUBLIC_HEADER "${odgi_HEADERS}")
-set_target_properties(libodgi_shared PROPERTIES PUBLIC_HEADER "${odgi_HEADERS}")
+
+if (NOT PIC)
+  MESSAGE(STATUS "libodgi.so requires -DPIC=ON")
+else (NOT PIC)
+  add_library(libodgi_shared SHARED $<TARGET_OBJECTS:odgi_objs> src/algorithms/fonts/field8.h src/algorithms/fonts/font5x8.h)
+  set_target_properties(libodgi_shared PROPERTIES OUTPUT_NAME "odgi")
+  set_target_properties(libodgi_shared PROPERTIES PUBLIC_HEADER "${odgi_HEADERS}")
+endif (NOT PIC)
 
 add_executable(odgi
   $<TARGET_OBJECTS:odgi_objs>
@@ -669,25 +733,30 @@ add_executable(odgi
 target_link_libraries(odgi ${odgi_LIBS})
 set_target_properties(odgi PROPERTIES OUTPUT_NAME "odgi")
 
+if (NOT PIC)
+  MESSAGE(STATUS "Can not build python bindings with PIC=OFF")
+else (NOT PIC)
+  if (NOT pybind11_FOUND)
+    add_subdirectory(deps/pybind11)
+  endif (NOT pybind11_FOUND)
 
-if (NOT pybind11_FOUND)
-  add_subdirectory(deps/pybind11)
-endif (NOT pybind11_FOUND)
-
-# Build Python module
-pybind11_add_module(odgi_pybind11 "${CMAKE_SOURCE_DIR}/src/pythonmodule.cpp")
-add_dependencies(odgi_pybind11 ${odgi_DEPS} libodgi_static)
-target_include_directories(odgi_pybind11 PUBLIC ${odgi_INCLUDES})
-target_link_libraries(odgi_pybind11 PRIVATE "${CMAKE_SOURCE_DIR}/lib/libodgi.a" "${odgi_LIBS}")
-set_target_properties(odgi_pybind11 PROPERTIES OUTPUT_NAME "odgi")
-install(TARGETS odgi_pybind11 LIBRARY DESTINATION lib)
+  # Build Python module
+  pybind11_add_module(odgi_pybind11 "${CMAKE_SOURCE_DIR}/src/pythonmodule.cpp")
+  add_dependencies(odgi_pybind11 ${odgi_DEPS} libodgi_static)
+  target_include_directories(odgi_pybind11 PUBLIC ${odgi_INCLUDES})
+  target_link_libraries(odgi_pybind11 PRIVATE "${CMAKE_SOURCE_DIR}/lib/libodgi.a" "${odgi_LIBS}")
+  set_target_properties(odgi_pybind11 PROPERTIES OUTPUT_NAME "odgi")
+  install(TARGETS odgi_pybind11 LIBRARY DESTINATION lib)
+endif (NOT PIC)
 
 file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/include)
 execute_process(COMMAND bash ${CMAKE_SOURCE_DIR}/scripts/generate_git_version.sh ${CMAKE_SOURCE_DIR}/include)
 
 install(TARGETS odgi DESTINATION bin)
 install(TARGETS libodgi_static ARCHIVE DESTINATION lib LIBRARY DESTINATION lib PUBLIC_HEADER DESTINATION include/odgi)
-install(TARGETS libodgi_shared ARCHIVE DESTINATION lib LIBRARY DESTINATION lib PUBLIC_HEADER DESTINATION include/odgi)
+if (PIC)
+  install(TARGETS libodgi_shared ARCHIVE DESTINATION lib LIBRARY DESTINATION lib PUBLIC_HEADER DESTINATION include/odgi)
+endif (PIC)
 
 if (APPLE)
 elseif (TRUE)
@@ -699,5 +768,3 @@ endif()
 # ---- Add tests
 enable_testing()
 add_test(NAME odgi-test COMMAND odgi test)
-# timed on Intel(R) Core(TM) i7-2620M CPU @ 2.70GHz
-# set_tests_properties(odgi-test PROPERTIES TIMEOUT 200)
