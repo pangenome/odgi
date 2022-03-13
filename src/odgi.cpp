@@ -1,6 +1,6 @@
 //
 //  graph.cpp
-//  
+//
 
 #include "odgi.hpp"
 
@@ -774,7 +774,7 @@ void graph_t::reassign_node_ids(const std::function<nid_t(const nid_t&)>& get_ne
         });
     *this = reassigned;
     */
-    // XXXXXX TODO 
+    // XXXXXX TODO
 }
 
 /// Reorder the graph's internal structure to match that given.
