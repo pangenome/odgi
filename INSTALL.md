@@ -199,6 +199,14 @@ CXX_FLAGS = -fopenmp -Ofast -march=native -pipe -msse4.2 -funroll-all-loops -fop
   + 190s run of odgi test to generate profile
   + PGO goes at 20s. So the overall gain is greater than 20%.
 
+### Static library (libodgi.a) and shared library (libodgi.so)
+
+The optimal build of odgi is with `-DPIC=OFF` that adds the switch `-fPIC`.
+Therefore the binary always builds with library `libodgi.a`.
+
+To build the shared library use the default, i.e., `-DPIC=ON`. Still, the odgi binary won't use that.
+This may change in the future.
+
 ### Looking at the libs
 
 After all this the CMake flags are not honoured by libhandlegraph. It builds with
