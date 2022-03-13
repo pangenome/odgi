@@ -2,10 +2,11 @@
 
 require(tidyverse)
 
-objectFun <- function(p, x, y){                                                                                                                      
-  y.hat <- p[1] * x^(p[2])
-  J <- sqrt(sum((y - y.hat)^2))/length(x)
-  return(J)
+objectFun <- function(p, x, y){
+    y.hat <- p[1] * x^(p[2])
+    #J <- sqrt(sum((y - y.hat)^2))/length(x)
+    J <- sum((y - y.hat)^2) # sum of squared error
+    return(J)
 }
 
 # ENABLE command line arguments

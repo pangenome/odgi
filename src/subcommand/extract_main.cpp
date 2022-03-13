@@ -53,6 +53,11 @@ namespace odgi {
         args::ValueFlag<std::string> _path_bed_file(extract_opts, "FILE",
                                                     "Find the node(s) in the path range(s) specified in the given BED FILE.",
                                                     {'b', "bed-file"});
+        args::ValueFlag<std::string> _pangenomic_range(extract_opts, "STRING",
+                                                       "Find the node(s) in the specified pangenomic range pos1-pos2 (0-based coordinates). "
+                                                       "The nucleotide positions refer to the pangenome’s sequence (i.e., "
+                                                       "the sequence obtained arranging all the graph’s node from left to right)."
+                                                       , {'q', "pangenomic-range"});
         args::Flag _full_range(extract_opts, "full_range",
                                "Collects all nodes in the sorted order of the graph in the min and max positions touched by the given path ranges. "
                                "This ensures that all the paths of the subgraph are not split by node, but that the nodes are laced together again. "
@@ -125,7 +130,13 @@ namespace odgi {
             }
 
             if (_inverse) {
-                std::cerr << "[odgi::extract] error: please do not specify an inverse query (with -I/--_inverse) when "
+                std::cerr << "[odgi::extract] error: please do not specify an inverse query (with -I/--inverse) when "
+                             "one subgraph per given target is requested (with -s/--split-subgraphs)." << std::endl;
+                return 1;
+            }
+
+            if (_pangenomic_range) {
+                std::cerr << "[odgi::extract] error: please do not specify a pangenomic range (with -q/--pangenomic-range) when "
                              "one subgraph per given target is requested (with -s/--split-subgraphs)." << std::endl;
                 return 1;
             }
@@ -229,63 +240,12 @@ namespace odgi {
 
         std::vector<odgi::path_range_t> path_ranges;
 
-        auto add_bed_range = [&path_ranges](const odgi::graph_t &graph,
-                                            const std::string &buffer) {
-            if (!buffer.empty() && buffer[0] != '#') {
-                const auto vals = split(buffer, '\t');
-                /*
-                if (vals.size() != 3) {
-                    std::cerr << "[odgi::extract] error: path position record is incomplete" << std::endl;
-                    std::cerr << "[odgi::extract] error: got '" << buffer << "'" << std::endl;
-                    exit(1); // bail
-                }
-                */
-                const auto &path_name = vals[0];
-                if (!graph.has_path(path_name)) {
-                    std::cerr << "[odgi::extract] error: path " << path_name << " not found in graph" << std::endl;
-                    exit(1);
-                } else {
-                    uint64_t start = vals.size() > 1 ? (uint64_t) std::stoi(vals[1]) : 0;
-                    uint64_t end = 0;
-                    if (vals.size() > 2) {
-                        end = (uint64_t) std::stoi(vals[2]);
-                    } else {
-                        // In the BED format, the end is non-inclusive, unlike start
-                        graph.for_each_step_in_path(graph.get_path_handle(path_name), [&](const step_handle_t &s) {
-                            end += graph.get_length(graph.get_handle_of_step(s));
-                        });
-                    }
-
-                    if (start > end) {
-                        std::cerr << "[odgi::extract] error: wrong input coordinates in row: " << buffer << std::endl;
-                        exit(1);
-                    }
-
-                    path_ranges.push_back(
-                            {
-                                    {
-                                            graph.get_path_handle(path_name),
-                                            start,
-                                            false
-                                    },
-                                    {
-                                            graph.get_path_handle(path_name),
-                                            end,
-                                            false
-                                    },
-                                    (vals.size() > 3 && vals[3] == "-"),
-                                    buffer
-                            });
-                }
-            }
-        };
-
         // handle targets from BED
         if (_path_bed_file && !args::get(_path_bed_file).empty()) {
             std::ifstream bed_in(args::get(_path_bed_file));
             std::string line;
             while (std::getline(bed_in, line)) {
-                add_bed_range(graph, line);
+                add_bed_range(path_ranges, graph, line);
             }
         }
 
@@ -303,10 +263,38 @@ namespace odgi {
 
             // no coordinates given, we do whole thing (0,-1)
             if (region.start < 0 && region.end < 0) {
-                add_bed_range(graph, region.seq);
+                add_bed_range(path_ranges, graph, region.seq);
             } else {
-                add_bed_range(graph, region.seq + "\t" + std::to_string(region.start) + "\t" + std::to_string(region.end));
+                add_bed_range(path_ranges, graph, region.seq + "\t" + std::to_string(region.start) + "\t" + std::to_string(region.end));
             }
+        }
+
+        std::pair<uint64_t, uint64_t> pangenomic_range = {0, 0};
+        if (_pangenomic_range && !args::get(_pangenomic_range).empty()) {
+            const std::string pangenomic_range_str = args::get(_pangenomic_range);
+
+            const std::regex regex("-");
+            const std::vector<std::string> splitted(
+                    std::sregex_token_iterator(pangenomic_range_str.begin(), pangenomic_range_str.end(), regex, -1),
+                    std::sregex_token_iterator()
+                    );
+
+            if (splitted.size() != 2) {
+                std::cerr
+                        << "[odgi::extract] error: please specify a valid pangenomic range: start-end."
+                        << std::endl;
+                return 1;
+            }
+
+            if (!utils::is_number(splitted[0]) || !utils::is_number(splitted[1]) || stoull(splitted[0]) > stoull(splitted[1])) {
+                std::cerr
+                << "[odgi::extract] error: please specify valid numbers for the pangenomic range."
+                << std::endl;
+                return 1;
+            }
+
+            pangenomic_range.first = stoull(splitted[0]);
+            pangenomic_range.second = stoull(splitted[1]);
         }
 
         if (_split_subgraphs && path_ranges.empty()) {
@@ -319,7 +307,7 @@ namespace odgi {
         const uint64_t context_steps = _context_steps ? args::get(_context_steps) : 0;
         const uint64_t context_bases = _context_bases ? args::get(_context_bases) : 0;
 
-        omp_set_num_threads(num_threads);
+        omp_set_num_threads((int) num_threads);
 
         auto prep_graph = [](graph_t &source, const std::vector<path_handle_t>& source_paths,
                              const std::vector<path_handle_t>& lace_paths, graph_t &subgraph,
@@ -505,6 +493,18 @@ namespace odgi {
                         [&](const handle_t& handle) {
                             keep_bv.set(graph.get_id(handle) - shift);
                         });
+                }
+                if (_pangenomic_range) {
+                    uint64_t len = 0;
+                    graph.for_each_handle([&](const handle_t &h) {
+                        const uint64_t hl = graph.get_length(h);
+
+                        if (len <= pangenomic_range.second && pangenomic_range.first <= len + hl) {
+                            keep_bv.set(graph.get_id(h) - shift);
+                        }
+
+                        len += hl;
+                    });
                 }
                 for (auto id_shifted : keep_bv) {
                     const handle_t h = graph.get_handle(id_shifted + shift);

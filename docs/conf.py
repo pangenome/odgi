@@ -20,13 +20,13 @@ sys.path.insert(0, os.path.abspath('../lib/'))
 # -- Project information -----------------------------------------------------
 
 project = u'odgi'
-copyright = '2021, Simon Heumos, Andrea Guarracino, Erik Garrison. Revision v0.6.3-7b866a5'
+copyright = '2021, Simon Heumos, Andrea Guarracino, Erik Garrison. Revision v0.6.3-838d607'
 author = u'Andrea Guarracino, Simon Heumos, ... , Pjotr Prins, Erik Garrison'
 
 # The short X.Y version
 version = 'v0.6.3'
 # The full version, including alpha/beta/rc tags
-release = '7b866a5'
+release = '838d607'
 
 
 # -- General configuration ---------------------------------------------------
@@ -152,6 +152,8 @@ man_pages = [
     ('man/odgi_chop', 'odgi_chop', u'Divide nodes into smaller pieces preserving node topology and order.',
      [EG, AG], 1),
     ('man/odgi_cover', 'odgi_cover', u'Cover the graph with paths.',
+     [AG], 1),
+    ('man/odgi_pav', 'odgi_pav', u'Presence/absence variants (PAVs).',
      [AG], 1),
     ('man/odgi_degree', 'odgi_degree', u'Describe the graph in terms of node degree.',
      [EG], 1),

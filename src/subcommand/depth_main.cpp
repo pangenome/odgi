@@ -228,57 +228,6 @@ namespace odgi {
             }
         };
 
-        auto add_bed_range = [&path_ranges](const odgi::graph_t &graph,
-                                            const std::string &buffer) {
-            if (!buffer.empty() && buffer[0] != '#') {
-                auto vals = split(buffer, '\t');
-                /*
-                if (vals.size() != 3) {
-                    std::cerr << "[odgi::depth] error: path position record is incomplete" << std::endl;
-                    std::cerr << "[odgi::depth] error: got '" << buffer << "'" << std::endl;
-                    exit(1); // bail
-                }
-                */
-                auto &path_name = vals[0];
-                if (!graph.has_path(path_name)) {
-                    std::cerr << "[odgi::depth] error: path " << path_name << " not found in graph" << std::endl;
-                    exit(1);
-                } else {
-                    uint64_t start = vals.size() > 1 ? (uint64_t) std::stoi(vals[1]) : 0;
-                    uint64_t end = 0;
-                    if (vals.size() > 2) {
-                        end = (uint64_t) std::stoi(vals[2]);
-                    } else {
-                        // In the BED format, the end is non-inclusive, unlike start
-                        graph.for_each_step_in_path(graph.get_path_handle(path_name), [&](const step_handle_t &s) {
-                            end += graph.get_length(graph.get_handle_of_step(s));
-                        });
-                    }
-
-                    if (start > end) {
-                        std::cerr << "[odgi::depth] error: wrong input coordinates in row: " << buffer << std::endl;
-                        exit(1);
-                    }
-
-                    path_ranges.push_back(
-                            {
-                                    {
-                                            graph.get_path_handle(path_name),
-                                            start,
-                                            false
-                                    },
-                                    {
-                                            graph.get_path_handle(path_name),
-                                            end,
-                                            false
-                                    },
-                                    (vals.size() > 3 && vals[3] == "-"),
-                                    buffer
-                            });
-                }
-            }
-        };
-
         if (summarize_depth) {
             // we do nothing here, we iterate over the handles in the graph later
         } else if (graph_depth_table) {
@@ -388,21 +337,21 @@ namespace odgi {
             std::ifstream bed_in(args::get(bed_input));
             std::string buffer;
             while (std::getline(bed_in, buffer)) {
-                add_bed_range(graph, buffer);
+                add_bed_range(path_ranges, graph, buffer);
             }
         } else if (path_name) {
-            add_bed_range(graph, args::get(path_name));
+            add_bed_range(path_ranges, graph, args::get(path_name));
         } else if (path_file) {
             // for thing in things
             std::ifstream refs(args::get(path_file));
             std::string line;
             while (std::getline(refs, line)) {
-                add_bed_range(graph, line);
+                add_bed_range(path_ranges, graph, line);
             }
         } else if (!_windows_in && !_windows_out){
             // using all the paths in the graph
             graph.for_each_path_handle(
-                    [&](const path_handle_t &path) { add_bed_range(graph, graph.get_path_name(path)); });
+                    [&](const path_handle_t &path) { add_bed_range(path_ranges, graph, graph.get_path_name(path)); });
         }
 
         auto get_graph_pos = [](const odgi::graph_t &graph,

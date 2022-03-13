@@ -63,8 +63,11 @@ Extract Options
 | Find the node(s) in the specified path range TARGET=path[:pos1[-pos2]]
   (0-based coordinates).
 
-| **-r, --bed-file**\ =\ *FILE*
+| **-b, --bed-file**\ =\ *FILE*
 | Find the node(s) in the path range(s) specified in the given BED FILE
+
+| **-q, --pangenomic-range**\ =\ *FILE*
+|  Find the node(s) in the specified pangenomic range pos1-pos2 (0-based coordinates). The nucleotide positions refer to the pangenome’s sequence (i.e., the sequence obtained arranging all the graph’s node from left to right).
 
 | **-E, --full-range**
 | Collects all nodes in the sorted order of the graph in the min and max
