@@ -46,6 +46,7 @@
   (gnu packages gcc)
   (gnu packages jemalloc)
   (gnu packages libffi)
+  (gnu packages mpi)
   (gnu packages python)
   (gnu packages python-xyz)
   (gnu packages pkg-config)
@@ -77,6 +78,7 @@
        ("gdb" ,gdb)
        ("git" ,git)
        ; ("lodepng" ,lodepng) later!
+       ("openmpi" ,openmpi)
        ("python" ,python)
        ("sdsl-lite" ,sdsl-lite)
        ("libdivsufsort" ,libdivsufsort)
