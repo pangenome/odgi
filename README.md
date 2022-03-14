@@ -50,6 +50,7 @@ cmake -DBUILD_STATIC=1 -H. -Bbuild && cmake --build build -- -j 3
 You'll need to set this flag to 0 or remove and rebuild your build directory if you want to unset this build behavior and get a dynamic binary again.
 Static builds are unlikely to be supported on OSX, and require appropriate static libraries on linux.
 
+For more information on optimisations, debugging and GNU Guix builds, see [INSTALL.md](./INSTALL.md) and [CMakeLists.txt](./CMakeLists.txt).
 
 #### Notes on dependencies
 

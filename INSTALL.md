@@ -6,11 +6,9 @@ This document describes creating a build environment, development and performanc
 
 ### Install and build with GNU Guix
 
-An alternative way to manage `odgi`'s dependencies is by using the `GNU GUIX` package manager. We use Guix to develop, test and deploy odgi on our systems.
-For more information see [INSTALL](./INSTALL.md).
+We use GNU Guix to develop, test and deploy odgi on our systems. GNU Guix will run as a package manager on *any* Linux distribution.
 
-
-After installing and updating guix, load the current profile with:
+On Debian, after installing and updating guix, load the current profile with:
 
 ```sh
 sudo apt install guix
@@ -18,7 +16,7 @@ guix pull
 source ~/.config/guix/current/etc/profile
 ```
 
-With the latest guix in the path start a GNU Guix build container with:
+That way, with the latest guix in the path start a GNU Guix build container with:
 
 ```bash
 git clone --recursive https://github.com/pangenome/odgi.git
@@ -30,7 +28,7 @@ make
 ctest .
 ```
 
-Another way of building odgi is with guix.scm:
+Another way of building odgi is with the provided [guix.scm](./guix.scm):
 
 ```sh
 guix build -f guix.scm
@@ -53,12 +51,12 @@ cd odgi
 find -name CMakeCache.txt|xargs rm -v
 ```
 
-For more see [guix.scm](./guix.scm).
+For more information, see [guix.scm](./guix.scm).
 
 
 #### installing via the guix-genomics git repository
 
-guix genomics also contains a package definition of odgi.
+The `guix genomics` git repository contains another package definition of odgi.
 
 First, clone the guix-genomics repository:
 
@@ -102,9 +100,16 @@ guix environment --ad-hoc odgi
 
 For more details about how to handle Guix channels, please go to https://git.genenetwork.org/guix-bioinformatics/guix-bioinformatics.git.
 
-## Development
+## Development & debugging
 
-WIP
+To build odgi with debug information:
+
+```sh
+cd build
+cmake -DCMAKE_BUILD_TYPE ..
+make
+ctest . --verbose
+```
 
 ## ODGI performance tuning
 
@@ -124,19 +129,20 @@ cmake ..
 To build the binary without PIC makes it slightly faster
 
 ```
-cmake -DNOPIC=ON ..
+cmake -DPIC=OFF ..
 ```
 
-Adding machine flags can improve speed by 10%
+Note that this only builds the `odgi` binary. For shared libs and FFI we need PIC.
+Additionally adding machine flags can improve speed by 10%
 
 ```
-cmake -DNOPIC=ON -DEXTRA_FLAGS="-Ofast -march=native -pipe -msse4.2 -funroll-all-loops" ..
+cmake -DPIC=OFF -DEXTRA_FLAGS="-Ofast -march=native -pipe -msse4.2 -funroll-all-loops" ..
 ```
 
 To make use of profiler generated optimization (PGO) compile ODGI twice(!) Run the tests (or your favorite job) after compiling with
 
 ```
-cmake -DNOPIC=ON -DEXTRA_FLAGS="-Ofast -march=native -pipe -msse4.2 -funroll-all-loops -fprofile-generate=../pgo" ..
+cmake -DPIC=OFF -DEXTRA_FLAGS="-Ofast -march=native -pipe -msse4.2 -funroll-all-loops -fprofile-generate=../pgo" ..
 make -j 8
 for x in 1 2 3 ; do ctest . ; done
 ```
@@ -144,23 +150,23 @@ for x in 1 2 3 ; do ctest . ; done
 With the profiling data in ../pgo we can now ask gcc to optimize compiler output with
 
 ```
-cmake -DNOPIC=ON -DEXTRA_FLAGS="-Ofast -march=native -pipe -msse4.2 -funroll-all-loops -fprofile-use=../pgo" ..
+cmake -DPIC=OFF -DEXTRA_FLAGS="-Ofast -march=native -pipe -msse4.2 -funroll-all-loops -fprofile-use=../pgo" ..
 make -j 8
 for x in 1 2 3 ; do ctest . ; done
 ```
 
-This should gain the odgi binary another 10% of speed. To optimize the shared libs run both steps with PIC (i.e. -DNOPIC=OFF).
+This should gain the odgi binary another 10% of speed. To optimize the shared libs run both PGO steps with PIC.
 
 ### Position independent code
 
 Normally compilation with position independent code (`-fPIC` option for `gcc`) is  detrimental to performance. In general this is true for odgi too, so to build the binary tool we default.
 
-* On epysode the current master runs at slightly over 25.0s.
-* Disabling fPIC on odgi-obj drops to 24.6s
+* On epysode AMD EPYC 3251 8-Core Processor the current master runs at slightly over 25.0s.
+* Disabling PIC on odgi-obj drops to 24.6s
 
 ### Native compilation
 
-With native compilation we gain a little on AMD EPYC 3251 8-Core Processor
+With native compilation we gain a little on the AMD EPYC 3251 8-Core Processor
 
 * Native compilation march=native at 24.5s
 
@@ -181,13 +187,13 @@ The following flags have no impact
 * -fforce-addr
 * -D_GLIBCXX_PARALLEL
 
-Current build flags
+Current recommended build flags
 
 ```
 cmake -DEXTRA_FLAGS="-Ofast -march=native -pipe -msse4.2 -funroll-all-loops" ..
 ```
 
-result in
+result in CMake generating
 
 ```
 CXX_FLAGS = -fopenmp -Ofast -march=native -pipe -msse4.2 -funroll-all-loops -fopenmp -fopenmp -DNDEBUG -std=gnu++17
@@ -201,7 +207,7 @@ CXX_FLAGS = -fopenmp -Ofast -march=native -pipe -msse4.2 -funroll-all-loops -fop
 
 ### Static library (libodgi.a) and shared library (libodgi.so)
 
-The optimal build of odgi is with `-DPIC=OFF` that adds the switch `-fPIC`.
+The optimal build of odgi is with `-DPIC=OFF` that removes the switch `-fPIC` an can not build shared libs.
 Therefore the binary always builds with library `libodgi.a`.
 
 To build the shared library use the default, i.e., `-DPIC=ON`. Still, the odgi binary won't use that.
@@ -215,7 +221,7 @@ After all this the CMake flags are not honoured by libhandlegraph. It builds wit
 CXX_FLAGS =  -O3 -g -fPIC -std=gnu++14
 ```
 
-Compiling with inlined sources, however, made no dent.
+Compiling with inlined sources, however, made no dent in performance.
 
 Above metrics were using sdsl-lite which also does not honour global flags with
 
@@ -250,6 +256,6 @@ resulting in
 CXX_FLAGS =  -Ofast -pipe -msse4.2 -funroll-all-loops -DNDEBUG
 ```
 
-improved speed from 22.7s to 22.4s. That points out that these switches help AND that the native sdsl-lite libs are somehow optimally compiled.
+improved speed from 22.7s to 22.4s. That points out that these switches help AND that the native sdsl-lite libs that come with a distro are optimally compiled.
 
 I am not sure what the impact can be of the other libs, but we will find that out after profiling the code.
