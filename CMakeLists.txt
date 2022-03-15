@@ -179,6 +179,7 @@ if (NOT INLINE_HANDLEGRAPH_SOURCES)
   ExternalProject_Get_property(handlegraph INSTALL_DIR)
   set(handlegraph_INCLUDE "${INSTALL_DIR}/include")
   set(handlegraph_LIB "${INSTALL_DIR}/lib")
+
 else (NOT INLINE_HANDLEGRAPH_SOURCES)
   MESSAGE(STATUS "ODGI inlining handlegraph sources")
   set(handlegraph_INCLUDE "${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/include")

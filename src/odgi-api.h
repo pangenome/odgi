@@ -7,12 +7,13 @@
 #pragma once
 
 #include <cstddef>
-// #include <cstdint>
+
+#include "odgi.hpp"
 
 extern "C" {
 
-  // These functions are exposed as a C API
-  const char *odgi_version();
-  size_t odgi_graph_nodes();
+  // These functions are exposed as a simple C API
 
+  // Note that they are picked from a shared library so there are no
+  // header definitions required until we start calling from C.
 }
