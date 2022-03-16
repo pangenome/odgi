@@ -133,7 +133,7 @@ int main_sort(int argc, char** argv) {
         return 1;
     }
 
-    if (!dg_out_file) {
+    if (!dg_out_file || args::get(dg_out_file).empty()) {
         std::cerr << "[odgi::sort] error: please specify an output file to store the graph via -o=[FILE], --out=[FILE]." << std::endl;
         return 1;
     }
@@ -210,6 +210,12 @@ int main_sort(int argc, char** argv) {
                      "Please either use -G=[N], path-sgd-min-term-updates-paths=[N] or -U=[N], path-sgd-min-term-updates-nodes=[N]." << std::endl;
         return 1;
     }
+
+    // If required, first of all, optimize the graph so that it is optimized for subsequent algorithms (if required)
+    if (args::get(optimize)) {
+        graph.optimize();
+    }
+
     uint64_t path_sgd_iter_max = args::get(p_sgd_iter_max) ? args::get(p_sgd_iter_max) : 100;
     uint64_t path_sgd_iter_max_learning_rate = args::get(p_sgd_iter_with_max_learning_rate) ? args::get(p_sgd_iter_with_max_learning_rate) : 0;
     double path_sgd_zipf_theta = args::get(p_sgd_zipf_theta) ? args::get(p_sgd_zipf_theta) : 0.99;
@@ -304,164 +310,158 @@ int main_sort(int argc, char** argv) {
         path_sgd_max_eta = args::get(p_sgd_eta_max) ? args::get(p_sgd_eta_max) : max_path_step_count * max_path_step_count;
     }
 
-    // helper, TODO: move into its own file
-
     // did we groom the graph?
-    const std::string outfile = args::get(dg_out_file);
-    if (!outfile.empty()) {
-        if (args::get(two)) {
-            graph.apply_ordering(algorithms::two_way_topological_order(&graph), true);
-        } else if (args::get(optimize)) {
-            graph.optimize();
-        } else if (!args::get(sort_order_in).empty()) {
-            std::vector<handle_t> given_order;
-            std::string buf;
-            std::ifstream in_order(args::get(sort_order_in).c_str());
-            while (std::getline(in_order, buf)) {
-                given_order.push_back(graph.get_handle(std::stol(buf)));
+    if (!args::get(pipeline).empty()) {
+        // for each sort type, apply it to the graph
+        std::vector<handle_t> order;
+        for (auto c : args::get(pipeline)) {
+            switch (c) {
+                case 's':
+                    order = algorithms::topological_order(&graph, true, false, args::get(progress));
+                    break;
+                case 'n':
+                    order = algorithms::topological_order(&graph, false, false, args::get(progress));
+                    break;
+                case 'd': {
+                    graph_t split, into;
+                    order = algorithms::dagify_sort(graph, split, into);
+                }
+                    break;
+                case 'c':
+                    order = algorithms::cycle_breaking_sort(graph);
+                    break;
+                case 'b':
+                    order = algorithms::breadth_first_topological_order(graph, bf_chunk_size);
+                    break;
+                case 'z':
+                    order = algorithms::depth_first_topological_order(graph, df_chunk_size);
+                    break;
+                case 'w':
+                    order = algorithms::two_way_topological_order(&graph);
+                    break;
+                case 'r':
+                    order = algorithms::random_order(graph);
+                    break;
+                case 'Y': {
+                    if (!fresh_path_index) {
+                        path_index.clean();
+                        path_index.from_handle_graph(graph, num_threads);
+                    }
+                    order = algorithms::path_linear_sgd_order(graph,
+                                                              path_index,
+                                                              path_sgd_use_paths,
+                                                              path_sgd_iter_max,
+                                                              path_sgd_iter_max_learning_rate,
+                                                              path_sgd_min_term_updates,
+                                                              path_sgd_delta,
+                                                              path_sgd_eps,
+                                                              path_sgd_max_eta,
+                                                              path_sgd_zipf_theta,
+                                                              path_sgd_zipf_space,
+                                                              path_sgd_zipf_space_max,
+                                                              path_sgd_zipf_space_quantization_step,
+                                                              path_sgd_cooling,
+                                                              num_threads,
+                                                              progress,
+                                                              path_sgd_seed,
+                                                              snapshot,
+                                                              snapshot_prefix);
+                    break;
+                }
+                case 'f':
+                    order.clear();
+                    graph.for_each_handle([&order](const handle_t &handle) {
+                        order.push_back(handle);
+                    });
+                    std::reverse(order.begin(), order.end());
+                    break;
+                case 'g': {
+                    order = algorithms::groom(graph, progress);
+                    break;
+                }
+                default:
+                    break;
             }
-            graph.apply_ordering(given_order, true);
-        } else if (args::get(dagify)) {
-            graph_t split, into;
-            graph.apply_ordering(algorithms::dagify_sort(graph, split, into), true);
-        } else if (args::get(cycle_breaking)) {
-            graph.apply_ordering(algorithms::cycle_breaking_sort(graph), true);
-        } else if (args::get(no_seeds)) {
-            graph.apply_ordering(algorithms::topological_order(&graph, false, false, args::get(progress)), true);
-        } else if (args::get(p_sgd)) {
-            std::vector<handle_t> order =
-                    algorithms::path_linear_sgd_order(graph,
-                                                      path_index,
-                                                      path_sgd_use_paths,
-                                                      path_sgd_iter_max,
-                                                      path_sgd_iter_max_learning_rate,
-                                                      path_sgd_min_term_updates,
-                                                      path_sgd_delta,
-                                                      path_sgd_eps,
-                                                      path_sgd_max_eta,
-                                                      path_sgd_zipf_theta,
-                                                      path_sgd_zipf_space,
-                                                      path_sgd_zipf_space_max,
-                                                      path_sgd_zipf_space_quantization_step,
-                                                      path_sgd_cooling,
-                                                      num_threads,
-                                                      progress,
-                                                      path_sgd_seed,
-                                                      snapshot,
-                                                      snapshot_prefix);
+            if (order.size() != graph.get_node_count()) {
+                std::cerr << "[odgi::sort] error: expected " << graph.get_node_count()
+                          << " handles in the order "
+                          << "but got " << order.size() << std::endl;
+                assert(false);
+            }
             graph.apply_ordering(order, true);
-        } else if (args::get(breadth_first)) {
-            graph.apply_ordering(algorithms::breadth_first_topological_order(graph, bf_chunk_size), true);
-        } else if (args::get(depth_first)) {
-            graph.apply_ordering(algorithms::depth_first_topological_order(graph, df_chunk_size), true);
-        } else if (args::get(randomize)) {
-            graph.apply_ordering(algorithms::random_order(graph), true);
-        } else if (!args::get(pipeline).empty()) {
-            // for each sort type, apply it to the graph
-            std::vector<handle_t> order;
-            for (auto c : args::get(pipeline)) {
-                switch (c) {
-                    case 's':
-                        order = algorithms::topological_order(&graph, true, false, args::get(progress));
-                        break;
-                    case 'n':
-                        order = algorithms::topological_order(&graph, false, false, args::get(progress));
-                        break;
-                    case 'd': {
-                        graph_t split, into;
-                        order = algorithms::dagify_sort(graph, split, into);
-                    }
-                        break;
-                    case 'c':
-                        order = algorithms::cycle_breaking_sort(graph);
-                        break;
-                    case 'b':
-                        order = algorithms::breadth_first_topological_order(graph, bf_chunk_size);
-                        break;
-                    case 'z':
-                        order = algorithms::depth_first_topological_order(graph, df_chunk_size);
-                        break;
-                    case 'w':
-                        order = algorithms::two_way_topological_order(&graph);
-                        break;
-                    case 'r':
-                        order = algorithms::random_order(graph);
-                        break;
-                    case 'Y': {
-                        if (!fresh_path_index) {
-                            path_index.clean();
-                            path_index.from_handle_graph(graph, num_threads);
-                        }
-                        order = algorithms::path_linear_sgd_order(graph,
-                                                                  path_index,
-                                                                  path_sgd_use_paths,
-                                                                  path_sgd_iter_max,
-                                                                  path_sgd_iter_max_learning_rate,
-                                                                  path_sgd_min_term_updates,
-                                                                  path_sgd_delta,
-                                                                  path_sgd_eps,
-                                                                  path_sgd_max_eta,
-                                                                  path_sgd_zipf_theta,
-                                                                  path_sgd_zipf_space,
-                                                                  path_sgd_zipf_space_max,
-                                                                  path_sgd_zipf_space_quantization_step,
-                                                                  path_sgd_cooling,
-                                                                  num_threads,
-                                                                  progress,
-                                                                  path_sgd_seed,
-                                                                  snapshot,
-                                                                  snapshot_prefix);
-                        break;
-                    }
-                    case 'f':
-                        order.clear();
-                        graph.for_each_handle([&order](const handle_t &handle) {
-                            order.push_back(handle);
-                        });
-                        std::reverse(order.begin(), order.end());
-                        break;
-                    case 'g': {
-                        order = algorithms::groom(graph, progress);
-                        break;
-                    }
-                    default:
-                        break;
-                }
-                if (order.size() != graph.get_node_count()) {
-                    std::cerr << "[odgi::sort] error: expected " << graph.get_node_count()
-                              << " handles in the order "
-                              << "but got " << order.size() << std::endl;
-                    assert(false);
-                }
-                graph.apply_ordering(order, true);
-                fresh_path_index = false;
-            }
-        } else {
-            graph.apply_ordering(algorithms::topological_order(&graph, true, false, args::get(progress)), true);
+            fresh_path_index = false;
         }
-        if (args::get(paths_by_min_node_id)) {
-            graph.apply_path_ordering(
-                    algorithms::prefix_and_id_ordered_paths(graph, args::get(path_delim), false, false));
+    } else if (args::get(two)) {
+        graph.apply_ordering(algorithms::two_way_topological_order(&graph), true);
+    } else if (!args::get(sort_order_in).empty()) {
+        std::vector<handle_t> given_order;
+        std::string buf;
+        std::ifstream in_order(args::get(sort_order_in).c_str());
+        while (std::getline(in_order, buf)) {
+            given_order.push_back(graph.get_handle(std::stol(buf)));
         }
-        if (args::get(paths_by_max_node_id)) {
-            graph.apply_path_ordering(
-                    algorithms::prefix_and_id_ordered_paths(graph, args::get(path_delim), false, true));
-        }
-        if (args::get(paths_by_avg_node_id)) {
-            graph.apply_path_ordering(
-                    algorithms::prefix_and_id_ordered_paths(graph, args::get(path_delim), true, false));
-        }
-        if (args::get(paths_by_avg_node_id_rev)) {
-            graph.apply_path_ordering(
-                    algorithms::prefix_and_id_ordered_paths(graph, args::get(path_delim), true, true));
-        }
-        if (outfile == "-") {
-            graph.serialize(std::cout);
-        } else {
-            ofstream f(outfile.c_str());
-            graph.serialize(f);
-            f.close();
-        }
+        graph.apply_ordering(given_order, true);
+    } else if (args::get(dagify)) {
+        graph_t split, into;
+        graph.apply_ordering(algorithms::dagify_sort(graph, split, into), true);
+    } else if (args::get(cycle_breaking)) {
+        graph.apply_ordering(algorithms::cycle_breaking_sort(graph), true);
+    } else if (args::get(no_seeds)) {
+        graph.apply_ordering(algorithms::topological_order(&graph, false, false, args::get(progress)), true);
+    } else if (args::get(p_sgd)) {
+        std::vector<handle_t> order =
+                algorithms::path_linear_sgd_order(graph,
+                                                  path_index,
+                                                  path_sgd_use_paths,
+                                                  path_sgd_iter_max,
+                                                  path_sgd_iter_max_learning_rate,
+                                                  path_sgd_min_term_updates,
+                                                  path_sgd_delta,
+                                                  path_sgd_eps,
+                                                  path_sgd_max_eta,
+                                                  path_sgd_zipf_theta,
+                                                  path_sgd_zipf_space,
+                                                  path_sgd_zipf_space_max,
+                                                  path_sgd_zipf_space_quantization_step,
+                                                  path_sgd_cooling,
+                                                  num_threads,
+                                                  progress,
+                                                  path_sgd_seed,
+                                                  snapshot,
+                                                  snapshot_prefix);
+        graph.apply_ordering(order, true);
+    } else if (args::get(breadth_first)) {
+        graph.apply_ordering(algorithms::breadth_first_topological_order(graph, bf_chunk_size), true);
+    } else if (args::get(depth_first)) {
+        graph.apply_ordering(algorithms::depth_first_topological_order(graph, df_chunk_size), true);
+    } else if (args::get(randomize)) {
+        graph.apply_ordering(algorithms::random_order(graph), true);
+    } else {
+        graph.apply_ordering(algorithms::topological_order(&graph, true, false, args::get(progress)), true);
+    }
+    if (args::get(paths_by_min_node_id)) {
+        graph.apply_path_ordering(
+                algorithms::prefix_and_id_ordered_paths(graph, args::get(path_delim), false, false));
+    }
+    if (args::get(paths_by_max_node_id)) {
+        graph.apply_path_ordering(
+                algorithms::prefix_and_id_ordered_paths(graph, args::get(path_delim), false, true));
+    }
+    if (args::get(paths_by_avg_node_id)) {
+        graph.apply_path_ordering(
+                algorithms::prefix_and_id_ordered_paths(graph, args::get(path_delim), true, false));
+    }
+    if (args::get(paths_by_avg_node_id_rev)) {
+        graph.apply_path_ordering(
+                algorithms::prefix_and_id_ordered_paths(graph, args::get(path_delim), true, true));
+    }
+    const std::string outfile = args::get(dg_out_file);
+    if (outfile == "-") {
+        graph.serialize(std::cout);
+    } else {
+        ofstream f(outfile.c_str());
+        graph.serialize(f);
+        f.close();
     }
     return 0;
 }

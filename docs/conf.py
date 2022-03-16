@@ -20,13 +20,13 @@ sys.path.insert(0, os.path.abspath('../lib/'))
 # -- Project information -----------------------------------------------------
 
 project = u'odgi'
-copyright = '2021, Simon Heumos, Andrea Guarracino, Erik Garrison. Revision v0.6.3-838d607'
-author = u'Andrea Guarracino, Simon Heumos, ... , Pjotr Prins, Erik Garrison'
+copyright = '2021, Guarracino A., Heumos S., Nahnsen S., Prins P., Garrison E. Revision v0.6.3-305f069'
+author = u'Andrea Guarracino, Simon Heumos, Sven Nahnsen , Pjotr Prins, Erik Garrison'
 
 # The short X.Y version
 version = 'v0.6.3'
 # The full version, including alpha/beta/rc tags
-release = '838d607'
+release = '305f069'
 
 
 # -- General configuration ---------------------------------------------------
@@ -156,6 +156,8 @@ man_pages = [
     ('man/odgi_pav', 'odgi_pav', u'Presence/absence variants (PAVs).',
      [AG], 1),
     ('man/odgi_degree', 'odgi_degree', u'Describe the graph in terms of node degree.',
+     [EG], 1),
+    ('man/odgi_heaps', 'odgi_heaps', u'Path pangenome coverage permutations.',
      [EG], 1),
     ('man/odgi_depth', 'odgi_depth', u'Find the depth of a graph as defined by query criteria. Without specifying any '
                                      u'non-mandatory options, it prints in a tab-delimited format path, start, end, '

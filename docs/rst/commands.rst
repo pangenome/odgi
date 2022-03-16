@@ -18,6 +18,7 @@ Commands
     commands/odgi_extract
     commands/odgi_flatten
     commands/odgi_groom
+    commands/odgi_heaps
     commands/odgi_kmers
     commands/odgi_layout
     commands/odgi_matrix

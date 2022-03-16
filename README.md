@@ -14,7 +14,7 @@ The edges and path steps are recorded as deltas between the current node id and 
 Graphs built from biological data sets tend to have local partial order and, when sorted, the deltas be small.
 This allows them to be compressed with a variable length integer representation, resulting in a small in-memory footprint at the cost of packing and unpacking.
 
-The RAM and computational savings are substantial.  In partially ordered regions of the graph, most deltas will require only a single byte.
+The RAM and computational savings are substantial. In partially ordered regions of the graph, most deltas will require only a single byte.
 
 ## installation
 
