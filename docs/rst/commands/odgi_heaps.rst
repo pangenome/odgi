@@ -25,7 +25,7 @@ MANDATORY OPTIONS
 | **-i, --idx**\ =\ *FILE*
 | Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!
 
-Pav Options
+Heaps Options
 ---------------
 
 | **-p, --path-groups**\ =\ *FILE*
@@ -59,7 +59,7 @@ Program Information
 -------------------
 
 | **-h, --help**
-| Print a help message for **odgi pav**.
+| Print a help message for **odgi heaps**.
 
 ..
 	EXIT STATUS
