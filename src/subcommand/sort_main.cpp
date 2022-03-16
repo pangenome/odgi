@@ -133,7 +133,7 @@ int main_sort(int argc, char** argv) {
         return 1;
     }
 
-    if (!dg_out_file) {
+    if (!dg_out_file || args::get(dg_out_file).empty()) {
         std::cerr << "[odgi::sort] error: please specify an output file to store the graph via -o=[FILE], --out=[FILE]." << std::endl;
         return 1;
     }
@@ -210,6 +210,12 @@ int main_sort(int argc, char** argv) {
                      "Please either use -G=[N], path-sgd-min-term-updates-paths=[N] or -U=[N], path-sgd-min-term-updates-nodes=[N]." << std::endl;
         return 1;
     }
+
+    // If required, first of all, optimize the graph so that it is optimized for subsequent algorithms (if required)
+    if (args::get(optimize)) {
+        graph.optimize();
+    }
+
     uint64_t path_sgd_iter_max = args::get(p_sgd_iter_max) ? args::get(p_sgd_iter_max) : 100;
     uint64_t path_sgd_iter_max_learning_rate = args::get(p_sgd_iter_with_max_learning_rate) ? args::get(p_sgd_iter_with_max_learning_rate) : 0;
     double path_sgd_zipf_theta = args::get(p_sgd_zipf_theta) ? args::get(p_sgd_zipf_theta) : 0.99;
