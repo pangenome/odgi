@@ -33,8 +33,9 @@ coords.lay -p .png -x 1920 -y 1080 -R -t 28
 
 :ref:`odgi flatten` -i graph.og -f FASTA.fa -b BED.tsv
 
-:ref:`odgi groom` -i graph.og -o
-graph.groomed.og
+:ref:`odgi groom` -i graph.og -o graph.groomed.og
+
+:ref:`odgi heaps` -i graph.og
 
 :ref:`odgi kmers` -i graph.og -c -k 23
 -e 34 -D 50
@@ -55,6 +56,8 @@ Chr1 -n 4
 :ref:`odgi pathindex` -i graph.og -o graph.xp
 
 :ref:`odgi paths` -i graph.og -f
+
+:ref:`odgi pav` -i graph.og -b bed.bed
 
 :ref:`odgi position` -i
 target_graph.og -g
@@ -400,7 +403,7 @@ AUTHORS
 Erik Garrison from the University of Tennessee wrote the
 whole **odgi** tool suite.
 
-Andrea Guarracino from the Human Technopole wrote **odgi viz**, **odgi extract**, **odgi explode**, **odgi squeeze**,
+Andrea Guarracino from the Human Technopole wrote **odgi viz**, **odgi extract**, **odgi pav**, **odgi explode**, **odgi squeeze**,
 **odgi untangle**, **odgi position**, **odgi cover**, **odgi sort**, **odgi groom**, **odgi layout**, **odgi chop**,
 **odgi unchop**, **odgi depth**, **odgi degree**, **odgi stats**, **odgi overlap**, **odgi validate**, **odgi test**,
 and this documentation.
