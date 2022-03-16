@@ -36,7 +36,7 @@ int main_heaps(int argc, char **argv) {
     args::ValueFlag<uint64_t> nthreads(threading_opts, "N", "Number of threads to use for parallel operations.",
                                        {'t', "threads"});
     args::Group processing_info_opts(parser, "[ Processing Information ]");
-    args::Flag debug(processing_info_opts, "debug", "Print information about the process to stderr.", {'d', "debug"});
+    //args::Flag debug(processing_info_opts, "debug", "Print information about the process to stderr.", {'d', "debug"});
     args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
     args::Group program_info_opts(parser, "[ Program Information ]");
     args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi heaps.", {'h', "help"});
