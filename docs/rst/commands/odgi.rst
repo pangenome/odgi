@@ -173,6 +173,10 @@ description.
 | The odgi cover command creates a path coverage of a variation graph,
   with a specified number of paths per component.
 
+| **odgi crush** [**-i, --idx**\ =\ *FILE*] [**-o, --out**\ =\ *FILE*]
+  [*OPTION*]…
+| Crush runs of N.
+
 **odgi degree** [**-i, --idx**\ =\ *FILE*] [*OPTION*]… The odgi degree
 command describes the graph in terms of node degree. In summarization mode, it shows the *node.count*, *edge.count*, *avg.degree*,
 *min.degree*, and *max.degree*. One can also specify degree ranges streaming these into
@@ -330,12 +334,6 @@ As `evaluated <https://docs.google.com/presentation/d/1a8bOnulta6fYnQ2DFmdzt4es2
 As a bonus, the step index includes all the lengths of the paths, too. This allows us to efficiently get the length in nucleotides of a path by a given path handle.
 
 Current ODGI tools that work with a step index are :ref:`odgi untangle` and :ref:`odgi tips`.
-
-| **odgi test** [<TEST NAME|PATTERN|TAGS> …] [*OPTION*]…
-| The odgi test command starts all unit tests that are implemented in
-  odgi. For targeted testing, a subset of tests can be selected. odgi
-  test depends on `Catch2 <https://github.com/catchorg/Catch2>`__. In
-  the default setting, all results are printed to stdout.
 
 | **odgi tips** [**-i, --input**\ =\ *FILE*] [*OPTION*]…
 | The odgi tips command identifies break point positions relative to given query (reference) path(s) of all the tips in
