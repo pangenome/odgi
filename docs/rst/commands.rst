@@ -11,6 +11,7 @@ Commands
     commands/odgi_build
     commands/odgi_chop
     commands/odgi_cover
+    commands/odgi_crush
     commands/odgi_degree
     commands/odgi_depth
     commands/odgi_draw
