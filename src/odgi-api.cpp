@@ -61,8 +61,41 @@ extern "C" {
       false); // note that parallel is false
   }
 
+  /// Loop over all the handles to next/previous (right/left) nodes. Passes
+  /// them to a callback which returns false to stop iterating and true to
+  /// continue. Returns true if we finished and false if we stopped early.
+  const bool odgi_follow_edges(const graph_t *graph,
+                               const handlegraph::handle_t handle,
+                               bool go_left,
+                               bool (*next) (const handlegraph::handle_t handle))
+  {
+    return graph->follow_edges(handle,go_left,
+                               [&](const handlegraph::handle_t handle)
+                               {
+                                 next(handle);
+                                 return true;
+                               }
+                               );
+  };
+
+  const bool odgi_has_node(const graph_t *graph, nid_t node_id) {
+    return graph->has_node(node_id);
+  }
+
   const char *odgi_get_sequence(const graph_t *graph, const handle_t handle) {
     return graph->get_sequence(handle).c_str();
+  }
+
+  const nid_t odgi_get_id(const graph_t *graph, const handle_t handle) {
+    return graph->get_id(handle);
+  }
+
+  const bool odgi_get_is_reverse(const graph_t *graph, const handle_t handle) {
+    return graph->get_is_reverse(handle);
+  }
+
+  const size_t odgi_get_length(const graph_t *graph, const handle_t handle) {
+    return graph->get_length(handle);
   }
 
   const char *odgi_get_path_name(const graph_t *graph, const path_handle_t path) {
