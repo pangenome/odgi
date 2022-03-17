@@ -335,12 +335,6 @@ As a bonus, the step index includes all the lengths of the paths, too. This allo
 
 Current ODGI tools that work with a step index are :ref:`odgi untangle` and :ref:`odgi tips`.
 
-| **odgi test** [<TEST NAME|PATTERN|TAGS> …] [*OPTION*]…
-| The odgi test command starts all unit tests that are implemented in
-  odgi. For targeted testing, a subset of tests can be selected. odgi
-  test depends on `Catch2 <https://github.com/catchorg/Catch2>`__. In
-  the default setting, all results are printed to stdout.
-
 | **odgi tips** [**-i, --input**\ =\ *FILE*] [*OPTION*]…
 | The odgi tips command identifies break point positions relative to given query (reference) path(s) of all the tips in
 the graph or of tips of given path(s). Prints BED records to stdout. Each record consists of:

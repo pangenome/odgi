@@ -35,7 +35,6 @@ Commands
     commands/odgi_squeeze
     commands/odgi_stats
     commands/odgi_stepindex
-    commands/odgi_test
     commands/odgi_tips
     commands/odgi_unchop
     commands/odgi_unitig
