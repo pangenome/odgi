@@ -173,6 +173,10 @@ description.
 | The odgi cover command creates a path coverage of a variation graph,
   with a specified number of paths per component.
 
+| **odgi crush** [**-i, --idx**\ =\ *FILE*] [**-o, --out**\ =\ *FILE*]
+  [*OPTION*]…
+| Crush runs of N.
+
 **odgi degree** [**-i, --idx**\ =\ *FILE*] [*OPTION*]… The odgi degree
 command describes the graph in terms of node degree. In summarization mode, it shows the *node.count*, *edge.count*, *avg.degree*,
 *min.degree*, and *max.degree*. One can also specify degree ranges streaming these into
