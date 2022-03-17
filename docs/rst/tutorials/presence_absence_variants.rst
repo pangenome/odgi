@@ -80,6 +80,24 @@ input ``BED`` format file. In this example, the region ``chm13__LPA__tig00000001
 ``HG02572__LPA__tig00000005`` and ``HG02572__LPA__tig00000001`` contigs, and it is absent in the others, except in the
 reference itself.
 
+To display the result, execute
+
+.. code-block:: R
+
+    library(tidyverse)
+
+    pav_table <- read.table('LPA.w1kbp.pavs.tsv', sep = '\t', header = T)
+
+    pav_table %>%
+      ggplot(aes(x = start, y = group, fill = pav)) +
+      geom_tile(color = "black") +
+      scale_fill_gradient(low = "white", high = "brown")
+
+to obtain the following visualization:
+
+.. image:: /img/LPA.w1kbp.pavs.png
+
+
 ``odgi pav`` also supports the matrix format output (``-M/matrix-output`` flag).
 To emit the `PAV ratios` in a matrix and take a look at its first rows and columns, execute:
 
