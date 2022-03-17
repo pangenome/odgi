@@ -156,7 +156,7 @@ For example, to identify the PAVs by considering ``chm13__LPA__tig00000001`` as 
 
 .. code-block:: bash
 
-    odgi untangle -i LPA.og -r chm13__LPA__tig00000001 | sed '1d' | cut -f 4,5,6 > LPA.untangle.bed
+    odgi untangle -i LPA.og -r chm13__LPA__tig00000001 | sed '1d' | cut -f 4,5,6 | sort | uniq | sort -k 2n > LPA.untangle.bed
     odgi pav -i LPA.og -b LPA.untangle.bed > LPA.untangle.pavs.txt
 
     head LPA.untangle.pavs.txt | cut -f 1-8 | column -t
@@ -180,8 +180,8 @@ all paths as reference paths, execute:
 .. code-block:: bash
 
     odgi paths -i LPA.og -L > LPA.paths.txt
-    odgi untangle -i LPA.og -R LPA.paths.txt | sed '1d' | cut -f 4,5,6 > LPA.untangle.multiple_references.bed
-    odgi pav -i LPA.og -b LPA.untangle.bed > LPA.untangle.multiple_references.pavs.txt
+    odgi untangle -i LPA.og -R LPA.paths.txt | sed '1d' | cut -f 4,5,6 | sort | uniq > LPA.untangle.multiple_references.bed
+    odgi pav -i LPA.og -b LPA.untangle.multiple_references.bed > LPA.untangle.multiple_references.pavs.txt
 
     # Sort by starting position, but keeping the header line at the top
     awk 'NR == 1; NR > 1 {print $0 | "sort -k 2n"}' LPA.untangle.multiple_references.pavs.txt | head | cut -f 1-8 | column -t
