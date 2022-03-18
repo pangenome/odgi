@@ -49,18 +49,62 @@ To identify the PAVs, execute:
 
 .. code-block:: bash
 
-    odgi pav -i LPA.og -b LPA.w1kbp.bed > LPA.w1kbp.pavs.txt
+    odgi pav -i LPA.og -b LPA.w1kbp.bed > LPA.w1kbp.pavs.tsv
 
-By default, ``odgi pav`` prints to stdout a matrix with the `PAV ratios`.
+By default, ``odgi pav`` prints to stdout a TSV table with the `PAV ratios`.
 For a given path range ``PR`` and path ``P``, the `PAV ratio` is the ratio between the sum of the lengths of the nodes
 in ``PR`` that are crossed by ``P`` divided by the sum of the lengths of all the nodes in ``PR``.
 Each node is considered only once.
 
-To take a look at the first rows and columns of the matrix in the ``LPA.w1kbp.pavs.txt`` file, execute:
+To take a look at the first rows of the table in the ``LPA.w1kbp.pavs.tsv`` file, execute:
 
 .. code-block:: bash
 
-    head LPA.w1kbp.pavs.txt | cut -f 1-8 | column -t
+    head LPA.w1kbp.pavs.tsv | column -t
+
+.. code-block:: none
+
+    chrom                    start  end   name  group                      pav
+    chm13__LPA__tig00000001  0      1000  .     chm13__LPA__tig00000001    1
+    chm13__LPA__tig00000001  0      1000  .     HG002__LPA__tig00000001    0
+    chm13__LPA__tig00000001  0      1000  .     HG002__LPA__tig00000005    0
+    chm13__LPA__tig00000001  0      1000  .     HG00733__LPA__tig00000001  0
+    chm13__LPA__tig00000001  0      1000  .     HG00733__LPA__tig00000008  0
+    chm13__LPA__tig00000001  0      1000  .     HG01358__LPA__tig00000002  0
+    chm13__LPA__tig00000001  0      1000  .     HG01358__LPA__tig00000010  0
+    chm13__LPA__tig00000001  0      1000  .     HG02572__LPA__tig00000005  0.99524
+    chm13__LPA__tig00000001  0      1000  .     HG02572__LPA__tig00000001  0.99524
+
+The ``chrom``, ``start``, ``end``, and ``name`` columns are filled with the values in the corresponding columns in the
+input ``BED`` format file. In this example, the region ``chm13__LPA__tig00000001:0-1000`` is covered at ``99.54%`` in the
+``HG02572__LPA__tig00000005`` and ``HG02572__LPA__tig00000001`` contigs, and it is absent in the others, except in the
+reference itself.
+
+To display the result, execute
+
+.. code-block:: R
+
+    library(tidyverse)
+
+    pav_table <- read.table('LPA.w1kbp.pavs.tsv', sep = '\t', header = T)
+
+    pav_table %>%
+      ggplot(aes(x = start, y = group, fill = pav)) +
+      geom_tile(color = "black") +
+      scale_fill_gradient(low = "white", high = "brown")
+
+to obtain the following visualization:
+
+.. image:: /img/LPA.w1kbp.pavs.png
+
+
+``odgi pav`` also supports the matrix format output (``-M/matrix-output`` flag).
+To emit the `PAV ratios` in a matrix and take a look at its first rows and columns, execute:
+
+.. code-block:: bash
+
+    odgi pav -i LPA.og -b LPA.w1kbp.bed -M > LPA.w1kbp.pavs.matrix.txt
+    head LPA.w1kbp.pavs.matrix.txt | cut -f 1-8 | column -t
 
 .. code-block:: none
 
@@ -75,17 +119,12 @@ To take a look at the first rows and columns of the matrix in the ``LPA.w1kbp.pa
     chm13__LPA__tig00000001  7000   8000  .     1                        0.99811                  0.99906                  0.98491
     chm13__LPA__tig00000001  8000   9000  .     1                        1                        1                        0.99466
 
-
-The ``chrom``, ``start``, ``end``, and ``name`` columns are filled with the values in the corresponding columns in the
-input ``BED`` format file. In this example, the region ``chm13__LPA__tig00000001:5000-6000`` is covered at ``41.56%`` in the
-``HG002__LPA__tig00000001`` contig and it is almost absent in ``HG00733__LPA__tig00000001``.
-
 To emit a binary PAV matrix, execute:
 
 .. code-block:: bash
 
-    odgi pav -i LPA.og -b LPA.w1kbp.bed -B 0.5 > LPA.w1kbp.pavs.binary.txt
-    head LPA.w1kbp.pavs.binary.txt | cut -f 1-8 | column -t
+    odgi pav -i LPA.og -b LPA.w1kbp.bed -M -B 0.5 > LPA.w1kbp.pavs.matrix.binary.txt
+    head LPA.w1kbp.pavs.matrix.binary.txt | cut -f 1-8 | column -t
 
 .. code-block:: none
 
@@ -100,7 +139,7 @@ To emit a binary PAV matrix, execute:
     chm13__LPA__tig00000001  7000   8000  .     1                        1                        1                        1
     chm13__LPA__tig00000001  8000   9000  .     1                        1                        1                        1
 
-With ``B`` is specified to emit a binary matrix, with 1 if the PAV ratio is greater than or equal to the specified
+With ``B`` is specified to emit a binary matrix, with 1 if the `PAV ratio` is greater than or equal to the specified
 threshold (``0.5`` in the example), else 0.
 
 If needed, it is possible to group paths. For this, we need to prepare a file that specifies for each path the group it
@@ -127,9 +166,9 @@ Then, to group the PAVs by sample, execute:
 
 .. code-block:: bash
 
-    odgi pav -i LPA.og -b LPA.w1kbp.bed -B 0.5 -p LPA.path_and_sample.txt > LPA.w1kbp.pavs.binary.grouped_by_sample.txt
+    odgi pav -i LPA.og -b LPA.w1kbp.bed -M -B 0.5 -p LPA.path_and_sample.txt > LPA.w1kbp.pavs.matrix.binary.grouped_by_sample.txt
 
-    head LPA.w1kbp.pavs.binary.grouped_by_sample.txt | column -t
+    head LPA.w1kbp.pavs.matrix.binary.grouped_by_sample.txt | column -t
 
 .. code-block:: none
 
@@ -157,34 +196,29 @@ For example, to identify the PAVs by considering ``chm13__LPA__tig00000001`` as 
 .. code-block:: bash
 
     odgi untangle -i LPA.og -r chm13__LPA__tig00000001 | sed '1d' | cut -f 4,5,6 | sort | uniq | sort -k 2n > LPA.untangle.bed
-    odgi pav -i LPA.og -b LPA.untangle.bed > LPA.untangle.pavs.txt
+    odgi pav -i LPA.og -b LPA.untangle.bed > LPA.untangle.pavs.tsv
 
-    head LPA.untangle.pavs.txt | cut -f 1-8 | column -t
+    head LPA.untangle.pavs.tsv | head -n 5 | column -t
 
 .. code-block:: none
 
-    chrom                    start  end    name  chm13__LPA__tig00000001  HG002__LPA__tig00000001  HG002__LPA__tig00000005  HG00733__LPA__tig00000001
-    chm13__LPA__tig00000001  0      5045   .     1                        0                        0                        0
-    chm13__LPA__tig00000001  5045   5586   .     1                        0                        0.99815                  0
-    chm13__LPA__tig00000001  5586   5827   .     1                        0.99585                  0.99585                  0
-    chm13__LPA__tig00000001  5827   6550   .     1                        1                        1                        0.54772
-    chm13__LPA__tig00000001  6550   7430   .     1                        0.99886                  1                        0.98182
-    chm13__LPA__tig00000001  7430   9096   .     1                        0.9994                   0.9994                   0.9922
-    chm13__LPA__tig00000001  9096   9884   .     1                        0.99873                  1                        0.99873
-    chm13__LPA__tig00000001  9884   10346  .     1                        0.99784                  1                        1
-    chm13__LPA__tig00000001  10346  47024  .     1                        0.98863                  0.9889                   0.98844
+    chrom                    start  end   name  group                      pav
+    chm13__LPA__tig00000001  0      5045  .     chm13__LPA__tig00000001    1
+    chm13__LPA__tig00000001  0      5045  .     HG002__LPA__tig00000001    0
+    chm13__LPA__tig00000001  0      5045  .     HG002__LPA__tig00000005    0
+    chm13__LPA__tig00000001  0      5045  .     HG00733__LPA__tig00000001  0
 
 Of note, ``odgi pav`` is not constrained to use a single reference. As further example, to identify the PAVs by considering
-all paths as reference paths, execute:
+all paths as reference paths and emit them in a matrix, execute:
 
 .. code-block:: bash
 
     odgi paths -i LPA.og -L > LPA.paths.txt
     odgi untangle -i LPA.og -R LPA.paths.txt | sed '1d' | cut -f 4,5,6 | sort | uniq > LPA.untangle.multiple_references.bed
-    odgi pav -i LPA.og -b LPA.untangle.multiple_references.bed > LPA.untangle.multiple_references.pavs.txt
+    odgi pav -i LPA.og -b LPA.untangle.multiple_references.bed -M > LPA.untangle.multiple_references.pavs.matrix.txt
 
     # Sort by starting position, but keeping the header line at the top
-    awk 'NR == 1; NR > 1 {print $0 | "sort -k 2n"}' LPA.untangle.multiple_references.pavs.txt | head | cut -f 1-8 | column -t
+    awk 'NR == 1; NR > 1 {print $0 | "sort -k 2n"}' LPA.untangle.multiple_references.pavs.matrix.txt | head | cut -f 1-8 | column -t
 
 .. code-block:: none
 
@@ -211,20 +245,14 @@ for all nodes crossed by all paths in the graph, execute:
 
     odgi flatten -i LPA.og -b LPA.flatten.tsv
     sed '1d'  LPA.flatten.tsv | awk -v OFS='\t' '{print($4,$2,$3,"step.rank_"$6,".",$5)}' > LPA.flatten.bed
-    odgi pav -i LPA.og -b LPA.flatten.bed > LPA.flatten.pavs.txt
+    odgi pav -i LPA.og -b LPA.flatten.bed > LPA.flatten.pavs.tsv
 
-    # Sort by starting position, but keeping the header line at the top
-    awk 'NR == 1; NR > 1 {print $0 | "sort -k 2n"}' LPA.flatten.pavs.txt | head | cut -f 1-8 | column -t
+    head  LPA.flatten.pavs.tsv | column -t
 
 .. code-block:: none
 
-    chrom                      start  end  name         chm13__LPA__tig00000001  HG002__LPA__tig00000001  HG002__LPA__tig00000005  HG00733__LPA__tig00000001
-    HG02572__LPA__tig00000001  0      35   step.rank_0  0                        0                        0                        0
-    HG02572__LPA__tig00000001  35     38   step.rank_1  0                        0                        0                        0
-    HG02572__LPA__tig00000005  35     38   step.rank_0  1                        0                        0                        0
-    chm13__LPA__tig00000001    38     43   step.rank_0  1                        0                        0                        0
-    HG02572__LPA__tig00000001  38     43   step.rank_2  1                        0                        0                        0
-    HG02572__LPA__tig00000005  38     43   step.rank_1  1                        0                        0                        0
-    chm13__LPA__tig00000001    43     44   step.rank_1  1                        0                        0                        0
-    HG02572__LPA__tig00000005  43     44   step.rank_2  1                        0                        0                        0
-    HG02572__LPA__tig00000001  44     45   step.rank_3  1                        0                        0                        0
+    chrom                    start  end  name         group                      pav
+    chm13__LPA__tig00000001  38     43   step.rank_0  chm13__LPA__tig00000001    1
+    chm13__LPA__tig00000001  38     43   step.rank_0  HG002__LPA__tig00000001    0
+    chm13__LPA__tig00000001  38     43   step.rank_0  HG002__LPA__tig00000005    0
+    chm13__LPA__tig00000001  38     43   step.rank_0  HG00733__LPA__tig00000001  0
