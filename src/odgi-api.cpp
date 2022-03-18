@@ -3,6 +3,10 @@
 // Copyright (c) 2022 Erik Garrison and Pjotr Prins
 //
 // ODGI is published under the MIT license
+//
+// IMPORTANT: this interface is WIP. Function names reflect odgi
+// naming and we suggest to keep that as a low-level interface. A more
+// natural OOP representation may be built on this low-level API.
 
 #include "odgi-api.h"
 #include "version.hpp"
@@ -78,6 +82,16 @@ extern "C" {
                                );
   };
 
+  const handle_t odgi_edge_first_handle(const graph_t *graph, const handlegraph::edge_t &edge_handle)
+  {
+      return (&edge_handle)->first;
+  }
+
+  const handle_t odgi_edge_second_handle(const graph_t *graph, const handlegraph::edge_t &edge_handle)
+  {
+      return (&edge_handle)->second;
+  }
+
   const bool odgi_has_node(const graph_t *graph, nid_t node_id) {
     return graph->has_node(node_id);
   }
@@ -98,6 +112,7 @@ extern "C" {
     return graph->get_length(handle);
   }
 
+  // Path handling
   const char *odgi_get_path_name(const graph_t *graph, const path_handle_t path) {
     return graph->get_path_name(path).c_str();
   }
@@ -106,7 +121,146 @@ extern "C" {
     return graph->has_path(path_name);
   }
 
+  const bool odgi_path_is_empty(const graph_t *graph, const path_handle_t path) {
+    return graph->is_empty(path);
+  }
+
   const path_handle_t odgi_get_path_handle(const graph_t *graph, const char *path_name) {
     return graph->get_path_handle(path_name);
   }
-}
+
+  // Steps
+  const size_t odgi_get_step_count(const odgi::graph_t *graph, const handle_t handle)
+  {
+    return graph->get_step_count(handle);
+  }
+
+  const handle_t odgi_step_get_handle(const graph_t *graph, step_handle_t step)
+  {
+    return graph->get_handle_of_step(step);
+  }
+
+  const path_handle_t odgi_step_get_path(const graph_t *graph, step_handle_t step)
+  {
+    return graph->get_path(step);
+  }
+
+  const step_handle_t odgi_step_path_begin(const graph_t *graph, path_handle_t path)
+  {
+    return graph->path_begin(path);
+  }
+
+  const step_handle_t odgi_step_path_end(const graph_t *graph, path_handle_t path)
+  {
+    return graph->path_end(path);
+  }
+
+  const step_handle_t odgi_step_path_back(const graph_t *graph, path_handle_t path)
+  {
+    return graph->path_back(path);
+  }
+
+  const int64_t odgi_step_path_id(const graph_t *graph, step_handle_t &step_handle) {
+    return (reinterpret_cast<const int64_t*>(&step_handle)[0]) >> 1;
+  }
+
+  bool odgi_step_is_reverse(const graph_t *graph, step_handle_t &step_handle) {
+    return (reinterpret_cast<const int64_t*>(&step_handle)[0]) & 1;
+  }
+
+  const int64_t odgi_step_prev_id(const graph_t *graph, step_handle_t &step_handle)
+  {
+      return (reinterpret_cast<const int64_t*>(&step_handle)[1]);
+  }
+
+  const int64_t odgi_step_prev_rank(const graph_t *graph, step_handle_t &step_handle)
+  {
+      return (reinterpret_cast<const int64_t*>(&step_handle)[2]);
+  }
+
+  const int64_t odgi_step_next_id(const graph_t *graph, step_handle_t &step_handle)
+  {
+      return (reinterpret_cast<const int64_t*>(&step_handle)[3]);
+  }
+
+  const int64_t odgi_step_next_rank(const graph_t *graph,handlegraph::step_handle_t &step_handle)
+  {
+      return (reinterpret_cast<const int64_t*>(&step_handle)[4]);
+  }
+
+  const bool odgi_step_eq(const graph_t *graph,
+                          handlegraph::step_handle_t &step_handle1,
+                          handlegraph::step_handle_t &step_handle2)
+  {
+    // this code is hardly optimal. FIXME.
+    for (uint i=0;i<8;i++) {
+      if ((reinterpret_cast<const int64_t*>(&step_handle1)[i]) != (reinterpret_cast<const int64_t*>(&step_handle2)[i])){
+        return false;
+      }
+    }
+    return true;
+  }
+
+  const step_handle_t odgi_path_front_end(const graph_t *graph,
+                                     const path_handle_t path)
+  {
+    return graph->path_front_end(path);
+  }
+
+  const step_handle_t odgi_get_next_step(const graph_t *graph,
+                                         const step_handle_t step)
+  {
+    return graph->get_next_step(step);
+  }
+
+  const step_handle_t odgi_get_previous_step(const graph_t *graph,
+                                         const step_handle_t step)
+  {
+    return graph->get_previous_step(step);
+  }
+
+  const bool odgi_has_edge(const graph_t *graph, const handle_t left, const handle_t right)
+  {
+    return graph->has_edge(left,right);
+  }
+
+  const bool odgi_is_path_front_end(const graph_t *graph, const step_handle_t step)
+  {
+    return graph->is_path_front_end(step);
+  }
+  const bool odgi_is_path_end(const graph_t *graph, const step_handle_t step)
+  {
+    return graph->is_path_end(step);
+  }
+  const bool odgi_has_next_step(const graph_t *graph, const step_handle_t step)
+  {
+    return graph->has_next_step(step);
+  }
+  const bool odgi_has_previous_step(const graph_t *graph, const step_handle_t step)
+  {
+    return graph->has_previous_step(step);
+  }
+
+  const path_handle_t odgi_get_path_handle_of_step(const graph_t *graph,
+                                                   const step_handle_t step)
+  {
+    return graph->get_path_handle_of_step(step);
+  }
+
+  // Still missing:
+
+  // graph_t::for_each_step_in_path,
+
+  /*
+        .def("for_each_step_on_handle",
+             [](const odgi::graph_t& g,
+                const handlegraph::handle_t& handle,
+                const std::function<bool(const handlegraph::step_handle_t&)>& iteratee) {
+                 return g.for_each_step_on_handle(handle, [&iteratee](const handlegraph::step_handle_t& s) {
+                         iteratee(s); return true;
+                     });
+             },
+             "Invoke the callback for each of the steps on a given handle.")
+  */
+
+} // extern "C"
