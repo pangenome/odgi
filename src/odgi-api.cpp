@@ -6,7 +6,11 @@
 //
 // IMPORTANT: this interface is WIP. Function names reflect odgi
 // naming and we suggest to keep that as a low-level interface. A more
-// natural OOP representation may be built on this low-level API.
+// natural OOP representation may be built on top of this low-level
+// API.
+//
+// The current edition is in memory graph read-only. A graph write
+// edition is future work.
 
 #include "odgi-api.h"
 #include "version.hpp"
@@ -15,6 +19,10 @@
 extern "C" {
 
   using namespace odgi;
+
+  const char *odgi_version() {
+    return Version::get_version().c_str();
+  }
 
   const graph_t* odgi_load_graph(const char *filen) {
     graph_t *graph = new graph_t();
@@ -43,10 +51,6 @@ extern "C" {
     return graph->get_path_count();
   }
 
-  const char *odgi_version() {
-    return Version::get_version().c_str();
-  }
-
   void odgi_for_each_path_handle(const graph_t *graph, void (*next) (const path_handle_t path)) {
     graph->for_each_path_handle([&](const path_handle_t& path) {
       next(path);
@@ -54,10 +58,10 @@ extern "C" {
   }
 
   const bool odgi_for_each_handle(const graph_t *graph,
-                                  // const std::function<bool(const handlegraph::handle_t&)>& iteratee)
-                                  bool (*next) (const handlegraph::handle_t handle))
+                                  // const std::function<bool(const handle_t&)>& iteratee)
+                                  bool (*next) (const handle_t handle))
   {
-    return graph->for_each_handle([&](const handlegraph::handle_t h)
+    return graph->for_each_handle([&](const handle_t h)
     {
       next(h);
       return true;
@@ -69,12 +73,12 @@ extern "C" {
   /// them to a callback which returns false to stop iterating and true to
   /// continue. Returns true if we finished and false if we stopped early.
   const bool odgi_follow_edges(const graph_t *graph,
-                               const handlegraph::handle_t handle,
+                               const handle_t handle,
                                bool go_left,
-                               bool (*next) (const handlegraph::handle_t handle))
+                               bool (*next) (const handle_t handle))
   {
     return graph->follow_edges(handle,go_left,
-                               [&](const handlegraph::handle_t handle)
+                               [&](const handle_t handle)
                                {
                                  next(handle);
                                  return true;
@@ -82,12 +86,12 @@ extern "C" {
                                );
   };
 
-  const handle_t odgi_edge_first_handle(const graph_t *graph, const handlegraph::edge_t &edge_handle)
+  const handle_t odgi_edge_first_handle(const graph_t *graph, const edge_t &edge_handle)
   {
       return (&edge_handle)->first;
   }
 
-  const handle_t odgi_edge_second_handle(const graph_t *graph, const handlegraph::edge_t &edge_handle)
+  const handle_t odgi_edge_second_handle(const graph_t *graph, const edge_t &edge_handle)
   {
       return (&edge_handle)->second;
   }
@@ -183,14 +187,14 @@ extern "C" {
       return (reinterpret_cast<const int64_t*>(&step_handle)[3]);
   }
 
-  const int64_t odgi_step_next_rank(const graph_t *graph,handlegraph::step_handle_t &step_handle)
+  const int64_t odgi_step_next_rank(const graph_t *graph,step_handle_t &step_handle)
   {
       return (reinterpret_cast<const int64_t*>(&step_handle)[4]);
   }
 
   const bool odgi_step_eq(const graph_t *graph,
-                          handlegraph::step_handle_t &step_handle1,
-                          handlegraph::step_handle_t &step_handle2)
+                          step_handle_t &step_handle1,
+                          step_handle_t &step_handle2)
   {
     // this code is hardly optimal. FIXME.
     for (uint i=0;i<8;i++) {
@@ -247,20 +251,25 @@ extern "C" {
     return graph->get_path_handle_of_step(step);
   }
 
-  // Still missing:
+  void odgi_for_each_step_in_path(const graph_t *graph,
+                                  const path_handle_t path,
+                                  void (*next) (const step_handle_t step))
+  {
+    graph->for_each_step_in_path(path,
+                                 [&](const step_handle_t step) {
+                                   next(step);
+                                 });
+  };
 
-  // graph_t::for_each_step_in_path,
 
-  /*
-        .def("for_each_step_on_handle",
-             [](const odgi::graph_t& g,
-                const handlegraph::handle_t& handle,
-                const std::function<bool(const handlegraph::step_handle_t&)>& iteratee) {
-                 return g.for_each_step_on_handle(handle, [&iteratee](const handlegraph::step_handle_t& s) {
-                         iteratee(s); return true;
-                     });
-             },
-             "Invoke the callback for each of the steps on a given handle.")
-  */
+  const bool odgi_for_each_step_on_handle(const graph_t *graph,
+                                          const handle_t handle,
+                                          bool (*next) (const step_handle_t step))
+  {
+    return graph->for_each_step_on_handle(handle,
+                                          [&](const step_handle_t step) {
+                                            next(step);
+                                            return true; });
+  }
 
 } // extern "C"
