@@ -742,8 +742,15 @@ else (NOT PIC)
     add_subdirectory(deps/pybind11)
   endif (NOT pybind11_FOUND)
 
-  # Build Python module
-  pybind11_add_module(odgi_pybind11 "${CMAKE_SOURCE_DIR}/src/pythonmodule.cpp")
+  # Build Python modules
+  pybind11_add_module(odgi_ffi "${CMAKE_SOURCE_DIR}/src/pythonffi.cpp")
+  add_dependencies(odgi_ffi ${odgi_DEPS} libodgi_static)
+  target_include_directories(odgi_ffi PUBLIC ${odgi_INCLUDES})
+  target_link_libraries(odgi_ffi PRIVATE "${CMAKE_SOURCE_DIR}/lib/libodgi.a" "${odgi_LIBS}")
+  set_target_properties(odgi_ffi PROPERTIES OUTPUT_NAME "odgi_ffi")
+  install(TARGETS odgi_ffi LIBRARY DESTINATION lib)
+
+pybind11_add_module(odgi_pybind11 "${CMAKE_SOURCE_DIR}/src/pythonmodule.cpp")
   add_dependencies(odgi_pybind11 ${odgi_DEPS} libodgi_static)
   target_include_directories(odgi_pybind11 PUBLIC ${odgi_INCLUDES})
   target_link_libraries(odgi_pybind11 PRIVATE "${CMAKE_SOURCE_DIR}/lib/libodgi.a" "${odgi_LIBS}")
