@@ -46,6 +46,19 @@ if (NOT CMAKE_BUILD_TYPE) # default build to Release
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
+# Enable tests
+enable_testing()
+
+# Function to invoke doctests
+function(add_pydoctest TEST_FILE)
+  add_test(
+    NAME ${TEST_FILE}
+    COMMAND python3 -m doctest -o NORMALIZE_WHITESPACE -o REPORT_UDIFF python/${TEST_FILE}.md
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test)
+  set_tests_properties(${TEST_FILE} PROPERTIES ENVIRONMENT "PYTHONPATH=${PROJECT_SOURCE_DIR}/lib;LD_LIBRARY_PATH=$ENV{LIBRARY_PATH}")
+endfunction()
+
+
 if (PIC)
   message(STATUS "Compiling odgi sources with PIC=ON")
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
@@ -71,7 +84,6 @@ if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
   # set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O -fsanitize=address")
   # set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O -fsanitize=address")
 endif ()
-
 
 message(STATUS "ODGI CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
 
@@ -735,6 +747,7 @@ add_executable(odgi
 target_link_libraries(odgi ${odgi_LIBS})
 set_target_properties(odgi PROPERTIES OUTPUT_NAME "odgi")
 
+
 if (NOT PIC)
   MESSAGE(STATUS "Can not build python bindings with PIC=OFF")
 else (NOT PIC)
@@ -744,11 +757,12 @@ else (NOT PIC)
 
   # Build Python modules, first the FFI
   pybind11_add_module(odgi_ffi "${CMAKE_SOURCE_DIR}/src/pythonffi.cpp")
-  add_dependencies(odgi_ffi ${odgi_DEPS} libodgi_static)
+  add_dependencies(odgi_ffi ${odgi_DEPS} libodgi_shared)
   target_include_directories(odgi_ffi PUBLIC ${odgi_INCLUDES})
   target_link_libraries(odgi_ffi PRIVATE "${CMAKE_SOURCE_DIR}/lib/libodgi.a" "${odgi_LIBS}")
   set_target_properties(odgi_ffi PROPERTIES OUTPUT_NAME "odgi_ffi")
   install(TARGETS odgi_ffi LIBRARY DESTINATION lib)
+  add_pydoctest(odgi_ffi)
 
   # Build original Python module
   pybind11_add_module(odgi_pybind11 "${CMAKE_SOURCE_DIR}/src/pythonmodule.cpp")
@@ -757,6 +771,7 @@ else (NOT PIC)
   target_link_libraries(odgi_pybind11 PRIVATE "${CMAKE_SOURCE_DIR}/lib/libodgi.a" "${odgi_LIBS}")
   set_target_properties(odgi_pybind11 PROPERTIES OUTPUT_NAME "odgi")
   install(TARGETS odgi_pybind11 LIBRARY DESTINATION lib)
+
 endif (NOT PIC)
 
 file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/include)
@@ -775,21 +790,4 @@ elseif (TRUE)
   endif()
 endif()
 
-# ---- Add tests
-enable_testing()
-
-SET(CTEST_ENVIRONMENT
-"LD_LIBRARY_PATH=/gnu/store/6hcvbvicszj935bfnh99q6gll99cl22p-profile/lib"
-)
-
-function(add_pydoctest TEST_FILE)
-  add_test(
-      NAME ${TEST_FILE}
-      COMMAND python3 -m doctest -o NORMALIZE_WHITESPACE -o REPORT_UDIFF python/${TEST_FILE}.md
-      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test)
-  set_tests_properties(${TEST_FILE} PROPERTIES ENVIRONMENT "PYTHONPATH=${PROJECT_SOURCE_DIR}/lib;LD_LIBRARY_PATH=/gnu/store/6hcvbvicszj935bfnh99q6gll99cl22p-profile/lib")
-
-endfunction()
-
-add_pydoctest(odgi_ffi)
 add_test(NAME odgi-test COMMAND odgi test)
