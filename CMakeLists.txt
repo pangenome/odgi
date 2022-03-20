@@ -742,7 +742,7 @@ else (NOT PIC)
     add_subdirectory(deps/pybind11)
   endif (NOT pybind11_FOUND)
 
-  # Build Python modules
+  # Build Python modules, first the FFI
   pybind11_add_module(odgi_ffi "${CMAKE_SOURCE_DIR}/src/pythonffi.cpp")
   add_dependencies(odgi_ffi ${odgi_DEPS} libodgi_static)
   target_include_directories(odgi_ffi PUBLIC ${odgi_INCLUDES})
@@ -750,7 +750,8 @@ else (NOT PIC)
   set_target_properties(odgi_ffi PROPERTIES OUTPUT_NAME "odgi_ffi")
   install(TARGETS odgi_ffi LIBRARY DESTINATION lib)
 
-pybind11_add_module(odgi_pybind11 "${CMAKE_SOURCE_DIR}/src/pythonmodule.cpp")
+  # Build original Python module
+  pybind11_add_module(odgi_pybind11 "${CMAKE_SOURCE_DIR}/src/pythonmodule.cpp")
   add_dependencies(odgi_pybind11 ${odgi_DEPS} libodgi_static)
   target_include_directories(odgi_pybind11 PUBLIC ${odgi_INCLUDES})
   target_link_libraries(odgi_pybind11 PRIVATE "${CMAKE_SOURCE_DIR}/lib/libodgi.a" "${odgi_LIBS}")
@@ -776,4 +777,19 @@ endif()
 
 # ---- Add tests
 enable_testing()
+
+SET(CTEST_ENVIRONMENT
+"LD_LIBRARY_PATH=/gnu/store/6hcvbvicszj935bfnh99q6gll99cl22p-profile/lib"
+)
+
+function(add_pydoctest TEST_FILE)
+  add_test(
+      NAME ${TEST_FILE}
+      COMMAND python3 -m doctest -o NORMALIZE_WHITESPACE -o REPORT_UDIFF python/${TEST_FILE}.md
+      WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test)
+  set_tests_properties(${TEST_FILE} PROPERTIES ENVIRONMENT "PYTHONPATH=${PROJECT_SOURCE_DIR}/lib;LD_LIBRARY_PATH=/gnu/store/6hcvbvicszj935bfnh99q6gll99cl22p-profile/lib")
+
+endfunction()
+
+add_pydoctest(odgi_ffi)
 add_test(NAME odgi-test COMMAND odgi test)
