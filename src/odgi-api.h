@@ -14,14 +14,17 @@ extern "C" {
 
   using namespace odgi;
 
+  typedef struct opaque_graph {} *graph_ptr;
+  typedef struct opaque2 {} *path_ptr;
+
   // These functions are exposed as a simple C API
   const char *odgi_version();
-  const graph_t* odgi_load_graph(const char *filen);
-  void odgi_free_graph(graph_t* graph);
-  const size_t odgi_get_node_count(const graph_t* graph);
+  graph_ptr odgi_load_graph(const char *filen);
+  void odgi_free_graph(graph_ptr graph);
+  const size_t odgi_get_node_count(graph_ptr graph);
   const size_t odgi_max_node_id(const graph_t* graph);
   const size_t odgi_min_node_id(const graph_t* graph);
-  const size_t odgi_get_path_count(const graph_t* graph);
+  const size_t odgi_get_path_count(graph_ptr graph);
   void odgi_for_each_path_handle(const graph_t *graph, void (*next) (const path_handle_t path));
   const bool odgi_for_each_handle(const graph_t *graph,
                                   bool (*next) (const handle_t handle));

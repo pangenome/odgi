@@ -13,10 +13,12 @@ namespace py = pybind11;
 
 PYBIND11_MODULE(odgi_ffi, m)
 {
+    py::class_<opaque_graph>(m, "opaque_graph pointer for FFI");
     // The functions with 'odgi_' prefix are low-level C-API calls
     m.def("odgi_version", &odgi_version, "Get the odgi library build version");
+    // const graph_t* odgi_load_graph(const char *filen)
     m.def("odgi_load_graph", &odgi_load_graph);
-    m.def("odgi_free_graph", &odgi_free_graph);
+    // m.def("odgi_free_graph", &odgi_free_graph); not safe in pybind11
     m.def("odgi_get_node_count", &odgi_get_node_count);
     m.def("odgi_max_node_id", &odgi_max_node_id);
     m.def("odgi_min_node_id", &odgi_min_node_id);

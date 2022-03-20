@@ -1,12 +1,13 @@
 // odgi
 #include "odgi.hpp"
-#include "odgi-api.h"
 
 // Pybind11
 #include <pybind11/pybind11.h>
 #include <pybind11/iostream.h>
 
 namespace py = pybind11;
+
+using namespace odgi;
 
 PYBIND11_MODULE(odgi, m)
 {

@@ -15,7 +15,6 @@
 #include "odgi-api.h"
 #include "version.hpp"
 
-
 extern "C" {
 
   using namespace odgi;
@@ -24,19 +23,21 @@ extern "C" {
     return Version::get_version().c_str();
   }
 
-  const graph_t* odgi_load_graph(const char *filen) {
+  graph_ptr odgi_load_graph(const char *filen) {
     graph_t *graph = new graph_t();
     std::ifstream in(filen);
     graph->deserialize(in);
-    return graph;
+    return (graph_ptr)graph;
   }
 
-  void odgi_free_graph(graph_t* graph) {
-    delete graph;
+  // Calling this function is not safe from pybind11
+  void odgi_free_graph(graph_ptr graph) {
+    graph_t *g = (graph_t *)graph;
+    delete g;
   }
 
-  const size_t odgi_get_node_count(const graph_t* graph) {
-    return graph->get_node_count();
+  const size_t odgi_get_node_count(graph_ptr graph) {
+    return ((graph_t *)graph)->get_node_count();
   }
 
   const size_t odgi_max_node_id(const graph_t* graph) {
@@ -47,8 +48,8 @@ extern "C" {
     return graph->min_node_id();
   }
 
-  const size_t odgi_get_path_count(const graph_t* graph) {
-    return graph->get_path_count();
+  const size_t odgi_get_path_count(graph_ptr graph) {
+    return ((graph_t *)graph)->get_path_count();
   }
 
   void odgi_for_each_path_handle(const graph_t *graph, void (*next) (const path_handle_t path)) {
