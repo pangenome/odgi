@@ -4,6 +4,11 @@ The odgi toolkit for pangenomics comes with a simple "C" foreign function interf
 The header file for the C-API can be found [here](https://github.com/pjotrp/odgi/blob/master/src/odgi-api.h).
 In this document we walk through the low-level API using the Python `odgi_ffi` module that comes with odgi.
 
+Note that odgi also has a higher level Python API. You may also decide to use this low level API to construct your own library.
+Feel free to go either way!
+
+The main purpose of this FFI is to allow other languages to explore an in-memory odgi pangenome.
+
 ## Setting it up
 
 First import the module. It may require setting the `PYTHONPATH` to the shared library `odgi_ffi.cpython-39-x86_64-linux-gnu.so`. Also it may be necessary to preload jemalloc with:
@@ -19,9 +24,6 @@ Now you should be able to use the `odgi_ffi` module and load the graph with 3214
 ```python
 >>> from odgi_ffi import *
 
->>> odgi_version()
-'f937271'
-
 >>> graph = odgi_load_graph("DRB1-3123_sorted.og")
 >>> odgi_get_node_count(graph)
 3214
@@ -30,3 +32,31 @@ Now you should be able to use the `odgi_ffi` module and load the graph with 3214
 12
 
 ```
+
+Note that load graph reads the `.og` file format only. To read a `GFA` file convert that using the odgi tool. E.g..
+
+    odgi build -g DRB1-3123.gfa -o DRB1-3123.og
+
+
+path_name5 = nil
+ODGI.each_path(pangenome) { |path|
+  p [path,ODGI.path_name(pangenome,path)]
+  path_name5 = ODGI.path_name(pangenome,path) if path==5
+}
+
+raise "No path[5]" if not ODGI.has_path(pangenome,path_name5)
+
+path5 = ODGI::get_path(pangenome,path_name5);
+p [path5,ODGI.path_name(pangenome,path5)]
+
+ODGI.each_handle(pangenome) { |handle|
+  right_edges = []
+  ODGI::follow_edges(pangenome,handle,true) { |edge|
+    right_edges.push edge
+  }
+  left_edges = []
+  ODGI::follow_edges(pangenome,handle,false) { |edge|
+    left_edges.push edge
+  }
+  p [handle,ODGI::get_id(pangenome,handle),ODGI::get_sequence(pangenome,handle),left_edges,right_edges]
+}
