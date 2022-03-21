@@ -14,9 +14,8 @@ extern "C" {
 
   using namespace odgi;
 
-  // Introduce opaque types to support type checking
+  // Introduce opaque types to support type checking of pointers to C++ classes
   typedef struct opaque_graph {} *ograph_t;
-  typedef struct opaque2 {} *path_ptr;
 
   // These functions are exposed as a simple C API
   const char *odgi_version();

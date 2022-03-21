@@ -37,6 +37,16 @@ Note that load graph reads the `.og` file format only. To read a `GFA` file conv
 
     odgi build -g DRB1-3123.gfa -o DRB1-3123.og
 
+## Exploring the pagenome
+
+
+
+![Path through pangenome](../../docs/img/exampleGraphPath.png "Pangenome path")
+
+
+```python
+```
+
 
 path_name5 = nil
 ODGI.each_path(pangenome) { |path|
