@@ -7,6 +7,7 @@
 
 // Pybind11
 #include <pybind11/pybind11.h>
+#include <pybind11/functional.h>
 #include <pybind11/iostream.h>
 
 namespace py = pybind11;
@@ -14,6 +15,7 @@ namespace py = pybind11;
 PYBIND11_MODULE(odgi_ffi, m)
 {
     py::class_<opaque_graph>(m, "opaque_graph pointer for FFI");
+    py::class_<path_handle_t>(m, "path handle for FFI");
     // The functions with 'odgi_' prefix are low-level C-API calls
     m.def("odgi_version", &odgi_version, "Get the odgi library build version");
     // const graph_t* odgi_load_graph(const char *filen)
@@ -24,6 +26,7 @@ PYBIND11_MODULE(odgi_ffi, m)
     m.def("odgi_min_node_id", &odgi_min_node_id);
     m.def("odgi_get_path_count", &odgi_get_path_count);
     m.def("odgi_for_each_path_handle", &odgi_for_each_path_handle);
+    m.def("odgi_for_each_path_handle2", &odgi_for_each_path_handle2);
     m.def("odgi_for_each_handle", &odgi_for_each_handle);
     m.def("odgi_follow_edges", &odgi_follow_edges);
     m.def("odgi_edge_first_handle", &odgi_edge_first_handle);

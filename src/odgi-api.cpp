@@ -58,6 +58,13 @@ extern "C" {
     });
   }
 
+  void odgi_for_each_path_handle2(const ograph_t graph, const std::function<bool(const path_handle_t&)>& next) {
+    ((graph_t *)graph)->for_each_path_handle([&](const path_handle_t& path) {
+      next(path);
+    });
+  };
+
+
   const bool odgi_for_each_handle(const ograph_t graph,
                                   // const std::function<bool(const handle_t&)>& iteratee)
                                   bool (*next) (const handle_t handle))
@@ -119,7 +126,12 @@ extern "C" {
 
   // Path handling
   const char *odgi_get_path_name(const ograph_t graph, const path_handle_t path) {
-    return ((graph_t *)graph)->get_path_name(path).c_str();
+    // we require a buffer to avoid
+    // UnicodeDecodeError: 'utf-8' codec can't decode byte
+    char buf[1000];
+    strcpy(buf,((graph_t *)graph)->get_path_name(path).data());
+    // return ((graph_t *)graph)->get_path_name(path).data();
+    return buf;
   }
 
   const bool odgi_has_path(const ograph_t graph, const char *path_name) {

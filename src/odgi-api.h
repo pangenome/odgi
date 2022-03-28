@@ -26,6 +26,7 @@ extern "C" {
   const size_t odgi_min_node_id(const ograph_t graph);
   const size_t odgi_get_path_count(ograph_t graph);
   void odgi_for_each_path_handle(const ograph_t graph, void (*next) (const path_handle_t path));
+  void odgi_for_each_path_handle2(const ograph_t graph, const std::function<bool(const handlegraph::path_handle_t&)>& iteratee);
   const bool odgi_for_each_handle(const ograph_t graph,
                                   bool (*next) (const handle_t handle));
   const bool odgi_follow_edges(const ograph_t graph,

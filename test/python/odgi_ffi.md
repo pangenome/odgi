@@ -1,3 +1,5 @@
+% -*- coding: utf-8 -*-
+
 # ODGI Python FFI
 
 The odgi toolkit for pangenomics comes with a simple "C" foreign function interface (FFI) that can be used from any computer language.
@@ -39,12 +41,27 @@ Note that load graph reads the `.og` file format only. To read a `GFA` file conv
 
 ## Exploring the pagenome
 
-
+A pangenome is made out of nodes (sequences), edges (connectors) and paths:
 
 ![Path through pangenome](../../docs/img/exampleGraphPath.png "Pangenome path")
 
+A path represents one version of a genome - it can represent an individual, or a version of a gene. Anything that is a linked sequence. In the picture the red path represents `CGA TTGG CCGT GT GATAA CGG ACA ATATAAC'.
+
+In the pangenome graph that we loaded with odgi we have 12 paths.
+Show the names using a call back
+
 
 ```python
+
+>>> import codecs
+
+>>> def test(p):
+...   odgi_get_path_name(graph,p)
+...   return True
+
+>>> list = []
+>>> odgi_for_each_path_handle2(graph, lambda p: test(p))
+
 ```
 
 
