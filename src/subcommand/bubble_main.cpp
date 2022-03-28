@@ -3,6 +3,7 @@
 #include "args.hxx"
 #include <omp.h>
 #include "algorithms/bubble.hpp"
+#include "algorithms/stepindex.hpp"
 #include "utils.hpp"
 #include "split.hpp"
 
@@ -81,13 +82,17 @@ int main_bubble(int argc, char **argv) {
 
     graph.set_number_of_threads(num_threads);
 
-    auto handle_output = [&](const step_handle_t& begin, const step_handle_t& end) {
-#pragma omp critical (cout)
-        std::cout << "yay" << std::endl;
+    auto target_path = graph.get_path_handle(args::get(_target_path));
+    
+    algorithms::step_index_t step_index(graph, {target_path}, num_threads, true, 8);
+    //step_index.save(step_index_out_file);
+
+    //int last_depth = 0;
+    auto handle_output = [&](const algorithms::bubble_t& bubble) {
+        // 
     };
 
-    auto target_path = graph.get_path_handle(args::get(_target_path));
-    algorithms::for_each_bubble(graph, target_path, handle_output);
+    algorithms::for_each_bubble(graph, step_index, target_path, handle_output);
 
     return 0;
 }
