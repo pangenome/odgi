@@ -21,7 +21,7 @@ int main_bubble(int argc, char **argv) {
     argv[0] = (char *) prog_name.c_str();
     --argc
 ;
-    args::ArgumentParser parser("Extract matrix of path pangenome coverage permutations for power law regression.");
+    args::ArgumentParser parser("Path-based bubble detection and VCF projection.");
     args::Group mandatory_opts(parser, "[ MANDATORY ARGUMENTS ]");
     args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::Group bubble_opts(parser, "[ Bubble Options ]");
