@@ -2,6 +2,10 @@
 ;;
 ;;   guix build -f guix.scm
 ;;
+;; To do a cross compilation build for ARM64
+;;
+;;   guix build -f guix.scm --target=aarch64-linux
+;;
 ;; To get a development container (emacs shell will work)
 ;;
 ;;   guix shell -C -D -f guix.scm
@@ -76,7 +80,7 @@
        ("gcc-lib" ,gcc-11 "lib")
        ("gcc-toolchain" ,gcc-toolchain)
        ("gdb" ,gdb)
-       ("git" ,git)
+       ;; ("git" ,git) -- pulls in perl which does not do cross builds
        ; ("lodepng" ,lodepng) later!
        ("openmpi" ,openmpi)
        ("python" ,python)
@@ -98,8 +102,10 @@
                (lambda ()
                  (format #t "#define ODGI_GIT_VERSION \"~a\"~%" version)))
              #t))
-         (delete 'check))
-        #:make-flags (list ,(string-append "CC=" (cc-for-target)))))
+         ;; (delete 'check)
+         )
+        ;; #:make-flags (list ,(string-append "CC=" (cc-for-target)))))
+        ))
      (synopsis "odgi pangenome optimized dynamic sequence graph implementation")
      (description
 "odgi pangenome graph tooling provides an efficient, succinct dynamic
