@@ -81,11 +81,16 @@ endif ()
 
 # set(CMAKE_BUILD_TYPE Debug) -- don't uncomment this, instead run
 #   cmake -DCMAKE_BUILD_TYPE=Debug ..
+# or with flags
+#   cmake -DCMAKE_BUILD_TYPE=Debug -DEXTRA_FLAGS="-fsanitize=address" ..
+#
 
 if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
-  # Debug use the defaults - so commenting out:
+  # Debug use the defaults - so commenting out and don't uncomment:
   # set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O -fsanitize=address")
   # set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O -fsanitize=address")
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_FLAGS}")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_FLAGS}")
 endif ()
 
 message(STATUS "ODGI CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
@@ -758,7 +763,8 @@ else (NOT PIC)
     add_subdirectory(deps/pybind11)
   endif (NOT pybind11_FOUND)
 
-  # Build Python modules, first the FFI
+  # Build Python modules, first the FFI - note we added a second module so
+  # as not to confuse things with the old bindings
   pybind11_add_module(odgi_ffi "${CMAKE_SOURCE_DIR}/src/pythonffi.cpp")
   add_dependencies(odgi_ffi ${odgi_DEPS} libodgi_shared)
   target_include_directories(odgi_ffi PUBLIC ${odgi_INCLUDES})
