@@ -28,6 +28,11 @@
 ;;
 ;; this is because the underlying libraries were built with gcc-10 and
 ;; jemalloc needs to be preloaded.
+;;
+;;   cmake -DCMAKE_BUILD_TYPE=Debug -DINLINE_HANDLEGRAPH_SOURCES=ON ..
+;;   make
+;;   ctest .
+;;
 
 (use-modules
   (ice-9 popen)
