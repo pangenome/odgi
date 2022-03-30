@@ -51,25 +51,24 @@ const size_t odgi_get_path_count(ograph_t graph) {
   return ((graph_t *)graph)->get_path_count();
 }
 
-void odgi_for_each_path_handle(const ograph_t graph, void (*next) (const path_handle_t path)) {
-  ((graph_t *)graph)->for_each_path_handle([&](const path_handle_t& path) {
+// void odgi_for_each_path_handle(const ograph_t graph, void (*next) (const path_handle_t path)) {
+
+void odgi_for_each_path_handle(const ograph_t graph,
+                               void (*next) (const path_handle_t path)) {
+  ((graph_t *)graph)->for_each_path_handle([&](const path_handle_t path) {
     next(path);
   });
 }
 
-void odgi_for_each_path_handle2(const ograph_t graph, const std::function<bool(const path_handle_t&)>& next) {
-  ((graph_t *)graph)->for_each_path_handle([&](const path_handle_t& path) {
-    next(path);
-  });
-};
-
+// @@
 
 const bool odgi_for_each_handle(const ograph_t graph,
-                                // const std::function<bool(const handle_t&)>& iteratee)
+                                // const std::function<bool(const handle_t)>& next)
                                 bool (*next) (const handle_t handle))
 {
   return ((graph_t *)graph)->for_each_handle([&](const handle_t h)
   {
+
     next(h);
     return true;
   },

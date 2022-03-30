@@ -14,6 +14,7 @@ using namespace odgi;
 
 // Introduce opaque types to support type checking of pointers to C++ classes
 typedef struct opaque_graph {} *ograph_t;
+typedef long long int ohandle_t;
 
 // These functions are exposed as a simple C API
 const char *odgi_version();
@@ -23,10 +24,13 @@ const size_t odgi_get_node_count(ograph_t graph);
 const size_t odgi_max_node_id(const ograph_t graph);
 const size_t odgi_min_node_id(const ograph_t graph);
 const size_t odgi_get_path_count(ograph_t graph);
-void odgi_for_each_path_handle(const ograph_t graph, void (*next) (const path_handle_t path));
-void odgi_for_each_path_handle2(const ograph_t graph, const std::function<bool(const handlegraph::path_handle_t&)>& iteratee);
+void odgi_for_each_path_handle(const ograph_t graph,
+                               void (*next) (const path_handle_t path));
+// @@
 const bool odgi_for_each_handle(const ograph_t graph,
+                                // const std::function<bool(const handle_t)>& next);
                                 bool (*next) (const handle_t handle));
+
 const bool odgi_follow_edges(const ograph_t graph,
                              const handle_t handle,
                              bool go_left,

@@ -62,7 +62,7 @@ Since graph and p represent state we can move it into a class and end up with a 
 
 In this document we only discuss the native low-level API.
 
-## Exploring the pagenome
+## Exploring the pangenome
 
 A pangenome is made out of nodes (sequences), edges (connectors) and paths:
 
@@ -75,12 +75,11 @@ Show the names using a call back
 
 ```python
 
->>> def test(p):
+>>> def do_path(p):
 ...   print(odgi_get_path_name(graph,p))
 ...   return True
 
->>> list = []
->>> odgi_for_each_path_handle2(graph, lambda p: test(p))
+>>> odgi_for_each_path_handle(graph, lambda p: do_path(p))
 gi|568815592:32578768-32589835
 gi|568815529:3998044-4011446
 gi|568815551:3814534-3830133
@@ -93,31 +92,45 @@ gi|28212469:126036-137103
 gi|28212470:131613-146345
 gi|528476637:32549024-32560088
 gi|157702218:147985-163915
-
-odgi_free_graph(graph)
-
 ```
 
+Note that we use a lambda to go through each path handle and that invokes a function because Python does not allow multi-line statements in a lambda (doh!). The `do_path` function prints the output in this case. When test returns False the process stops. This approach is not so functional, so try a more functional:
 
-path_name5 = nil
-ODGI.each_path(pangenome) { |path|
-  p [path,ODGI.path_name(pangenome,path)]
-  path_name5 = ODGI.path_name(pangenome,path) if path==5
-}
+```python
+>>> paths = []
+>>> odgi_for_each_path_handle(graph, lambda p: paths.append(odgi_get_path_name(graph,p)))
+>>> paths[0:3]
+['gi|568815592:32578768-32589835', 'gi|568815529:3998044-4011446', 'gi|568815551:3814534-3830133']
+```
 
-raise "No path[5]" if not ODGI.has_path(pangenome,path_name5)
+This way we can quickly move toward a functional programming interface, see `odgi_graph`. (FIXME).
 
-path5 = ODGI::get_path(pangenome,path_name5);
-p [path5,ODGI.path_name(pangenome,path5)]
+```python
+>>> def do_handle(h):
+...   print(odgi_get_sequence(graph,h))
+...   return True
 
-ODGI.each_handle(pangenome) { |handle|
-  right_edges = []
-  ODGI::follow_edges(pangenome,handle,true) { |edge|
-    right_edges.push edge
-  }
-  left_edges = []
-  ODGI::follow_edges(pangenome,handle,false) { |edge|
-    left_edges.push edge
-  }
-  p [handle,ODGI::get_id(pangenome,handle),ODGI::get_sequence(pangenome,handle),left_edges,right_edges]
-}
+>>> odgi_for_each_handle(graph, lambda h: do_handle(h))
+```
+
+-ODGI.each_handle(pangenome) { |handle|
+-  right_edges = []
+-  ODGI::follow_edges(pangenome,handle,true) { |edge|
+-    right_edges.push edge
+-  }
+-  left_edges = []
+-  ODGI::follow_edges(pangenome,handle,false) { |edge|
+-    left_edges.push edge
+-  }
+-  p [handle,ODGI::get_id(pangenome,handle),ODGI::get_sequence(pangenome,handle),left_edges,right_edges]
+-}
+
+
+
+## Cleanup
+
+Finally clean up with
+
+```python
+odgi_free_graph(graph)
+```
