@@ -20,7 +20,7 @@ PYBIND11_MODULE(odgi_ffi, m)
     m.def("odgi_version", &odgi_version, "Get the odgi library build version");
     // const graph_t* odgi_load_graph(const char *filen)
     m.def("odgi_load_graph", &odgi_load_graph);
-    m.def("odgi_free_graph", &odgi_free_graph); // not safe in pybind11?
+    m.def("odgi_free_graph", &odgi_free_graph);
     m.def("odgi_get_node_count", &odgi_get_node_count);
     m.def("odgi_max_node_id", &odgi_max_node_id);
     m.def("odgi_min_node_id", &odgi_min_node_id);
@@ -37,7 +37,7 @@ PYBIND11_MODULE(odgi_ffi, m)
     m.def("odgi_get_is_reverse", &odgi_get_is_reverse);
     m.def("odgi_get_length", &odgi_get_length);
     m.def("odgi_get_path_name", &odgi_get_path_name);
-    m.def("odgi_c_get_path_name", &odgi_c_get_path_name);
+    // m.def("odgi_c_get_path_name", &odgi_c_get_path_name);
     m.def("odgi_has_path", &odgi_has_path);
     m.def("odgi_path_is_empty", &odgi_path_is_empty);
     m.def("odgi_get_path_handle", &odgi_get_path_handle);

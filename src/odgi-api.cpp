@@ -279,17 +279,3 @@ const bool odgi_for_each_step_on_handle(const ograph_t graph,
 const std::string odgi_get_path_name(const ograph_t graph, const path_handle_t path) {
   return ((graph_t *)graph)->get_path_name(path);
 }
-
-
-extern "C" {
-  // Path handling
-  const char *odgi_c_get_path_name(const ograph_t graph, const path_handle_t path) {
-    // we require a buffer to avoid
-    // UnicodeDecodeError: 'utf-8' codec can't decode byte
-    char *buf = (char *)malloc(1000);
-    strcpy(buf,((graph_t *)graph)->get_path_name(path).data());
-    // return ((graph_t *)graph)->get_path_name(path).data();
-    return buf;
-  }
-
-}

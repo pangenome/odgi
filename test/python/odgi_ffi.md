@@ -77,7 +77,6 @@ Show the names using a call back
 
 >>> def test(p):
 ...   print(odgi_get_path_name(graph,p))
-...   print(odgi_c_get_path_name(graph,p))
 ...   return True
 
 >>> list = []

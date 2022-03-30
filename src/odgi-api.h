@@ -79,10 +79,10 @@ const bool odgi_for_each_step_on_handle(const ograph_t graph,
                                         const handle_t handle,
                                         bool (*next) (const step_handle_t step));
 
-// C++ interface
-
 const std::string odgi_get_path_name(const ograph_t graph, const path_handle_t path);
 
+// Language agnostic C interface starts here
+
 extern "C" {
-  const char *odgi_c_get_path_name(const ograph_t graph, const path_handle_t path);
+  // const char *odgi_c_get_path_name(const ograph_t graph, const path_handle_t path);
 }
