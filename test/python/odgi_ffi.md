@@ -82,7 +82,7 @@ Show the names using a call back
 ...   print(odgi_get_path_name(graph,p))
 ...   return True
 
-# >>> odgi_for_each_path_handle(graph, lambda p: do_path(p))
+>>> odgi_for_each_path_handle(graph, lambda p: do_path(p))
 gi|568815592:32578768-32589835
 gi|568815529:3998044-4011446
 gi|568815551:3814534-3830133
@@ -95,6 +95,7 @@ gi|28212469:126036-137103
 gi|28212470:131613-146345
 gi|528476637:32549024-32560088
 gi|157702218:147985-163915
+
 ```
 
 Note that we use a lambda to go through each path handle and that invokes a function because Python does not allow multi-line statements in a lambda (doh!). The `do_path` function prints the output in this case. When test returns False the process stops. This approach is not so functional, so try a more functional:
