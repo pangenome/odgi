@@ -17,7 +17,6 @@
 
 using namespace odgi;
 
-
 const std::string odgi_version() {
   return Version::get_version();
 }
@@ -29,12 +28,13 @@ const ograph_t odgi_load_graph(const char *filen) {
   return (ograph_t)graph;
 }
 
-// Calling this function is probably not safe
+// has python doctest
 void odgi_free_graph(ograph_t graph) {
   graph_t *g = (graph_t *)graph;
   delete g;
 }
 
+// has python doctest
 const size_t odgi_get_node_count(ograph_t graph) {
   return ((graph_t *)graph)->get_node_count();
 }
@@ -47,6 +47,7 @@ const size_t odgi_min_node_id(const ograph_t graph) {
   return ((graph_t *)graph)->min_node_id();
 }
 
+// has python doctest
 const size_t odgi_get_path_count(ograph_t graph) {
   return ((graph_t *)graph)->get_path_count();
 }
@@ -127,12 +128,12 @@ const bool odgi_has_path(const ograph_t graph, const char *path_name) {
   return ((graph_t *)graph)->has_path(path_name);
 }
 
-const bool odgi_path_is_empty(const ograph_t graph, const path_handle_t path) {
-  return ((graph_t *)graph)->is_empty(path);
+const bool odgi_path_is_empty(const ograph_t graph, const path_handle_i path) {
+  return ((graph_t *)graph)->is_empty(as_path_handle(path));
 }
 
-const path_handle_t odgi_get_path_handle(const ograph_t graph, const char *path_name) {
-  return ((graph_t *)graph)->get_path_handle(path_name);
+const path_handle_i odgi_get_path_handle(const ograph_t graph, const char *path_name) {
+  return as_integer(((graph_t *)graph)->get_path_handle(path_name));
 }
 
 // Steps
@@ -146,24 +147,24 @@ const handle_t odgi_step_get_handle(const ograph_t graph, step_handle_t step)
   return ((graph_t *)graph)->get_handle_of_step(step);
 }
 
-const path_handle_t odgi_step_get_path(const ograph_t graph, step_handle_t step)
+const path_handle_i odgi_step_get_path(const ograph_t graph, step_handle_t step)
 {
-  return ((graph_t *)graph)->get_path(step);
+  return as_integer(((graph_t *)graph)->get_path(step));
 }
 
-const step_handle_t odgi_step_path_begin(const ograph_t graph, path_handle_t path)
+const step_handle_t odgi_step_path_begin(const ograph_t graph, path_handle_i path)
 {
-  return ((graph_t *)graph)->path_begin(path);
+  return ((graph_t *)graph)->path_begin(as_path_handle(path));
 }
 
-const step_handle_t odgi_step_path_end(const ograph_t graph, path_handle_t path)
+const step_handle_t odgi_step_path_end(const ograph_t graph, path_handle_i path)
 {
-  return ((graph_t *)graph)->path_end(path);
+  return ((graph_t *)graph)->path_end(as_path_handle(path));
 }
 
-const step_handle_t odgi_step_path_back(const ograph_t graph, path_handle_t path)
+const step_handle_t odgi_step_path_back(const ograph_t graph, path_handle_i ipath)
 {
-  return ((graph_t *)graph)->path_back(path);
+  return ((graph_t *)graph)->path_back(as_path_handle(ipath));
 }
 
 const int64_t odgi_step_path_id(const ograph_t graph, step_handle_t &step_handle) {
@@ -208,9 +209,9 @@ const bool odgi_step_eq(const ograph_t graph,
 }
 
 const step_handle_t odgi_path_front_end(const ograph_t graph,
-                                   const path_handle_t path)
+                                   const path_handle_i ipath)
 {
-  return ((graph_t *)graph)->path_front_end(path);
+  return ((graph_t *)graph)->path_front_end(as_path_handle(ipath));
 }
 
 const step_handle_t odgi_get_next_step(const ograph_t graph,
@@ -247,17 +248,17 @@ const bool odgi_has_previous_step(const ograph_t graph, const step_handle_t step
   return ((graph_t *)graph)->has_previous_step(step);
 }
 
-const path_handle_t odgi_get_path_handle_of_step(const ograph_t graph,
+const path_handle_i odgi_get_path_handle_of_step(const ograph_t graph,
                                                  const step_handle_t step)
 {
-  return ((graph_t *)graph)->get_path_handle_of_step(step);
+  return as_integer(((graph_t *)graph)->get_path_handle_of_step(step));
 }
 
 void odgi_for_each_step_in_path(const ograph_t graph,
-                                const path_handle_t path,
+                                const path_handle_i ipath,
                                 void (*next) (const step_handle_t step))
 {
-  ((graph_t *)graph)->for_each_step_in_path(path,
+  ((graph_t *)graph)->for_each_step_in_path(as_path_handle(ipath),
                                [&](const step_handle_t step) {
                                  next(step);
                                });

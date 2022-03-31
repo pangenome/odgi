@@ -27,7 +27,7 @@ const size_t odgi_min_node_id(const ograph_t graph);
 const size_t odgi_get_path_count(ograph_t graph);
 void odgi_for_each_path_handle(const ograph_t graph,
                                const std::function<void(const path_handle_i)>& next);
-  // void (*next) (const path_handle_t path));
+  // void (*next) (const path_handle_i path));
 // @@
 const bool odgi_for_each_handle(const ograph_t graph,
                                 const std::function<bool(const handle_i)>& next);
@@ -47,17 +47,17 @@ const nid_t odgi_get_id(const ograph_t graph, const handle_t handle);
 const bool odgi_get_is_reverse(const ograph_t graph, const handle_t handle);
 const size_t odgi_get_length(const ograph_t graph, const handle_t handle);
 // Path handling
-// const char *odgi_get_path_name(const ograph_t graph, const path_handle_t path);
+// const char *odgi_get_path_name(const ograph_t graph, const path_handle_i path);
 const bool odgi_has_path(const ograph_t graph, const char *path_name);
-const bool odgi_path_is_empty(const ograph_t graph, const path_handle_t path);
-const path_handle_t odgi_get_path_handle(const ograph_t graph, const char *path_name);
+const bool odgi_path_is_empty(const ograph_t graph, const path_handle_i path);
+const path_handle_i odgi_get_path_handle(const ograph_t graph, const char *path_name);
 // Steps
 const size_t odgi_get_step_count(const ograph_t graph, const handle_t handle);
 const handle_t odgi_step_get_handle(const ograph_t graph, step_handle_t step);
-const path_handle_t odgi_step_get_path(const ograph_t graph, step_handle_t step);
-const step_handle_t odgi_step_path_begin(const ograph_t graph, path_handle_t path);
-const step_handle_t odgi_step_path_end(const ograph_t graph, path_handle_t path);
-const step_handle_t odgi_step_path_back(const ograph_t graph, path_handle_t path);
+const path_handle_i odgi_step_get_path(const ograph_t graph, step_handle_t step);
+const step_handle_t odgi_step_path_begin(const ograph_t graph, path_handle_i path);
+const step_handle_t odgi_step_path_end(const ograph_t graph, path_handle_i path);
+const step_handle_t odgi_step_path_back(const ograph_t graph, path_handle_i path);
 const int64_t odgi_step_path_id(const ograph_t graph, step_handle_t &step_handle);
 bool odgi_step_is_reverse(const ograph_t graph, step_handle_t &step_handle);
 const int64_t odgi_step_prev_id(const ograph_t graph, step_handle_t &step_handle);
@@ -68,7 +68,7 @@ const bool odgi_step_eq(const ograph_t graph,
                         step_handle_t &step_handle1,
                         step_handle_t &step_handle2);
 const step_handle_t odgi_path_front_end(const ograph_t graph,
-                                   const path_handle_t path);
+                                   const path_handle_i path);
 const step_handle_t odgi_get_next_step(const ograph_t graph,
                                        const step_handle_t step);
 const step_handle_t odgi_get_previous_step(const ograph_t graph,
@@ -78,10 +78,10 @@ const bool odgi_is_path_front_end(const ograph_t graph, const step_handle_t step
 const bool odgi_is_path_end(const ograph_t graph, const step_handle_t step);
 const bool odgi_has_next_step(const ograph_t graph, const step_handle_t step);
 const bool odgi_has_previous_step(const ograph_t graph, const step_handle_t step);
-const path_handle_t odgi_get_path_handle_of_step(const ograph_t graph,
+const path_handle_i odgi_get_path_handle_of_step(const ograph_t graph,
                                                  const step_handle_t step);
 void odgi_for_each_step_in_path(const ograph_t graph,
-                                const path_handle_t path,
+                                const path_handle_i path,
                                 void (*next) (const step_handle_t step));
 const bool odgi_for_each_step_on_handle(const ograph_t graph,
                                         const handle_t handle,
@@ -92,5 +92,5 @@ const std::string odgi_get_path_name(const ograph_t graph, const path_handle_i i
 // Language agnostic C interface starts here
 
 extern "C" {
-  // const char *odgi_c_get_path_name(const ograph_t graph, const path_handle_t path);
+  // const char *odgi_c_get_path_name(const ograph_t graph, const path_handle_i path);
 }
