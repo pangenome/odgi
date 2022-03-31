@@ -18,8 +18,8 @@
 using namespace odgi;
 
 
-const char *odgi_version() {
-  return Version::get_version().c_str();
+const std::string odgi_version() {
+  return Version::get_version();
 }
 
 const ograph_t odgi_load_graph(const char *filen) {
@@ -64,8 +64,8 @@ void odgi_for_each_path_handle(const ograph_t graph,
 // @@
 
 const bool odgi_for_each_handle(const ograph_t graph,
-                                const std::function<bool(const ohandle_t)>& next)
-// bool (*next) (const ohandle_t handle))
+                                const std::function<bool(const handle_i)>& next)
+// bool (*next) (const handle_i handle))
 {
   return ((graph_t *)graph)->for_each_handle([&](const handle_t h)
   {
@@ -80,14 +80,15 @@ const bool odgi_for_each_handle(const ograph_t graph,
 /// them to a callback which returns false to stop iterating and true to
 /// continue. Returns true if we finished and false if we stopped early.
 const bool odgi_follow_edges(const ograph_t graph,
-                             const handle_t handle,
+                             const handle_i ihandle,
                              bool go_left,
-                             bool (*next) (const handle_t handle))
+                             // bool (*next) (const handle_i ihandle))
+                             const std::function<bool(const handle_i ihandle)>& next)
 {
-  return ((graph_t *)graph)->follow_edges(handle,go_left,
+  return ((graph_t *)graph)->follow_edges(as_handle(ihandle),go_left,
                              [&](const handle_t handle)
                              {
-                               next(handle);
+                               next(as_integer(handle));
                                return true;
                              }
                              );
@@ -107,7 +108,7 @@ const bool odgi_has_node(const ograph_t graph, nid_t node_id) {
   return ((graph_t *)graph)->has_node(node_id);
 }
 
-const std::string odgi_get_sequence(const ograph_t graph, const ohandle_t ohandle) {
+const std::string odgi_get_sequence(const ograph_t graph, const handle_i ohandle) {
   return ((graph_t *)graph)->get_sequence(as_handle(ohandle));
 }
 

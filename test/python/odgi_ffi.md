@@ -25,6 +25,9 @@ Now you should be able to use the `odgi_ffi` module and load the graph with 3214
 ```python
 >>> from odgi_ffi import *
 
+>>> odgi_version()
+''
+
 >>> graph = odgi_load_graph("DRB1-3123_sorted.og")
 >>> odgi_get_node_count(graph)
 3214
@@ -115,19 +118,21 @@ True
 
 ```
 
--ODGI.each_handle(pangenome) { |handle|
--  right_edges = []
--  ODGI::follow_edges(pangenome,handle,true) { |edge|
--    right_edges.push edge
--  }
--  left_edges = []
--  ODGI::follow_edges(pangenome,handle,false) { |edge|
--    left_edges.push edge
--  }
--  p [handle,ODGI::get_id(pangenome,handle),ODGI::get_sequence(pangenome,handle),left_edges,right_edges]
--}
+Let's explore the edges
 
+```python
 
+>>> left_edges = []
+>>> right_edges = []
+>>> for h in handles[4:8]:
+...   result1 = odgi_follow_edges(graph,h[0],True,lambda e: right_edges.append(e))
+...   result2 = odgi_follow_edges(graph,h[0],False,lambda e: left_edges.append(e))
+
+>>> right_edges
+[12, 6, 32, 14, 16, 4]
+
+>>> left_edges
+[26, 18, 20, 8, 12, 6]
 
 ## Cleanup
 

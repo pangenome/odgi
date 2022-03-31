@@ -14,11 +14,11 @@ using namespace odgi;
 
 // Introduce opaque types to support type checking of pointers to C++ classes
 typedef struct opaque_graph {} *ograph_t;
-typedef uint64_t ohandle_t;
+typedef uint64_t handle_i;
 typedef uint64_t path_handle_i;
 
 // These functions are exposed as a simple C API
-const char *odgi_version();
+const std::string odgi_version();
 const ograph_t odgi_load_graph(const char *filen);
 void odgi_free_graph(const ograph_t graph);
 const size_t odgi_get_node_count(ograph_t graph);
@@ -30,18 +30,19 @@ void odgi_for_each_path_handle(const ograph_t graph,
   // void (*next) (const path_handle_t path));
 // @@
 const bool odgi_for_each_handle(const ograph_t graph,
-                                const std::function<bool(const ohandle_t)>& next);
-                                // bool (*next) (const ohandle_t handle));
+                                const std::function<bool(const handle_i)>& next);
+                                // bool (*next) (const handle_i handle));
 
 const bool odgi_follow_edges(const ograph_t graph,
-                             const handle_t handle,
+                             const handle_i ihandle,
                              bool go_left,
-                             bool (*next) (const handle_t handle));
+                             const std::function<bool(const handle_i ihandle)>& next);
+                                                                                      //                             bool (*next) (const handle_i ihandle));
 const handle_t odgi_edge_first_handle(const ograph_t graph, const edge_t &edge_handle);
 const handle_t odgi_edge_second_handle(const ograph_t graph, const edge_t &edge_handle);
 const bool odgi_has_node(const ograph_t graph, nid_t node_id);
-// const std::string odgi_get_sequence(const ograph_t graph, const ohandle_t handle);
-const std::string odgi_get_sequence(const ograph_t graph, const ohandle_t ihandle);
+// const std::string odgi_get_sequence(const ograph_t graph, const handle_i handle);
+const std::string odgi_get_sequence(const ograph_t graph, const handle_i ihandle);
 const nid_t odgi_get_id(const ograph_t graph, const handle_t handle);
 const bool odgi_get_is_reverse(const ograph_t graph, const handle_t handle);
 const size_t odgi_get_length(const ograph_t graph, const handle_t handle);
