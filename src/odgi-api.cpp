@@ -63,7 +63,6 @@ void odgi_for_each_path_handle(const ograph_t graph,
 // has python doctest
 const bool odgi_for_each_handle(const ograph_t graph,
                                 const std::function<bool(const handle_i)>& next)
-// bool (*next) (const handle_i handle))
 {
   return ((graph_t *)graph)->for_each_handle([&](const handle_t h)
   {
@@ -92,14 +91,14 @@ const bool odgi_follow_edges(const ograph_t graph,
                              );
 };
 
-const handle_t odgi_edge_first_handle(const ograph_t graph, const edge_t &edge_handle)
+const handle_i odgi_edge_first_handle(const ograph_t graph, const edge_t &edge_handle)
 {
-    return (&edge_handle)->first;
+  return as_integer((&edge_handle)->first);
 }
 
-const handle_t odgi_edge_second_handle(const ograph_t graph, const edge_t &edge_handle)
+const handle_i odgi_edge_second_handle(const ograph_t graph, const edge_t &edge_handle)
 {
-    return (&edge_handle)->second;
+  return as_integer((&edge_handle)->second);
 }
 
 const bool odgi_has_node(const ograph_t graph, nid_t node_id) {
@@ -107,20 +106,20 @@ const bool odgi_has_node(const ograph_t graph, nid_t node_id) {
 }
 
 // has python doctest
-const std::string odgi_get_sequence(const ograph_t graph, const handle_i ohandle) {
-  return ((graph_t *)graph)->get_sequence(as_handle(ohandle));
+const std::string odgi_get_sequence(const ograph_t graph, const handle_i ihandle) {
+  return ((graph_t *)graph)->get_sequence(as_handle(ihandle));
 }
 
-const nid_t odgi_get_id(const ograph_t graph, const handle_t handle) {
-  return ((graph_t *)graph)->get_id(handle);
+const nid_t odgi_get_id(const ograph_t graph, const handle_i ihandle) {
+  return ((graph_t *)graph)->get_id(as_handle(ihandle));
 }
 
-const bool odgi_get_is_reverse(const ograph_t graph, const handle_t handle) {
-  return ((graph_t *)graph)->get_is_reverse(handle);
+const bool odgi_get_is_reverse(const ograph_t graph, const handle_i ihandle) {
+  return ((graph_t *)graph)->get_is_reverse(as_handle(ihandle));
 }
 
-const size_t odgi_get_length(const ograph_t graph, const handle_t handle) {
-  return ((graph_t *)graph)->get_length(handle);
+const size_t odgi_get_length(const ograph_t graph, const handle_i ihandle) {
+  return ((graph_t *)graph)->get_length(as_handle(ihandle));
 }
 
 
@@ -137,14 +136,14 @@ const path_handle_i odgi_get_path_handle(const ograph_t graph, const char *path_
 }
 
 // Steps
-const size_t odgi_get_step_count(const ograph_t graph, const handle_t handle)
+const size_t odgi_get_step_count(const ograph_t graph, const handle_i ihandle)
 {
-  return ((graph_t *)graph)->get_step_count(handle);
+  return ((graph_t *)graph)->get_step_count(as_handle(ihandle));
 }
 
-const handle_t odgi_step_get_handle(const ograph_t graph, step_handle_t step)
+const handle_i odgi_step_get_handle(const ograph_t graph, step_handle_t step)
 {
-  return ((graph_t *)graph)->get_handle_of_step(step);
+  return as_integer(((graph_t *)graph)->get_handle_of_step(step));
 }
 
 const path_handle_i odgi_step_get_path(const ograph_t graph, step_handle_t step)
@@ -226,9 +225,9 @@ const step_handle_t odgi_get_previous_step(const ograph_t graph,
   return ((graph_t *)graph)->get_previous_step(step);
 }
 
-const bool odgi_has_edge(const ograph_t graph, const handle_t left, const handle_t right)
+const bool odgi_has_edge(const ograph_t graph, const handle_i left, const handle_i right)
 {
-  return ((graph_t *)graph)->has_edge(left,right);
+  return ((graph_t *)graph)->has_edge(as_handle(left),as_handle(right));
 }
 
 const bool odgi_is_path_front_end(const ograph_t graph, const step_handle_t step)
@@ -266,10 +265,10 @@ void odgi_for_each_step_in_path(const ograph_t graph,
 
 
 const bool odgi_for_each_step_on_handle(const ograph_t graph,
-                                        const handle_t handle,
+                                        const handle_i ihandle,
                                         bool (*next) (const step_handle_t step))
 {
-  return ((graph_t *)graph)->for_each_step_on_handle(handle,
+  return ((graph_t *)graph)->for_each_step_on_handle(as_handle(ihandle),
                                         [&](const step_handle_t step) {
                                           next(step);
                                           return true; });
