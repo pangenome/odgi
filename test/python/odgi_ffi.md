@@ -53,10 +53,10 @@ Next, by default, data is copied across language barriers. For most odgi handles
 imort odgi_ffi
 
 # These are examples of naming convention:
-odgi_get_path_name(graph,p)       # C++ copy handler (default)
-odgi_raw_get_path_name(graph,p)   # C++ string access in place
-odgi_c_get_path_name(graph,p)     # C copy handler (default)
-odgi_c_raw_get_path_name(graph,p) # C string access in place
+odgi_get_path_name(graph,p)       # C++ copy handler (immutable & default)
+odgi_raw_get_path_name(graph,p)   # C++ string access in place (mutable)
+odgi_c_get_path_name(graph,p)     # C copy handler (immutable)
+odgi_c_raw_get_path_name(graph,p) # C string access in place (mutable)
 ```
 
 Note that not all these functions may be implemented. See the reference (FIXME).

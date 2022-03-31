@@ -51,18 +51,15 @@ const size_t odgi_get_path_count(ograph_t graph) {
   return ((graph_t *)graph)->get_path_count();
 }
 
-// void odgi_for_each_path_handle(const ograph_t graph, void (*next) (const path_handle_t path)) {
-
+// has python doctest
 void odgi_for_each_path_handle(const ograph_t graph,
                                const std::function<void(const path_handle_i)>& next) {
-// void (*next) (const path_handle_t path)) {
   ((graph_t *)graph)->for_each_path_handle([&](const path_handle_t path) {
     next(as_integer(path));
   });
 }
 
-// @@
-
+// has python doctest
 const bool odgi_for_each_handle(const ograph_t graph,
                                 const std::function<bool(const handle_i)>& next)
 // bool (*next) (const handle_i handle))
@@ -79,10 +76,10 @@ const bool odgi_for_each_handle(const ograph_t graph,
 /// Loop over all the handles to next/previous (right/left) nodes. Passes
 /// them to a callback which returns false to stop iterating and true to
 /// continue. Returns true if we finished and false if we stopped early.
+// has python doctest
 const bool odgi_follow_edges(const ograph_t graph,
                              const handle_i ihandle,
                              bool go_left,
-                             // bool (*next) (const handle_i ihandle))
                              const std::function<bool(const handle_i ihandle)>& next)
 {
   return ((graph_t *)graph)->follow_edges(as_handle(ihandle),go_left,
@@ -108,6 +105,7 @@ const bool odgi_has_node(const ograph_t graph, nid_t node_id) {
   return ((graph_t *)graph)->has_node(node_id);
 }
 
+// has python doctest
 const std::string odgi_get_sequence(const ograph_t graph, const handle_i ohandle) {
   return ((graph_t *)graph)->get_sequence(as_handle(ohandle));
 }
@@ -276,7 +274,7 @@ const bool odgi_for_each_step_on_handle(const ograph_t graph,
                                           return true; });
 }
 
-
+// has python doctest
 const std::string odgi_get_path_name(const ograph_t graph, const path_handle_i ipath) {
   return ((graph_t *)graph)->get_path_name(as_path_handle(ipath));
 }
