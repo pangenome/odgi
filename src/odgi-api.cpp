@@ -21,6 +21,19 @@ const std::string odgi_version() {
   return Version::get_version();
 }
 
+size_t odgi_long_long_size() {
+  return sizeof(long long)*8;
+}
+
+size_t odgi_handle_i_size() {
+  return sizeof(handle_i)*8;
+}
+
+size_t odgi_edge_handle_i_size() {
+  return sizeof(edge_handle_i)*8;
+}
+
+
 const ograph_t odgi_load_graph(const char *filen) {
   graph_t *graph = new graph_t();
   std::ifstream in(filen);
@@ -80,7 +93,7 @@ const bool odgi_for_each_handle(const ograph_t graph,
 const bool odgi_follow_edges(const ograph_t graph,
                              const handle_i ihandle,
                              bool go_left,
-                             const std::function<bool(const handle_i ihandle)>& next)
+                             const std::function<bool(const edge_handle_i iedge)>& next)
 {
   return ((graph_t *)graph)->follow_edges(as_handle(ihandle),go_left,
                              [&](const handle_t handle)

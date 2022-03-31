@@ -18,8 +18,12 @@ typedef struct opaque_graph {} *ograph_t;
 // Use integers for the FFI
 typedef uint64_t handle_i;
 typedef uint64_t path_handle_i;
+typedef unsigned __int128 edge_handle_i;
 
 const std::string odgi_version();
+size_t odgi_long_long_size();
+size_t odgi_handle_i_size();
+size_t odgi_edge_handle_i_size();
 const ograph_t odgi_load_graph(const char *filen);
 void odgi_free_graph(const ograph_t graph);
 const size_t odgi_get_node_count(ograph_t graph);
@@ -34,7 +38,7 @@ const bool odgi_for_each_handle(const ograph_t graph,
 const bool odgi_follow_edges(const ograph_t graph,
                              const handle_i ihandle,
                              bool go_left,
-                             const std::function<bool(const handle_i ihandle)>& next);
+                             const std::function<bool(const edge_handle_i ihandle)>& next);
 const handle_i odgi_edge_first_handle(const ograph_t graph, const edge_t &edge_handle);
 const handle_i odgi_edge_second_handle(const ograph_t graph, const edge_t &edge_handle);
 const bool odgi_has_node(const ograph_t graph, nid_t node_id);

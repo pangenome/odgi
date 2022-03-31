@@ -18,6 +18,9 @@ PYBIND11_MODULE(odgi_ffi, m)
     // py::class_<path_handle_t>(m, "opaque path_handle_t for FFI");
     // py::class_<handle_t>(m, "opaque handle_t for FFI");
     m.def("odgi_version", &odgi_version, "Get the odgi library build version");
+    m.def("odgi_long_long_size", &odgi_long_long_size);
+    m.def("odgi_handle_i_size", &odgi_handle_i_size);
+    m.def("odgi_edge_handle_i_size", &odgi_edge_handle_i_size);
     m.def("odgi_load_graph", &odgi_load_graph);
     m.def("odgi_free_graph", &odgi_free_graph);
     m.def("odgi_get_node_count", &odgi_get_node_count);

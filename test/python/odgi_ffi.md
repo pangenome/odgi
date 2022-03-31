@@ -25,9 +25,6 @@ Now you should be able to use the `odgi_ffi` module and load the graph with 3214
 ```python
 >>> from odgi_ffi import *
 
->>> odgi_version()
-''
-
 >>> graph = odgi_load_graph("DRB1-3123_sorted.og")
 >>> odgi_get_node_count(graph)
 3214
@@ -119,7 +116,7 @@ True
 
 ```
 
-Let's explore the edges
+Let's explore the edges. `odgi_follow_edges` returns handles/nodes on the right and left of the edges:
 
 ```python
 
@@ -149,3 +146,25 @@ odgi_free_graph(graph)
 ### I am getting segfaults
 
 Make sure to set `LD_PRELOAD=libjemalloc.so.2` when running Python scripts.
+
+### Some odgi system information
+
+The API provides the following low level information
+
+```python
+>>> odgi_version()
+''
+
+>>> odgi_long_long_size()
+64
+
+>>> odgi_handle_i_size()
+64
+
+>>> odgi_edge_handle_i_size()
+128
+
+>>> odgi_step_handle_i_size()
+128
+
+```
