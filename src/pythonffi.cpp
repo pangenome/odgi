@@ -21,6 +21,8 @@ PYBIND11_MODULE(odgi_ffi, m)
     m.def("odgi_long_long_size", &odgi_long_long_size);
     m.def("odgi_handle_i_size", &odgi_handle_i_size);
     m.def("odgi_edge_handle_i_size", &odgi_edge_handle_i_size);
+    m.def("odgi_step_handle_i_size", &odgi_step_handle_i_size);
+    m.def("odgi_test_uint128", &odgi_test_uint128);
     m.def("odgi_load_graph", &odgi_load_graph);
     m.def("odgi_free_graph", &odgi_free_graph);
     m.def("odgi_get_node_count", &odgi_get_node_count);

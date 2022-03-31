@@ -167,4 +167,13 @@ The API provides the following low level information
 >>> odgi_step_handle_i_size()
 128
 
+>>> hex((0xAB << 32) + 0xCD)
+'0xab000000cd'
+
+>>> hex((0xAB << 64) + 0xCD)
+'0xab00000000000000cd'
+
+>>> hex(odgi_test_uint128())
+'0xab00000000000000cd'
+
 ```

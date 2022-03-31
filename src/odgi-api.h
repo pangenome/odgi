@@ -24,6 +24,8 @@ const std::string odgi_version();
 size_t odgi_long_long_size();
 size_t odgi_handle_i_size();
 size_t odgi_edge_handle_i_size();
+size_t odgi_step_handle_i_size();
+unsigned __int128 odgi_test_uint128();
 const ograph_t odgi_load_graph(const char *filen);
 void odgi_free_graph(const ograph_t graph);
 const size_t odgi_get_node_count(ograph_t graph);

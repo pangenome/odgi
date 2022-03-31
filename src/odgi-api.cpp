@@ -33,6 +33,14 @@ size_t odgi_edge_handle_i_size() {
   return sizeof(edge_handle_i)*8;
 }
 
+size_t odgi_step_handle_i_size() {
+  return sizeof(step_handle_t)*8;
+}
+
+unsigned __int128 odgi_test_uint128() {
+  unsigned __int128 ll = (unsigned __int128)0xAB << 64 + 0xCD;
+  return ll;
+}
 
 const ograph_t odgi_load_graph(const char *filen) {
   graph_t *graph = new graph_t();
