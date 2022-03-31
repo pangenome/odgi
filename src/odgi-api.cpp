@@ -54,22 +54,23 @@ const size_t odgi_get_path_count(ograph_t graph) {
 // void odgi_for_each_path_handle(const ograph_t graph, void (*next) (const path_handle_t path)) {
 
 void odgi_for_each_path_handle(const ograph_t graph,
-                               void (*next) (const path_handle_t path)) {
+                               const std::function<void(const path_handle_i)>& next) {
+// void (*next) (const path_handle_t path)) {
   ((graph_t *)graph)->for_each_path_handle([&](const path_handle_t path) {
-    next(path);
+    next(as_integer(path));
   });
 }
 
 // @@
 
 const bool odgi_for_each_handle(const ograph_t graph,
-                                // const std::function<bool(const handle_t)>& next)
-                                bool (*next) (const handle_t handle))
+                                const std::function<bool(const ohandle_t)>& next)
+// bool (*next) (const ohandle_t handle))
 {
   return ((graph_t *)graph)->for_each_handle([&](const handle_t h)
   {
 
-    next(h);
+    next(as_integer(h));
     return true;
   },
     false); // note that parallel is false
@@ -106,8 +107,8 @@ const bool odgi_has_node(const ograph_t graph, nid_t node_id) {
   return ((graph_t *)graph)->has_node(node_id);
 }
 
-const char *odgi_get_sequence(const ograph_t graph, const handle_t handle) {
-  return ((graph_t *)graph)->get_sequence(handle).c_str();
+const std::string odgi_get_sequence(const ograph_t graph, const ohandle_t ohandle) {
+  return ((graph_t *)graph)->get_sequence(as_handle(ohandle));
 }
 
 const nid_t odgi_get_id(const ograph_t graph, const handle_t handle) {
@@ -275,6 +276,6 @@ const bool odgi_for_each_step_on_handle(const ograph_t graph,
 }
 
 
-const std::string odgi_get_path_name(const ograph_t graph, const path_handle_t path) {
-  return ((graph_t *)graph)->get_path_name(path);
+const std::string odgi_get_path_name(const ograph_t graph, const path_handle_i ipath) {
+  return ((graph_t *)graph)->get_path_name(as_path_handle(ipath));
 }

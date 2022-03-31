@@ -79,7 +79,7 @@ Show the names using a call back
 ...   print(odgi_get_path_name(graph,p))
 ...   return True
 
->>> odgi_for_each_path_handle(graph, lambda p: do_path(p))
+# >>> odgi_for_each_path_handle(graph, lambda p: do_path(p))
 gi|568815592:32578768-32589835
 gi|568815529:3998044-4011446
 gi|568815551:3814534-3830133
@@ -101,16 +101,18 @@ Note that we use a lambda to go through each path handle and that invokes a func
 >>> odgi_for_each_path_handle(graph, lambda p: paths.append(odgi_get_path_name(graph,p)))
 >>> paths[0:3]
 ['gi|568815592:32578768-32589835', 'gi|568815529:3998044-4011446', 'gi|568815551:3814534-3830133']
+
 ```
 
 This way we can quickly move toward a functional programming interface, see `odgi_graph`. (FIXME).
 
 ```python
->>> def do_handle(h):
-...   print(odgi_get_sequence(graph,h))
-...   return True
+>>> handles = []
+>>> odgi_for_each_handle(graph, lambda h: handles.append([h,odgi_get_sequence(graph,h)]))
+True
+>>> handles[4:8]
+[[8, 'GCTGCCATCAATGCTGGGACTTCAGGCCAA'], [10, 'TGGGAGGCAGGAAGCGTTAGGT'], [12, 'C'], [14, 'AAGATGAGG']]
 
->>> odgi_for_each_handle(graph, lambda h: do_handle(h))
 ```
 
 -ODGI.each_handle(pangenome) { |handle|
@@ -134,3 +136,10 @@ Finally clean up with
 ```python
 odgi_free_graph(graph)
 ```
+
+
+## Troubleshooting
+
+### I am getting segfaults
+
+Make sure to set `LD_PRELOAD=libjemalloc.so.2` when running Python scripts.

@@ -14,7 +14,8 @@ using namespace odgi;
 
 // Introduce opaque types to support type checking of pointers to C++ classes
 typedef struct opaque_graph {} *ograph_t;
-typedef long long int ohandle_t;
+typedef uint64_t ohandle_t;
+typedef uint64_t path_handle_i;
 
 // These functions are exposed as a simple C API
 const char *odgi_version();
@@ -25,11 +26,12 @@ const size_t odgi_max_node_id(const ograph_t graph);
 const size_t odgi_min_node_id(const ograph_t graph);
 const size_t odgi_get_path_count(ograph_t graph);
 void odgi_for_each_path_handle(const ograph_t graph,
-                               void (*next) (const path_handle_t path));
+                               const std::function<void(const path_handle_i)>& next);
+  // void (*next) (const path_handle_t path));
 // @@
 const bool odgi_for_each_handle(const ograph_t graph,
-                                // const std::function<bool(const handle_t)>& next);
-                                bool (*next) (const handle_t handle));
+                                const std::function<bool(const ohandle_t)>& next);
+                                // bool (*next) (const ohandle_t handle));
 
 const bool odgi_follow_edges(const ograph_t graph,
                              const handle_t handle,
@@ -38,7 +40,8 @@ const bool odgi_follow_edges(const ograph_t graph,
 const handle_t odgi_edge_first_handle(const ograph_t graph, const edge_t &edge_handle);
 const handle_t odgi_edge_second_handle(const ograph_t graph, const edge_t &edge_handle);
 const bool odgi_has_node(const ograph_t graph, nid_t node_id);
-const char *odgi_get_sequence(const ograph_t graph, const handle_t handle);
+// const std::string odgi_get_sequence(const ograph_t graph, const ohandle_t handle);
+const std::string odgi_get_sequence(const ograph_t graph, const ohandle_t ihandle);
 const nid_t odgi_get_id(const ograph_t graph, const handle_t handle);
 const bool odgi_get_is_reverse(const ograph_t graph, const handle_t handle);
 const size_t odgi_get_length(const ograph_t graph, const handle_t handle);
@@ -83,7 +86,7 @@ const bool odgi_for_each_step_on_handle(const ograph_t graph,
                                         const handle_t handle,
                                         bool (*next) (const step_handle_t step));
 
-const std::string odgi_get_path_name(const ograph_t graph, const path_handle_t path);
+const std::string odgi_get_path_name(const ograph_t graph, const path_handle_i ipath);
 
 // Language agnostic C interface starts here
 
