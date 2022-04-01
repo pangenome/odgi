@@ -237,6 +237,21 @@ else (NOT INLINE_HANDLEGRAPH_SOURCES)
 )
 endif (NOT INLINE_HANDLEGRAPH_SOURCES)
 
+ExternalProject_Add(libbf
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/libbf"
+  CMAKE_ARGS "${CMAKE_ARGS};-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>")
+ExternalProject_Get_property(libbf INSTALL_DIR)
+set(libbf_INCLUDE "${INSTALL_DIR}/include")
+set(libbf_LIB "${INSTALL_DIR}/lib")
+
+ExternalProject_Add(lodepng
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/lodepng"
+  UPDATE_COMMAND ""
+  INSTALL_COMMAND "")
+ExternalProject_Get_property(lodepng SOURCE_DIR)
+set(lodepng_INCLUDE "${SOURCE_DIR}")
+set(lodepng_LIB "${SOURCE_DIR}/lib")
+
 # taywee's C++ args library, header only
 ExternalProject_Add(tayweeargs
   SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/args"
@@ -328,14 +343,6 @@ ExternalProject_Add(atomicqueue
 ExternalProject_Get_property(atomicqueue SOURCE_DIR)
 set(atomicqueue_INCLUDE "${SOURCE_DIR}/")
 
-# lodepng
-ExternalProject_Add(lodepng
-  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/lodepng"
-  UPDATE_COMMAND ""
-  INSTALL_COMMAND "")
-ExternalProject_Get_property(lodepng SOURCE_DIR)
-set(lodepng_INCLUDE "${SOURCE_DIR}")
-set(lodepng_LIB "${SOURCE_DIR}/lib")
 
 # structures
 ExternalProject_Add(structures
@@ -365,22 +372,6 @@ ExternalProject_Add(sgd2
   CONFIGURE_COMMAND "")
 ExternalProject_Get_property(sgd2 SOURCE_DIR)
 set(sgd2_INCLUDE "${SOURCE_DIR}/src")
-
-#ExternalProject_Add(mondriaan
-#  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/mondriaan"
-#  UPDATE_COMMAND ""
-#  INSTALL_COMMAND "")
-#ExternalProject_Get_property(mondriaan SOURCE_DIR)
-#set(mondriaan_INCLUDE "${SOURCE_DIR}/src")
-#set(mondriaan_LIB "${SOURCE_DIR}/lib")
-
-ExternalProject_Add(libbf
-  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/libbf"
-  CMAKE_ARGS "${CMAKE_ARGS};-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>")
-ExternalProject_Get_property(libbf INSTALL_DIR)
-#message(STATUS "libbf target " ${INSTALL_DIR})
-set(libbf_INCLUDE "${INSTALL_DIR}/include")
-set(libbf_LIB "${INSTALL_DIR}/lib")
 
 # httplib for HTTP server
 ExternalProject_Add(httplib
@@ -629,14 +620,14 @@ set(odgi_INCLUDES
   "${mio_INCLUDE}")
 
 set(odgi_LIBS
+  jemalloc
   ${SDSLLITE_LINK_LIBRARIES}
   ${LIBDIVSUFSORT_LINK_LIBRARIES}
-  "${lodepng_LIB}/liblodepng.a"
-#  "${mondriaan_LIB}/libmondriaan.a"
-  "${libbf_LIB}/libbf.a"
+  "${lodepng_LIB}/liblodepng.so"
+  "${libbf_LIB}/libbf.so"
   "-ldl"
   "-latomic"
-  jemalloc)
+  )
   #"-lefence") # for malloc error checking
   #"-ltcmalloc") # for heap profiling
 
@@ -747,6 +738,7 @@ else (NOT PIC)
   add_library(libodgi_shared SHARED $<TARGET_OBJECTS:odgi_objs> src/algorithms/fonts/field8.h src/algorithms/fonts/font5x8.h)
   set_target_properties(libodgi_shared PROPERTIES OUTPUT_NAME "odgi")
   set_target_properties(libodgi_shared PROPERTIES PUBLIC_HEADER "${odgi_HEADERS}")
+  add_dependencies(libodgi_shared ${odgi_DEPS})
 endif (NOT PIC)
 
 add_executable(odgi
@@ -768,7 +760,7 @@ else (NOT PIC)
   pybind11_add_module(odgi_ffi "${CMAKE_SOURCE_DIR}/src/pythonffi.cpp")
   add_dependencies(odgi_ffi ${odgi_DEPS} libodgi_shared)
   target_include_directories(odgi_ffi PUBLIC ${odgi_INCLUDES})
-  target_link_libraries(odgi_ffi PRIVATE "${CMAKE_SOURCE_DIR}/lib/libodgi.a" "${odgi_LIBS}")
+  target_link_libraries(odgi_ffi PUBLIC "${odgi_LIBS}" "${CMAKE_SOURCE_DIR}/lib/libodgi.so")
   set_target_properties(odgi_ffi PROPERTIES OUTPUT_NAME "odgi_ffi")
   install(TARGETS odgi_ffi LIBRARY DESTINATION lib)
   add_pydoctest(odgi_ffi)

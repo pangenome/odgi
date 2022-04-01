@@ -123,10 +123,11 @@ Let's explore the edges. `odgi_follow_edges` returns handles/nodes on the right 
 >>> left_edges = []
 >>> right_edges = []
 >>> for h in handles[4:8]:
-...   result1 = odgi_follow_edges(graph,h[0],True,lambda e: right_edges.append(e))
-...   result2 = odgi_follow_edges(graph,h[0],False,lambda e: left_edges.append(e))
+...   res1 = odgi_follow_edges(graph,h[0],True,lambda e: right_edges.append(e))
+...   res2 = odgi_follow_edges(graph,h[0],False,lambda e: left_edges.append(e))
 
->>> right_edges
+>>> for n in right_edges:
+...   print(ogdi_get_id(graph,n),odgi_get_sequence(graph,n))
 [12, 6, 32, 14, 16, 4]
 
 >>> left_edges
@@ -173,7 +174,7 @@ The API provides the following low level information
 >>> hex((0xAB << 64) + 0xCD)
 '0xab00000000000000cd'
 
->>> hex(odgi_test_uint128())
+.>>> hex(odgi_test_uint128())
 '0xab00000000000000cd'
 
 ```

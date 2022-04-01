@@ -40,7 +40,6 @@ PYBIND11_MODULE(odgi_ffi, m)
     m.def("odgi_get_is_reverse", &odgi_get_is_reverse);
     m.def("odgi_get_length", &odgi_get_length);
     m.def("odgi_get_path_name", &odgi_get_path_name);
-    // m.def("odgi_c_get_path_name", &odgi_c_get_path_name);
     m.def("odgi_has_path", &odgi_has_path);
     m.def("odgi_path_is_empty", &odgi_path_is_empty);
     m.def("odgi_get_path_handle", &odgi_get_path_handle);

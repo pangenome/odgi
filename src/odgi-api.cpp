@@ -101,7 +101,7 @@ const bool odgi_for_each_handle(const ograph_t graph,
 const bool odgi_follow_edges(const ograph_t graph,
                              const handle_i ihandle,
                              bool go_left,
-                             const std::function<bool(const edge_handle_i iedge)>& next)
+                             const std::function<bool(const handle_i ihandle)>& next)
 {
   return ((graph_t *)graph)->follow_edges(as_handle(ihandle),go_left,
                              [&](const handle_t handle)
@@ -134,6 +134,8 @@ const std::string odgi_get_sequence(const ograph_t graph, const handle_i ihandle
 const nid_t odgi_get_id(const ograph_t graph, const handle_i ihandle) {
   return ((graph_t *)graph)->get_id(as_handle(ihandle));
 }
+
+const auto& odgi_get_node_id = odgi_get_id;
 
 const bool odgi_get_is_reverse(const ograph_t graph, const handle_i ihandle) {
   return ((graph_t *)graph)->get_is_reverse(as_handle(ihandle));

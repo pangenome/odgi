@@ -40,7 +40,7 @@ const bool odgi_for_each_handle(const ograph_t graph,
 const bool odgi_follow_edges(const ograph_t graph,
                              const handle_i ihandle,
                              bool go_left,
-                             const std::function<bool(const edge_handle_i ihandle)>& next);
+                             const std::function<bool(const handle_i ihandle)>& next);
 const handle_i odgi_edge_first_handle(const ograph_t graph, const edge_t &edge_handle);
 const handle_i odgi_edge_second_handle(const ograph_t graph, const edge_t &edge_handle);
 const bool odgi_has_node(const ograph_t graph, nid_t node_id);
