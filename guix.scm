@@ -85,7 +85,7 @@
        ("gcc-lib" ,gcc-11 "lib")
        ("gcc-toolchain" ,gcc-toolchain)
        ("gdb" ,gdb)
-       ;; ("git" ,git) -- pulls in perl which does not do cross builds
+       ("git" ,git) ; pulls in perl which does not do RISV-V cross builds yet
        ; ("lodepng" ,lodepng) later!
        ("openmpi" ,openmpi)
        ("python" ,python)

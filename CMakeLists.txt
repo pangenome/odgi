@@ -126,6 +126,7 @@ endif()
 set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/bin)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 set(LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/lib)
+set(ODGI_LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/lib)
 
 # The following folder will be included
 include_directories("${PROJECT_SOURCE_DIR}")
@@ -142,6 +143,33 @@ include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 #
 # We need to NOT blank out UPDATE_COMMAND or we can never change the Git revision we point to.
 # The cost of this is that we have to re-configure on every build if we do update.
+
+# CMAKE_CURRENT_BINARY_DIR points to current build dir
+#
+# See also https://cmake.org/cmake/help/latest/module/ExternalProject.html
+
+# Include the lodepng git submodule
+# Note: - builds deps/lodepng/lib/liblodepng.a
+#       - lodepng does not honour passing LIBRARY_OUTPUT_PATH
+#       - so use the lib inside the source dir(!)
+ExternalProject_Add(lodepng_deps
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/lodepng"
+  UPDATE_COMMAND ""  # using git prefetched submodule in deps
+  COMMENT "External project lodepng installed from a git submodule"
+  INSTALL_COMMAND ""
+)
+ExternalProject_Get_property(lodepng_deps SOURCE_DIR)
+set(lodepng_INCLUDE "${SOURCE_DIR}")
+set(lodepng_static "${SOURCE_DIR}/lib/liblodepng.a")
+
+# The libbf git submodule is well behaved and creates a shared library
+# in libbf-prefix/lib/libbf.so
+ExternalProject_Add(libbf_deps
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/libbf"
+  CMAKE_ARGS "${CMAKE_ARGS};-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>")
+ExternalProject_Get_property(libbf_deps INSTALL_DIR)
+set(libbf_INCLUDE "${INSTALL_DIR}/include")
+set(libbf_shared "${INSTALL_DIR/lib/libbf.so")
 
 if (NOT SDSLLITE_FOUND)
   # sdsl-lite (full build using its cmake config)
@@ -236,21 +264,6 @@ else (NOT INLINE_HANDLEGRAPH_SOURCES)
   ${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/weakly_connected_components.cpp
 )
 endif (NOT INLINE_HANDLEGRAPH_SOURCES)
-
-ExternalProject_Add(libbf
-  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/libbf"
-  CMAKE_ARGS "${CMAKE_ARGS};-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>")
-ExternalProject_Get_property(libbf INSTALL_DIR)
-set(libbf_INCLUDE "${INSTALL_DIR}/include")
-set(libbf_LIB "${INSTALL_DIR}/lib")
-
-ExternalProject_Add(lodepng
-  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/lodepng"
-  UPDATE_COMMAND ""
-  INSTALL_COMMAND "")
-ExternalProject_Get_property(lodepng SOURCE_DIR)
-set(lodepng_INCLUDE "${SOURCE_DIR}")
-set(lodepng_LIB "${SOURCE_DIR}/lib")
 
 # taywee's C++ args library, header only
 ExternalProject_Add(tayweeargs
@@ -519,7 +532,6 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_info.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_depth.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/sgd_layout.cpp
-#  ${CMAKE_SOURCE_DIR}/src/algorithms/mondriaan_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/matrix_writer.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/temp_file.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/linear_index.cpp
@@ -554,6 +566,8 @@ add_library(odgi_objs OBJECT
 )
 
 set(odgi_DEPS
+    lodepng_deps
+    libbf_deps
     dynamic
     hopscotch_map
     gfakluge
@@ -563,11 +577,9 @@ set(odgi_DEPS
     ska
     intervaltree
     cgranges
-    lodepng
     structures
     picosha256
     sgd2
-    libbf
     httplib
     random_distributions
     dirtyzipf
@@ -623,8 +635,9 @@ set(odgi_LIBS
   jemalloc
   ${SDSLLITE_LINK_LIBRARIES}
   ${LIBDIVSUFSORT_LINK_LIBRARIES}
-  "${lodepng_LIB}/liblodepng.so"
-  "${libbf_LIB}/libbf.so"
+  "-L${CMAKE_SOURCE_DIR}/lib"
+  ${lodepng_static}
+  ${libbf_shared}
   "-ldl"
   "-latomic"
   )
