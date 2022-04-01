@@ -44,6 +44,15 @@ The ``-j`` argument determines the number of threads used for the compilation pr
 ``2``. As ``odgi`` is a fairly large project, it is recommended to set ``-j`` to the maximum number of available threads. This
 can reduce the compilation time significantly.
 
+.. note::
+
+    If you need to avoid machine-specific optimizations, use the ``CMAKE_BUILD_TYPE=Generic`` build type:
+
+    .. code-block:: bash
+
+        cmake -H. -Bbuild -DCMAKE_BUILD_TYPE=Generic && cmake --build build -- -j 3
+
+
 BIOCONDA
 ========
 
