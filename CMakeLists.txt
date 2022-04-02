@@ -17,10 +17,12 @@
 #
 # For more information see ./INSTALL.md
 
-cmake_minimum_required(VERSION 3.1)
+# Let's avoid older versions of CMake - they are not always compatible
+cmake_minimum_required(VERSION 3.16)
 
 # Project's name
 project(odgi)
+
 # Enforce c++17
 set(CMAKE_CXX_STANDARD 17)
 
@@ -171,6 +173,7 @@ ExternalProject_Get_property(lodepng-EXT SOURCE_DIR)
 set(lodepng_INCLUDE "${SOURCE_DIR}")
 set(lodepng_static_orig "${SOURCE_DIR}/lib/liblodepng.a")
 set(lodepng_static "${ODGI_LIBRARY_OUTPUT_PATH}/liblodepng.a")
+set(lodepng_lib ${lodepng_static}) # only builds static lib
 add_custom_target(lodepng
   DEPENDS ${lodepng_static}
   DEPENDS lodepng-EXT
@@ -184,7 +187,7 @@ ExternalProject_Add(libbf-EXT
   CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>;${CMAKE_ARGS}")
 ExternalProject_Get_property(libbf-EXT INSTALL_DIR)
 set(libbf_INCLUDE "${INSTALL_DIR}/include")
-set(libbf_shared "${INSTALL_DIR}/lib/libbf.so")
+set(libbf_lib "${INSTALL_DIR}/lib/libbf.so")
 add_custom_target(libbf DEPENDS libbf-EXT)
 
 if (NOT SDSLLITE_FOUND)
@@ -652,8 +655,8 @@ set(odgi_LIBS
   ${SDSLLITE_LINK_LIBRARIES}
   ${LIBDIVSUFSORT_LINK_LIBRARIES}
   "-L${CMAKE_SOURCE_DIR}/lib"
-  ${lodepng_static}
-  ${libbf_shared}
+  ${lodepng_lib}
+  ${libbf_lib}
   "-ldl"
   "-latomic"
   )
