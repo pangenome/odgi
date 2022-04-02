@@ -163,6 +163,19 @@ ExternalProject_Get_property(lodepng_ext INSTALL_DIR)
 set(lodepng_INCLUDE "${SOURCE_DIR}")
 set(lodepng_static "${SOURCE_DIR}/lib/liblodepng.a")
 
+
+add_custom_command(
+  OUTPUT ${lodepng_static}
+  DEPENDS lodepng_ext
+  POST_BUILD
+  COMMAND ${CMAKE_COMMAND} -E copy ${lodepng_static} ${ODGI_LIBRARY_OUTPUT_PATH}
+  VERBATIM
+)
+# target_link_libraries(lodepng_liba INTERFACE ${FOO_LIBRARIES})
+
+add_custom_target(mytarget DEPENDS ${lodepng_static})
+
+
 # The libbf git submodule is well behaved and creates a shared library
 # in libbf-prefix/lib/libbf.so
 ExternalProject_Add(libbf_ext
