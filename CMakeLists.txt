@@ -134,42 +134,43 @@ include_directories("${PROJECT_SOURCE_DIR}")
 # Add external projects
 include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 
-# TODO: We're using INSTALL_DIR very wrong. We *should* be actually installing
-# the external projects into their prefixes and working with the installed
-# files. Instead we're building but not installing them and trying to work with
-# the non-installed build trees.
+# The following section builds external git submodules. We can not use
+# the INSTALL_COMMAND and UPDATE_COMMAND because source updates are
+# handled with git submodules. These systems to not mix, so we cancel
+# these commands.  Not that git submodules are deterministic because
+# their updates are handled outside the build system. On a module
+# update/upgrade you need to regenerate cmake.
 #
-# Hence the blanked out INSTALL_COMMANDs to suppress the install step.
-#
-# We need to NOT blank out UPDATE_COMMAND or we can never change the Git revision we point to.
-# The cost of this is that we have to re-configure on every build if we do update.
-
-# CMAKE_CURRENT_BINARY_DIR points to current build dir
+# CMAKE_CURRENT_BINARY_DIR points to current build dir Use
+# ExternalProject_Get_property INSTALL_DIR to build out of tree.
 #
 # See also https://cmake.org/cmake/help/latest/module/ExternalProject.html
 
 # Include the lodepng git submodule
-# Note: - builds deps/lodepng/lib/liblodepng.a
-#       - lodepng does not honour passing LIBRARY_OUTPUT_PATH
-#       - so use the lib inside the source dir(!)
-ExternalProject_Add(lodepng_deps
+# Note:
+# - deps/lodepng/CMakeLists.txt file is hard coding the following
+# - only builds static library deps/lodepng/lib/liblodepng.a
+# - lodepng does not honour passing LIBRARY_OUTPUT_PATH
+# - so copy the lib from inside the source dir(!)
+ExternalProject_Add(lodepng_ext
   SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/lodepng"
   UPDATE_COMMAND ""  # using git prefetched submodule in deps
   COMMENT "External project lodepng installed from a git submodule"
   INSTALL_COMMAND ""
 )
-ExternalProject_Get_property(lodepng_deps SOURCE_DIR)
+ExternalProject_Get_property(lodepng_ext SOURCE_DIR)
+ExternalProject_Get_property(lodepng_ext INSTALL_DIR)
 set(lodepng_INCLUDE "${SOURCE_DIR}")
 set(lodepng_static "${SOURCE_DIR}/lib/liblodepng.a")
 
 # The libbf git submodule is well behaved and creates a shared library
 # in libbf-prefix/lib/libbf.so
-ExternalProject_Add(libbf_deps
+ExternalProject_Add(libbf_ext
   SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/libbf"
   CMAKE_ARGS "${CMAKE_ARGS};-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>")
-ExternalProject_Get_property(libbf_deps INSTALL_DIR)
+ExternalProject_Get_property(libbf_ext INSTALL_DIR)
 set(libbf_INCLUDE "${INSTALL_DIR}/include")
-set(libbf_shared "${INSTALL_DIR/lib/libbf.so")
+set(libbf_shared "${INSTALL_DIR}/lib/libbf.so")
 
 if (NOT SDSLLITE_FOUND)
   # sdsl-lite (full build using its cmake config)
@@ -566,8 +567,8 @@ add_library(odgi_objs OBJECT
 )
 
 set(odgi_DEPS
-    lodepng_deps
-    libbf_deps
+    lodepng_ext
+    libbf_ext
     dynamic
     hopscotch_map
     gfakluge
