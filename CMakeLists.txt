@@ -136,13 +136,21 @@ include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 
 # The following section builds external git submodules. We can not use
 # the INSTALL_COMMAND and UPDATE_COMMAND because source updates are
-# handled with git submodules. These systems to not mix, so we cancel
+# handled with git submodules. These systems do not mix, so we cancel
 # these commands.  Not that git submodules are deterministic because
 # their updates are handled outside the build system. On a module
-# update/upgrade you need to regenerate cmake.
+# update/upgrade you need to regenerate the cmake build dir(!)
 #
 # CMAKE_CURRENT_BINARY_DIR points to current build dir Use
 # ExternalProject_Get_property INSTALL_DIR to build out of tree.
+#
+# At this point the modules with -EXT are the exemplar of above.
+#
+# The current solution is to build EXT directories and copy the
+# libraries to odgi/lib (so they are all in one place). Ideally a
+# library becomes a proper add_library target, but at this point we
+# simply add the files to odgi_DEPS etc. Another improvement will be
+# to support static builds of these tools (FIXME).
 #
 # See also https://cmake.org/cmake/help/latest/module/ExternalProject.html
 
@@ -151,39 +159,33 @@ include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 # - deps/lodepng/CMakeLists.txt file is hard coding the following
 # - only builds static library deps/lodepng/lib/liblodepng.a
 # - lodepng does not honour passing LIBRARY_OUTPUT_PATH
-# - so copy the lib from inside the source dir(!)
-ExternalProject_Add(lodepng_ext
+# - so copy the lib from inside the source dir to odgi/lib(!)
+# - note we don't have to install the static lib as it comes with libodgi etc.
+ExternalProject_Add(lodepng-EXT
   SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/lodepng"
+  # CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>;${CMAKE_ARGS}"
   UPDATE_COMMAND ""  # using git prefetched submodule in deps
-  COMMENT "External project lodepng installed from a git submodule"
-  INSTALL_COMMAND ""
-)
-ExternalProject_Get_property(lodepng_ext SOURCE_DIR)
-ExternalProject_Get_property(lodepng_ext INSTALL_DIR)
+  INSTALL_COMMAND "")
+ExternalProject_Get_property(lodepng-EXT SOURCE_DIR)
+# ExternalProject_Get_property(lodepng-EXT INSTALL_DIR)
 set(lodepng_INCLUDE "${SOURCE_DIR}")
-set(lodepng_static "${SOURCE_DIR}/lib/liblodepng.a")
-
-
-add_custom_command(
-  OUTPUT ${lodepng_static}
-  DEPENDS lodepng_ext
-  POST_BUILD
-  COMMAND ${CMAKE_COMMAND} -E copy ${lodepng_static} ${ODGI_LIBRARY_OUTPUT_PATH}
-  VERBATIM
-)
-# target_link_libraries(lodepng_liba INTERFACE ${FOO_LIBRARIES})
-
-add_custom_target(mytarget DEPENDS ${lodepng_static})
-
+set(lodepng_static_orig "${SOURCE_DIR}/lib/liblodepng.a")
+set(lodepng_static "${ODGI_LIBRARY_OUTPUT_PATH}/liblodepng.a")
+add_custom_target(lodepng
+  DEPENDS ${lodepng_static}
+  DEPENDS lodepng-EXT
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${lodepng_static_orig} ${lodepng_static}
+  VERBATIM)
 
 # The libbf git submodule is well behaved and creates a shared library
-# in libbf-prefix/lib/libbf.so
-ExternalProject_Add(libbf_ext
+# in libbf-prefix/lib/libbf.so. We copy that to odgi/lib
+ExternalProject_Add(libbf-EXT
   SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/libbf"
-  CMAKE_ARGS "${CMAKE_ARGS};-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>")
-ExternalProject_Get_property(libbf_ext INSTALL_DIR)
+  CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>;${CMAKE_ARGS}")
+ExternalProject_Get_property(libbf-EXT INSTALL_DIR)
 set(libbf_INCLUDE "${INSTALL_DIR}/include")
 set(libbf_shared "${INSTALL_DIR}/lib/libbf.so")
+add_custom_target(libbf DEPENDS libbf-EXT)
 
 if (NOT SDSLLITE_FOUND)
   # sdsl-lite (full build using its cmake config)
@@ -580,8 +582,8 @@ add_library(odgi_objs OBJECT
 )
 
 set(odgi_DEPS
-    lodepng_ext
-    libbf_ext
+    lodepng
+    libbf
     dynamic
     hopscotch_map
     gfakluge
@@ -811,7 +813,7 @@ if (PIC)
   install(TARGETS libodgi_shared ARCHIVE DESTINATION lib LIBRARY DESTINATION lib PUBLIC_HEADER DESTINATION include/odgi)
 endif (PIC)
 
-if (APPLE)
+if (APPLE) # APPLE builds are not supported at this point
 elseif (TRUE)
   if (BUILD_STATIC)
     set(CMAKE_EXE_LINKER_FLAGS "-static")
