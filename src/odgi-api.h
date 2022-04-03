@@ -12,6 +12,7 @@
 
 using namespace odgi;
 
+
 // Introduce opaque types to support type checking of pointers to C++ classes
 typedef struct opaque_graph {} *ograph_t;
 
@@ -19,12 +20,30 @@ typedef struct opaque_graph {} *ograph_t;
 typedef uint64_t handle_i;
 typedef uint64_t path_handle_i;
 typedef unsigned __int128 edge_handle_i;
-typedef step_handle_t step_handle_i;
+// step_handle_t is of type { char data[2 * sizeof(int64_t)]; };
+// which we handle as int128 in the FFI, but for now:
+typedef unsigned __int128 step_handle_i;
 
+inline handle_i as_handle_i(handle_t h) { return as_integer(h); };
+inline handle_t as_handle_t(handle_i h) { return as_handle(h); };
 inline path_handle_i as_path_handle_i(path_handle_t path) { return as_integer(path); };
 inline path_handle_t as_path_handle_t(path_handle_i path) { return as_path_handle(path); };
-inline step_handle_i as_step_handle_i(step_handle_t step) { return step; };
-inline step_handle_t as_step_handle_t(step_handle_i step) { return step; };
+
+
+inline const __int128 as_int128(const step_handle_t step) {
+  __int128 x;
+  // return reinterpret_cast<const __int128>(step);
+  return x;
+}
+inline const step_handle_t as_step_handle(const __int128 value) {
+  step_handle_t step;
+  //  return reinterpret_cast<const handle_t>(value);
+  return step;
+}
+
+inline step_handle_i as_step_handle_i(step_handle_t step) { return as_int128(step); };
+inline step_handle_t as_step_handle_t(step_handle_i step) { return as_step_handle(step); }
+
 
 const std::string odgi_version();
 size_t odgi_long_long_size();

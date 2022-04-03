@@ -155,6 +155,9 @@ Finally we use steps to walk along a path.
 
 >>> ph = odgi_get_path_handle(graph,path_name)
 >>> step = odgi_path_begin(graph,ph)
+>>> h = odgi_get_handle_of_step(graph,step)
+# >>> odgi_get_sequence(graph,h)
+unknown
 
 step = gr.path_begin(path)
 while(gr.has_next_step(step)):
