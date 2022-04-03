@@ -148,7 +148,7 @@ int main_heaps(int argc, char **argv) {
                 uint64_t start = std::stoul(vals[1]);
                 uint64_t end = std::stoul(vals[2]);
                 if (!graph.has_path(path_name)) {
-                    std::cerr << "[odgi::heaps] warning: no path '" << path_name << "' in graph" << std::endl;
+                    //std::cerr << "[odgi::heaps] warning: no path '" << path_name << "' in graph" << std::endl;
                 } else {
                     auto path = graph.get_path_handle(path_name);
                     intervals[path].push_back(algorithms::interval_t(start, end));
