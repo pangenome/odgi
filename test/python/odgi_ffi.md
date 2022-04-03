@@ -116,7 +116,7 @@ True
 
 ```
 
-Let's explore the edges. `odgi_follow_edges` returns handles/nodes on the right and left of the edges:
+Let's explore the edges of a node. `odgi_follow_edges` returns handles/nodes on the right and left of the edges:
 
 ```python
 
@@ -143,6 +143,30 @@ Let's explore the edges. `odgi_follow_edges` returns handles/nodes on the right 
 [5, 'GCTGCCATCAATGCTGGGACTTCAGGCCAA']
 [7, 'C']
 [4, 'G']
+
+```
+
+Finally we use steps to walk along a path.
+
+```
+>>> path_name = paths[1]
+>>> path_name
+'gi|568815529:3998044-4011446'
+
+>>> ph = odgi_get_path_handle(graph,path_name)
+>>> step = odgi_path_begin(graph,ph)
+
+step = gr.path_begin(path)
+while(gr.has_next_step(step)):
+        # get the node handle from the step handle
+        current_node_handle = gr.get_handle_of_step(step)
+        # ask the node handle for the sequence
+        print(gr.get_sequence(current_node_handle))
+        # progress to the next step
+        step = gr.get_next_step(step)
+current_node_handle = gr.get_handle_of_step(step)
+print(gr.get_sequence(current_node_handle))
+```
 
 ## Cleanup
 

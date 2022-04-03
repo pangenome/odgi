@@ -44,11 +44,11 @@ PYBIND11_MODULE(odgi_ffi, m)
     m.def("odgi_path_is_empty", &odgi_path_is_empty);
     m.def("odgi_get_path_handle", &odgi_get_path_handle);
     m.def("odgi_get_step_count", &odgi_get_step_count);
-    m.def("odgi_step_get_handle", &odgi_step_get_handle);
-    m.def("odgi_step_get_path", &odgi_step_get_path);
-    m.def("odgi_step_path_begin", &odgi_step_path_begin);
-    m.def("odgi_step_path_end", &odgi_step_path_end);
-    m.def("odgi_step_path_back", &odgi_step_path_back);
+    m.def("odgi_get_handle_of_step", &odgi_get_handle_of_step);
+    m.def("odgi_get_path", &odgi_get_path);
+    m.def("odgi_path_begin", &odgi_path_begin);
+    m.def("odgi_path_end", &odgi_path_end);
+    m.def("odgi_path_back", &odgi_path_back);
     m.def("odgi_step_path_id", &odgi_step_path_id);
     m.def("odgi_step_is_reverse", &odgi_step_is_reverse);
     m.def("odgi_step_prev_id", &odgi_step_prev_id);

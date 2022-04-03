@@ -34,10 +34,10 @@ size_t odgi_edge_handle_i_size() {
 }
 
 size_t odgi_step_handle_i_size() {
-  return sizeof(step_handle_t)*8;
+  return sizeof(step_handle_i)*8;
 }
 
-unsigned __int128 odgi_test_uint128() {
+unsigned __int128 odgi_test_uint128() { // FIXME
   unsigned __int128 ll = (unsigned __int128)0xAB << 64 + 0xCD;
   return ll;
 }
@@ -112,12 +112,12 @@ const bool odgi_follow_edges(const ograph_t graph,
                              );
 };
 
-const handle_i odgi_edge_first_handle(const ograph_t graph, const edge_t &edge_handle)
+const handle_i odgi_edge_first_handle(const ograph_t graph, const edge_t edge_handle)
 {
   return as_integer((&edge_handle)->first);
 }
 
-const handle_i odgi_edge_second_handle(const ograph_t graph, const edge_t &edge_handle)
+const handle_i odgi_edge_second_handle(const ograph_t graph, const edge_t edge_handle)
 {
   return as_integer((&edge_handle)->second);
 }
@@ -164,62 +164,62 @@ const size_t odgi_get_step_count(const ograph_t graph, const handle_i ihandle)
   return ((graph_t *)graph)->get_step_count(as_handle(ihandle));
 }
 
-const handle_i odgi_step_get_handle(const ograph_t graph, step_handle_t step)
+const handle_i odgi_get_handle_of_step(const ograph_t graph, step_handle_i step)
 {
   return as_integer(((graph_t *)graph)->get_handle_of_step(step));
 }
 
-const path_handle_i odgi_step_get_path(const ograph_t graph, step_handle_t step)
+const path_handle_i odgi_get_path(const ograph_t graph, step_handle_i step)
 {
   return as_integer(((graph_t *)graph)->get_path(step));
 }
 
-const step_handle_t odgi_step_path_begin(const ograph_t graph, path_handle_i path)
+const step_handle_i odgi_path_begin(const ograph_t graph, path_handle_i path)
 {
-  return ((graph_t *)graph)->path_begin(as_path_handle(path));
+  return as_step_handle_i(((graph_t *)graph)->path_begin(as_path_handle(path)));
 }
 
-const step_handle_t odgi_step_path_end(const ograph_t graph, path_handle_i path)
+const step_handle_i odgi_path_end(const ograph_t graph, path_handle_i path)
 {
   return ((graph_t *)graph)->path_end(as_path_handle(path));
 }
 
-const step_handle_t odgi_step_path_back(const ograph_t graph, path_handle_i ipath)
+const step_handle_i odgi_path_back(const ograph_t graph, path_handle_i ipath)
 {
   return ((graph_t *)graph)->path_back(as_path_handle(ipath));
 }
 
-const int64_t odgi_step_path_id(const ograph_t graph, step_handle_t &step_handle) {
+const int64_t odgi_step_path_id(const ograph_t graph, step_handle_i step_handle) {
   return (reinterpret_cast<const int64_t*>(&step_handle)[0]) >> 1;
 }
 
-bool odgi_step_is_reverse(const ograph_t graph, step_handle_t &step_handle) {
+bool odgi_step_is_reverse(const ograph_t graph, step_handle_i step_handle) {
   return (reinterpret_cast<const int64_t*>(&step_handle)[0]) & 1;
 }
 
-const int64_t odgi_step_prev_id(const ograph_t graph, step_handle_t &step_handle)
+const int64_t odgi_step_prev_id(const ograph_t graph, step_handle_i step_handle)
 {
     return (reinterpret_cast<const int64_t*>(&step_handle)[1]);
 }
 
-const int64_t odgi_step_prev_rank(const ograph_t graph, step_handle_t &step_handle)
+const int64_t odgi_step_prev_rank(const ograph_t graph, step_handle_i step_handle)
 {
     return (reinterpret_cast<const int64_t*>(&step_handle)[2]);
 }
 
-const int64_t odgi_step_next_id(const ograph_t graph, step_handle_t &step_handle)
+const int64_t odgi_step_next_id(const ograph_t graph, step_handle_i step_handle)
 {
     return (reinterpret_cast<const int64_t*>(&step_handle)[3]);
 }
 
-const int64_t odgi_step_next_rank(const ograph_t graph,step_handle_t &step_handle)
+const int64_t odgi_step_next_rank(const ograph_t graph,step_handle_i step_handle)
 {
     return (reinterpret_cast<const int64_t*>(&step_handle)[4]);
 }
 
 const bool odgi_step_eq(const ograph_t graph,
-                        step_handle_t &step_handle1,
-                        step_handle_t &step_handle2)
+                        step_handle_i step_handle1,
+                        step_handle_i step_handle2)
 {
   // this code is hardly optimal. FIXME.
   for (uint i=0;i<8;i++) {
@@ -230,22 +230,22 @@ const bool odgi_step_eq(const ograph_t graph,
   return true;
 }
 
-const step_handle_t odgi_path_front_end(const ograph_t graph,
+const step_handle_i odgi_path_front_end(const ograph_t graph,
                                    const path_handle_i ipath)
 {
   return ((graph_t *)graph)->path_front_end(as_path_handle(ipath));
 }
 
-const step_handle_t odgi_get_next_step(const ograph_t graph,
-                                       const step_handle_t step)
+const step_handle_i odgi_get_next_step(const ograph_t graph,
+                                       const step_handle_i step)
 {
-  return ((graph_t *)graph)->get_next_step(step);
+  return ((graph_t *)graph)->get_next_step(as_step_handle_t(step));
 }
 
-const step_handle_t odgi_get_previous_step(const ograph_t graph,
-                                       const step_handle_t step)
+const step_handle_i odgi_get_previous_step(const ograph_t graph,
+                                       const step_handle_i step)
 {
-  return ((graph_t *)graph)->get_previous_step(step);
+  return ((graph_t *)graph)->get_previous_step(as_step_handle_t(step));
 }
 
 const bool odgi_has_edge(const ograph_t graph, const handle_i left, const handle_i right)
@@ -253,27 +253,27 @@ const bool odgi_has_edge(const ograph_t graph, const handle_i left, const handle
   return ((graph_t *)graph)->has_edge(as_handle(left),as_handle(right));
 }
 
-const bool odgi_is_path_front_end(const ograph_t graph, const step_handle_t step)
+const bool odgi_is_path_front_end(const ograph_t graph, const step_handle_i step)
 {
-  return ((graph_t *)graph)->is_path_front_end(step);
+  return ((graph_t *)graph)->is_path_front_end(as_step_handle_t(step));
 }
-const bool odgi_is_path_end(const ograph_t graph, const step_handle_t step)
+const bool odgi_is_path_end(const ograph_t graph, const step_handle_i step)
 {
-  return ((graph_t *)graph)->is_path_end(step);
+  return ((graph_t *)graph)->is_path_end(as_step_handle_t(step));
 }
-const bool odgi_has_next_step(const ograph_t graph, const step_handle_t step)
+const bool odgi_has_next_step(const ograph_t graph, const step_handle_i step)
 {
-  return ((graph_t *)graph)->has_next_step(step);
+  return ((graph_t *)graph)->has_next_step(as_step_handle_t(step));
 }
-const bool odgi_has_previous_step(const ograph_t graph, const step_handle_t step)
+const bool odgi_has_previous_step(const ograph_t graph, const step_handle_i step)
 {
-  return ((graph_t *)graph)->has_previous_step(step);
+  return ((graph_t *)graph)->has_previous_step(as_step_handle_t(step));
 }
 
 const path_handle_i odgi_get_path_handle_of_step(const ograph_t graph,
-                                                 const step_handle_t step)
+                                                 const step_handle_i step)
 {
-  return as_integer(((graph_t *)graph)->get_path_handle_of_step(step));
+  return as_path_handle_i(((graph_t *)graph)->get_path_handle_of_step(as_step_handle_t(step)));
 }
 
 void odgi_for_each_step_in_path(const ograph_t graph,
