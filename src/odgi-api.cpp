@@ -38,8 +38,9 @@ size_t odgi_step_handle_i_size() {
 }
 
 unsigned __int128 odgi_test_uint128() { // FIXME
-  unsigned __int128 ll = (unsigned __int128)0xAB << 64 + 0xCD;
-  return ll;
+  // unsigned __int128 ll = (unsigned __int128)0xAB << 64 + 0xCD;
+  // return ll;
+  return 0;
 }
 
 const ograph_t odgi_load_graph(const char *filen) {
@@ -169,12 +170,13 @@ const handle_i odgi_get_handle_of_step(const ograph_t graph, step_handle_i step)
   return as_handle_i(((graph_t *)graph)->get_handle_of_step(as_step_handle_t(step)));
 }
 
-
+// step -> path
 const path_handle_i odgi_get_path(const ograph_t graph, step_handle_i step)
 {
   return as_path_handle_i(((graph_t *)graph)->get_path(as_step_handle_t(step)));
 }
 
+// path -> step
 const step_handle_i odgi_path_begin(const ograph_t graph, path_handle_i path)
 {
   return as_step_handle_i(((graph_t *)graph)->path_begin(as_path_handle(path)));

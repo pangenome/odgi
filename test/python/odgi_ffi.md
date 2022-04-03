@@ -154,10 +154,22 @@ Finally we use steps to walk along a path.
 'gi|568815529:3998044-4011446'
 
 >>> ph = odgi_get_path_handle(graph,path_name)
+>>> ph
+2
+
 >>> step = odgi_path_begin(graph,ph)
+>>> step
+(-56, 0)
+
+# >>> odgi_get_path_handle_of_step(graph,step)
+segfaults
+
 >>> h = odgi_get_handle_of_step(graph,step)
+>>> h
+2
+
 # >>> odgi_get_sequence(graph,h)
-unknown
+
 
 step = gr.path_begin(path)
 while(gr.has_next_step(step)):
@@ -185,6 +197,33 @@ odgi_free_graph(graph)
 ### I am getting segfaults
 
 Make sure to set `LD_PRELOAD=libjemalloc.so.2` when running Python scripts.
+
+### I am still crashin
+
+Try running the gdb debugger with something like
+
+```sh
+cd test
+env LD_PRELOAD=libjemalloc.so.2 LD_LIBRARY_PATH=$GUIX_ENVIRONMENT/lib PYTHONPATH=../lib/ gdb --args python3 -m doctest python/odgi_ffi.md
+```
+
+and set a breakpoint on a function, e.g.
+
+```
+b odgi_path_begin
+r
+l
+179     const step_handle_i odgi_path_begin(const ograph_t graph, path_handle_i path)
+180     {
+181       return as_step_handle_i(((graph_t *)graph)->path_begin(as_path_handle(path)));
+182     }
+p path
+$1 = 2
+p as_path_handle(path)
+$2 = (handlegraph::path_handle_t &) @0x7fffffffcc50: {data = "\002\000\000\000\000\000\000"}
+```
+
+etc. See [gdb stepping](https://sourceware.org/gdb/current/onlinedocs/gdb/Continuing-and-Stepping.html#Continuing-and-Stepping) for more info.
 
 ### Some odgi system information
 
