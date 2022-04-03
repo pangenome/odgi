@@ -156,6 +156,16 @@ include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 #
 # See also https://cmake.org/cmake/help/latest/module/ExternalProject.html
 
+# The lodepng git submodule only uses two source files in odgi. The CMakeLists.txt
+# file in ekg's repo does not honour project info. I suggest
+# the following:
+#
+# 1. Use the upstream lodepng (it has updates!)
+# 2. Here we use the sources directly so there is no lib
+set(lodepng_INCLUDE "${CMAKE_SOURCE_DIR}/deps/lodepng")
+set(lodepng_SOURCES "${CMAKE_SOURCE_DIR}/deps/lodepng/lodepng.cpp")
+
+if (FALSE)
 # Include the lodepng git submodule
 # Note:
 # - deps/lodepng/CMakeLists.txt file is hard coding the following
@@ -173,12 +183,13 @@ ExternalProject_Get_property(lodepng-EXT SOURCE_DIR)
 set(lodepng_INCLUDE "${SOURCE_DIR}")
 set(lodepng_static_orig "${SOURCE_DIR}/lib/liblodepng.a")
 set(lodepng_static "${ODGI_LIBRARY_OUTPUT_PATH}/liblodepng.a")
-set(lodepng_lib ${lodepng_static}) # only builds static lib
+set(lodepng_lib ${lodepng_static}) # alias static lib in odgi/lib
 add_custom_target(lodepng
-  DEPENDS ${lodepng_static}
+  # DEPENDS ${lodepng_lib}
   DEPENDS lodepng-EXT
   COMMAND ${CMAKE_COMMAND} -E copy_if_different ${lodepng_static_orig} ${lodepng_static}
   VERBATIM)
+endif(FALSE)
 
 # The libbf git submodule is well behaved and creates a shared library
 # in libbf-prefix/lib/libbf.so. We copy that to odgi/lib
@@ -581,11 +592,12 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/unittest/edge.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/tips.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/path_jaccard.cpp
+  ${lodepng_SOURCES}
   ${handlegraph_sources}
 )
 
 set(odgi_DEPS
-    lodepng
+    # lodepng
     libbf
     dynamic
     hopscotch_map
@@ -655,7 +667,7 @@ set(odgi_LIBS
   ${SDSLLITE_LINK_LIBRARIES}
   ${LIBDIVSUFSORT_LINK_LIBRARIES}
   "-L${CMAKE_SOURCE_DIR}/lib"
-  ${lodepng_lib}
+  # ${lodepng_lib}
   ${libbf_lib}
   "-ldl"
   "-latomic"
@@ -770,6 +782,7 @@ else (NOT PIC)
   add_library(libodgi_shared SHARED $<TARGET_OBJECTS:odgi_objs> src/algorithms/fonts/field8.h src/algorithms/fonts/font5x8.h)
   set_target_properties(libodgi_shared PROPERTIES OUTPUT_NAME "odgi")
   set_target_properties(libodgi_shared PROPERTIES PUBLIC_HEADER "${odgi_HEADERS}")
+  target_link_libraries(libodgi_shared ${odgi_LIBS})
   add_dependencies(libodgi_shared ${odgi_DEPS})
 endif (NOT PIC)
 

@@ -127,11 +127,22 @@ Let's explore the edges. `odgi_follow_edges` returns handles/nodes on the right 
 ...   res2 = odgi_follow_edges(graph,h[0],False,lambda e: left_edges.append(e))
 
 >>> for n in right_edges:
-...   print(ogdi_get_id(graph,n),odgi_get_sequence(graph,n))
-[12, 6, 32, 14, 16, 4]
+...   [odgi_get_id(graph,n),odgi_get_sequence(graph,n)]
+[7, 'C']
+[4, 'G']
+[17, 'TACAGATGCA']
+[8, 'AAGATGAGG']
+[9, 'GTTG']
+[3, 'CTTGG']
 
->>> left_edges
-[26, 18, 20, 8, 12, 6]
+>>> for n in left_edges:
+...   [odgi_get_id(graph,n),odgi_get_sequence(graph,n)]
+[14, 'GGGCAG']
+[10, 'AGGCAT']
+[11, 'AAAGGGGAGCACAAAA']
+[5, 'GCTGCCATCAATGCTGGGACTTCAGGCCAA']
+[7, 'C']
+[4, 'G']
 
 ## Cleanup
 
