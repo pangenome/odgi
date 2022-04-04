@@ -27,8 +27,6 @@ typedef unsigned __int128 edge_handle_i;
 // which we handle as int128 in the FFI, but for now:
 typedef std::pair< int64_t, int64_t > pair64;
 
-typedef pair64 step_handle_i;
-
 inline handle_i as_handle_i(handle_t h) { return as_integer(h); };
 inline handle_t as_handle_t(handle_i h) { return as_handle(h); };
 inline path_handle_i as_path_handle_i(path_handle_t path) { return as_integer(path); };
@@ -46,8 +44,14 @@ inline const step_handle_t as_step_handle(const pair64 p) {
   return step;
 }
 
-inline step_handle_i as_step_handle_i(step_handle_t step) { return as_pair64(step); };
-inline step_handle_t as_step_handle_t(step_handle_i step) { return as_step_handle(step); }
+typedef step_handle_t step_handle_i;
+
+inline step_handle_i as_step_handle_i(step_handle_t step) {
+  return step;
+};
+inline step_handle_t as_step_handle_t(step_handle_i step) {
+  return step;
+}
 
 
 const std::string odgi_version();

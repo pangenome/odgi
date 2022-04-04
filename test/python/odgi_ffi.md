@@ -154,33 +154,28 @@ Finally we use steps to walk along a path.
 'gi|568815529:3998044-4011446'
 
 >>> ph = odgi_get_path_handle(graph,path_name)
->>> ph
-2
-
 >>> step = odgi_path_begin(graph,ph)
->>> step
-(-56, 0)
-
-# >>> odgi_get_path_handle_of_step(graph,step)
-segfaults
+>>> odgi_get_path_handle_of_step(graph,step) == ph
+True
 
 >>> h = odgi_get_handle_of_step(graph,step)
->>> h
-2
+>>> odgi_get_sequence(graph,h)
+'AT'
 
-# >>> odgi_get_sequence(graph,h)
+>>> seq = []
+>>> while(odgi_has_next_step(graph,step)):
+...   h = odgi_get_handle_of_step(graph,step)
+...   seq.append(odgi_get_sequence(graph,h))
+...   step = odgi_get_next_step(graph,step)
 
+# Number of steps in path
+>>> len(seq)
+1918
 
-step = gr.path_begin(path)
-while(gr.has_next_step(step)):
-        # get the node handle from the step handle
-        current_node_handle = gr.get_handle_of_step(step)
-        # ask the node handle for the sequence
-        print(gr.get_sequence(current_node_handle))
-        # progress to the next step
-        step = gr.get_next_step(step)
-current_node_handle = gr.get_handle_of_step(step)
-print(gr.get_sequence(current_node_handle))
+# Show some of the sequences for this path
+>>> seq[10:14]
+['CCTCT', 'T', 'GTCTCTGC', 'AGGCCACAAGCTATTATGCTTT']
+
 ```
 
 ## Cleanup
