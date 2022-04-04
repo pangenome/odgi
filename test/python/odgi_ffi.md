@@ -171,13 +171,13 @@ True
 ...   seq.append(odgi_get_sequence(graph,h))
 ...   step = odgi_get_next_step(graph,step)
 
-# Number of steps in path
->>> len(seq)
-1918
-
 # Show some of the sequences for this path
 >>> seq[10:14]
 ['CCTCT', 'T', 'GTCTCTGC', 'AGGCCACAAGCTATTATGCTTT']
+
+# Number of steps in path
+>>> len(seq)
+1918
 
 ```
 
@@ -186,7 +186,8 @@ True
 Finally clean up with
 
 ```python
-odgi_free_graph(graph)
+>>> odgi_free_graph(graph)
+
 ```
 
 
