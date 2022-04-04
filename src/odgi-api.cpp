@@ -43,6 +43,7 @@ unsigned __int128 odgi_test_uint128() { // FIXME
   return 0;
 }
 
+// has python doctest
 const ograph_t odgi_load_graph(const char *filen) {
   graph_t *graph = new graph_t();
   std::ifstream in(filen);
@@ -61,6 +62,7 @@ const size_t odgi_get_node_count(ograph_t graph) {
   return ((graph_t *)graph)->get_node_count();
 }
 
+// has python doctest
 const size_t odgi_max_node_id(const ograph_t graph) {
   return ((graph_t *)graph)->max_node_id();
 }
@@ -132,6 +134,7 @@ const std::string odgi_get_sequence(const ograph_t graph, const handle_i ihandle
   return ((graph_t *)graph)->get_sequence(as_handle(ihandle));
 }
 
+// has python doctest
 const nid_t odgi_get_id(const ograph_t graph, const handle_i ihandle) {
   return ((graph_t *)graph)->get_id(as_handle(ihandle));
 }
@@ -155,6 +158,7 @@ const bool odgi_path_is_empty(const ograph_t graph, const path_handle_i path) {
   return ((graph_t *)graph)->is_empty(as_path_handle(path));
 }
 
+// has python doctest
 const path_handle_i odgi_get_path_handle(const ograph_t graph, const char *path_name) {
   return as_path_handle_i(((graph_t *)graph)->get_path_handle(path_name));
 }
@@ -165,6 +169,7 @@ const size_t odgi_get_step_count(const ograph_t graph, const handle_i ihandle)
   return ((graph_t *)graph)->get_step_count(as_handle(ihandle));
 }
 
+// has python doctest
 const handle_i odgi_get_handle_of_step(const ograph_t graph, step_handle_i step)
 {
   return as_handle_i(((graph_t *)graph)->get_handle_of_step(as_step_handle_t(step)));
@@ -177,6 +182,7 @@ const path_handle_i odgi_get_path(const ograph_t graph, step_handle_i step)
 }
 
 // path -> step
+// has python doctest
 const step_handle_i odgi_path_begin(const ograph_t graph, path_handle_i path)
 {
   return as_step_handle_i(((graph_t *)graph)->path_begin(as_path_handle(path)));
@@ -239,6 +245,7 @@ const step_handle_i odgi_path_front_end(const ograph_t graph,
   return as_step_handle_i(((graph_t *)graph)->path_front_end(as_path_handle(ipath)));
 }
 
+// has python doctest
 const step_handle_i odgi_get_next_step(const ograph_t graph,
                                        const step_handle_i step)
 {

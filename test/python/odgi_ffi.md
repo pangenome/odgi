@@ -32,6 +32,9 @@ Now you should be able to use the `odgi_ffi` module and load the graph with 3214
 >>> odgi_get_path_count(graph)
 12
 
+>>> odgi_max_node_id(graph)
+3214
+
 ```
 
 Note that load graph reads the `.og` file format only. To read a `GFA` file convert that using the odgi tool. E.g..
@@ -148,7 +151,7 @@ Let's explore the edges of a node. `odgi_follow_edges` returns handles/nodes on 
 
 Finally we use steps to walk along a path.
 
-```
+```python
 >>> path_name = paths[1]
 >>> path_name
 'gi|568815529:3998044-4011446'
