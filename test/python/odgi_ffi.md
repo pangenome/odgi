@@ -186,7 +186,7 @@ True
 Finally clean up with
 
 ```python
-# >>> odgi_free_graph(graph)
+>>> odgi_free_graph(graph)
 
 ```
 
