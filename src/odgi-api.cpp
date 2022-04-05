@@ -56,8 +56,6 @@ const ograph_t odgi_load_graph(const char *filen) {
 // has python doctest
 void odgi_free_graph(ograph_t graph) {
   // no need to delete a shared ptr!
-  // graph_t *g = (as_graph_t(graph));
-  // delete g;
 }
 
 // has python doctest

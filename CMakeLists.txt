@@ -28,6 +28,7 @@ set(CMAKE_CXX_STANDARD 17)
 
 # Command line switches. Compile with cmake -DINLINE_HANDLEGRAPH_SOURCES=ON
 option(PIC "Compile all odgi sources with -fPIC - required for shared libs" ON)
+option(ASAN "Use address sanitiser" OFF)
 option(INLINE_HANDLEGRAPH_SOURCES "Compile handlegraph sources inline" OFF)
 
 include(ExternalProject)
@@ -48,23 +49,6 @@ if (NOT CMAKE_BUILD_TYPE) # default build to Release
   set(CMAKE_BUILD_TYPE Release)
 endif()
 
-# Enable tests
-enable_testing()
-
-# Function to invoke doctests
-function(add_pydoctest TEST_FILE)
-  add_test(
-    NAME ${TEST_FILE}
-    COMMAND python3 -m doctest -o NORMALIZE_WHITESPACE -o REPORT_UDIFF python/${TEST_FILE}.md
-    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test)
-  set_tests_properties(${TEST_FILE} PROPERTIES ENVIRONMENT "PYTHONPATH=${PROJECT_SOURCE_DIR}/lib;LD_LIBRARY_PATH=$ENV{LIBRARY_PATH};LD_PRELOAD=libasan.so:libjemalloc.so.2")
-endfunction()
-
-
-if (PIC)
-  message(STATUS "Compiling odgi sources with PIC=ON")
-  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
-endif (PIC)
 
 # Set optimization through command line; see INSTALL.md
 # set(EXTRA_FLAGS "-Ofast -march=native -pipe -msse4.2 -funroll-all-loops") #  -fprofile-generate=../pgo")
@@ -83,19 +67,50 @@ endif ()
 
 # set(CMAKE_BUILD_TYPE Debug) -- don't uncomment this, instead run
 #   cmake -DCMAKE_BUILD_TYPE=Debug ..
-# or with flags
+# or with additional flags use EXTRA_FLAGS
 #   cmake -DCMAKE_BUILD_TYPE=Debug -DEXTRA_FLAGS="-fsanitize=address" ..
 #
 
 if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
-  # Debug use the defaults - so commenting out and don't uncomment:
-  # set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O -fsanitize=address")
-  # set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O -fsanitize=address")
   set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_FLAGS}")
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_FLAGS}")
+  if (ASAN)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O -fsanitize=address")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O -fsanitize=address")
+  endif(ASAN)
 endif ()
 
+if (PIC)
+  message(STATUS "Compiling odgi sources with PIC=ON")
+  set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+  # the following should not be necessary but messes up EXT projects if not set
+  set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+endif (PIC)
+
 message(STATUS "ODGI CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
+message(STATUS "ODGI CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+message(STATUS "ODGI CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}")
+
+# Enable tests
+enable_testing()
+
+# Preload the following libraries before running tests
+if (ASAN)
+  set(PRELOAD "libasan.so:libjemalloc.so.2")
+else()
+  set(PRELOAD "libjemalloc.so.2")
+endif()
+
+# Function to invoke doctests
+function(add_pydoctest TEST_FILE)
+  add_test(
+    NAME ${TEST_FILE}
+    COMMAND python3 -m doctest -o NORMALIZE_WHITESPACE -o REPORT_UDIFF python/${TEST_FILE}.md
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test)
+  set_tests_properties(${TEST_FILE} PROPERTIES ENVIRONMENT "PYTHONPATH=${PROJECT_SOURCE_DIR}/lib;LD_LIBRARY_PATH=$ENV{LIBRARY_PATH};LD_PRELOAD=${PRELOAD}")
+endfunction()
+
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   # assumes clang build
@@ -192,7 +207,7 @@ add_custom_target(lodepng
 endif(FALSE)
 
 # The libbf git submodule is well behaved and creates a shared library
-# in libbf-prefix/lib/libbf.so. We copy that to odgi/lib
+# in libbf-prefix/lib/libbf.so.
 ExternalProject_Add(libbf-EXT
   SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/libbf"
   CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>;${CMAKE_ARGS}")
@@ -201,19 +216,20 @@ set(libbf_INCLUDE "${INSTALL_DIR}/include")
 set(libbf_lib "${INSTALL_DIR}/lib/libbf.so")
 add_custom_target(libbf DEPENDS libbf-EXT)
 
+# the sdsl git submodule is creates static libs for sdsllite and divsufsort.
+# libduvsort has an OPENMP switch
 if (NOT SDSLLITE_FOUND)
-  # sdsl-lite (full build using its cmake config)
   ExternalProject_Add(sdsl-lite
     SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/sdsl-lite"
-    CMAKE_ARGS "${CMAKE_ARGS};-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>"
+    CMAKE_ARGS "${CMAKE_ARGS};-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS};-DCMAKE_CXX_FLAGS:STRING=${CMAKE_CXX_FLAGS};-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>"
     UPDATE_COMMAND ""
     INSTALL_COMMAND "")
   ExternalProject_Get_property(sdsl-lite INSTALL_DIR)
   set(SDSLLITE_INCLUDE_DIRS "${INSTALL_DIR}/src/sdsl-lite-build/include")
-  set(LIBDIVSUFSORT_INCLUDE_DIRS "${INSTALL_DIR}/src/sdsl-lite-build/external/libdivsufsort/include")
   set(SDSLLITE_LINK_LIBRARIES "${INSTALL_DIR}/src/sdsl-lite-build/lib/libsdsl.a")
+  set(LIBDIVSUFSORT_INCLUDE_DIRS "${INSTALL_DIR}/src/sdsl-lite-build/external/libdivsufsort/include")
   set(LIBDIVSUFSORT_LINK_LIBRARIES "${INSTALL_DIR}/src/sdsl-lite-build/external/libdivsufsort/lib/libdivsufsort.a" "${INSTALL_DIR}/src/sdsl-lite-build/external/libdivsufsort/lib/libdivsufsort64.a")
-endif (NOT SDSLLITE_FOUND)
+endif ()
 
 # DYNAMIC (full build using its cmake config)
 ExternalProject_Add(dynamic

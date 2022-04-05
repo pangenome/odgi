@@ -89,8 +89,8 @@
        ; ("lodepng" ,lodepng) later!
        ("openmpi" ,openmpi)
        ("python" ,python)
-       ("sdsl-lite" ,sdsl-lite)
-       ("libdivsufsort" ,libdivsufsort)
+       ; ("sdsl-lite" ,sdsl-lite)
+       ; ("libdivsufsort" ,libdivsufsort)
        ))
     (native-inputs
      `(("pkg-config" ,pkg-config)
