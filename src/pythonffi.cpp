@@ -10,18 +10,19 @@
 #include <pybind11/functional.h>
 #include <pybind11/iostream.h>
 
+PYBIND11_MAKE_OPAQUE(ograph_t);
+
 namespace py = pybind11;
 
 PYBIND11_MODULE(odgi_ffi, m)
 {
-    py::class_<opaque_graph>(m, "opaque_graph pointer for FFI");
+    py::class_<ograph_t>(m, "opaque_graph pointer for FFI");
     // py::class_<path_handle_t>(m, "opaque path_handle_t for FFI");
     // py::class_<handle_t>(m, "opaque handle_t for FFI");
     py::class_<step_handle_t>(m, "step_handle_t for FFI");
     m.def("odgi_version", &odgi_version, "Get the odgi library build version");
     m.def("odgi_long_long_size", &odgi_long_long_size);
     m.def("odgi_handle_i_size", &odgi_handle_i_size);
-    m.def("odgi_edge_handle_i_size", &odgi_edge_handle_i_size);
     m.def("odgi_step_handle_i_size", &odgi_step_handle_i_size);
     m.def("odgi_test_uint128", &odgi_test_uint128);
     m.def("odgi_load_graph", &odgi_load_graph);

@@ -11,6 +11,11 @@
 //
 // The current edition is in memory graph read-only. A graph write
 // edition is future work.
+//
+// To test for memory errors compile with
+//
+//   cmake -DCMAKE_BUILD_TYPE=Debug -DEXTRA_FLAGS="-fsanitize=address" ..
+//   make odgi_ffi -j 16 && ctest . -R ffi --verbose
 
 #include "odgi-api.h"
 #include "version.hpp"
@@ -29,10 +34,6 @@ size_t odgi_handle_i_size() {
   return sizeof(handle_i)*8;
 }
 
-size_t odgi_edge_handle_i_size() {
-  return sizeof(edge_handle_i)*8;
-}
-
 size_t odgi_step_handle_i_size() {
   return sizeof(step_handle_i)*8;
 }
@@ -43,43 +44,44 @@ unsigned __int128 odgi_test_uint128() { // FIXME
   return 0;
 }
 
+
 // has python doctest
 const ograph_t odgi_load_graph(const char *filen) {
-  graph_t *graph = new graph_t();
+  auto graph = ograph_t(new graph_t());
   std::ifstream in(filen);
   graph->deserialize(in);
-  return (ograph_t)graph;
+  return graph;
 }
 
 // has python doctest
 void odgi_free_graph(ograph_t graph) {
-  graph_t *g = (graph_t *)graph;
+  graph_t *g = (as_graph_t(graph));
   delete g;
 }
 
 // has python doctest
 const size_t odgi_get_node_count(ograph_t graph) {
-  return ((graph_t *)graph)->get_node_count();
+  return ((as_graph_t(graph)))->get_node_count();
 }
 
 // has python doctest
 const size_t odgi_max_node_id(const ograph_t graph) {
-  return ((graph_t *)graph)->max_node_id();
+  return ((as_graph_t(graph)))->max_node_id();
 }
 
 const size_t odgi_min_node_id(const ograph_t graph) {
-  return ((graph_t *)graph)->min_node_id();
+  return ((as_graph_t(graph)))->min_node_id();
 }
 
 // has python doctest
 const size_t odgi_get_path_count(ograph_t graph) {
-  return ((graph_t *)graph)->get_path_count();
+  return ((as_graph_t(graph)))->get_path_count();
 }
 
 // has python doctest
 void odgi_for_each_path_handle(const ograph_t graph,
                                const std::function<void(const path_handle_i)>& next) {
-  ((graph_t *)graph)->for_each_path_handle([&](const path_handle_t path) {
+  ((as_graph_t(graph)))->for_each_path_handle([&](const path_handle_t path) {
     next(as_path_handle_i(path));
   });
 }
@@ -88,7 +90,7 @@ void odgi_for_each_path_handle(const ograph_t graph,
 const bool odgi_for_each_handle(const ograph_t graph,
                                 const std::function<bool(const handle_i)>& next)
 {
-  return ((graph_t *)graph)->for_each_handle([&](const handle_t h)
+  return ((as_graph_t(graph)))->for_each_handle([&](const handle_t h)
   {
 
     next(as_handle_i(h));
@@ -106,7 +108,7 @@ const bool odgi_follow_edges(const ograph_t graph,
                              bool go_left,
                              const std::function<bool(const handle_i ihandle)>& next)
 {
-  return ((graph_t *)graph)->follow_edges(as_handle(ihandle),go_left,
+  return ((as_graph_t(graph)))->follow_edges(as_handle(ihandle),go_left,
                              [&](const handle_t handle)
                              {
                                next(as_handle_i(handle));
@@ -126,76 +128,76 @@ const handle_i odgi_edge_second_handle(const ograph_t graph, const edge_t edge_h
 }
 
 const bool odgi_has_node(const ograph_t graph, nid_t node_id) {
-  return ((graph_t *)graph)->has_node(node_id);
+  return ((as_graph_t(graph)))->has_node(node_id);
 }
 
 // has python doctest
 const std::string odgi_get_sequence(const ograph_t graph, const handle_i ihandle) {
-  return ((graph_t *)graph)->get_sequence(as_handle(ihandle));
+  return ((as_graph_t(graph)))->get_sequence(as_handle(ihandle));
 }
 
 // has python doctest
 const nid_t odgi_get_id(const ograph_t graph, const handle_i ihandle) {
-  return ((graph_t *)graph)->get_id(as_handle(ihandle));
+  return ((as_graph_t(graph)))->get_id(as_handle(ihandle));
 }
 
 const auto& odgi_get_node_id = odgi_get_id;
 
 const bool odgi_get_is_reverse(const ograph_t graph, const handle_i ihandle) {
-  return ((graph_t *)graph)->get_is_reverse(as_handle(ihandle));
+  return ((as_graph_t(graph)))->get_is_reverse(as_handle(ihandle));
 }
 
 const size_t odgi_get_length(const ograph_t graph, const handle_i ihandle) {
-  return ((graph_t *)graph)->get_length(as_handle(ihandle));
+  return ((as_graph_t(graph)))->get_length(as_handle(ihandle));
 }
 
 
 const bool odgi_has_path(const ograph_t graph, const char *path_name) {
-  return ((graph_t *)graph)->has_path(path_name);
+  return ((as_graph_t(graph)))->has_path(path_name);
 }
 
 const bool odgi_path_is_empty(const ograph_t graph, const path_handle_i path) {
-  return ((graph_t *)graph)->is_empty(as_path_handle(path));
+  return ((as_graph_t(graph)))->is_empty(as_path_handle(path));
 }
 
 // has python doctest
 const path_handle_i odgi_get_path_handle(const ograph_t graph, const char *path_name) {
-  return as_path_handle_i(((graph_t *)graph)->get_path_handle(path_name));
+  return as_path_handle_i(((as_graph_t(graph)))->get_path_handle(path_name));
 }
 
 // Steps
 const size_t odgi_get_step_count(const ograph_t graph, const handle_i ihandle)
 {
-  return ((graph_t *)graph)->get_step_count(as_handle(ihandle));
+  return ((as_graph_t(graph)))->get_step_count(as_handle(ihandle));
 }
 
 // has python doctest
 const handle_i odgi_get_handle_of_step(const ograph_t graph, step_handle_i step)
 {
-  return as_handle_i(((graph_t *)graph)->get_handle_of_step(as_step_handle_t(step)));
+  return as_handle_i(((as_graph_t(graph)))->get_handle_of_step(as_step_handle_t(step)));
 }
 
 // step -> path
 const path_handle_i odgi_get_path(const ograph_t graph, step_handle_i step)
 {
-  return as_path_handle_i(((graph_t *)graph)->get_path(as_step_handle_t(step)));
+  return as_path_handle_i(((as_graph_t(graph)))->get_path(as_step_handle_t(step)));
 }
 
 // path -> step
 // has python doctest
 const step_handle_i odgi_path_begin(const ograph_t graph, path_handle_i path)
 {
-  return as_step_handle_i(((graph_t *)graph)->path_begin(as_path_handle(path)));
+  return as_step_handle_i(((as_graph_t(graph)))->path_begin(as_path_handle(path)));
 }
 
 const step_handle_i odgi_path_end(const ograph_t graph, path_handle_i path)
 {
-  return as_step_handle_i(((graph_t *)graph)->path_end(as_path_handle(path)));
+  return as_step_handle_i(((as_graph_t(graph)))->path_end(as_path_handle(path)));
 }
 
 const step_handle_i odgi_path_back(const ograph_t graph, path_handle_i ipath)
 {
-  return as_step_handle_i(((graph_t *)graph)->path_back(as_path_handle(ipath)));
+  return as_step_handle_i(((as_graph_t(graph)))->path_back(as_path_handle(ipath)));
 }
 
 const int64_t odgi_step_path_id(const ograph_t graph, step_handle_i step_handle) {
@@ -242,55 +244,55 @@ const bool odgi_step_eq(const ograph_t graph,
 const step_handle_i odgi_path_front_end(const ograph_t graph,
                                    const path_handle_i ipath)
 {
-  return as_step_handle_i(((graph_t *)graph)->path_front_end(as_path_handle(ipath)));
+  return as_step_handle_i(((as_graph_t(graph)))->path_front_end(as_path_handle(ipath)));
 }
 
 // has python doctest
 const step_handle_i odgi_get_next_step(const ograph_t graph,
                                        const step_handle_i step)
 {
-  return as_step_handle_i(((graph_t *)graph)->get_next_step(as_step_handle_t(step)));
+  return as_step_handle_i(((as_graph_t(graph)))->get_next_step(as_step_handle_t(step)));
 }
 
 const step_handle_i odgi_get_previous_step(const ograph_t graph,
                                        const step_handle_i step)
 {
-  return as_step_handle_i(((graph_t *)graph)->get_previous_step(as_step_handle_t(step)));
+  return as_step_handle_i(((as_graph_t(graph)))->get_previous_step(as_step_handle_t(step)));
 }
 
 const bool odgi_has_edge(const ograph_t graph, const handle_i left, const handle_i right)
 {
-  return ((graph_t *)graph)->has_edge(as_handle(left),as_handle(right));
+  return ((as_graph_t(graph)))->has_edge(as_handle(left),as_handle(right));
 }
 
 const bool odgi_is_path_front_end(const ograph_t graph, const step_handle_i step)
 {
-  return ((graph_t *)graph)->is_path_front_end(as_step_handle_t(step));
+  return ((as_graph_t(graph)))->is_path_front_end(as_step_handle_t(step));
 }
 const bool odgi_is_path_end(const ograph_t graph, const step_handle_i step)
 {
-  return ((graph_t *)graph)->is_path_end(as_step_handle_t(step));
+  return ((as_graph_t(graph)))->is_path_end(as_step_handle_t(step));
 }
 const bool odgi_has_next_step(const ograph_t graph, const step_handle_i step)
 {
-  return ((graph_t *)graph)->has_next_step(as_step_handle_t(step));
+  return ((as_graph_t(graph)))->has_next_step(as_step_handle_t(step));
 }
 const bool odgi_has_previous_step(const ograph_t graph, const step_handle_i step)
 {
-  return ((graph_t *)graph)->has_previous_step(as_step_handle_t(step));
+  return ((as_graph_t(graph)))->has_previous_step(as_step_handle_t(step));
 }
 
 const path_handle_i odgi_get_path_handle_of_step(const ograph_t graph,
                                                  const step_handle_i step)
 {
-  return as_path_handle_i(((graph_t *)graph)->get_path_handle_of_step(as_step_handle_t(step)));
+  return as_path_handle_i(((as_graph_t(graph)))->get_path_handle_of_step(as_step_handle_t(step)));
 }
 
 void odgi_for_each_step_in_path(const ograph_t graph,
                                 const path_handle_i ipath,
                                 void (*next) (const step_handle_i step))
 {
-  ((graph_t *)graph)->for_each_step_in_path(as_path_handle(ipath),
+  ((as_graph_t(graph)))->for_each_step_in_path(as_path_handle(ipath),
                                [&](const step_handle_t step) {
                                  next(as_step_handle_i(step));
                                });
@@ -301,7 +303,7 @@ const bool odgi_for_each_step_on_handle(const ograph_t graph,
                                         const handle_i ihandle,
                                         bool (*next) (const step_handle_i step))
 {
-  return ((graph_t *)graph)->for_each_step_on_handle(as_handle(ihandle),
+  return ((as_graph_t(graph)))->for_each_step_on_handle(as_handle(ihandle),
                                         [&](const step_handle_t step) {
                                           next(as_step_handle_i(step));
                                           return true; });
@@ -309,5 +311,5 @@ const bool odgi_for_each_step_on_handle(const ograph_t graph,
 
 // has python doctest
 const std::string odgi_get_path_name(const ograph_t graph, const path_handle_i ipath) {
-  return ((graph_t *)graph)->get_path_name(as_path_handle(ipath));
+  return (as_graph_t(graph))->get_path_name(as_path_handle(ipath));
 }

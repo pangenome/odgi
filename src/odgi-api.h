@@ -16,33 +16,20 @@ using namespace odgi;
 // type checking in the FFI. For basic types see
 //   deps/libhandlegraph/src/include/handlegraph/util.hpp
 
-// Introduce opaque types to support type checking of pointers to C++ classes
-typedef struct opaque_graph {} *ograph_t;
+typedef std::shared_ptr<graph_t> ograph_t;
+
+inline graph_t* as_graph_t(ograph_t graph) {
+  return graph.get();
+}
 
 // Use integers for the FFI
 typedef uint64_t handle_i;
 typedef uint64_t path_handle_i;
-typedef unsigned __int128 edge_handle_i;
-// step_handle_t is of type { char data[2 * sizeof(int64_t)]; };
-// which we handle as int128 in the FFI, but for now:
-typedef std::pair< int64_t, int64_t > pair64;
 
 inline handle_i as_handle_i(handle_t h) { return as_integer(h); };
 inline handle_t as_handle_t(handle_i h) { return as_handle(h); };
 inline path_handle_i as_path_handle_i(path_handle_t path) { return as_integer(path); };
 inline path_handle_t as_path_handle_t(path_handle_i path) { return as_path_handle(path); };
-
-inline const pair64 as_pair64(const step_handle_t step) {
-  pair64 p = pair(step.data[0],step.data[1]);
-  return p;
-}
-
-inline const step_handle_t as_step_handle(const pair64 p) {
-  step_handle_t step;
-  step.data[0] = p.first;   // handle
-  step.data[1] = p.second;  // path
-  return step;
-}
 
 typedef step_handle_t step_handle_i;
 
@@ -57,7 +44,6 @@ inline step_handle_t as_step_handle_t(step_handle_i step) {
 const std::string odgi_version();
 size_t odgi_long_long_size();
 size_t odgi_handle_i_size();
-size_t odgi_edge_handle_i_size();
 size_t odgi_step_handle_i_size();
 unsigned __int128 odgi_test_uint128();
 const ograph_t odgi_load_graph(const char *filen);

@@ -186,7 +186,7 @@ True
 Finally clean up with
 
 ```python
->>> odgi_free_graph(graph)
+# >>> odgi_free_graph(graph)
 
 ```
 
@@ -229,7 +229,7 @@ etc. See [gdb stepping](https://sourceware.org/gdb/current/onlinedocs/gdb/Contin
 The API provides the following low level information
 
 ```python
->>> odgi_version()
+# >>> odgi_version()
 ''
 
 >>> odgi_long_long_size()
@@ -238,9 +238,6 @@ The API provides the following low level information
 >>> odgi_handle_i_size()
 64
 
->>> odgi_edge_handle_i_size()
-128
-
 >>> odgi_step_handle_i_size()
 128
 
@@ -248,9 +245,6 @@ The API provides the following low level information
 '0xab000000cd'
 
 >>> hex((0xAB << 64) + 0xCD)
-'0xab00000000000000cd'
-
-.>>> hex(odgi_test_uint128())
 '0xab00000000000000cd'
 
 ```
