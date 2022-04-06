@@ -17,15 +17,18 @@
 #
 # For more information see ./INSTALL.md
 
-cmake_minimum_required(VERSION 3.1)
+# Let's avoid older versions of CMake - they are not always compatible
+cmake_minimum_required(VERSION 3.16)
 
 # Project's name
 project(odgi)
+
 # Enforce c++17
 set(CMAKE_CXX_STANDARD 17)
 
 # Command line switches. Compile with cmake -DINLINE_HANDLEGRAPH_SOURCES=ON
 option(PIC "Compile all odgi sources with -fPIC - required for shared libs" ON)
+option(ASAN "Use address sanitiser" OFF)
 option(INLINE_HANDLEGRAPH_SOURCES "Compile handlegraph sources inline" OFF)
 
 include(ExternalProject)
@@ -47,33 +50,64 @@ if(NOT CMAKE_BUILD_TYPE)
           "Choose the type of build, options are: Release Debug Generic." FORCE)
 endif()
 
+# Set optimization through command line; see INSTALL.md
+if (${CMAKE_BUILD_TYPE} MATCHES Release)
+  set(EXTRA_FLAGS "-Ofast -march=native -pipe -msse4.2 -funroll-all-loops") #  -fprofile-generate=../pgo")
+  set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG") # reset CXX_FLAGS to be able to replace -O3 with -Ofast
+endif ()
+
+if ((${CMAKE_BUILD_TYPE} MATCHES "Release") OR (${CMAKE_BUILD_TYPE} MATCHES "RelWithDebInfo"))
+  set (CMAKE_C_FLAGS "${OpenMP_C_FLAGS} ${EXTRA_FLAGS}")
+  set (CMAKE_CXX_FLAGS "${OpenMP_CXX_FLAGS} ${EXTRA_FLAGS}")
+endif ()
+
 # set(CMAKE_BUILD_TYPE Debug) -- don't uncomment this, instead run
 #   cmake -DCMAKE_BUILD_TYPE=Debug ..
+# or
+#   cmake -DCMAKE_BUILD_TYPE=Debug -DASAN=ON" ..
+#
 
-message(STATUS "CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
+if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
+  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${EXTRA_FLAGS}")
+  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${EXTRA_FLAGS}")
+  if (ASAN)
+    set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O -fsanitize=address")
+    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O -fsanitize=address")
+  endif(ASAN)
+endif ()
 
 if (PIC)
   message(STATUS "Compiling odgi sources with PIC=ON")
   set(CMAKE_POSITION_INDEPENDENT_CODE ON)
+  # the following should not be necessary but messes up EXT projects if not set
+  set(CMAKE_C_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -fPIC")
 endif (PIC)
 
-# Set optimization through command line; see INSTALL.md
-if (${CMAKE_BUILD_TYPE} MATCHES Release)
-  set(EXTRA_FLAGS "-Ofast -march=native -pipe -msse4.2 -funroll-all-loops") #  -fprofile-generate=../pgo")
-  set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG") # reset CXX_FLAGS to replace -O3 with -Ofast
-endif ()
+message(STATUS "ODGI CMAKE_BUILD_TYPE: ${CMAKE_BUILD_TYPE}")
+message(STATUS "ODGI CMAKE_CXX_FLAGS: ${CMAKE_CXX_FLAGS}")
+message(STATUS "ODGI CMAKE_C_FLAGS: ${CMAKE_C_FLAGS}")
 
-if (${CMAKE_BUILD_TYPE} MATCHES Debug)
-  # Debug use the defaults
-  set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} -O -g -fsanitize=address")
-  set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -O -g -fsanitize=address")
+# Enable tests
+enable_testing()
+
+# Preload the following libraries before running tests
+if (ASAN)
+  set(PRELOAD "libasan.so:libjemalloc.so.2")
 else()
-  # Use all standard-compliant optimizations - always add these:
-  set (CMAKE_C_FLAGS "${OpenMP_C_FLAGS} ${PIC_FLAG} ${EXTRA_FLAGS}")
-  set (CMAKE_CXX_FLAGS "${OpenMP_CXX_FLAGS} ${PIC_FLAG} ${EXTRA_FLAGS}")
-endif ()
+  set(PRELOAD "libjemalloc.so.2")
+endif()
 
-if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+# Function to invoke doctests
+function(add_pydoctest TEST_FILE)
+  add_test(
+    NAME ${TEST_FILE}
+    COMMAND python3 -m doctest -o NORMALIZE_WHITESPACE -o REPORT_UDIFF python/${TEST_FILE}.md
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test)
+  set_tests_properties(${TEST_FILE} PROPERTIES ENVIRONMENT "PYTHONPATH=${PROJECT_SOURCE_DIR}/lib;LD_LIBRARY_PATH=$ENV{LIBRARY_PATH};LD_PRELOAD=${PRELOAD}")
+endfunction()
+
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin") # untested
   # assumes clang build
   # we can't reliably detect when we're using clang, so for the time being we assume
   # TODO: can't we though?
@@ -104,6 +138,7 @@ endif()
 set(CMAKE_BINARY_DIR ${CMAKE_SOURCE_DIR}/bin)
 set(EXECUTABLE_OUTPUT_PATH ${CMAKE_BINARY_DIR})
 set(LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/lib)
+set(ODGI_LIBRARY_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/lib)
 
 # The following folder will be included
 include_directories("${PROJECT_SOURCE_DIR}")
@@ -111,29 +146,85 @@ include_directories("${PROJECT_SOURCE_DIR}")
 # Add external projects
 include(${CMAKE_ROOT}/Modules/ExternalProject.cmake)
 
-# TODO: We're using INSTALL_DIR very wrong. We *should* be actually installing
-# the external projects into their prefixes and working with the installed
-# files. Instead we're building but not installing them and trying to work with
-# the non-installed build trees.
+# The following section builds external git submodules. We can not use
+# the INSTALL_COMMAND and UPDATE_COMMAND because source updates are
+# handled with git submodules. These systems do not mix, so we cancel
+# these commands.  Not that git submodules are deterministic because
+# their updates are handled outside the build system. On a module
+# update/upgrade you need to regenerate the cmake build dir(!)
 #
-# Hence the blanked out INSTALL_COMMANDs to suppress the install step.
+# CMAKE_CURRENT_BINARY_DIR points to current build dir Use
+# ExternalProject_Get_property INSTALL_DIR to build out of tree.
 #
-# We need to NOT blank out UPDATE_COMMAND or we can never change the Git revision we point to.
-# The cost of this is that we have to re-configure on every build if we do update.
+# At this point the modules with -EXT are the exemplar of above.
+#
+# The current solution is to build EXT directories and copy the
+# libraries to odgi/lib (so they are all in one place). Ideally a
+# library becomes a proper add_library target, but at this point we
+# simply add the files to odgi_DEPS etc. Another improvement will be
+# to support static builds of these tools (FIXME).
+#
+# See also https://cmake.org/cmake/help/latest/module/ExternalProject.html
 
+# The lodepng git submodule only uses two source files in odgi. The CMakeLists.txt
+# file in ekg's repo does not honour project info. I suggest
+# the following:
+#
+# 1. Use the upstream lodepng (it has updates!)
+# 2. Here we use the sources directly so there is no lib
+set(lodepng_INCLUDE "${CMAKE_SOURCE_DIR}/deps/lodepng")
+set(lodepng_SOURCES "${CMAKE_SOURCE_DIR}/deps/lodepng/lodepng.cpp")
+
+if (FALSE)
+# Include the lodepng git submodule
+# Note:
+# - deps/lodepng/CMakeLists.txt file is hard coding the following
+# - only builds static library deps/lodepng/lib/liblodepng.a
+# - lodepng does not honour passing LIBRARY_OUTPUT_PATH
+# - so copy the lib from inside the source dir to odgi/lib(!)
+# - note we don't have to install the static lib as it comes with libodgi etc.
+ExternalProject_Add(lodepng-EXT
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/lodepng"
+  # CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>;${CMAKE_ARGS}"
+  UPDATE_COMMAND ""  # using git prefetched submodule in deps
+  INSTALL_COMMAND "")
+ExternalProject_Get_property(lodepng-EXT SOURCE_DIR)
+# ExternalProject_Get_property(lodepng-EXT INSTALL_DIR)
+set(lodepng_INCLUDE "${SOURCE_DIR}")
+set(lodepng_static_orig "${SOURCE_DIR}/lib/liblodepng.a")
+set(lodepng_static "${ODGI_LIBRARY_OUTPUT_PATH}/liblodepng.a")
+set(lodepng_lib ${lodepng_static}) # alias static lib in odgi/lib
+add_custom_target(lodepng
+  # DEPENDS ${lodepng_lib}
+  DEPENDS lodepng-EXT
+  COMMAND ${CMAKE_COMMAND} -E copy_if_different ${lodepng_static_orig} ${lodepng_static}
+  VERBATIM)
+endif(FALSE)
+
+# The libbf git submodule is well behaved and creates a shared library
+# in libbf-prefix/lib/libbf.so.
+ExternalProject_Add(libbf-EXT
+  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/libbf"
+  CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>;${CMAKE_ARGS}")
+ExternalProject_Get_property(libbf-EXT INSTALL_DIR)
+set(libbf_INCLUDE "${INSTALL_DIR}/include")
+set(libbf_lib "${INSTALL_DIR}/lib/libbf.so")
+add_custom_target(libbf DEPENDS libbf-EXT)
+
+# the sdsl git submodule is creates static libs for sdsllite and divsufsort.
+# libduvsort has an OPENMP switch
 if (NOT SDSLLITE_FOUND)
-  # sdsl-lite (full build using its cmake config)
   ExternalProject_Add(sdsl-lite
     SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/sdsl-lite"
-    CMAKE_ARGS "${CMAKE_ARGS};-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>"
+    CMAKE_ARGS "${CMAKE_ARGS};-DCMAKE_C_FLAGS=${CMAKE_C_FLAGS};-DCMAKE_CXX_FLAGS:STRING=${CMAKE_CXX_FLAGS};-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>"
     UPDATE_COMMAND ""
     INSTALL_COMMAND "")
   ExternalProject_Get_property(sdsl-lite INSTALL_DIR)
   set(SDSLLITE_INCLUDE_DIRS "${INSTALL_DIR}/src/sdsl-lite-build/include")
-  set(LIBDIVSUFSORT_INCLUDE_DIRS "${INSTALL_DIR}/src/sdsl-lite-build/external/libdivsufsort/include")
   set(SDSLLITE_LINK_LIBRARIES "${INSTALL_DIR}/src/sdsl-lite-build/lib/libsdsl.a")
+  set(LIBDIVSUFSORT_INCLUDE_DIRS "${INSTALL_DIR}/src/sdsl-lite-build/external/libdivsufsort/include")
   set(LIBDIVSUFSORT_LINK_LIBRARIES "${INSTALL_DIR}/src/sdsl-lite-build/external/libdivsufsort/lib/libdivsufsort.a" "${INSTALL_DIR}/src/sdsl-lite-build/external/libdivsufsort/lib/libdivsufsort64.a")
-endif (NOT SDSLLITE_FOUND)
+endif ()
 
 # DYNAMIC (full build using its cmake config)
 ExternalProject_Add(dynamic
@@ -177,6 +268,7 @@ if (NOT INLINE_HANDLEGRAPH_SOURCES)
   ExternalProject_Get_property(handlegraph INSTALL_DIR)
   set(handlegraph_INCLUDE "${INSTALL_DIR}/include")
   set(handlegraph_LIB "${INSTALL_DIR}/lib")
+
 else (NOT INLINE_HANDLEGRAPH_SOURCES)
   MESSAGE(STATUS "ODGI inlining handlegraph sources")
   set(handlegraph_INCLUDE "${CMAKE_SOURCE_DIR}/deps/libhandlegraph/src/include")
@@ -305,14 +397,6 @@ ExternalProject_Add(atomicqueue
 ExternalProject_Get_property(atomicqueue SOURCE_DIR)
 set(atomicqueue_INCLUDE "${SOURCE_DIR}/")
 
-# lodepng
-ExternalProject_Add(lodepng
-  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/lodepng"
-  UPDATE_COMMAND ""
-  INSTALL_COMMAND "")
-ExternalProject_Get_property(lodepng SOURCE_DIR)
-set(lodepng_INCLUDE "${SOURCE_DIR}")
-set(lodepng_LIB "${SOURCE_DIR}/lib")
 
 # structures
 ExternalProject_Add(structures
@@ -342,22 +426,6 @@ ExternalProject_Add(sgd2
   CONFIGURE_COMMAND "")
 ExternalProject_Get_property(sgd2 SOURCE_DIR)
 set(sgd2_INCLUDE "${SOURCE_DIR}/src")
-
-#ExternalProject_Add(mondriaan
-#  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/mondriaan"
-#  UPDATE_COMMAND ""
-#  INSTALL_COMMAND "")
-#ExternalProject_Get_property(mondriaan SOURCE_DIR)
-#set(mondriaan_INCLUDE "${SOURCE_DIR}/src")
-#set(mondriaan_LIB "${SOURCE_DIR}/lib")
-
-ExternalProject_Add(libbf
-  SOURCE_DIR "${CMAKE_SOURCE_DIR}/deps/libbf"
-  CMAKE_ARGS "${CMAKE_ARGS};-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>")
-ExternalProject_Get_property(libbf INSTALL_DIR)
-#message(STATUS "libbf target " ${INSTALL_DIR})
-set(libbf_INCLUDE "${INSTALL_DIR}/include")
-set(libbf_LIB "${INSTALL_DIR}/lib")
 
 # httplib for HTTP server
 ExternalProject_Add(httplib
@@ -505,7 +573,6 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_info.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/bin_path_depth.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/sgd_layout.cpp
-#  ${CMAKE_SOURCE_DIR}/src/algorithms/mondriaan_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/matrix_writer.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/temp_file.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/linear_index.cpp
@@ -536,10 +603,13 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/unittest/edge.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/tips.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/path_jaccard.cpp
+  ${lodepng_SOURCES}
   ${handlegraph_sources}
 )
 
 set(odgi_DEPS
+    # lodepng
+    libbf
     dynamic
     hopscotch_map
     gfakluge
@@ -549,11 +619,9 @@ set(odgi_DEPS
     ska
     intervaltree
     cgranges
-    lodepng
     structures
     picosha256
     sgd2
-    libbf
     httplib
     random_distributions
     dirtyzipf
@@ -606,14 +674,15 @@ set(odgi_INCLUDES
   "${mio_INCLUDE}")
 
 set(odgi_LIBS
+  jemalloc
   ${SDSLLITE_LINK_LIBRARIES}
   ${LIBDIVSUFSORT_LINK_LIBRARIES}
-  "${lodepng_LIB}/liblodepng.a"
-#  "${mondriaan_LIB}/libmondriaan.a"
-  "${libbf_LIB}/libbf.a"
+  "-L${CMAKE_SOURCE_DIR}/lib"
+  # ${lodepng_lib}
+  ${libbf_lib}
   "-ldl"
   "-latomic"
-  jemalloc)
+  )
   #"-lefence") # for malloc error checking
   #"-ltcmalloc") # for heap profiling
 
@@ -724,6 +793,8 @@ else (NOT PIC)
   add_library(libodgi_shared SHARED $<TARGET_OBJECTS:odgi_objs> src/algorithms/fonts/field8.h src/algorithms/fonts/font5x8.h)
   set_target_properties(libodgi_shared PROPERTIES OUTPUT_NAME "odgi")
   set_target_properties(libodgi_shared PROPERTIES PUBLIC_HEADER "${odgi_HEADERS}")
+  target_link_libraries(libodgi_shared ${odgi_LIBS})
+  add_dependencies(libodgi_shared ${odgi_DEPS})
 endif (NOT PIC)
 
 add_executable(odgi
@@ -732,6 +803,7 @@ add_executable(odgi
 target_link_libraries(odgi ${odgi_LIBS})
 set_target_properties(odgi PROPERTIES OUTPUT_NAME "odgi")
 
+
 if (NOT PIC)
   MESSAGE(STATUS "Can not build python bindings with PIC=OFF")
 else (NOT PIC)
@@ -739,13 +811,24 @@ else (NOT PIC)
     add_subdirectory(deps/pybind11)
   endif (NOT pybind11_FOUND)
 
-  # Build Python module
+  # Build Python modules, first the FFI - note we added a second module so
+  # as not to confuse things with the old bindings
+  pybind11_add_module(odgi_ffi "${CMAKE_SOURCE_DIR}/src/pythonffi.cpp")
+  add_dependencies(odgi_ffi ${odgi_DEPS} libodgi_shared)
+  target_include_directories(odgi_ffi PUBLIC ${odgi_INCLUDES})
+  target_link_libraries(odgi_ffi PUBLIC "${odgi_LIBS}" "${CMAKE_SOURCE_DIR}/lib/libodgi.so")
+  set_target_properties(odgi_ffi PROPERTIES OUTPUT_NAME "odgi_ffi")
+  install(TARGETS odgi_ffi LIBRARY DESTINATION lib)
+  add_pydoctest(odgi_ffi)
+
+  # Build original Python module
   pybind11_add_module(odgi_pybind11 "${CMAKE_SOURCE_DIR}/src/pythonmodule.cpp")
   add_dependencies(odgi_pybind11 ${odgi_DEPS} libodgi_static)
   target_include_directories(odgi_pybind11 PUBLIC ${odgi_INCLUDES})
   target_link_libraries(odgi_pybind11 PRIVATE "${CMAKE_SOURCE_DIR}/lib/libodgi.a" "${odgi_LIBS}")
   set_target_properties(odgi_pybind11 PROPERTIES OUTPUT_NAME "odgi")
   install(TARGETS odgi_pybind11 LIBRARY DESTINATION lib)
+
 endif (NOT PIC)
 
 file(MAKE_DIRECTORY ${CMAKE_SOURCE_DIR}/include)
@@ -757,13 +840,17 @@ if (PIC)
   install(TARGETS libodgi_shared ARCHIVE DESTINATION lib LIBRARY DESTINATION lib PUBLIC_HEADER DESTINATION include/odgi)
 endif (PIC)
 
-if (APPLE)
+if (APPLE) # APPLE builds are not supported at this point
 elseif (TRUE)
   if (BUILD_STATIC)
     set(CMAKE_EXE_LINKER_FLAGS "-static")
   endif()
 endif()
 
-# ---- Add tests
-enable_testing()
-add_test(NAME odgi-test COMMAND odgi test)
+add_test(
+    NAME odgi-binary-tests
+    COMMAND ./scripts/test_binary.sh bin/odgi test scripts/
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+set_tests_properties(odgi-binary-tests PROPERTIES ENVIRONMENT "LD_LIBRARY_PATH=$ENV{LIBRARY_PATH};LD_PRELOAD=${PRELOAD}")
+
+add_test(NAME odgi-test COMMAND odgi test) # should run within 30s

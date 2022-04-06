@@ -2,6 +2,10 @@
 ;;
 ;;   guix build -f guix.scm
 ;;
+;; To do a cross compilation build for ARM64
+;;
+;;   guix build -f guix.scm --target=aarch64-linux
+;;
 ;; To get a development container (emacs shell will work)
 ;;
 ;;   guix shell -C -D -f guix.scm
@@ -24,6 +28,11 @@
 ;;
 ;; this is because the underlying libraries were built with gcc-10 and
 ;; jemalloc needs to be preloaded.
+;;
+;;   cmake -DCMAKE_BUILD_TYPE=Debug -DINLINE_HANDLEGRAPH_SOURCES=ON ..
+;;   make
+;;   ctest .
+;;
 
 (use-modules
   (ice-9 popen)
@@ -76,12 +85,12 @@
        ("gcc-lib" ,gcc-11 "lib")
        ("gcc-toolchain" ,gcc-toolchain)
        ("gdb" ,gdb)
-       ("git" ,git)
+       ("git" ,git) ; pulls in perl which does not do RISV-V cross builds yet
        ; ("lodepng" ,lodepng) later!
        ("openmpi" ,openmpi)
        ("python" ,python)
-       ("sdsl-lite" ,sdsl-lite)
-       ("libdivsufsort" ,libdivsufsort)
+       ; ("sdsl-lite" ,sdsl-lite)
+       ; ("libdivsufsort" ,libdivsufsort)
        ))
     (native-inputs
      `(("pkg-config" ,pkg-config)
@@ -98,8 +107,10 @@
                (lambda ()
                  (format #t "#define ODGI_GIT_VERSION \"~a\"~%" version)))
              #t))
-         (delete 'check))
-        #:make-flags (list ,(string-append "CC=" (cc-for-target)))))
+         ;; (delete 'check)
+         )
+        ;; #:make-flags (list ,(string-append "CC=" (cc-for-target)))))
+        ))
      (synopsis "odgi pangenome optimized dynamic sequence graph implementation")
      (description
 "odgi pangenome graph tooling provides an efficient, succinct dynamic
