@@ -849,7 +849,7 @@ endif()
 
 add_test(
     NAME odgi-binary-tests
-    COMMAND sh scripts/test_binary.sh bin/odgi test scripts/
+    COMMAND ./scripts/test_binary.sh bin/odgi test scripts/
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 set_tests_properties(odgi-binary-tests PROPERTIES ENVIRONMENT "LD_LIBRARY_PATH=$ENV{LIBRARY_PATH};LD_PRELOAD=${PRELOAD}")
 
