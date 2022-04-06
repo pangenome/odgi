@@ -50,32 +50,21 @@ if(NOT CMAKE_BUILD_TYPE)
           "Choose the type of build, options are: Release Debug Generic." FORCE)
 endif()
 
-if (${CMAKE_BUILD_TYPE} MATCHES Release)
-  set(EXTRA_FLAGS "-Ofast -march=native -pipe -msse4.2 -funroll-all-loops") #  -fprofile-generate=../pgo")
-endif ()
-
 # Set optimization through command line; see INSTALL.md
 if (${CMAKE_BUILD_TYPE} MATCHES Release)
   set(EXTRA_FLAGS "-Ofast -march=native -pipe -msse4.2 -funroll-all-loops") #  -fprofile-generate=../pgo")
-  set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG") # reset CXX_FLAGS to replace -O3 with -Ofast
+  set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG") # reset CXX_FLAGS to be able to replace -O3 with -Ofast
 endif ()
 
 if ((${CMAKE_BUILD_TYPE} MATCHES "Release") OR (${CMAKE_BUILD_TYPE} MATCHES "RelWithDebInfo"))
-  if (EXTRA_FLAGS)
-    set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG") # reset CXX_FLAGS to replace -O3 with -Ofast
-  endif (EXTRA_FLAGS)
-  # Use all standard-compliant optimizations - always add these:
-  set (CMAKE_C_FLAGS "${OpenMP_C_FLAGS} ${PIC_FLAG} ${EXTRA_FLAGS}")
-  set (CMAKE_CXX_FLAGS "${OpenMP_CXX_FLAGS} ${PIC_FLAG} ${EXTRA_FLAGS}")
-  if (${CMAKE_BUILD_TYPE} MATCHES "RelWithDebInfo")
-    set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g")
-  endif ()
+  set (CMAKE_C_FLAGS "${OpenMP_C_FLAGS} ${EXTRA_FLAGS}")
+  set (CMAKE_CXX_FLAGS "${OpenMP_CXX_FLAGS} ${EXTRA_FLAGS}")
 endif ()
 
 # set(CMAKE_BUILD_TYPE Debug) -- don't uncomment this, instead run
 #   cmake -DCMAKE_BUILD_TYPE=Debug ..
-# or with additional flags use EXTRA_FLAGS
-#   cmake -DCMAKE_BUILD_TYPE=Debug -DEXTRA_FLAGS="-fsanitize=address" ..
+# or
+#   cmake -DCMAKE_BUILD_TYPE=Debug -DASAN=ON" ..
 #
 
 if (${CMAKE_BUILD_TYPE} MATCHES "Debug")
@@ -118,7 +107,7 @@ function(add_pydoctest TEST_FILE)
   set_tests_properties(${TEST_FILE} PROPERTIES ENVIRONMENT "PYTHONPATH=${PROJECT_SOURCE_DIR}/lib;LD_LIBRARY_PATH=$ENV{LIBRARY_PATH};LD_PRELOAD=${PRELOAD}")
 endfunction()
 
-if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin") # untested
   # assumes clang build
   # we can't reliably detect when we're using clang, so for the time being we assume
   # TODO: can't we though?
