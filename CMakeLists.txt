@@ -45,10 +45,14 @@ feature_summary(
 pkg_check_modules(SDSLLITE sdsl-lite)
 pkg_check_modules(LIBDIVSUFSORT libdivsufsort)
 
-if (NOT CMAKE_BUILD_TYPE) # default build to Release
-  set(CMAKE_BUILD_TYPE Release)
+if(NOT CMAKE_BUILD_TYPE)
+  set(CMAKE_BUILD_TYPE Release CACHE STRING
+          "Choose the type of build, options are: Release Debug Generic." FORCE)
 endif()
 
+if (${CMAKE_BUILD_TYPE} MATCHES Release)
+  set(EXTRA_FLAGS "-Ofast -march=native -pipe -msse4.2 -funroll-all-loops") #  -fprofile-generate=../pgo")
+endif ()
 
 # Set optimization through command line; see INSTALL.md
 # set(EXTRA_FLAGS "-Ofast -march=native -pipe -msse4.2 -funroll-all-loops") #  -fprofile-generate=../pgo")
