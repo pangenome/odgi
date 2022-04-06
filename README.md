@@ -52,6 +52,14 @@ Static builds are unlikely to be supported on OSX, and require appropriate stati
 
 For more information on optimisations, debugging and GNU Guix builds, see [INSTALL.md](./INSTALL.md) and [CMakeLists.txt](./CMakeLists.txt).
 
+#### Notes for distribution
+
+If you need to avoid machine-specific optimizations, use the `CMAKE_BUILD_TYPE=Generic` build type:
+
+```shell
+cmake -H. -Bbuild -DCMAKE_BUILD_TYPE=Generic && cmake --build build -- -j 3
+```
+
 #### Notes on dependencies
 
 On `Arch Linux`, the `jemalloc` dependency can be installed with:

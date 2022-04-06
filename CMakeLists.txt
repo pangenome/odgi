@@ -55,7 +55,10 @@ if (${CMAKE_BUILD_TYPE} MATCHES Release)
 endif ()
 
 # Set optimization through command line; see INSTALL.md
-# set(EXTRA_FLAGS "-Ofast -march=native -pipe -msse4.2 -funroll-all-loops") #  -fprofile-generate=../pgo")
+if (${CMAKE_BUILD_TYPE} MATCHES Release)
+  set(EXTRA_FLAGS "-Ofast -march=native -pipe -msse4.2 -funroll-all-loops") #  -fprofile-generate=../pgo")
+  set(CMAKE_CXX_FLAGS_RELEASE "-DNDEBUG") # reset CXX_FLAGS to replace -O3 with -Ofast
+endif ()
 
 if ((${CMAKE_BUILD_TYPE} MATCHES "Release") OR (${CMAKE_BUILD_TYPE} MATCHES "RelWithDebInfo"))
   if (EXTRA_FLAGS)
@@ -114,7 +117,6 @@ function(add_pydoctest TEST_FILE)
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test)
   set_tests_properties(${TEST_FILE} PROPERTIES ENVIRONMENT "PYTHONPATH=${PROJECT_SOURCE_DIR}/lib;LD_LIBRARY_PATH=$ENV{LIBRARY_PATH};LD_PRELOAD=${PRELOAD}")
 endfunction()
-
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
   # assumes clang build

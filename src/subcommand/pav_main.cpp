@@ -23,7 +23,7 @@ int main_pav(int argc, char **argv) {
     argv[0] = (char *) prog_name.c_str();
     --argc;
 
-    args::ArgumentParser parser("Presence/absence variants (PAVs). It prints to stdout a matrix with the 'PAV ratios'. "
+    args::ArgumentParser parser("Presence/absence variants (PAVs). It prints to stdout a TSV table with the 'PAV ratios'. "
                                 "For a given path range 'PR' and path 'P', the 'PAV ratio' is the ratio between the sum of the lengths "
                                 "of the nodes in 'PR' that are crossed by 'P' divided by the sum of the lengths"
                                 " of all the nodes in 'PR'. Each node is considered only once.");
@@ -37,8 +37,10 @@ int main_pav(int argc, char **argv) {
                                               {'p', "path-groups"});
     args::Flag _group_by_sample(pav_opts, "bool", "Following PanSN naming (sample#hap#ctg), group by sample (1st field).", {'S', "group-by-sample"});
     args::Flag _group_by_haplotype(pav_opts, "bool", "Following PanSN naming (sample#hap#ctg), group by haplotype (2nd field).", {'H', "group-by-haplotype"});
-    args::ValueFlag<double> _binary_matrix(pav_opts, "THRESHOLD", "Emit a binary matrix, with 1 if the PAV ratio is greater than or equal to the specified THRESHOLD, else 0.",
-                                       {'B', "binary-matrix"});
+    args::ValueFlag<double> _binary_values(pav_opts, "THRESHOLD", "Print 1 if the PAV ratio is greater than or equal to the specified THRESHOLD, else 0.",
+                                       {'B', "binary-values"});
+    args::Flag _matrix_output(pav_opts, "bool", "Emit the PAV ratios in a matrix, with path ranges as rows and paths/groups as columns.",
+                                           {'M', "matrix-output"});
     args::Group threading_opts(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> nthreads(threading_opts, "N", "Number of threads to use for parallel operations.",
                                        {'t', "threads"});
@@ -88,14 +90,14 @@ int main_pav(int argc, char **argv) {
     }
     graph.set_number_of_threads(num_threads);
 
-    if (args::get(_binary_matrix) && (args::get(_binary_matrix) < 0 || args::get(_binary_matrix) > 1)) {
+    if (args::get(_binary_values) && (args::get(_binary_values) < 0 || args::get(_binary_values) > 1)) {
         std::cerr
             << "[odgi::pav] error: the PAV ratio threshold must be greater than 0 and lower than 1."
             << std::endl;
         return 1;
     }
-    const double binary_threshold = args::get(_binary_matrix) ? args::get(_binary_matrix) : 0;
-    const bool emit_binary_matrix = binary_threshold != 0;
+    const double binary_threshold = args::get(_binary_values) ? args::get(_binary_values) : 0;
+    const bool emit_binary_values = binary_threshold != 0;
 
     if (_path_groups + _group_by_sample + _group_by_haplotype > 1) {
         std::cerr
@@ -250,22 +252,49 @@ int main_pav(int argc, char **argv) {
         tree.index(); // index
     }
 
+    const bool emit_matrix_else_table = args::get(_matrix_output);
+
     // Emit the PAV matrix
-    //todo we are not managing the strandness... should we?
     std::cout << "chrom" << "\t"
               << "start" << "\t"
               << "end" << "\t"
               << "name";
-    if (group_paths) {
-        for (auto& x : group_2_index) {
-            std::cout << "\t" << x.first;
+    if (emit_matrix_else_table) {
+        if (group_paths) {
+            for (auto& x : group_2_index) {
+                std::cout << "\t" << x.first;
+            }
+        } else {
+            graph.for_each_path_handle([&](const path_handle_t path_handle) {
+                std::cout << "\t" << graph.get_path_name(path_handle);
+            });
         }
     } else {
-        graph.for_each_path_handle([&](const path_handle_t path_handle) {
-            std::cout << "\t" << graph.get_path_name(path_handle);
-        });
+        std::cout << "\t" << "group" << "\t" << "pav";
     }
     std::cout << std::endl;
+
+    auto print_pav_table_row = [](
+            const basic_ostream<char>& stream,
+            graph_t& graph,
+            const uint64_t len_unique_nodes_in_range,
+            const std::vector<uint64_t>& len_unique_nodes_in_range_for_each_group,
+            const std::string& group_name,
+            const uint64_t group_rank,
+            const odgi::path_range_t& path_range,
+            const bool emit_binary_values,
+            const double binary_threshold) {
+        // Check if there were nodes in the range
+        const double pav_ratio = len_unique_nodes_in_range == 0 ?
+                                 0 : (double) len_unique_nodes_in_range_for_each_group[group_rank] / (double) len_unique_nodes_in_range;
+        std::cout << std::setprecision(5)
+                  << graph.get_path_name(path_range.begin.path) << "\t"
+                  << path_range.begin.offset << "\t"
+                  << path_range.end.offset << "\t"
+                  << path_range.name << "\t"
+                  << group_name << "\t"
+                  << (emit_binary_values ? pav_ratio >= binary_threshold : pav_ratio) << "\n";
+    };
 
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
     for (uint64_t i = 0; i < path_ranges.size(); ++i) {
@@ -312,18 +341,50 @@ int main_pav(int argc, char **argv) {
 
 #pragma omp critical (cout)
         {
-            std::cout << std::setprecision(5)
-            << graph.get_path_name(path_range.begin.path) << "\t"
-            << path_range.begin.offset << "\t"
-            << path_range.end.offset << "\t"
-            << path_range.name;
-            for (auto& x: len_unique_nodes_in_range_for_each_group) {
-                // Check if there were nodes in the range
-                const double pav_ratio = len_unique_nodes_in_range == 0 ?
-                        0 : (double) x / (double) len_unique_nodes_in_range;
-                std::cout << "\t" << (emit_binary_matrix ? pav_ratio >= binary_threshold : pav_ratio);
+            if (emit_matrix_else_table) {
+                std::cout << std::setprecision(5)
+                          << graph.get_path_name(path_range.begin.path) << "\t"
+                          << path_range.begin.offset << "\t"
+                          << path_range.end.offset << "\t"
+                          << path_range.name;
+                for (auto& x: len_unique_nodes_in_range_for_each_group) {
+                    // Check if there were nodes in the range
+                    const double pav_ratio = len_unique_nodes_in_range == 0 ?
+                                             0 : (double) x / (double) len_unique_nodes_in_range;
+                    std::cout << "\t" << (emit_binary_values ? pav_ratio >= binary_threshold : pav_ratio);
+                }
+                std::cout << std::endl;
+            } else {
+                if (group_paths) {
+                    for (auto& x : group_2_index) {
+                        const uint64_t group_rank = x.second;
+                        print_pav_table_row(
+                                std::cout,
+                                graph,
+                                len_unique_nodes_in_range,
+                                len_unique_nodes_in_range_for_each_group,
+                                x.first,
+                                group_rank,
+                                path_range,
+                                emit_binary_values,
+                                binary_threshold);
+                    }
+                } else {
+                    graph.for_each_path_handle([&](const path_handle_t path_handle) {
+                        const uint64_t group_rank = as_integer(path_handle) - 1;
+                        print_pav_table_row(
+                                std::cout,
+                                graph,
+                                len_unique_nodes_in_range,
+                                len_unique_nodes_in_range_for_each_group,
+                                graph.get_path_name(path_handle),
+                                group_rank,
+                                path_range,
+                                emit_binary_values,
+                                binary_threshold);
+                    });
+                }
             }
-            std::cout << std::endl;
         }
     }
 
