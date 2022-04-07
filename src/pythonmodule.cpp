@@ -1,15 +1,14 @@
 // odgi
 #include "odgi.hpp"
-//using namespace odgi;
 
 // Pybind11
 #include <pybind11/pybind11.h>
 #include <pybind11/functional.h>
 #include <pybind11/iostream.h>
-#include <pybind11/numpy.h>
-#include <pybind11/stl.h>
-#include <pybind11/complex.h>
+
 namespace py = pybind11;
+
+using namespace odgi;
 
 PYBIND11_MODULE(odgi, m)
 {
@@ -191,7 +190,7 @@ PYBIND11_MODULE(odgi, m)
              &odgi::graph_t::get_previous_step,
              "Returns a handle to the previous step on the path. Calling on a front\nend marker step returns the same end marker.")
         .def("get_path_handle_of_step",
-             &odgi::graph_t::get_path_handle_of_step,
+             &graph_t::get_path_handle_of_step,
              "Returns a handle to the path that an step is on.")
         /*
         .def("get_ordinal_rank_of_step",
@@ -319,6 +318,5 @@ PYBIND11_MODULE(odgi, m)
              "Load the graph from the given file.")
         // Definition of class_<odgi::graph_t> ends here.
     ;
-
 
 }
