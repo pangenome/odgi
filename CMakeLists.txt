@@ -101,10 +101,10 @@ endif()
 # Function to invoke doctests
 function(add_pydoctest TEST_FILE)
   add_test(
-    NAME ${TEST_FILE}
+    NAME pydoctest_${TEST_FILE}
     COMMAND python3 -m doctest -o NORMALIZE_WHITESPACE -o REPORT_UDIFF python/${TEST_FILE}.md
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test)
-  set_tests_properties(${TEST_FILE} PROPERTIES ENVIRONMENT "PYTHONPATH=${PROJECT_SOURCE_DIR}/lib;LD_LIBRARY_PATH=$ENV{LIBRARY_PATH};LD_PRELOAD=${PRELOAD}")
+  set_tests_properties(pydoctest_${TEST_FILE} PROPERTIES ENVIRONMENT "PYTHONPATH=${PROJECT_SOURCE_DIR}/lib;LD_LIBRARY_PATH=$ENV{LIBRARY_PATH};LD_PRELOAD=${PRELOAD}")
 endfunction()
 
 if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin") # untested
@@ -820,6 +820,7 @@ else (NOT PIC)
   set_target_properties(odgi_ffi PROPERTIES OUTPUT_NAME "odgi_ffi")
   install(TARGETS odgi_ffi LIBRARY DESTINATION lib)
   add_pydoctest(odgi_ffi)
+  add_pydoctest(odgi_performance)
 
   # Build original Python module
   pybind11_add_module(odgi_pybind11 "${CMAKE_SOURCE_DIR}/src/pythonmodule.cpp")
@@ -828,6 +829,11 @@ else (NOT PIC)
   target_link_libraries(odgi_pybind11 PRIVATE "${CMAKE_SOURCE_DIR}/lib/libodgi.a" "${odgi_LIBS}")
   set_target_properties(odgi_pybind11 PROPERTIES OUTPUT_NAME "odgi")
   install(TARGETS odgi_pybind11 LIBRARY DESTINATION lib)
+  add_test(
+    NAME pythonmodule
+    COMMAND python3 -c "import odgi; g = odgi.graph()"
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}/test)
+  set_tests_properties(pythonmodule PROPERTIES ENVIRONMENT "PYTHONPATH=${PROJECT_SOURCE_DIR}/lib;LD_LIBRARY_PATH=$ENV{LIBRARY_PATH};LD_PRELOAD=${PRELOAD}")
 
 endif (NOT PIC)
 

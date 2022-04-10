@@ -4,6 +4,7 @@
 
 The odgi toolkit for pangenomics comes with a simple "C" foreign function interface (FFI) that can be used from any computer language.
 The header file for the C-API can be found [here](https://github.com/pjotrp/odgi/blob/master/src/odgi-api.h).
+This C-API is covered by the `odgi-ffi` module.
 In this document we walk through the low-level API using the Python `odgi_ffi` module that comes with odgi.
 
 Note that odgi also has an older high-level Python API `import odgi` that is somewhat obsolete. Instead you should probably use below `import odgi_ffi` lower level API to construct your own library.
