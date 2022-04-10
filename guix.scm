@@ -6,16 +6,16 @@
 ;;
 ;;   guix build -f guix.scm --target=aarch64-linux
 ;;
-;; To get a development container (emacs shell will work)
+;; To get a development container (inside emacs shell will work)
 ;;
-;;   guix shell -C -D -f guix.scm
+;;   guix shell -C -D -f guix.scm -- bash --init-file <(echo "ln -s /bin/sh /bin/bash")
 ;;
 ;; and build
 ;;
 ;;   find -name CMakeCache.txt|xargs rm -v
 ;;   cd build
 ;;   cmake -DCMAKE_BUILD_TYPE=Debug ..
-;;   cmake --build . --verbose
+;;   cmake --build . --verbose -- -j 14 && ctest . --verbose
 ;;
 ;; For the tests you may need /usr/bin/env. In a container create it with
 ;;
@@ -89,8 +89,8 @@
        ; ("lodepng" ,lodepng) later!
        ("openmpi" ,openmpi)
        ("python" ,python)
-       ; ("sdsl-lite" ,sdsl-lite)
-       ; ("libdivsufsort" ,libdivsufsort)
+       ("sdsl-lite" ,sdsl-lite)
+       ("libdivsufsort" ,libdivsufsort)
        ))
     (native-inputs
      `(("pkg-config" ,pkg-config)
@@ -99,6 +99,10 @@
       `(#:phases
         (modify-phases
          %standard-phases
+         (add-after 'unpack 'symlink-bash
+           (lambda _
+             (symlinklink "/bin/bash" "/bin/sh")
+             #t))
          ;; This stashes our build version in the executable
          (add-after 'unpack 'set-version
            (lambda _
