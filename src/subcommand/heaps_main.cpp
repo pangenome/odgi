@@ -148,12 +148,21 @@ int main_heaps(int argc, char **argv) {
                 uint64_t start = std::stoul(vals[1]);
                 uint64_t end = std::stoul(vals[2]);
                 if (!graph.has_path(path_name)) {
-                    std::cerr << "[odgi::heaps] no path '" << path_name << "' in graph" << std::endl;
-                    return 1;
+                    //std::cerr << "[odgi::heaps] warning: no path '" << path_name << "' in graph" << std::endl;
+                } else {
+                    auto path = graph.get_path_handle(path_name);
+                    intervals[path].push_back(algorithms::interval_t(start, end));
                 }
-                auto path = graph.get_path_handle(path_name);
-                intervals[path].push_back(algorithms::interval_t(start, end));
             }
+        }
+        // ensure sorted input
+        std::vector<std::vector<algorithms::interval_t>*> v;
+        for (auto& i : intervals) {
+            v.push_back(&i.second);
+        }
+#pragma omp parallel for
+        for (auto& ivals : v) {
+            std::sort(ivals->begin(), ivals->end());
         }
     }
 
