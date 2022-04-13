@@ -208,7 +208,7 @@ ExternalProject_Add(libbf-EXT
   CMAKE_ARGS "-DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>;${CMAKE_ARGS}")
 ExternalProject_Get_property(libbf-EXT INSTALL_DIR)
 set(libbf_INCLUDE "${INSTALL_DIR}/include")
-set(libbf_lib "${INSTALL_DIR}/lib/libbf.so")
+set(libbf_lib "${INSTALL_DIR}/lib/libbf.a")
 add_custom_target(libbf DEPENDS libbf-EXT)
 
 # the sdsl git submodule is creates static libs for sdsllite and divsufsort.
