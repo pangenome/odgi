@@ -376,7 +376,9 @@ int main_sort(int argc, char** argv) {
                     std::reverse(order.begin(), order.end());
                     break;
                 case 'g': {
-                    order = algorithms::groom(graph, progress);
+					// TODO fill this at some point
+					std::vector<handlegraph::path_handle_t> target_paths;
+                    order = algorithms::groom(graph, progress, target_paths);
                     break;
                 }
                 default:
