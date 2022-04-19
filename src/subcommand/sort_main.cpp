@@ -218,6 +218,77 @@ int main_sort(int argc, char** argv) {
         graph.optimize();
     }
 
+	// TODO We have this function here, in untangle, maybe somewhere else? Refactor!
+	// path loading
+	auto load_paths = [&](const std::string& path_names_file) {
+		std::ifstream path_names_in(path_names_file);
+		uint64_t num_of_paths_in_file = 0;
+		std::vector<bool> path_already_seen;
+		path_already_seen.resize(graph.get_path_count(), false);
+		std::string line;
+		std::vector<path_handle_t> paths;
+		while (std::getline(path_names_in, line)) {
+			if (!line.empty()) {
+				if (graph.has_path(line)) {
+					const path_handle_t path = graph.get_path_handle(line);
+					const uint64_t path_rank = as_integer(path) - 1;
+					if (!path_already_seen[path_rank]) {
+						path_already_seen[path_rank] = true;
+						paths.push_back(path);
+					} else {
+						std::cerr << "[odgi::sort] error: in the path list there are duplicated path names."
+								  << std::endl;
+						exit(1);
+					}
+				}
+				++num_of_paths_in_file;
+			}
+		}
+		path_names_in.close();
+		std::cerr << "[odgi::sort] found " << paths.size() << "/" << num_of_paths_in_file
+				  << " paths to consider." << std::endl;
+		if (paths.empty()) {
+			std::cerr << "[odgi::sort] error: no path to consider." << std::endl;
+			exit(1);
+		}
+		return paths;
+	};
+
+	auto sort_graph_by_target_paths = [&](graph_t& graph, std::vector<path_handle_t> target_paths, std::vector<bool>& is_ref) {
+		std::vector<handle_t> target_order;
+		std::fill_n(std::back_inserter(is_ref), graph.get_node_count(), false);
+		std::unique_ptr <odgi::algorithms::progress_meter::ProgressMeter> target_paths_progress;
+		if (args::get(progress)) {
+			std::string banner = "[odgi::sort] preparing target path vectors:";
+			target_paths_progress = std::make_unique<odgi::algorithms::progress_meter::ProgressMeter>(target_paths.size(), banner);
+		}
+		for (handlegraph::path_handle_t target_path: target_paths) {
+			graph.for_each_step_in_path(
+					target_path,
+					[&](const step_handle_t &step) {
+						handle_t handle = graph.get_handle_of_step(step);
+						uint64_t i = graph.get_id(handle) - 1;
+						if (!is_ref[i]) {
+							is_ref[i] = true;
+							target_order.push_back(handle);
+						}
+					});
+			if (args::get(progress)) {
+				target_paths_progress->increment(1);
+			}
+		}
+		if (args::get(progress))  {
+			target_paths_progress->finish();
+		}
+		for (uint64_t i = 0; i < is_ref.size(); i++) {
+			bool ref = is_ref[i];
+			if (!ref) {
+				target_order.push_back(graph.get_handle(i + 1));
+			}
+		}
+		graph.apply_ordering(target_order, true);
+	};
+
     uint64_t path_sgd_iter_max = args::get(p_sgd_iter_max) ? args::get(p_sgd_iter_max) : 100;
     uint64_t path_sgd_iter_max_learning_rate = args::get(p_sgd_iter_with_max_learning_rate) ? args::get(p_sgd_iter_with_max_learning_rate) : 0;
     double path_sgd_zipf_theta = args::get(p_sgd_zipf_theta) ? args::get(p_sgd_zipf_theta) : 0.99;
@@ -239,7 +310,13 @@ int main_sort(int argc, char** argv) {
     if (snapshot) {
         snapshot_prefix = args::get(p_sgd_snapshot);
     }
+	std::vector<bool> is_ref;
+	std::vector<path_handle_t> target_paths;
     if (p_sgd || args::get(pipeline).find('Y') != std::string::npos) {
+		if (_p_sgd_target_paths) {
+			target_paths = load_paths(args::get(_p_sgd_target_paths));
+			sort_graph_by_target_paths(graph, target_paths, is_ref);
+		}
         // take care of path index
         if (xp_in_file) {
             std::ifstream in;
@@ -312,81 +389,6 @@ int main_sort(int argc, char** argv) {
         path_sgd_max_eta = args::get(p_sgd_eta_max) ? args::get(p_sgd_eta_max) : max_path_step_count * max_path_step_count;
     }
 
-	// TODO We have this function here, in untangle, maybe somewhere else? Refactor!
-	// path loading
-	auto load_paths = [&](const std::string& path_names_file) {
-		std::ifstream path_names_in(path_names_file);
-		uint64_t num_of_paths_in_file = 0;
-		std::vector<bool> path_already_seen;
-		path_already_seen.resize(graph.get_path_count(), false);
-		std::string line;
-		std::vector<path_handle_t> paths;
-		while (std::getline(path_names_in, line)) {
-			if (!line.empty()) {
-				if (graph.has_path(line)) {
-					const path_handle_t path = graph.get_path_handle(line);
-					const uint64_t path_rank = as_integer(path) - 1;
-					if (!path_already_seen[path_rank]) {
-						path_already_seen[path_rank] = true;
-						paths.push_back(path);
-					} else {
-						std::cerr << "[odgi::sort] error: in the path list there are duplicated path names."
-								  << std::endl;
-						exit(1);
-					}
-				}
-				++num_of_paths_in_file;
-			}
-		}
-		path_names_in.close();
-		std::cerr << "[odgi::sort] found " << paths.size() << "/" << num_of_paths_in_file
-				  << " paths to consider." << std::endl;
-		if (paths.empty()) {
-			std::cerr << "[odgi::sort] error: no path to consider." << std::endl;
-			exit(1);
-		}
-		return paths;
-	};
-
-	std::vector<path_handle_t> target_paths;
-	if (args::get(p_sgd) && _p_sgd_target_paths) {
-		target_paths = load_paths(args::get(_p_sgd_target_paths));
-		// TODO put this in a function from here
-		std::vector<handle_t> target_order;
-		std::vector<bool> is_ref;
-		std::fill_n(std::back_inserter(is_ref), graph.get_node_count(), false);
-		std::unique_ptr <odgi::algorithms::progress_meter::ProgressMeter> target_paths_progress;
-		if (args::get(progress)) {
-			std::string banner = "[odgi::sort] preparing target path vectors:";
-			target_paths_progress = std::make_unique<odgi::algorithms::progress_meter::ProgressMeter>(target_paths.size(), banner);
-		}
-		for (handlegraph::path_handle_t target_path: target_paths) {
-			graph.for_each_step_in_path(
-					target_path,
-					[&](const step_handle_t &step) {
-						handle_t handle = graph.get_handle_of_step(step);
-						uint64_t i = graph.get_id(handle) - 1;
-						if (!is_ref[i]) {
-							is_ref[i] = true;
-							target_order.push_back(handle);
-						}
-					});
-			if (args::get(progress)) {
-				target_paths_progress->increment(1);
-			}
-		}
-		if (args::get(progress))  {
-			target_paths_progress->finish();
-		}
-		for (uint64_t i = 0; i < is_ref.size(); i++) {
-			bool ref = is_ref[i];
-			if (!ref) {
-				target_order.push_back(graph.get_handle(i + 1));
-			}
-		}
-		graph.apply_ordering(target_order, true);
-	}
-
     // did we groom the graph?
     if (!args::get(pipeline).empty()) {
         // for each sort type, apply it to the graph
@@ -422,7 +424,10 @@ int main_sort(int argc, char** argv) {
                 case 'Y': {
                     if (!fresh_path_index) {
                         path_index.clean();
-						// TODO check if we have to sort by reference nodes
+						// do we have to sort by reference nodes first?
+						if (_p_sgd_target_paths) {
+							sort_graph_by_target_paths(graph, target_paths, is_ref);
+						}
                         path_index.from_handle_graph(graph, num_threads);
                     }
                     order = algorithms::path_linear_sgd_order(graph,
@@ -443,7 +448,9 @@ int main_sort(int argc, char** argv) {
                                                               progress,
                                                               path_sgd_seed,
                                                               snapshot,
-                                                              snapshot_prefix);
+                                                              snapshot_prefix,
+															  _p_sgd_target_paths,
+															  is_ref);
                     break;
                 }
                 case 'f':
@@ -506,7 +513,9 @@ int main_sort(int argc, char** argv) {
                                                   progress,
                                                   path_sgd_seed,
                                                   snapshot,
-                                                  snapshot_prefix);
+                                                  snapshot_prefix,
+												  _p_sgd_target_paths,
+												  is_ref);
         graph.apply_ordering(order, true);
     } else if (args::get(breadth_first)) {
         graph.apply_ordering(algorithms::breadth_first_topological_order(graph, bf_chunk_size), true);

@@ -81,7 +81,9 @@ std::vector<handle_t> path_linear_sgd_order(const graph_t &graph,
                                             const bool &progress,
                                             const std::string &seed,
                                             const bool &snapshot,
-                                            const std::string &snapshot_prefix);
+                                            const std::string &snapshot_prefix,
+											const bool &target_sorting,
+											const std::vector<bool> target_nodes);
 
 }
 

@@ -200,6 +200,8 @@ TEST_CASE("Sorting a graph with paths 1 node long", "[sort]") {
 
     uint64_t path_sgd_iter_max_learning_rate = 0; // don't use this max iter stuff
 
+	std::vector<bool> target_nodes;
+
     auto order = odgi::algorithms::path_linear_sgd_order(
             graph,
             path_index,
@@ -219,7 +221,9 @@ TEST_CASE("Sorting a graph with paths 1 node long", "[sort]") {
             false,
             path_sgd_seed,
             false,
-            ""
+            "",
+			false,
+			target_nodes
     );
 
     graph.apply_ordering(order, true);

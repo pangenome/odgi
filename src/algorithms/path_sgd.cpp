@@ -25,7 +25,9 @@ namespace odgi {
                                             const uint64_t &nthreads,
                                             const bool &progress,
                                             const bool &snapshot,
-                                            std::vector<std::string> &snapshots) {
+                                            std::vector<std::string> &snapshots,
+											const bool &target_sorting,
+											const std::vector<bool> target_nodes) {
 #ifdef debug_path_sgd
             std::cerr << "iter_max: " << iter_max << std::endl;
             std::cerr << "min_term_updates: " << min_term_updates << std::endl;
@@ -285,6 +287,24 @@ namespace odgi {
                                     handle_t term_i = path_index.get_handle_of_step(step_a);
                                     handle_t term_j = path_index.get_handle_of_step(step_b);
 
+									bool update_term_i = true;
+									bool update_term_j = true;
+
+
+									// Check which terms we actually have to update
+									if (target_sorting) {
+										if (target_nodes[graph.get_id(term_i)]) {
+											update_term_i = false;
+										}
+										if (target_nodes[graph.get_id(term_j)]) {
+											update_term_j = false;
+										}
+									}
+									if (!update_term_j && !update_term_i) {
+										continue;
+									}
+
+
                                     // adjust the positions to the node starts
                                     size_t pos_in_path_a = path_index.get_position_of_step(step_a);
                                     size_t pos_in_path_b = path_index.get_position_of_step(step_b);
@@ -368,8 +388,12 @@ namespace odgi {
 #ifdef debug_path_sgd
                                     std::cerr << "before X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
 #endif
-                                    X[i].store(X[i].load() - r_x);
-                                    X[j].store(X[j].load() + r_x);
+									if (update_term_i) {
+										X[i].store(X[i].load() - r_x);
+									}
+									if (update_term_j) {
+										X[j].store(X[j].load() + r_x);
+									}
 #ifdef debug_path_sgd
                                     std::cerr << "after X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
 #endif
@@ -494,7 +518,9 @@ namespace odgi {
                                                     const bool &progress,
                                                     const std::string &seed,
                                                     const bool &snapshot,
-                                                    const std::string &snapshot_prefix) {
+                                                    const std::string &snapshot_prefix,
+													const bool &target_sorting,
+													const std::vector<bool> target_nodes) {
             std::vector<string> snapshots;
             std::vector<double> layout = path_linear_sgd(graph,
                                                          path_index,
@@ -513,7 +539,9 @@ namespace odgi {
                                                          nthreads,
                                                          progress,
                                                          snapshot,
-                                                         snapshots);
+                                                         snapshots,
+														 target_sorting,
+														 target_nodes);
             // TODO move the following into its own function that we can reuse
 #ifdef debug_components
             std::cerr << "node count: " << graph.get_node_count() << std::endl;
