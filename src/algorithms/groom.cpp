@@ -12,6 +12,7 @@ namespace odgi {
 
     std::vector<handle_t>groom(const handlegraph::MutablePathDeletableHandleGraph &graph,
 							   bool progress_reporting, const std::vector<handlegraph::path_handle_t> target_paths, bool use_bfs) {
+			bool target_grooming = (target_paths.size() > 0);
 
             // This (s) is our set of oriented nodes.
             //dyn::succinct_bitvector<dyn::spsi<dyn::packed_vector,256,16> > s;
@@ -41,7 +42,7 @@ namespace odgi {
 			// do we have target paths which we want to force to have a forward orientation?
 			std::vector<bool> is_ref;
 			std::vector<bool> needs_flipping;
-			if (target_paths.size() > 0) {
+			if (target_grooming) {
 				std::fill_n(std::back_inserter(is_ref), graph.get_node_count(), false);
 				std::fill_n(std::back_inserter(needs_flipping), graph.get_node_count(), false);
 				std::unique_ptr<progress_meter::ProgressMeter> target_paths_progress;
@@ -89,14 +90,14 @@ namespace odgi {
             while (unvisited.rank1(unvisited.size()) != 0) {
                 if (use_bfs) {
                     bfs(graph,
-                        [&graph, &unvisited, &flipped, &progress_reporting, &bfs_progress, &needs_flipping, &is_ref]
+                        [&graph, &unvisited, &flipped, &progress_reporting, &bfs_progress, &needs_flipping, &is_ref, &target_grooming]
                         (const handle_t &h, const uint64_t &r, const uint64_t &l, const uint64_t &d) {
                             if (progress_reporting) {
                                 bfs_progress->increment(1);
                             }
                             uint64_t i = number_bool_packing::unpack_number(h);
                             unvisited.set(i, 0);
-							if (is_ref[i]) {
+							if (target_grooming && is_ref[i]) {
 								if (needs_flipping[i]) {
 									flipped.set(i, true);
 								} else {
@@ -126,14 +127,14 @@ namespace odgi {
                     }
                 } else {
                     dfs(graph,
-                        [&graph, &unvisited, &flipped, &progress_reporting, &bfs_progress, &needs_flipping, &is_ref]
+                        [&graph, &unvisited, &flipped, &progress_reporting, &bfs_progress, &needs_flipping, &is_ref, &target_grooming]
                         (const handle_t &h) {
                             if (progress_reporting) {
                                 bfs_progress->increment(1);
                             }
                             uint64_t i = number_bool_packing::unpack_number(h);
                             unvisited.set(i, 0);
-							if (is_ref[i]) {
+							if (target_grooming && is_ref[i]) {
 								if (needs_flipping[i]) {
 									flipped.set(i, true);
 								} else {
