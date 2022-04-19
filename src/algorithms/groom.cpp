@@ -28,16 +28,18 @@ namespace odgi {
             // Start with the heads of the graph.
             // We could also just use the first node of the graph.
             std::vector<handle_t> seeds;
-            bool use_heads = true;
-            bool use_tails = false;
-            if (use_heads) {
-                seeds = head_nodes(&graph);
-            } else if (use_tails) {
-                seeds = tail_nodes(&graph);
-            } else {
-                handle_t min_handle = number_bool_packing::pack(min_handle_rank, false);
-                seeds = {min_handle};
-            }
+			if (!target_grooming) {
+				bool use_heads = true;
+				bool use_tails = false;
+				if (use_heads) {
+					seeds = head_nodes(&graph);
+				} else if (use_tails) {
+					seeds = tail_nodes(&graph);
+				} else {
+					handle_t min_handle = number_bool_packing::pack(min_handle_rank, false);
+					seeds = {min_handle};
+				}
+			}
 
 			// do we have target paths which we want to force to have a forward orientation?
 			std::vector<bool> is_ref;
@@ -58,6 +60,7 @@ namespace odgi {
 								uint64_t i = number_bool_packing::unpack_number(handle);
 								if (!is_ref[i]) {
 									is_ref[i] = true;
+									seeds.push_back(handle);
 									// do we need flipping?
 									if (graph.get_is_reverse(handle)) {
 										needs_flipping[i] = true;
