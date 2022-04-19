@@ -49,7 +49,7 @@ namespace odgi {
 				std::fill_n(std::back_inserter(needs_flipping), graph.get_node_count(), false);
 				std::unique_ptr<progress_meter::ProgressMeter> target_paths_progress;
 				if (progress_reporting) {
-					std::string banner = "[odgi::groom] preparing target paths vectors:";
+					std::string banner = "[odgi::groom] preparing target path vectors:";
 					target_paths_progress = std::make_unique<progress_meter::ProgressMeter>(target_paths.size(), banner);
 				}
 				for (handlegraph::path_handle_t target_path : target_paths) {
@@ -67,9 +67,13 @@ namespace odgi {
 									}
 								}
 							});
-					target_paths_progress->increment(1);
+					if (progress_reporting) {
+						target_paths_progress->increment(1);
+					}
 				}
-				target_paths_progress->finish();
+				if (progress_reporting) {
+					target_paths_progress->finish();
+				}
 			}
 
             // We need to keep track of the nodes we haven't visited to seed subsequent runs of the BFS

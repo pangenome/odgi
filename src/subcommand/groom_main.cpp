@@ -91,7 +91,7 @@ int main_groom(int argc, char** argv) {
 						path_already_seen[path_rank] = true;
 						paths.push_back(path);
 					} else {
-						std::cerr << "[odgi::untangle] error: in the path list there are duplicated path names."
+						std::cerr << "[odgi::groom] error: in the path list there are duplicated path names."
 								  << std::endl;
 						exit(1);
 					}
@@ -100,10 +100,10 @@ int main_groom(int argc, char** argv) {
 			}
 		}
 		path_names_in.close();
-		std::cerr << "[odgi::untangle] found " << paths.size() << "/" << num_of_paths_in_file
+		std::cerr << "[odgi::groom] found " << paths.size() << "/" << num_of_paths_in_file
 				  << " paths to consider." << std::endl;
 		if (paths.empty()) {
-			std::cerr << "[odgi::untangle] error: no path to consider." << std::endl;
+			std::cerr << "[odgi::groom] error: no path to consider." << std::endl;
 			exit(1);
 		}
 		return paths;
