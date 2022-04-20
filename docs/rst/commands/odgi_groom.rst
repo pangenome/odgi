@@ -35,6 +35,9 @@ Grooming Options
 | **-d, --use-dfs**
 | Use depth-first search for the grooming.
 
+| **-R, --target_paths**\ =\ *FILE*
+| Read the paths that should be considered as target paths (references) from this *FILE*. odgi groom tries to force a forward orientation of all steps for the given paths. A path's rank determines it's weight for decision making and is given by its position in the given *FILE*.
+
 Threading
 ---------
 

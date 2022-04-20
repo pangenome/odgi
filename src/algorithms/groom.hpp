@@ -22,6 +22,7 @@ namespace odgi {
         std::vector<handle_t>
         groom(const handlegraph::MutablePathDeletableHandleGraph &graph,
               bool progress_reporting,
+			  const std::vector<handlegraph::path_handle_t> target_paths,
               bool use_bfs = true);
 
     }

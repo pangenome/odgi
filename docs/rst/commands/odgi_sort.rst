@@ -186,6 +186,10 @@ Path Guided 1D Linear SGD Sort
   argument only works when *-Y, --path-sgd* was specified. Not applicable
   in a pipeline of sorts.
 
+| **-H, --target-paths**\ =\ *FILE*
+| Read the paths that should be considered as target paths (references) from this *FILE*. PG-SGD will keep the nodes of the given paths fixed. A path's rank determines it's weight for decision making and is given by its position in the given *FILE*.
+
+
 Pipeline Sorting Options
 ----------------
 
