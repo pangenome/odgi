@@ -293,17 +293,6 @@ int main_sort(int argc, char** argv) {
 		// refill is_ref with start->ref_nodes: 1 and ref_nodes->end: 0
 		std::fill_n(is_ref.begin(), ref_nodes, true);
 		std::fill(is_ref.begin() + ref_nodes, is_ref.end(), false);
-
-		// FIXME
-
-		const std::string outfile_snapshot = args::get(dg_out_file) + "snapshot";
-		if (outfile_snapshot == "-") {
-			graph.serialize(std::cout);
-		} else {
-			ofstream f(outfile_snapshot.c_str());
-			graph.serialize(f);
-			f.close();
-		}
 	};
 
     uint64_t path_sgd_iter_max = args::get(p_sgd_iter_max) ? args::get(p_sgd_iter_max) : 100;

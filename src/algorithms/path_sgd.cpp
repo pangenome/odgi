@@ -293,8 +293,6 @@ namespace odgi {
 
 									// Check which terms we actually have to update
 									if (target_sorting) {
-										// FIXME DELETE
-										// std::cerr << "node id i: " << graph.get_id(term_i) << " target: " << target_nodes[graph.get_id(term_i) - 1] << " - " << "node id j: " << graph.get_id(term_j) << " target: " << target_nodes[graph.get_id(term_j) - 1] << std::endl;
 										if (target_nodes[graph.get_id(term_i) - 1]) {
 											update_term_i = false;
 										}
@@ -391,13 +389,9 @@ namespace odgi {
 #endif
 									if (update_term_i) {
 										X[i].store(X[i].load() - r_x);
-										// FIXME DELETE
-										// std::cerr << "UPDATED i" << std::endl;
 									}
 									if (update_term_j) {
 										X[j].store(X[j].load() + r_x);
-										// FIXME DELETE
-										// std::cerr << "UPDATED j" << std::endl;
 									}
 #ifdef debug_path_sgd
                                     std::cerr << "after X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
