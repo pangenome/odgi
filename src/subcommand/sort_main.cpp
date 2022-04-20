@@ -280,13 +280,30 @@ int main_sort(int argc, char** argv) {
 		if (args::get(progress))  {
 			target_paths_progress->finish();
 		}
+		uint64_t ref_nodes = 0;
 		for (uint64_t i = 0; i < is_ref.size(); i++) {
 			bool ref = is_ref[i];
 			if (!ref) {
 				target_order.push_back(graph.get_handle(i + 1));
+				ref_nodes++;
 			}
 		}
 		graph.apply_ordering(target_order, true);
+
+		// refill is_ref with start->ref_nodes: 1 and ref_nodes->end: 0
+		std::fill_n(is_ref.begin(), ref_nodes, true);
+		std::fill(is_ref.begin() + ref_nodes, is_ref.end(), false);
+
+		// FIXME
+
+		const std::string outfile_snapshot = args::get(dg_out_file) + "snapshot";
+		if (outfile_snapshot == "-") {
+			graph.serialize(std::cout);
+		} else {
+			ofstream f(outfile_snapshot.c_str());
+			graph.serialize(f);
+			f.close();
+		}
 	};
 
     uint64_t path_sgd_iter_max = args::get(p_sgd_iter_max) ? args::get(p_sgd_iter_max) : 100;

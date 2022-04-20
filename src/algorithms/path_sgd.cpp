@@ -27,7 +27,7 @@ namespace odgi {
                                             const bool &snapshot,
                                             std::vector<std::string> &snapshots,
 											const bool &target_sorting,
-											const std::vector<bool> target_nodes) {
+											std::vector<bool>& target_nodes) {
 #ifdef debug_path_sgd
             std::cerr << "iter_max: " << iter_max << std::endl;
             std::cerr << "min_term_updates: " << min_term_updates << std::endl;
@@ -293,17 +293,18 @@ namespace odgi {
 
 									// Check which terms we actually have to update
 									if (target_sorting) {
-										if (target_nodes[graph.get_id(term_i)]) {
+										// FIXME DELETE
+										// std::cerr << "node id i: " << graph.get_id(term_i) << " target: " << target_nodes[graph.get_id(term_i) - 1] << " - " << "node id j: " << graph.get_id(term_j) << " target: " << target_nodes[graph.get_id(term_j) - 1] << std::endl;
+										if (target_nodes[graph.get_id(term_i) - 1]) {
 											update_term_i = false;
 										}
-										if (target_nodes[graph.get_id(term_j)]) {
+										if (target_nodes[graph.get_id(term_j) - 1]) {
 											update_term_j = false;
 										}
 									}
 									if (!update_term_j && !update_term_i) {
 										continue;
 									}
-
 
                                     // adjust the positions to the node starts
                                     size_t pos_in_path_a = path_index.get_position_of_step(step_a);
@@ -390,9 +391,13 @@ namespace odgi {
 #endif
 									if (update_term_i) {
 										X[i].store(X[i].load() - r_x);
+										// FIXME DELETE
+										// std::cerr << "UPDATED i" << std::endl;
 									}
 									if (update_term_j) {
 										X[j].store(X[j].load() + r_x);
+										// FIXME DELETE
+										// std::cerr << "UPDATED j" << std::endl;
 									}
 #ifdef debug_path_sgd
                                     std::cerr << "after X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
@@ -520,7 +525,7 @@ namespace odgi {
                                                     const bool &snapshot,
                                                     const std::string &snapshot_prefix,
 													const bool &target_sorting,
-													const std::vector<bool> target_nodes) {
+													std::vector<bool>& target_nodes) {
             std::vector<string> snapshots;
             std::vector<double> layout = path_linear_sgd(graph,
                                                          path_index,
