@@ -29,9 +29,9 @@ to take a look at the calculated layout using static and interactive tools.
 
     Be aware that :ref:`odgi sort` offers much more sorting algorithms than this tutorial could cover here in detail.
 
-=====
-Steps
-=====
+==========
+1D sorting
+==========
 
 ----------------------------------
 Build the unsorted DRB1-3123 graph
@@ -166,6 +166,104 @@ This prints to stdout:
     all_paths	4.66114	4.72171	21882	163416	5948	1
 
 Compared to before, these metrics show that the goodness of the sorting of the graph improved significantly.
+
+=========================================================
+1D reference-guided grooming and reference-guided sorting
+=========================================================
+
+In the following, we will groom and sort a human MHC pangenome graph with respect to given references.
+
+-------------------------------
+Extract the MHC graph from Chr6
+-------------------------------
+
+.. code-block:: bash
+
+	prefix_chr6_smooth=chr6.pan.fa.a2fb268.4030258.6a1ecc2.smooth
+	# download and build the graph
+	wget https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2021_11_16_pggb_wgg.88/chroms/${prefix_chr6_smooth}.gfa.gz
+	gunzip ${prefix_chr6_smooth}.gfa.gz
+	odgi build -g ${prefix_chr6_smooth}.gfa -o ${prefix_chr6_smooth}.og -t 16 -P
+	# extraction and optimization of the MHC locus
+	odgi extract -i ${prefix_chr6_smooth}.og -r grch38#chr6:29000000-34000000 -o - --full-range -t 16 -P | odgi sort -i - -o ${prefix_chr6_smooth}.mhc.og --optimize
+
+--------------------------------
+Visualize the MHC by orientation
+--------------------------------
+
+.. code-block:: bash
+
+	odgi viz -i${prefix_chr6_smooth}.mhc.og -o ${prefix_chr6_smooth}.mhc.og.z.png -z
+
+.. image:: /img/chr6.pan.fa.a2fb268.4030258.6a1ecc2.smooth.mhc.og.z.png
+
+Overview of the node orientation of the MHC graph. How would the graph would like if we want to ensure that path ``HG00733#2#JAHEPP010000166.1:0-551833``
+is in forward orientation?
+
+------------------------------------
+Groom the MHC by haplotype HG00733#2
+------------------------------------
+
+.. code-block:: bash
+
+	# collect our desired path in a file
+	odgi paths -i ${prefix_chr6_smooth}.mhc.og -L | head -n 12 | tail -n 1 > HG00733_1
+	# apply reference-guided grooming
+	odgi groom -i ${prefix_chr6_smooth}.mhc.og -R HG00733_1 -o ${prefix_chr6_smooth}.mhc.og.groom.og
+	# take another look at the orientation of path ``HG00733#2#JAHEPP010000166.1:0-551833``
+	odgi viz -i${prefix_chr6_smooth}.mhc.og.groom.og -o ${prefix_chr6_smooth}.mhc.og.groom.z.png -z
+
+.. image:: /img/chr6.pan.fa.a2fb268.4030258.6a1ecc2.smooth.mhc.og.groom.z.png
+
+The selected graph is now forward oriented. But what if we want to ensure that all nodes touching our precious references are in forward orientation?
+
+--------------------------------------------
+Groom the MHC by haplotypes CHM13 and GRCh38
+--------------------------------------------
+
+.. code-block:: bash
+
+	# collect our desired path in a file
+	odgi paths -i ${prefix_chr6_smooth}.mhc.og -L | head -n 2 > CHM13_GRCh38
+	# apply reference-guided grooming
+	odgi groom -i ${prefix_chr6_smooth}.mhc.og -R CHM13_GRCh38 -o ${prefix_chr6_smooth}.mhc.og.groom_chm13_grch38.og
+	# take another look at the orientation of the reference paths
+	odgi viz -i ${prefix_chr6_smooth}.mhc.og.groom_chm13_grch38.og -o ${prefix_chr6_smooth}.mhc.og.groom_chm13_grch38.og.z.png -z
+
+.. image:: /img/chr6.pan.fa.a2fb268.4030258.6a1ecc2.smooth.mhc.og.groom_chm13_grch38.og.z.png
+
+Now the two reference paths are in forward orientation again, as before :)
+
+----------------------------------
+Visualize the MHC by path position
+----------------------------------
+
+.. code-block:: bash
+
+	odgi viz -i${prefix_chr6_smooth}.mhc.og -o ${prefix_chr6_smooth}.mhc.og.du.png -du
+
+.. image:: /img/chr6.pan.fa.a2fb268.4030258.6a1ecc2.smooth.mhc.og.du.png
+
+Assuming we now want to force the 1D layout to respect the path positions of the references better, how to do that?
+
+--------------------------------------
+Sort the MHC by paths CHM13 and GRCh38
+--------------------------------------
+
+.. code-block:: bash
+
+	# apply reference-path-guided stochastic gradient descent - rPG-SGD
+	odgi sort -i ${prefix_chr6_smooth}.mhc.og -H CHM13_GRCh38 -o ${prefix_chr6_smooth}.mhc.og.Y_chm13_grch38.og -t 16 -P -Y
+	# take another look at the orientation of the reference paths
+	odgi viz -i ${prefix_chr6_smooth}.mhc.og.Y_chm13_grch38.og -o ${prefix_chr6_smooth}.mhc.og.Y_chm13_grch38.og.du.png -du
+
+.. image:: /img/chr6.pan.fa.a2fb268.4030258.6a1ecc2.smooth.mhc.og.Y_chm13_grch38.og.du.png
+
+We can clearly observe, that the path positions of the two reference now define the graph. Both reference show greater continuity compared to before.
+
+=========
+2D layout
+=========
 
 -----------------------------------------
 2D layout of the unsorted DRB1-3123 graph
