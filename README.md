@@ -76,6 +76,23 @@ sudo pacman -S jemalloc     # arch linux
 conda install -c bioconda odgi
 ```
 
+
+### Docker
+
+To simplify installation and versioning, we have an automated GitHub action that pushes the current docker build to [dockerhub](https://hub.docker.com/r/pangenome/odgi).
+To use it, pull the docker image:
+
+```shell
+docker pull pangenome/odgi
+```
+
+Then, you can run `odgi` with:
+
+```shell
+docker run odgi
+```
+
+
 ### Guix
 
 An alternative way to manage `odgi`'s dependencies is by using the `GNU GUIX` package manager. We use Guix to develop, test and deploy odgi on our systems.

@@ -10,7 +10,9 @@
 namespace odgi {
     namespace algorithms {
 
-    std::vector<handle_t>groom(const handlegraph::MutablePathDeletableHandleGraph &graph, bool progress_reporting, bool use_bfs) {
+    std::vector<handle_t>groom(const handlegraph::MutablePathDeletableHandleGraph &graph,
+							   bool progress_reporting, const std::vector<handlegraph::path_handle_t> target_paths, bool use_bfs) {
+			bool target_grooming = (target_paths.size() > 0);
 
             // This (s) is our set of oriented nodes.
             //dyn::succinct_bitvector<dyn::spsi<dyn::packed_vector,256,16> > s;
@@ -26,16 +28,53 @@ namespace odgi {
             // Start with the heads of the graph.
             // We could also just use the first node of the graph.
             std::vector<handle_t> seeds;
-            bool use_heads = true;
-            bool use_tails = false;
-            if (use_heads) {
-                seeds = head_nodes(&graph);
-            } else if (use_tails) {
-                seeds = tail_nodes(&graph);
-            } else {
-                handle_t min_handle = number_bool_packing::pack(min_handle_rank, false);
-                seeds = {min_handle};
-            }
+			if (!target_grooming) {
+				bool use_heads = true;
+				bool use_tails = false;
+				if (use_heads) {
+					seeds = head_nodes(&graph);
+				} else if (use_tails) {
+					seeds = tail_nodes(&graph);
+				} else {
+					handle_t min_handle = number_bool_packing::pack(min_handle_rank, false);
+					seeds = {min_handle};
+				}
+			}
+
+			// do we have target paths which we want to force to have a forward orientation?
+			std::vector<bool> is_ref;
+			std::vector<bool> needs_flipping;
+			if (target_grooming) {
+				std::fill_n(std::back_inserter(is_ref), graph.get_node_count(), false);
+				std::fill_n(std::back_inserter(needs_flipping), graph.get_node_count(), false);
+				std::unique_ptr<progress_meter::ProgressMeter> target_paths_progress;
+				if (progress_reporting) {
+					std::string banner = "[odgi::groom] preparing target path vectors:";
+					target_paths_progress = std::make_unique<progress_meter::ProgressMeter>(target_paths.size(), banner);
+				}
+				for (handlegraph::path_handle_t target_path : target_paths) {
+					graph.for_each_step_in_path(
+							target_path,
+							[&](const step_handle_t& step) {
+								handle_t handle = graph.get_handle_of_step(step);
+								uint64_t i = number_bool_packing::unpack_number(handle);
+								if (!is_ref[i]) {
+									is_ref[i] = true;
+									seeds.push_back(handle);
+									// do we need flipping?
+									if (graph.get_is_reverse(handle)) {
+										needs_flipping[i] = true;
+									}
+								}
+							});
+					if (progress_reporting) {
+						target_paths_progress->increment(1);
+					}
+				}
+				if (progress_reporting) {
+					target_paths_progress->finish();
+				}
+			}
 
             // We need to keep track of the nodes we haven't visited to seed subsequent runs of the BFS
             dyn::succinct_bitvector<dyn::spsi<dyn::packed_vector, 256, 16> > unvisited, flipped;
@@ -58,14 +97,22 @@ namespace odgi {
             while (unvisited.rank1(unvisited.size()) != 0) {
                 if (use_bfs) {
                     bfs(graph,
-                        [&graph, &unvisited, &flipped, &progress_reporting, &bfs_progress]
+                        [&graph, &unvisited, &flipped, &progress_reporting, &bfs_progress, &needs_flipping, &is_ref, &target_grooming]
                         (const handle_t &h, const uint64_t &r, const uint64_t &l, const uint64_t &d) {
                             if (progress_reporting) {
                                 bfs_progress->increment(1);
                             }
                             uint64_t i = number_bool_packing::unpack_number(h);
                             unvisited.set(i, 0);
-                            flipped.set(i, graph.get_is_reverse(h));
+							if (target_grooming && is_ref[i]) {
+								if (needs_flipping[i]) {
+									flipped.set(i, true);
+								} else {
+									flipped.set(i, false);
+								}
+							} else {
+								flipped.set(i, graph.get_is_reverse(h));
+							}
                         },
                         [&unvisited](const handle_t &h) {
                             uint64_t i = number_bool_packing::unpack_number(h);
@@ -87,14 +134,22 @@ namespace odgi {
                     }
                 } else {
                     dfs(graph,
-                        [&graph, &unvisited, &flipped, &progress_reporting, &bfs_progress]
+                        [&graph, &unvisited, &flipped, &progress_reporting, &bfs_progress, &needs_flipping, &is_ref, &target_grooming]
                         (const handle_t &h) {
                             if (progress_reporting) {
                                 bfs_progress->increment(1);
                             }
                             uint64_t i = number_bool_packing::unpack_number(h);
                             unvisited.set(i, 0);
-                            flipped.set(i, graph.get_is_reverse(h));
+							if (target_grooming && is_ref[i]) {
+								if (needs_flipping[i]) {
+									flipped.set(i, true);
+								} else {
+									flipped.set(i, false);
+								}
+							} else {
+								flipped.set(i, graph.get_is_reverse(h));
+							}
                         },
                         [&unvisited](const handle_t &h) {
                             uint64_t i = number_bool_packing::unpack_number(h);
