@@ -1,0 +1,23 @@
+name: Docker Image CI for DockerHub
+
+on:
+  push:
+    branches: [ master ]
+
+jobs:
+
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: Docker login
+        env:
+          DOCKER_USER: pangenome
+          DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+        run: |
+          docker login -u pangenome -p $DOCKER_PASSWORD
+      - name: Build and push the Docker image
+        run: tag=$(date +%s) && docker build . --file Dockerfile --tag pangenome/odgi:$tag && docker push pangenome/odgi:$tag
