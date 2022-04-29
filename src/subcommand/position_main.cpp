@@ -28,7 +28,7 @@ int main_position(int argc, char** argv) {
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
     args::ValueFlag<std::string> og_target_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "target"});
     args::Group position_opts(parser, "[ Position Options ]");
-    args::ValueFlag<std::string> og_source_file(position_opts, "FILE", "Translate positions from this *FILE graph into the target graph using common"
+    args::ValueFlag<std::string> og_source_file(position_opts, "FILE", "Translate positions from this *FILE* graph into the target graph using common"
                                                                 " *-l, --lift-paths* shared between both graphs (default: use the same"
                                                                 " source/target graph). It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'x', "source"});
     args::ValueFlag<std::string> ref_path_name(position_opts, "PATH_NAME", "Translate the given positions into positions relative to this reference path.", {'r', "ref-path"});
@@ -701,7 +701,7 @@ int main_position(int argc, char** argv) {
             }
         };
 
-    if (graph_positions.size()) {
+    if (!graph_positions.empty()) {
         if (lifting) {
             std::cout << "#source.graph.pos\ttarget.graph.pos\t";
         } else {
@@ -717,6 +717,12 @@ int main_position(int argc, char** argv) {
         	} else {
 				std::cout << "target.path.pos\tdist.to.path\tstrand.vs.ref" << std::endl;
         	}
+        }
+    } else if (!path_positions.empty()) {
+        if (give_graph_pos) {
+            std::cout << "#source.path.pos\ttarget.graph.pos" << std::endl;
+        } else {
+            std::cout << "#source.path.pos\ttarget.path.pos\tdist.to.ref\tstrand.vs.ref" << std::endl;
         }
     }
     // for each position that we want to look up
@@ -820,16 +826,14 @@ int main_position(int argc, char** argv) {
         if (id(pos)) {
             if (give_graph_pos) {
 #pragma omp critical (cout)
-                std::cout << "#source.path.pos\ttarget.graph.pos" << std::endl
-                          << (lifting ? source_graph.get_path_name(path_pos.path) : target_graph.get_path_name(path_pos.path))
+                std::cout << (lifting ? source_graph.get_path_name(path_pos.path) : target_graph.get_path_name(path_pos.path))
                           << "," << path_pos.offset << "," << (path_pos.is_rev ? "-" : "+")
                           << "\t" << id(pos) << "," << offset(pos) << "," << (is_rev(pos) ? "-" : "+") << std::endl;
             } else if (get_position(target_graph, ref_path_set, pos, result, step_handle_graph_pos, true)) {
                 bool ref_is_rev = false;
                 path_handle_t p = target_graph.get_path_handle_of_step(result.ref_hit);
 #pragma omp critical (cout)
-                std::cout << "#source.path.pos\ttarget.path.pos\tdist.to.ref\tstrand.vs.ref" << std::endl
-                          << (lifting ? source_graph.get_path_name(path_pos.path) : target_graph.get_path_name(path_pos.path)) << ","
+                std::cout << (lifting ? source_graph.get_path_name(path_pos.path) : target_graph.get_path_name(path_pos.path)) << ","
                           << path_pos.offset << "," << (path_pos.is_rev ? "-" : "+") << "\t"
                           << target_graph.get_path_name(p) << "," << result.path_offset << "," << (ref_is_rev ? "-" : "+") << "\t"
                           << result.walked_to_hit_ref << "\t" << (result.is_rev_vs_ref ? "-" : "+") << std::endl;
