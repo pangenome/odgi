@@ -2,7 +2,7 @@
 #include "odgi.hpp"
 #include "args.hxx"
 #include <omp.h>
-#include "algorithms/heaps.hpp"
+#include "algorithms/inject.hpp"
 #include "utils.hpp"
 #include "split.hpp"
 
@@ -10,27 +10,27 @@ namespace odgi {
 
 using namespace odgi::subcommand;
 
-int main_heaps(int argc, char **argv) {
+int main_inject(int argc, char **argv) {
 
     // trick argumentparser to do the right thing with the subcommand
     for (uint64_t i = 1; i < argc - 1; ++i) {
         argv[i] = argv[i + 1];
     }
-    const std::string prog_name = "odgi heaps";
+    const std::string prog_name = "odgi inject";
     argv[0] = (char *) prog_name.c_str();
     --argc
 ;
     args::ArgumentParser parser("Extract matrix of path pangenome coverage permutations for power law regression.");
     args::Group mandatory_opts(parser, "[ MANDATORY ARGUMENTS ]");
     args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
-    args::Group heaps_opts(parser, "[ Heaps Options ]");
-    args::ValueFlag<std::string> _path_groups(heaps_opts, "FILE", "Group paths as described in two-column FILE, with columns path.name and group.name.",
+    args::Group inject_opts(parser, "[ Inject Options ]");
+    args::ValueFlag<std::string> _path_groups(inject_opts, "FILE", "Group paths as described in two-column FILE, with columns path.name and group.name.",
                                               {'p', "path-groups"});
-    args::Flag group_by_sample(heaps_opts, "bool", "Following PanSN naming (sample#hap#ctg), group by sample (1st field).", {'S', "group-by-sample"});
-    args::Flag group_by_haplotype(heaps_opts, "bool", "Following PanSN naming (sample#hap#ctg), group by haplotype (2nd field).", {'H', "group-by-haplotype"});
-    args::ValueFlag<std::string> _bed_targets(heaps_opts, "FILE", "BED file over path space of the graph, describing a subset of the graph to consider.",
+    args::Flag group_by_sample(inject_opts, "bool", "Following PanSN naming (sample#hap#ctg), group by sample (1st field).", {'S', "group-by-sample"});
+    args::Flag group_by_haplotype(inject_opts, "bool", "Following PanSN naming (sample#hap#ctg), group by haplotype (2nd field).", {'H', "group-by-haplotype"});
+    args::ValueFlag<std::string> _bed_targets(inject_opts, "FILE", "BED file over path space of the graph, describing a subset of the graph to consider.",
                                               {'b', "bed-targets"});
-    args::ValueFlag<uint64_t> _n_permutations(heaps_opts, "N", "Number of permutations to run.",
+    args::ValueFlag<uint64_t> _n_permutations(inject_opts, "N", "Number of permutations to run.",
                                              {'n', "n-permutations"});
     args::Group threading_opts(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> nthreads(threading_opts, "N", "Number of threads to use for parallel operations.",
@@ -39,7 +39,7 @@ int main_heaps(int argc, char **argv) {
     //args::Flag debug(processing_info_opts, "debug", "Print information about the process to stderr.", {'d', "debug"});
     args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
     args::Group program_info_opts(parser, "[ Program Information ]");
-    args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi heaps.", {'h', "help"});
+    args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi inject.", {'h', "help"});
     try {
         parser.ParseCLI(argc, argv);
     } catch (args::Help) {
@@ -57,7 +57,7 @@ int main_heaps(int argc, char **argv) {
 
     if (!og_in_file) {
         std::cerr
-            << "[odgi::heaps] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
+            << "[odgi::inject] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
             << std::endl;
         return 1;
     }
@@ -75,7 +75,7 @@ int main_heaps(int argc, char **argv) {
             if (infile == "-") {
                 graph.deserialize(std::cin);
             } else {
-                utils::handle_gfa_odgi_input(infile, "heaps", args::get(progress), num_threads, graph);
+                utils::handle_gfa_odgi_input(infile, "inject", args::get(progress), num_threads, graph);
             }
         }
     }
@@ -90,14 +90,14 @@ int main_heaps(int argc, char **argv) {
                 if (!line.empty()) {
                     auto vals = split(line, '\t');
                     if (vals.size() != 2) {
-                        std::cerr << "[odgi::heaps] line does not have a path.name and path.group value:"
+                        std::cerr << "[odgi::inject] line does not have a path.name and path.group value:"
                                   << std::endl << line << std::endl;
                         return 1;
                     }
                     auto& path_name = vals.front();
                     auto& group = vals.back();
                     if (!graph.has_path(vals.front())) {
-                        std::cerr << "[odgi::heaps] no path '" << path_name << "' in graph" << std::endl;
+                        std::cerr << "[odgi::inject] no path '" << path_name << "' in graph" << std::endl;
                         return 1;
                     }
                     path_groups_map[group].push_back(graph.get_path_handle(path_name));
@@ -139,7 +139,7 @@ int main_heaps(int argc, char **argv) {
             if (!line.empty()) {
                 auto vals = split(line, '\t');
                 if (vals.size() < 3) {
-                    std::cerr << "[odgi::heaps]"
+                    std::cerr << "[odgi::inject]"
                               << "BED line does not have enough fields to define an interval"
                               << std::endl << line << std::endl;
                     return 1;
@@ -148,7 +148,7 @@ int main_heaps(int argc, char **argv) {
                 uint64_t start = std::stoul(vals[1]);
                 uint64_t end = std::stoul(vals[2]);
                 if (!graph.has_path(path_name)) {
-                    //std::cerr << "[odgi::heaps] warning: no path '" << path_name << "' in graph" << std::endl;
+                    //std::cerr << "[odgi::inject] warning: no path '" << path_name << "' in graph" << std::endl;
                 } else {
                     auto path = graph.get_path_handle(path_name);
                     intervals[path].push_back(interval_t(start, end));
@@ -177,13 +177,13 @@ int main_heaps(int argc, char **argv) {
         }
     };
 
-    algorithms::for_each_heap_permutation(graph, path_groups, intervals, n_permutations, handle_output);
+    //algorithms::for_each_heap_permutation(graph, path_groups, intervals, n_permutations, handle_output);
 
     return 0;
 }
 
-static Subcommand odgi_heaps("heaps", "Path pangenome coverage permutations.",
-                             PIPELINE, 3, main_heaps);
+static Subcommand odgi_inject("inject", "Inject annotations as paths.",
+                              PIPELINE, 3, main_inject);
 
 
 }
