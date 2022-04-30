@@ -20,7 +20,7 @@ int main_inject(int argc, char **argv) {
     argv[0] = (char *) prog_name.c_str();
     --argc
 ;
-    args::ArgumentParser parser("Extract matrix of path pangenome coverage permutations for power law regression.");
+    args::ArgumentParser parser("Inject BED interval ranges as paths in the graph.");
     args::Group mandatory_opts(parser, "[ MANDATORY ARGUMENTS ]");
     args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::ValueFlag<std::string> og_out_file(mandatory_opts, "FILE", "Write the sorted dynamic succinct variation graph to this file. A file ending with *.og* is recommended.", {'o', "out"});
@@ -138,7 +138,7 @@ int main_inject(int argc, char **argv) {
     return 0;
 }
 
-static Subcommand odgi_inject("inject", "Inject annotations as paths.",
+static Subcommand odgi_inject("inject", "Inject BED annotations as paths.",
                               PIPELINE, 3, main_inject);
 
 
