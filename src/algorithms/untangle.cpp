@@ -611,15 +611,6 @@ void untangle(
                     });
         }
 
-        // cut first and last
-        /*
-#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
-        for (auto& target : targets) {
-            cut_nodes.set(graph.get_id(graph.get_handle_of_step(graph.path_begin(target))), true);
-            cut_nodes.set(graph.get_id(graph.get_handle_of_step(graph.path_back(target))), true);
-        }
-        */
-
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
         for (auto& path : paths) {
             // test path_step_index_t
