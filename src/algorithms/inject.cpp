@@ -15,8 +15,7 @@ void inject_ranges(MutablePathHandleGraph& graph,
 }
 
 void chop_at(MutablePathDeletableHandleGraph &graph,
-             const ska::flat_hash_map<handle_t, std::vector<size_t>>& cut_points,
-             const uint64_t &nthreads, const bool &show_info) {
+             const ska::flat_hash_map<handle_t, std::vector<size_t>>& cut_points) {
 
     std::vector<std::tuple<uint64_t, uint64_t, handle_t>> originalRank_inChoppedNodeRank_handle;
     std::vector<std::pair<uint64_t, handle_t>> originalRank_handleToChop;
@@ -31,9 +30,7 @@ void chop_at(MutablePathDeletableHandleGraph &graph,
         rank++;
     });
 
-    if (show_info) {
-        std::cerr << "[odgi::inject::chop_at] " << originalRank_handleToChop.size() << " node(s) to chop." << std::endl;
-    }
+    //std::cerr << "[odgi::inject::chop_at] " << originalRank_handleToChop.size() << " node(s) to chop." << std::endl;
 
     for (auto rank_handle : originalRank_handleToChop) {
         // get divide points
@@ -50,10 +47,7 @@ void chop_at(MutablePathDeletableHandleGraph &graph,
         }
     }
 
-    ips4o::parallel::sort(
-        originalRank_inChoppedNodeRank_handle.begin(), originalRank_inChoppedNodeRank_handle.end(),
-        std::less<>(), nthreads
-        );
+    std::sort(originalRank_inChoppedNodeRank_handle.begin(), originalRank_inChoppedNodeRank_handle.end());
 
     std::vector<handle_t> new_handles;
     for (auto x_y_z : originalRank_inChoppedNodeRank_handle) {

@@ -15,8 +15,6 @@
 #include <handlegraph/handle_graph.hpp>
 #include <handlegraph/path_handle_graph.hpp>
 #include <handlegraph/mutable_path_deletable_handle_graph.hpp>
-//#include <atomic_bitvector.hpp>
-#include <deps/ips4o/ips4o.hpp>
 
 namespace odgi {
 
@@ -30,8 +28,7 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
                    const ska::flat_hash_map<path_handle_t, std::pair<std::string, std::vector<interval_t>>>& path_intervals);
 
 void chop_at(MutablePathDeletableHandleGraph &graph,
-             const ska::flat_hash_map<handle_t, std::vector<size_t>>& cut_points,
-             const uint64_t &nthreads, const bool &show_info);
+             const ska::flat_hash_map<handle_t, std::vector<size_t>>& cut_points);
 
 }
 
