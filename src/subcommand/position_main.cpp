@@ -9,6 +9,7 @@
 #include <omp.h>
 #include "utils.hpp"
 #include "picosha2.h"
+#include "IITree.h"
 
 namespace odgi {
 
@@ -795,6 +796,70 @@ int main_position(int argc, char** argv) {
         }
     }
 
+
+    // Check the min/max coordinates for each target path
+    ska::flat_hash_map<path_handle_t, std::pair<uint64_t, uint64_t>> path_name_2_min_max;
+    for (uint64_t i = 0; i < path_positions.size(); ++i) {
+        auto &path_pos = path_positions[i];
+        //std::cerr << target_graph.get_path_name(path_pos.path) << " --- " << path_pos.offset << std::endl;
+        path_name_2_min_max[path_pos.path] = { std::numeric_limits<uint64_t>::max(), 0 };
+    }
+    for (uint64_t i = 0; i < path_positions.size(); ++i) {
+        auto &path_pos = path_positions[i];
+        const uint64_t begin = path_pos.offset;
+        const uint64_t end = path_pos.offset + 1;
+
+        if (begin < path_name_2_min_max[path_pos.path].first) {
+            path_name_2_min_max[path_pos.path].first = begin;
+        }
+        if (end > path_name_2_min_max[path_pos.path].second) {
+            path_name_2_min_max[path_pos.path].second = end;
+        }
+    }
+
+    // Prepare target path handles to run in parallel on them
+    ska::flat_hash_map<path_handle_t, uint64_t> path_handle_2_index;
+    std::vector<path_handle_t> path_handles;
+    path_handles.reserve(path_name_2_min_max.size());
+    uint64_t i = 0;
+    for (auto& p2mm : path_name_2_min_max) {
+        path_handles.push_back(p2mm.first);
+        path_handle_2_index[p2mm.first] = i++;
+    }
+
+    // Prepare the interval trees to query target path ranges
+    std::vector<IITree<uint64_t, uint64_t>> trees;
+    trees.resize(path_handles.size());
+    std::vector<std::vector<step_handle_t>> stepss;
+    stepss.resize(path_handles.size());
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
+    for (uint64_t i = 0; i < path_handles.size(); ++i) {
+        const auto& path_handle = path_handles[i];
+        const uint64_t min = path_name_2_min_max[path_handle].first;
+        const uint64_t max = path_name_2_min_max[path_handle].second;
+
+        const uint64_t index = path_handle_2_index[path_handle];
+        auto& tree = trees[index];
+        auto& steps = stepss[index];
+
+        uint64_t walked = 0;
+        const auto path_end = target_graph.path_end(path_handle);
+        for (step_handle_t cur_step = target_graph.path_begin(path_handle);
+             cur_step != path_end && walked < max; cur_step = target_graph.get_next_step(cur_step)) {
+            const handle_t cur_handle = target_graph.get_handle_of_step(cur_step);
+            const uint64_t len_cur_handle = target_graph.get_length(cur_handle);
+            walked += len_cur_handle;
+            if (walked > min) {
+                //std::cerr << walked - len_cur_handle << " ------ " << walked << std::endl;
+                tree.add(walked - len_cur_handle, walked, steps.size());
+                steps.push_back(cur_step);
+            }
+        }
+
+        tree.index(); // index
+    }
+
+
 #pragma omp parallel for schedule(dynamic,1)
     for (auto& path_pos : path_positions) {
         // TODO we need a better input format
@@ -819,7 +884,35 @@ int main_position(int argc, char** argv) {
 
         } else {
             //path_pos = _path_pos;
-            pos = get_graph_pos(target_graph, path_pos, step_handle_graph_pos);
+            //pos = get_graph_pos(target_graph, path_pos, step_handle_graph_pos);
+
+            const uint64_t begin = path_pos.offset;
+            const uint64_t end = path_pos.offset + 1;
+
+            const uint64_t index = path_handle_2_index[path_pos.path];
+            auto& tree = trees[index];
+            auto& steps = stepss[index];
+
+            vector<size_t> indexs_info;
+            //std::cerr << "ASK " << target_graph.get_path_name(path_pos.path) << " - " << begin << " - " << end << std::endl;
+            tree.overlap(begin, end, indexs_info); // retrieve overlaps
+            if (!indexs_info.empty()) {
+                step_handle_graph_pos = steps[tree.data(indexs_info.front())];
+
+                pos = make_pos_t(
+                        target_graph.get_id(target_graph.get_handle_of_step(step_handle_graph_pos)),
+                        target_graph.get_is_reverse(target_graph.get_handle_of_step(step_handle_graph_pos)),
+                        path_pos.offset - tree.start(indexs_info.front())
+                        );
+
+                //std::cerr << tree.start(indexs_info.front()) << ":" << tree.end(indexs_info.front()) << std::endl;
+//                std::cerr << target_graph.get_id(target_graph.get_handle_of_step(step_handle_graph_pos))
+//                          << " - " << target_graph.get_is_reverse(target_graph.get_handle_of_step(step_handle_graph_pos))
+//                          << " - " << path_pos.offset - tree.start(indexs_info.front()) << " --- "
+//                          << as_integers(step_handle_graph_pos)[0] << " + " << as_integers(step_handle_graph_pos)[1] << std::endl;
+            } else {
+                pos = make_pos_t(0, false, 0);
+            }
         }
         lift_result_t result;
         //std::cerr << "Got graph pos " << id(pos) << std::endl;
