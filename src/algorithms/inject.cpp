@@ -31,7 +31,8 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
                 [&](const step_handle_t& step) {
                     // remove intervals that ended before this node
                     while (interval_ends.size()
-                           && *interval_ends.begin() < pos) {
+                           //// XXXXX TODO NEEDS WORK FROM HERE ON
+                           && *interval_ends.begin() <= pos) {
                         auto last_length = graph.get_length(last_h);
                         auto last_offset = last_length - (pos - *interval_ends.begin());
                         if (last_offset > 0 && last_offset < last_length) {
@@ -48,7 +49,7 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
                            && ival->first.first < pos + len) {
                         interval_ends.insert(ival->first.second);
                         // mark a cut point
-                        auto offset = pos + len - ival->first.first;
+                        auto offset = ival->first.first - pos;
                         if (offset > 0 && offset < len) {
 #pragma omp critical (cut_points)
                             cut_points[h].push_back(offset);
@@ -59,6 +60,12 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
                     last_h = h;
                 });
         }
+    }
+
+    for (auto& c : cut_points) {
+        auto& v = c.second;
+        std::sort(v.begin(), v.end());
+        v.erase(std::unique(v.begin(), v.end()), v.end());
     }
 
     for (auto& c : cut_points) {
@@ -86,24 +93,29 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
                 path,
                 [&](const step_handle_t& step) {
                     // remove intervals that ended before this node
-                    std::cerr << "on step " << graph.get_id(graph.get_handle_of_step(step)) << std::endl;
                     while (open_intervals_by_end.size()
-                           && open_intervals_by_end.begin()->first < pos) {
+                           && open_intervals_by_end.begin()->first <= pos) {
+                        /*
                         auto last_offset = graph.get_length(last_h)
                             - (pos - open_intervals_by_end.begin()->first);
-                        if (last_offset != 0) {
-                            std::cerr << "we messed up" << std::endl;
+                        */
+                        // get reference to name
+                        auto& i = open_intervals_by_end.begin()->second;
+                        auto& name = i.first;
+                        if (open_intervals_by_end.begin()->first != pos) {
+                            std::cerr << "[odgi::algorithms::inject_ranges] "
+                                      << "injection end point for interval " << name
+                                      << " is not at a node boundary" << std::endl;
                             exit(1);
                         }
                         // add the path
-                        auto& i = open_intervals_by_end.begin()->second;
-                        auto& name = i.first;
                         auto p = graph.create_path_handle(name);
                         auto c = i.second;
-                        while (c != step) {
+                        auto end = step; //graph.get_previous_step(step);
+                        do {
                             graph.append_step(p, graph.get_handle_of_step(c));
                             c = graph.get_next_step(c);
-                        }
+                        } while (c != end);
                         // clean up
                         open_intervals_by_end.erase(open_intervals_by_end.begin());
                     }
@@ -113,6 +125,7 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
                     while (ival != intervals.end()
                            && ival->first.first >= pos
                            && ival->first.first < pos + len) {
+                        // the intervals must start at the node start
                         open_intervals_by_end[ival->first.second] = std::make_pair(ival->second, step);
                         ++ival;
                     }

@@ -603,6 +603,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/heaps.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/inject.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/edge.cpp
+  ${CMAKE_SOURCE_DIR}/src/unittest/inject.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/tips.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/path_jaccard.cpp
   ${lodepng_SOURCES}
