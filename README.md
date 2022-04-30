@@ -1,7 +1,6 @@
 # odgi
 
 [![build and test](https://github.com/pangenome/odgi/actions/workflows/build_and_test_on_push.yml/badge.svg)](https://github.com/pangenome/odgi/actions/workflows/build_and_test_on_push.yml)
-[![build and python import](https://github.com/pangenome/odgi/actions/workflows/build_and_python_import_on_push.yml/badge.svg)](https://github.com/pangenome/odgi/actions/workflows/build_and_python_import_on_push.yml)
 [![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat)](http://bioconda.github.io/recipes/odgi/README.html)
 
 ## optimized dynamic genome/graph implementation (odgi)
