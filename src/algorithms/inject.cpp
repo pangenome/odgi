@@ -31,13 +31,18 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
                 [&](const step_handle_t& step) {
                     // remove intervals that ended before this node
                     while (interval_ends.size()
-                           //// XXXXX TODO NEEDS WORK FROM HERE ON
                            && *interval_ends.begin() <= pos) {
                         auto last_length = graph.get_length(last_h);
-                        auto last_offset = last_length - (pos - *interval_ends.begin());
+                        auto last_offset =
+                            graph.get_is_reverse(last_h) ?
+                            (pos - *interval_ends.begin())
+                            : last_length - (pos - *interval_ends.begin());
                         if (last_offset > 0 && last_offset < last_length) {
+                            // store cut points on the forward strand to avoid dups
+                            auto last_h_fwd = graph.get_is_reverse(last_h) ?
+                                graph.flip(last_h) : last_h;
 #pragma omp critical (cut_points)
-                            cut_points[last_h].push_back(last_offset);
+                            cut_points[last_h_fwd].push_back(last_offset);
                             interval_ends.erase(interval_ends.begin());
                         }
                     }
@@ -49,10 +54,15 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
                            && ival->first.first < pos + len) {
                         interval_ends.insert(ival->first.second);
                         // mark a cut point
-                        auto offset = ival->first.first - pos;
+                        auto offset = graph.get_is_reverse(h) ?
+                            len - (ival->first.first - pos)
+                            : ival->first.first - pos;
                         if (offset > 0 && offset < len) {
+                            // store cut points on the forward strand to avoid dups
+                            auto h_fwd = graph.get_is_reverse(h) ?
+                                graph.flip(h) : h;
 #pragma omp critical (cut_points)
-                            cut_points[h].push_back(offset);
+                            cut_points[h_fwd].push_back(offset);
                         }
                         ++ival;
                     }
@@ -68,6 +78,7 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
         v.erase(std::unique(v.begin(), v.end()), v.end());
     }
 
+    /*
     for (auto& c : cut_points) {
         std::cerr << "cutting at " << graph.get_id(c.first) << " -> ";
         for (auto& p : c.second) {
@@ -75,6 +86,7 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
         }
         std::cerr << std::endl;
     }
+    */
 
     // then we cut the nodes in the graph at the interval starts and ends
     chop_at(graph, cut_points);
@@ -88,30 +100,31 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
             std::map<uint64_t, std::pair<std::string, step_handle_t>> open_intervals_by_end;
             uint64_t pos = 0;
             handle_t last_h;
-            std::cerr << "on path " << graph.get_path_name(path) << std::endl;
             graph.for_each_step_in_path(
                 path,
                 [&](const step_handle_t& step) {
                     // remove intervals that ended before this node
                     while (open_intervals_by_end.size()
                            && open_intervals_by_end.begin()->first <= pos) {
-                        /*
-                        auto last_offset = graph.get_length(last_h)
-                            - (pos - open_intervals_by_end.begin()->first);
-                        */
                         // get reference to name
                         auto& i = open_intervals_by_end.begin()->second;
                         auto& name = i.first;
                         if (open_intervals_by_end.begin()->first != pos) {
                             std::cerr << "[odgi::algorithms::inject_ranges] "
                                       << "injection end point for interval " << name
-                                      << " is not at a node boundary" << std::endl;
+                                      << " is not at a node boundary: "
+                                      << "off by " << open_intervals_by_end.begin()->first
+                                      << " vs " << pos
+                                      << " on a node "
+                                      << graph.get_length(graph.get_handle_of_step(step))
+                                      << "bp long"
+                                      << std::endl;
                             exit(1);
                         }
                         // add the path
                         auto p = graph.create_path_handle(name);
                         auto c = i.second;
-                        auto end = step; //graph.get_previous_step(step);
+                        auto end = step;
                         do {
                             graph.append_step(p, graph.get_handle_of_step(c));
                             c = graph.get_next_step(c);

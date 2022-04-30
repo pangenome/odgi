@@ -81,18 +81,42 @@ TEST_CASE( "Inject works", "[inject]" ) {
         g.append_step(pC, n8);
         g.append_step(pC, n9);
 
+        path_handle_t pD = g.create_path_handle("d");
+        g.append_step(pD, g.flip(n9));
+        g.append_step(pD, g.flip(n8));
+        g.append_step(pD, g.flip(n7));
+        g.append_step(pD, g.flip(n5));
+        g.append_step(pD, g.flip(n4));
+        g.append_step(pD, g.flip(n2));
+        g.append_step(pD, g.flip(n1));
+        g.append_step(pD, g.flip(n0));
+
         ska::flat_hash_map<path_handle_t, std::vector<std::pair<interval_t, std::string>>> ivals;
         ivals[pA].push_back(std::make_pair(interval_t(0,5), "a:0-5"));
         ivals[pA].push_back(std::make_pair(interval_t(4,6), "a:4-6"));
         ivals[pA].push_back(std::make_pair(interval_t(5,10), "a:5-10"));
         ivals[pB].push_back(std::make_pair(interval_t(4,5), "b:4-5"));
+        ivals[pD].push_back(std::make_pair(interval_t(4,5), "d:4-5"));
+        ivals[pD].push_back(std::make_pair(interval_t(0,1), "d:0-1"));
 
+        for (auto& i : ivals) {
+            std::sort(i.second.begin(), i.second.end());
+        }
 
         algorithms::inject_ranges(g, ivals);
 
-        g.to_gfa(std::cout);
+        //g.to_gfa(std::cout);
 
-        REQUIRE(true);
+        REQUIRE(g.get_sequence(g.get_handle(3)) == "T");
+        REQUIRE(g.get_id(g.get_handle_of_step(g.path_begin(g.get_path_handle("d:4-5")))) == 15);
+        REQUIRE(g.get_sequence(g.get_handle_of_step(g.path_begin(g.get_path_handle("d:4-5")))) == "T");
+        REQUIRE(g.get_step_count(g.get_path_handle("a:0-5")) == 3);
+        REQUIRE(g.get_step_count(g.get_path_handle("b:4-5")) == 1);
+        REQUIRE(g.get_step_count(g.get_path_handle("a:4-6")) == 2);
+        REQUIRE(g.get_step_count(g.get_path_handle("a:5-10")) == 3);
+        REQUIRE(g.get_step_count(g.get_path_handle("d:0-1")) == 1);
+        REQUIRE(g.get_step_count(g.get_path_handle("d:4-5")) == 1);
+
     }
 }
 
