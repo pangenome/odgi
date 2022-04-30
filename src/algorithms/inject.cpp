@@ -31,11 +31,14 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
                 [&](const step_handle_t& step) {
                     // remove intervals that ended before this node
                     while (interval_ends.size()
-                           && *interval_ends.begin() <= pos) { // 1-past end
-                        auto last_offset = graph.get_length(last_h) - (pos - *interval_ends.begin());
+                           && *interval_ends.begin() < pos) {
+                        auto last_length = graph.get_length(last_h);
+                        auto last_offset = last_length - (pos - *interval_ends.begin());
+                        if (last_offset > 0 && last_offset < last_length) {
 #pragma omp critical (cut_points)
-                        cut_points[last_h].push_back(last_offset);
-                        interval_ends.erase(interval_ends.begin());
+                            cut_points[last_h].push_back(last_offset);
+                            interval_ends.erase(interval_ends.begin());
+                        }
                     }
                     auto h = graph.get_handle_of_step(step);
                     auto len = graph.get_length(h);
@@ -45,14 +48,25 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
                            && ival->first.first < pos + len) {
                         interval_ends.insert(ival->first.second);
                         // mark a cut point
+                        auto offset = pos + len - ival->first.first;
+                        if (offset > 0 && offset < len) {
 #pragma omp critical (cut_points)
-                        cut_points[h].push_back(pos + len - ival->first.first);
+                            cut_points[h].push_back(offset);
+                        }
                         ++ival;
                     }
                     pos += len;
                     last_h = h;
                 });
         }
+    }
+
+    for (auto& c : cut_points) {
+        std::cerr << "cutting at " << graph.get_id(c.first) << " -> ";
+        for (auto& p : c.second) {
+            std::cerr << p << " ";
+        }
+        std::cerr << std::endl;
     }
 
     // then we cut the nodes in the graph at the interval starts and ends
@@ -67,12 +81,14 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
             std::map<uint64_t, std::pair<std::string, step_handle_t>> open_intervals_by_end;
             uint64_t pos = 0;
             handle_t last_h;
+            std::cerr << "on path " << graph.get_path_name(path) << std::endl;
             graph.for_each_step_in_path(
                 path,
                 [&](const step_handle_t& step) {
                     // remove intervals that ended before this node
+                    std::cerr << "on step " << graph.get_id(graph.get_handle_of_step(step)) << std::endl;
                     while (open_intervals_by_end.size()
-                           && open_intervals_by_end.begin()->first <= pos) { // 1-past end
+                           && open_intervals_by_end.begin()->first < pos) {
                         auto last_offset = graph.get_length(last_h)
                             - (pos - open_intervals_by_end.begin()->first);
                         if (last_offset != 0) {
@@ -98,6 +114,7 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
                            && ival->first.first >= pos
                            && ival->first.first < pos + len) {
                         open_intervals_by_end[ival->first.second] = std::make_pair(ival->second, step);
+                        ++ival;
                     }
                     pos += len;
                     last_h = h;

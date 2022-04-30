@@ -57,7 +57,7 @@ void for_each_heap_permutation(const PathHandleGraph& graph,
                     [&](const step_handle_t& step) {
                         // remove intervals that ended before this node
                         while (interval_ends.size()
-                               && *interval_ends.begin() <= pos) { // 1-past end
+                               && *interval_ends.begin() < pos) {
                             interval_ends.erase(interval_ends.begin());
                         }
                         auto h = graph.get_handle_of_step(step);
