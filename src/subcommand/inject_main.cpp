@@ -23,6 +23,7 @@ int main_inject(int argc, char **argv) {
     args::ArgumentParser parser("Extract matrix of path pangenome coverage permutations for power law regression.");
     args::Group mandatory_opts(parser, "[ MANDATORY ARGUMENTS ]");
     args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
+    args::ValueFlag<std::string> og_out_file(mandatory_opts, "FILE", "Write the sorted dynamic succinct variation graph to this file. A file ending with *.og* is recommended.", {'o', "out"});
     args::Group inject_opts(parser, "[ Inject Options ]");
     args::ValueFlag<std::string> _path_groups(inject_opts, "FILE", "Group paths as described in two-column FILE, with columns path.name and group.name.",
                                               {'p', "path-groups"});
@@ -59,6 +60,11 @@ int main_inject(int argc, char **argv) {
         std::cerr
             << "[odgi::inject] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
             << std::endl;
+        return 1;
+    }
+
+    if (!og_out_file || args::get(og_out_file).empty()) {
+        std::cerr << "[odgi::inject] error: please specify an output file to store the graph via -o=[FILE], --out=[FILE]." << std::endl;
         return 1;
     }
 
@@ -168,16 +174,16 @@ int main_inject(int argc, char **argv) {
 
     graph.set_number_of_threads(num_threads);
 
-    std::cout << "permutation\tnth.genome\tbase.pairs" << std::endl;
-    auto handle_output = [&](const std::vector<uint64_t>& vals, uint64_t perm_id) {
-        int i = 0;
-#pragma omp critical (cout)
-        for (auto& v : vals) {
-            std::cout << perm_id << "\t" << ++i << "\t" << v << std::endl;
-        }
-    };
-
     //algorithms::for_each_heap_permutation(graph, path_groups, intervals, n_permutations, handle_output);
+
+    const std::string outfile = args::get(og_out_file);
+    if (outfile == "-") {
+        graph.serialize(std::cout);
+    } else {
+        ofstream f(outfile.c_str());
+        graph.serialize(f);
+        f.close();
+    }
 
     return 0;
 }
