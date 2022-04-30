@@ -1,6 +1,6 @@
 //
 //  graph.cpp
-//  
+//
 
 #include "odgi.hpp"
 
@@ -351,6 +351,7 @@ void graph_t::set_circularity(const path_handle_t& path_handle, bool circular) {
 
 /// Returns true if the step is not the last step on the path, else false
 bool graph_t::has_next_step(const step_handle_t& step_handle) const {
+    if (is_path_end(step_handle)) return false;
     auto& node = get_node_ref(get_handle_of_step(step_handle));
     node.get_lock();
     auto b = !node.step_is_end(as_integers(step_handle)[1]);
@@ -360,6 +361,7 @@ bool graph_t::has_next_step(const step_handle_t& step_handle) const {
 
 /// Returns true if the step is not the first step on the path, else false
 bool graph_t::has_previous_step(const step_handle_t& step_handle) const {
+    if (is_path_end(step_handle)) return true;
     auto& node = get_node_ref(get_handle_of_step(step_handle));
     node.get_lock();
     auto b = !node.step_is_start(as_integers(step_handle)[1]);
@@ -774,7 +776,7 @@ void graph_t::reassign_node_ids(const std::function<nid_t(const nid_t&)>& get_ne
         });
     *this = reassigned;
     */
-    // XXXXXX TODO 
+    // XXXXXX TODO
 }
 
 /// Reorder the graph's internal structure to match that given.

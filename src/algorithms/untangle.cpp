@@ -173,6 +173,11 @@ std::vector<step_handle_t> merge_cuts(
             last = pos;
         }
     }
+    // add the end step
+    if (cuts.size()) {
+        merged.push_back(
+            graph.path_end(graph.get_path_handle_of_step(cuts.front())));
+    }
     return merged;
 }
 
@@ -506,6 +511,7 @@ void map_segments(
         std::vector<segment_mapping_t> target_mapping =
             target_segments.get_matches(graph, cuts[i], cuts[i+1], length);
         uint64_t nth_best = 0;
+        //std::cerr << "search-> " << query_name << "\t" << begin_pos << "\t" << end_pos << "\t" << target_mapping.size() << std::endl;
         // todo for each target mapping, up to the Nth, emitting if they're >= min_jaccard
         if (!target_mapping.empty()) {
             for (auto& mapping : target_mapping) {
@@ -605,6 +611,15 @@ void untangle(
                     });
         }
 
+        // cut first and last
+        /*
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
+        for (auto& target : targets) {
+            cut_nodes.set(graph.get_id(graph.get_handle_of_step(graph.path_begin(target))), true);
+            cut_nodes.set(graph.get_id(graph.get_handle_of_step(graph.path_back(target))), true);
+        }
+        */
+
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
         for (auto& path : paths) {
             // test path_step_index_t
@@ -617,9 +632,9 @@ void untangle(
                                   step_index,
                                   self_index,
                                   [](const handle_t& h) { return false; }),
-                                  merge_dist,
-                                  step_index,
-                                  graph);
+                    merge_dist,
+                    step_index,
+                    graph);
             for (auto& step : cuts) {
                 cut_nodes.set(graph.get_id(graph.get_handle_of_step(step)));
             }
