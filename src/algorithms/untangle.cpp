@@ -385,9 +385,12 @@ segment_map_t::get_matches(
             });
     }
     // compute the jaccards
+    path_handle_t curr_path = graph.get_path_handle_of_step(start);
     std::vector<segment_mapping_t> jaccards;
     for (auto& p : target_isec) {
         auto& segment_id = p.first;
+        path_handle_t segment_path
+            = graph.get_path_handle_of_step(get_segment_cut(segment_id));
         auto& isec = p.second.len;
         //auto& inv = p.second.inv;
         bool is_inv = (double)p.second.inv/(double)isec > 0.5;
@@ -395,6 +398,7 @@ segment_map_t::get_matches(
         jaccards.push_back(
             {
                 segment_id,
+                segment_path == curr_path,
                 is_inv,
                 (double)isec
                 / (double)(get_segment_length(segment_id)
@@ -402,11 +406,12 @@ segment_map_t::get_matches(
             });
     }
     // sort the target segments by their jaccard with the query
+    // keep self-matches ahead, all else equal
     std::sort(jaccards.begin(), jaccards.end(),
               [](const segment_mapping_t& a,
                  const segment_mapping_t& b) {
-                  return std::tie(a.jaccard, a.segment_id, a.is_inv) >
-                      std::tie(b.jaccard, b.segment_id, b.is_inv);
+                  return std::tie(a.jaccard, a.self_map, a.is_inv, a.segment_id) >
+                      std::tie(b.jaccard, b.self_map, b.is_inv, b.segment_id);
               });
     return jaccards;
 }

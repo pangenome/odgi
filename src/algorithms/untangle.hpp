@@ -14,11 +14,12 @@
 
 namespace odgi {
 namespace algorithms {
-    
+
 using namespace handlegraph;
 
 struct segment_mapping_t {
     uint64_t segment_id = 0;
+    bool self_map = false;
     bool is_inv = false;
     double jaccard = 0;
 };
@@ -122,5 +123,3 @@ void untangle(
 
 }
 }
-
-
