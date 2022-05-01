@@ -153,7 +153,9 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
                             exit(1);
                         }
                         // add the path
-                        auto p = injected_paths[name];
+                        path_handle_t p;
+#pragma omp critical (get_path)
+                        p = injected_paths[name];
                         auto c = i.second;
                         auto end = step;
                         do {
@@ -184,7 +186,9 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
                 auto& i = open_intervals_by_end.begin()->second;
                 auto& name = i.first;
                 // add the path
-                auto p = injected_paths[name];
+                path_handle_t p;
+#pragma omp critical (get_path)
+                p = injected_paths[name];
                 auto c = i.second;
                 auto end = graph.path_end(path);
                 do {
