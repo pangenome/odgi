@@ -71,7 +71,7 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
                 });
 
             // Manage last offsets
-            if (interval_ends.size() && *interval_ends.begin() <= pos) {
+            while (interval_ends.size() && *interval_ends.begin() <= pos) {
                 auto last_length = graph.get_length(last_h);
                 auto last_offset =
                         graph.get_is_reverse(last_h) ?
