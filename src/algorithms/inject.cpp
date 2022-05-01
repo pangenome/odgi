@@ -43,8 +43,8 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
                                 graph.flip(last_h) : last_h;
 #pragma omp critical (cut_points)
                             cut_points[last_h_fwd].push_back(last_offset);
-                            interval_ends.erase(interval_ends.begin());
                         }
+                        interval_ends.erase(interval_ends.begin());
                     }
                     auto h = graph.get_handle_of_step(step);
                     auto len = graph.get_length(h);
@@ -83,8 +83,8 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
                                       graph.flip(last_h) : last_h;
 #pragma omp critical (cut_points)
                     cut_points[last_h_fwd].push_back(last_offset);
-                    interval_ends.erase(interval_ends.begin());
                 }
+                interval_ends.erase(interval_ends.begin());
             }
         }
     }
