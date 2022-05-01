@@ -1,4 +1,4 @@
-.. _untangling_the_pangenome:
+.. _injecting_gene_arrows:
 
 ######################
 Injecting gene arrows
