@@ -48,7 +48,7 @@ In humans, C4 is a protein involved in the intricate complement system, originat
 
 
 -----------------------------------
-Injecting genes
+Injecting gene annotations
 -----------------------------------
 
 We start with gene annotations against the GRCh38 reference.
@@ -139,61 +139,53 @@ We use `-j 0.5` to filter out low-quality matches.
 
 .. code-block:: bash
 
-   odgi untangle -R chr6.C4.gene.names.txt -i chr6.C4.genes.og -j 0.5 -t 16 | grep '^mol\|HG00438#2\|HG0107\|HG01952#1\|chm13' >chr6.C4.gene.gggenes.tsv
+   odgi untangle -R chr6.C4.gene.names.txt -i chr6.C4.genes.og -j 0.5 -t 4 -g \
+       | grep '^mol\|HG00438#2\|HG0107\|HG01952#1\|chm13' >chr6.C4.gene.gggenes.tsv
 
-
-Take a look at the rows in the ``chr6.C4.untangle.bed`` file for the ``HG00438`` and ```HG01071`` individuals:
-
-.. code-block:: bash
-
-    cat <(head chr6.C4.untangle.bed -n 1) <(grep 'HG00438\|HG01071' chr6.C4.untangle.bed) | column -t
-
-.. code-block:: none
-
-
-
-
-For each segment in the query (``query.name``, ``query.start``, and ``query.end`` columns), the best match on the reference is reported
-(``ref.name``, ``ref.start``, and ``ref.end``), with information about the quality of the match (``score``), the strand (``inv``),
-the copy number status (``self.cov``), and its rank over all possible matches (``n.th``).
-
-To obtain a visualization of the output for the ``HG00438`` and ```HG01071`` individuals, execute:
+We can then load this into ``R`` for plotting with ``gggenes``:
 
 .. code-block:: R
 
-    library(ggplot2)
-    x <- read.table('chr6.C4.untangle.bed', sep = '\t', header = T, comment.char="$")
-    x$query.name <- gsub(":.*","",x$query.name)
-    x$query.name <- gsub("#J.*","",x$query.name)
-
-    ggplot(
-      subset(x, query.name %in% c(
-        "grch38#chr6",
-        "HG00438#1",
-        "HG00438#2",
-        "HG01071#1",
-        "HG01071#2"
-        )
-      ), aes(x=query.start, xend=query.end, y=ref.start, yend=ref.end)) +
-        geom_segment(size=0.3) +
-        facet_grid(. ~ query.name) +
-        coord_fixed() +
-        theme(
-          text = element_text(size = 12.6),
-          axis.text.x = element_text(size = 12, angle = 90),
-          axis.text.y = element_text(size = 12),
-        )  +
-          xlab("Query start") +
-          ylab("Reference start")
-
-    ggsave('chr6.C4.untangle.png', width = 32, height = 8,  units = "cm", dpi = 300,  bg = "transparent")
-
+   require(ggplot2)
+   require(gggenes)
+   x <- read.delim('chr6.C4.gene.gggenes.tsv')
+   ggplot(x, aes(xmin=start, xmax=end, y=molecule, fill=gene, forward=strand)) + geom_gene_arrow()
+   ggsave('c4.gggenes.subset.png', height=1.5, width=15)
 
 To obtain the following PNG image:
 
-.. image:: /img/chr6.C4.untangle.png
+.. image:: /img/c4.gggenes.subset.png
 
-The plots show the copy number status of the haplotypes in the C4 region with respect to the grch38 reference sequence.
-On the grch38 reference, `C4A precedes C4B, and both are in single copy <http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&lastVirtModeType=default&lastVirtModeExtraState=&virtModeType=default&virtMode=0&nonVirtPosition=&position=chr6%3A31972057%2D32055418&hgsid=1211002763_taymHTHRXlpfFiqu51J8nWGyKv67>`_.
-``odgi untangle``'s output makes then clear, for example, that in ``HG00438`` the C4A gene is missing in both haplotypes, while ``HG01071#2``
-has two copies of C4B.
+It looks a bit... odd! This is because some of the paths are in the reverse complement orientation relative to the annotations.
+We can clean this up by using ``odgi flip``, which flips paths around if they tend to be in the reverse complement orientation relative to the graph.
+
+.. code-block:: bash
+
+   odgi flip -i chr6.C4.genes.og -o - -t 4 \
+       | odgi untangle -R chr6.C4.gene.names.txt -i - -j 0.5 -t 4 -g \
+       | grep '^mol\|HG00438#2\|HG0107\|HG01952#1\|chm13' >chr6.C4.gene.gggenes.tsv
+
+We can plot this using the exact same ``R`` snippet above:
+
+.. image:: /img/c4.gggenes.subset.flip.png
+
+This is somewhat easier to understand.
+We're seeing things relative to the forward strand of the graph now, which happens to be sorted according to the GRCh38 reference that is the basis of the C4 annotations we're using.
+(n.b. We can ensure this kind of ordering using ``odgi groom`` and a reference path.)
+
+We can also do more than just a subset:
+
+.. code-block:: bash
+
+   odgi flip -i chr6.C4.genes.og -o - -t 4 \
+       | odgi untangle -R chr6.C4.gene.names.txt -i - -j 0.5 -t 4 -g >chr6.C4.gene.gggenes.tsv
+
+And plotting with a slightly different ``ggsave`` command:
+
+.. code-block:: R
+
+   x <- read.delim('chr6.C4.gene.gggenes.tsv')
+   ggplot(x, aes(xmin=start, xmax=end, y=molecule, fill=gene, forward=strand)) + geom_gene_arrow()
+   ggsave('c4.gggenes.all.png', height=15, width=15)
+
+.. image:: /img/c4.gggenes.all.png
