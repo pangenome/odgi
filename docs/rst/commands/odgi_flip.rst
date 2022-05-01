@@ -1,21 +1,21 @@
-.. _odgi inject:
+.. _odgi flip:
 
 #########
-odgi inject
+odgi flip
 #########
 
-Inject BED interval ranges as paths in the graph.
+Flip (reverse complement) paths to match the graph.
 
 SYNOPSIS
 ========
 
-**odgi inject** [**-i, --input**\ =\ *FILE*] [**-b, --bed-targets**\ =\ *FILE*] [*OPTION*]…
+**odgi flip** [**-i, --input**\ =\ *FILE*] [*OPTION*]…
 
 DESCRIPTION
 ===========
 
-The odgi inject command converts BED records against graph paths into new paths labeled by the BED record name.
-Injection allows us to import genome annotations as paths, and is useful to produce input to odgi untangle.
+The odgi flip command converts BED records against graph paths into new paths labeled by the BED record name.
+Flipion allows us to import genome annotations as paths, and is useful to produce input to odgi untangle.
 
 OPTIONS
 =======
@@ -27,13 +27,7 @@ MANDATORY OPTIONS
 | Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!
 
 | **-o, --out**\ =\ *FILE*
-| Write the graph with injected paths to *.og*.
-
-Injection Options
-----------------
-
-| **-b, --bed-targets**\ =\ *FILE*
-| BED file over path space of the graph. Records will be converted into new paths in the output graph.
+| Write the graph with fliped paths to *.og*.
 
 Threading
 ---------
@@ -51,7 +45,7 @@ Program Information
 -------------------
 
 | **-h, --help**
-| Print a help message for **odgi inject**.
+| Print a help message for **odgi flip**.
 
 ..
 	EXIT STATUS
