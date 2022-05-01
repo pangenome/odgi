@@ -91,7 +91,7 @@ int main_prune(int argc, char** argv) {
 
 	const int n_threads = threads ? args::get(threads) : 1;
 
-	graph_t graph;;
+	graph_t graph;
     {
         const std::string infile = args::get(dg_in_file);
         if (!infile.empty()) {

@@ -82,8 +82,11 @@ Path Options
 | **-p, --expand-path-length**\ =\ *N*
 | Also include nodes within this path length of a component passing the prune thresholds.
 
-| **-D, --drop-paths**
-| Remove the paths from the graph.
+| **-r, --drop-paths**\ =\ *FILE*
+| List of paths to remove. The FILE must contain one path name per line and a subset of all paths can be specified.
+
+| **-D, --drop-all-paths**
+| Remove all paths from the graph.
 
 | **-m, --cut-tips-min-depth**\ =\ *N*
 | Remove nodes which are graph tips and have less than *N* path depth.
