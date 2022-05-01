@@ -99,7 +99,7 @@ We can always pipe the output of ``odgi`` subcommands to each other, but in this
 
 
 -----------------------------
-Visualize the C4 graph
+Visualize the C4 graph with injected gene annotations
 -----------------------------
 
 To visualize a subset of the graph, execute:

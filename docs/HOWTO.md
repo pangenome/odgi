@@ -58,3 +58,11 @@ To add documentation for a new command:
 - Add the new tutorial file in the list here https://github.com/pangenome/odgi/blob/master/docs/rst/tutorials.rst
 
 Then edit these to match the new command.
+
+To build an HTML tree, first install everything with `pip3`:
+
+```
+pip3 install sphinx sphinx_rtd_theme breathe m2r2 asciidoc --user
+```
+
+Then `make html` in the docs directory will build a tree for evaluation.
