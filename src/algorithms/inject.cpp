@@ -69,6 +69,23 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
                     pos += len;
                     last_h = h;
                 });
+
+            // Manage last offsets
+            if (interval_ends.size() && *interval_ends.begin() <= pos) {
+                auto last_length = graph.get_length(last_h);
+                auto last_offset =
+                        graph.get_is_reverse(last_h) ?
+                        (pos - *interval_ends.begin())
+                                                     : last_length - (pos - *interval_ends.begin());
+                if (last_offset > 0 && last_offset < last_length) {
+                    // store cut points on the forward strand to avoid dups
+                    auto last_h_fwd = graph.get_is_reverse(last_h) ?
+                                      graph.flip(last_h) : last_h;
+#pragma omp critical (cut_points)
+                    cut_points[last_h_fwd].push_back(last_offset);
+                    interval_ends.erase(interval_ends.begin());
+                }
+            }
         }
     }
 
@@ -145,6 +162,24 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
                     pos += len;
                     last_h = h;
                 });
+
+            // Add last paths
+            while (open_intervals_by_end.size()
+                   && open_intervals_by_end.begin()->first <= pos) {
+                // get reference to name
+                auto& i = open_intervals_by_end.begin()->second;
+                auto& name = i.first;
+                // add the path
+                auto p = graph.create_path_handle(name);
+                auto c = i.second;
+                auto end = graph.path_end(path);
+                do {
+                    graph.append_step(p, graph.get_handle_of_step(c));
+                    c = graph.get_next_step(c);
+                } while (c != end);
+                // clean up
+                open_intervals_by_end.erase(open_intervals_by_end.begin());
+            }
         }
     }
 
