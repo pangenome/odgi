@@ -120,6 +120,7 @@ int main_inject(int argc, char **argv) {
         return 1;
     }
 
+    omp_set_num_threads(num_threads);
     graph.set_number_of_threads(num_threads);
 
     algorithms::inject_ranges(graph, path_intervals, ordered_intervals);

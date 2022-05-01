@@ -57,8 +57,8 @@ Our annotations are against the full `grch38#chr6`, in ``test/chr6.C4.bed``:
 .. code-block:: none
 
    grch38#chr6	31982057	32002681	C4A
-   grch38#chr6	32014795	32035418	C4B
    grch38#chr6	31985101	31991058	C4A_HERV-K
+   grch38#chr6	32014795	32035418	C4B
    grch38#chr6	32017839	32023796	C4B_HERV-K
 
 However, the C4 locus graph ``chr6.c$.gfa`` is over the reference range ``grch38#chr6:31972046-32055647``.
@@ -74,13 +74,13 @@ We subtract ``31972046`` from both coordinates and adjust the path name to match
 
 .. code-block:: bash
 
-   <chr6.C4.bed awk '{ i=31972046; j=32055647; print $1":"i"-"j, $2-i, $3-i, $4 }' | tr ' ' '\t' >chr6.C4.adj.bed
+   <chr6.C4.bed awk '{ i=31972046; j=32055647; print $1":"i"-"j, $2-i, $3-i, $4 }' | tr ' ' '\t' | sort -n >chr6.C4.adj.bed
 
 Now, we can inject these into the graph:
 
 .. code-block:: bash
 
-   odgi inject -i chr6.C4.gfa -b chr6.C4.adj.bed -o - | odgi paths -i - -L | tail -4 | sort -V >chr6.C4.gene.names.txt
+   odgi inject -i chr6.C4.gfa -b chr6.C4.adj.bed -o - | odgi paths -i - -L | tail -4 >chr6.C4.gene.names.txt
 
 This shows that the annotations have been added as paths (``cat chr6.C4.gene.names.txt``):
 
@@ -90,6 +90,8 @@ This shows that the annotations have been added as paths (``cat chr6.C4.gene.nam
    C4A_HERV-K
    C4B
    C4B_HERV-K
+
+Their order among the paths is the same as in the input BED.
 
 We can always pipe the output of ``odgi`` subcommands to each other, but in this case it will simplify things to save the graph with the injected gene paths:
 
@@ -107,9 +109,9 @@ To visualize a subset of the graph, execute:
 .. code-block:: bash
 
     # Select haplotypes
-    odgi paths -i chr6.C4.og -L | grep 'chr6\|HG00438\|HG0107\|HG01952\|C4' > chr6.C4.selected_paths.txt
+    odgi paths -i chr6.C4.genes.og -L | grep 'chr6\|HG00438\|HG0107\|HG01952\|C4' > chr6.C4.selected_paths.txt
 
-    odgi viz -i chr6.C4.og -o chr6.C4.selected_paths.png -c 12 -w 100 -y 50 -p chr6.C4.selected_paths.txt -m -B Spectral:4
+    odgi viz -i chr6.C4.genes.og -o chr6.C4.genes.selected_paths.png -c 12 -w 100 -y 50 -p chr6.C4.selected_paths.txt -m -B Spectral:4
 
 To obtain the following PNG image:
 
@@ -192,4 +194,23 @@ And plotting with a slightly different ``ggsave`` command:
 
 It's surprising that we don't get any matches to the C4A HERV.
 Actually, what's happening is simply that the HERVs in GRCh38 are exactly the same.
-We can see this by
+We can see this by extracting the FASTA corresponding to each, and comparing with ``sha256sum``:
+
+.. code-block:: bash
+
+   # extract FASTA of paths
+   odgi paths -i chr6.C4.genes.og -f >chr6.C4.genes.og.fa
+   # index
+   samtools faidx chr6.C4.genes.og.fa
+   # extract HERV-specific sequences and take their sha256sum
+   samtools faidx chr6.C4.genes.og.fa C4A_HERV-K C4B_HERV-K -n 100000000 \
+       | grep -v "^#" | while read f; do echo $f | sha256sum; done
+
+We get the same hash, indicating that this is an exact repeat in the GRCh38 reference.
+
+.. code-block:: none
+
+   253f6ea1f8f063c340fce457e88dcd9db8f73bf574544b177976128ba758a811  -
+   253f6ea1f8f063c340fce457e88dcd9db8f73bf574544b177976128ba758a811  -
+
+While surprising, this explains our arrow map results.
