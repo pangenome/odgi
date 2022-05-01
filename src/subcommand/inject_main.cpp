@@ -80,6 +80,7 @@ int main_inject(int argc, char **argv) {
 
     ska::flat_hash_map<path_handle_t,
                        std::vector<std::pair<interval_t, std::string>>> path_intervals;
+    std::vector<std::string> ordered_intervals;
     if (_bed_targets) {
         std::ifstream bed(args::get(_bed_targets).c_str());
         std::string line;
@@ -101,6 +102,7 @@ int main_inject(int argc, char **argv) {
                 } else {
                     auto path = graph.get_path_handle(path_name);
                     path_intervals[path].push_back(std::make_pair(interval_t(start, end), name));
+                    ordered_intervals.push_back(name);
                 }
             }
         }
@@ -120,7 +122,7 @@ int main_inject(int argc, char **argv) {
 
     graph.set_number_of_threads(num_threads);
 
-    algorithms::inject_ranges(graph, path_intervals);
+    algorithms::inject_ranges(graph, path_intervals, ordered_intervals);
 
     const std::string outfile = args::get(og_out_file);
     if (outfile == "-") {

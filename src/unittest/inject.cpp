@@ -102,8 +102,14 @@ TEST_CASE( "Inject works", "[inject]" ) {
         for (auto& i : ivals) {
             std::sort(i.second.begin(), i.second.end());
         }
+        std::vector<string> ordered_ivals;
+        for (auto& i : ivals) {
+            for (auto& n : i.second) {
+                ordered_ivals.push_back(n.second);
+            }
+        }
 
-        algorithms::inject_ranges(g, ivals);
+        algorithms::inject_ranges(g, ivals, ordered_ivals);
 
         //g.to_gfa(std::cout);
 

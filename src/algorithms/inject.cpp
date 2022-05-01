@@ -7,7 +7,8 @@ namespace algorithms {
 using namespace handlegraph;
 
 void inject_ranges(MutablePathDeletableHandleGraph& graph,
-                   const ska::flat_hash_map<path_handle_t, std::vector<std::pair<interval_t, std::string>>>& path_intervals) {
+                   const ska::flat_hash_map<path_handle_t, std::vector<std::pair<interval_t, std::string>>>& path_intervals,
+                   const std::vector<std::string>& ordered_intervals) {
 
     // we collect cut points based on where our intervals start and end
     ska::flat_hash_map<handle_t, std::vector<size_t>> cut_points;
@@ -108,6 +109,19 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
     // then we cut the nodes in the graph at the interval starts and ends
     chop_at(graph, cut_points);
 
+    ska::flat_hash_map<std::string, path_handle_t> injected_paths;
+    for (auto& n : ordered_intervals) {
+        auto f = injected_paths.find(n);
+        if (f != injected_paths.end()) {
+            std::cerr << "[odgi::algorithms::inject_ranges] "
+                      << "duplicate annotation path, unable to inject "
+                      << n << std::endl;
+            exit(1);
+        } else {
+            injected_paths[n] = graph.create_path_handle(n);
+        }
+    }
+
     // then we iterate back through the sorted path intervals and add paths at the appropriate points
 #pragma omp parallel for
     for (auto& path : paths) {
@@ -139,7 +153,7 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
                             exit(1);
                         }
                         // add the path
-                        auto p = graph.create_path_handle(name);
+                        auto p = injected_paths[name];
                         auto c = i.second;
                         auto end = step;
                         do {
@@ -170,7 +184,7 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
                 auto& i = open_intervals_by_end.begin()->second;
                 auto& name = i.first;
                 // add the path
-                auto p = graph.create_path_handle(name);
+                auto p = injected_paths[name];
                 auto c = i.second;
                 auto end = graph.path_end(path);
                 do {

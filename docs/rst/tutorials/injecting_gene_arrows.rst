@@ -189,3 +189,7 @@ And plotting with a slightly different ``ggsave`` command:
    ggsave('c4.gggenes.all.png', height=15, width=15)
 
 .. image:: /img/c4.gggenes.all.png
+
+It's surprising that we don't get any matches to the C4A HERV.
+Actually, what's happening is simply that the HERVs in GRCh38 are exactly the same.
+We can see this by

@@ -25,7 +25,8 @@ using namespace handlegraph;
 /// Modify the graph to include the named intervals as paths
 /// This will cut nodes at interval start/ends and then embed them in the graph
 void inject_ranges(MutablePathDeletableHandleGraph& graph,
-                   const ska::flat_hash_map<path_handle_t, std::vector<std::pair<interval_t, std::string>>>& path_intervals);
+                   const ska::flat_hash_map<path_handle_t, std::vector<std::pair<interval_t, std::string>>>& path_intervals,
+                   const std::vector<std::string>& ordered_intervals);
 
 void chop_at(MutablePathDeletableHandleGraph &graph,
              const ska::flat_hash_map<handle_t, std::vector<size_t>>& cut_points);
