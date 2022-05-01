@@ -18,8 +18,10 @@ Commands
     commands/odgi_explode
     commands/odgi_extract
     commands/odgi_flatten
+    commands/odgi_flip
     commands/odgi_groom
     commands/odgi_heaps
+    commands/odgi_inject
     commands/odgi_kmers
     commands/odgi_layout
     commands/odgi_matrix

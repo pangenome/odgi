@@ -22,8 +22,6 @@ using namespace handlegraph;
 
 namespace algorithms {
 
-typedef std::pair<uint64_t, uint64_t> interval_t;
-
 /// For each permutation of the path groups
 /// we call func with a vector that is the fraction of the pangenome covered when we've considered N groups in the permutation
 void for_each_heap_permutation(const PathHandleGraph& graph,

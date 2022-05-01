@@ -173,6 +173,11 @@ std::vector<step_handle_t> merge_cuts(
             last = pos;
         }
     }
+    // add the end step
+    if (cuts.size()) {
+        merged.push_back(
+            graph.path_end(graph.get_path_handle_of_step(cuts.front())));
+    }
     return merged;
 }
 
@@ -380,9 +385,12 @@ segment_map_t::get_matches(
             });
     }
     // compute the jaccards
+    path_handle_t curr_path = graph.get_path_handle_of_step(start);
     std::vector<segment_mapping_t> jaccards;
     for (auto& p : target_isec) {
         auto& segment_id = p.first;
+        path_handle_t segment_path
+            = graph.get_path_handle_of_step(get_segment_cut(segment_id));
         auto& isec = p.second.len;
         //auto& inv = p.second.inv;
         bool is_inv = (double)p.second.inv/(double)isec > 0.5;
@@ -390,6 +398,7 @@ segment_map_t::get_matches(
         jaccards.push_back(
             {
                 segment_id,
+                segment_path == curr_path,
                 is_inv,
                 (double)isec
                 / (double)(get_segment_length(segment_id)
@@ -397,11 +406,13 @@ segment_map_t::get_matches(
             });
     }
     // sort the target segments by their jaccard with the query
+    // keep self-matches ahead of equivalent non-self matches
+    // and order equals using segment_id
     std::sort(jaccards.begin(), jaccards.end(),
               [](const segment_mapping_t& a,
                  const segment_mapping_t& b) {
-                  return std::tie(a.jaccard, a.segment_id, a.is_inv) >
-                      std::tie(b.jaccard, b.segment_id, b.is_inv);
+                  return std::tie(a.jaccard, a.self_map, a.is_inv, a.segment_id) >
+                      std::tie(b.jaccard, b.self_map, b.is_inv, b.segment_id);
               });
     return jaccards;
 }
@@ -492,6 +503,7 @@ void map_segments(
     const uint64_t& n_best,
     const double& min_jaccard,
     const bool& paf_output,
+    const bool& gggenes_output,
     ska::flat_hash_map<path_handle_t, uint64_t>& path_to_len) {
     std::string query_name = graph.get_path_name(path);
     for (uint64_t i = 0; i < cuts.size()-1; ++i) {
@@ -506,6 +518,7 @@ void map_segments(
         std::vector<segment_mapping_t> target_mapping =
             target_segments.get_matches(graph, cuts[i], cuts[i+1], length);
         uint64_t nth_best = 0;
+        //std::cerr << "search-> " << query_name << "\t" << begin_pos << "\t" << end_pos << "\t" << target_mapping.size() << std::endl;
         // todo for each target mapping, up to the Nth, emitting if they're >= min_jaccard
         if (!target_mapping.empty()) {
             for (auto& mapping : target_mapping) {
@@ -541,6 +554,12 @@ void map_segments(
                         << "sc:f:" << self_coverage << "\t"
                         << "nb:i:" << nth_best << "\t"
                         << std::endl;
+                    } else if (gggenes_output) {
+                        std::cout << query_name << "\t"
+                        << target_name << "\t"
+                        << begin_pos << "\t"
+                        << end_pos << "\t"
+                        << (mapping.is_inv ? "0" : "1") << std::endl;
                     } else {
                         // BEDPE format
                         std::cout << query_name << "\t"
@@ -573,6 +592,7 @@ void untangle(
     const double& min_jaccard,
     const uint64_t& cut_every,
     const bool& paf_output,
+    const bool& gggenes_output,
     const std::string& cut_points_input,
     const std::string& cut_points_output,
     const size_t& num_threads,
@@ -617,9 +637,9 @@ void untangle(
                                   step_index,
                                   self_index,
                                   [](const handle_t& h) { return false; }),
-                                  merge_dist,
-                                  step_index,
-                                  graph);
+                    merge_dist,
+                    step_index,
+                    graph);
             for (auto& step : cuts) {
                 cut_nodes.set(graph.get_id(graph.get_handle_of_step(step)));
             }
@@ -726,15 +746,18 @@ void untangle(
     //std::cout << "path\tfrom\tto" << std::endl;
     //auto step_pos = make_step_index(graph, queries);
     if (progress) {
-        std::cerr << "[odgi::algorithms::untangle] writing " << ( paf_output ? "PAF" : "pair BED" ) << " for " << queries.size() << " queries" << std::endl;
+        std::cerr << "[odgi::algorithms::untangle] writing " << ( paf_output ? "PAF" : ( gggenes_output ? "gggenes tsv" : "pair BED" ) ) << " for " << queries.size() << " queries" << std::endl;
     }
 
     ska::flat_hash_map<path_handle_t, uint64_t> path_to_len;
 
-    if (!paf_output){
+    if (gggenes_output) {
+        // gggenes format
+        std::cout << "molecule\tgene\tstart\tend\tstrand" << std::endl;
+    } else if (!paf_output){
         // BEDPE format
         std::cout << "#query.name\tquery.start\tquery.end\tref.name\tref.start\tref.end\tscore\tinv\tself.cov\tnth.best" << std::endl;
-    }else{
+    } else {
         // PAF format
         auto get_path_length = [](const PathHandleGraph &graph, const path_handle_t &path_handle) {
             uint64_t path_len = 0;
@@ -767,7 +790,10 @@ void untangle(
                 merge_dist,
                 step_index,
 				graph);
-        map_segments(graph, query, cuts, target_segments, step_index, self_index, max_self_coverage, n_best, min_jaccard, paf_output, path_to_len);
+        map_segments(graph, query, cuts, target_segments,
+                     step_index, self_index,
+                     max_self_coverage, n_best, min_jaccard,
+                     paf_output, gggenes_output, path_to_len);
 
         //write_cuts(graph, query, cuts, step_pos);
     }

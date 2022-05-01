@@ -6,7 +6,7 @@
 #include <tuple>
 #include <handlegraph/util.hpp>
 
-/** \file 
+/** \file
  * Functions for working with Positions and `pos_t`s.
  */
 
@@ -99,6 +99,8 @@ inline uint64_t & get_long_path_start(std::tuple<std::string, uint64_t, uint64_t
 inline uint64_t & get_long_path_end(std::tuple<std::string, uint64_t, uint64_t> path_long_start_end) {
 	return std::get<2>(path_long_start_end);
 }
+
+typedef std::pair<uint64_t, uint64_t> interval_t;
 
 }
 

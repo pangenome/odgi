@@ -131,7 +131,7 @@ int main_heaps(int argc, char **argv) {
         }
     }
 
-    ska::flat_hash_map<path_handle_t, std::vector<algorithms::interval_t>> intervals;
+    ska::flat_hash_map<path_handle_t, std::vector<interval_t>> intervals;
     if (_bed_targets) {
         std::ifstream bed(args::get(_bed_targets).c_str());
         std::string line;
@@ -151,12 +151,12 @@ int main_heaps(int argc, char **argv) {
                     //std::cerr << "[odgi::heaps] warning: no path '" << path_name << "' in graph" << std::endl;
                 } else {
                     auto path = graph.get_path_handle(path_name);
-                    intervals[path].push_back(algorithms::interval_t(start, end));
+                    intervals[path].push_back(interval_t(start, end));
                 }
             }
         }
         // ensure sorted input
-        std::vector<std::vector<algorithms::interval_t>*> v;
+        std::vector<std::vector<interval_t>*> v;
         for (auto& i : intervals) {
             v.push_back(&i.second);
         }
@@ -176,7 +176,7 @@ int main_heaps(int argc, char **argv) {
             std::cout << perm_id << "\t" << ++i << "\t" << v << std::endl;
         }
     };
-    
+
     algorithms::for_each_heap_permutation(graph, path_groups, intervals, n_permutations, handle_output);
 
     return 0;
