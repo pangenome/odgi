@@ -406,7 +406,8 @@ segment_map_t::get_matches(
             });
     }
     // sort the target segments by their jaccard with the query
-    // keep self-matches ahead, all else equal
+    // keep self-matches ahead of equivalent non-self matches
+    // and order equals using segment_id
     std::sort(jaccards.begin(), jaccards.end(),
               [](const segment_mapping_t& a,
                  const segment_mapping_t& b) {
@@ -502,6 +503,7 @@ void map_segments(
     const uint64_t& n_best,
     const double& min_jaccard,
     const bool& paf_output,
+    const bool& gggenes_output,
     ska::flat_hash_map<path_handle_t, uint64_t>& path_to_len) {
     std::string query_name = graph.get_path_name(path);
     for (uint64_t i = 0; i < cuts.size()-1; ++i) {
@@ -552,6 +554,11 @@ void map_segments(
                         << "sc:f:" << self_coverage << "\t"
                         << "nb:i:" << nth_best << "\t"
                         << std::endl;
+                    } else if (gggenes_output) {
+                        std::cout << query_name << "\t"
+                        << target_name << "\t"
+                        << begin_pos << "\t"
+                        << end_pos << std::endl;
                     } else {
                         // BEDPE format
                         std::cout << query_name << "\t"
@@ -584,6 +591,7 @@ void untangle(
     const double& min_jaccard,
     const uint64_t& cut_every,
     const bool& paf_output,
+    const bool& gggenes_output,
     const std::string& cut_points_input,
     const std::string& cut_points_output,
     const size_t& num_threads,
@@ -737,15 +745,18 @@ void untangle(
     //std::cout << "path\tfrom\tto" << std::endl;
     //auto step_pos = make_step_index(graph, queries);
     if (progress) {
-        std::cerr << "[odgi::algorithms::untangle] writing " << ( paf_output ? "PAF" : "pair BED" ) << " for " << queries.size() << " queries" << std::endl;
+        std::cerr << "[odgi::algorithms::untangle] writing " << ( paf_output ? "PAF" : ( gggenes_output ? "gggenes tsv" : "pair BED" ) ) << " for " << queries.size() << " queries" << std::endl;
     }
 
     ska::flat_hash_map<path_handle_t, uint64_t> path_to_len;
 
-    if (!paf_output){
+    if (gggenes_output) {
+        // gggenes format
+        std::cout << "molecule\tgene\tstart\tend" << std::endl;
+    } else if (!paf_output){
         // BEDPE format
         std::cout << "#query.name\tquery.start\tquery.end\tref.name\tref.start\tref.end\tscore\tinv\tself.cov\tnth.best" << std::endl;
-    }else{
+    } else {
         // PAF format
         auto get_path_length = [](const PathHandleGraph &graph, const path_handle_t &path_handle) {
             uint64_t path_len = 0;
@@ -778,7 +789,10 @@ void untangle(
                 merge_dist,
                 step_index,
 				graph);
-        map_segments(graph, query, cuts, target_segments, step_index, self_index, max_self_coverage, n_best, min_jaccard, paf_output, path_to_len);
+        map_segments(graph, query, cuts, target_segments,
+                     step_index, self_index,
+                     max_self_coverage, n_best, min_jaccard,
+                     paf_output, gggenes_output, path_to_len);
 
         //write_cuts(graph, query, cuts, step_pos);
     }

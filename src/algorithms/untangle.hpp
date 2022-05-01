@@ -102,6 +102,7 @@ void map_segments(
     const uint64_t& n_best,
     const double& min_jaccard,
     const bool& paf_output,
+    const bool& gggenes_output,
     const ska::flat_hash_map<path_handle_t, uint64_t>& path_to_len);
 
 void untangle(
@@ -114,6 +115,7 @@ void untangle(
     const double& min_jaccard,
     const uint64_t& cut_every,
     const bool& paf_output,
+    const bool& gggenes_output,
     const std::string& cut_points_input,
     const std::string& cut_points_output,
     const size_t& num_threads,

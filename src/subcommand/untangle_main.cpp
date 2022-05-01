@@ -48,6 +48,8 @@ int main_untangle(int argc, char **argv) {
                                          {'e', "cut-every"});
     args::Flag paf_output(untangling_opts, "paf_output", "emit the output in PAF format.",
                         {'p', "paf-output"});
+    args::Flag gggenes_output(untangling_opts, "gggenes_output", "emit the output in gggenes-compatible tabular format.",
+                              {'g', "gggenes-output"});
     args::ValueFlag<std::string> input_cut_points(untangling_opts, "FILE", "A text file of node identifiers (one identifier per row) where to start the segment boundaries."
                                                                            "When specified, no further starting points will be added.", {'c', "cut-points-input"});
     args::ValueFlag<std::string> output_cut_points(untangling_opts, "FILE", "Emit node identifiers where segment boundaries started (one identifier per row).",
@@ -206,6 +208,7 @@ int main_untangle(int argc, char **argv) {
 								 (_jaccard_threshold ? args::get(_jaccard_threshold) : 0.0),
 								 (_cut_every ? args::get(_cut_every) : 0),
 								 args::get(paf_output),
+                                 args::get(gggenes_output),
 								 args::get(input_cut_points),
 								 args::get(output_cut_points),
 								 num_threads,
@@ -224,6 +227,7 @@ int main_untangle(int argc, char **argv) {
 								 (_jaccard_threshold ? args::get(_jaccard_threshold) : 0.0),
 								 (_cut_every ? args::get(_cut_every) : 0),
 								 args::get(paf_output),
+                                 args::get(gggenes_output),
 								 args::get(input_cut_points),
 								 args::get(output_cut_points),
 								 num_threads,
