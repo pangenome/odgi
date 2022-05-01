@@ -558,7 +558,8 @@ void map_segments(
                         std::cout << query_name << "\t"
                         << target_name << "\t"
                         << begin_pos << "\t"
-                        << end_pos << std::endl;
+                        << end_pos << "\t"
+                        << (mapping.is_inv ? "0" : "1") << std::endl;
                     } else {
                         // BEDPE format
                         std::cout << query_name << "\t"
@@ -752,7 +753,7 @@ void untangle(
 
     if (gggenes_output) {
         // gggenes format
-        std::cout << "molecule\tgene\tstart\tend" << std::endl;
+        std::cout << "molecule\tgene\tstart\tend\tstrand" << std::endl;
     } else if (!paf_output){
         // BEDPE format
         std::cout << "#query.name\tquery.start\tquery.end\tref.name\tref.start\tref.end\tscore\tinv\tself.cov\tnth.best" << std::endl;

@@ -61,7 +61,7 @@ longer link on the bottom indicates that the copy number status varies across th
 Moreover, C4A and C4B genes segregate in both long and short genomic forms, distinguished by the presence or absence of a
 human endogenous retroviral (HERV) sequence, as also highlighted by the short nested link on the left of the image.
 Coloring by path depth, we can see that the two references present two different allele copies of the C4 genes,
-both of them including the HERV sequence. The entirely grey paths have one copy of these genes. ``HG01071#2`` presents 3 copies of the `locus` (orange),
+both of them including the HERV sequence. The entirely grey paths have one copy of these genes. ``HG01071#2`` presents 3 copies of the locus (orange),
 of which one contains the HERV sequence (gray in the middle of the orange). In ``HG01952#1``, the HERV sequence is absent.
 
 
@@ -69,9 +69,9 @@ of which one contains the HERV sequence (gray in the middle of the orange). In `
 Linearize the C4 region
 -----------------------------------
 
-To obtain a more precise overview of a collapsed `locus`, we can apply ``odgi untangle`` to segment paths into linear segments
+To obtain a more precise overview of a collapsed locus, we can apply ``odgi untangle`` to segment paths into linear segments
 by breaking these segments where the paths loop back on themselves. In this way, we can obtain information on the copy
-number status of the sequences in the `locus`.
+number status of the sequences in the locus.
 
 To untangle the C4 graph, execute:
 
@@ -157,4 +157,3 @@ The plots show the copy number status of the haplotypes in the C4 region with re
 On the grch38 reference, `C4A precedes C4B, and both are in single copy <http://genome.ucsc.edu/cgi-bin/hgTracks?db=hg38&lastVirtModeType=default&lastVirtModeExtraState=&virtModeType=default&virtMode=0&nonVirtPosition=&position=chr6%3A31972057%2D32055418&hgsid=1211002763_taymHTHRXlpfFiqu51J8nWGyKv67>`_.
 ``odgi untangle``'s output makes then clear, for example, that in ``HG00438`` the C4A gene is missing in both haplotypes, while ``HG01071#2``
 has two copies of C4B.
-
