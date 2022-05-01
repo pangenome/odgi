@@ -195,7 +195,7 @@ man_pages = [
     ('man/odgi_position', 'odgi_position', u'Find, translate, and liftover graph and path positions between graphs. '
                                            u'Results are printed to stdout.',
      [EG], 1),
-    ('man/odgi_prune', 'odgi_prune', u'Remove complex parts of the graph.',
+    ('man/odgi_prune', 'odgi_prune', u'Remove parts of the graph.',
      [EG], 1),
     ('man/odgi_server', 'odgi_server', u'Start a basic HTTP server with a given path index file to go from '
                                        u'*path:position* to *pangenome:position* very efficiently.',

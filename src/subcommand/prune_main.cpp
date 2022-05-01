@@ -24,7 +24,7 @@ int main_prune(int argc, char** argv) {
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
-    args::ArgumentParser parser("Remove complex parts of the graph.");
+    args::ArgumentParser parser("Remove parts of the graph.");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
     args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::ValueFlag<std::string> dg_out_file(mandatory_opts, "FILE", "Write the pruned graph in ODGI format to *FILE*. A file ending with *.og* is recommended.", {'o', "out"});
@@ -46,7 +46,11 @@ int main_prune(int argc, char** argv) {
     args::ValueFlag<uint64_t> expand_length(step_opts, "N", "Also include nodes within this graph nucleotide distance of a component passing the prune thresholds.", {'l', "expand-length"});
     args::Group path_opts(parser, "[ Path Options ]");
     args::ValueFlag<uint64_t> expand_path_length(path_opts, "N", "Also include nodes within this path length of a component passing the prune thresholds.", {'p', "expand-path-length"});
-    args::Flag drop_paths(path_opts, "bool", "Remove the paths from the graph.", {'D', "drop-paths"});
+    args::ValueFlag<std::string> drop_paths(path_opts, "FILE",
+                                                  "List of paths to remove. The FILE must "
+                                                  "contain one path name per line and a subset of all paths can be specified.",
+                                                  {'r', "drop-paths"});
+    args::Flag drop_all_paths(path_opts, "bool", "Remove all paths from the graph.", {'D', "drop-all-paths"});
     args::ValueFlag<uint64_t> cut_tips_min_depth(path_opts, "N", "Remove nodes which are graph tips and have less than *N* path depth.", {'m', "cut-tips-min-depth"});
     args::Flag remove_isolated(path_opts, "bool", "Remove isolated nodes covered by a single path.", {'I', "remove-isolated"});
     args::Group threading_opts(parser, "[ Threading ]");
@@ -176,8 +180,46 @@ int main_prune(int argc, char** argv) {
         algorithms::remove_isolated_paths(graph);
         graph.optimize();
     }
-    if (args::get(drop_paths)) {
+    if (args::get(drop_all_paths)) {
         graph.clear_paths();
+    } else if (!args::get(drop_paths).empty()){
+        std::vector<path_handle_t> paths_to_remove;
+
+        std::ifstream path_names_in(args::get(drop_paths));
+
+        uint64_t num_of_paths_in_file = 0;
+
+        std::vector<bool> path_already_seen;
+        path_already_seen.resize(graph.get_path_count(), false);
+
+        std::string line;
+        while (std::getline(path_names_in, line)) {
+            if (!line.empty()) {
+                if (graph.has_path(line)) {
+                    const path_handle_t path = graph.get_path_handle(line);
+                    const uint64_t path_rank = as_integer(path) - 1;
+                    if (!path_already_seen[path_rank]) {
+                        path_already_seen[path_rank] = true;
+                        paths_to_remove.push_back(path);
+                    } else {
+                        std::cerr << "[odgi::prune] error: in the path list there are duplicated path names."
+                                  << std::endl;
+                        exit(1);
+                    }
+                }
+
+                ++num_of_paths_in_file;
+            }
+        }
+
+        path_names_in.close();
+
+        std::cerr << "[odgi::prune] found " << paths_to_remove.size() << "/" << num_of_paths_in_file
+                  << " paths to remove." << std::endl;
+
+        for(auto& path : paths_to_remove) {
+            graph.destroy_path(path);
+        }
     }
 
     {
@@ -196,7 +238,7 @@ int main_prune(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand odgi_prune("prune", "Remove complex parts of the graph.",
+static Subcommand odgi_prune("prune", "Remove parts of the graph.",
                               PIPELINE, 3, main_prune);
 
 

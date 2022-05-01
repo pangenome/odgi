@@ -4,7 +4,7 @@
 odgi prune
 #########
 
-Remove complex parts of the graph.
+Remove parts of the graph.
 
 SYNOPSIS
 ========
