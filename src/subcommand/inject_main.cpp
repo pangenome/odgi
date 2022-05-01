@@ -123,7 +123,7 @@ int main_inject(int argc, char **argv) {
     omp_set_num_threads(num_threads);
     graph.set_number_of_threads(num_threads);
 
-    algorithms::inject_ranges(graph, path_intervals, ordered_intervals);
+    algorithms::inject_ranges(graph, path_intervals, ordered_intervals, args::get(progress));
 
     const std::string outfile = args::get(og_out_file);
     if (outfile == "-") {

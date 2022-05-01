@@ -32,7 +32,7 @@ rm -rf sphinx_build && sphinx-build -b html ./ sphinx_build
 Assuming you have Python already, install Sphinx:
 
 ```
-pip install sphinx
+pip install sphinx sphinx_rtd_theme breathe m2r2 asciidoc --user
 ```
 
 Then, go into your documentation directory

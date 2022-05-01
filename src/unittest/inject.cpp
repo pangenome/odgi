@@ -109,7 +109,7 @@ TEST_CASE( "Inject works", "[inject]" ) {
             }
         }
 
-        algorithms::inject_ranges(g, ivals, ordered_ivals);
+        algorithms::inject_ranges(g, ivals, ordered_ivals, true);
 
         //g.to_gfa(std::cout);
 

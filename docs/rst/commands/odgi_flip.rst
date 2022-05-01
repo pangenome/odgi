@@ -15,7 +15,7 @@ DESCRIPTION
 ===========
 
 The odgi flip command converts BED records against graph paths into new paths labeled by the BED record name.
-Flipion allows us to import genome annotations as paths, and is useful to produce input to odgi untangle.
+Flip allows us to import genome annotations as paths, and is useful to produce input to odgi untangle.
 
 OPTIONS
 =======

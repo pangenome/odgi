@@ -8,7 +8,7 @@ using namespace handlegraph;
 
 void inject_ranges(MutablePathDeletableHandleGraph& graph,
                    const ska::flat_hash_map<path_handle_t, std::vector<std::pair<interval_t, std::string>>>& path_intervals,
-                   const std::vector<std::string>& ordered_intervals) {
+                   const std::vector<std::string>& ordered_intervals, const bool show_progress) {
 
     // we collect cut points based on where our intervals start and end
     ska::flat_hash_map<handle_t, std::vector<size_t>> cut_points;
@@ -18,6 +18,24 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
     graph.for_each_path_handle([&](const path_handle_t& path) {
         paths.push_back(path);
     });
+
+    std::atomic<uint64_t> num_intervals;
+    num_intervals.store(0);
+
+    std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress;
+    if (show_progress) {
+        // Count intervals to process
+#pragma omp parallel for
+        for (auto& path : paths) {
+            auto x = path_intervals.find(path);
+            if (x != path_intervals.end()) {
+                num_intervals += x->second.size();
+            }
+        }
+
+        progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+                num_intervals.load(), "[odgi::inject] collecting cut points");
+    }
 
 #pragma omp parallel for
     for (auto& path : paths) {
@@ -66,6 +84,9 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
                             cut_points[h_fwd].push_back(offset);
                         }
                         ++ival;
+                        if (show_progress) {
+                            progress->increment(1);
+                        }
                     }
                     pos += len;
                     last_h = h;
@@ -90,6 +111,10 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
         }
     }
 
+    if (show_progress) {
+        progress->finish();
+    }
+
     for (auto& c : cut_points) {
         auto& v = c.second;
         std::sort(v.begin(), v.end());
@@ -108,6 +133,11 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
 
     // then we cut the nodes in the graph at the interval starts and ends
     chop_at(graph, cut_points);
+
+    if (show_progress) {
+        progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+                num_intervals.load(), "[odgi::inject] injecting intervals");
+    }
 
     ska::flat_hash_map<std::string, path_handle_t> injected_paths;
     for (auto& n : ordered_intervals) {
@@ -178,6 +208,9 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
                         // the intervals must start at the node start
                         open_intervals_by_end[ival->first.second] = std::make_pair(ival->second, step);
                         ++ival;
+                        if (show_progress) {
+                            progress->increment(1);
+                        }
                     }
                     pos += len;
                     last_h = h;
@@ -209,6 +242,9 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
         }
     }
 
+    if (show_progress) {
+        progress->finish();
+    }
 }
 
 void chop_at(MutablePathDeletableHandleGraph &graph,
