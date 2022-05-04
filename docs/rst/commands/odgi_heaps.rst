@@ -43,6 +43,9 @@ Heaps Options
 | **-n, --n-permutations**\ =\ *N*
 | Number of permutations to run.
 
+| **-d, --min-node-depth**\ =\ *N*
+| Exclude nodes with less than this path depth (default: 0).
+
 Threading
 ---------
 
@@ -64,16 +67,16 @@ Program Information
 ..
 	EXIT STATUS
 	===========
-	
+
 	| **0**
 	| Success.
-	
+
 	| **1**
 	| Failure (syntax or usage error; parameter error; file processing
 	  failure; unexpected error).
-	
+
 	BUGS
 	====
-	
+
 	Refer to the **odgi** issue tracker at
 	https://github.com/pangenome/odgi/issues.
