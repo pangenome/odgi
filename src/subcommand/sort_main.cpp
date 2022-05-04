@@ -1,3 +1,4 @@
+#include <xp.hpp>
 #include "subcommand.hpp"
 #include "odgi.hpp"
 #include "args.hxx"
@@ -38,6 +39,8 @@ int main_sort(int argc, char** argv) {
     args::Group files_io_opts(parser, "[ Files IO Options ]");
     args::ValueFlag<std::string> xp_in_file(files_io_opts, "FILE", "Load the succinct variation graph index from this *FILE*. The file name usually ends with *.xp*.", {'X', "path-index"});
     args::ValueFlag<std::string> sort_order_in(files_io_opts, "FILE", "*FILE* containing the sort order. Each line contains one node identifer.", {'s', "sort-order"});
+    args::ValueFlag<std::string> tmp_base(files_io_opts, "BASE", "use this basename for temporary files during build",
+                                      {'T', "base"});
     args::Group topo_sorts_opts(parser, "[ Topological Sort Options ]");
     args::Flag breadth_first(topo_sorts_opts, "breadth_first", "Use a (chunked) breadth first topological sort.", {'b', "breadth-first"});
     args::ValueFlag<uint64_t> breadth_first_chunk(topo_sorts_opts, "N", "Chunk size for breadth first topological sort. Specify how many"
@@ -211,6 +214,14 @@ int main_sort(int argc, char** argv) {
         std::cerr << "[odgi::sort] error: there can only be one argument provided for the minimum number of term updates in the path guided 1D SGD."
                      "Please either use -G=[N], path-sgd-min-term-updates-paths=[N] or -U=[N], path-sgd-min-term-updates-nodes=[N]." << std::endl;
         return 1;
+    }
+
+    if (tmp_base) {
+        xp::temp_file::set_dir(args::get(tmp_base));
+    } else {
+        char* cwd = get_current_dir_name();
+        xp::temp_file::set_dir(std::string(cwd));
+        free(cwd);
     }
 
     // If required, first of all, optimize the graph so that it is optimized for subsequent algorithms (if required)

@@ -61,7 +61,7 @@ Our annotations are against the full `grch38#chr6`, in ``test/chr6.C4.bed``:
    grch38#chr6	32014795	32035418	C4B
    grch38#chr6	32017839	32023796	C4B_HERV-K
 
-However, the C4 locus graph ``chr6.c$.gfa`` is over the reference range ``grch38#chr6:31972046-32055647``.
+However, the C4 locus graph ``chr6.c4.gfa`` is over the reference range ``grch38#chr6:31972046-32055647``.
 ``odgi extract`` uses `PanSN sequencing naming format <https://github.com/pangenome/PanSN-spec>`_, and so we can see the
 
 .. code-block:: bash
