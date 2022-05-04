@@ -28,6 +28,7 @@ void for_each_heap_permutation(const PathHandleGraph& graph,
                                const std::vector<std::vector<path_handle_t>>& path_groups,
                                const ska::flat_hash_map<path_handle_t, std::vector<interval_t>>& path_intervals,
                                uint64_t n_permutations,
+                               uint64_t min_node_depth,
                                const std::function<void(const std::vector<uint64_t>&, uint64_t)>& func);
 
 }
