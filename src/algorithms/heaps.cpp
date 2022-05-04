@@ -8,6 +8,7 @@ void for_each_heap_permutation(const PathHandleGraph& graph,
                                const std::vector<std::vector<path_handle_t>>& path_groups,
                                const ska::flat_hash_map<path_handle_t, std::vector<interval_t>>& path_intervals,
                                uint64_t n_permutations,
+                               uint64_t min_node_depth,
                                const std::function<void(const std::vector<uint64_t>&, uint64_t)>& func) {
     //const std::function<bool(const path_handle_t&, _t)>& in_range) {
     //std::vector<std::vector<path_handle_t>>
@@ -38,7 +39,11 @@ void for_each_heap_permutation(const PathHandleGraph& graph,
     if (path_intervals.size() == 0) {
         // keep everything if we aren't given intervals to guide subset
         for (uint64_t i = 0; i < graph.get_node_count(); ++i) {
-            target_nodes.set(i, true);
+            if (min_node_depth == 0
+                || (graph.get_step_count(graph.get_handle(i+1))
+                    >= min_node_depth)) {
+                target_nodes.set(i, true);
+            }
         }
     } else {
         std::vector<path_handle_t> paths;
@@ -70,7 +75,9 @@ void for_each_heap_permutation(const PathHandleGraph& graph,
                             ++ival;
                         }
                         uint64_t rank = graph.get_id(h)-1; // assumes compaction!
-                        if (interval_ends.size()) {
+                        if (interval_ends.size()
+                            && (min_node_depth == 0
+                                || graph.get_step_count(h) >= min_node_depth)) {
                             target_nodes.set(rank, true);
                         }
                         pos += len;

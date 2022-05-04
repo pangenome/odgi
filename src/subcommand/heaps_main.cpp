@@ -32,6 +32,8 @@ int main_heaps(int argc, char **argv) {
                                               {'b', "bed-targets"});
     args::ValueFlag<uint64_t> _n_permutations(heaps_opts, "N", "Number of permutations to run.",
                                              {'n', "n-permutations"});
+    args::ValueFlag<uint64_t> _min_node_depth(heaps_opts, "N", "Exclude nodes with less than this path depth (default: 0).",
+                                         {'d', "min-node-depth"});
     args::Group threading_opts(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> nthreads(threading_opts, "N", "Number of threads to use for parallel operations.",
                                        {'t', "threads"});
@@ -66,6 +68,8 @@ int main_heaps(int argc, char **argv) {
     omp_set_num_threads(num_threads);
 
     const uint64_t n_permutations = args::get(_n_permutations) ? args::get(_n_permutations) : 1;
+
+    const uint64_t min_node_depth = args::get(_min_node_depth) ? args::get(_min_node_depth) : 0;
 
     graph_t graph;
     assert(argc > 0);
@@ -177,7 +181,7 @@ int main_heaps(int argc, char **argv) {
         }
     };
 
-    algorithms::for_each_heap_permutation(graph, path_groups, intervals, n_permutations, handle_output);
+    algorithms::for_each_heap_permutation(graph, path_groups, intervals, n_permutations, min_node_depth, handle_output);
 
     return 0;
 }
