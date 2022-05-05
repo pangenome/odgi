@@ -52,22 +52,27 @@ void flip_paths(graph_t& graph) {
             graph.append_step(flipped, h);
         }
     }
-    // delete the old paths, then optimize the graph and return it (by reference)
-#pragma omp parallel for
-    for (auto& path : to_flip_v) {
-        graph.destroy_path(path);
-    }
-    // apply original order
+    // apply original order and record which paths to drop
     std::vector<path_handle_t> order;
+    std::vector<path_handle_t> to_drop;
     for (auto& path : paths) {
         auto f = to_flip.find(path);
-        if (f == to_flip.end()) {
+        if (f != to_flip.end()) {
             order.push_back(path);
-        } else {
+            to_drop.push_back(as_path_handle(order.size()));
             order.push_back(f->second);
+        } else {
+            order.push_back(path);
         }
     }
+    // set the order
     graph.apply_path_ordering(order);
+    // delete the old paths, then optimize the graph and return it (by reference)
+#pragma omp parallel for
+    for (auto& path : to_drop) {
+        graph.destroy_path(path);
+    }
+    // clean up deleted path steps
     graph.optimize();
 }
 
