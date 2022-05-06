@@ -549,6 +549,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/stepindex_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/heaps_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/inject_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/procbed_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/flip_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/pav_main.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.cpp
@@ -603,6 +604,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/crush_n.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/heaps.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/inject.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/procbed.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/flip.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/edge.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/inject.cpp

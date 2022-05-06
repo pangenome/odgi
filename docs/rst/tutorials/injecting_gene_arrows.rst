@@ -70,11 +70,21 @@ However, the C4 locus graph ``chr6.c4.gfa`` is over the reference range ``grch38
    # grch38#chr6:31972046-32055647
 
 We must adjust the annotations to match the subgraph to ensure that path names and coordinates exactly correspond between the BED and GFA.
-We subtract ``31972046`` from both coordinates and adjust the path name to match that in the subgraph, yielding:
+We do so using **odgi procbed**, which like `Procrustes of Greek mythology <https://en.wikipedia.org/wiki/Procrustes>`_ cuts BED records to fit within a given subgraph.
 
 .. code-block:: bash
 
-   <chr6.C4.bed awk '{ i=31972046; j=32055647; print $1":"i"-"j, $2-i, $3-i, $4 }' | tr ' ' '\t' | sort -n >chr6.C4.adj.bed
+   odgi procbed -i chr6.C4.gfa -b chr6.C4.bed >chr6.C4.adj.bed
+
+The coordinate space now matches that of the C4A/B subgraph.
+
+.. code-block:: none
+
+   # chr6.C4.adj.bed
+   grch38#chr6:31972046-32055647   10011   30635   C4A
+   grch38#chr6:31972046-32055647   13055   19012   C4A_HERV-K
+   grch38#chr6:31972046-32055647   42749   63372   C4B
+   grch38#chr6:31972046-32055647   45793   51750   C4B_HERV-K
 
 Now, we can inject these into the graph:
 
