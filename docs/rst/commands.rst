@@ -33,6 +33,7 @@ Commands
     commands/odgi_paths
     commands/odgi_position
     commands/odgi_prune
+    commands/odgi_procbed
     commands/odgi_server
     commands/odgi_sort
     commands/odgi_squeeze
