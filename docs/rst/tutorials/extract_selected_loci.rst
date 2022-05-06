@@ -218,7 +218,7 @@ To extract the sub-graph containing all the HLA genes annotated in the ``chr6.HL
 
 .. code-block:: bash
 
-    odgi extract -i chr6.pan.og -o chr6.pan.MHC.og -b chr6.HLA_genes.bed  -E --threads 2 -P
+    odgi extract -i chr6.pan.og -o chr6.pan.MHC.og -b chr6.HLA_genes.bed -c 0 -E --threads 2 -P
 
 The instruction extracts:
 

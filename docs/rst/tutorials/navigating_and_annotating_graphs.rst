@@ -247,7 +247,7 @@ extract the HLA region and produce a CSV to take a look at the annotated nodes i
     wget https://s3-us-west-2.amazonaws.com/human-pangenomics/pangenomes/scratch/2021_10_11_pggb_wgg.85/chroms/chr6.pan.fa.a2fb268.4030258.b5c839f.smooth.gfa.gz
     gunzip chr6.pan.fa.a2fb268.4030258.b5c839f.smooth.gfa.gz
     odgi build -g chr6.pan.fa.a2fb268.4030258.b5c839f.smooth.gfa -o chr6.pan.fa.a2fb268.4030258.b5c839f.smooth.gfa.og -P -t 28
-    odgi extract -i chr6.pan.fa.a2fb268.4030258.b5c839f.smooth.gfa.og -r grch38#chr6:29000000-34000000 -o - -t 28 -P -E | odgi sort -i - -o chr6.pan.fa.a2fb268.4030258.b5c839f.smooth.gfa.og.29-34.og -O
+    odgi extract -i chr6.pan.fa.a2fb268.4030258.b5c839f.smooth.gfa.og -r grch38#chr6:29000000-34000000 -o - -t 28 -P -c 0 -E | odgi sort -i - -o chr6.pan.fa.a2fb268.4030258.b5c839f.smooth.gfa.og.29-34.og -O
 
 We downloaded the graph, unpacked it, translated it into the `odgi` format and extracted the HLA region.
 

@@ -185,7 +185,7 @@ Extract the MHC graph from Chr6
 	gunzip ${prefix_chr6_smooth}.gfa.gz
 	odgi build -g ${prefix_chr6_smooth}.gfa -o ${prefix_chr6_smooth}.og -t 16 -P
 	# extraction and optimization of the MHC locus
-	odgi extract -i ${prefix_chr6_smooth}.og -r grch38#chr6:29000000-34000000 -o - --full-range -t 16 -P | odgi sort -i - -o ${prefix_chr6_smooth}.mhc.og --optimize
+	odgi extract -i ${prefix_chr6_smooth}.og -r grch38#chr6:29000000-34000000 -o - -c 0 --full-range -t 16 -P | odgi sort -i - -o ${prefix_chr6_smooth}.mhc.og --optimize
 
 --------------------------------
 Visualize the MHC by orientation
