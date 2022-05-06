@@ -24,9 +24,8 @@ int main_flip(int argc, char **argv) {
     args::Group mandatory_opts(parser, "[ MANDATORY ARGUMENTS ]");
     args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. GFA is also supported.", {'i', "idx"});
     args::ValueFlag<std::string> og_out_file(mandatory_opts, "FILE", "Write the sorted dynamic succinct variation graph to this file (e.g. *.og*).", {'o', "out"});
-    //args::Group flip_opts(parser, "[ Flip Options ]");
-    //args::ValueFlag<std::string> _bed_targets(flip_opts, "FILE", "BED file over path space of the graph. Records will be converted into new paths in the output graph.",
-    //                                          {'b', "bed-targets"});
+    args::Group flip_opts(parser, "[ Flip Options ]");
+    args::ValueFlag<std::string> _no_flips(flip_opts, "FILE", "Don't flip paths listed one per line in FILE.", {'n', "no-flips"});
     args::Group threading_opts(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> nthreads(threading_opts, "N", "Number of threads to use for parallel operations.",
                                        {'t', "threads"});
@@ -80,7 +79,47 @@ int main_flip(int argc, char **argv) {
 
     graph.set_number_of_threads(num_threads);
 
-    algorithms::flip_paths(graph);
+    // path loading
+    auto load_paths = [&](const std::string& path_names_file) {
+        std::ifstream path_names_in(path_names_file);
+        uint64_t num_of_paths_in_file = 0;
+        std::vector<bool> path_already_seen;
+        path_already_seen.resize(graph.get_path_count(), false);
+        std::string line;
+        std::vector<path_handle_t> paths;
+        while (std::getline(path_names_in, line)) {
+            if (!line.empty()) {
+                if (graph.has_path(line)) {
+                    const path_handle_t path = graph.get_path_handle(line);
+                    const uint64_t path_rank = as_integer(path) - 1;
+                    if (!path_already_seen[path_rank]) {
+                        path_already_seen[path_rank] = true;
+                        paths.push_back(path);
+                    } else {
+                        std::cerr << "[odgi::untangle] error: in the path list there are duplicated path names."
+                                  << std::endl;
+                        exit(1);
+                    }
+                }
+                ++num_of_paths_in_file;
+            }
+        }
+        path_names_in.close();
+        std::cerr << "[odgi::untangle] found " << paths.size() << "/" << num_of_paths_in_file
+                  << " paths to consider." << std::endl;
+        if (paths.empty()) {
+            std::cerr << "[odgi::untangle] error: no path to consider." << std::endl;
+            exit(1);
+        }
+        return paths;
+    };
+
+    std::vector<path_handle_t> no_flips;
+    if (_no_flips) {
+        no_flips = load_paths(args::get(_no_flips));
+    }
+
+    algorithms::flip_paths(graph, no_flips);
 
     const std::string outfile = args::get(og_out_file);
     if (outfile == "-") {
