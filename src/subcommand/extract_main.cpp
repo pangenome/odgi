@@ -27,6 +27,12 @@ namespace odgi {
         args::ArgumentParser parser("Extract subgraphs or parts of a graph defined by query criteria.");
         args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
         args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
+        args::ValueFlag<uint64_t> _context_steps(mandatory_opts, "N",
+                                                 "The number of steps (nodes) away from our initial subgraph that we should collect.",
+                                                 {'c', "context-steps"});
+        args::ValueFlag<uint64_t> _context_bases(mandatory_opts, "N",
+                                                 "The number of bases away from our initial subgraph that we should collect.",
+                                                 {'L', "context-bases"});
         args::Group graph_files_io_opts(parser, "[ Graph Files IO ]");
         args::ValueFlag<std::string> og_out_file(graph_files_io_opts, "FILE", "Store all subgraphs in this FILE. The file name usually ends with *.og*.",
                                                  {'o', "out"});
@@ -41,12 +47,6 @@ namespace odgi {
         args::ValueFlag<uint64_t> _target_node(extract_opts, "ID", "A single node ID from which to begin our traversal.",
                                                {'n', "node"});
         args::ValueFlag<std::string> _node_list(extract_opts, "FILE", "A file with one node id per line. The node specified will be extracted from the input graph.", {'l', "node-list"});
-        args::ValueFlag<uint64_t> _context_steps(extract_opts, "N",
-                                                "The number of steps (nodes) away from our initial subgraph that we should collect.",
-                                                {'c', "context-steps"});
-        args::ValueFlag<uint64_t> _context_bases(extract_opts, "N",
-                                   "The number of bases away from our initial subgraph that we should collect.",
-                                   {'L', "context-bases"});
         args::ValueFlag<std::string> _path_range(extract_opts, "STRING",
                                                  "Find the node(s) in the specified path range TARGET=path[:pos1[-pos2]] "
                                                  "(0-based coordinates).", {'r', "path-range"});
@@ -104,8 +104,14 @@ namespace odgi {
             return 1;
         }
 
+        if (!_context_steps && !_context_bases) {
+            std::cerr << "[odgi::extract] error: please specify the expanding context either in steps (with -c/--context-steps) or "
+                         "in bases (-L/--context-bases). Values equal to or greater than 0 are allowed." << std::endl;
+            return 1;
+        }
+
         if (_context_steps && _context_bases) {
-            std::cerr << "[odgi::extract] error: please specify the expanding context either in steps (with -c/--context-steps) or"
+            std::cerr << "[odgi::extract] error: please specify the expanding context either in steps (with -c/--context-steps) or "
                          "in bases (-L/--context-bases), not both." << std::endl;
             return 1;
         }
