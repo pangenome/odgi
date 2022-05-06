@@ -261,6 +261,10 @@ path_step_index_t::path_step_index_t(const PathHandleGraph& graph,
                                                         step));
                 offset += graph.get_length(graph.get_handle_of_step(step));
             });
+        if (offset == 0) {
+            std::cerr << "[odgi::algorithms::stepindex] unable to index empty path " << graph.get_path_name(path) << std::endl;
+            std::abort();
+        }
 
         node_offset.resize(node_count+1);
         step_offset.resize(step_count+1);
