@@ -93,7 +93,7 @@ To clean the pangenome graph, execute:
     odgi paths -i chr8.pan.og -L | grep '^grch38#chr8' > chr8.pan.path_to_fully_retain.txt
 
     odgi extract -i chr8.pan.og --threads 2 -P \
-         --inverse \
+         -c 0 --inverse \
          -b chr8.pan.regions_to_remove.bed \
          -R chr8.pan.path_to_fully_retain.txt \
          -o chr8.pan.clean.og
