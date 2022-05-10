@@ -28,7 +28,7 @@ namespace xp {
     void XP::from_handle_graph(odgi::graph_t &graph, std::string basename, const uint64_t& nthreads) {
         // create temporary file for path names
         if (basename.empty()) {
-            basename = temp_file::create();
+            basename = temp_file::get_dir() + '/';
         }
         from_handle_graph_impl(graph, basename, nthreads);
         temp_file::cleanup(); // clean up our temporary files
@@ -39,6 +39,9 @@ namespace xp {
 			std::cerr << "error [xp]: Graph to index is not optimized. Please run 'odgi sort' using -O, --optimize." << std::endl;
 			exit(1);
     	}
+        // Specify the working directory
+        sdsl::cache_config config(true, basename);
+
         std::string path_names;
         // the graph must be compacted for this to work
         sdsl::int_vector<> position_map;
@@ -110,7 +113,8 @@ namespace xp {
         std::string path_name_file = basename + ".pathnames.iv";
         sdsl::store_to_file((const char *) path_names.c_str(), path_name_file);
         // read file and construct compressed suffix array
-        sdsl::construct(pn_csa, path_name_file, 1);
+
+        sdsl::construct(pn_csa, path_name_file, config, 1);
         // we need to take care of the node->path vectors
         node_path_ms.index(nthreads, graph.get_node_count() + 1);
         sdsl::util::assign(nr_iv, sdsl::int_vector<>(np_size));
