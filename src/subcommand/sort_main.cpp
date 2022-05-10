@@ -39,8 +39,7 @@ int main_sort(int argc, char** argv) {
     args::Group files_io_opts(parser, "[ Files IO Options ]");
     args::ValueFlag<std::string> xp_in_file(files_io_opts, "FILE", "Load the succinct variation graph index from this *FILE*. The file name usually ends with *.xp*.", {'X', "path-index"});
     args::ValueFlag<std::string> sort_order_in(files_io_opts, "FILE", "*FILE* containing the sort order. Each line contains one node identifer.", {'s', "sort-order"});
-    args::ValueFlag<std::string> tmp_base(files_io_opts, "BASE", "use this basename for temporary files during build",
-                                      {'T', "base"});
+    args::ValueFlag<std::string> tmp_base(files_io_opts, "PATH", "directory for temporary files", {'C', "temp-dir"});
     args::Group topo_sorts_opts(parser, "[ Topological Sort Options ]");
     args::Flag breadth_first(topo_sorts_opts, "breadth_first", "Use a (chunked) breadth first topological sort.", {'b', "breadth-first"});
     args::ValueFlag<uint64_t> breadth_first_chunk(topo_sorts_opts, "N", "Chunk size for breadth first topological sort. Specify how many"

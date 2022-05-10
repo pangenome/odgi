@@ -80,6 +80,9 @@ Files IO Options
 | *FILE* containing the sort order. Each line contains one node
   identifier.
 
+| **-C, --temp-dir**\ =\ *PATH*
+| Directory for temporary files.
+
 Topological Sort Options
 -----------------
 
