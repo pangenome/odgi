@@ -46,9 +46,11 @@ int main_untangle(int argc, char **argv) {
                                                {'j', "min-jaccard"});
     args::ValueFlag<uint64_t> _cut_every(untangling_opts, "N", "Start a segment boundary every Nbp of the sorted graph (default: 0/off).",
                                          {'e', "cut-every"});
-    args::Flag paf_output(untangling_opts, "paf_output", "emit the output in PAF format.",
-                        {'p', "paf-output"});
-    args::Flag gggenes_output(untangling_opts, "gggenes_output", "emit the output in gggenes-compatible tabular format.",
+    args::Flag paf_output(untangling_opts, "paf_output", "Emit the output in PAF format.",
+                          {'p', "paf-output"});
+    args::Flag gene_order_output(untangling_opts, "gene_order_output", "Write each query as a series of target gene segments.",
+                                 {'G', "gene-order"});
+    args::Flag gggenes_output(untangling_opts, "gggenes_output", "Emit the output in gggenes-compatible tabular format.",
                               {'g', "gggenes-output"});
     args::ValueFlag<std::string> input_cut_points(untangling_opts, "FILE", "A text file of node identifiers (one identifier per row) where to start the segment boundaries."
                                                                            "When specified, no further starting points will be added.", {'c', "cut-points-input"});
@@ -186,6 +188,16 @@ int main_untangle(int argc, char **argv) {
 	std::sort(paths.begin(), paths.end());
 	paths.erase(std::unique(paths.begin(), paths.end()), paths.end());
 
+    algorithms::untangle_output_t output_type = algorithms::untangle_output_t::BEDPE;
+    if (args::get(paf_output)) {
+        output_type = algorithms::untangle_output_t::PAF;
+    } else if (args::get(gene_order_output)) {
+        output_type = algorithms::untangle_output_t::ORDER;
+    } else if (args::get(gggenes_output)) {
+        output_type = algorithms::untangle_output_t::GGGENES;
+    }
+
+
     if (make_self_dotplot) {
         for (auto& query : query_paths) {
             algorithms::self_dotplot(graph, query);
@@ -207,8 +219,7 @@ int main_untangle(int argc, char **argv) {
 								 (_best_n_mappings ? args::get(_best_n_mappings) : 1),
 								 (_jaccard_threshold ? args::get(_jaccard_threshold) : 0.0),
 								 (_cut_every ? args::get(_cut_every) : 0),
-								 args::get(paf_output),
-                                 args::get(gggenes_output),
+                                 output_type,
 								 args::get(input_cut_points),
 								 args::get(output_cut_points),
 								 num_threads,
@@ -226,8 +237,7 @@ int main_untangle(int argc, char **argv) {
 								 (_best_n_mappings ? args::get(_best_n_mappings) : 1),
 								 (_jaccard_threshold ? args::get(_jaccard_threshold) : 0.0),
 								 (_cut_every ? args::get(_cut_every) : 0),
-								 args::get(paf_output),
-                                 args::get(gggenes_output),
+                                 output_type,
 								 args::get(input_cut_points),
 								 args::get(output_cut_points),
 								 num_threads,
