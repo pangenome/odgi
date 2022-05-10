@@ -21,7 +21,8 @@ enum class untangle_output_t {
     BEDPE,
     PAF,
     GGGENES,
-    ORDER
+    ORDER,
+    SCHEMATIC
 };
 
 struct segment_mapping_t {

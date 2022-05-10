@@ -52,6 +52,8 @@ int main_untangle(int argc, char **argv) {
                                  {'G', "gene-order"});
     args::Flag gggenes_output(untangling_opts, "gggenes_output", "Emit the output in gggenes-compatible tabular format.",
                               {'g', "gggenes-output"});
+    args::Flag gggenes_schematic(untangling_opts, "gggenes_schematic", "Emit the output in gggenes-compatible *schematic* tabular format, where each gene is rendered as 100bp.",
+                                 {'X', "gggenes-schematic"});
     args::ValueFlag<std::string> input_cut_points(untangling_opts, "FILE", "A text file of node identifiers (one identifier per row) where to start the segment boundaries."
                                                                            "When specified, no further starting points will be added.", {'c', "cut-points-input"});
     args::ValueFlag<std::string> output_cut_points(untangling_opts, "FILE", "Emit node identifiers where segment boundaries started (one identifier per row).",
@@ -195,6 +197,8 @@ int main_untangle(int argc, char **argv) {
         output_type = algorithms::untangle_output_t::ORDER;
     } else if (args::get(gggenes_output)) {
         output_type = algorithms::untangle_output_t::GGGENES;
+    } else if (args::get(gggenes_schematic)) {
+        output_type = algorithms::untangle_output_t::SCHEMATIC;
     }
 
 

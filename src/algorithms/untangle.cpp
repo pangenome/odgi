@@ -565,7 +565,8 @@ void map_segments(
                         << "nb:i:" << nth_best << "\t"
                         << std::endl;
                     } else if (output_type == untangle_output_t::ORDER
-                               || output_type == untangle_output_t::GGGENES) {
+                               || output_type == untangle_output_t::GGGENES
+                               || output_type == untangle_output_t::SCHEMATIC) {
                         if (gene_order.size() && gene_order.back().target_path == target_path
                             && gene_order.back().query_end == begin_pos
                             && gene_order.back().target_end == target_begin_pos
@@ -609,8 +610,18 @@ void map_segments(
 #pragma omp critical (cout)
         std::cout << s << std::endl;
     }
-    if (output_type == untangle_output_t::GGGENES) {
+    if (output_type == untangle_output_t::GGGENES
+        || output_type == untangle_output_t::SCHEMATIC) {
         std::stringstream ss;
+        if (output_type == untangle_output_t::SCHEMATIC) {
+            uint64_t idx = 0;
+            for (auto& range : gene_order) {
+                range.query_begin = idx;
+                idx += 100;
+                range.query_end = idx;
+                idx += 50;
+            }
+        }
         for (auto& range : gene_order) {
             ss << query_name << "\t"
                << graph.get_path_name(range.target_path) << "\t"
@@ -810,7 +821,8 @@ void untangle(
         }
     } else if (output_type == untangle_output_t::BEDPE) {
         std::cout << "#query.name\tquery.start\tquery.end\tref.name\tref.start\tref.end\tscore\tinv\tself.cov\tnth.best" << std::endl;
-    } else if (output_type == untangle_output_t::GGGENES) {
+    } else if (output_type == untangle_output_t::GGGENES
+               || output_type == untangle_output_t::SCHEMATIC) {
         // gggenes format
         std::cout << "molecule\tgene\tstart\tend\tstrand" << std::endl;
     } else if (output_type == untangle_output_t::ORDER) {
