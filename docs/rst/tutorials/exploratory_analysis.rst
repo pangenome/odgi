@@ -33,17 +33,17 @@ The command creates a file called ``DRB1-3123.og``, which contains the input gra
 
 .. note::
 
-	If you know in advance that your graph is ``not optimized``, and you want to run at least one of the following subcommands:
+    If you know in advance that your graph is ``not optimized``, and you want to run at least one of the following subcommands:
 
-		- :ref:`odgi extract`
-		- :ref:`odgi layout`
-		- :ref:`odgi pathindex`
-		- :ref:`odgi sort`
+        - :ref:`odgi extract`
+        - :ref:`odgi layout`
+        - :ref:`odgi pathindex`
+        - :ref:`odgi sort`
 
-	Then please execute :ref:`odgi build` with ``-O, --optimize`` in order
-	to ensure that you don't run into any problems later. :ref:`odgi sort` can optimize already built graphs.
+    Then please execute :ref:`odgi build` with ``-O, --optimize`` in order
+    to ensure that you don't run into any problems later. :ref:`odgi sort` can optimize already built graphs.
 
-	In an optimized graph the minimum node identifier is one and the maximum node identifier is equal to the number of nodes in the graph.
+    In an optimized graph the minimum node identifier is one and the maximum node identifier is equal to the number of nodes in the graph.
 
 -----------------------------
 Visualize the DRB1-3123 graph
@@ -61,10 +61,10 @@ To obtain the following PNG image:
 
 In this 1-Dimensional visualization:
 
-- The graph nodes are arranged from left to right, forming the ``pangenome sequence``.
-- The colored bars represent the the paths versus the ``pangenome sequences`` in a binary matrix.
-- The path names are visualized on the left.
-- The black lines under the paths are the links, which represent the graph topology.
+- the graph nodes are arranged from left to right, forming the ``pangenome sequence``;
+- the colored bars represent the the paths versus the ``pangenome sequences`` in a binary matrix;
+- the path names are visualized on the left;
+- the black lines under the paths are the links, which represent the graph topology.
 
 See :ref:`odgi viz` documentation for more information.
 
