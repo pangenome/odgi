@@ -17,6 +17,14 @@ namespace algorithms {
 
 using namespace handlegraph;
 
+enum class untangle_output_t {
+    BEDPE,
+    PAF,
+    GGGENES,
+    ORDER,
+    SCHEMATIC
+};
+
 struct segment_mapping_t {
     uint64_t segment_id = 0;
     bool self_map = false;
@@ -101,8 +109,7 @@ void map_segments(
     const double& max_self_coverage,
     const uint64_t& n_best,
     const double& min_jaccard,
-    const bool& paf_output,
-    const bool& gggenes_output,
+    const untangle_output_t& output_type,
     const ska::flat_hash_map<path_handle_t, uint64_t>& path_to_len);
 
 void untangle(
@@ -114,8 +121,7 @@ void untangle(
     const uint64_t& n_best,
     const double& min_jaccard,
     const uint64_t& cut_every,
-    const bool& paf_output,
-    const bool& gggenes_output,
+    const untangle_output_t& output_type,
     const std::string& cut_points_input,
     const std::string& cut_points_output,
     const size_t& num_threads,

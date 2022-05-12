@@ -502,10 +502,20 @@ void map_segments(
     const double& max_self_coverage,
     const uint64_t& n_best,
     const double& min_jaccard,
-    const bool& paf_output,
-    const bool& gggenes_output,
+    const untangle_output_t& output_type,
     ska::flat_hash_map<path_handle_t, uint64_t>& path_to_len) {
+    // query name is the first field in our outputs
     std::string query_name = graph.get_path_name(path);
+    // helper for building up gene order lists and gggenes plot data
+    struct path_range_t {
+        path_handle_t target_path;
+        uint64_t query_begin;
+        uint64_t query_end;
+        uint64_t target_begin;
+        uint64_t target_end;
+        bool is_inv;
+    };
+    std::vector<path_range_t> gene_order;
     for (uint64_t i = 0; i < cuts.size()-1; ++i) {
         auto& begin = cuts[i];
         auto& end = cuts[i+1];
@@ -534,9 +544,9 @@ void map_segments(
                     auto target_end_pos = target_begin_pos + target_segments.get_segment_length(idx);
                     path_handle_t target_path = graph.get_path_handle_of_step(target_begin);
                     std::string target_name = graph.get_path_name(target_path);
-#pragma omp critical (cout)
-                    if (paf_output){
+                    if (output_type == untangle_output_t::PAF){
                         // PAF format
+#pragma omp critical (cout)
                         std::cout << query_name << "\t"
                         << path_to_len[path] << "\t"
                         << begin_pos << "\t"
@@ -554,13 +564,23 @@ void map_segments(
                         << "sc:f:" << self_coverage << "\t"
                         << "nb:i:" << nth_best << "\t"
                         << std::endl;
-                    } else if (gggenes_output) {
-                        std::cout << query_name << "\t"
-                        << target_name << "\t"
-                        << begin_pos << "\t"
-                        << end_pos << "\t"
-                        << (mapping.is_inv ? "0" : "1") << std::endl;
-                    } else {
+                    } else if (output_type == untangle_output_t::ORDER
+                               || output_type == untangle_output_t::GGGENES
+                               || output_type == untangle_output_t::SCHEMATIC) {
+                        if (gene_order.size() && gene_order.back().target_path == target_path
+                            && gene_order.back().query_end == begin_pos
+                            && gene_order.back().target_end == target_begin_pos
+                            && gene_order.back().is_inv == mapping.is_inv) {
+                            // extend the last range
+                            gene_order.back().query_end = end_pos;
+                            gene_order.back().target_end = target_end_pos;
+                        } else {
+                            gene_order.push_back({ target_path, begin_pos,
+                                    end_pos, target_begin_pos, target_end_pos,
+                                    mapping.is_inv });
+                        }
+                    } else if (output_type == untangle_output_t::BEDPE) {
+#pragma omp critical (cout)
                         // BEDPE format
                         std::cout << query_name << "\t"
                         << begin_pos << "\t"
@@ -578,6 +598,40 @@ void map_segments(
             }
         }
     }
+    if (output_type == untangle_output_t::ORDER) {
+        std::stringstream ss;
+        ss << query_name << "\t";
+        for (auto& range : gene_order) {
+            ss << graph.get_path_name(range.target_path) << ":"
+               << range.target_begin << "-" << range.target_end << ",";
+        }
+        std::string s = ss.str();
+        if (s.size() && s.at(s.size()-1) == ',') { s.pop_back(); }
+#pragma omp critical (cout)
+        std::cout << s << std::endl;
+    }
+    if (output_type == untangle_output_t::GGGENES
+        || output_type == untangle_output_t::SCHEMATIC) {
+        std::stringstream ss;
+        if (output_type == untangle_output_t::SCHEMATIC) {
+            uint64_t idx = 0;
+            for (auto& range : gene_order) {
+                range.query_begin = idx;
+                idx += 100;
+                range.query_end = idx;
+                idx += 50;
+            }
+        }
+        for (auto& range : gene_order) {
+            ss << query_name << "\t"
+               << graph.get_path_name(range.target_path) << "\t"
+               << range.query_begin << "\t"
+               << range.query_end << "\t"
+               << (range.is_inv ? "0" : "1") << std::endl;
+        }
+#pragma omp critical (cout)
+        std::cout << ss.str();
+    }
 }
 
 // BEDPE (pair-BED) projection of the graph
@@ -591,8 +645,7 @@ void untangle(
     const uint64_t& n_best,
     const double& min_jaccard,
     const uint64_t& cut_every,
-    const bool& paf_output,
-    const bool& gggenes_output,
+    const untangle_output_t& output_type,
     const std::string& cut_points_input,
     const std::string& cut_points_output,
     const size_t& num_threads,
@@ -746,18 +799,12 @@ void untangle(
     //std::cout << "path\tfrom\tto" << std::endl;
     //auto step_pos = make_step_index(graph, queries);
     if (progress) {
-        std::cerr << "[odgi::algorithms::untangle] writing " << ( paf_output ? "PAF" : ( gggenes_output ? "gggenes tsv" : "pair BED" ) ) << " for " << queries.size() << " queries" << std::endl;
+        std::cerr << "[odgi::algorithms::untangle] untangling " << queries.size() << " queries" << std::endl;
     }
 
     ska::flat_hash_map<path_handle_t, uint64_t> path_to_len;
 
-    if (gggenes_output) {
-        // gggenes format
-        std::cout << "molecule\tgene\tstart\tend\tstrand" << std::endl;
-    } else if (!paf_output){
-        // BEDPE format
-        std::cout << "#query.name\tquery.start\tquery.end\tref.name\tref.start\tref.end\tscore\tinv\tself.cov\tnth.best" << std::endl;
-    } else {
+    if (output_type == untangle_output_t::PAF) {
         // PAF format
         auto get_path_length = [](const PathHandleGraph &graph, const path_handle_t &path_handle) {
             uint64_t path_len = 0;
@@ -772,6 +819,14 @@ void untangle(
             auto& path = paths[i];
             path_to_len[path] = get_path_length(graph, path);
         }
+    } else if (output_type == untangle_output_t::BEDPE) {
+        std::cout << "#query.name\tquery.start\tquery.end\tref.name\tref.start\tref.end\tscore\tinv\tself.cov\tnth.best" << std::endl;
+    } else if (output_type == untangle_output_t::GGGENES
+               || output_type == untangle_output_t::SCHEMATIC) {
+        // gggenes format
+        std::cout << "molecule\tgene\tstart\tend\tstrand" << std::endl;
+    } else if (output_type == untangle_output_t::ORDER) {
+        // nothing to do
     }
 
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
@@ -793,7 +848,7 @@ void untangle(
         map_segments(graph, query, cuts, target_segments,
                      step_index, self_index,
                      max_self_coverage, n_best, min_jaccard,
-                     paf_output, gggenes_output, path_to_len);
+                     output_type, path_to_len);
 
         //write_cuts(graph, query, cuts, step_pos);
     }
