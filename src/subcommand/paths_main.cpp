@@ -1,12 +1,10 @@
 #include "subcommand.hpp"
 #include "odgi.hpp"
-//#include "IntervalTree.h"
-//#include "gfakluge.hpp"
 #include "args.hxx"
 #include "split.hpp"
-//#include "io_helper.hpp"
 #include "position.hpp"
 #include <omp.h>
+#include "utils.hpp"
 
 namespace odgi {
 
@@ -22,16 +20,37 @@ int main_paths(int argc, char** argv) {
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
-    args::ArgumentParser parser("embedded path interrogation");
-    args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-    args::Flag list_names(parser, "list-names", "list the paths in the graph", {'L', "list-paths"});
-    args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the index from this file", {'i', "idx"});
-    args::ValueFlag<std::string> overlaps_file(parser, "FILE", "Each line in (tab-delimited) FILE lists a grouping and a path. For each group we will provide pairwise overlap statistics for each pairing.", {'O', "overlaps"});
-    args::ValueFlag<std::string> path_delim(parser, "CHAR", "The part of each path name before this delimiter is a group identifier", {'D', "delim"});
-    args::Flag haplo_matrix(parser, "haplo", "write the paths (or path groups if --delim is provided) in an approximate binary haplotype matrix based on the graph sort order", {'H', "haplotypes"});
-    args::Flag distance_matrix(parser, "distance", "provide a sparse distance matrix for paths (or path groups if --delim is provided)", {'d', "distance"});
-    args::Flag write_fasta(parser, "fasta", "write the paths in FASTA format", {'f', "fasta"});
-    args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
+    args::ArgumentParser parser("Interrogate the embedded paths of a graph. Does not print anything to stdout by default!");
+    args::Group mandatory_opts(parser, "[ MANDATORY ARGUMENTS ]");
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
+    args::Group path_investigation_opts(parser, "[ Path Investigation Options ]");
+    args::ValueFlag<std::string> overlaps_file(path_investigation_opts, "FILE", "Read in the path grouping *FILE* to generate the overlap statistics"
+                                                               " from. The file must be tab-delimited. The first column lists a"
+                                                               " grouping and the second the path itself. Each line has one path entry."
+                                                               " For each group the pairwise overlap statistics for each pairing will"
+                                                               " be calculated and printed to stdout.", {'O', "overlaps"});
+    args::Flag list_names(path_investigation_opts, "list-names", "Print the paths in the graph to stdout. Each path is printed in its"
+                                                " own line.", {'L', "list-paths"});
+	args::Flag list_path_start_end(path_investigation_opts, "list-path-start-end", "If -L,--list-paths was specified, this additionally prints the start and end positions of each path in additional, tab-delimited coloumns."
+						   , {'l', "list-path-start-end"});
+    args::ValueFlag<std::string> path_delim(path_investigation_opts, "CHAR", "The part of each path name before this delimiter CHAR is a group"
+                                                                             " identifier. This parameter should only be set in combination with"
+                                                                             " **-H, --haplotypes**. Prints an additional, first column"
+                                                                             " **group.name** to stdout.", {'D', "delim"});
+    args::Flag haplo_matrix(path_investigation_opts, "haplo", "Print to stdout the paths in an approximate binary haplotype matrix"
+                                                              " based on the graph’s sort order. The output is tab-delimited:"
+                                                              " *path.name*, *path.length*, *node.count*, *node.1*,"
+                                                              " *node.2*, *node.n*. Each path entry is printed in its own line.", {'H', "haplotypes"});
+    args::Flag distance_matrix(path_investigation_opts, "distance", "Provides a sparse distance matrix for paths. If **-D, --delim** is"
+                                                                    " set, it will be path groups distances. Each line prints in a tab-delimited format to stdout:"
+                                                                    " *path.a*, *path.b*, *path.a.length*, *path.b.length*, *intersection*, *jaccard*, *euclidean*." , {'d', "distance"});
+    args::Flag write_fasta(path_investigation_opts, "fasta", "Print paths in FASTA format to stdout. One line for the FASTA header, another line for the whole sequence.", {'f', "fasta"});
+    args::Group threading_opts(parser, "[ Threading ]");
+    args::ValueFlag<uint64_t> threads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
+	args::Group processing_info_opts(parser, "[ Processing Information ]");
+	args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
+    args::Group program_info_opts(parser, "[ Program Information ]");
+    args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi paths.", {'h', "help"});
 
     try {
         parser.ParseCLI(argc, argv);
@@ -48,32 +67,46 @@ int main_paths(int argc, char** argv) {
         return 1;
     }
 
-    if (args::get(threads)) {
-        omp_set_num_threads(args::get(threads));
-    } else {
-        omp_set_num_threads(1);
-    }
-
     if (!dg_in_file) {
         std::cerr << "[odgi::paths] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
         return 1;
     }
 
-    graph_t graph;
+	if (list_path_start_end && !list_names) {
+		std::cerr << "[odgi::paths] error: please specify also -L,--list-path with the -l,--list-path-start-end option!" << std::endl;
+		return 1;
+	}
+
+	const uint64_t num_threads = args::get(threads) ? args::get(threads) : 1;
+    omp_set_num_threads(num_threads);
+
+	graph_t graph;
     assert(argc > 0);
     std::string infile = args::get(dg_in_file);
     if (infile.size()) {
         if (infile == "-") {
             graph.deserialize(std::cin);
         } else {
-            ifstream f(infile.c_str());
-            graph.deserialize(f);
-            f.close();
+			utils::handle_gfa_odgi_input(infile, "paths", args::get(progress), num_threads, graph);
         }
     }
 
-    //args::Flag list_names(parser, "list-names", "list the paths in the graph", {'L', "list-paths"});
-    if (args::get(list_names)) {
+    if (list_path_start_end && list_names) {
+    	std::vector<path_handle_t> paths;
+		graph.for_each_path_handle([&](const path_handle_t& p) {
+			paths.push_back(p);
+		});
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
+		for (auto path : paths) {
+			uint64_t path_len = 0;
+			graph.for_each_step_in_path(path, [&](const step_handle_t& s) {
+				handle_t h = graph.get_handle_of_step(s);
+				path_len += graph.get_length(h);
+			});
+#pragma omp critical (cout)
+			std::cout << graph.get_path_name(path) << "\t" << 1 << "\t" << path_len << std::endl;
+		}
+	} else if (args::get(list_names)) {
         graph.for_each_path_handle([&](const path_handle_t& p) {
                 std::cout << graph.get_path_name(p) << std::endl;
             });
@@ -141,6 +174,8 @@ int main_paths(int argc, char** argv) {
     }
 
     if (args::get(distance_matrix)) {
+        // TODO this breaks on a simple graph
+        // WHY?!
         bool using_delim = !args::get(path_delim).empty();
         char delim = '\0';
         ska::flat_hash_map<std::string, uint64_t> path_group_ids;
@@ -196,7 +231,7 @@ int main_paths(int argc, char** argv) {
 
 #pragma omp parallel for
         for (uint64_t i = 0; i < path_max; ++i) {
-            path_handle_t p = as_path_handle(i);
+            path_handle_t p = as_path_handle(i + 1);
             uint64_t path_length = 0;
             graph.for_each_step_in_path(
                 p,
@@ -325,7 +360,7 @@ int main_paths(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand odgi_paths("paths", "interrogation and manipulation of paths",
+static Subcommand odgi_paths("paths", "Interrogate the embedded paths of a graph.",
                               PIPELINE, 3, main_paths);
 
 

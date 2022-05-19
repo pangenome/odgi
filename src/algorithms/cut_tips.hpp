@@ -22,7 +22,7 @@ uint64_t cut_tips(
 
 uint64_t cut_tips(
     MutablePathDeletableHandleGraph& graph,
-    uint64_t min_coverage = 0);
+    uint64_t min_depth = 0);
 
 }
 

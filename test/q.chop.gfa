@@ -1,0 +1,75 @@
+H	VN:Z:1.0
+S	1	CA	DP:i:1	RC:i:2
+L	1	+	2	+	0M
+S	2	AA	DP:i:1	RC:i:2
+L	2	+	3	+	0M
+S	3	TA	DP:i:1	RC:i:2
+L	3	+	4	+	0M
+S	4	AG	DP:i:1	RC:i:2
+L	4	+	5	+	0M
+L	4	+	6	+	0M
+S	5	A	DP:i:0	RC:i:0
+L	5	+	7	+	0M
+L	5	+	8	+	0M
+S	6	G	DP:i:1	RC:i:1
+L	6	+	7	+	0M
+L	6	+	8	+	0M
+S	7	T	DP:i:0	RC:i:0
+L	7	+	9	+	0M
+S	8	C	DP:i:1	RC:i:1
+L	8	+	9	+	0M
+S	9	TT	DP:i:1	RC:i:2
+L	9	+	10	+	0M
+S	10	G	DP:i:1	RC:i:1
+L	10	+	11	+	0M
+L	10	+	12	+	0M
+S	11	A	DP:i:0	RC:i:0
+L	11	+	13	+	0M
+S	12	G	DP:i:1	RC:i:1
+L	12	+	13	+	0M
+S	13	AA	DP:i:1	RC:i:2
+L	13	+	14	+	0M
+S	14	AT	DP:i:1	RC:i:2
+L	14	+	15	+	0M
+S	15	TT	DP:i:1	RC:i:2
+L	15	+	16	+	0M
+S	16	TC	DP:i:1	RC:i:2
+L	16	+	17	+	0M
+S	17	TG	DP:i:1	RC:i:2
+L	17	+	18	+	0M
+S	18	GA	DP:i:1	RC:i:2
+L	18	+	19	+	0M
+S	19	GT	DP:i:1	RC:i:2
+L	19	+	20	+	0M
+S	20	TC	DP:i:1	RC:i:2
+L	20	+	21	+	0M
+S	21	TA	DP:i:1	RC:i:2
+L	21	+	22	+	0M
+S	22	T	DP:i:1	RC:i:1
+L	22	+	23	+	0M
+L	22	+	24	+	0M
+S	23	A	DP:i:0	RC:i:0
+L	23	+	25	+	0M
+S	24	T	DP:i:1	RC:i:1
+L	24	+	25	+	0M
+S	25	AT	DP:i:1	RC:i:2
+L	25	+	26	+	0M
+S	26	AT	DP:i:1	RC:i:2
+L	26	+	27	+	0M
+L	26	+	28	+	0M
+S	27	A	DP:i:0	RC:i:0
+L	27	+	29	+	0M
+S	28	T	DP:i:1	RC:i:1
+L	28	+	29	+	0M
+S	29	CC	DP:i:1	RC:i:2
+L	29	+	30	+	0M
+S	30	AA	DP:i:1	RC:i:2
+L	30	+	31	+	0M
+S	31	CT	DP:i:1	RC:i:2
+L	31	+	32	+	0M
+S	32	CT	DP:i:1	RC:i:2
+L	32	+	33	+	0M
+S	33	CT	DP:i:1	RC:i:2
+L	33	+	34	+	0M
+S	34	G	DP:i:1	RC:i:1
+P	x	1+,2+,3+,4+,6+,8+,9+,10+,12+,13+,14+,15+,16+,17+,18+,19+,20+,21+,22+,24+,25+,26+,28+,29+,30+,31+,32+,33+,34+	*

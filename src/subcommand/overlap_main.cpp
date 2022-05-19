@@ -2,9 +2,10 @@
 #include "odgi.hpp"
 #include "position.hpp"
 #include "args.hxx"
-#include "split.hpp"
+#include "subgraph/region.hpp"
 #include <omp.h>
 #include <mutex>
+#include "utils.hpp"
 
 namespace odgi {
 
@@ -20,24 +21,29 @@ namespace odgi {
         argv[0] = (char *) prog_name.c_str();
         --argc;
 
-        args::ArgumentParser parser("find the paths touched by the input paths");
-        args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-        args::ValueFlag<std::string> og_file(parser, "FILE", "perform the search in this graph", {'i', "input"});
-
-        args::ValueFlag<std::string> subset_paths(parser, "FILE",
-                                                  "perform the search considering only the paths specified in the FILE; "
-                                                  "the file must contain one path name per line and a subset of all paths can be specified.",
+        args::ArgumentParser parser("Find the paths touched by given input paths.");
+        args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+        args::ValueFlag<std::string> og_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "input"});
+        args::Group overlap_opts(parser, "[ Overlap Options ]");
+        args::ValueFlag<std::string> subset_paths(overlap_opts, "FILE",
+                                                  "Perform the search considering only the paths specified in the FILE. "
+                                                  "The file must contain one path name per line and a subset of all paths can be specified."
+                                                  "When searching the overlaps, only these paths will be considered.",
                                                   {'s', "subset-paths"});
 
-        args::ValueFlag<std::string> path_name(parser, "PATH_NAME", "perform the search of the given path in the graph",
+        args::ValueFlag<std::string> path_name(overlap_opts, "PATH_NAME", "Perform the search of the given path STRING in the graph.",
                                                {'r', "path"});
-        args::ValueFlag<std::string> path_file(parser, "FILE", "perform the search for the paths listed in FILE",
+        args::ValueFlag<std::string> path_file(overlap_opts, "FILE", "Report the search results only for the paths listed in FILE.",
                                                {'R', "paths"});
 
-        args::ValueFlag<std::string> bed_input(parser, "FILE", "a BED file of ranges in paths in the graph",
+        args::ValueFlag<std::string> bed_input(overlap_opts, "FILE", "A BED FILE of ranges in paths in the graph.",
                                                {'b', "bed-input"});
-
-        args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use", {'t', "threads"});
+        args::Group threading_opts(parser, "[ Threading ]");
+        args::ValueFlag<uint64_t> nthreads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
+		args::Group processing_info_opts(parser, "[ Processing Information ]");
+		args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
+        args::Group program_info_opts(parser, "[ Program Information ]");
+        args::HelpFlag help(program_info_opts, "help", "display this help summary", {'h', "help"});
 
         try {
             parser.ParseCLI(argc, argv);
@@ -64,19 +70,17 @@ namespace odgi {
             return 1;
         }
 
+		const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+
         odgi::graph_t graph;
         assert(argc > 0);
         std::string infile = args::get(og_file);
         if (infile == "-") {
             graph.deserialize(std::cin);
         } else {
-            ifstream f(infile.c_str());
-            graph.deserialize(f);
-            f.close();
+			utils::handle_gfa_odgi_input(infile, "overlap", args::get(progress), num_threads, graph);
         }
 
-
-        uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
         omp_set_num_threads(num_threads);
 
         std::vector<path_handle_t> paths_to_consider;
@@ -104,71 +108,20 @@ namespace odgi {
 
         std::vector<odgi::path_range_t> path_ranges;
 
-        auto add_bed_range = [&path_ranges](const odgi::graph_t &graph,
-                                            const std::string &buffer) {
-            if (!buffer.empty() && buffer[0] != '#') {
-                auto vals = split(buffer, '\t');
-                /*
-                if (vals.size() != 3) {
-                    std::cerr << "[odgi::overlap] error: path position record is incomplete" << std::endl;
-                    std::cerr << "[odgi::overlap] error: got '" << buffer << "'" << std::endl;
-                    exit(1); // bail
-                }
-                */
-                auto &path_name = vals[0];
-                if (!graph.has_path(path_name)) {
-                    std::cerr << "[odgi::overlap] error: path " << path_name << " not found in graph" << std::endl;
-                    exit(1);
-                } else {
-                    uint64_t start = vals.size() > 1 ? (uint64_t) std::stoi(vals[1]) : 0;
-                    uint64_t end = 0;
-                    if (vals.size() > 2) {
-                        end = (uint64_t) std::stoi(vals[2]);
-                    } else {
-                        // In the BED format, the end is non-inclusive, unlike start
-                        graph.for_each_step_in_path(graph.get_path_handle(path_name), [&](const step_handle_t &s) {
-                            end += graph.get_length(graph.get_handle_of_step(s));
-                        });
-                    }
-
-                    if (start > end) {
-                        std::cerr << "[odgi::overlap] error: wrong input coordinates in row: " << buffer << std::endl;
-                        exit(1);
-                    }
-
-                    path_ranges.push_back(
-                            {
-                                    {
-                                            graph.get_path_handle(path_name),
-                                            start,
-                                            false
-                                    },
-                                    {
-                                            graph.get_path_handle(path_name),
-                                            end,
-                                            false
-                                    },
-                                    (vals.size() > 3 && vals[3] == "-"),
-                                    buffer
-                            });
-                }
-            }
-        };
-
         if (path_name) {
-            add_bed_range(graph, args::get(path_name));
+            add_bed_range(path_ranges, graph, args::get(path_name));
         } else if (path_file) {
             // for thing in things
             std::ifstream refs(args::get(path_file));
             std::string line;
             while (std::getline(refs, line)) {
-                add_bed_range(graph, line);
+                add_bed_range(path_ranges, graph, line);
             }
         } else {// if (bed_input) {
             std::ifstream bed_in(args::get(bed_input));
             std::string line;
             while (std::getline(bed_in, line)) {
-                add_bed_range(graph, line);
+                add_bed_range(path_ranges, graph, line);
             }
         }
 
@@ -266,7 +219,7 @@ namespace odgi {
         return 0;
     }
 
-    static Subcommand odgi_overlap("overlap", "find the paths touched by the input paths",
+    static Subcommand odgi_overlap("overlap", "Find the paths touched by given input paths.",
                                  PIPELINE, 3, main_overlap);
 
 }

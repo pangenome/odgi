@@ -310,6 +310,11 @@ public:
     /// Organize the graph for better performance and memory use
     void optimize(bool allow_id_reassignment = true);
 
+    /// is the graph optimized?
+    /// definition:
+    /// smallest node identifier is 1 and largest node identifier is equal to get_node_count()
+    bool is_optimized(void);
+
     /// Reassign the node ids
     void reassign_node_ids(const std::function<nid_t(const nid_t&)>& get_new_id);
 
@@ -398,7 +403,7 @@ public:
     void display(void) const;
 
     /// Convert to GFA (for debugging)
-    void to_gfa(std::ostream& out) const;
+    void to_gfa(std::ostream& out, const bool& emit_node_annotation = false) const;
 
     /// Magic number header for serialization
     uint32_t get_magic_number(void) const;

@@ -16,9 +16,9 @@
 
 // Define a way to quote macro values.
 // See https://stackoverflow.com/a/196093
-#define QUOTE(arg) #arg
+//#define QUOTE(arg) #arg
 // We need another level to get the macro's value and not its name.
-#define STR(macro) QUOTE(macro)
+//#define STR(macro) QUOTE(macro)
 
 namespace odgi {
 
@@ -37,7 +37,12 @@ const unordered_map<string, string> Version::codenames = {
     {"v0.4.1", "back to old ABI"},
     {"v0.5.0", "fastify everything"},
     {"v0.5.1", "Phoenix"},
-    {"v0.6.0", "Locality"}
+    {"0.6", "Domani"},
+    {"v0.6.1", "Froggi"},
+    {"v0.6.2", "Auff"},
+	{"v0.6.3", "Pulizia"},
+    {"v0.7.0", "Presente"},
+    {"v0.7.1", "Pasticcione"}
     // Add more codenames here
 };
 

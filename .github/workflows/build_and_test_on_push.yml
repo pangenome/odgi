@@ -1,0 +1,29 @@
+on: [ push ]
+
+name: build and test
+
+jobs:
+  build_and_test:
+    runs-on: ubuntu-20.04
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install required packages
+        run: sudo apt-get update && sudo apt-get install -y
+          git
+          bash
+          cmake
+          make
+          g++
+          python3-dev
+          python3-distutils
+          autoconf
+          build-essential
+          libjemalloc-dev
+      - name: Init and update submodules
+        run: git submodule update --init --recursive
+      - name: Build odgi
+        run: cmake -H. -DCMAKE_BUILD_TYPE=Debug -Bbuild && cmake --build build -- -j 2
+      - name: Run odgi program tests
+        run: ASAN_OPTIONS=detect_leaks=1:symbolize=1 LSAN_OPTIONS=verbosity=0:log_threads=1 bin/odgi test
+      - name: Run remaining tests 
+        run: ctest --test-dir build -E odgi-test --verbose

@@ -6,7 +6,7 @@
 #include <tuple>
 #include <handlegraph/util.hpp>
 
-/** \file 
+/** \file
  * Functions for working with Positions and `pos_t`s.
  */
 
@@ -84,8 +84,23 @@ struct path_range_t {
     path_pos_t begin;
     path_pos_t end;
     bool is_rev;
+    std::string name;
     std::string data;
 };
+
+inline std::string& get_long_path_name(std::tuple<std::string, uint64_t, uint64_t> path_long_start_end) {
+	return std::get<0>(path_long_start_end);
+}
+
+inline uint64_t & get_long_path_start(std::tuple<std::string, uint64_t, uint64_t> path_long_start_end) {
+	return std::get<1>(path_long_start_end);
+}
+
+inline uint64_t & get_long_path_end(std::tuple<std::string, uint64_t, uint64_t> path_long_start_end) {
+	return std::get<2>(path_long_start_end);
+}
+
+typedef std::pair<uint64_t, uint64_t> interval_t;
 
 }
 

@@ -20,21 +20,28 @@ namespace xp {
     }
 
     /// build the graph from a graph handle
-    void XP::from_handle_graph(const PathHandleGraph &graph) {
+    void XP::from_handle_graph(odgi::graph_t &graph, const uint64_t& nthreads) {
         std::string basename;
-        from_handle_graph(graph, basename);
+        from_handle_graph(graph, basename, nthreads);
     }
 
-    void XP::from_handle_graph(const PathHandleGraph &graph, std::string basename) {
+    void XP::from_handle_graph(odgi::graph_t &graph, std::string basename, const uint64_t& nthreads) {
         // create temporary file for path names
         if (basename.empty()) {
-            basename = temp_file::create();
+            basename = temp_file::get_dir() + '/';
         }
-        from_handle_graph_impl(graph, basename);
+        from_handle_graph_impl(graph, basename, nthreads);
         temp_file::cleanup(); // clean up our temporary files
     }
 
-    void XP::from_handle_graph_impl(const PathHandleGraph &graph, const std::string& basename) {
+    void XP::from_handle_graph_impl(odgi::graph_t &graph, const std::string& basename, const uint64_t& nthreads) {
+    	if (!graph.is_optimized()) {
+			std::cerr << "error [xp]: Graph to index is not optimized. Please run 'odgi sort' using -O, --optimize." << std::endl;
+			exit(1);
+    	}
+        // Specify the working directory
+        sdsl::cache_config config(true, basename);
+
         std::string path_names;
         // the graph must be compacted for this to work
         sdsl::int_vector<> position_map;
@@ -42,15 +49,9 @@ namespace xp {
         uint64_t len = 0;
         nid_t last_node_id = graph.min_node_id();
         graph.for_each_handle([&](const handle_t &h) {
-            nid_t node_id = graph.get_id(h);
-            if (node_id - last_node_id > 1) {
-                std::cerr << "error [xp]: Graph to index is not optimized. Please run 'odgi sort' using -O, --optimize" << std::endl;
-                exit(1);
-            }
             position_map[number_bool_packing::unpack_number(h)] = len;
             uint64_t hl = graph.get_length(h);
             len += hl;
-            last_node_id = node_id;
         });
         position_map[position_map.size() - 1] = len;
 #ifdef debug_from_handle_graph
@@ -112,9 +113,10 @@ namespace xp {
         std::string path_name_file = basename + ".pathnames.iv";
         sdsl::store_to_file((const char *) path_names.c_str(), path_name_file);
         // read file and construct compressed suffix array
-        sdsl::construct(pn_csa, path_name_file, 1);
+
+        sdsl::construct(pn_csa, path_name_file, config, 1);
         // we need to take care of the node->path vectors
-        node_path_ms.index(get_thread_count(), graph.get_node_count() + 1);
+        node_path_ms.index(nthreads, graph.get_node_count() + 1);
         sdsl::util::assign(nr_iv, sdsl::int_vector<>(np_size));
         sdsl::util::assign(np_bv, sdsl::bit_vector(np_size));
         sdsl::util::assign(npi_iv, sdsl::int_vector<>(np_size));
@@ -794,15 +796,5 @@ namespace xp {
 
             return temp_dir;
         }
-    }
-
-    int get_thread_count() {
-        int thread_count = 1;
-#pragma omp parallel
-        {
-#pragma omp master
-            thread_count = omp_get_num_threads();
-        }
-        return thread_count;
     }
 }

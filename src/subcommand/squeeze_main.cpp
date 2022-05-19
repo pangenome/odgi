@@ -7,6 +7,8 @@
 #include "args.hxx"
 #include <queue>
 
+#include "utils.hpp"
+
 namespace odgi {
 
     using namespace odgi::subcommand;
@@ -22,22 +24,29 @@ namespace odgi {
         --argc;
 
         args::ArgumentParser parser(
-                "squeezes multiple graphs into the same file");
-        args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-        args::ValueFlag<std::string> _input_graphs(parser, "FILE",
-                                                   "input file containing the list of graphs to squeeze into the same file; the file must contain one path per line.",
+                "Squeezes multiple graphs in ODGI format into the same file in ODGI format.");
+        args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+        args::ValueFlag<std::string> _input_graphs(mandatory_opts, "FILE",
+                                                   "Input file containing the list of graphs to squeeze into the same\n"
+                                                   "  file. The file must contain one graph per line. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!",
                                                    {'f', "input-graphs"});
-        args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store all the input graphs in this file",
+        args::ValueFlag<std::string> dg_out_file(mandatory_opts, "FILE", "Store all the input graphs in this file. The file name usually ends with *.og*.",
                                                  {'o', "out"});
-        args::ValueFlag<char> _add_suffix(parser, "C",
-                                          "add the separator and the input file rank as suffix to the path names (to avoid path name collisions)",
+        args::Group squeeze_opt(parser, "[ Squeeze Options ]");
+        args::ValueFlag<char> _add_suffix(squeeze_opt, "STRING",
+                                          "Add the separator and the input file rank as suffix to the path names\n"
+                                          "  (to avoid path name collisions).",
                                           {'s', "rank-suffix"});
-        args::Flag _optimize(parser, "optimize", "compact the node ID space in each connected component",
+        args::Flag _optimize(parser, "optimize", "Compact the node ID space for each connected component before squeezing.",
                              {'O', "optimize"});
-        args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use",
+        args::Group threading_opts(parser, "[ Threading ]");
+        args::ValueFlag<uint64_t> nthreads(threading_opts, "N", "Number of threads to use for parallel operations.",
                                            {'t', "threads"});
-        args::Flag _debug(parser, "progress", "print information about the components and the progress to stderr",
+        args::Group processing_info_opts(parser, "[ Processing Information ]");
+        args::Flag progress(parser, "progress", "Print information about the progress to stderr.",
                           {'P', "progress"});
+        args::Group program_info_opts(parser, "[ Program Information ]");
+        args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi squeeze.", {'h', "help"});
 
         try {
             parser.ParseCLI(argc, argv);
@@ -89,7 +98,7 @@ namespace odgi {
             return 1;
         }
 
-        bool debug = args::get(_debug);
+        bool debug = args::get(progress);
         bool optimize = args::get(_optimize);
 
         uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
@@ -105,7 +114,7 @@ namespace odgi {
         std::unique_ptr<algorithms::progress_meter::ProgressMeter> squeeze_progress;
         if (debug) {
             squeeze_progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
-                    num_input_graphs, "[odgi::squeeze] imploding input graphs");
+                    num_input_graphs, "[odgi::squeeze] squeezing input graphs");
 
             std::cerr << "[odgi::squeeze] detected " << num_input_graphs << " input graphs" << std::endl;
         }
@@ -121,9 +130,7 @@ namespace odgi {
             if (!line.empty()) {
                 graph_t graph;
 
-                ifstream f(line.c_str());
-                graph.deserialize(f);
-                f.close();
+				utils::handle_gfa_odgi_input(line, "squeeze", args::get(progress), num_threads, graph);
 
                 if (optimize) {
                     graph.optimize();
@@ -214,7 +221,7 @@ namespace odgi {
         return 0;
     }
 
-    static Subcommand odgi_squeeze("squeeze", "squeezes multiple graphs into the same file",
+    static Subcommand odgi_squeeze("squeeze", "Squeezes multiple graphs in ODGI format into the same file in ODGI format.",
                                    PIPELINE, 3, main_squeeze);
 
 

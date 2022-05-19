@@ -20,63 +20,67 @@ namespace odgi {
         for (uint64_t i = 1; i < argc - 1; ++i) {
             argv[i] = argv[i + 1];
         }
-        std::string prog_name = "odgi extract";
+        const std::string prog_name = "odgi extract";
         argv[0] = (char *) prog_name.c_str();
         --argc;
 
-        args::ArgumentParser parser("extract parts of the graph as defined by query criteria");
-        args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-
-        args::ValueFlag<std::string> og_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-        args::ValueFlag<std::string> og_out_file(parser, "FILE", "store the graph self index in this file",
+        args::ArgumentParser parser("Extract subgraphs or parts of a graph defined by query criteria.");
+        args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+        args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
+        args::ValueFlag<uint64_t> _context_steps(mandatory_opts, "N",
+                                                 "The number of steps (nodes) away from our initial subgraph that we should collect.",
+                                                 {'c', "context-steps"});
+        args::ValueFlag<uint64_t> _context_bases(mandatory_opts, "N",
+                                                 "The number of bases away from our initial subgraph that we should collect.",
+                                                 {'L', "context-bases"});
+        args::Group graph_files_io_opts(parser, "[ Graph Files IO ]");
+        args::ValueFlag<std::string> og_out_file(graph_files_io_opts, "FILE", "Store all subgraphs in this FILE. The file name usually ends with *.og*.",
                                                  {'o', "out"});
-        args::Flag _split_subgraphs(parser, "split_subgraphs",
-                                    "instead of writing the target subgraphs into a single graph, "
-                                    "write one subgraph per given target to a separate file named path:start-end.og  "
-                                    "(0-based coordinates)", {'s', "split-subgraphs"});
-
-        args::Flag _inverse(parser, "inverse",
-                               "extract parts of the graph that do not meet the query criteria",
+        args::Group extract_opts(parser, "[ Extract Options ]");
+        args::Flag _split_subgraphs(extract_opts, "split_subgraphs",
+                                    "Instead of writing the target subgraphs into a single graph, "
+                                    "write one subgraph per given target to a separate file named path:start-end.og "
+                                    "(0-based coordinates).", {'s', "split-subgraphs"});
+        args::Flag _inverse(extract_opts, "inverse",
+                               "Extract the parts of the graph that do not meet the query criteria.",
                                {'I', "inverse"});
-
-        args::ValueFlag<uint64_t> _target_node(parser, "ID", "a single node from which to begin our traversal",
+        args::ValueFlag<uint64_t> _target_node(extract_opts, "ID", "A single node ID from which to begin our traversal.",
                                                {'n', "node"});
-        args::ValueFlag<std::string> _node_list(parser, "FILE", "a file with one node id per line", {'l', "node-list"});
-
-        args::ValueFlag<uint64_t> _context_size(parser, "N",
-                                                "the number of steps away from our initial subgraph that we should collect",
-                                                {'c', "context"});
-        args::Flag _use_length(parser, "use_length",
-                               "treat the context size as a length in bases (and not as a number of steps)",
-                               {'L', "use-length"});
-
-        args::ValueFlag<std::string> _path_range(parser, "STRING",
-                                                 "find the node(s) in the specified path range TARGET=path[:pos1[-pos2]] "
-                                                 "(0-based coordinates)", {'r', "path-range"});
-        args::ValueFlag<std::string> _path_bed_file(parser, "FILE",
-                                                    "find the node(s) in the path range(s) specified in the given BED FILE",
+        args::ValueFlag<std::string> _node_list(extract_opts, "FILE", "A file with one node id per line. The node specified will be extracted from the input graph.", {'l', "node-list"});
+        args::ValueFlag<std::string> _path_range(extract_opts, "STRING",
+                                                 "Find the node(s) in the specified path range TARGET=path[:pos1[-pos2]] "
+                                                 "(0-based coordinates).", {'r', "path-range"});
+        args::ValueFlag<std::string> _path_bed_file(extract_opts, "FILE",
+                                                    "Find the node(s) in the path range(s) specified in the given BED FILE.",
                                                     {'b', "bed-file"});
-        args::Flag _full_range(parser, "use_length",
-                               "collects all nodes in the sorted order of the graph in the min and max position touched by the given path ranges. "
-                               "Be careful to use it with very complex graphs",
+        args::ValueFlag<std::string> _pangenomic_range(extract_opts, "STRING",
+                                                       "Find the node(s) in the specified pangenomic range pos1-pos2 (0-based coordinates). "
+                                                       "The nucleotide positions refer to the pangenome’s sequence (i.e., "
+                                                       "the sequence obtained arranging all the graph’s node from left to right)."
+                                                       , {'q', "pangenomic-range"});
+        args::Flag _full_range(extract_opts, "full_range",
+                               "Collects all nodes in the sorted order of the graph in the min and max positions touched by the given path ranges. "
+                               "This ensures that all the paths of the subgraph are not split by node, but that the nodes are laced together again. "
+                               "Comparable to **-R, --lace-paths=FILE**, but specifically for all paths in the resulting subgraph. "
+                               "Be careful to use it with very complex graphs.",
                                {'E', "full-range"});
-
-        args::ValueFlag<std::string> _path_names_file(parser, "FILE",
-                                                      "list of paths to consider in the extraction; the file must "
+        args::ValueFlag<std::string> _path_names_file(extract_opts, "FILE",
+                                                      "List of paths to consider in the extraction. The FILE must "
                                                       "contain one path name per line and a subset of all paths can be specified.",
                                                       {'p', "paths-to-extract"});
-
-        args::ValueFlag<std::string> _lace_paths_file(parser, "FILE",
-                                                       "list of paths to fully retain in the extracted graph; must "
+        args::ValueFlag<std::string> _lace_paths_file(extract_opts, "FILE",
+                                                       "List of paths to fully retain in the extracted graph. Must "
                                                        "contain one path name per line and a subset of all paths can be specified.",
                                                       {'R', "lace-paths"});
-
-        args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use (to embed the subpaths in parallel)",
+        args::Group threading_opts(parser, "[ Threading ]");
+        args::ValueFlag<uint64_t> nthreads(threading_opts, "N", "Number of threads to use for parallel operations.",
                                            {'t', "threads"});
-
-        args::Flag _show_progress(parser, "progress",
-                                  "print information about the operations and the progress to stderr",
+        args::Group processing_info_opts(parser, "[ Processing Information ]");
+        args::Flag _show_progress(processing_info_opts, "progress",
+                                  "Print information about the operations and the progress to stderr.",
                                   {'P', "progress"});
+        args::Group program_info_opts(parser, "[ Program Information ]");
+        args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi extract.", {'h', "help"});
 
         try {
             parser.ParseCLI(argc, argv);
@@ -100,6 +104,18 @@ namespace odgi {
             return 1;
         }
 
+        if (!_context_steps && !_context_bases) {
+            std::cerr << "[odgi::extract] error: please specify the expanding context either in steps (with -c/--context-steps) or "
+                         "in bases (-L/--context-bases). Values equal to or greater than 0 are allowed." << std::endl;
+            return 1;
+        }
+
+        if (_context_steps && _context_bases) {
+            std::cerr << "[odgi::extract] error: please specify the expanding context either in steps (with -c/--context-steps) or "
+                         "in bases (-L/--context-bases), not both." << std::endl;
+            return 1;
+        }
+
         if (_split_subgraphs) {
             if (og_out_file) {
                 std::cerr << "[odgi::extract] error: please do not specify an output file (with -o/--out) when "
@@ -120,7 +136,13 @@ namespace odgi {
             }
 
             if (_inverse) {
-                std::cerr << "[odgi::extract] error: please do not specify an inverse query (with -I/--_inverse) when "
+                std::cerr << "[odgi::extract] error: please do not specify an inverse query (with -I/--inverse) when "
+                             "one subgraph per given target is requested (with -s/--split-subgraphs)." << std::endl;
+                return 1;
+            }
+
+            if (_pangenomic_range) {
+                std::cerr << "[odgi::extract] error: please do not specify a pangenomic range (with -q/--pangenomic-range) when "
                              "one subgraph per given target is requested (with -s/--split-subgraphs)." << std::endl;
                 return 1;
             }
@@ -132,34 +154,26 @@ namespace odgi {
             }
         }
 
-        graph_t graph;
+		const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+
+		graph_t graph;
         assert(argc > 0);
-        if (!args::get(og_in_file).empty()) {
-            std::string infile = args::get(og_in_file);
-            if (infile == "-") {
-                graph.deserialize(std::cin);
-            } else {
-                ifstream f(infile.c_str());
-                graph.deserialize(f);
-                f.close();
+        {
+            const std::string infile = args::get(og_in_file);
+            if (!infile.empty()) {
+                if (infile == "-") {
+                    graph.deserialize(std::cin);
+                } else {
+					utils::handle_gfa_odgi_input(infile, "extract", args::get(_show_progress), num_threads, graph);
+                }
             }
         }
 
-        if (_full_range) {
-            nid_t last_node_id = graph.min_node_id();
-            graph.for_each_handle([&](const handle_t &h) {
-                nid_t node_id = graph.get_id(h);
-                if (node_id - last_node_id > 1) {
-                    std::cerr
-                            << "[odgi::extract] error: the graph is not optimized. "
-                               "To extract the full ranges, please run 'odgi sort' using -O/--optimize first"
-                            << std::endl;
-                    exit(1);
-                }
-                last_node_id = node_id;
-            });
+        const uint64_t shift = graph.min_node_id();
+        if (graph.max_node_id() - shift >= graph.get_node_count()){
+            std::cerr << "[odgi::extract] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
+            exit(1);
         }
-
 
         // Prepare all paths for parallelize the next step (actually, not all paths are always present in the subgraph)
         std::vector<path_handle_t> paths;
@@ -180,8 +194,8 @@ namespace odgi {
             while (std::getline(path_names_in, line)) {
                 if (!line.empty()) {
                     if (graph.has_path(line)) {
-                        path_handle_t path = graph.get_path_handle(line);
-                        uint64_t path_rank = as_integer(path) - 1;
+                        const path_handle_t path = graph.get_path_handle(line);
+                        const uint64_t path_rank = as_integer(path) - 1;
                         if (!path_already_seen[path_rank]) {
                             path_already_seen[path_rank] = true;
                             paths.push_back(path);
@@ -225,70 +239,19 @@ namespace odgi {
             }
             path_names_in.close();
             if (lace_paths.empty()) {
-                std::cerr << "[odgi::extract] error: no path to consider." << std::endl;
+                std::cerr << "[odgi::extract] error: no path to fully retain." << std::endl;
                 exit(1);
             }
         }
 
         std::vector<odgi::path_range_t> path_ranges;
 
-        auto add_bed_range = [&path_ranges](const odgi::graph_t &graph,
-                                            const std::string &buffer) {
-            if (!buffer.empty() && buffer[0] != '#') {
-                auto vals = split(buffer, '\t');
-                /*
-                if (vals.size() != 3) {
-                    std::cerr << "[odgi::extract] error: path position record is incomplete" << std::endl;
-                    std::cerr << "[odgi::extract] error: got '" << buffer << "'" << std::endl;
-                    exit(1); // bail
-                }
-                */
-                auto &path_name = vals[0];
-                if (!graph.has_path(path_name)) {
-                    std::cerr << "[odgi::extract] error: path " << path_name << " not found in graph" << std::endl;
-                    exit(1);
-                } else {
-                    uint64_t start = vals.size() > 1 ? (uint64_t) std::stoi(vals[1]) : 0;
-                    uint64_t end = 0;
-                    if (vals.size() > 2) {
-                        end = (uint64_t) std::stoi(vals[2]);
-                    } else {
-                        // In the BED format, the end is non-inclusive, unlike start
-                        graph.for_each_step_in_path(graph.get_path_handle(path_name), [&](const step_handle_t &s) {
-                            end += graph.get_length(graph.get_handle_of_step(s));
-                        });
-                    }
-
-                    if (start > end) {
-                        std::cerr << "[odgi::extract] error: wrong input coordinates in row: " << buffer << std::endl;
-                        exit(1);
-                    }
-
-                    path_ranges.push_back(
-                            {
-                                    {
-                                            graph.get_path_handle(path_name),
-                                            start,
-                                            false
-                                    },
-                                    {
-                                            graph.get_path_handle(path_name),
-                                            end,
-                                            false
-                                    },
-                                    (vals.size() > 3 && vals[3] == "-"),
-                                    buffer
-                            });
-                }
-            }
-        };
-
         // handle targets from BED
         if (_path_bed_file && !args::get(_path_bed_file).empty()) {
             std::ifstream bed_in(args::get(_path_bed_file));
             std::string line;
             while (std::getline(bed_in, line)) {
-                add_bed_range(graph, line);
+                add_bed_range(path_ranges, graph, line);
             }
         }
 
@@ -301,42 +264,70 @@ namespace odgi {
                 std::cerr
                         << "[odgi::extract] error: path " << region.seq << " not found in the input graph."
                         << std::endl;
-                return 1;
+                exit(1);
             }
 
             // no coordinates given, we do whole thing (0,-1)
             if (region.start < 0 && region.end < 0) {
-                add_bed_range(graph, region.seq);
+                add_bed_range(path_ranges, graph, region.seq);
             } else {
-                add_bed_range(graph, region.seq + "\t" + std::to_string(region.start) + "\t" + std::to_string(region.end));
+                add_bed_range(path_ranges, graph, region.seq + "\t" + std::to_string(region.start) + "\t" + std::to_string(region.end));
             }
+        }
+
+        std::pair<uint64_t, uint64_t> pangenomic_range = {0, 0};
+        if (_pangenomic_range && !args::get(_pangenomic_range).empty()) {
+            const std::string pangenomic_range_str = args::get(_pangenomic_range);
+
+            const std::regex regex("-");
+            const std::vector<std::string> splitted(
+                    std::sregex_token_iterator(pangenomic_range_str.begin(), pangenomic_range_str.end(), regex, -1),
+                    std::sregex_token_iterator()
+                    );
+
+            if (splitted.size() != 2) {
+                std::cerr
+                        << "[odgi::extract] error: please specify a valid pangenomic range: start-end."
+                        << std::endl;
+                return 1;
+            }
+
+            if (!utils::is_number(splitted[0]) || !utils::is_number(splitted[1]) || stoull(splitted[0]) > stoull(splitted[1])) {
+                std::cerr
+                << "[odgi::extract] error: please specify valid numbers for the pangenomic range."
+                << std::endl;
+                return 1;
+            }
+
+            pangenomic_range.first = stoull(splitted[0]);
+            pangenomic_range.second = stoull(splitted[1]);
         }
 
         if (_split_subgraphs && path_ranges.empty()) {
             std::cerr << "[odgi::extract] error: please specify at least one target when "
                          "one subgraph per given target is requested (with -s/--split-subgraphs)." << std::endl;
-            return 1;
+            exit(1);
         }
 
-        bool show_progress = args::get(_show_progress);
-        uint64_t context_size = _context_size ? args::get(_context_size) : 0;
+        const bool show_progress = args::get(_show_progress);
+        const uint64_t context_steps = _context_steps ? args::get(_context_steps) : 0;
+        const uint64_t context_bases = _context_bases ? args::get(_context_bases) : 0;
 
-        uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
-        omp_set_num_threads(num_threads);
+        omp_set_num_threads((int) num_threads);
 
         auto prep_graph = [](graph_t &source, const std::vector<path_handle_t>& source_paths,
                              const std::vector<path_handle_t>& lace_paths, graph_t &subgraph,
-                             uint64_t context_size, bool use_length, bool full_range, bool inverse,
-                             uint64_t num_threads, bool show_progress) {
-            if (context_size > 0) {
+                             const uint64_t context_steps, const uint64_t context_bases, const bool full_range, const bool inverse,
+                             const uint64_t num_threads, const bool show_progress) {
+            if (context_steps > 0 || context_bases > 0) {
                 if (show_progress) {
                     std::cerr << "[odgi::extract] expansion and adding connecting edges" << std::endl;
                 }
 
-                if (use_length) {
-                    algorithms::expand_subgraph_by_length(source, subgraph, context_size, false);
+                if (context_steps > 0) {
+                    algorithms::expand_subgraph_by_steps(source, subgraph, context_steps, false);
                 } else {
-                    algorithms::expand_subgraph_by_steps(source, subgraph, context_size, false);
+                    algorithms::expand_subgraph_by_length(source, subgraph, context_bases, false);
                 }
             }
 
@@ -382,6 +373,7 @@ namespace odgi {
                 if (show_progress) {
                     std::cerr << "[odgi::extract] adding " << lace_paths.size() << " lace paths" << std::endl;
                 }
+
                 algorithms::embed_lace_paths(source, subgraph, lace_paths);
             }
 
@@ -394,21 +386,53 @@ namespace odgi {
             algorithms::add_subpaths_to_subgraph(source, source_paths, subgraph, num_threads,
                                                  show_progress ? "[odgi::extract] adding subpaths" : "");
 
-            // force embed the paths
-            subgraph.for_each_path_handle(
-                [&](const path_handle_t& path) {
-                    handle_t last;
-                    step_handle_t begin_step = subgraph.path_begin(path);
-                    subgraph.for_each_step_in_path(
-                        path,
-                        [&](const step_handle_t &step) {
-                            handle_t h = subgraph.get_handle_of_step(step);
-                            if (step != begin_step) {
-                                subgraph.create_edge(last, h);
-                            }
-                            last = h;
-                        });
+
+            std::vector<path_handle_t> subpaths;
+            subpaths.reserve(subgraph.get_path_count());
+            subgraph.for_each_path_handle([&](const path_handle_t& path) {
+                subpaths.push_back(path);
+            });
+
+            std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress_checking;
+            if (show_progress) {
+                progress_checking = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+                        subpaths.size(), "[odgi::extract] checking missing edges");
+            }
+
+            ska::flat_hash_set<std::pair<handle_t, handle_t>> edges_to_create;
+
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
+            for (auto path: subpaths) {
+                handle_t last;
+                const step_handle_t begin_step = subgraph.path_begin(path);
+                subgraph.for_each_step_in_path(path, [&](const step_handle_t &step) {
+                    handle_t h = subgraph.get_handle_of_step(step);
+                    if (step != begin_step && !subgraph.has_edge(last, h)) {
+#pragma omp critical (edges_to_create)
+                        edges_to_create.insert({last, h});
+                    }
+                    last = h;
                 });
+
+                if (show_progress) {
+                    progress_checking->increment(1);
+                }
+            }
+
+            if (show_progress) {
+                progress_checking->finish();
+            }
+
+            subpaths.clear();
+
+            // force embed the paths
+            for (auto edge: edges_to_create) {
+                subgraph.create_edge(edge.first, edge.second);
+            }
+
+            if (show_progress && edges_to_create.size() > 0) {
+                std::cerr << "[odgi::extract] fixed " << edges_to_create.size() << " edge(s)" << std::endl;
+            }
 
             // This should not be necessary, if the extraction works correctly
             // subgraph.remove_orphan_edges();
@@ -417,7 +441,7 @@ namespace odgi {
         auto check_and_create_handle = [&](const graph_t &source, graph_t &subgraph, const nid_t node_id) {
             if (graph.has_node(node_id)) {
                 if (!subgraph.has_node(node_id)){
-                    handle_t cur_handle = graph.get_handle(node_id);
+                    const handle_t cur_handle = graph.get_handle(node_id);
                     subgraph.create_handle(
                             source.get_sequence(source.get_is_reverse(cur_handle) ? source.flip(cur_handle) : cur_handle),
                             node_id);
@@ -431,22 +455,24 @@ namespace odgi {
             for (auto &path_range : path_ranges) {
                 graph_t subgraph;
 
-                path_handle_t path_handle = path_range.begin.path;
+                const path_handle_t path_handle = path_range.begin.path;
 
                 if (show_progress) {
                     std::cerr << "[odgi::extract] extracting path range " << graph.get_path_name(path_range.begin.path) << ":" << path_range.begin.offset
                               << "-"
                               << path_range.end.offset << std::endl;
                 }
-                algorithms::extract_path_range(graph, path_handle, path_range.begin.offset, path_range.end.offset , subgraph);
 
-                prep_graph(graph, paths, lace_paths, subgraph, context_size, _use_length, _full_range, false, num_threads, show_progress);
+                algorithms::extract_path_range(graph, path_handle, path_range.begin.offset, path_range.end.offset, subgraph);
 
-                string filename = graph.get_path_name(path_range.begin.path) + ":" + to_string(path_range.begin.offset) + "-" + to_string(path_range.end.offset) + ".og";
+                prep_graph(graph, paths, lace_paths, subgraph, context_steps, context_bases, _full_range, false, num_threads, show_progress);
+
+                const string filename = graph.get_path_name(path_range.begin.path) + ":" + to_string(path_range.begin.offset) + "-" + to_string(path_range.end.offset) + ".og";
 
                 if (show_progress) {
                     std::cerr << "[odgi::extract] writing " << filename << std::endl;
                 }
+
                 ofstream f(filename);
                 subgraph.serialize(f);
                 f.close();
@@ -457,28 +483,42 @@ namespace odgi {
                 progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
                     path_ranges.size(), "[odgi::extract] extracting path ranges");
             }
+
             graph_t subgraph;
             {
                 atomicbitvector::atomic_bv_t keep_bv(graph.get_node_count()+1);
                 // collect path ranges by path
 #pragma omp parallel for schedule(dynamic,1)
                 for (auto &path_range : path_ranges) {
-                    path_handle_t path_handle = path_range.begin.path;
+                    const path_handle_t path_handle = path_range.begin.path;
                     if (show_progress) {
                         progress->increment(1);
                     }
                     algorithms::for_handle_in_path_range(
                         graph, path_handle, path_range.begin.offset, path_range.end.offset,
                         [&](const handle_t& handle) {
-                            keep_bv.set(graph.get_id(handle));
+                            keep_bv.set(graph.get_id(handle) - shift);
                         });
                 }
-                for (auto id : keep_bv) {
-                    handle_t h = graph.get_handle(id);
+                if (_pangenomic_range) {
+                    uint64_t len = 0;
+                    graph.for_each_handle([&](const handle_t &h) {
+                        const uint64_t hl = graph.get_length(h);
+
+                        if (len <= pangenomic_range.second && pangenomic_range.first <= len + hl) {
+                            keep_bv.set(graph.get_id(h) - shift);
+                        }
+
+                        len += hl;
+                    });
+                }
+                for (auto id_shifted : keep_bv) {
+                    const handle_t h = graph.get_handle(id_shifted + shift);
                     subgraph.create_handle(graph.get_sequence(h),
-                                           id);
+                                           id_shifted + shift);
                 }
             }
+
             if (show_progress) {
                 progress->finish();
             }
@@ -495,16 +535,18 @@ namespace odgi {
                 }
             }
 
-            prep_graph(graph, paths, lace_paths, subgraph, context_size, _use_length, _full_range, _inverse, num_threads, show_progress);
+            prep_graph(graph, paths, lace_paths, subgraph, context_steps, context_bases, _full_range, _inverse, num_threads, show_progress);
 
-            std::string outfile = args::get(og_out_file);
-            if (!outfile.empty()) {
-                if (outfile == "-") {
-                    subgraph.serialize(std::cout);
-                } else {
-                    ofstream f(outfile.c_str());
-                    subgraph.serialize(f);
-                    f.close();
+            {
+                const std::string outfile = args::get(og_out_file);
+                if (!outfile.empty()) {
+                    if (outfile == "-") {
+                        subgraph.serialize(std::cout);
+                    } else {
+                        ofstream f(outfile.c_str());
+                        subgraph.serialize(f);
+                        f.close();
+                    }
                 }
             }
         }
@@ -512,7 +554,7 @@ namespace odgi {
         return 0;
     }
 
-    static Subcommand odgi_extract("extract", "extract parts of the graph using paths, positions, and nodes",
+    static Subcommand odgi_extract("extract", "Extract subgraphs or parts of a graph defined by query criteria.",
                                    PIPELINE, 3, main_extract);
 
 }

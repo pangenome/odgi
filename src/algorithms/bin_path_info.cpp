@@ -29,7 +29,6 @@ namespace odgi {
                                                     const std::vector<std::pair<uint64_t, uint64_t>> &,
                                                     const std::map<uint64_t, algorithms::path_info_t> &)> &handle_path,
                            const std::function<void(const uint64_t &, const std::string &)> &handle_sequence,
-                           const std::function<void(const string &)> &handle_fasta,
                            uint64_t num_bins,
                            uint64_t bin_width,
                            bool drop_gap_links,
@@ -57,8 +56,6 @@ namespace odgi {
             for (uint64_t i = 0; i < num_bins; ++i) {
                 handle_sequence(i + 1, graph_seq.substr(i * bin_width, bin_width));
             }
-            // write out pangenome sequence if wished so
-            handle_fasta(graph_seq);
             graph_seq.clear(); // clean up
             std::unordered_map<path_handle_t, uint64_t> path_length;
             uint64_t gap_links_removed = 0;
@@ -91,7 +88,7 @@ namespace odgi {
                             // bin cross!
                             links.push_back(std::make_pair(last_bin, curr_bin));
                         }
-                        ++bins[curr_bin].mean_cov;
+                        ++bins[curr_bin].mean_depth;
                         if (is_rev) {
                             ++bins[curr_bin].mean_inv;
                         }
@@ -131,9 +128,9 @@ namespace odgi {
                 uint64_t end_nucleotide = nucleotide_count;
                 for (auto &entry : bins) {
                     auto &v = entry.second;
-                    v.mean_inv /= (v.mean_cov ? v.mean_cov : 1);
-                    v.mean_cov /= bin_width;
-                    v.mean_pos /= bin_width * path_length * v.mean_cov;
+                    v.mean_inv /= (v.mean_depth ? v.mean_depth : 1);
+                    v.mean_depth /= bin_width;
+                    v.mean_pos /= bin_width * path_length * v.mean_depth;
                 }
 
                 if (drop_gap_links) {

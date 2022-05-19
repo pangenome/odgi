@@ -3,11 +3,12 @@
 #include "args.hxx"
 #include <omp.h>
 #include "algorithms/prune.hpp"
-#include "algorithms/coverage.hpp"
+#include "algorithms/depth.hpp"
 #include "algorithms/remove_high_degree.hpp"
 #include "algorithms/cut_tips.hpp"
 #include "algorithms/remove_isolated.hpp"
 #include "algorithms/expand_context.hpp"
+#include "utils.hpp"
 
 namespace odgi {
 
@@ -19,29 +20,45 @@ int main_prune(int argc, char** argv) {
     for (uint64_t i = 1; i < argc-1; ++i) {
         argv[i] = argv[i+1];
     }
-    std::string prog_name = "odgi prune";
+    const std::string prog_name = "odgi prune";
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
-    args::ArgumentParser parser("remove complex parts of the graph");
-    args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-    args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-    args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store the graph self index in this file", {'o', "out"});
-    args::ValueFlag<uint64_t> kmer_length(parser, "K", "the length of the kmers to consider", {'k', "kmer-length"});
-    args::ValueFlag<uint64_t> max_furcations(parser, "N", "break at edges that would be induce this many furcations in a kmer", {'e', "max-furcations"});
-    args::ValueFlag<uint64_t> max_degree(parser, "N", "remove nodes that have degree greater that this level", {'d', "max-degree"});
-    args::ValueFlag<uint64_t> min_coverage(parser, "N", "remove nodes covered by fewer than this number of path steps", {'c', "min-coverage"});
-    args::ValueFlag<uint64_t> max_coverage(parser, "N", "remove nodes covered by more than this number of path steps", {'C', "max-coverage"});
-    args::Flag edge_coverage(parser, "bool", "remove edges outside of the min and max coverage (rather than nodes)", {'E', "edge-coverage"});
-    args::ValueFlag<uint64_t> best_edges(parser, "N", "keep only the N most-covered inbound and outbound edge of each node", {'b', "best-edges"});
-    args::ValueFlag<uint64_t> expand_steps(parser, "N", "include nodes within this many steps of a component passing the prune thresholds", {'s', "expand-steps"});
-    args::ValueFlag<uint64_t> expand_length(parser, "N", "include nodes within this graph distance of a component passing the prune thresholds", {'l', "expand-length"});
-    args::ValueFlag<uint64_t> expand_path_length(parser, "N", "include nodes within this path length of a component passing the prune thresholds", {'p', "expand-path-length"});
-    args::Flag drop_paths(parser, "bool", "remove the paths from the graph", {'D', "drop-paths"});
-    args::Flag cut_tips(parser, "bool", "remove nodes which are graph tips", {'T', "cut-tips"});
-    args::ValueFlag<uint64_t> cut_tips_min_coverage(parser, "bool", "remove nodes which are graph tips and have less than this path coverage", {'m', "cut-tips-min-coverage"});
-    args::Flag remove_isolated(parser, "bool", "remove isolated nodes covered by a single path", {'I', "remove-isolated"});
-    args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
+    args::ArgumentParser parser("Remove parts of the graph.");
+    args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
+    args::ValueFlag<std::string> dg_out_file(mandatory_opts, "FILE", "Write the pruned graph in ODGI format to *FILE*. A file ending with *.og* is recommended.", {'o', "out"});
+    args::Group kmer_opts(parser, "[ Kmer Options ]");
+    args::ValueFlag<uint64_t> kmer_length(kmer_opts, "K", "The length of the kmers to consider.", {'k', "kmer-length"});
+    args::ValueFlag<uint64_t> max_furcations(kmer_opts, "N", "Break at edges that would induce *N* many furcations in a kmer.", {'e', "max-furcations"});
+    args::Group node_options(parser, "[ Node Options ]");
+    args::ValueFlag<uint64_t> max_degree(node_options, "N", "Remove nodes that have a higher node degree than *N*.", {'d', "max-degree"});
+    args::ValueFlag<uint64_t> min_depth(node_options, "N", "Remove nodes covered by fewer than *N* number of path steps.", {'c', "min-depth"});
+    args::ValueFlag<uint64_t> max_depth(node_options, "N", "Remove nodes covered by more than *N* number of path steps.", {'C', "max-depth"});
+    args::Flag cut_tips(node_options, "bool", "Remove nodes which are graph tips.", {'T', "cut-tips"});
+    args::Group edge_opts(parser, "[ Edge Options ]");
+    args::Flag edge_depth(edge_opts, "bool", "Remove edges outside of the minimum and maximum coverage rather than"
+                                             " nodes. Only set this argument in combination with **-c,"
+                                             " –min-coverage**=*N* and **-C, --max-coverage**=*N*.", {'E', "edge-depth"});
+    args::ValueFlag<uint64_t> best_edges(edge_opts, "N", "Only keep the *N* most covered inbound and output edges of each node.", {'b', "best-edges"});
+    args::Group step_opts(parser, "[ Step Options ]");
+    args::ValueFlag<uint64_t> expand_steps(step_opts, "N", "Also include nodes within this many steps of a component passing the prune thresholds.", {'s', "expand-steps"});
+    args::ValueFlag<uint64_t> expand_length(step_opts, "N", "Also include nodes within this graph nucleotide distance of a component passing the prune thresholds.", {'l', "expand-length"});
+    args::Group path_opts(parser, "[ Path Options ]");
+    args::ValueFlag<uint64_t> expand_path_length(path_opts, "N", "Also include nodes within this path length of a component passing the prune thresholds.", {'p', "expand-path-length"});
+    args::ValueFlag<std::string> drop_paths(path_opts, "FILE",
+                                                  "List of paths to remove. The FILE must "
+                                                  "contain one path name per line and a subset of all paths can be specified.",
+                                                  {'r', "drop-paths"});
+    args::Flag drop_all_paths(path_opts, "bool", "Remove all paths from the graph.", {'D', "drop-all-paths"});
+    args::ValueFlag<uint64_t> cut_tips_min_depth(path_opts, "N", "Remove nodes which are graph tips and have less than *N* path depth.", {'m', "cut-tips-min-depth"});
+    args::Flag remove_isolated(path_opts, "bool", "Remove isolated nodes covered by a single path.", {'I', "remove-isolated"});
+    args::Group threading_opts(parser, "[ Threading ]");
+    args::ValueFlag<int> threads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
+	args::Group processing_info_opts(parser, "[ Processing Information ]");
+	args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
+	args::Group program_info_opts(parser, "[ Program Information ]");
+    args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi prune.", {'h', "help"});
 
     try {
         parser.ParseCLI(argc, argv);
@@ -72,19 +89,20 @@ int main_prune(int argc, char** argv) {
         return 1;
     }
 
-    graph_t graph;
-    std::string infile = args::get(dg_in_file);
-    if (infile.size()) {
-        if (infile == "-") {
-            graph.deserialize(std::cin);
-        } else {
-            ifstream f(infile.c_str());
-            graph.deserialize(f);
-            f.close();
+	const int n_threads = threads ? args::get(threads) : 1;
+
+	graph_t graph;
+    {
+        const std::string infile = args::get(dg_in_file);
+        if (!infile.empty()) {
+            if (infile == "-") {
+                graph.deserialize(std::cin);
+            } else {
+				utils::handle_gfa_odgi_input(infile, "prune", args::get(progress), n_threads, graph);
+            }
         }
     }
 
-    int n_threads = threads ? args::get(threads) : 1;
     omp_set_num_threads(n_threads);
 
     if (args::get(max_degree)) {
@@ -100,13 +118,15 @@ int main_prune(int argc, char** argv) {
         // we're just removing edges, so paths shouldn't be damaged
         //std::cerr << "done prune" << std::endl;
     }
-    if (args::get(min_coverage) || args::get(max_coverage) || args::get(best_edges)) {
+    if (args::get(min_depth) || args::get(max_depth) || args::get(best_edges)) {
         std::vector<handle_t> handles_to_drop;
-        std::vector<edge_t> edges_to_drop_coverage, edges_to_drop_best;
-        if (args::get(edge_coverage)) {
-            edges_to_drop_coverage = algorithms::find_edges_exceeding_coverage_limits(graph, args::get(min_coverage), args::get(max_coverage));
+        std::vector<edge_t> edges_to_drop_depth;
+        std::vector<edge_t> edges_to_drop_best;
+
+        if (args::get(edge_depth)) {
+            edges_to_drop_depth = algorithms::find_edges_exceeding_depth_limits(graph, args::get(min_depth), args::get(max_depth));
         } else {
-            handles_to_drop = algorithms::find_handles_exceeding_coverage_limits(graph, args::get(min_coverage), args::get(max_coverage));
+            handles_to_drop = algorithms::find_handles_exceeding_depth_limits(graph, args::get(min_depth), args::get(max_depth));
         }
         if (args::get(best_edges)) {
             edges_to_drop_best = algorithms::keep_mutual_best_edges(graph, args::get(best_edges));
@@ -117,13 +137,13 @@ int main_prune(int argc, char** argv) {
         // and at present, we have no mechanism to reconstruct them
         auto do_destroy =
             [&]() {
-                if (args::get(min_coverage) == 1 && args::get(max_coverage) == 0) {
+                if (args::get(min_depth) == 1 && args::get(max_depth) == 0) {
                     // we could not have damaged any paths
                 } else {
                     graph.clear_paths();
                 }
                 //std::cerr << "got " << to_drop.size() << " handles to drop" << std::endl;
-                for (auto& edge : edges_to_drop_coverage) {
+                for (auto& edge : edges_to_drop_depth) {
                     graph.destroy_edge(edge);
                 }
                 for (auto& edge : edges_to_drop_best) {
@@ -153,30 +173,72 @@ int main_prune(int argc, char** argv) {
         }
     }
     if (args::get(cut_tips)) {
-        algorithms::cut_tips(graph, args::get(cut_tips_min_coverage));
+        algorithms::cut_tips(graph, args::get(cut_tips_min_depth));
         graph.optimize();
     }
     if (args::get(remove_isolated)) {
         algorithms::remove_isolated_paths(graph);
         graph.optimize();
     }
-    if (args::get(drop_paths)) {
+    if (args::get(drop_all_paths)) {
         graph.clear_paths();
-    }
-    std::string outfile = args::get(dg_out_file);
-    if (outfile.size()) {
-        if (outfile == "-") {
-            graph.serialize(std::cout);
-        } else {
-            ofstream f(outfile.c_str());
-            graph.serialize(f);
-            f.close();
+    } else if (!args::get(drop_paths).empty()){
+        std::vector<path_handle_t> paths_to_remove;
+
+        std::ifstream path_names_in(args::get(drop_paths));
+
+        uint64_t num_of_paths_in_file = 0;
+
+        std::vector<bool> path_already_seen;
+        path_already_seen.resize(graph.get_path_count(), false);
+
+        std::string line;
+        while (std::getline(path_names_in, line)) {
+            if (!line.empty()) {
+                if (graph.has_path(line)) {
+                    const path_handle_t path = graph.get_path_handle(line);
+                    const uint64_t path_rank = as_integer(path) - 1;
+                    if (!path_already_seen[path_rank]) {
+                        path_already_seen[path_rank] = true;
+                        paths_to_remove.push_back(path);
+                    } else {
+                        std::cerr << "[odgi::prune] error: in the path list there are duplicated path names."
+                                  << std::endl;
+                        exit(1);
+                    }
+                }
+
+                ++num_of_paths_in_file;
+            }
+        }
+
+        path_names_in.close();
+
+        std::cerr << "[odgi::prune] found " << paths_to_remove.size() << "/" << num_of_paths_in_file
+                  << " paths to remove." << std::endl;
+
+        for(auto& path : paths_to_remove) {
+            graph.destroy_path(path);
         }
     }
+
+    {
+        const std::string outfile = args::get(dg_out_file);
+        if (!outfile.empty()) {
+            if (outfile == "-") {
+                graph.serialize(std::cout);
+            } else {
+                ofstream f(outfile.c_str());
+                graph.serialize(f);
+                f.close();
+            }
+        }
+    }
+
     return 0;
 }
 
-static Subcommand odgi_prune("prune", "prune the graph based on coverage or topological complexity",
+static Subcommand odgi_prune("prune", "Remove parts of the graph.",
                               PIPELINE, 3, main_prune);
 
 

@@ -1,0 +1,24 @@
+cff-version: 1.2.0
+message: "If you use this software, please cite it as below."
+title: "Optimized Dynamic Genome/Graph Implementation (ODGI)"
+version: "0.6.2"
+date-released: "2021-09-15"
+abstract: "ODGI, a new suite of tools that implements scalable algorithms and has an efficient in-memory representation of DNA variation graphs. ODGI includes tools for detecting complex regions, extracting loci, removing artifacts, exploratory analysis, manipulation, validation, and visualization."
+authors:
+  - family-names: "Guarracino"
+    given-names: "Andrea"
+    orcid: "https://orcid.org/0000-0001-9744-131X"
+  - family-names: "Heumos"
+    given-names: "Simon"
+  - family-names: "Nahnsen"
+    given-names: "Sven"
+  - family-names: "Prins"
+    given-names: "Pjotr"
+  - family-names: "Garrison"
+    given-names: "Erik"
+license: MIT
+repository-code: "https://github.com/pangenome/odgi"
+keywords:
+  - pangenome
+  - pangenome graph
+  - variation graph

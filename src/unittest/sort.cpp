@@ -186,7 +186,7 @@ TEST_CASE("Sorting a graph with paths 1 node long", "[sort]") {
             };
 
     xp::XP path_index;
-    path_index.from_handle_graph(graph);
+    path_index.from_handle_graph(graph, 1);
 
     uint64_t sum_path_step_count = get_sum_path_step_count(path_sgd_use_paths, path_index);
     uint64_t path_sgd_min_term_updates = sum_path_step_count;//p_sgd_min_term_updates * sum_path_step_count;
@@ -196,8 +196,11 @@ TEST_CASE("Sorting a graph with paths 1 node long", "[sort]") {
     uint64_t path_sgd_zipf_space_max = 1000;
     uint64_t path_sgd_zipf_space_quantization_step = 100;
     std::string path_sgd_seed = "pangenomic!";
+    double path_sgd_cooling_start = 1.0;
 
     uint64_t path_sgd_iter_max_learning_rate = 0; // don't use this max iter stuff
+
+	std::vector<bool> target_nodes;
 
     auto order = odgi::algorithms::path_linear_sgd_order(
             graph,
@@ -213,13 +216,16 @@ TEST_CASE("Sorting a graph with paths 1 node long", "[sort]") {
             path_sgd_zipf_space,
             path_sgd_zipf_space_max,
             path_sgd_zipf_space_quantization_step,
+            path_sgd_cooling_start,
             2,
             false,
             path_sgd_seed,
-            false,
-            "",
-            false,
-            ""
+            false, // snapshot
+            "", // snapshot prefix
+			false, // write 1D layout
+			"", // layout file name
+			false, // target base sorting
+			target_nodes // actual target nodes
     );
 
     graph.apply_ordering(order, true);

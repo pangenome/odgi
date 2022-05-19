@@ -1,25 +1,38 @@
 # odgi
 
+[![build and test](https://github.com/pangenome/odgi/actions/workflows/build_and_test_on_push.yml/badge.svg)](https://github.com/pangenome/odgi/actions/workflows/build_and_test_on_push.yml)
 [![install with bioconda](https://img.shields.io/badge/install%20with-bioconda-brightgreen.svg?style=flat)](http://bioconda.github.io/recipes/odgi/README.html)
 
-## optimized dynamic genome/graph implementation
+## optimized dynamic genome/graph implementation (odgi)
 
-Representing large genomic [variation graphs](https://github.com/vgteam/vg) with minimal memory overhead requires a careful encoding of the graph entities.
-It is possible to build succinct, _static_ data structures to store queryable graphs, as in [xg](https://github.com/vgteam/xg), but dynamic data structures are more tricky to implement.
+`odgi` provides an efficient and succinct dynamic DNA sequence graph model, as well as a host of algorithms that allow the use of such graphs in bioinformatic analyses.
 
-`odgi` follows the dynamic [GBWT](https://github.com/jltsiren/gbwt) in developing a byte-packed version of the graph and paths through it.
-Each node is represented by a byte array into which we write variable length integers to represent, 1) the node sequence, 2) its edges, and 3) the paths crossing the node.
+Careful encoding of graph entities allows `odgi` to efficiently compute and transform [pangenomes](https://pangenome.github.io/) with minimal overheads.  `odgi` implements a dynamic data structure that leveraged multi-core CPUs and can be updated on the fly.
 
-The edges and path steps are recorded relativistically, as deltas between the current node id and the target node id, where the node id corresponds to the rank in the global array of nodes.
-Graphs built from biological data sets tend to have local partial order, and when sorted the stored deltas will tend to be small.
-This allows them to be compressed with a variable length integer representation, resulting in a small in-memory footprint at the cost of packing and unpacking. 
+The edges and path steps are recorded as deltas between the current node id and the target node id, where the node id corresponds to the rank in the global array of nodes.
+Graphs built from biological data sets tend to have local partial order and, when sorted, the deltas be small.
+This allows them to be compressed with a variable length integer representation, resulting in a small in-memory footprint at the cost of packing and unpacking.
 
-The savings are substantial.  In partially ordered regions of the graph, most deltas will require only a single byte.
+The RAM and computational savings are substantial. In partially ordered regions of the graph, most deltas will require only a single byte.
 
-<!--- <> The resulting implementation is able to load the whole genome 1000 Genomes Project graph (described in our [publication on vg in Nature Biotechnology](https://www.nature.com/articles/nbt.4227)) in around 20GB of RAM.
-Initially, `odgi` has been developed to allow in-memory manipulation of graphs produced by the [seqwish](https://github.com/ekg/seqwish) variation graph inducer.  -->
+## installation
 
-## building
+### building from source
+
+`odgi` requires a C++ version of 9.3 or higher. You can check your version via:
+
+``` bash
+gcc --version
+g++ --version
+```
+
+`odgi` pulls in a host of source repositories as dependencies. It may be necessary to install several system-level libraries to build `odgi`. On `Ubuntu 20.04`, these can be installed using `apt`:
+```
+sudo apt install build-essential cmake python3-distutils python3-dev libjemalloc-dev
+```
+
+After installing the required dependencies, clone the `odgi` git repository recursively because of the many submodules
+and build with:
 
 ```
 git clone --recursive https://github.com/pangenome/odgi.git
@@ -36,18 +49,77 @@ cmake -DBUILD_STATIC=1 -H. -Bbuild && cmake --build build -- -j 3
 You'll need to set this flag to 0 or remove and rebuild your build directory if you want to unset this build behavior and get a dynamic binary again.
 Static builds are unlikely to be supported on OSX, and require appropriate static libraries on linux.
 
-It may be necessary to install several system-level libraries to build odgi.
-On Ubuntu 20.04, these can be installed using apt: `sudo apt install build-essential cmake python3-distutils python3-dev`.
+For more information on optimisations, debugging and GNU Guix builds, see [INSTALL.md](./INSTALL.md) and [CMakeLists.txt](./CMakeLists.txt).
 
-## supported functionality
+#### Notes for distribution
 
-odgi includes a variety of subtools for building and manipulating large genome graphs.
-These are [documented in manual pages for each tool in odgi](https://pangenome.github.io/odgi/odgi_docs.html).
+If you need to avoid machine-specific optimizations, use the `CMAKE_BUILD_TYPE=Generic` build type:
+
+```shell
+cmake -H. -Bbuild -DCMAKE_BUILD_TYPE=Generic && cmake --build build -- -j 3
+```
+
+#### Notes on dependencies
+
+On `Arch Linux`, the `jemalloc` dependency can be installed with:
+
+```
+sudo pacman -S jemalloc     # arch linux
+```
+
+### Bioconda
+
+`odgi` recipes for Bioconda are available at https://bioconda.github.io/recipes/odgi/README.html. To install the latest version using `Conda` please execute:
+
+``` bash
+conda install -c bioconda odgi
+```
+
+
+### Docker
+
+To simplify installation and versioning, we have an automated GitHub action that pushes the current docker build to [dockerhub](https://hub.docker.com/r/pangenome/odgi).
+To use it, pull the docker image:
+
+```shell
+docker pull pangenome/odgi
+```
+
+Then, you can run `odgi` with:
+
+```shell
+docker run odgi
+```
+
+
+### Guix
+
+An alternative way to manage `odgi`'s dependencies is by using the `GNU GUIX` package manager. We use Guix to develop, test and deploy odgi on our systems.
+For more information see [INSTALL](./INSTALL.md).
+
+
+## documentation
+
+`odgi` includes a variety of tools for analyzing and manipulating large pangenome graphs.
+Read the full documentation at [https://odgi.readthedocs.io/](https://odgi.readthedocs.io/).
+
+## multiqc
+
+Since v1.11 [MultiQC](https://multiqc.info/) has an [ODGI module](https://multiqc.info/docs/#odgi). This module can only
+work with output from `odgi stats`! For more details take a look at the documentation at [odgi.readthedocs.io/multiqc](https://odgi.readthedocs.io/en/latest/rst/multiqc.html).
+
+## Citation
+**Andrea Guarracino\*, Simon Heumos\*, Sven Nahnsen, Pjotr Prins, Erik Garrison**. [ODGI: understanding pangenome graphs](https://doi.org/10.1093/bioinformatics/btac308), Bioinformatics, 2022\
+**\*Shared first authorship**
 
 ## tests
 
 Unittests from `vg` have been ported here and are used to validate the behavior of the algorithm.
-They can be run via `odgi test`.
+They can be run via `odgi test` which is invoked by
+
+```
+ctest .
+```
 
 ## API
 
@@ -55,17 +127,17 @@ They can be run via `odgi test`.
 As such, it is possible to add, delete, and modify nodes, edges, and paths through the graph.
 Wherever possible, destructive operations on the graph maintain path validity.
 
-## Documentation
-There exists detailed documentation for `odgi`. For an HTML version please click [here](./docs/asciidocs/odgi_docs.html). 
-For manpages please click [here](./docs/asciidocs/man).
-
-## Versioning
+## versioning
 Each time `odgi` is build, the current version is inferred via `git describe --always --tags`. Assuming, [version.cpp](./src/version.cpp)
-is up to date, `odgi version` will not only print out the current tagged version, but its release codename, too. 
+is up to date, `odgi version` will not only print out the current tagged version, but its release codename, too.
 
-## Prepare release
-This section is important for developers only. Each time we make a new release, we invoke [prepare_release.sh](./scripts/prepare_release.sh) (`cd` into folder [scripts](./scripts) first!) 
+## prepare release
+This section is important for developers only. Each time we make a new release, we invoke [prepare_release.sh](./scripts/prepare_release.sh) (`cd` into folder [scripts](./scripts) first!)
 with a new release version and codename. [version.cpp](./src/version.cpp) is updated and the documentation version is bumped up.
+
+## presentations
+
+[@AndreaGuarracino](https://github.com/andreaguarracino) and [@subwaystation](https://github.com/subwaystation) presented `odgi` at the German Bioinformatics Conference 2021: [ODGI - scalable tools for pangenome graphs](https://docs.google.com/presentation/d/1d52kaiOqeH4db4LyMHn7YNjv-mBKvhY2t2zQMNvzgno/edit#slide=id.p).
 
 ## name
 

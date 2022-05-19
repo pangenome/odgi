@@ -40,9 +40,6 @@
 [submodule "deps/sgd2"]
 	path = deps/sgd2
 	url = https://github.com/ekg/sgd2.git
-[submodule "deps/mondriaan"]
-	path = deps/mondriaan
-	url = https://github.com/ekg/mondriaan.git
 [submodule "deps/structures"]
 	path = deps/structures
 	url = https://github.com/jeizenga/structures.git

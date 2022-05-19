@@ -1,7 +1,7 @@
 #include "path_sgd.hpp"
 #include "dirty_zipfian_int_distribution.h"
 
-// #define debug_path_sgd
+//#define debug_path_sgd
 // #define eval_path_sgd
 // #define debug_schedule
 // # define debug_sample_from_nodes
@@ -21,10 +21,13 @@ namespace odgi {
                                             const uint64_t &space,
                                             const uint64_t &space_max,
                                             const uint64_t &space_quantization_step,
+                                            const double &cooling_start,
                                             const uint64_t &nthreads,
                                             const bool &progress,
                                             const bool &snapshot,
-                                            std::vector<std::string> &snapshots) {
+                                            std::vector<std::string> &snapshots,
+											const bool &target_sorting,
+											std::vector<bool>& target_nodes) {
 #ifdef debug_path_sgd
             std::cerr << "iter_max: " << iter_max << std::endl;
             std::cerr << "min_term_updates: " << min_term_updates << std::endl;
@@ -34,7 +37,11 @@ namespace odgi {
             std::cerr << "space: " << space << std::endl;
             std::cerr << "space_max: " << space_max << std::endl;
             std::cerr << "space_quantization_step: " << space_quantization_step << std::endl;
+            std::cerr << "cooling_start: " << cooling_start << std::endl;
 #endif
+
+            uint64_t first_cooling_iteration = std::floor(cooling_start * (double)iter_max);
+            //std::cerr << "first cooling iteration " << first_cooling_iteration << std::endl;
 
             uint64_t total_term_updates = iter_max * min_term_updates;
             std::unique_ptr<progress_meter::ProgressMeter> progress_meter;
@@ -77,8 +84,8 @@ namespace odgi {
                 std::cerr << path_name << std::endl;
                 std::cerr << as_integer(path) << std::endl;
 #endif
-                //size_t path_len = path_index.get_path_length(path);
 #ifdef debug_path_sgd
+                size_t path_len = path_index.get_path_length(path);
                 std::cerr << path_name << " has length: " << path_len << std::endl;
 #endif
                 //path_nucleotide_tree.add(total_path_len_in_nucleotides, total_path_len_in_nucleotides + path_len, path);
@@ -143,6 +150,12 @@ namespace odgi {
                 // learning rate
                 std::atomic<double> eta;
                 eta.store(etas.front());
+                // adaptive zip theta
+                std::atomic<double> adj_theta;
+                adj_theta.store(theta);
+                // if we're in a final cooling phase (last 10%) of iterations
+                std::atomic<bool> cooling;
+                cooling.store(false);
                 // our max delta
                 std::atomic<double> Delta_max;
                 Delta_max.store(0);
@@ -185,11 +198,14 @@ namespace odgi {
                                     } else {
                                         eta.store(etas[iteration]); // update our learning rate
                                         Delta_max.store(delta); // set our delta max to the threshold
+                                        if (iteration > first_cooling_iteration) {
+                                            adj_theta.store(0.001);
+                                            cooling.store(true);
+                                        }
                                     }
                                     term_updates.store(0);
                                 }
                                 std::this_thread::sleep_for(1ms);
-
                             }
                         };
 
@@ -230,7 +246,8 @@ namespace odgi {
                                         continue;
                                     }
 
-                                    if (flip(gen)) {
+                                    if (cooling.load() || flip(gen)) {
+                                        auto _theta = adj_theta.load();
                                         if (s_rank > 0 && flip(gen) || s_rank == path_step_count-1) {
                                             // go backward
                                             uint64_t jump_space = std::min(space, s_rank);
@@ -238,7 +255,7 @@ namespace odgi {
                                             if (jump_space > space_max){
                                                 space = space_max + (jump_space - space_max) / space_quantization_step + 1;
                                             }
-                                            dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, theta, zetas[space]);
+                                            dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, _theta, zetas[space]);
                                             dirtyzipf::dirty_zipfian_int_distribution<uint64_t> z(z_p);
                                             uint64_t z_i = z(gen);
                                             //assert(z_i <= path_space);
@@ -251,7 +268,7 @@ namespace odgi {
                                             if (jump_space > space_max){
                                                 space = space_max + (jump_space - space_max) / space_quantization_step + 1;
                                             }
-                                            dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, theta, zetas[space]);
+                                            dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, _theta, zetas[space]);
                                             dirtyzipf::dirty_zipfian_int_distribution<uint64_t> z(z_p);
                                             uint64_t z_i = z(gen);
                                             //assert(z_i <= path_space);
@@ -269,6 +286,28 @@ namespace odgi {
                                     // and the graph handles, which we need to record the update
                                     handle_t term_i = path_index.get_handle_of_step(step_a);
                                     handle_t term_j = path_index.get_handle_of_step(step_b);
+
+									bool update_term_i = true;
+									bool update_term_j = true;
+
+
+									// Check which terms we actually have to update
+									if (target_sorting) {
+										if (target_nodes[graph.get_id(term_i) - 1]) {
+											update_term_i = false;
+										}
+										if (target_nodes[graph.get_id(term_j) - 1]) {
+											update_term_j = false;
+										}
+									}
+									if (!update_term_j && !update_term_i) {
+										// we also have to update the number of terms here, because else we will over sample and the sorting will take much longer
+										term_updates++; // atomic
+										if (progress) {
+											progress_meter->increment(1);
+										}
+										continue;
+									}
 
                                     // adjust the positions to the node starts
                                     size_t pos_in_path_a = path_index.get_position_of_step(step_a);
@@ -353,8 +392,12 @@ namespace odgi {
 #ifdef debug_path_sgd
                                     std::cerr << "before X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
 #endif
-                                    X[i].store(X[i].load() - r_x);
-                                    X[j].store(X[j].load() + r_x);
+									if (update_term_i) {
+										X[i].store(X[i].load() - r_x);
+									}
+									if (update_term_j) {
+										X[j].store(X[j].load() + r_x);
+									}
 #ifdef debug_path_sgd
                                     std::cerr << "after X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
 #endif
@@ -474,13 +517,16 @@ namespace odgi {
                                                     const uint64_t &space,
                                                     const uint64_t &space_max,
                                                     const uint64_t &space_quantization_step,
+                                                    const double &cooling_start,
                                                     const uint64_t &nthreads,
                                                     const bool &progress,
                                                     const std::string &seed,
                                                     const bool &snapshot,
                                                     const std::string &snapshot_prefix,
                                                     const bool &write_layout,
-                                                    const std::string &layout_out) {
+                                                    const std::string &layout_out,
+													const bool &target_sorting,
+													std::vector<bool>& target_nodes) {
             std::vector<string> snapshots;
             std::vector<double> layout = path_linear_sgd(graph,
                                                          path_index,
@@ -495,10 +541,13 @@ namespace odgi {
                                                          space,
                                                          space_max,
                                                          space_quantization_step,
+                                                         cooling_start,
                                                          nthreads,
                                                          progress,
                                                          snapshot,
-                                                         snapshots);
+                                                         snapshots,
+														 target_sorting,
+														 target_nodes);
             // TODO move the following into its own function that we can reuse
 #ifdef debug_components
             std::cerr << "node count: " << graph.get_node_count() << std::endl;
@@ -581,12 +630,12 @@ namespace odgi {
                     std::cerr << "[odgi::path_linear_sgd] Applying order to graph of snapshot: " << std::to_string(j + 1)
                               << std::endl;
                     std::string local_snapshot_prefix = snapshot_prefix + std::to_string(j + 1);
-                    graph_t graph_copy;
-                    graph_copy.copy(graph);
-                    graph_copy.apply_ordering(order, true);
+                    auto* graph_copy = new odgi::graph_t();
+                    utils::graph_deep_copy(graph, graph_copy);
+                    graph_copy->apply_ordering(order, true);
                     ofstream f(local_snapshot_prefix);
                     std::cerr << "[odgi::path_linear_sgd] Writing snapshot: " << std::to_string(j + 1) << std::endl;
-                    graph_copy.serialize(f);
+                    graph_copy->serialize(f);
                     f.close();
                 }
             }
@@ -637,6 +686,5 @@ namespace odgi {
             }
             return order;
         }
-
     }
 }

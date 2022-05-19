@@ -6,6 +6,7 @@
 #include "algorithms/xp.hpp"
 #include "algorithms/draw.hpp"
 #include "algorithms/layout.hpp"
+#include "utils.hpp"
 
 namespace odgi {
 
@@ -22,26 +23,31 @@ int main_draw(int argc, char **argv) {
     --argc;
 
     args::ArgumentParser parser(
-        "draw previously-determined 2D layouts of the graph with diverse annotations");
-    args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-    args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-    args::ValueFlag<std::string> layout_in_file(parser, "FILE", "read the layout coordinates from this .lay format file produced by odgi layout", {'c', "coords-in"});
+        "Draw previously-determined 2D layouts of the graph with diverse annotations.");
+    args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
+    args::ValueFlag<std::string> layout_in_file(mandatory_opts, "FILE", "Read the layout coordinates from this .lay format FILE produced by odgi layout.", {'c', "coords-in"});
     //args::Flag in_is_tsv(parser, "is-tsv", "if the input is .tsv format (three column: id, X, Y) rather the default .lay binary format", {'I', "input-is-tsv"});
-    args::ValueFlag<std::string> tsv_out_file(parser, "FILE", "write the TSV layout plus displayed annotations to this file", {'T', "tsv"});
-    args::ValueFlag<std::string> svg_out_file(parser, "FILE", "write an SVG rendering to this file", {'s', "svg"});
-    args::ValueFlag<std::string> png_out_file(parser, "FILE", "write a rasterized PNG rendering to this file", {'p', "png"});
-    args::ValueFlag<uint64_t> png_height(parser, "FILE", "height of PNG rendering (default: 1000)", {'H', "png-height"});
-    args::ValueFlag<uint64_t> png_border(parser, "FILE", "size of PNG border in bp (default: 10)", {'E', "png-border"});
-    args::Flag color_paths(parser, "color-paths", "color paths (in PNG output)", {'C', "color-paths"});
-    args::ValueFlag<double> render_scale(parser, "N", "image scaling (default 1.0)", {'R', "scale"});
-    args::ValueFlag<double> render_border(parser, "N", "image border (in approximate bp) (default 100.0)", {'B', "border"});
-    args::ValueFlag<double> png_line_width(parser, "N", "line width (in approximate bp) (default 0.0)", {'w', "line-width"});
+    args::Group files_io_opts(parser, "[ Files IO ]");
+    args::ValueFlag<std::string> tsv_out_file(files_io_opts, "FILE", "Write the TSV layout plus displayed annotations to this FILE.", {'T', "tsv"});
+    args::ValueFlag<std::string> svg_out_file(files_io_opts, "FILE", "Write an SVG rendering to this FILE.", {'s', "svg"});
+    args::ValueFlag<std::string> png_out_file(files_io_opts, "FILE", "Write a rasterized PNG rendering to this FILE.", {'p', "png"});
+    args::Group visualizations_opts(parser, "[ Visualization Options ]");
+    args::ValueFlag<uint64_t> png_height(visualizations_opts, "FILE", "Height of PNG rendering (default: 1000).", {'H', "png-height"});
+    args::ValueFlag<uint64_t> png_border(visualizations_opts, "FILE", "Size of PNG border in bp (default: 10).", {'E', "png-border"});
+    args::Flag color_paths(visualizations_opts, "color-paths", "Color paths (in PNG output).", {'C', "color-paths"});
+    args::ValueFlag<double> render_scale(visualizations_opts, "N", "Image scaling (default 1.0).", {'R', "scale"});
+    args::ValueFlag<double> render_border(visualizations_opts, "N", "Image border (in approximate bp) (default 100.0).", {'B', "border"});
+    args::ValueFlag<double> png_line_width(visualizations_opts, "N", "Line width (in approximate bp) (default 0.0).", {'w', "line-width"});
     //args::ValueFlag<double> png_line_overlay(parser, "N", "line width (in approximate bp) (default 10.0)", {'O', "line-overlay"});
-    args::ValueFlag<double> png_path_line_spacing(parser, "N", "spacing between path lines in png layout (in approximate bp) (default 0.0)", {'S', "path-line-spacing"});
-    args::ValueFlag<std::string> xp_in_file(parser, "FILE", "load the path index from this file", {'X', "path-index"});
-    //args::Flag progress(parser, "progress", "display progress", {'P', "progress"});
-    //args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel phases", {'t', "threads"});
-    //args::Flag debug(parser, "debug", "print information about the layout", {'d', "debug"});
+    args::ValueFlag<double> png_path_line_spacing(visualizations_opts, "N", "Spacing between path lines in PNG layout (in approximate bp) (default 0.0).", {'S', "path-line-spacing"});
+    args::ValueFlag<std::string> xp_in_file(files_io_opts, "FILE", "Load the path index from this FILE.", {'X', "path-index"});
+	args::Group threading(parser, "[ Threading ]");
+	args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
+	args::Group processing_info_opts(parser, "[ Processing Information ]");
+	args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
+    args::Group program_info_opts(parser, "[ Program Information ]");
+    args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi draw.", {'h', "help"});
 
     try {
         parser.ParseCLI(argc, argv);
@@ -58,16 +64,19 @@ int main_draw(int argc, char **argv) {
         return 1;
     }
 
-//    if (args::get(nthreads)) {
-//        omp_set_num_threads(args::get(nthreads));
-//    }
-
     if (!dg_in_file) {
         std::cerr
             << "[odgi::draw] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]."
             << std::endl;
         return 1;
     }
+
+	if (!layout_in_file) {
+		std::cerr
+				<< "[odgi::draw] error: please specify an input file from where to load the layout from via -c=[FILE], --coords-in=[FILE]."
+				<< std::endl;
+		return 1;
+	}
 
     if (!tsv_out_file && !svg_out_file && !png_out_file) {
         std::cerr
@@ -76,16 +85,16 @@ int main_draw(int argc, char **argv) {
         return 1;
     }
 
-    graph_t graph;
+	const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+
+	graph_t graph;
     assert(argc > 0);
     std::string infile = args::get(dg_in_file);
     if (!infile.empty()) {
         if (infile == "-") {
             graph.deserialize(std::cin);
         } else {
-            ifstream f(infile.c_str());
-            graph.deserialize(f);
-            f.close();
+			utils::handle_gfa_odgi_input(infile, "draw", args::get(progress), num_threads, graph);
         }
     }
 
@@ -150,7 +159,7 @@ int main_draw(int argc, char **argv) {
     return 0;
 }
 
-static Subcommand odgi_draw("draw", "draw previously-determined 2D layouts of the graph with diverse annotations",
+static Subcommand odgi_draw("draw", "Draw previously-determined 2D layouts of the graph with diverse annotations.",
                             PIPELINE, 3, main_draw);
 
 

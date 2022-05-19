@@ -1,6 +1,6 @@
 //
 //  graph.cpp
-//  
+//
 
 #include "odgi.hpp"
 
@@ -147,13 +147,13 @@ size_t graph_t::get_node_count() const {
 /// Return the smallest ID in the graph, or some smaller number if the
 /// smallest ID is unavailable. Return value is unspecified if the graph is empty.
 nid_t graph_t::min_node_id() const {
-    return _min_node_id;
+    return _min_node_id + _id_increment;
 }
 
 /// Return the largest ID in the graph, or some larger number if the
 /// largest ID is unavailable. Return value is unspecified if the graph is empty.
 nid_t graph_t::max_node_id() const {
-    return _max_node_id;
+    return _max_node_id + _id_increment;
 }
 
 ////////////////////////////////////////////////////////////////////////////
@@ -351,6 +351,7 @@ void graph_t::set_circularity(const path_handle_t& path_handle, bool circular) {
 
 /// Returns true if the step is not the last step on the path, else false
 bool graph_t::has_next_step(const step_handle_t& step_handle) const {
+    if (is_path_end(step_handle)) return false;
     auto& node = get_node_ref(get_handle_of_step(step_handle));
     node.get_lock();
     auto b = !node.step_is_end(as_integers(step_handle)[1]);
@@ -360,6 +361,7 @@ bool graph_t::has_next_step(const step_handle_t& step_handle) const {
 
 /// Returns true if the step is not the first step on the path, else false
 bool graph_t::has_previous_step(const step_handle_t& step_handle) const {
+    if (is_path_end(step_handle)) return true;
     auto& node = get_node_ref(get_handle_of_step(step_handle));
     node.get_lock();
     auto b = !node.step_is_start(as_integers(step_handle)[1]);
@@ -416,7 +418,8 @@ step_handle_t graph_t::get_previous_step(const step_handle_t& step_handle) const
     if (is_path_front_end(step_handle)) {
         return step_handle;
     } else if (is_path_end(step_handle)) {
-        curr_handle = get_handle_of_step(path_back(as_path_handle(as_integers(step_handle)[0])));
+        return path_back(as_path_handle(as_integers(step_handle)[0]));
+		// curr_handle = get_handle_of_step(path_back(as_path_handle(as_integers(step_handle)[0])));
     } else {
         curr_handle = get_handle_of_step(step_handle);
     }
@@ -735,6 +738,14 @@ void graph_t::optimize(bool allow_id_reassignment) {
     apply_ordering({}, allow_id_reassignment);
 }
 
+bool graph_t::is_optimized(void) {
+	if (min_node_id() == 1 && max_node_id() == get_node_count()) {
+		return true;
+	} else {
+		return false;
+	}
+}
+
 void graph_t::reassign_node_ids(const std::function<nid_t(const nid_t&)>& get_new_id) {
     assert(false); // to implement
     /*
@@ -765,7 +776,7 @@ void graph_t::reassign_node_ids(const std::function<nid_t(const nid_t&)>& get_ne
         });
     *this = reassigned;
     */
-    // XXXXXX TODO 
+    // XXXXXX TODO
 }
 
 /// Reorder the graph's internal structure to match that given.
@@ -859,6 +870,7 @@ void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
 
     // now we actually apply the ordering to our node_v, while removing deleted slots
     std::vector<node_t*> new_node_v; //(order->size());
+    _min_node_id = 1;
     if (compact_ids) {
         uint64_t j = 0;
         for (uint64_t i = 0; i < node_v.size(); ++i) {
@@ -1528,14 +1540,18 @@ void graph_t::display() const {
 
 }
 
-void graph_t::to_gfa(std::ostream& out) const {
+void graph_t::to_gfa(std::ostream& out, const bool& emit_node_annotation) const {
     out << "H\tVN:Z:1.0" << std::endl;
     // for each node
-    for_each_handle([&out,this](const handle_t& h) {
-            out << "S\t" << get_id(h) << "\t"
-                << get_sequence(h) << "\t"
+    for_each_handle([&out,&emit_node_annotation, this](const handle_t& h) {
+            out << "S\t" << get_id(h) << "\t" << get_sequence(h);
+            if (emit_node_annotation) {
+                out << "\t"
                 << "DP:i:" << get_step_count(h) << "\t"
-                << "RC:i:" << get_step_count(h) * get_length(h) << std::endl;
+                << "RC:i:" << get_step_count(h) * get_length(h);
+            }
+            out << std::endl;
+
             {
                 // use this direct iteration to avoid double counting edges
                 // we only consider write the edges relative to their start

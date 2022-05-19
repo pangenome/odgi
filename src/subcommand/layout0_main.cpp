@@ -9,7 +9,6 @@ namespace odgi {
 
 using namespace odgi::subcommand;
 
-
 void draw_svg(ostream& out, const std::vector<double>& X, const HandleGraph& graph, double scale) {
     double border = 10.0;
     double min_x = 0;
@@ -108,7 +107,7 @@ int main_layout0(int argc, char** argv) {
     graph_t graph;
     assert(argc > 0);
     std::string infile = args::get(dg_in_file);
-    if (infile.size()) {
+    if (!infile.empty()) {
         if (infile == "-") {
             graph.deserialize(std::cin);
         } else {
@@ -121,7 +120,7 @@ int main_layout0(int argc, char** argv) {
     std::vector<double> layout = algorithms::sgd_layout(graph, n_pivots, t_max, eps, x_padding);
 
     std::string outfile = args::get(svg_out_file);
-    if (outfile.size()) {
+    if (!outfile.empty()) {
         if (outfile == "-") {
             draw_svg(std::cout, layout, graph, svg_scale);
         } else {

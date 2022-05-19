@@ -2,7 +2,9 @@
 #include "odgi.hpp"
 #include "args.hxx"
 #include "algorithms/bin_path_info.hpp"
-#include "algorithms/bin_path_coverage.hpp"
+#include "algorithms/bin_path_depth.hpp"
+#include "gfa_to_handle.hpp"
+#include "utils.hpp"
 
 #include <regex>
 
@@ -19,21 +21,47 @@ int main_bin(int argc, char** argv) {
     argv[0] = (char*)prog_name.c_str();
     --argc;
 
-    args::ArgumentParser parser("binning of path information in the graph");
-    args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-    args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-    args::ValueFlag<std::string> fa_out_file(parser, "FILE", "store the pangenome sequence in FASTA format in this file", {'f', "fasta"});
-    args::ValueFlag<std::string> path_delim(parser, "path-delim", "annotate rows by prefix and suffix of this delimiter", {'D', "path-delim"});
-    args::Flag output_json(parser, "write-json", "write JSON format output including additional path positional information", {'j', "json"});
-    args::Flag aggregate_delim(parser, "aggregate-delim", "aggregate on path prefix delimiter", {'a', "aggregate-delim"});
-    args::ValueFlag<uint64_t> num_bins(parser, "N", "number of bins", {'n', "num-bins"});
-    args::ValueFlag<uint64_t> bin_width(parser, "bp", "width of each bin in basepairs along the graph vector", {'w', "bin-width"});
-    args::Flag write_seqs_not(parser, "write-seqs-not", "don't write out the sequences for each bin", {'s', "no-seqs"});
-    args::Flag drop_gap_links(parser, "drop-gap-links", "don't include gap links in the output", {'g', "no-gap-links"});
-    args::Flag haplo_blocker(parser, "haplo-blocker", "write a TSV to stdout for input to HaploBlocker: Each row corresponds to a node. Each column corresponds to a path. Each value is the coverage of a specific node of a specific path.", {'b', "haplo-blocker"});
-    args::ValueFlag<uint64_t> haplo_blocker_min_paths(parser, "N", "the minimum number of paths that are present in the bin to actually report that bin", {'p', "haplo-blocker-min-paths"});
-    args::ValueFlag<uint64_t> haplo_blocker_min_coverage(parser, "N", "the minimum coverage a path needs to have in a bin to actually report that bin", {'c', "haplo-blocker-min-coverage"});
-    args::Flag progress(parser, "progress", "write current progress to stderr", {'P', "progress"});
+    args::ArgumentParser parser("Binning of pangenome sequence and path information in the graph.");
+    args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this FILE. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
+    args::Group bin_opts(parser, "[ Bin Options ]");
+    args::ValueFlag<std::string> path_delim(bin_opts, "path-delim", "Annotate rows by prefix and suffix of this delimiter.", {'D', "path-delim"});
+    args::Flag aggregate_delim(bin_opts, "aggregate-delim", "Aggregate on path prefix delimiter. Argument depends on -D,--path-delim=[STRING].", {'a', "aggregate-delim"});
+    args::Flag output_json(bin_opts, "write-json", "Print bins and links to stdout in pseudo JSON format. "
+                                                 "Each line is a  valid JSON object, but the whole file is not a valid JSON! "
+                                                 "First, each  bin including its pangenome sequence is printed to stdout per line.  "
+                                                 "Second, for each path in the graph, its traversed bins including  metainformation: **bin** (bin identifier), "
+                                                 "**mean.cov** (mean coverage  of the path in this bin), "
+                                                 "**mean.inv** (mean inversion rate of this  path in this bin), "
+                                                 "**mean.pos** (mean nucleotide position of this path  in this bin), "
+                                                 "and an array of ranges determining the nucleotide  position of the path in this bin. "
+                                                 "Switching first and last nucleotide  in a range represents a complement "
+                                                 "reverse orientation of that  particular sequence.", {'j', "json"});
+    args::ValueFlag<uint64_t> num_bins(bin_opts, "N", "The number of bins the pangenome sequence should be chopped up to.", {'n', "num-bins"});
+    args::ValueFlag<uint64_t> bin_width(bin_opts, "bp", "The bin width specifies the size of each bin.", {'w', "bin-width"});
+    args::Flag write_seqs_not(bin_opts, "write-seqs-not", "If -j,--json is set, no nucleotide sequences will be printed to stdout in order to save disk space.", {'s', "no-seqs"});
+    args::Flag drop_gap_links(bin_opts, "drop-gap-links", "Don't include gap links in the output. "
+                                                          "We divide links into 2 classes:\n1. The links which help to follow complex variations. "
+                                                          "They need to be drawn, else one could not follow the sequence of a path.\n"
+                                                          "2. The links helping to follow simple variations. These links are called gap-links."
+                                                          " Such links solely connecting a path from left to right may not be"
+                                                          "relevant to understand a path's traveral through the bins. Therfore,"
+                                                          " when this option is set, the gap-links are left out saving disk space.", {'g', "no-gap-links"});
+    args::Group haplo_blocker_opts(parser, "[ HaploBlocker Options ]");
+    args::Flag haplo_blocker(haplo_blocker_opts, "haplo-blocker", "Write a TSV to stdout formatted in a "
+                                                                  "way ready for HaploBlocker: Each row corresponds to a node. "
+                                                                  "Each column corresponds to a path. Each value is the coverage of "
+                                                                  "a specific node of a specific path.", {'b', "haplo-blocker"});
+    args::ValueFlag<uint64_t> haplo_blocker_min_paths(haplo_blocker_opts, "N", "Specify the minimum number of paths "
+                                                                               "that need to be present in the bin to actually"
+                                                                               " report that bin (default: 1).", {'p', "haplo-blocker-min-paths"});
+    args::ValueFlag<uint64_t> haplo_blocker_min_depth(haplo_blocker_opts, "N", "Specify the minimum depth a path needs to have in a bin to actually report that bin (default: 1).", {'c', "haplo-blocker-min-depth"});
+	args::Group threading(parser, "[ Threading ]");
+	args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
+    args::Group processing_info_opts(parser, "[ Processing Information ]");
+    args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
+    args::Group program_info_opts(parser, "[ Program Information ]");
+    args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi bin.", {'h', "help"});
     try {
         parser.ParseCLI(argc, argv);
     } catch (args::Help) {
@@ -54,16 +82,16 @@ int main_bin(int argc, char** argv) {
         return 1;
     }
 
-    graph_t graph;
+	const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+
+	graph_t graph;
     assert(argc > 0);
-    std::string infile = args::get(dg_in_file);
-    if (infile.size()) {
+    if (!args::get(dg_in_file).empty()) {
+        std::string infile = args::get(dg_in_file);
         if (infile == "-") {
             graph.deserialize(std::cin);
         } else {
-            ifstream f(infile.c_str());
-            graph.deserialize(f);
-            f.close();
+			utils::handle_gfa_odgi_input(infile, "bin", args::get(progress), num_threads, graph);
         }
     }
 
@@ -92,22 +120,22 @@ int main_bin(int argc, char** argv) {
     }
 
     if (haplo_blocker) {
-        std::cerr << "[odgi::bin] main: running in HaploBlocker mode. Ignoring input parameters -f/--fasta, -D/--path-delim, -j/--json, -a/--aggregate-delim, "
+        std::cerr << "[odgi::bin] main: running in HaploBlocker mode. Ignoring input parameters -D/--path-delim, -j/--json, -a/--aggregate-delim, "
                      "-n/--num-bins, -w/--bin-width, -s/--no-seqs, -g/--no-gap-links." << std::endl;
         // first pass: collect #nucleotides, fill in_all_bins_bv, unique_bins_bv
         uint64_t haplo_blocker_min_paths_ = args::get(haplo_blocker_min_paths) ? args::get(haplo_blocker_min_paths) : 1;
-        uint64_t haplo_blocker_min_coverage_ = args::get(haplo_blocker_min_coverage) ? args::get(haplo_blocker_min_coverage) : 1.0;
-        algorithms::bin_path_coverage(graph, args::get(progress),
-                                      haplo_blocker_min_paths_, haplo_blocker_min_coverage_);
+        uint64_t haplo_blocker_min_depth_ = args::get(haplo_blocker_min_depth) ? args::get(haplo_blocker_min_depth) : 1.0;
+        algorithms::bin_path_depth(graph, args::get(progress),
+                                      haplo_blocker_min_paths_, haplo_blocker_min_depth_);
         // write header of table to stdout
 
         // for all paths, for each node and nucleotide in path --> better unordered_map https://stackoverflow.com/questions/1939953/how-to-find-if-a-given-key-exists-in-a-c-stdmap
         // map<uint64_t, double>: ++ when we cover the bin
         // as it is done so far
 
-        // update mean coverage
+        // update mean depth
         // write to std::cout, only if we have !in_all_bins_bv[idx] && !unique_bins_bv[idx] && auto it = m.find("f"); if (it != m.end()) {/*Use it->second*/}.
-        // cap coverage by 255
+        // cap depth by 255
     } else {
 
         // ODGI JSON VERSION
@@ -129,32 +157,11 @@ int main_bin(int argc, char** argv) {
         std::function<void(const uint64_t&,
                            const std::string&)> write_seq_json
                 = [&](const uint64_t& bin_id, const std::string& seq) {
-                    if (args::get(write_seqs_not) || fa_out_file) {
+                    if (args::get(write_seqs_not)) {
                         std::cout << "{\"bin_id\":" << bin_id << "}" << std::endl;
                     } else {
                         std::cout << "{\"bin_id\":" << bin_id << ","
                                   << "\"sequence\":\"" << seq << "\"}" << std::endl;
-                    }
-                };
-
-        std::function<void(const std::string&)> write_fasta
-                = [&](const std::string& nuc_seq) {
-                    if (fa_out_file) {
-                        std::ofstream out(args::get(fa_out_file));
-                        std::string fa_out_name = args::get(fa_out_file).c_str();
-                        std::regex regex("/");
-                        std::vector<std::string> splitted(
-                                std::sregex_token_iterator(fa_out_name.begin(), fa_out_name.end(), regex, -1),
-                                std::sregex_token_iterator()
-                        );
-                        fa_out_name = splitted[splitted.size() - 1];
-                        // Write header
-                        out << ">" << fa_out_name << std::endl;
-                        // Write the actual sequences, 80 nucleotides per line
-                        for (unsigned i = 0; i < nuc_seq.length(); i += 80) {
-                            std:: string sub_nuc_seq = nuc_seq.substr(i, 80);
-                            out << sub_nuc_seq << std::endl;
-                        }
                     }
                 };
 
@@ -180,7 +187,7 @@ int main_bin(int argc, char** argv) {
                       const std::map<uint64_t, algorithms::path_info_t>& bins) {
                     std::string name_prefix = get_path_prefix(path_name);
                     std::string name_suffix = get_path_suffix(path_name);
-                    std::cout << "{\"path_name\":\"" << path_name << "\",";
+                    std::cout << R"({"path_name":")" << path_name << "\",";
                     if (!delim.empty()) {
                         std::cout << "\"path_name_prefix\":\"" << name_prefix << "\","
                                   << "\"path_name_suffix\":\"" << name_suffix << "\",";
@@ -191,7 +198,7 @@ int main_bin(int argc, char** argv) {
                         auto& bin_id = entry_it->first;
                         auto &info = entry_it->second;
                         std::cout << "[" << bin_id << ","
-                                  << info.mean_cov << ","
+                                  << info.mean_depth << ","
                                   << info.mean_inv << ","
                                   << info.mean_pos << ",";
                         write_ranges_json(info.ranges);
@@ -227,12 +234,12 @@ int main_bin(int argc, char** argv) {
                     for (auto& entry : bins) {
                         auto& bin_id = entry.first;
                         auto& info = entry.second;
-                        if (info.mean_cov) {
+                        if (info.mean_depth > 0) {
                             std::cout << path_name << "\t"
                                       << name_prefix << "\t"
                                       << name_suffix << "\t"
                                       << bin_id << "\t"
-                                      << info.mean_cov << "\t"
+                                      << info.mean_depth << "\t"
                                       << info.mean_inv << "\t"
                                       << info.mean_pos << "\t"
                                       << info.ranges[0].first << "\t";
@@ -247,7 +254,7 @@ int main_bin(int argc, char** argv) {
 
         if (args::get(output_json)) {
             algorithms::bin_path_info(graph, (args::get(aggregate_delim) ? args::get(path_delim) : ""),
-                                      write_header_json,write_json, write_seq_json, write_fasta,
+                                      write_header_json,write_json, write_seq_json,
                                       args::get(num_bins), args::get(bin_width), args::get(drop_gap_links),
                                       args::get(progress));
         } else {
@@ -261,7 +268,7 @@ int main_bin(int argc, char** argv) {
                       << "first.nucl" << "\t"
                       << "last.nucl" << std::endl;
             algorithms::bin_path_info(graph, (args::get(aggregate_delim) ? args::get(path_delim) : ""),
-                                      write_header_tsv,write_tsv, write_seq_noop, write_fasta,
+                                      write_header_tsv,write_tsv, write_seq_noop,
                                       args::get(num_bins), args::get(bin_width), args::get(drop_gap_links),
                                       args::get(progress));
         }
@@ -269,7 +276,7 @@ int main_bin(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand odgi_bin("bin", "bin path information across the graph",
+static Subcommand odgi_bin("bin", "Binning of pangenome sequence and path information in the graph.",
                               PIPELINE, 3, main_bin);
 
 

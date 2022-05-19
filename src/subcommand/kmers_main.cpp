@@ -8,6 +8,7 @@
 #include "algorithms/prune.hpp"
 #include "algorithms/remove_high_degree.hpp"
 #include <chrono>
+#include "utils.hpp"
 
 namespace odgi {
 
@@ -19,18 +20,24 @@ int main_kmers(int argc, char** argv) {
     for (uint64_t i = 1; i < argc-1; ++i) {
         argv[i] = argv[i+1];
     }
-    std::string prog_name = "odgi kmers";
+    const std::string prog_name = "odgi kmers";
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
-    args::ArgumentParser parser("show and characterize the kmer space of the graph");
-    args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-    args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-    args::ValueFlag<uint64_t> kmer_length(parser, "K", "the length of the kmers to generate", {'k', "kmer-length"});
-    args::ValueFlag<uint64_t> max_furcations(parser, "N", "break at edges that would be induce this many furcations in a kmer", {'e', "max-furcations"});
-    args::ValueFlag<uint64_t> max_degree(parser, "N", "remove nodes that have degree greater that this level", {'D', "max-degree"});
-    args::ValueFlag<uint64_t> threads(parser, "N", "number of threads to use", {'t', "threads"});
-    args::Flag kmers_stdout(parser, "", "write the kmers to stdout", {'c', "stdout"});
+    args::ArgumentParser parser("Display and characterize the kmer space of a graph.");
+    args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
+    args::ValueFlag<uint64_t> kmer_length(mandatory_opts, "K", "The kmer length to generate kmers from.", {'k', "kmer-length"});
+    args::Group kmer_opts(parser, "[ Kmer Options ]");
+    args::ValueFlag<uint64_t> max_furcations(kmer_opts, "N", "Break at edges that would be induce this many furcations in a kmer.", {'e', "max-furcations"});
+    args::ValueFlag<uint64_t> max_degree(kmer_opts, "N", "Don't take nodes into account that have a degree greater than N.", {'D', "max-degree"});
+    args::Group threading_opts(parser, "[ Threading ]");
+    args::ValueFlag<int> threads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
+	args::Group processing_info_opts(parser, "[ Processing Information ]");
+	args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
+    args::Flag kmers_stdout(kmer_opts, "", "Write the kmers to stdout. Kmers are line-separated.", {'c', "stdout"});
+    args::Group program_info_opts(parser, "[ Program Information ]");
+    args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi kmers.", {'h', "help"});
 
     try {
         parser.ParseCLI(argc, argv);
@@ -56,27 +63,29 @@ int main_kmers(int argc, char** argv) {
         std::cerr << "Please specify a kmer length via -k=[N], --kmer-lenght=[N]." << std::endl;
         return 1;
     }
-
-    graph_t graph;
-    assert(argc > 0);
     assert(args::get(kmer_length));
-    std::string infile = args::get(dg_in_file);
-    if (infile.size()) {
-        if (infile == "-") {
-            graph.deserialize(std::cin);
-        } else {
-            ifstream f(infile.c_str());
-            graph.deserialize(f);
-            f.close();
+
+	const uint64_t num_threads = args::get(threads) ? args::get(threads) : 1;
+
+	graph_t graph;
+    assert(argc > 0);
+    {
+        const std::string infile = args::get(dg_in_file);
+        if (!infile.empty()) {
+            if (infile == "-") {
+                graph.deserialize(std::cin);
+            } else {
+				utils::handle_gfa_odgi_input(infile, "kmers", args::get(progress), num_threads, graph);
+            }
         }
     }
 
-    int n_threads = threads ? args::get(threads) : 1;
-    omp_set_num_threads(n_threads);
+    omp_set_num_threads(num_threads);
 
     if (args::get(max_degree)) {
         algorithms::remove_high_degree_nodes(graph, args::get(max_degree));
     }
+
     /*
     if (args::get(max_furcations)) {
         std::vector<edge_t> to_prune = algorithms::find_edges_to_prune(graph, args::get(kmer_length), args::get(max_furcations));
@@ -87,10 +96,12 @@ int main_kmers(int argc, char** argv) {
         std::cerr << "done prune" << std::endl;
     }
     */
-    std::vector<std::vector<kmer_t>> buffers(n_threads);
+
     if (args::get(kmers_stdout)) {
+        std::vector<std::vector<kmer_t>> buffers(num_threads);
+
         algorithms::for_each_kmer(graph, args::get(kmer_length), args::get(max_furcations), [&](const kmer_t& kmer) {
-                int tid = omp_get_thread_num();
+                const int tid = omp_get_thread_num();
                 auto& buffer = buffers.at(tid);
                 buffer.push_back(kmer);
                 if (buffer.size() > 1e5) {
@@ -103,12 +114,15 @@ int main_kmers(int argc, char** argv) {
                     }
                 }
             });
+
+        // last kmers in the buffer
         for (auto& buffer : buffers) {
             for (auto& kmer : buffer) {
                 std::cout << kmer << "\n";
             }
             buffer.clear();
         }
+
         std::cout.flush();
     } else {
         //ska::flat_hash_map<uint32_t, uint32_t> kmer_table;
@@ -131,10 +145,11 @@ int main_kmers(int argc, char** argv) {
                 }
                 */
             });
+
         std::cerr << std::endl;
         std::sort(kmers.begin(), kmers.end());
         kmers.erase(std::unique(kmers.begin(), kmers.end()), kmers.end());
-        boophf_t * bphf = new boomphf::mphf<uint64_t,hasher_t>(kmers.size(),kmers,n_threads);
+        boophf_t* bphf = new boomphf::mphf<uint64_t,hasher_t>(kmers.size(),kmers,num_threads);
         //kmers.clear();
         std::cerr << "querying kmers" << std::endl;
         chrono::high_resolution_clock::time_point t1 = chrono::high_resolution_clock::now();
@@ -158,7 +173,7 @@ int main_kmers(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand odgi_kmers("kmers", "process and dump the kmers of the graph",
+static Subcommand odgi_kmers("kmers", "Display and characterize the kmer space of a graph.",
                               PIPELINE, 3, main_kmers);
 
 

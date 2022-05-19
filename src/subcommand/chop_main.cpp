@@ -3,6 +3,7 @@
 #include "args.hxx"
 #include <omp.h>
 #include "algorithms/chop.hpp"
+#include "utils.hpp"
 
 namespace odgi {
 
@@ -14,20 +15,25 @@ namespace odgi {
         for (uint64_t i = 1; i < argc - 1; ++i) {
             argv[i] = argv[i + 1];
         }
-        std::string prog_name = "odgi chop";
+        const std::string prog_name = "odgi chop";
         argv[0] = (char *) prog_name.c_str();
         --argc;
 
-        args::ArgumentParser parser("divide nodes into smaller pieces");
-        args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-        args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-        args::ValueFlag<std::string> dg_out_file(parser, "FILE", "store the graph self index in this file",
+        args::ArgumentParser parser("Divide nodes into smaller pieces preserving node topology and order.");
+        args::Group mandatory_opts(parser, "[ MANDATORY ARGUMENTS ]");
+        args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
+        args::ValueFlag<std::string> dg_out_file(mandatory_opts, "FILE", "Write the chopped succinct variation graph in ODGI format to *FILE*. A file ending of *.og* is recommended.",
                                                  {'o', "out"});
-        args::ValueFlag<uint64_t> chop_to(parser, "N", "divide nodes to be shorter than this length", {'c', "chop-to"});
-        args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel operations",
+        args::ValueFlag<uint64_t> chop_to(mandatory_opts, "N", "Divide nodes that are longer than *N* base pairs into nodes no longer than *N* while"
+                                                               " maintaining graph topology.", {'c', "chop-to"});
+        args::Group threading_opts(parser, "[ Threading ]");
+        args::ValueFlag<uint64_t> nthreads(threading_opts, "N", "Number of threads to use for parallel operations.",
                                            {'t', "threads"});
-        args::Flag debug(parser, "debug", "print information about the process to stderr.", {'d', "debug"});
-
+        args::Group processing_info_opts(parser, "[ Processing Information ]");
+        args::Flag debug(processing_info_opts, "debug", "Print information about the process to stderr.", {'d', "debug"});
+		args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
+        args::Group program_info_opts(parser, "[ Program Information ]");
+        args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi chop.", {'h', "help"});
         try {
             parser.ParseCLI(argc, argv);
         } catch (args::Help) {
@@ -63,38 +69,40 @@ namespace odgi {
             return 1;
         }
 
-        graph_t graph;
+		const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
+
+		graph_t graph;
         assert(argc > 0);
-        std::string infile = args::get(dg_in_file);
-        if (!infile.empty()) {
-            if (infile == "-") {
-                graph.deserialize(std::cin);
-            } else {
-                ifstream f(infile.c_str());
-                graph.deserialize(f);
-                f.close();
+        {
+            const std::string infile = args::get(dg_in_file);
+            if (!infile.empty()) {
+                if (infile == "-") {
+                    graph.deserialize(std::cin);
+                } else {
+					utils::handle_gfa_odgi_input(infile, "chop", args::get(progress), num_threads, graph);
+                }
             }
         }
-
-        const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
-        graph.set_number_of_threads(num_threads);
 
         algorithms::chop(graph, args::get(chop_to), num_threads, args::get(debug));
 
-        std::string outfile = args::get(dg_out_file);
-        if (!outfile.empty()) {
-            if (outfile == "-") {
-                graph.serialize(std::cout);
-            } else {
-                ofstream f(outfile.c_str());
-                graph.serialize(f);
-                f.close();
+        {
+            const std::string outfile = args::get(dg_out_file);
+            if (!outfile.empty()) {
+                if (outfile == "-") {
+                    graph.serialize(std::cout);
+                } else {
+                    ofstream f(outfile.c_str());
+                    graph.serialize(f);
+                    f.close();
+                }
             }
         }
+
         return 0;
     }
 
-    static Subcommand odgi_chop("chop", "chop long nodes into short ones while preserving topology and node order",
+    static Subcommand odgi_chop("chop", "Divide nodes into smaller pieces preserving node topology and order.",
                                 PIPELINE, 3, main_chop);
 
 
