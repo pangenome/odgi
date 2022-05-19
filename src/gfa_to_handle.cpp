@@ -113,8 +113,17 @@ void gfa_to_handle(const string& gfa_filename,
                     if (path_queue.try_pop(p)) {
                         uint64_t i = 0;
                         for (auto& s : p->gfak.segment_names) {
+                            uint64_t id = 0;
+                            try {
+                                id = std::stoull(s) - id_increment;
+                            } catch (...) {
+                                std::cerr << "[odgi::gfa_to_handle] id parsing failure for path "
+                                          << graph->get_path_name(p->path)
+                                          << " attempting to parse node id from '" << s << "'" << std::endl;
+                                throw;
+                            }
                             graph->append_step(p->path,
-                                               graph->get_handle(std::stoull(s) - id_increment,
+                                               graph->get_handle(id,
                                                                  // in gfak, true == +
                                                                  !p->gfak.orientations[i++]));
                         }
