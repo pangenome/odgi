@@ -75,7 +75,7 @@ void gfa_to_handle(const string& gfa_filename,
             progress_meter->finish();
         }
     }
-    
+
     {
         std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress_meter;
         if (progress) {
@@ -114,7 +114,7 @@ void gfa_to_handle(const string& gfa_filename,
                         uint64_t i = 0;
                         for (auto& s : p->gfak.segment_names) {
                             graph->append_step(p->path,
-                                               graph->get_handle(std::stoi(s) - id_increment,
+                                               graph->get_handle(std::stoull(s) - id_increment,
                                                                  // in gfak, true == +
                                                                  !p->gfak.orientations[i++]));
                         }
