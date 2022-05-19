@@ -117,7 +117,8 @@ void gfa_to_handle(const string& gfa_filename,
                             try {
                                 id = std::stoull(s) - id_increment;
                             } catch (...) {
-                                std::cerr << "[odgi::gfa_to_handle] id parsing failure for path "
+                                std::cerr << std::endl // pad
+                                          << "[odgi::gfa_to_handle] id parsing failure for path "
                                           << graph->get_path_name(p->path)
                                           << " attempting to parse node id from '" << s << "'" << std::endl;
                                 throw;
