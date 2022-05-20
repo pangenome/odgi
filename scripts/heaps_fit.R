@@ -18,8 +18,19 @@ fit <- with(x, optim(c(0,0,0), objectFun, gr = NULL, nth.genome, base.pairs/max(
 print(fit)
 
 print(min(x$base.pairs))
+print(max(x$base.pairs))
 print(fit$par[1]*max(x$base.pairs))
+print(fit$par[2]*max(x$base.pairs))
 print(fit$par[3]*max(x$base.pairs))
 
-ggplot(x, aes(x=nth.genome, y=base.pairs/max(base.pairs))) + geom_point(alpha=I(1/10)) + stat_function(fun=function(x) fit$par[1] * x^fit$par[2] + fit$par[3]) + ylim(0,1)
-ggsave(args[2])
+z <- max(x$base.pairs)
+m <- z/1e9
+
+f <- function(x) { fit$par[1] * x^fit$par[2] + fit$par[3] }
+n <- max(x$nth.genome)
+print(z * (f(n) - f(n-1)))
+print(z * (f(2) - f(1)))
+#print(f(n) - f(n-1))
+
+ggplot(x, aes(x=nth.genome, y=base.pairs/1e9)) + geom_point(alpha=I(1/10)) + stat_function(fun=function(x) (fit$par[1] * x^fit$par[2] + fit$par[3]) * m) + scale_y_continuous("observed pangenome size (Gbp)") + scale_x_continuous("Nth included genome (200 permutations)")
+ggsave(args[2], height=5, width=9)

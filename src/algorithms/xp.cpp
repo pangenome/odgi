@@ -154,10 +154,10 @@ namespace xp {
         */
         std::cerr << std::endl;
 #endif
-        //node_path_ms.reset(); // free the mmmultimap
-        //std::remove(node_path_idx.c_str());
-        //std::remove(path_name_file.c_str());
-        //delete node_path_ms;
+        // node_path_ms.reset(); // free the mmmultimap
+        std::remove(node_path_idx.c_str());
+        std::remove(path_name_file.c_str());
+        // delete node_path_ms;
     }
 
     std::vector<XPPath *> XP::get_paths() const {
