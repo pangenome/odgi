@@ -152,16 +152,25 @@ namespace odgi {
                 // add contacts for the edges
                 graph.for_each_handle([&](const handle_t &h) {
                     handle_t new_handle_h = squeezed_graph.get_handle(graph.get_id(h) + shift_id);
+                    const bool h_is_rev = graph.get_is_reverse(h);
 
                     graph.follow_edges(h, false, [&](const handle_t &o) {
                         handle_t new_handle_o = squeezed_graph.get_handle(graph.get_id(o) + shift_id);
+                        const bool o_is_rev = graph.get_is_reverse(o);
 
-                        squeezed_graph.create_edge(new_handle_h, new_handle_o);
+                        squeezed_graph.create_edge(
+                            h_is_rev ? graph.flip(new_handle_h) : new_handle_h,
+                            o_is_rev ? graph.flip(new_handle_o) : new_handle_o
+                        );
                     });
                     graph.follow_edges(h, true, [&](const handle_t &o) {
                         handle_t new_handle_o = squeezed_graph.get_handle(graph.get_id(o) + shift_id);
+                        const bool o_is_rev = graph.get_is_reverse(o);
 
-                        squeezed_graph.create_edge(new_handle_o, new_handle_h);
+                        squeezed_graph.create_edge(
+                            o_is_rev ? graph.flip(new_handle_o) : new_handle_o,
+                            h_is_rev ? graph.flip(new_handle_h) : new_handle_h
+                        );
                     });
                 });
 
