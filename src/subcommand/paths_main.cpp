@@ -258,7 +258,7 @@ int main_paths(int argc, char** argv) {
                     graph.get_node_count(), "[odgi::paths] collecting path intersection lengths");
         }
 
-        // ska::bytell_hash_map<std::pair<uint64_t, uint64_t>, uint64_t> leads to huge memory usage with deep graphs
+        // ska::flat_hash_map<std::pair<uint64_t, uint64_t>, uint64_t> leads to huge memory usage with deep graphs
         ska::flat_hash_map<uint64_t, uint64_t> path_intersection_length;
         graph.for_each_handle(
             [&](const handle_t& h) {
