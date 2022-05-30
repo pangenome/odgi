@@ -5,7 +5,6 @@
 #include "position.hpp"
 #include <omp.h>
 #include "utils.hpp"
-#include "deps/parallel-hashmap/parallel_hashmap/phmap.h"
 
 namespace odgi {
 
@@ -243,7 +242,7 @@ int main_paths(int argc, char** argv) {
             bp_count[get_path_id(p)] += path_length;
         }
 
-        phmap::flat_hash_map<std::pair<uint64_t, uint64_t>, uint64_t> path_intersection_length;
+        ska::bytell_hash_map<std::pair<uint64_t, uint64_t>, uint64_t> path_intersection_length;
         graph.for_each_handle(
             [&](const handle_t& h) {
                 uint64_t paths_here = 0;
