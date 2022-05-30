@@ -10,6 +10,15 @@ namespace odgi {
 
 using namespace odgi::subcommand;
 
+// Functions used for the distance matrix generation
+inline uint64_t encode_pair(uint32_t v, uint32_t h) {
+    return ((uint64_t)v << 32) | (uint64_t)h;
+}
+inline void decode_pair(uint64_t pair, uint32_t *v, uint32_t *h) {
+    *v = pair >> 32;
+    *h = pair & 0x00000000FFFFFFFF;
+}
+
 int main_paths(int argc, char** argv) {
 
     // trick argumentparser to do the right thing with the subcommand
@@ -174,16 +183,16 @@ int main_paths(int argc, char** argv) {
     }
 
     if (args::get(distance_matrix)) {
-        // TODO this breaks on a simple graph
-        // WHY?!
+        // We support up to 4 billion paths (there are uint32_t variables in the implementation)
+
         bool using_delim = !args::get(path_delim).empty();
         char delim = '\0';
-        ska::flat_hash_map<std::string, uint64_t> path_group_ids;
-        ska::flat_hash_map<path_handle_t, uint64_t> path_handle_group_ids;
+        ska::flat_hash_map<std::string, uint32_t> path_group_ids;
+        ska::flat_hash_map<path_handle_t, uint32_t> path_handle_group_ids;
         std::vector<std::string> path_groups;
         if (using_delim) {
             delim = args::get(path_delim).at(0);
-            uint64_t i = 0;
+            uint32_t i = 0;
             graph.for_each_path_handle(
                 [&](const path_handle_t& p) {
                     std::string group_name = split(graph.get_path_name(p), delim)[0];
@@ -198,22 +207,22 @@ int main_paths(int argc, char** argv) {
 
         auto get_path_name
             = (using_delim ?
-               (std::function<std::string(const uint64_t&)>)
-               [&](const uint64_t& id) { return path_groups[id]; }
+               (std::function<std::string(const uint32_t&)>)
+               [&](const uint32_t& id) { return path_groups[id]; }
                :
-               (std::function<std::string(const uint64_t&)>)
-               [&](const uint64_t& id) { return graph.get_path_name(as_path_handle(id)); });
+               (std::function<std::string(const uint32_t&)>)
+               [&](const uint32_t& id) { return graph.get_path_name(as_path_handle(id)); });
 
         auto get_path_id
             = (using_delim ?
-               (std::function<uint64_t(const path_handle_t&)>)
+               (std::function<uint32_t(const path_handle_t&)>)
                [&](const path_handle_t& p) {
                    return path_handle_group_ids[p];
                }
                :
-               (std::function<uint64_t(const path_handle_t&)>)
+               (std::function<uint32_t(const path_handle_t&)>)
                [&](const path_handle_t& p) {
-                   return as_integer(p);
+                   return (uint32_t)as_integer(p);
                });
 
         std::vector<uint64_t> bp_count;
@@ -223,14 +232,14 @@ int main_paths(int argc, char** argv) {
             bp_count.resize(graph.get_path_count());
         }
 
-        uint64_t path_max = 0;
+        uint32_t path_max = 0;
         graph.for_each_path_handle(
             [&](const path_handle_t& p) {
-                path_max = std::max(path_max, as_integer(p));
+                path_max = std::max(path_max, (uint32_t)as_integer(p));
             });
 
 #pragma omp parallel for
-        for (uint64_t i = 0; i < path_max; ++i) {
+        for (uint32_t i = 0; i < path_max; ++i) {
             path_handle_t p = as_path_handle(i + 1);
             uint64_t path_length = 0;
             graph.for_each_step_in_path(
@@ -242,24 +251,40 @@ int main_paths(int argc, char** argv) {
             bp_count[get_path_id(p)] += path_length;
         }
 
-        ska::flat_hash_map<std::pair<uint64_t, uint64_t>, uint64_t> path_intersection_length;
+        const bool show_progress = args::get(progress);
+        std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress_meter;
+        if (show_progress) {
+            progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+                    graph.get_node_count(), "[odgi::paths] collecting path intersection lengths");
+        }
+
+        // ska::flat_hash_map<std::pair<uint64_t, uint64_t>, uint64_t> leads to huge memory usage with deep graphs
+        ska::flat_hash_map<uint64_t, uint64_t> path_intersection_length;
         graph.for_each_handle(
             [&](const handle_t& h) {
-                uint64_t paths_here = 0;
-                ska::flat_hash_map<uint64_t, uint64_t> local_path_lengths;
+                ska::flat_hash_map<uint32_t, uint64_t> local_path_lengths;
                 size_t l = graph.get_length(h);
                 graph.for_each_step_on_handle(
                     h,
                     [&](const step_handle_t& s) {
                         local_path_lengths[get_path_id(graph.get_path_handle_of_step(s))] += l;
                     });
+
 #pragma omp critical (path_intersection_length)
                 for (auto& p : local_path_lengths) {
                     for (auto& q : local_path_lengths) {
-                        path_intersection_length[std::make_pair(p.first, q.first)] += std::min(p.second, q.second);
+                        path_intersection_length[encode_pair(p.first, q.first)] += std::min(p.second, q.second);
                     }
                 }
+
+                if (show_progress) {
+                    progress_meter->increment(1);
+                }
             }, true);
+
+        if (show_progress) {
+            progress_meter->finish();
+        }
 
         if (using_delim) {
             std::cout << "group.a" << "\t"
@@ -275,8 +300,9 @@ int main_paths(int argc, char** argv) {
                   << "euclidean"
                   << std::endl;
         for (auto& p : path_intersection_length) {
-            auto& id_a = p.first.first;
-            auto& id_b = p.first.second;
+            uint32_t id_a, id_b;
+            decode_pair(p.first, &id_a, &id_b);
+
             auto& intersection = p.second;
             std::cout << get_path_name(id_a) << "\t"
                       << get_path_name(id_b) << "\t"
@@ -319,7 +345,7 @@ int main_paths(int argc, char** argv) {
                   << "overlap.frac" << std::endl;
 
 #pragma omp parallel for
-        for (uint64_t k = 0; k < path_names.size(); ++k) {
+        for (uint32_t k = 0; k < path_names.size(); ++k) {
             auto& path_name = path_names.at(k);
             auto& decomposition = path_decomposition[path_name];
             // walk the path, adding each position to the decomposition
@@ -338,8 +364,8 @@ int main_paths(int argc, char** argv) {
         for (auto& s : path_sets) {
             auto& group_name = s.first;
             auto& paths = s.second;
-            for (uint64_t i = 0; i < paths.size(); ++i) {
-                for (uint64_t j = i+1; j < paths.size(); ++j) {
+            for (uint32_t i = 0; i < paths.size(); ++i) {
+                for (uint32_t j = i+1; j < paths.size(); ++j) {
                     auto& v1 = path_decomposition[paths[i]];
                     auto& v2 = path_decomposition[paths[j]];
                     std::vector<pos_t> v3;
