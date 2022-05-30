@@ -242,6 +242,14 @@ int main_paths(int argc, char** argv) {
             bp_count[get_path_id(p)] += path_length;
         }
 
+        const bool show_progress = args::get(progress);
+        std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress_meter;
+        if (show_progress) {
+            progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+                    graph.get_node_count(), "[odgi::paths] collecting path intersection lengths");
+        }
+
+        // ska::flat_hash_map leads to huge memory usage with deep graphs
         ska::bytell_hash_map<std::pair<uint64_t, uint64_t>, uint64_t> path_intersection_length;
         graph.for_each_handle(
             [&](const handle_t& h) {
@@ -260,7 +268,15 @@ int main_paths(int argc, char** argv) {
                         path_intersection_length[std::make_pair(p.first, q.first)] += std::min(p.second, q.second);
                     }
                 }
+
+                if (show_progress) {
+                    progress_meter->increment(1);
+                }
             }, true);
+
+        if (show_progress) {
+            progress_meter->finish();
+        }
 
         if (using_delim) {
             std::cout << "group.a" << "\t"
