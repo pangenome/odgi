@@ -74,7 +74,7 @@ for kneed_s in str(S).split(","):
     plt.savefig(PNG_OUT)
 
     bed_kneed = bed[:kn.knee]
-    bed_kneed.to_csv(BED_OUT, sep="\t")
+    bed_kneed.to_csv(BED_OUT, sep="\t", index=False, header=False)
     plt.close()
     plt.cla()
     plt.clf()
