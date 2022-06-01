@@ -60,7 +60,7 @@ int main_layout(int argc, char **argv) {
                                              "The theta value N for the Zipfian distribution which is used as the sampling method for the second node of one term in the path guided 2D SGD model (default: 0.99).",
                                              {'a', "path-sgd-zipf-theta"});
     args::ValueFlag<uint64_t> p_sgd_iter_max(pg_sgd_opts, "N",
-                                             "The maximum number of iterations N for the path guided 2D SGD model (default: 100).",
+                                             "The maximum number of iterations N for the path guided 2D SGD model (default: 30).",
                                              {'x', "path-sgd-iter-max"});
     args::ValueFlag<double> p_sgd_cooling(pg_sgd_opts, "N",
                                           "Use this fraction of the iterations for layout annealing (default: 0.5).",
@@ -145,7 +145,6 @@ int main_layout(int argc, char **argv) {
 		exit(1);
     }
 
-    const uint64_t t_max = !p_sgd_iter_max ? 100 : args::get(p_sgd_iter_max);
     const double eps = !p_sgd_eps ? 0.01 : args::get(p_sgd_eps);
     const double sgd_delta = p_sgd_delta ? args::get(p_sgd_delta) : 0;
     const bool show_progress = progress ? args::get(progress) : false;
