@@ -145,7 +145,6 @@ int main_layout(int argc, char **argv) {
 		exit(1);
     }
 
-    const uint64_t t_max = !p_sgd_iter_max ? 100 : args::get(p_sgd_iter_max);
     const double eps = !p_sgd_eps ? 0.01 : args::get(p_sgd_eps);
     const double sgd_delta = p_sgd_delta ? args::get(p_sgd_delta) : 0;
     const bool show_progress = progress ? args::get(progress) : false;
