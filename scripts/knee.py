@@ -68,8 +68,8 @@ for kneed_s in str(S).split(","):
     plt.plot(x, y, 'bo-')
     plt.vlines(kn.knee, plt.ylim()[0], plt.ylim()[1], linestyles='dashed')
 
-    PNG_OUT = OUTPUT_PREFIX + "_" + kneed_s + ".png"
-    BED_OUT = OUTPUT_PREFIX + "_" + kneed_s + ".bed"
+    PNG_OUT = OUTPUT_PREFIX + "_S" + kneed_s + ".png"
+    BED_OUT = OUTPUT_PREFIX + "_S" + kneed_s + ".bed"
 
     plt.savefig(PNG_OUT)
 
