@@ -231,6 +231,12 @@ namespace odgi {
 #endif
                                     uint64_t path_i = npi_iv[step_index];
                                     path_handle_t path = as_path_handle(path_i);
+
+                                    size_t path_step_count = path_index.get_path_step_count(path);
+                                    if (path_step_count == 1){
+                                        continue;
+                                    }
+
 #ifdef debug_sample_from_nodes
                                     std::cerr << "path integer: " << path_i << std::endl;
 #endif
@@ -241,10 +247,6 @@ namespace odgi {
 #ifdef debug_sample_from_nodes
                                     std::cerr << "step rank in path: " << nr_iv[step_index]  << std::endl;
 #endif
-                                    size_t path_step_count = path_index.get_path_step_count(path);
-                                    if (path_step_count == 1){
-                                        continue;
-                                    }
 
                                     if (cooling.load() || flip(gen)) {
                                         auto _theta = adj_theta.load();
