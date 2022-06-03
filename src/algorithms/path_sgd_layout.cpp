@@ -430,13 +430,6 @@ namespace odgi {
             if (progress) {
                 progress_meter->finish();
             }
-
-            // drop out of atomic stuff... maybe not the best way to do this
-            std::vector<double> X_final(X.size());
-            uint64_t i = 0;
-            for (auto &x : X) {
-                X_final[i++] = x.load();
-            }
         }
 
         std::vector<double> path_linear_sgd_layout_schedule(const double &w_min,
@@ -837,13 +830,6 @@ namespace odgi {
                     }
                 }
                 term_updates.store(0);
-            }
-
-            // drop out of atomic stuff... maybe not the best way to do this
-            std::vector<double> X_final(X.size());
-            uint64_t i = 0;
-            for (auto &x : X) {
-                X_final[i++] = x.load();
             }
         }*/
     }
