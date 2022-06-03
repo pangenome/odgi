@@ -52,7 +52,7 @@ namespace odgi {
             using namespace std::chrono_literals; // for timing stuff
             uint64_t num_nodes = graph.get_node_count();
             // our positions in 1D
-            std::vector<std::atomic<double>> X(num_nodes);
+            std::vector<double> X(num_nodes);
             atomic<bool> snapshot_in_progress;
             snapshot_in_progress.store(false);
             std::vector<atomic<bool>> snapshot_progress(iter_max);
@@ -63,7 +63,7 @@ namespace odgi {
             graph.for_each_handle(
                     [&X, &graph, &len](const handle_t &handle) {
                         // nb: we assume that the graph provides a compact handle set
-                        X[number_bool_packing::unpack_number(handle)].store(len);
+                        X[number_bool_packing::unpack_number(handle)] = len;
                         len += graph.get_length(handle);
                     });
             // the longest path length measured in nucleotides
@@ -359,7 +359,7 @@ namespace odgi {
                                 std::cerr << "nodes are " << graph.get_id(term_i) << " and " << graph.get_id(term_j) << std::endl;
 #endif
                                     // distance == magnitude in our 1D situation
-                                    double dx = X[i].load() - X[j].load();
+                                    double dx = X[i] - X[j];
                                     if (dx == 0) {
                                         dx = 1e-9; // avoid nan
                                     }
@@ -392,16 +392,16 @@ namespace odgi {
 #endif
                                     // update our positions (atomically)
 #ifdef debug_path_sgd
-                                    std::cerr << "before X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
+                                    std::cerr << "before X[i] " << X[i] << " X[j] " << X[j] << std::endl;
 #endif
 									if (update_term_i) {
-										X[i].store(X[i].load() - r_x);
+										X[i] = X[i] - r_x;
 									}
 									if (update_term_j) {
-										X[j].store(X[j].load() + r_x);
+										X[j] = X[j]+ r_x;
 									}
 #ifdef debug_path_sgd
-                                    std::cerr << "after X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
+                                    std::cerr << "after X[i] " << X[i] << " X[j] " << X[j] << std::endl;
 #endif
                                     term_updates++; // atomic
                                     if (progress) {
@@ -459,14 +459,8 @@ namespace odgi {
             if (progress) {
                 progress_meter->finish();
             }
-
-            // drop out of atomic stuff... maybe not the best way to do this
-            std::vector<double> X_final(X.size());
-            uint64_t i = 0;
-            for (auto &x : X) {
-                X_final[i++] = x.load();
-            }
-            return X_final;
+            
+            return X;
         }
 
         std::vector<double> path_linear_sgd_schedule(const double &w_min,
