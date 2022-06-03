@@ -47,7 +47,12 @@ int main_stats(int argc, char** argv) {
     //args::ValueFlag<std::string> path_bedmulticov(parser, "BED", "for each BED entry, provide a table of path coverage over unique multisets of paths in the graph. Each unique multiset of paths overlapping a given BED interval is described in terms of its length relative to the total interval, the number of path traversals, and unique paths involved in these traversals.", {'B', "bed-multicov"});
     args::ValueFlag<std::string> path_delim(summary_opts, "STRING", "The part of each path name before this delimiter is a group identifier, which when specified will ensure that odgi stats collects the summary information per group and not per path.", {'D', "delim"});
 	args::Flag _file_size(summary_opts, "file-size", "Show the file size in bytes.", {'f', "file-size"});
-	args::ValueFlag<std::string> _pangenome_sequence_class_counts(summary_opts, "DELIM,POS", "Show counted pangenome sequence class counts of all samples. Classes are Private (only one sample visiting the node), Core (all samples visiting the node), and Shell (not Core or Private). The given String determines how to find the sample name in the path names: DELIM,POS. Split the whole path name by DELIM and access the actual sample name at POS of the split result. If the full path name is the sample name, select a DELIM that is not in the path names and set POS to 0. If -m,--multiqc was set, this OPTION has to be set implicitly.", {'a', "pangenome-sequence-class-counts"});
+	args::ValueFlag<std::string> _pangenome_sequence_class_counts(summary_opts, "DELIM,POS", "Show counted pangenome sequence class counts of all samples. "
+                                                                                             "Classes are Private (only one sample visiting the node), Core (all samples visiting the node), and Shell (not Core or Private). "
+                                                                                             "The given String determines how to find the sample name in the path names: DELIM,POS. "
+                                                                                             "Split the whole path name by DELIM and access the actual sample name at POS of the split result. "
+                                                                                             "If the full path name is the sample name, select a DELIM that is not in the path names and set POS to 0. "
+                                                                                             "If -m,--multiqc was set, this OPTION has to be set implicitly.", {'a', "pangenome-sequence-class-counts"});
 	args::Group sorting_goodness_evaluation_opts(parser, "[ Sorting Goodness Eval Options ]");
 	args::ValueFlag<std::string> layout_in_file(sorting_goodness_evaluation_opts, "FILE", "Load the 2D layout coordinates in binary layout format from this *FILE*. The file name usually ends with *.lay*. The sorting goodness evaluation will then be performed for this *FILE*. When the layout coordinates are provided, the mean links length and the sum path nodes distances statistics are evaluated in 2D, else in 1D. Such a file can be generated with *odgi layout*.", {'c', "coords-in"});
 	args::Flag mean_links_length(sorting_goodness_evaluation_opts, "mean_links_length", "Calculate the mean links length. This metric is path-guided and"
@@ -64,7 +69,11 @@ int main_stats(int argc, char** argv) {
 	args::Flag penalize_diff_orientation(sorting_goodness_evaluation_opts, "penalize_diff_orientation", "If a link connects two nodes which have different orientations, this"
                                                                                                         " is penalized (adding 2 times its length in the sum).", {'d', "penalize-different-orientation"});
 	args::Flag path_statistics(sorting_goodness_evaluation_opts, "path_statistics", "Display the statistics (mean links length or sum path nodes distances) for each path.", {'p', "path-statistics"});
-	args::Group io_format_opts(parser, "[ IO Format Options ]");
+	
+    args::Flag weighted_feedback_arc(sorting_goodness_evaluation_opts, "weighted_feedback_arc", "Compute the sum of weigths of all feedback arcs, i.e. backward pointing edges the statistics (the weight is the number of times the edge is traversed by paths).", {'w', "weighted-feedback-arc"});
+	args::Flag weighted_reversing_join(sorting_goodness_evaluation_opts, "weighted_reversing_join", "Compute the sum of weigths of all reversing joins, i.e. edges joining two in- or two out-sides (the weight is the number of times the edge is traversed by paths).", {'j', "weighted-reversing-join"});   
+
+    args::Group io_format_opts(parser, "[ IO Format Options ]");
     args::Flag _multiqc(io_format_opts, "multiqc", "Setting this option prints all! statistics in YAML format instead of pseudo TSV to stdout. This includes *-S,--summarize*, *-W,--weak-connected-components*, *-L,--self-loops*, *-b,--base-content*, *-l,--mean-links-length*, *-g,--no-gap-links*, *-s,--sum-path-nodes-distances*, *-f,--file-size*, and *-d,--penalize-different-orientation*. *-p,path-statistics* is still optional. Not applicable to *-N,--nondeterministic-edges*. Overwrites all other given OPTIONs! The output is perfectly curated for the ODGI MultiQC module.", {'m', "multiqc"});
 	args::Flag _yaml(io_format_opts, "yaml", "Setting this option prints all selected statistics in YAML format instead of pseudo TSV to stdout.", {'y', "yaml"});
     args::Group processing_information(parser, "[ Processing Information ]");
@@ -94,11 +103,10 @@ int main_stats(int argc, char** argv) {
         return 1;
     }
 
-
     if (!args::get(mean_links_length) && !args::get(sum_of_path_node_distances)){
         if (args::get(path_statistics)){
             std::cerr
-                    << "[odgi::stats] error: please specify the -l/--mean-links-length and/or the -s/--sum-path-nodes-distances options to use the -P/--path-statistics option."
+                    << "[odgi::stats] error: please specify the -l/--mean-links-length and/or the -s/--sum-path-nodes-distances options to use the -p/--path-statistics option."
                     << std::endl;
             return 1;
         }
@@ -146,7 +154,7 @@ int main_stats(int argc, char** argv) {
 
     graph_t graph;
     assert(argc > 0);
-    std::string infile = args::get(dg_in_file);
+    const std::string infile = args::get(dg_in_file);
     if (!infile.empty()) {
         if (infile == "-") {
             graph.deserialize(std::cin);
@@ -168,18 +176,14 @@ int main_stats(int argc, char** argv) {
     }
 
     if (args::get(_summarize) || _multiqc) {
-        uint64_t length_in_bp = 0, node_count = 0, edge_count = 0, path_count = 0;
+        uint64_t length_in_bp = 0, node_count = 0;
         graph.for_each_handle([&](const handle_t& h) {
                 length_in_bp += graph.get_length(h);
                 ++node_count;
             });
-        graph.for_each_edge([&](const edge_t& e) {
-                ++edge_count;
-                return true;
-            });
-        graph.for_each_path_handle([&](const path_handle_t& p) {
-                ++path_count;
-            });
+
+        uint64_t edge_count = graph.get_edge_count();
+        uint64_t path_count = graph.get_path_count();
         if (_multiqc || _yaml) {
         	std::cout << "length: " << length_in_bp << std::endl;
         	std::cout << "nodes: " << node_count << std::endl;
