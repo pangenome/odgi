@@ -22,8 +22,8 @@ namespace odgi {
                                     const bool &progress,
                                     const bool &snapshot,
                                     const std::string &snapshot_prefix,
-                                    std::vector<std::atomic<double>> &X,
-                                    std::vector<std::atomic<double>> &Y) {
+                                    std::vector<double> &X,
+                                    std::vector<double> &Y) {
 #ifdef debug_path_sgd
             std::cerr << "iter_max: " << iter_max << std::endl;
             std::cerr << "min_term_updates: " << min_term_updates << std::endl;
@@ -325,8 +325,8 @@ namespace odgi {
                                     if (use_other_end_b) {
                                         offset_j += 1;
                                     }
-                                    double dx = X[2 * i + offset_i].load() - X[2 * j + offset_j].load();
-                                    double dy = Y[2 * i + offset_i].load() - Y[2 * j + offset_j].load();
+                                    double dx = X[2 * i + offset_i] - X[2 * j + offset_j];
+                                    double dy = Y[2 * i + offset_i] - Y[2 * j + offset_j];
                                     if (dx == 0) {
                                         dx = 1e-9; // avoid nan
                                     }
@@ -361,14 +361,14 @@ namespace odgi {
 #endif
                                     // update our positions (atomically)
 #ifdef debug_path_sgd
-                                    std::cerr << "before X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
+                                    std::cerr << "before X[i] " << X[i] << " X[j] " << X[j] << std::endl;
 #endif
-                                    X[2 * i + offset_i].store(X[2 * i + offset_i].load() - r_x);
-                                    Y[2 * i + offset_i].store(Y[2 * i + offset_i].load() - r_y);
-                                    X[2 * j + offset_j].store(X[2 * j + offset_j].load() + r_x);
-                                    Y[2 * j + offset_j].store(Y[2 * j + offset_j].load() + r_y);
+                                    X[2 * i + offset_i] = X[2 * i + offset_i] - r_x;
+                                    Y[2 * i + offset_i] = Y[2 * i + offset_i] - r_y;
+                                    X[2 * j + offset_j] = X[2 * j + offset_j] + r_x;
+                                    Y[2 * j + offset_j] = Y[2 * j + offset_j] + r_y;
 #ifdef debug_path_sgd
-                                    std::cerr << "after X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
+                                    std::cerr << "after X[i] " << X[i] << " X[j] " << X[j] << std::endl;
 #endif
                                     term_updates++; // atomic
                                     if (progress) {
@@ -384,18 +384,7 @@ namespace odgi {
                             while (snapshot && work_todo.load()) {
                                 if ((iter < iteration) && iteration != iter_max) {
                                     std::cerr << "[odgi::path_linear_sgd_layout] snapshot thread: Taking snapshot!" << std::endl;
-                                    // drop out of atomic stuff... maybe not the best way to do this
-                                    std::vector<double> X_iter(X.size());
-                                    uint64_t i = 0;
-                                    for (auto &x : X) {
-                                        X_iter[i++] = x.load();
-                                    }
-                                    std::vector<double> Y_iter(Y.size());
-                                    i = 0;
-                                    for (auto &y : Y) {
-                                        Y_iter[i++] = y.load();
-                                    }
-                                    algorithms::layout::Layout layout(X_iter, Y_iter);
+                                    algorithms::layout::Layout layout(X, Y);
                                     std::string local_snapshot_prefix = snapshot_prefix + std::to_string(iter + 1);
                                     ofstream snapshot_out(local_snapshot_prefix);
                                     // write out
@@ -429,13 +418,6 @@ namespace odgi {
 
             if (progress) {
                 progress_meter->finish();
-            }
-
-            // drop out of atomic stuff... maybe not the best way to do this
-            std::vector<double> X_final(X.size());
-            uint64_t i = 0;
-            for (auto &x : X) {
-                X_final[i++] = x.load();
             }
         }
 

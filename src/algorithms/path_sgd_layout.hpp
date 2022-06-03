@@ -44,8 +44,8 @@ namespace odgi {
                                     const bool &progress,
                                     const bool &snapshot,
                                     const std::string &snapshot_prefix,
-                                    std::vector<std::atomic<double>> &X,
-                                    std::vector<std::atomic<double>> &Y);
+                                    std::vector<double> &X,
+                                    std::vector<double> &Y);
 
 /// our learning schedule
         std::vector<double> path_linear_sgd_layout_schedule(const double &w_min,

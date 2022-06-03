@@ -260,8 +260,8 @@ int main_layout(int argc, char **argv) {
     path_sgd_zipf_space_max = args::get(p_sgd_zipf_space_max) ? std::min(path_sgd_zipf_space, args::get(p_sgd_zipf_space_max)) : 1000;
     path_sgd_zipf_space_quantization_step = args::get(p_sgd_zipf_space_quantization_step) ? std::max((uint64_t)2, args::get(p_sgd_zipf_space_quantization_step)) : 100;
 
-    std::vector<std::atomic<double>> graph_X(graph.get_node_count() * 2);  // Graph's X coordinates for node+ and node-
-    std::vector<std::atomic<double>> graph_Y(graph.get_node_count() * 2);  // Graph's Y coordinates for node+ and node-
+    std::vector<double> graph_X(graph.get_node_count() * 2);  // Graph's X coordinates for node+ and node-
+    std::vector<double> graph_Y(graph.get_node_count() * 2);  // Graph's Y coordinates for node+ and node-
 
     std::random_device dev;
     std::mt19937 rng(dev());
@@ -283,43 +283,43 @@ int main_layout(int argc, char **argv) {
           uint64_t pos = 2 * number_bool_packing::unpack_number(h);
           switch (layout_initialization) {
           case 'g': {
-              graph_X[pos].store(gaussian_noise(rng));
-              graph_Y[pos].store(gaussian_noise(rng));
-              graph_X[pos + 1].store(gaussian_noise(rng));
-              graph_Y[pos + 1].store(gaussian_noise(rng));
+              graph_X[pos] = gaussian_noise(rng);
+              graph_Y[pos] = gaussian_noise(rng);
+              graph_X[pos + 1] = gaussian_noise(rng);
+              graph_Y[pos + 1] = gaussian_noise(rng);
               break;
           }
           case 'u': {
-              graph_X[pos].store(len);
-              graph_Y[pos].store(uniform_noise(rng));
+              graph_X[pos] = len;
+              graph_Y[pos] = uniform_noise(rng);
               len += graph.get_length(h);
-              graph_X[pos + 1].store(len);
-              graph_Y[pos + 1].store(uniform_noise(rng));
+              graph_X[pos + 1] = len;
+              graph_Y[pos + 1] = uniform_noise(rng);
               break;
           }
           case 'r': {
-              graph_X[pos].store(uniform_noise_in_length(rng));
-              graph_Y[pos].store(uniform_noise_in_length(rng));
+              graph_X[pos] = uniform_noise_in_length(rng);
+              graph_Y[pos] = uniform_noise_in_length(rng);
               len += graph.get_length(h);
-              graph_X[pos + 1].store(uniform_noise_in_length(rng));
-              graph_Y[pos + 1].store(uniform_noise_in_length(rng));
+              graph_X[pos + 1] = uniform_noise_in_length(rng);
+              graph_Y[pos + 1] = uniform_noise_in_length(rng);
               break;
           }
           case 'h': {
               d2xy(square_space, pos, &x, &y);
-              graph_X[pos].store(x);
-              graph_Y[pos].store(y);
+              graph_X[pos] = x;
+              graph_Y[pos] = y;
               d2xy(square_space, pos + 1, &x, &y);
-              graph_X[pos + 1].store(x);
-              graph_Y[pos + 1].store(y);
+              graph_X[pos + 1] = x;
+              graph_Y[pos + 1] = y;
               break;
           }
           default: {
-              graph_X[pos].store(len);
-              graph_Y[pos].store(gaussian_noise(rng));
+              graph_X[pos] = len;
+              graph_Y[pos] =  gaussian_noise(rng);
               len += graph.get_length(h);
-              graph_X[pos + 1].store(len);
-              graph_Y[pos + 1].store(gaussian_noise(rng));
+              graph_X[pos + 1] = len;
+              graph_Y[pos + 1] = gaussian_noise(rng);
           }
           }
           //std::cerr << pos << ": " << graph_X[pos] << "," << graph_Y[pos] << " ------ " << graph_X[pos + 1] << "," << graph_Y[pos + 1] << std::endl;
@@ -349,19 +349,6 @@ int main_layout(int argc, char **argv) {
         graph_Y
         );
 
-    // drop out of atomic stuff... maybe not the best way to do this
-    // TODO: use directly the atomic vector?
-    std::vector<double> X_final(graph_X.size());
-    uint64_t i = 0;
-    for (auto& x : graph_X) {
-        X_final[i++] = x.load();
-    }
-    std::vector<double> Y_final(graph_Y.size());
-    i = 0;
-    for (auto& y : graph_Y) {
-        Y_final[i++] = y.load();
-    }
-
     // refine order by weakly connected components
     std::vector<std::vector<handlegraph::handle_t>> weak_components = algorithms::weakly_connected_component_vectors(&graph);
 
@@ -377,7 +364,7 @@ int main_layout(int argc, char **argv) {
         for (auto& handle : component) {
             uint64_t pos = 2 * number_bool_packing::unpack_number(handle);
             for (uint64_t j = pos; j <= pos+1; ++j) {
-                component_range.include(X_final[j], Y_final[j]);
+                component_range.include(graph_X[j], graph_Y[j]);
             }
         }
         component_range.x_offset = component_range.min_x - border;
@@ -392,8 +379,8 @@ int main_layout(int argc, char **argv) {
             uint64_t pos = 2 * number_bool_packing::unpack_number(handle);
 
             for (uint64_t j = pos; j <= pos+1; ++j) {
-                X_final[j] -= component_range.x_offset;
-                Y_final[j] += component_range.y_offset;
+                graph_X[j] -= component_range.x_offset;
+                graph_Y[j] += component_range.y_offset;
             }
         }
     }
@@ -403,10 +390,10 @@ int main_layout(int argc, char **argv) {
         auto& outfile = args::get(tsv_out_file);
         if (outfile.size()) {
             if (outfile == "-") {
-                algorithms::layout::to_tsv(std::cout, X_final, Y_final, weak_components);
+                algorithms::layout::to_tsv(std::cout, graph_X, graph_Y, weak_components);
             } else {
                 ofstream f(outfile.c_str());
-                algorithms::layout::to_tsv(f, X_final, Y_final, weak_components);
+                algorithms::layout::to_tsv(f, graph_X, graph_Y, weak_components);
                 f.close();
             }
         }
@@ -415,7 +402,7 @@ int main_layout(int argc, char **argv) {
     if (layout_out_file) {
         auto& outfile = args::get(layout_out_file);
         if (outfile.size()) {
-            algorithms::layout::Layout lay(X_final, Y_final);
+            algorithms::layout::Layout lay(graph_X, graph_Y);
             if (outfile == "-") {
                 lay.serialize(std::cout);
             } else {
