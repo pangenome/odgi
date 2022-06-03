@@ -241,6 +241,7 @@ int main_stats(int argc, char** argv) {
 			cout << "unique" << "\t" << loops.size() << endl;
 		}
     }
+
 	/// we don't do this when `-y, --_multiqc` was specified
     if (_show_nondeterministic_edges) {
         // This edges could be compressed in principle
@@ -369,7 +370,7 @@ int main_stats(int argc, char** argv) {
         std::vector<double> X, Y;
 
         if (layout_in_file) {
-            auto& infile = args::get(layout_in_file);
+            const auto& infile = args::get(layout_in_file);
             if (!infile.empty()) {
                 algorithms::layout::Layout layout;
 
@@ -469,7 +470,7 @@ int main_stats(int argc, char** argv) {
 
                                 sum_2D_space += sqrt(dx * dx + dy * dy);
                             }else{
-                                // 1D metric (in node space and int nucleotide space)
+                                // 1D metric (in node space and in nucleotide space)
                                 sum_node_space += _info_b - _info_a;
                                 sum_nt_space += position_map[_info_b - shift] - position_map[_info_a - shift];
 
@@ -493,7 +494,7 @@ int main_stats(int argc, char** argv) {
                     if (num_links > 0){
                         if (layout_in_file) {
                             ratio_2D_space = sum_2D_space / (double)num_links;
-                        }else{
+                        } else{
                             ratio_node_space = (double)sum_node_space / (double)num_links;
                             ratio_nt_space = (double)sum_nt_space / (double)num_links;
                         }
@@ -743,6 +744,33 @@ int main_stats(int argc, char** argv) {
 				}
 			}
 
+        }
+    }
+
+
+    if (args::get(weighted_feedback_arc) || args::get(weighted_reversing_join)) {
+        // Compute edge weigths (the weight is the number of times the edge is traversed by paths)
+        ska::flat_hash_map<std::pair<handle_t, handle_t>, uint64_t> edge_2_weigth;
+        
+        // TODO parallelize
+        graph.for_each_path_handle([&](const path_handle_t &path) {
+            graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
+                handle_t h = graph.get_handle_of_step(occ);
+
+                if (graph.has_next_step(occ)){
+                    handle_t i = graph.get_handle_of_step(graph.get_next_step(occ));
+
+                    edge_2_weigth[{h, i}] += 1;
+                }
+            });
+        });
+
+        if (args::get(weighted_feedback_arc)) {
+            // todo
+        }
+
+        if (args::get(weighted_reversing_join)) {
+            // todo
         }
     }
 
