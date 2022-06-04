@@ -103,10 +103,11 @@ int main_stats(int argc, char** argv) {
         return 1;
     }
 
-    if (!args::get(mean_links_length) && !args::get(sum_of_path_node_distances)){
+    if (!args::get(mean_links_length) && !args::get(sum_of_path_node_distances) && !args::get(weighted_feedback_arc) && !args::get(weighted_reversing_join)){
         if (args::get(path_statistics)){
             std::cerr
-                    << "[odgi::stats] error: please specify the -l/--mean-links-length and/or the -s/--sum-path-nodes-distances options to use the -p/--path-statistics option."
+                    << "[odgi::stats] error: please specify the -l/--mean-links-length and/or the -s/--sum-path-nodes-distances and/or "
+                    "-w/--weighted-feedback-arc and/or -j/--weighted-reversing-join options to use the -p/--path-statistics option."
                     << std::endl;
             return 1;
         }
@@ -743,36 +744,82 @@ int main_stats(int argc, char** argv) {
 					std::cout << std::endl;
 				}
 			}
-
         }
     }
 
+    if (args::get(weighted_feedback_arc)) {
+        std::cout << "path\tweighted_feedback_arc" << std::endl;
 
-    if (args::get(weighted_feedback_arc) || args::get(weighted_reversing_join)) {
-        // Compute edge weigths (the weight is the number of times the edge is traversed by paths)
-        ska::flat_hash_map<std::pair<handle_t, handle_t>, uint64_t> edge_2_weigth;
-        
-        // TODO parallelize
+        uint64_t wfa_all_paths = 0;
+
+        // TODO Could we run this in parallel?
         graph.for_each_path_handle([&](const path_handle_t &path) {
+            uint64_t wfa_current_path = 0;
+
             graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
                 handle_t h = graph.get_handle_of_step(occ);
 
                 if (graph.has_next_step(occ)){
                     handle_t i = graph.get_handle_of_step(graph.get_next_step(occ));
 
-                    edge_2_weigth[{h, i}] += 1;
+                    uint64_t unpacked_a = number_bool_packing::unpack_number(h);
+                    uint64_t unpacked_b = number_bool_packing::unpack_number(i);
+
+                    // Check if it is a feedback arc (edge joining out-sides with in-sides such that the outside node does not precedes the inside node)
+                    if (
+                        (!graph.get_is_reverse(h) && !graph.get_is_reverse(i) && unpacked_a >= unpacked_b) ||
+                        ( graph.get_is_reverse(h) &&  graph.get_is_reverse(i) && unpacked_a <= unpacked_b)
+                    ) {
+                        wfa_current_path += 1;
+                    }
                 }
             });
+
+            if (args::get(path_statistics)) {
+                std::cout << graph.get_path_name(path) << "\t" << wfa_current_path << std::endl;
+            }
+
+            wfa_all_paths += wfa_current_path;
         });
 
-        if (args::get(weighted_feedback_arc)) {
-            // todo
-        }
-
-        if (args::get(weighted_reversing_join)) {
-            // todo
-        }
+        std::cout << "all_paths" << "\t" << wfa_all_paths << std::endl;
     }
+
+    if (args::get(weighted_reversing_join)) {
+         std::cout << "path\tweighted_reversing_join" << std::endl;
+
+        uint64_t wrj_all_paths = 0;
+
+        // TODO Could we run this in parallel?
+        graph.for_each_path_handle([&](const path_handle_t &path) {
+            uint64_t wrj_current_path = 0;
+
+            graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
+                handle_t h = graph.get_handle_of_step(occ);
+
+                if (graph.has_next_step(occ)){
+                    handle_t i = graph.get_handle_of_step(graph.get_next_step(occ));
+
+                    uint64_t unpacked_a = number_bool_packing::unpack_number(h);
+                    uint64_t unpacked_b = number_bool_packing::unpack_number(i);
+
+                    // Check if it is a reversing arc (edges joining two in- or two out-sides)
+                    if (graph.get_is_reverse(h) != graph.get_is_reverse(i)) {
+                        wrj_current_path += 1;
+                    }
+                }
+            });
+
+            if (args::get(path_statistics)) {
+                std::cout << graph.get_path_name(path) << "\t" << wrj_current_path << std::endl;
+            }
+
+            wrj_all_paths += wrj_current_path;
+        });
+
+        std::cout << "all_paths" << "\t" << wrj_all_paths << std::endl;
+    }
+
 
     bool using_delim = !args::get(path_delim).empty();
     char delim = '\0';
