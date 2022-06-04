@@ -539,8 +539,11 @@ int main_sort(int argc, char** argv) {
         graph.apply_ordering(algorithms::depth_first_topological_order(graph, df_chunk_size), true);
     } else if (args::get(randomize)) {
         graph.apply_ordering(algorithms::random_order(graph), true);
-    } else if (!args::get(optimize)) {
-        graph.apply_ordering(algorithms::topological_order(&graph, true, false, args::get(progress)), true);
+    } else {
+        // To be able to only optimize the graph, avoiding the topological sorting if nothing else is requested
+        if (!args::get(optimize)) {
+            graph.apply_ordering(algorithms::topological_order(&graph, true, false, args::get(progress)), true);
+        }
     }
     if (args::get(paths_by_min_node_id)) {
         graph.apply_path_ordering(
