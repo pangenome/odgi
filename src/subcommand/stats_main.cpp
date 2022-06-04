@@ -750,6 +750,7 @@ int main_stats(int argc, char** argv) {
 
     // Put path handles in a vector to work on them in parallel
     std::vector<path_handle_t> paths;
+    paths.reserve(graph.get_path_count());
 
     // Check if we are going to use the vector with the path handles
     if (args::get(weighted_feedback_arc) || args::get(weighted_reversing_join)) {
