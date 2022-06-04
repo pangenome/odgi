@@ -747,13 +747,24 @@ int main_stats(int argc, char** argv) {
         }
     }
 
+
+    // Put path handles in a vector to work on them in parallel
+    std::vector<path_handle_t> paths;
+
+    // Check if we are going to use the vector with the path handles
+    if (args::get(weighted_feedback_arc) || args::get(weighted_reversing_join)) {
+        graph.for_each_path_handle([&](const path_handle_t path) {
+            paths.push_back(path);
+        });
+    }
+
     if (args::get(weighted_feedback_arc)) {
         std::cout << "path\tweighted_feedback_arc" << std::endl;
 
-        uint64_t wfa_all_paths = 0;
+        std::atomic<uint64_t> wfa_all_paths = 0;
 
-        // TODO Could we run this in parallel?
-        graph.for_each_path_handle([&](const path_handle_t &path) {
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
+        for (auto& path : paths) {
             uint64_t wfa_current_path = 0;
 
             graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
@@ -776,11 +787,12 @@ int main_stats(int argc, char** argv) {
             });
 
             if (args::get(path_statistics)) {
+#pragma omp critical (cout)
                 std::cout << graph.get_path_name(path) << "\t" << wfa_current_path << std::endl;
             }
 
-            wfa_all_paths += wfa_current_path;
-        });
+            wfa_all_paths.store(wfa_all_paths.load() + wfa_current_path);
+        }
 
         std::cout << "all_paths" << "\t" << wfa_all_paths << std::endl;
     }
@@ -788,10 +800,10 @@ int main_stats(int argc, char** argv) {
     if (args::get(weighted_reversing_join)) {
          std::cout << "path\tweighted_reversing_join" << std::endl;
 
-        uint64_t wrj_all_paths = 0;
+        std::atomic<uint64_t> wrj_all_paths = 0;
 
-        // TODO Could we run this in parallel?
-        graph.for_each_path_handle([&](const path_handle_t &path) {
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
+        for (auto& path : paths) {
             uint64_t wrj_current_path = 0;
 
             graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
@@ -811,11 +823,12 @@ int main_stats(int argc, char** argv) {
             });
 
             if (args::get(path_statistics)) {
+#pragma omp critical (cout)
                 std::cout << graph.get_path_name(path) << "\t" << wrj_current_path << std::endl;
             }
 
-            wrj_all_paths += wrj_current_path;
-        });
+            wrj_all_paths.store(wrj_all_paths.load() + wrj_current_path);
+        }
 
         std::cout << "all_paths" << "\t" << wrj_all_paths << std::endl;
     }
