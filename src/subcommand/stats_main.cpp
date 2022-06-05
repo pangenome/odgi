@@ -757,16 +757,6 @@ int main_stats(int argc, char** argv) {
         graph.for_each_path_handle([&](const path_handle_t path) {
             paths.push_back(path);
         });
-
-
-        // uint64_t rank = 0;
-        // graph.for_each_handle([&](const handle_t &h) {
-        //     std::cout << "SEGMENT ID: " << graph.get_id(h) <<
-        //                  " - index_in_position_map (" << number_bool_packing::unpack_number(h) << 
-        //                  "); rank: " << rank << 
-        //                  "; len: " << graph.get_length(h) << std::endl;
-        //     ++rank;
-        // });
     }
 
     if (args::get(weighted_feedback_arc)) {
@@ -777,7 +767,7 @@ int main_stats(int argc, char** argv) {
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
         for (auto& path : paths) {
             uint64_t wfa_current_path = 0;
-            // std::cout << graph.get_path_name(path) << std::endl;
+
             graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
                 handle_t h = graph.get_handle_of_step(occ);
 
@@ -786,9 +776,6 @@ int main_stats(int argc, char** argv) {
 
                     uint64_t unpacked_a = number_bool_packing::unpack_number(h);
                     uint64_t unpacked_b = number_bool_packing::unpack_number(i);
-
-                    // std::cout << unpacked_a << " (" << graph.get_length(h) << ") - "
-                    //           << unpacked_b << " (" << graph.get_length(i) << ")" << std::endl;
 
                     // Check if it is a feedback arc (edge joining out-sides with in-sides such that the outside node does not precedes the inside node)
                     if (
