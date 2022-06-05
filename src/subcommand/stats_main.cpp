@@ -47,7 +47,12 @@ int main_stats(int argc, char** argv) {
     //args::ValueFlag<std::string> path_bedmulticov(parser, "BED", "for each BED entry, provide a table of path coverage over unique multisets of paths in the graph. Each unique multiset of paths overlapping a given BED interval is described in terms of its length relative to the total interval, the number of path traversals, and unique paths involved in these traversals.", {'B', "bed-multicov"});
     args::ValueFlag<std::string> path_delim(summary_opts, "STRING", "The part of each path name before this delimiter is a group identifier, which when specified will ensure that odgi stats collects the summary information per group and not per path.", {'D', "delim"});
 	args::Flag _file_size(summary_opts, "file-size", "Show the file size in bytes.", {'f', "file-size"});
-	args::ValueFlag<std::string> _pangenome_sequence_class_counts(summary_opts, "DELIM,POS", "Show counted pangenome sequence class counts of all samples. Classes are Private (only one sample visiting the node), Core (all samples visiting the node), and Shell (not Core or Private). The given String determines how to find the sample name in the path names: DELIM,POS. Split the whole path name by DELIM and access the actual sample name at POS of the split result. If the full path name is the sample name, select a DELIM that is not in the path names and set POS to 0. If -m,--multiqc was set, this OPTION has to be set implicitly.", {'a', "pangenome-sequence-class-counts"});
+	args::ValueFlag<std::string> _pangenome_sequence_class_counts(summary_opts, "DELIM,POS", "Show counted pangenome sequence class counts of all samples. "
+                                                                                             "Classes are Private (only one sample visiting the node), Core (all samples visiting the node), and Shell (not Core or Private). "
+                                                                                             "The given String determines how to find the sample name in the path names: DELIM,POS. "
+                                                                                             "Split the whole path name by DELIM and access the actual sample name at POS of the split result. "
+                                                                                             "If the full path name is the sample name, select a DELIM that is not in the path names and set POS to 0. "
+                                                                                             "If -m,--multiqc was set, this OPTION has to be set implicitly.", {'a', "pangenome-sequence-class-counts"});
 	args::Group sorting_goodness_evaluation_opts(parser, "[ Sorting Goodness Eval Options ]");
 	args::ValueFlag<std::string> layout_in_file(sorting_goodness_evaluation_opts, "FILE", "Load the 2D layout coordinates in binary layout format from this *FILE*. The file name usually ends with *.lay*. The sorting goodness evaluation will then be performed for this *FILE*. When the layout coordinates are provided, the mean links length and the sum path nodes distances statistics are evaluated in 2D, else in 1D. Such a file can be generated with *odgi layout*.", {'c', "coords-in"});
 	args::Flag mean_links_length(sorting_goodness_evaluation_opts, "mean_links_length", "Calculate the mean links length. This metric is path-guided and"
@@ -64,7 +69,11 @@ int main_stats(int argc, char** argv) {
 	args::Flag penalize_diff_orientation(sorting_goodness_evaluation_opts, "penalize_diff_orientation", "If a link connects two nodes which have different orientations, this"
                                                                                                         " is penalized (adding 2 times its length in the sum).", {'d', "penalize-different-orientation"});
 	args::Flag path_statistics(sorting_goodness_evaluation_opts, "path_statistics", "Display the statistics (mean links length or sum path nodes distances) for each path.", {'p', "path-statistics"});
-	args::Group io_format_opts(parser, "[ IO Format Options ]");
+	
+    args::Flag weighted_feedback_arc(sorting_goodness_evaluation_opts, "weighted_feedback_arc", "Compute the sum of weigths of all feedback arcs, i.e. backward pointing edges the statistics (the weight is the number of times the edge is traversed by paths).", {'w', "weighted-feedback-arc"});
+	args::Flag weighted_reversing_join(sorting_goodness_evaluation_opts, "weighted_reversing_join", "Compute the sum of weigths of all reversing joins, i.e. edges joining two in- or two out-sides (the weight is the number of times the edge is traversed by paths).", {'j', "weighted-reversing-join"});   
+
+    args::Group io_format_opts(parser, "[ IO Format Options ]");
     args::Flag _multiqc(io_format_opts, "multiqc", "Setting this option prints all! statistics in YAML format instead of pseudo TSV to stdout. This includes *-S,--summarize*, *-W,--weak-connected-components*, *-L,--self-loops*, *-b,--base-content*, *-l,--mean-links-length*, *-g,--no-gap-links*, *-s,--sum-path-nodes-distances*, *-f,--file-size*, and *-d,--penalize-different-orientation*. *-p,path-statistics* is still optional. Not applicable to *-N,--nondeterministic-edges*. Overwrites all other given OPTIONs! The output is perfectly curated for the ODGI MultiQC module.", {'m', "multiqc"});
 	args::Flag _yaml(io_format_opts, "yaml", "Setting this option prints all selected statistics in YAML format instead of pseudo TSV to stdout.", {'y', "yaml"});
     args::Group processing_information(parser, "[ Processing Information ]");
@@ -94,11 +103,11 @@ int main_stats(int argc, char** argv) {
         return 1;
     }
 
-
-    if (!args::get(mean_links_length) && !args::get(sum_of_path_node_distances)){
+    if (!args::get(mean_links_length) && !args::get(sum_of_path_node_distances) && !args::get(weighted_feedback_arc) && !args::get(weighted_reversing_join)){
         if (args::get(path_statistics)){
             std::cerr
-                    << "[odgi::stats] error: please specify the -l/--mean-links-length and/or the -s/--sum-path-nodes-distances options to use the -P/--path-statistics option."
+                    << "[odgi::stats] error: please specify the -l/--mean-links-length and/or the -s/--sum-path-nodes-distances and/or "
+                    "-w/--weighted-feedback-arc and/or -j/--weighted-reversing-join options to use the -p/--path-statistics option."
                     << std::endl;
             return 1;
         }
@@ -146,7 +155,7 @@ int main_stats(int argc, char** argv) {
 
     graph_t graph;
     assert(argc > 0);
-    std::string infile = args::get(dg_in_file);
+    const std::string infile = args::get(dg_in_file);
     if (!infile.empty()) {
         if (infile == "-") {
             graph.deserialize(std::cin);
@@ -168,18 +177,14 @@ int main_stats(int argc, char** argv) {
     }
 
     if (args::get(_summarize) || _multiqc) {
-        uint64_t length_in_bp = 0, node_count = 0, edge_count = 0, path_count = 0;
+        uint64_t length_in_bp = 0, node_count = 0;
         graph.for_each_handle([&](const handle_t& h) {
                 length_in_bp += graph.get_length(h);
                 ++node_count;
             });
-        graph.for_each_edge([&](const edge_t& e) {
-                ++edge_count;
-                return true;
-            });
-        graph.for_each_path_handle([&](const path_handle_t& p) {
-                ++path_count;
-            });
+
+        uint64_t edge_count = graph.get_edge_count();
+        uint64_t path_count = graph.get_path_count();
         if (_multiqc || _yaml) {
         	std::cout << "length: " << length_in_bp << std::endl;
         	std::cout << "nodes: " << node_count << std::endl;
@@ -237,6 +242,7 @@ int main_stats(int argc, char** argv) {
 			cout << "unique" << "\t" << loops.size() << endl;
 		}
     }
+
 	/// we don't do this when `-y, --_multiqc` was specified
     if (_show_nondeterministic_edges) {
         // This edges could be compressed in principle
@@ -365,7 +371,7 @@ int main_stats(int argc, char** argv) {
         std::vector<double> X, Y;
 
         if (layout_in_file) {
-            auto& infile = args::get(layout_in_file);
+            const auto& infile = args::get(layout_in_file);
             if (!infile.empty()) {
                 algorithms::layout::Layout layout;
 
@@ -465,7 +471,7 @@ int main_stats(int argc, char** argv) {
 
                                 sum_2D_space += sqrt(dx * dx + dy * dy);
                             }else{
-                                // 1D metric (in node space and int nucleotide space)
+                                // 1D metric (in node space and in nucleotide space)
                                 sum_node_space += _info_b - _info_a;
                                 sum_nt_space += position_map[_info_b - shift] - position_map[_info_a - shift];
 
@@ -489,7 +495,7 @@ int main_stats(int argc, char** argv) {
                     if (num_links > 0){
                         if (layout_in_file) {
                             ratio_2D_space = sum_2D_space / (double)num_links;
-                        }else{
+                        } else{
                             ratio_node_space = (double)sum_node_space / (double)num_links;
                             ratio_nt_space = (double)sum_nt_space / (double)num_links;
                         }
@@ -738,9 +744,98 @@ int main_stats(int argc, char** argv) {
 					std::cout << std::endl;
 				}
 			}
-
         }
     }
+
+
+    // Put path handles in a vector to work on them in parallel
+    std::vector<path_handle_t> paths;
+    paths.reserve(graph.get_path_count());
+
+    // Check if we are going to use the vector with the path handles
+    if (args::get(weighted_feedback_arc) || args::get(weighted_reversing_join)) {
+        graph.for_each_path_handle([&](const path_handle_t path) {
+            paths.push_back(path);
+        });
+    }
+
+    if (args::get(weighted_feedback_arc)) {
+        std::cout << "path\tweighted_feedback_arc" << std::endl;
+
+        uint64_t wfa_all_paths = 0;
+
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
+        for (auto& path : paths) {
+            uint64_t wfa_current_path = 0;
+
+            graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
+                handle_t h = graph.get_handle_of_step(occ);
+
+                if (graph.has_next_step(occ)){
+                    handle_t i = graph.get_handle_of_step(graph.get_next_step(occ));
+
+                    uint64_t unpacked_a = number_bool_packing::unpack_number(h);
+                    uint64_t unpacked_b = number_bool_packing::unpack_number(i);
+
+                    // Check if it is a feedback arc (edge joining out-sides with in-sides such that the outside node does not precedes the inside node)
+                    if (
+                        (!graph.get_is_reverse(h) && !graph.get_is_reverse(i) && unpacked_a >= unpacked_b) ||
+                        ( graph.get_is_reverse(h) &&  graph.get_is_reverse(i) && unpacked_a <= unpacked_b)
+                    ) {
+                        wfa_current_path += 1;
+                    }
+                }
+            });
+
+            if (args::get(path_statistics)) {
+#pragma omp critical (cout)
+                std::cout << graph.get_path_name(path) << "\t" << wfa_current_path << std::endl;
+            }
+
+#pragma omp critical (wfa_all_paths)
+            wfa_all_paths += wfa_current_path;
+        }
+
+        std::cout << "all_paths" << "\t" << wfa_all_paths << std::endl;
+    }
+
+    if (args::get(weighted_reversing_join)) {
+        std::cout << "path\tweighted_reversing_join" << std::endl;
+
+        uint64_t wrj_all_paths = 0;
+
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
+        for (auto& path : paths) {
+            uint64_t wrj_current_path = 0;
+
+            graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
+                handle_t h = graph.get_handle_of_step(occ);
+
+                if (graph.has_next_step(occ)){
+                    handle_t i = graph.get_handle_of_step(graph.get_next_step(occ));
+
+                    uint64_t unpacked_a = number_bool_packing::unpack_number(h);
+                    uint64_t unpacked_b = number_bool_packing::unpack_number(i);
+
+                    // Check if it is a reversing arc (edges joining two in- or two out-sides)
+                    if (graph.get_is_reverse(h) != graph.get_is_reverse(i)) {
+                        wrj_current_path += 1;
+                    }
+                }
+            });
+
+            if (args::get(path_statistics)) {
+#pragma omp critical (cout)
+                std::cout << graph.get_path_name(path) << "\t" << wrj_current_path << std::endl;
+            }
+
+#pragma omp critical (cout)
+            wrj_all_paths += wrj_current_path;
+        }
+
+        std::cout << "all_paths" << "\t" << wrj_all_paths << std::endl;
+    }
+
 
     bool using_delim = !args::get(path_delim).empty();
     char delim = '\0';
