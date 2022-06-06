@@ -72,6 +72,9 @@ namespace odgi {
                                                        "List of paths to fully retain in the extracted graph. Must "
                                                        "contain one path name per line and a subset of all paths can be specified.",
                                                       {'R', "lace-paths"});
+        args::ValueFlag<uint64_t> _max_dist_subpaths(extract_opts, "N",
+                                                 "Maximum distance between subpaths allowed for merging them [default: 0 (disabled)].",
+                                                 {'d', "max-distance-subpaths"});
         args::Group threading_opts(parser, "[ Threading ]");
         args::ValueFlag<uint64_t> nthreads(threading_opts, "N", "Number of threads to use for parallel operations.",
                                            {'t', "threads"});
@@ -318,6 +321,7 @@ namespace odgi {
         auto prep_graph = [](graph_t &source, const std::vector<path_handle_t>& source_paths,
                              const std::vector<path_handle_t>& lace_paths, graph_t &subgraph,
                              const uint64_t context_steps, const uint64_t context_bases, const bool full_range, const bool inverse,
+                             const uint64_t max_dist_subpaths,
                              const uint64_t num_threads, const bool show_progress) {
             if (context_steps > 0 || context_bases > 0) {
                 if (show_progress) {
@@ -375,6 +379,74 @@ namespace odgi {
                 }
 
                 algorithms::embed_lace_paths(source, subgraph, lace_paths);
+            }
+
+            if (max_dist_subpaths > 0) {
+                // The last step is not included
+                std::vector<std::pair<step_handle_t, step_handle_t>> short_missing_subpaths;
+
+                // Search not included subpaths (in parallel)
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
+                for (uint64_t path_rank = 0; path_rank < source_paths.size(); ++path_rank) {
+                    auto &source_path_handle = source_paths[path_rank];
+                    uint64_t walked = 0;
+
+                    // check if the nodes are in the output subgraph
+                    bool in_match = true;
+                    step_handle_t start_step = source.path_begin(source_path_handle);
+
+                    // We don't have to consider the not included subpath at the beginning (if any)
+                    bool ignore_subpath = !subgraph.has_node(source.get_id(source.get_handle_of_step(start_step)));
+
+                    uint64_t start_nt, end_nt;
+                    // get each range that isn't included
+                    source.for_each_step_in_path(source_path_handle, [&](const step_handle_t& step) {
+                        const handle_t source_handle = source.get_handle_of_step(step);
+                        const uint64_t source_length = source.get_length(source_handle);
+
+                        if (!subgraph.has_node(source.get_id(source_handle))) {
+                            if (in_match) {
+                                in_match = false;
+                                start_step = step;
+                                start_nt = walked;
+                            }
+
+                            end_nt = walked + source_length;
+                        } else {
+                            if (!in_match) {
+                                if (!ignore_subpath) {
+                                    if ((end_nt - start_nt) <= max_dist_subpaths) {
+    #pragma omp critical (short_missing_subpaths)
+                                        short_missing_subpaths.push_back(std::make_pair(start_step, step));
+                                    }
+                                }
+
+                                ignore_subpath = false;
+                            }
+                            in_match = true;
+                        }
+
+                        walked += source_length;
+                    });
+                    // Ignore last not included subpath (if any)
+                }
+
+                // Restore short subpaths by adding the associated handles
+                for (auto& range : short_missing_subpaths) {
+                    if (range.first != range.second) {
+                        for (step_handle_t step = range.first; step != range.second; step = source.get_next_step(step)) {
+                            handle_t h = source.get_handle_of_step(step);
+                            const uint64_t id = source.get_id(h);
+                            // To avoid adding multiple times the same node
+                            if(!subgraph.has_node(id)) {
+                                if (source.get_is_reverse(h)) {
+                                    h = source.flip(h); // All handles are added in forward in the subgraph
+                                }
+                                subgraph.create_handle(source.get_sequence(h), id);
+                            }
+                        }
+                    }
+                }
             }
 
             // Connect the collected handles
@@ -465,7 +537,7 @@ namespace odgi {
 
                 algorithms::extract_path_range(graph, path_handle, path_range.begin.offset, path_range.end.offset, subgraph);
 
-                prep_graph(graph, paths, lace_paths, subgraph, context_steps, context_bases, _full_range, false, num_threads, show_progress);
+                prep_graph(graph, paths, lace_paths, subgraph, context_steps, context_bases, _full_range, false, args::get(_max_dist_subpaths), num_threads, show_progress);
 
                 const string filename = graph.get_path_name(path_range.begin.path) + ":" + to_string(path_range.begin.offset) + "-" + to_string(path_range.end.offset) + ".og";
 
@@ -535,7 +607,7 @@ namespace odgi {
                 }
             }
 
-            prep_graph(graph, paths, lace_paths, subgraph, context_steps, context_bases, _full_range, _inverse, num_threads, show_progress);
+            prep_graph(graph, paths, lace_paths, subgraph, context_steps, context_bases, _full_range, _inverse, args::get(_max_dist_subpaths), num_threads, show_progress);
 
             {
                 const std::string outfile = args::get(og_out_file);
