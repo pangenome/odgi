@@ -382,70 +382,93 @@ namespace odgi {
             }
 
             if (max_dist_subpaths > 0) {
-                // The last step is not included
-                std::vector<std::pair<step_handle_t, step_handle_t>> short_missing_subpaths;
+                // Iterate multiple times to merge subpaths which became mergeable during the first iteration where new nodes were added
+                const uint8_t num_iterations = 3;
 
-                // Search not included subpaths (in parallel)
-#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
-                for (uint64_t path_rank = 0; path_rank < source_paths.size(); ++path_rank) {
-                    auto &source_path_handle = source_paths[path_rank];
-                    uint64_t walked = 0;
-
-                    // check if the nodes are in the output subgraph
-                    bool in_match = true;
-                    step_handle_t start_step = source.path_begin(source_path_handle);
-
-                    // We don't have to consider the not included subpath at the beginning (if any)
-                    bool ignore_subpath = !subgraph.has_node(source.get_id(source.get_handle_of_step(start_step)));
-
-                    uint64_t start_nt, end_nt;
-                    // get each range that isn't included
-                    source.for_each_step_in_path(source_path_handle, [&](const step_handle_t& step) {
-                        const handle_t source_handle = source.get_handle_of_step(step);
-                        const uint64_t source_length = source.get_length(source_handle);
-
-                        if (!subgraph.has_node(source.get_id(source_handle))) {
-                            if (in_match) {
-                                in_match = false;
-                                start_step = step;
-                                start_nt = walked;
-                            }
-
-                            end_nt = walked + source_length;
-                        } else {
-                            if (!in_match) {
-                                if (!ignore_subpath) {
-                                    if ((end_nt - start_nt) <= max_dist_subpaths) {
-    #pragma omp critical (short_missing_subpaths)
-                                        short_missing_subpaths.push_back(std::make_pair(start_step, step));
-                                    }
-                                }
-
-                                ignore_subpath = false;
-                            }
-                            in_match = true;
-                        }
-
-                        walked += source_length;
-                    });
-                    // Ignore last not included subpath (if any)
+                std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress;
+                if (show_progress) {
+                    progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+                        source.get_path_count() * num_iterations, "[odgi::extract] merge subpaths closer than " + std::to_string(max_dist_subpaths) + " bps");
                 }
 
-                // Restore short subpaths by adding the associated handles
-                for (auto& range : short_missing_subpaths) {
-                    if (range.first != range.second) {
-                        for (step_handle_t step = range.first; step != range.second; step = source.get_next_step(step)) {
-                            handle_t h = source.get_handle_of_step(step);
-                            const uint64_t id = source.get_id(h);
-                            // To avoid adding multiple times the same node
-                            if(!subgraph.has_node(id)) {
-                                if (source.get_is_reverse(h)) {
-                                    h = source.flip(h); // All handles are added in forward in the subgraph
+                for (uint8_t i = 0; i < num_iterations; ++i) {
+                    // The last step is not included
+                    std::vector<std::pair<step_handle_t, step_handle_t>> short_missing_subpaths;
+                    
+                    // Search not included subpaths (in parallel)
+    #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
+                    for (uint64_t path_rank = 0; path_rank < source_paths.size(); ++path_rank) {
+                        auto &source_path_handle = source_paths[path_rank];
+                        uint64_t walked = 0;
+
+                        // check if the nodes are in the output subgraph
+                        bool in_match = true;
+                        step_handle_t start_step = source.path_begin(source_path_handle);
+
+                        // We don't have to consider the not included subpath at the beginning (if any)
+                        bool ignore_subpath = !subgraph.has_node(source.get_id(source.get_handle_of_step(start_step)));
+
+                        uint64_t start_nt, end_nt;
+                        // get each range that isn't included
+                        source.for_each_step_in_path(source_path_handle, [&](const step_handle_t& step) {
+                            const handle_t source_handle = source.get_handle_of_step(step);
+                            const uint64_t source_length = source.get_length(source_handle);
+
+                            if (!subgraph.has_node(source.get_id(source_handle))) {
+                                if (in_match) {
+                                    in_match = false;
+                                    start_step = step;
+                                    start_nt = walked;
                                 }
-                                subgraph.create_handle(source.get_sequence(h), id);
+
+                                end_nt = walked + source_length;
+                            } else {
+                                if (!in_match) {
+                                    if (!ignore_subpath) {
+                                        if ((end_nt - start_nt) <= max_dist_subpaths) {
+        #pragma omp critical (short_missing_subpaths)
+                                            short_missing_subpaths.push_back(std::make_pair(start_step, step));
+                                        }
+                                    }
+
+                                    ignore_subpath = false;
+                                }
+                                in_match = true;
+                            }
+
+                            walked += source_length;
+                        });
+                        // Ignore last not included subpath (if any)
+
+                        if (show_progress) {
+                            progress->increment(1);
+                        }
+                    }
+
+                    if (short_missing_subpaths.empty()) {
+                        break; // Nothing mergeable, do not waste time in further iterations
+                    }
+
+                    // Restore short subpaths by adding the associated handles
+                    for (auto& range : short_missing_subpaths) {
+                        if (range.first != range.second) {
+                            for (step_handle_t step = range.first; step != range.second; step = source.get_next_step(step)) {
+                                handle_t h = source.get_handle_of_step(step);
+                                const uint64_t id = source.get_id(h);
+                                // To avoid adding multiple times the same node
+                                if(!subgraph.has_node(id)) {
+                                    if (source.get_is_reverse(h)) {
+                                        h = source.flip(h); // All handles are added in forward in the subgraph
+                                    }
+                                    subgraph.create_handle(source.get_sequence(h), id);
+                                }
                             }
                         }
                     }
+                }
+
+                if (show_progress) {
+                    progress->finish();
                 }
             }
 
