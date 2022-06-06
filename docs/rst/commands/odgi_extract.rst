@@ -82,6 +82,14 @@ Extract Options
 | List of paths to fully retain in the extracted graph. Must contain one
   path name per line and a subset of all paths can be specified.
 
+| **-d, --max-distance-subpaths**\ =\ *N*
+| Maximum distance between subpaths allowed for merging them [default: 0 (disabled)].
+
+| **-e, --max-merging-iterations**\ =\ *N*
+| Maximum number of iterations in attempting to merge close subpaths. 
+  It stops early if during an iteration no subpaths were merged [default: 3].
+
+
 Threading
 ---------
 
