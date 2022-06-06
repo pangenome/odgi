@@ -334,10 +334,7 @@ namespace odgi {
             for (nid_t id = id1; id <= id2; ++id) {
                 if (!subgraph.has_node(id)) {
                     const handle_t cur_handle = source.get_handle(id);
-                    subgraph.create_handle(
-                            source.get_sequence(
-                                    source.get_is_reverse(cur_handle) ? source.flip(cur_handle) : cur_handle),
-                            id);
+                    subgraph.create_handle(source.get_sequence(cur_handle), id);
                 }
 
                 if (show_progress) {
