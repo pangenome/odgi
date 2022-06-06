@@ -87,7 +87,7 @@ Extract Options
 
 | **-e, --max-merging-iterations**\ =\ *N*
 | Maximum number of iterations in attempting to merge close subpaths. 
-  It stops if during an iteration no subpaths were merged [default: 3].
+  It stops early if during an iteration no subpaths were merged [default: 3].
 
 
 Threading
