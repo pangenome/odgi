@@ -279,15 +279,16 @@ namespace odgi {
             Region region;
             parse_region(args::get(_path_range), region);
 
-            if (!graph.has_path(region.seq)) {
-                std::cerr
-                        << "[odgi::extract] error: path " << region.seq << " not found in the input graph."
-                        << std::endl;
-                exit(1);
-            }
+            // The check is performed by add_bed_range too
+            // if (!graph.has_path(region.seq)) {
+            //     std::cerr
+            //             << "[odgi::extract] error: path " << region.seq << " not found in the input graph."
+            //             << std::endl;
+            //     exit(1);
+            // }
 
             // no coordinates given, we do whole thing (0,-1)
-            if (region.start < 0 && region.end < 0) {
+            if (region.start < 0 || region.end < 0) {
                 add_bed_range(path_ranges, graph, region.seq);
             } else {
                 add_bed_range(path_ranges, graph, region.seq + "\t" + std::to_string(region.start) + "\t" + std::to_string(region.end));
