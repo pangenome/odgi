@@ -759,6 +759,8 @@ void untangle(
             }
         }
     } else {
+        uint64_t num_cut_points_read = 0;
+
         if (progress) {
             std::cerr << "[odgi::algorithms::untangle] loading input cuts" << std::endl;
         }
@@ -776,7 +778,17 @@ void untangle(
                 cut_nodes.set(
                         handle_id,
                         true);
+                ++num_cut_points_read;
             }
+        }
+
+        if (num_cut_points_read == 0) {
+            std::cerr << "[odgi::algorithms::untangle] error: no cut points loaded" << std::endl;
+            exit(1);
+        }
+
+        if (progress) {
+            std::cerr << "[odgi::algorithms::untangle] loaded " << num_cut_points_read << " cuts points" << std::endl;
         }
     }
 
