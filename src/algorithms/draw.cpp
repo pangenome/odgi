@@ -188,7 +188,8 @@ std::vector<uint8_t> rasterize(const std::vector<double> &X,
 
     // determine height and width based on the width, if width = 0
     if (width == 0) {
-        width = std::ceil(height * (source_width / source_height));
+        // Avoid too big images that would require too much memory
+        width = std::min(100000.0, std::ceil(height * (source_width / source_height)));
     }
     //std::cerr << "source " << source_width << "×" << source_height << std::endl;
     //std::cerr << "raster " << width << "×" << height << std::endl;
