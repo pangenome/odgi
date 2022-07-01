@@ -534,10 +534,7 @@ void map_segments(
             for (auto& mapping : target_mapping) {
                 ++nth_best;
                 if (nth_best > n_best) break;
-                double jaccard = mapping.jaccard > 1.0 ? 1.0 : mapping.jaccard;
-                if (jaccard >= min_jaccard) {
-                    double dist = -log(2.0 * jaccard / (1. + jaccard));
-                    if (dist > 1.0) dist = 1.0;
+                if (mapping.jaccard >= min_jaccard) {
                     auto& idx = mapping.segment_id; // segment index
                     auto& target_begin = target_segments.get_segment_cut(idx);
                     auto target_begin_pos = step_index.get_position(target_begin, graph);
@@ -546,6 +543,9 @@ void map_segments(
                     std::string target_name = graph.get_path_name(target_path);
                     if (output_type == untangle_output_t::PAF){
                         // PAF format
+                        double dist = -log(2.0 * mapping.jaccard / (1. + mapping.jaccard));
+                        if (dist > 1.0) dist = 1.0;
+
 #pragma omp critical (cout)
                         std::cout << query_name << "\t"
                         << path_to_len[path] << "\t"
@@ -560,7 +560,7 @@ void map_segments(
                         << std::max(target_end_pos - target_begin_pos, end_pos - begin_pos) << "\t"
                         << 255 << "\t"
                         << "id:f:" << ((double) 1.0 - dist) * (double) 100 << "\t"
-                        << "jc:f:" << jaccard << "\t"
+                        << "jc:f:" << mapping.jaccard << "\t"
                         << "sc:f:" << self_coverage << "\t"
                         << "nb:i:" << nth_best << "\t"
                         << std::endl;
@@ -588,7 +588,7 @@ void map_segments(
                         << target_name << "\t"
                         << target_begin_pos << "\t"
                         << target_end_pos << "\t"       // chrom2 end (1-based)
-                        << jaccard << "\t"
+                        << mapping.jaccard << "\t"
                         << (mapping.is_inv ? "-" : "+") << "\t"
                         << self_coverage << "\t"
                         << nth_best << std::endl;
@@ -668,16 +668,6 @@ void untangle(
             std::cerr << "[odgi::algorithms::untangle] establishing initial cuts for " << paths.size() << " paths" << std::endl;
         }
 
-        // which nodes are traversed by our target paths?
-        atomicbitvector::atomic_bv_t target_nodes(graph.get_node_count() + 1);
-#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
-        for (auto& target : targets) {
-            graph.for_each_step_in_path(
-                    target, [&](const step_handle_t& step) {
-                        target_nodes.set(graph.get_id(graph.get_handle_of_step(step)), true);
-                    });
-        }
-
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
         for (auto& path : paths) {
             // test path_step_index_t
@@ -696,7 +686,17 @@ void untangle(
             for (auto& step : cuts) {
                 cut_nodes.set(graph.get_id(graph.get_handle_of_step(step)));
             }
+
             // also add the nodes here where the query path touches the target for the first time
+            // which nodes are traversed by our target paths?
+            atomicbitvector::atomic_bv_t target_nodes(graph.get_node_count() + 1);
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
+            for (auto& target : targets) {
+                graph.for_each_step_in_path(
+                        target, [&](const step_handle_t& step) {
+                            target_nodes.set(graph.get_id(graph.get_handle_of_step(step)), true);
+                        });
+            }
             // we start from the front until we found a target node
             const uint64_t node_id_front = query_hits_target_front(graph, path, target_nodes);
             if (graph.has_node(node_id_front)) {
