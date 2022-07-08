@@ -359,45 +359,6 @@ namespace odgi {
                                                                                  : "");
             }
 
-            if (inverse) {
-                unordered_set<nid_t> node_ids_to_ignore;
-                subgraph.for_each_handle([&](const handle_t &h) {
-                    node_ids_to_ignore.insert(subgraph.get_id(h));
-                });
-
-                std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress;
-                if (show_progress) {
-                    progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
-                            source.get_node_count() - node_ids_to_ignore.size(), "[odgi::extract] inverting the query criteria");
-                }
-
-                subgraph.clear();
-
-                source.for_each_handle([&](const handle_t &h) {
-                    nid_t id = source.get_id(h);
-                    if (node_ids_to_ignore.count(id) <= 0) {
-                        subgraph.create_handle(source.get_sequence(source.get_handle(id)), id);
-
-                        if (show_progress) {
-                            progress->increment(1);
-                        }
-                    }
-                });
-
-                if (show_progress) {
-                    progress->finish();
-                }
-            }
-
-            // rewrite lace paths so that skipped regions are represented as new nodes that we then add to our subgraph
-            if (!lace_paths.empty()) {
-                if (show_progress) {
-                    std::cerr << "[odgi::extract] adding " << lace_paths.size() << " lace paths" << std::endl;
-                }
-
-                algorithms::embed_lace_paths(source, subgraph, lace_paths);
-            }
-
             if (max_dist_subpaths > 0) {
                 // Iterate multiple times to merge subpaths which became mergeable during the first iteration where new nodes were added
                 for (uint8_t i = 0; i < num_iterations; ++i) {
@@ -488,6 +449,47 @@ namespace odgi {
                 }
             }
 
+            if (inverse) {
+                unordered_set<nid_t> node_ids_to_ignore;
+                subgraph.for_each_handle([&](const handle_t &h) {
+                    node_ids_to_ignore.insert(subgraph.get_id(h));
+                });
+
+                std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress;
+                if (show_progress) {
+                    progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+                            source.get_node_count() - node_ids_to_ignore.size(), "[odgi::extract] inverting the query criteria");
+                }
+
+                subgraph.clear();
+
+                source.for_each_handle([&](const handle_t &h) {
+                    nid_t id = source.get_id(h);
+                    if (node_ids_to_ignore.count(id) <= 0) {
+                        subgraph.create_handle(source.get_sequence(source.get_handle(id)), id);
+
+                        if (show_progress) {
+                            progress->increment(1);
+                        }
+                    }
+                });
+
+                if (show_progress) {
+                    progress->finish();
+                }
+
+                // TODO: INVERT THE BED RANGES TOO?
+            }
+
+            // rewrite lace paths so that skipped regions are represented as new nodes that we then add to our subgraph
+            if (!lace_paths.empty()) {
+                if (show_progress) {
+                    std::cerr << "[odgi::extract] adding " << lace_paths.size() << " lace paths" << std::endl;
+                }
+
+                algorithms::embed_lace_paths(source, subgraph, lace_paths);
+            }
+
             // Connect the collected handles
             algorithms::add_connecting_edges_to_subgraph(source, subgraph, show_progress
                                                                            ? "[odgi::extract] adding connecting edges"
@@ -496,7 +498,6 @@ namespace odgi {
             // Add subpaths covering the collected handles
             algorithms::add_subpaths_to_subgraph(source, source_paths, subgraph, num_threads,
                                                  show_progress ? "[odgi::extract] adding subpaths" : "");
-
 
             std::vector<path_handle_t> subpaths;
             subpaths.reserve(subgraph.get_path_count());
