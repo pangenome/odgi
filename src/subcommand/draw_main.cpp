@@ -47,7 +47,9 @@ int main_draw(int argc, char **argv) {
     //args::ValueFlag<double> png_line_overlay(parser, "N", "line width (in approximate bp) (default 10.0)", {'O', "line-overlay"});
     args::ValueFlag<double> png_path_line_spacing(visualizations_opts, "N", "Spacing between path lines in PNG layout (in approximate bp) (default 0.0).", {'S', "path-line-spacing"});
     args::ValueFlag<std::string> _path_bed_file(visualizations_opts, "FILE",
-                                                "Find the node(s) in the path range(s) specified in the given BED FILE.",
+                                                "Color the nodes based on the input annotation in the given BED FILE. "
+                                                "Colors are derived from the 4th column, if present, else from the path name."
+                                                "If the 4th column value is in the format 'string#RRGGBB', the RRGGBB color (in hex notation) will be used.",
                                                 {'b', "bed-file"});
     args::Group threading(parser, "[ Threading ]");
 	args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
