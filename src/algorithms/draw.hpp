@@ -80,7 +80,8 @@ std::vector<uint8_t> rasterize(const std::vector<double> &X,
                                uint64_t& height,
                                const double& line_width,
                                const double& path_line_spacing,
-                               bool color_paths);
+                               bool color_paths,
+                               std::vector<algorithms::color_t>& node_id_to_color);
 
 void draw_png(const std::string& filename,
               const std::vector<double> &X,
@@ -92,7 +93,8 @@ void draw_png(const std::string& filename,
               uint64_t height,
               const double& line_width,
               const double& path_line_spacing,
-              bool color_paths);
+              bool color_paths,
+              std::vector<algorithms::color_t>& node_id_to_color);
 
 
 

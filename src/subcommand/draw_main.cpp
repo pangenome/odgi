@@ -7,6 +7,10 @@
 #include "algorithms/draw.hpp"
 #include "algorithms/layout.hpp"
 #include "utils.hpp"
+#include "position.hpp"
+#include "subgraph/region.hpp"
+#include "subgraph/extract.hpp"
+#include "split.hpp"
 
 namespace odgi {
 
@@ -32,6 +36,7 @@ int main_draw(int argc, char **argv) {
     args::ValueFlag<std::string> tsv_out_file(files_io_opts, "FILE", "Write the TSV layout plus displayed annotations to this FILE.", {'T', "tsv"});
     args::ValueFlag<std::string> svg_out_file(files_io_opts, "FILE", "Write an SVG rendering to this FILE.", {'s', "svg"});
     args::ValueFlag<std::string> png_out_file(files_io_opts, "FILE", "Write a rasterized PNG rendering to this FILE.", {'p', "png"});
+    args::ValueFlag<std::string> xp_in_file(files_io_opts, "FILE", "Load the path index from this FILE.", {'X', "path-index"});
     args::Group visualizations_opts(parser, "[ Visualization Options ]");
     args::ValueFlag<uint64_t> png_height(visualizations_opts, "FILE", "Height of PNG rendering (default: 1000).", {'H', "png-height"});
     args::ValueFlag<uint64_t> png_border(visualizations_opts, "FILE", "Size of PNG border in bp (default: 10).", {'E', "png-border"});
@@ -41,8 +46,10 @@ int main_draw(int argc, char **argv) {
     args::ValueFlag<double> png_line_width(visualizations_opts, "N", "Line width (in approximate bp) (default 0.0).", {'w', "line-width"});
     //args::ValueFlag<double> png_line_overlay(parser, "N", "line width (in approximate bp) (default 10.0)", {'O', "line-overlay"});
     args::ValueFlag<double> png_path_line_spacing(visualizations_opts, "N", "Spacing between path lines in PNG layout (in approximate bp) (default 0.0).", {'S', "path-line-spacing"});
-    args::ValueFlag<std::string> xp_in_file(files_io_opts, "FILE", "Load the path index from this FILE.", {'X', "path-index"});
-	args::Group threading(parser, "[ Threading ]");
+    args::ValueFlag<std::string> _path_bed_file(visualizations_opts, "FILE",
+                                                "Find the node(s) in the path range(s) specified in the given BED FILE.",
+                                                {'b', "bed-file"});
+    args::Group threading(parser, "[ Threading ]");
 	args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 	args::Group processing_info_opts(parser, "[ Processing Information ]");
 	args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
@@ -96,6 +103,67 @@ int main_draw(int argc, char **argv) {
                 graph.deserialize(std::cin);
             } else {
                 utils::handle_gfa_odgi_input(infile, "draw", args::get(progress), num_threads, graph);
+            }
+        }
+    }
+
+    if (graph.max_node_id() >= graph.get_node_count() + 1){
+        std::cerr << "[odgi::draw] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
+        exit(1);
+    }
+
+    // handle targets from BED
+    std::vector<odgi::path_range_t> path_ranges;
+    std::vector<algorithms::color_t> node_id_to_color;
+    if (_path_bed_file && !args::get(_path_bed_file).empty()) {
+        std::ifstream bed_in(args::get(_path_bed_file));
+        std::string line;
+        while (std::getline(bed_in, line)) {
+            add_bed_range(path_ranges, graph, line);
+        }
+
+        if (!path_ranges.empty()) {
+            node_id_to_color.resize(graph.get_node_count() + 1, algorithms::COLOR_LIGHTGRAY);
+
+            for (auto &path_range : path_ranges) {
+                graph_t subgraph;
+
+                const path_handle_t path_handle = path_range.begin.path;
+
+                // If there is no `name` information, hash the path_name to get a color
+                algorithms::color_t path_color = algorithms::hash_color(graph.get_path_name(path_handle));
+                if (!path_range.name.empty()) {
+                    auto vals = split(path_range.name, '#');
+                    if (vals.size() == 2 && vals[1].length() == 6) {
+                        // Colors are given in RRGGBB in the BED file, but they are taken in BBGGRR, so we need to switch BB/RR
+
+                        char temp = vals[1][0];
+                        vals[1][0] = vals[1][4];
+                        vals[1][4] = temp;
+                        temp = vals[1][1];
+                        vals[1][1] = vals[1][5];
+                        vals[1][5] = temp;
+
+                        unsigned int x;
+                        std::stringstream ss;
+                        ss << std::hex << vals[1];
+                        ss >> x;
+
+                        path_color = {0xff000000 + x};
+                    } else {
+                        path_color = algorithms::hash_color(path_range.name);
+                    }
+                }
+
+
+
+
+
+                algorithms::for_handle_in_path_range(
+                        graph, path_handle, path_range.begin.offset, path_range.end.offset,
+                        [&](const handle_t& handle) {
+                            node_id_to_color[graph.get_id(handle)] = path_color;
+                        });
             }
         }
     }
@@ -155,7 +223,7 @@ int main_draw(int argc, char **argv) {
         // todo could be done with callbacks
         std::vector<double> X = layout.get_X();
         std::vector<double> Y = layout.get_Y();
-        algorithms::draw_png(outfile, X, Y, graph, 1.0, border_bp, 0, _png_height, _png_line_width, _png_path_line_spacing, _color_paths);
+        algorithms::draw_png(outfile, X, Y, graph, 1.0, border_bp, 0, _png_height, _png_line_width, _png_path_line_spacing, _color_paths, node_id_to_color);
     }
     
     return 0;
