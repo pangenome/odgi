@@ -51,7 +51,7 @@ void adjust_ranges(const PathHandleGraph& graph, const std::string& bed_targets)
     while (std::getline(bed, line)) {
         if (!line.empty()) {
             auto vals = split(line, '\t');
-            if (vals.size() < 3) {
+            if (vals.size() < 4) {
                 std::cerr << "[odgi::algorithms::adjust_ranges]"
                           << "BED line does not have enough fields to define an interval"
                           << std::endl << line << std::endl;
