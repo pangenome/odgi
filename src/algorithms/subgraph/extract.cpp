@@ -459,17 +459,20 @@ namespace odgi {
 
         bool check_and_get_windows_in_out_parameter(
                 const std::string& parameter,
-                uint64_t &windows_len, uint64_t &windows_min, uint64_t &windows_max) {
+                uint64_t &windows_len, uint64_t &windows_min, uint64_t &windows_max, bool &only_tips) {
             const std::regex regex(":");
             const std::vector<std::string> splitted(
                     std::sregex_token_iterator(parameter.begin(), parameter.end(), regex, -1),
                     std::sregex_token_iterator()
             );
 
-            if (splitted.size() != 3) {
+            if (splitted.size() != 4) {
                 return false;
             }
-            if (!utils::is_number(splitted[0]) || !utils::is_number(splitted[1]) || !utils::is_number(splitted[2])) {
+            if (!utils::is_number(splitted[0])
+                || !utils::is_number(splitted[1])
+                || !utils::is_number(splitted[2])
+                || !utils::is_number(splitted[3])) {
                 return false;
             }
             if (stoull(splitted[1]) > stoull(splitted[2])) {
@@ -479,7 +482,7 @@ namespace odgi {
             windows_len = stoull(splitted[0]);
             windows_min = stoull(splitted[1]);
             windows_max = stoull(splitted[2]);
-
+            only_tips = (stoull(splitted[3]) == 1);
             return true;
         }
     }

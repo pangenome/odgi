@@ -53,7 +53,7 @@ namespace odgi {
 
         bool check_and_get_windows_in_out_parameter(
                 const std::string& parameter,
-                uint64_t &windows_len, uint64_t &windows_min, uint64_t &windows_max);
+                uint64_t &windows_len, uint64_t &windows_min, uint64_t &windows_max, bool &only_tips);
 
     }
 }
