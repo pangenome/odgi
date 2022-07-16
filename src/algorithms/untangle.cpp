@@ -376,6 +376,7 @@ segment_map_t::get_matches(
     // our final metric is jaccard of intersection over total length for each overlapped target
     //path_handle_t query_path = graph.get_path_handle_of_step(start);
     ska::flat_hash_map<uint64_t, isec_t> target_isec;
+    ska::flat_hash_map<uint64_t, uint64_t> query_seen;
     for (step_handle_t step = start;
          step != end;
          step = graph.get_next_step(step)) {
@@ -383,11 +384,16 @@ segment_map_t::get_matches(
         uint64_t node_id = graph.get_id(h);
         uint64_t node_length = graph.get_length(h);
         bool is_rev = graph.get_is_reverse(h);
+        uint64_t query_idx = query_seen[node_id]++;
+        ska::flat_hash_map<uint64_t, uint64_t> target_seen;
         for_segment_on_node(
             node_id,
             [&](const uint64_t& segment_id, const bool& segment_rev) {
                 // n.b. we do not skip self matches
-                target_isec[segment_id].incr(node_length, is_rev != segment_rev);
+                uint64_t target_idx = target_seen[segment_id]++;
+                if (query_idx == target_idx) {
+                    target_isec[segment_id].incr(node_length, is_rev != segment_rev);
+                }
             });
     }
     // compute the jaccards
@@ -540,7 +546,7 @@ void map_segments(
             for (auto& mapping : target_mapping) {
                 ++nth_best;
                 if (nth_best > n_best) break;
-                double jaccard = mapping.jaccard > 1.0 ? 1.0 : mapping.jaccard;
+                auto& jaccard = mapping.jaccard;
                 if (jaccard >= min_jaccard) {
                     double dist = -log(2.0 * jaccard / (1. + jaccard));
                     if (dist > 1.0) dist = 1.0;
