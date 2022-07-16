@@ -279,6 +279,12 @@ segment_map_t::segment_map_t(
 				graph);
     }
     // the index construction must be serial
+
+    // Put fake stuff in the 1-st position to avoid having segments with id 0
+    // becahse we can't discriminate +0 and -0 for the strandness
+    segment_cut.push_back(graph.path_begin(paths[0]));
+    segment_length.push_back(0);
+
     for (uint64_t i = 0; i < paths.size(); ++i) {
         auto& path = paths[i];
         auto& cuts = all_cuts[i];
