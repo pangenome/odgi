@@ -610,6 +610,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/unittest/inject.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/tips.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/path_jaccard.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/path_length.cpp
   ${lodepng_SOURCES}
   ${handlegraph_sources}
 )
@@ -786,7 +787,8 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/algorithms/progress.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/tips.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/tips_bed_writer_thread.hpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/path_jaccard.hpp)
+  ${CMAKE_SOURCE_DIR}/src/algorithms/path_jaccard.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/path_length.cpp)
 
 target_include_directories(odgi_objs PUBLIC ${odgi_INCLUDES})
 

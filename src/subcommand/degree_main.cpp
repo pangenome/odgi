@@ -21,7 +21,7 @@ int main_degree(int argc, char** argv) {
     std::string prog_name = "odgi degree";
     argv[0] = (char*)prog_name.c_str();
     --argc;
-    
+
     args::ArgumentParser parser("Describe the graph in terms of node degree.");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
     args::ValueFlag<std::string> og_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "input"});
@@ -110,16 +110,18 @@ int main_degree(int argc, char** argv) {
     }
 
     uint64_t windows_in_len = 0, windows_in_min = 0, windows_in_max = 0;
+    bool windows_in_only_tips = false;
     if (_windows_in) {
-        if (!algorithms::check_and_get_windows_in_out_parameter(args::get(_windows_in), windows_in_len, windows_in_min, windows_in_max)) {
+        if (!algorithms::check_and_get_windows_in_out_parameter(args::get(_windows_in), windows_in_len, windows_in_min, windows_in_max, windows_in_only_tips)) {
             std::cerr << "[odgi::degree] error: please specify a valid string (LEN:MIN:MAX) for the -w/--windows-in option." << std::endl;
             return 1;
         }
     }
 
     uint64_t windows_out_len = 0, windows_out_min = 0, windows_out_max = 0;
+    bool windows_out_only_tips = false;
     if (_windows_out) {
-        if (!algorithms::check_and_get_windows_in_out_parameter(args::get(_windows_out), windows_out_len, windows_out_min, windows_out_max)) {
+        if (!algorithms::check_and_get_windows_in_out_parameter(args::get(_windows_out), windows_out_len, windows_out_min, windows_out_max, windows_out_only_tips)) {
             std::cerr << "[odgi::degree] error: please specify a valid string (LEN:MIN:MAX) for the -W/--windows-out option." << std::endl;
             return 1;
         }
