@@ -112,7 +112,7 @@ int main_degree(int argc, char** argv) {
     uint64_t windows_in_len = 0, windows_in_min = 0, windows_in_max = 0;
     bool windows_in_only_tips = false;
     if (_windows_in) {
-        if (!algorithms::check_and_get_windows_in_out_parameter(args::get(_windows_in), windows_in_len, windows_in_min, windows_in_max, windows_in_only_tips)) {
+        if (!algorithms::check_and_get_windows_in_out_parameter(args::get(_windows_in)+":0", windows_in_len, windows_in_min, windows_in_max, windows_in_only_tips)) {
             std::cerr << "[odgi::degree] error: please specify a valid string (LEN:MIN:MAX) for the -w/--windows-in option." << std::endl;
             return 1;
         }
@@ -121,7 +121,7 @@ int main_degree(int argc, char** argv) {
     uint64_t windows_out_len = 0, windows_out_min = 0, windows_out_max = 0;
     bool windows_out_only_tips = false;
     if (_windows_out) {
-        if (!algorithms::check_and_get_windows_in_out_parameter(args::get(_windows_out), windows_out_len, windows_out_min, windows_out_max, windows_out_only_tips)) {
+        if (!algorithms::check_and_get_windows_in_out_parameter(args::get(_windows_out)+":0", windows_out_len, windows_out_min, windows_out_max, windows_out_only_tips)) {
             std::cerr << "[odgi::degree] error: please specify a valid string (LEN:MIN:MAX) for the -W/--windows-out option." << std::endl;
             return 1;
         }
