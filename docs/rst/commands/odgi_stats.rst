@@ -33,7 +33,7 @@ Summary Options
 
 | **-S, --summarize**
 | Summarize the graph properties and dimensions. Print to stdout the
-  #nucleotides, #nodes, #edges and #paths in a tab-delimited format.
+  #nucleotides, #nodes, #edges, #paths, and #steps in a tab-delimited format.
 
 | **-W, --weak-connected-components**
 | Shows the properties of the weakly connected components.
