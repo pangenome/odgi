@@ -335,8 +335,10 @@ namespace odgi {
 
         omp_set_num_threads((int) num_threads);
 
-        auto prep_graph = [](graph_t &source, const std::vector<path_handle_t>& source_paths,
+        auto prep_graph = [](
+                             graph_t &source, const std::vector<path_handle_t>& source_paths,
                              const std::vector<path_handle_t>& lace_paths, graph_t &subgraph,
+                             const std::vector<odgi::path_range_t>& path_ranges,
                              const uint64_t context_steps, const uint64_t context_bases, const bool full_range, const bool inverse,
                              const uint64_t max_dist_subpaths, const uint64_t num_iterations,
                              const uint64_t num_threads, const bool show_progress) {
@@ -359,21 +361,82 @@ namespace odgi {
                                                                                  : "");
             }
 
+            if (inverse) {
+                unordered_set<nid_t> node_ids_to_ignore;
+                subgraph.for_each_handle([&](const handle_t &h) {
+                    node_ids_to_ignore.insert(subgraph.get_id(h));
+                });
+
+                std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress;
+                if (show_progress) {
+                    progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+                            source.get_node_count() - node_ids_to_ignore.size(), "[odgi::extract] inverting the query criteria");
+                }
+
+                subgraph.clear();
+
+                source.for_each_handle([&](const handle_t &h) {
+                    nid_t id = source.get_id(h);
+                    if (node_ids_to_ignore.count(id) <= 0) {
+                        subgraph.create_handle(source.get_sequence(source.get_handle(id)), id);
+
+                        if (show_progress) {
+                            progress->increment(1);
+                        }
+                    }
+                });
+
+                if (show_progress) {
+                    progress->finish();
+                }
+
+                // Invert the path ranges too
+                auto path_length_table = algorithms::get_path_length(source);
+
+                std::vector<odgi::path_range_t> inverted_ranges;
+                // On average, each interval (in the middle) would generate two intervals (on the sides) when inverted
+                inverted_ranges.reserve(path_ranges.size() * 2);
+                for (auto &path_range : path_ranges) {
+                    const path_handle_t path_handle = path_range.begin.path;
+                    const uint64_t path_length = path_length_table[path_handle];
+
+                    if (path_range.begin.offset > 0) {
+                        inverted_ranges.push_back({
+                            { path_handle, 0, false },
+                            { path_handle, path_range.begin.offset, false },
+                            path_range.is_rev,
+                            path_range.name == "." ? "." : path_range.name + "-1",
+                            ""
+                        });
+                    }
+
+                    if (path_range.end.offset < path_length) {
+                        inverted_ranges.push_back({
+                            { path_handle, path_range.end.offset, false },
+                            { path_handle, path_length, false },
+                            path_range.is_rev,
+                            path_range.name == "." ? "." : path_range.name + "-2",
+                            ""
+                        });
+                    }
+                }
+            }
+
             if (max_dist_subpaths > 0) {
                 // Iterate multiple times to merge subpaths which became mergeable during the first iteration where new nodes were added
                 for (uint8_t i = 0; i < num_iterations; ++i) {
                     std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress;
                     if (show_progress) {
                         progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
-                            source.get_path_count(), "[odgi::extract] merge subpaths closer than " + std::to_string(max_dist_subpaths) + " bps - iteration " +
-                                                     std::to_string(i + 1) + " (max " + std::to_string(num_iterations) + ")");
+                                source.get_path_count(), "[odgi::extract] merge subpaths closer than " + std::to_string(max_dist_subpaths) + " bps - iteration " +
+                                                         std::to_string(i + 1) + " (max " + std::to_string(num_iterations) + ")");
                     }
 
                     // The last step is not included
                     std::vector<std::pair<step_handle_t, step_handle_t>> short_missing_subpaths;
-                    
+
                     // Search not included subpaths (in parallel)
-    #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
                     for (uint64_t path_rank = 0; path_rank < source_paths.size(); ++path_rank) {
                         auto &source_path_handle = source_paths[path_rank];
                         uint64_t walked = 0;
@@ -403,7 +466,7 @@ namespace odgi {
                                 if (!in_match) {
                                     if (!ignore_subpath) {
                                         if ((end_nt - start_nt) <= max_dist_subpaths) {
-        #pragma omp critical (short_missing_subpaths)
+#pragma omp critical (short_missing_subpaths)
                                             short_missing_subpaths.push_back(std::make_pair(start_step, step));
                                         }
                                     }
@@ -449,37 +512,8 @@ namespace odgi {
                 }
             }
 
-            if (inverse) {
-                unordered_set<nid_t> node_ids_to_ignore;
-                subgraph.for_each_handle([&](const handle_t &h) {
-                    node_ids_to_ignore.insert(subgraph.get_id(h));
-                });
-
-                std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress;
-                if (show_progress) {
-                    progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
-                            source.get_node_count() - node_ids_to_ignore.size(), "[odgi::extract] inverting the query criteria");
-                }
-
-                subgraph.clear();
-
-                source.for_each_handle([&](const handle_t &h) {
-                    nid_t id = source.get_id(h);
-                    if (node_ids_to_ignore.count(id) <= 0) {
-                        subgraph.create_handle(source.get_sequence(source.get_handle(id)), id);
-
-                        if (show_progress) {
-                            progress->increment(1);
-                        }
-                    }
-                });
-
-                if (show_progress) {
-                    progress->finish();
-                }
-
-                // TODO: INVERT THE BED RANGES TOO?
-            }
+            // TODO: insert the subpath scorrespondign to the path ranges (if any)
+            // TODO: pass to prep_graph a vector of paths of which no subpaths have to be added
 
             // rewrite lace paths so that skipped regions are represented as new nodes that we then add to our subgraph
             if (!lace_paths.empty()) {
@@ -577,7 +611,7 @@ namespace odgi {
 
                 algorithms::extract_path_range(graph, path_handle, path_range.begin.offset, path_range.end.offset, subgraph);
 
-                prep_graph(graph, paths, lace_paths, subgraph, context_steps, context_bases, _full_range, false, args::get(_max_dist_subpaths), num_iterations, num_threads, show_progress);
+                prep_graph(graph, paths, lace_paths, subgraph, {path_range}, context_steps, context_bases, _full_range, false, args::get(_max_dist_subpaths), num_iterations, num_threads, show_progress);
 
                 const string filename = graph.get_path_name(path_range.begin.path) + ":" + to_string(path_range.begin.offset) + "-" + to_string(path_range.end.offset) + ".og";
 
@@ -647,7 +681,7 @@ namespace odgi {
                 }
             }
 
-            prep_graph(graph, paths, lace_paths, subgraph, context_steps, context_bases, _full_range, _inverse, args::get(_max_dist_subpaths), num_iterations, num_threads, show_progress);
+            prep_graph(graph, paths, lace_paths, subgraph, path_ranges, context_steps, context_bases, _full_range, _inverse, args::get(_max_dist_subpaths), num_iterations, num_threads, show_progress);
 
             {
                 const std::string outfile = args::get(og_out_file);
