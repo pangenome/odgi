@@ -52,17 +52,17 @@ namespace odgi {
             return out_name;
         }
 
+        path_handle_t create_subpath(graph_t &subgraph, const string &subpath_name, const bool is_circular) {
+            if (subgraph.has_path(subpath_name)) {
+                subgraph.destroy_path(subgraph.get_path_handle(subpath_name));
+            }
+            return subgraph.create_path_handle(subpath_name, is_circular);
+        };
+
         void add_subpaths_to_subgraph(const graph_t &source, const std::vector<path_handle_t> source_paths,
                                       graph_t &subgraph, const uint64_t num_threads,
                                       const std::string &progress_message) {
             const bool show_progress = !progress_message.empty();
-
-            auto create_subpath = [](graph_t &subgraph, const string &subpath_name, const bool is_circular) {
-                if (subgraph.has_path(subpath_name)) {
-                    subgraph.destroy_path(subgraph.get_path_handle(subpath_name));
-                }
-                path_handle_t path = subgraph.create_path_handle(subpath_name, is_circular);
-            };
 
             std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress;
             if (show_progress) {
