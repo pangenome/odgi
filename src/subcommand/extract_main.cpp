@@ -66,7 +66,7 @@ namespace odgi {
                                "Be careful to use it with very complex graphs.",
                                {'E', "full-range"});
         args::ValueFlag<std::string> _path_names_file(extract_opts, "FILE",
-                                                      "List of paths to consider in the extraction. The FILE must "
+                                                      "List of paths to keep in the extracted graph. The FILE must "
                                                       "contain one path name per line and a subset of all paths can be specified.",
                                                       {'p', "paths-to-extract"});
         args::ValueFlag<std::string> _lace_paths_file(extract_opts, "FILE",
@@ -390,7 +390,7 @@ namespace odgi {
         auto prep_graph = [&shift](
                              graph_t &source, const std::vector<path_handle_t>& source_paths,
                              const std::vector<path_handle_t>& lace_paths, graph_t &subgraph,
-                             const std::vector<odgi::path_range_t> path_ranges, const std::vector<std::pair<uint64_t, uint64_t>> pangenomic_ranges,
+                             std::vector<odgi::path_range_t> path_ranges, std::vector<std::pair<uint64_t, uint64_t>> pangenomic_ranges,
                              const uint64_t context_steps, const uint64_t context_bases, const bool full_range, const bool inverse,
                              const uint64_t max_dist_subpaths, const uint64_t num_iterations,
                              const uint64_t num_threads, const bool show_progress) {
@@ -449,7 +449,7 @@ namespace odgi {
                         path_ranges.size(), "[odgi::extract] extracting path ranges");
             }
 
-            // Collect handles in path ranges (it is assumed they were already inverted outside, if needed)
+            // Collect handles in path/pangenomic ranges (it is assumed they were already inverted outside, if needed)
             {
                 atomicbitvector::atomic_bv_t keep_bv(source.get_node_count()+1);
 
@@ -582,6 +582,7 @@ namespace odgi {
                 }
             }
 
+            // ----------------------------------------------------------------------------------
             // Insert the subpaths corresponding to the path ranges (if any)
             // Create subpaths
             std::vector<path_handle_t> subpaths_from_path_ranges;
@@ -616,6 +617,7 @@ namespace odgi {
                             );
                         });
             }
+            // ----------------------------------------------------------------------------------
 
             // rewrite lace paths so that skipped regions are represented as new nodes that we then add to our subgraph
             if (!lace_paths.empty()) {

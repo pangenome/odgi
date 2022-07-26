@@ -75,7 +75,7 @@ Extract Options
   very complex graphs.
 
 | **-p, --paths-to-extract**\ =\ *FILE*
-| List of paths to consider in the extraction. The *FILE* must contain one
+| List of paths to keep in the extracted graph. The *FILE* must contain one
   path name per line and a subset of all paths can be specified.
 
 | **-R, --lace-paths**\ =\ *FILE*
