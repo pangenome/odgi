@@ -78,7 +78,7 @@ Extract Options
 | List of paths to keep in the extracted graph. The *FILE* must contain one
   path name per line and a subset of all paths can be specified.
  Paths specified in the input path ranges (with ``-r/--path-range`` and/or ``-b/--bed-file``)
- will be keep in any case.
+ will be kept in any case.
 
 | **-R, --lace-paths**\ =\ *FILE*
 | List of paths to fully retain in the extracted graph. Must contain one
