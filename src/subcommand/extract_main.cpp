@@ -464,23 +464,22 @@ namespace odgi {
                             [&](const handle_t& handle) {
                                 keep_bv.set(source.get_id(handle) - shift);
                             });
-                    if (!pangenomic_ranges.empty()) {
-                        uint64_t pos = 0;
-                        source.for_each_handle([&](const handle_t &h) {
-                            const uint64_t hl = source.get_length(h);
-
-                            for (auto &pan_range : pangenomic_ranges) {
-                                if (pos + hl >= pan_range.first && pos <= pan_range.second ) {
-                                    keep_bv.set(source.get_id(h) - shift);
-                                    break;
-                                }
-                            }
-
-                            pos += hl;
-                        });
-                    }
                 }
+                if (!pangenomic_ranges.empty()) {
+                    uint64_t pos = 0;
+                    source.for_each_handle([&](const handle_t &h) {
+                        const uint64_t hl = source.get_length(h);
 
+                        for (auto &pan_range : pangenomic_ranges) {
+                            if (pos + hl >= pan_range.first && pos <= pan_range.second ) {
+                                keep_bv.set(source.get_id(h) - shift);
+                                break;
+                            }
+                        }
+
+                        pos += hl;
+                    });
+                }
                 for (auto id_shifted : keep_bv) {
                     const handle_t h = source.get_handle(id_shifted + shift);
                     subgraph.create_handle(source.get_sequence(h),
