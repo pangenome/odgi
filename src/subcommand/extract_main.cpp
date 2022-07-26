@@ -415,7 +415,9 @@ namespace odgi {
                                                                                                                 : "");
             }
 
-            if (inverse) {
+            // Check if there are nodes in the subgraph, to avoid extracting the whole graph
+            // when nodes with functionality other than pangenomic paths/ranges are not specified
+            if (inverse && subgraph.get_path_count() > 0) {
                 unordered_set<nid_t> node_ids_to_ignore;
                 subgraph.for_each_handle([&](const handle_t &h) {
                     node_ids_to_ignore.insert(subgraph.get_id(h));
