@@ -93,6 +93,7 @@ color_t layer(const color_t& a, const color_t& b, const double& f);
 color_t mix(const color_t& a, const color_t& b, const double& f);
 
 const color_t COLOR_BLACK = { 0xff000000 };
+const color_t COLOR_LIGHTGRAY = { 0xffD3D3D3 };
 const color_t COLOR_WHITE = { 0xffffffff };
 
 # define COLOR_MAX  255
