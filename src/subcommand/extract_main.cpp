@@ -67,7 +67,9 @@ namespace odgi {
                                {'E', "full-range"});
         args::ValueFlag<std::string> _path_names_file(extract_opts, "FILE",
                                                       "List of paths to keep in the extracted graph. The FILE must "
-                                                      "contain one path name per line and a subset of all paths can be specified.",
+                                                      "contain one path name per line and a subset of all paths can be specified. "
+                                                      "Paths specified in the input path ranges (with -r/--path-range and/or -b/--bed-file) "
+                                                      "will be keep in any case.",
                                                       {'p', "paths-to-extract"});
         args::ValueFlag<std::string> _lace_paths_file(extract_opts, "FILE",
                                                        "List of paths to fully retain in the extracted graph. Must "
@@ -388,7 +390,7 @@ namespace odgi {
         omp_set_num_threads((int) num_threads);
 
         auto prep_graph = [&shift](
-                             graph_t &source, const std::vector<path_handle_t>& source_paths,
+                             graph_t &source, std::vector<path_handle_t>* source_paths,
                              const std::vector<path_handle_t>& lace_paths, graph_t &subgraph,
                              std::vector<odgi::path_range_t> path_ranges, std::vector<std::pair<uint64_t, uint64_t>> pangenomic_ranges,
                              const uint64_t context_steps, const uint64_t context_bases, const bool full_range, const bool inverse,
@@ -491,7 +493,20 @@ namespace odgi {
                 progress->finish();
             }
 
-            // TODO: pass to add_subpaths_to_subgraph a vector of paths of which no subpaths have to be searched/filled added
+            // These paths are treated differently: only the specified ranges are included in the extracted graph
+            std::vector<path_handle_t> source_paths_from_path_ranges;
+            for (auto &path_range : path_ranges) {
+                source_paths_from_path_ranges.push_back(path_range.begin.path);
+            }
+
+            // `max_dist_subpaths` and `add_subpaths_to_subgraph` have to work with the paths not specified in the
+            // input path ranges, preventing their possible fragmentation.
+            std::sort(source_paths_from_path_ranges.begin(), source_paths_from_path_ranges.end());
+            source_paths->erase(std::remove_if(source_paths->begin(), source_paths->end(), [&](const auto&x) {
+                return std::binary_search(source_paths_from_path_ranges.begin(), source_paths_from_path_ranges.end(), x);
+            }), source_paths->end());
+
+
             if (max_dist_subpaths > 0) {
                 // Iterate multiple times to merge subpaths which became mergeable during the first iteration where new nodes were added
                 for (uint8_t i = 0; i < num_iterations; ++i) {
@@ -507,8 +522,8 @@ namespace odgi {
 
                     // Search not included subpaths (in parallel)
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
-                    for (uint64_t path_rank = 0; path_rank < source_paths.size(); ++path_rank) {
-                        auto &source_path_handle = source_paths[path_rank];
+                    for (uint64_t path_rank = 0; path_rank < source_paths->size(); ++path_rank) {
+                        auto &source_path_handle = (*source_paths)[path_rank];
                         uint64_t walked = 0;
 
                         // check if the nodes are in the output subgraph
@@ -633,10 +648,8 @@ namespace odgi {
                                                                            ? "[odgi::extract] adding connecting edges"
                                                                            : "");
 
-            // TODO: pass to add_subpaths_to_subgraph a vector of paths of which no subpaths have to be added
-
             // Add subpaths covering the collected handles
-            algorithms::add_subpaths_to_subgraph(source, source_paths, subgraph, num_threads,
+            algorithms::add_subpaths_to_subgraph(source, *source_paths, subgraph, num_threads,
                                                  show_progress ? "[odgi::extract] adding subpaths" : "");
 
             std::vector<path_handle_t> subpaths;
@@ -715,7 +728,7 @@ namespace odgi {
                               << path_range.end.offset << std::endl;
                 }
 
-                prep_graph(graph, paths, lace_paths, subgraph, {path_range}, *pangenomic_ranges, context_steps, context_bases, _full_range, false, args::get(_max_dist_subpaths), num_iterations, num_threads, show_progress);
+                prep_graph(graph, &paths, lace_paths, subgraph, {path_range}, *pangenomic_ranges, context_steps, context_bases, _full_range, false, args::get(_max_dist_subpaths), num_iterations, num_threads, show_progress);
 
                 const string filename = graph.get_path_name(path_range.begin.path) + ":" + to_string(path_range.begin.offset) + "-" + to_string(path_range.end.offset) + ".og";
 
@@ -742,7 +755,7 @@ namespace odgi {
                 }
             }
 
-            prep_graph(graph, paths, lace_paths, subgraph, *path_ranges, *pangenomic_ranges, context_steps, context_bases, _full_range, _inverse, args::get(_max_dist_subpaths), num_iterations, num_threads, show_progress);
+            prep_graph(graph, &paths, lace_paths, subgraph, *path_ranges, *pangenomic_ranges, context_steps, context_bases, _full_range, _inverse, args::get(_max_dist_subpaths), num_iterations, num_threads, show_progress);
 
             {
                 const std::string outfile = args::get(og_out_file);
