@@ -288,7 +288,7 @@ namespace odgi {
             }
         }
 
-        std::pair<uint64_t, uint64_t> pangenomic_range = {0, 0};
+        std::vector<std::pair<uint64_t, uint64_t>> input_pangenomic_ranges;
         if (_pangenomic_range && !args::get(_pangenomic_range).empty()) {
             const std::string pangenomic_range_str = args::get(_pangenomic_range);
 
@@ -312,8 +312,7 @@ namespace odgi {
                 return 1;
             }
 
-            pangenomic_range.first = stoull(splitted[0]);
-            pangenomic_range.second = stoull(splitted[1]);
+            input_pangenomic_ranges.push_back({stoull(splitted[0]), stoull(splitted[1])});
         }
 
         if (_split_subgraphs && input_path_ranges.empty()) {
@@ -322,9 +321,9 @@ namespace odgi {
             exit(1);
         }
 
+        // Path ranges inversion
         std::vector<odgi::path_range_t>* path_ranges;
         if (_inverse && !input_path_ranges.empty()) {
-            // Invert the path ranges too
             auto path_length_table = algorithms::get_path_length(graph);
 
             // On average, each interval (in the middle) would generate two intervals (on the sides) when inverted
@@ -361,6 +360,27 @@ namespace odgi {
             path_ranges = &input_path_ranges;
         }
 
+        // Pangenomic range inversion
+        std::vector<std::pair<uint64_t, uint64_t>>* pangenomic_ranges;
+        if (_inverse && _pangenomic_range) {
+            uint64_t pangenome_len = 0;
+            graph.for_each_handle([&](const handle_t &h) {
+                pangenome_len += graph.get_length(h);
+            });
+
+            pangenomic_ranges = new std::vector<std::pair<uint64_t, uint64_t>>();
+
+            if (input_pangenomic_ranges[0].first > 0) {
+                pangenomic_ranges->push_back({0, input_pangenomic_ranges[0].first});
+            }
+            if (input_pangenomic_ranges[0].second < pangenome_len) {
+                pangenomic_ranges->push_back({input_pangenomic_ranges[0].second, pangenome_len});
+            }
+        } else {
+            pangenomic_ranges = &input_pangenomic_ranges;
+        }
+
+
         const bool show_progress = args::get(_show_progress);
         const uint64_t context_steps = _context_steps ? args::get(_context_steps) : 0;
         const uint64_t context_bases = _context_bases ? args::get(_context_bases) : 0;
@@ -370,7 +390,7 @@ namespace odgi {
         auto prep_graph = [&shift](
                              graph_t &source, const std::vector<path_handle_t>& source_paths,
                              const std::vector<path_handle_t>& lace_paths, graph_t &subgraph,
-                             const std::vector<odgi::path_range_t> path_ranges,
+                             const std::vector<odgi::path_range_t> path_ranges, const std::vector<std::pair<uint64_t, uint64_t>> pangenomic_ranges,
                              const uint64_t context_steps, const uint64_t context_bases, const bool full_range, const bool inverse,
                              const uint64_t max_dist_subpaths, const uint64_t num_iterations,
                              const uint64_t num_threads, const bool show_progress) {
@@ -444,6 +464,21 @@ namespace odgi {
                             [&](const handle_t& handle) {
                                 keep_bv.set(source.get_id(handle) - shift);
                             });
+                    if (!pangenomic_ranges.empty()) {
+                        uint64_t pos = 0;
+                        source.for_each_handle([&](const handle_t &h) {
+                            const uint64_t hl = source.get_length(h);
+
+                            for (auto &pan_range : pangenomic_ranges) {
+                                if (pos + hl >= pan_range.first && pos <= pan_range.second ) {
+                                    keep_bv.set(source.get_id(h) - shift);
+                                    break;
+                                }
+                            }
+
+                            pos += hl;
+                        });
+                    }
                 }
 
                 for (auto id_shifted : keep_bv) {
@@ -679,7 +714,7 @@ namespace odgi {
                               << path_range.end.offset << std::endl;
                 }
 
-                prep_graph(graph, paths, lace_paths, subgraph, {path_range}, context_steps, context_bases, _full_range, false, args::get(_max_dist_subpaths), num_iterations, num_threads, show_progress);
+                prep_graph(graph, paths, lace_paths, subgraph, {path_range}, *pangenomic_ranges, context_steps, context_bases, _full_range, false, args::get(_max_dist_subpaths), num_iterations, num_threads, show_progress);
 
                 const string filename = graph.get_path_name(path_range.begin.path) + ":" + to_string(path_range.begin.offset) + "-" + to_string(path_range.end.offset) + ".og";
 
@@ -694,29 +729,6 @@ namespace odgi {
         } else {
             graph_t subgraph;
 
-            // Collect handles inside the specified pangenomic range
-            {
-                atomicbitvector::atomic_bv_t keep_bv(graph.get_node_count()+1);
-
-                if (_pangenomic_range) {
-                    uint64_t len = 0;
-                    graph.for_each_handle([&](const handle_t &h) {
-                        const uint64_t hl = graph.get_length(h);
-
-                        if (len <= pangenomic_range.second && pangenomic_range.first <= len + hl) {
-                            keep_bv.set(graph.get_id(h) - shift);
-                        }
-
-                        len += hl;
-                    });
-                }
-
-                for (auto id_shifted : keep_bv) {
-                    const handle_t h = graph.get_handle(id_shifted + shift);
-                    subgraph.create_handle(graph.get_sequence(h), id_shifted + shift);
-                }
-            }
-
             if (args::get(_target_node)) {
                 check_and_create_handle(graph, subgraph, args::get(_target_node));
             }
@@ -729,7 +741,7 @@ namespace odgi {
                 }
             }
 
-            prep_graph(graph, paths, lace_paths, subgraph, *path_ranges, context_steps, context_bases, _full_range, _inverse, args::get(_max_dist_subpaths), num_iterations, num_threads, show_progress);
+            prep_graph(graph, paths, lace_paths, subgraph, *path_ranges, *pangenomic_ranges, context_steps, context_bases, _full_range, _inverse, args::get(_max_dist_subpaths), num_iterations, num_threads, show_progress);
 
             {
                 const std::string outfile = args::get(og_out_file);
