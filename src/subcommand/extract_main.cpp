@@ -117,8 +117,7 @@ namespace odgi {
         }
 
         if (!_max_dist_subpaths) {
-            std::cerr << "[odgi::extract] error: please specify the expanding context either in steps (with -c/--context-steps) or "
-                         "in bases (-L/--context-bases). Values equal to or greater than 0 are allowed." << std::endl;
+            std::cerr << "[odgi::extract] error: please specify -d/--max-distance-subpaths. Values equal to or greater than 0 are allowed." << std::endl;
             return 1;
         }
         if ((!_max_dist_subpaths || args::get(_max_dist_subpaths) == 0) && _num_iterations) {
