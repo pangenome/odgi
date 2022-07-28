@@ -119,14 +119,15 @@ int main_flip(int argc, char **argv) {
         no_flips = load_paths(args::get(_no_flips));
     }
 
-    algorithms::flip_paths(graph, no_flips);
+    graph_t into;
+    algorithms::flip_paths(graph, into, no_flips);
 
     const std::string outfile = args::get(og_out_file);
     if (outfile == "-") {
-        graph.serialize(std::cout);
+        into.serialize(std::cout);
     } else {
         ofstream f(outfile.c_str());
-        graph.serialize(f);
+        into.serialize(f);
         f.close();
     }
 
