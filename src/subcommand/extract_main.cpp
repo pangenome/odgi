@@ -28,15 +28,18 @@ namespace odgi {
         args::ArgumentParser parser("Extract subgraphs or parts of a graph defined by query criteria.");
         args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
         args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
-        args::ValueFlag<uint64_t> _context_steps(mandatory_opts, "N",
-                                                 "The number of steps (nodes) away from our initial subgraph that we should collect.",
-                                                 {'c', "context-steps"});
-        args::ValueFlag<uint64_t> _context_bases(mandatory_opts, "N",
-                                                 "The number of bases away from our initial subgraph that we should collect.",
-                                                 {'L', "context-bases"});
         args::Group graph_files_io_opts(parser, "[ Graph Files IO ]");
         args::ValueFlag<std::string> og_out_file(graph_files_io_opts, "FILE", "Store all subgraphs in this FILE. The file name usually ends with *.og*.",
                                                  {'o', "out"});
+        args::ValueFlag<uint64_t> _max_dist_subpaths(mandatory_opts, "N",
+                                                     "Maximum distance between subpaths allowed for merging them. "
+                                                     "It reduces the fragmentation of unspecified paths in the input path ranges. "
+                                                     "Set 0 to disable it.",
+                                                     {'d', "max-distance-subpaths"});
+        args::ValueFlag<uint64_t> _num_iterations(mandatory_opts, "N",
+                                                  "Maximum number of iterations in attempting to merge close subpaths. "
+                                                  "It stops early if during an iteration no subpaths were merged [default: 3].",
+                                                  {'e', "max-merging-iterations"});
         args::Group extract_opts(parser, "[ Extract Options ]");
         args::Flag _split_subgraphs(extract_opts, "split_subgraphs",
                                     "Instead of writing the target subgraphs into a single graph, "
@@ -48,6 +51,12 @@ namespace odgi {
         args::ValueFlag<uint64_t> _target_node(extract_opts, "ID", "A single node ID from which to begin our traversal.",
                                                {'n', "node"});
         args::ValueFlag<std::string> _node_list(extract_opts, "FILE", "A file with one node id per line. The node specified will be extracted from the input graph.", {'l', "node-list"});
+        args::ValueFlag<uint64_t> _context_steps(extract_opts, "N",
+                                                 "The number of steps (nodes) away from our initial subgraph that we should collect [default: 0 (disabled)]",
+                                                 {'c', "context-steps"});
+        args::ValueFlag<uint64_t> _context_bases(extract_opts, "N",
+                                                 "The number of bases away from our initial subgraph that we should collect [default: 0 (disabled)]",
+                                                 {'L', "context-bases"});
         args::ValueFlag<std::string> _path_range(extract_opts, "STRING",
                                                  "Find the node(s) in the specified path range TARGET=path[:pos1[-pos2]] "
                                                  "(0-based coordinates).", {'r', "path-range"});
@@ -75,13 +84,6 @@ namespace odgi {
                                                        "List of paths to fully retain in the extracted graph. Must "
                                                        "contain one path name per line and a subset of all paths can be specified.",
                                                       {'R', "lace-paths"});
-        args::ValueFlag<uint64_t> _max_dist_subpaths(extract_opts, "N",
-                                                 "Maximum distance between subpaths allowed for merging them [default: 0 (disabled)].",
-                                                 {'d', "max-distance-subpaths"});
-        args::ValueFlag<uint64_t> _num_iterations(extract_opts, "N",
-                                                 "Maximum number of iterations in attempting to merge close subpaths. "
-                                                 "It stops early if during an iteration no subpaths were merged [default: 3].",
-                                                 {'e', "max-merging-iterations"});
         args::Group threading_opts(parser, "[ Threading ]");
         args::ValueFlag<uint64_t> nthreads(threading_opts, "N", "Number of threads to use for parallel operations.",
                                            {'t', "threads"});
@@ -114,20 +116,19 @@ namespace odgi {
             return 1;
         }
 
-        if (!_context_steps && !_context_bases) {
+        if (!_max_dist_subpaths) {
             std::cerr << "[odgi::extract] error: please specify the expanding context either in steps (with -c/--context-steps) or "
                          "in bases (-L/--context-bases). Values equal to or greater than 0 are allowed." << std::endl;
+            return 1;
+        }
+        if ((!_max_dist_subpaths || args::get(_max_dist_subpaths) == 0) && _num_iterations) {
+            std::cerr << "[odgi::extract] error: specified -e/--max-merging-iterations without specifying -d/--max-distance-subpaths greater than 0." << std::endl;
             return 1;
         }
 
         if (_context_steps && _context_bases) {
             std::cerr << "[odgi::extract] error: please specify the expanding context either in steps (with -c/--context-steps) or "
                          "in bases (-L/--context-bases), not both." << std::endl;
-            return 1;
-        }
-
-        if ((!_max_dist_subpaths || args::get(_max_dist_subpaths) == 0) && _num_iterations) {
-            std::cerr << "[odgi::extract] error: specified -e/--max-merging-iterations without specifying -d/--max-distance-subpaths greater than 0." << std::endl;
             return 1;
         }
 
