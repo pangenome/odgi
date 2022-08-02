@@ -749,22 +749,29 @@ namespace odgi {
 
         {
             std::function<bool(const handle_t)> is_a_handle_to_hide;
-            if (path_count < graph.get_path_count()){
-                is_a_handle_to_hide = [&](const handle_t &h) {
-                    return graph.for_each_step_on_handle(h, [&](const step_handle_t &step) {
-                        auto path_handle = graph.get_path_handle_of_step(step);
-                        if (path_layout_y[as_integer(path_handle) - 1] >= 0) {
-                            return false;
-                        }
+			// FIXME
+			if (compress) {
+				is_a_handle_to_hide = [&](const handle_t &h) {
+					return false;
+				};
+			} else {
+				if (path_count < graph.get_path_count()) {
+					is_a_handle_to_hide = [&](const handle_t &h) {
+						return graph.for_each_step_on_handle(h, [&](const step_handle_t &step) {
+							auto path_handle = graph.get_path_handle_of_step(step);
+							if (path_layout_y[as_integer(path_handle) - 1] >= 0) {
+								return false;
+							}
 
-                        return true;
-                    });
-                };
-            }else{
-                is_a_handle_to_hide = [&](const handle_t &h) {
-                    return false;
-                };
-            }
+							return true;
+						});
+					};
+				} else {
+					is_a_handle_to_hide = [&](const handle_t &h) {
+						return false;
+					};
+				}
+			}
 
             /*
             if (_binned_mode){
@@ -923,6 +930,7 @@ namespace odgi {
 
 			});
 			std::string path_name = "COMPRESSED_MODE";
+			// TODO we might be able to skip this directly
 			picosha2::byte_t hashed[picosha2::k_digest_size];
 			picosha2::hash256(path_name.begin(), path_name.end(), hashed, hashed + picosha2::k_digest_size);
 
@@ -943,7 +951,6 @@ namespace odgi {
 				bool path_name_too_long = path_name.length() > num_of_chars;
 
 				uint8_t ratio = char_size / 8;
-				// FIXME?
 				uint8_t left_padding = max_num_of_chars - num_of_chars;
 
 				// TODO
