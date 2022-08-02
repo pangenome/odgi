@@ -143,8 +143,11 @@ namespace odgi {
 		/// Compressed mode
 		args::Group compressed_mode_opts(parser, "[ Compressed Mode Options ]");
 		args::Flag compress(compressed_mode_opts, "compressed", "Compress the view vertically, summarizing the path coverage across all paths dis"
-															  "playing the information using only one path 'COMPRESSED MODE'. "
-															  "Heatmap color-coding.", {'O', "compressed-mode"});
+															  "playing the information using only one path 'COMPRESSED_MODE'. "
+															  "A heatmap color-coding from https://colorbrewer2.org/#type=diverging&scheme=RdBu&n=11"
+															  " is used. Alternatively, one can enter a colorbrewer palette via "
+															  "-B, --colorbrewer-palette.", {'O', "compressed-mode"});
+
 		args::Group threading(parser, "[ Threading ]");
 		args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 		args::Group processing_info_opts(parser, "[ Processing Information ]");
@@ -749,7 +752,6 @@ namespace odgi {
 
         {
             std::function<bool(const handle_t)> is_a_handle_to_hide;
-			// FIXME
 			if (compress) {
 				is_a_handle_to_hide = [&](const handle_t &h) {
 					return false;
@@ -773,7 +775,7 @@ namespace odgi {
 				}
 			}
 
-            /*
+            /* FIXME Can we remove this?
             if (_binned_mode){
                 graph.for_each_handle([&](const handle_t &h) {
                     if (!is_a_handle_to_hide(h)){
@@ -895,7 +897,7 @@ namespace odgi {
                         hl = graph.get_length(h);
 
                         curr_len += hl;
-						// FIXME Why do we need this?
+						// FIXME @Andrea: Why do we need this?
                         p = position_map[number_bool_packing::unpack_number(h) - shift];
                         for (uint64_t k = 0; k < hl; ++k) {
                             int64_t curr_bin = (p + k) / _bin_width + 1;
@@ -911,7 +913,7 @@ namespace odgi {
         uint64_t total_links = 0;
         const bool _color_path_names_background = args::get(color_path_names_background);
 
-		// FIXME
+		// FIXME The new part starts here :)
 		if (compress) {
 			std::map <uint64_t, algorithms::path_info_t> bins;
 			graph.for_each_path_handle([&](const path_handle_t &path) {
@@ -929,60 +931,63 @@ namespace odgi {
 
 
 			});
+
+			/// path name part
 			std::string path_name = "COMPRESSED_MODE";
 			// TODO we might be able to skip this directly
 			picosha2::byte_t hashed[picosha2::k_digest_size];
 			picosha2::hash256(path_name.begin(), path_name.end(), hashed, hashed + picosha2::k_digest_size);
 
-			uint8_t path_r = hashed[24];
-			uint8_t path_g = hashed[8];
-			uint8_t path_b = hashed[16];
-			float path_r_f = (float) path_r / (float) (std::numeric_limits<uint8_t>::max());
-			float path_g_f = (float) path_g / (float) (std::numeric_limits<uint8_t>::max());
-			float path_b_f = (float) path_b / (float) (std::numeric_limits<uint8_t>::max());
-			float sum = path_r_f + path_g_f + path_b_f;
-			path_r_f /= sum;
-			path_g_f /= sum;
-			path_b_f /= sum;
+			uint8_t path_r = 255;
+			uint8_t path_g = 255;
+			uint8_t path_b = 255;
 
 			uint64_t path_rank = 0;
 
-				uint8_t num_of_chars = min(path_name.length(), (uint64_t) max_num_of_chars);
-				bool path_name_too_long = path_name.length() > num_of_chars;
+			uint8_t num_of_chars = min(path_name.length(), (uint64_t) max_num_of_chars);
+			bool path_name_too_long = path_name.length() > num_of_chars;
 
-				uint8_t ratio = char_size / 8;
-				uint8_t left_padding = max_num_of_chars - num_of_chars;
+			uint8_t left_padding = max_num_of_chars - num_of_chars;
 
-				// TODO
-				/*
-				if (_color_path_names_background) {
-					for (uint32_t x = left_padding * char_size; x <= max_num_of_chars * char_size; x++) {
-						add_path_step(image_path_names, width_path_names,
-									  (double) (x + ratio) * (1.0 / scale_x), path_layout_y[path_rank], path_r,
-									  path_g, path_b);
-					}
+			// TODO Do we want this functionality?
+			// uint8_t ratio = char_size / 8;
+			/*
+			if (_color_path_names_background) {
+				for (uint32_t x = left_padding * char_size; x <= max_num_of_chars * char_size; x++) {
+					add_path_step(image_path_names, width_path_names,
+								  (double) (x + ratio) * (1.0 / scale_x), path_layout_y[path_rank], path_r,
+								  path_g, path_b);
 				}
-				 */
-				uint64_t base_y = path_layout_y[path_rank] * pix_per_path + pix_per_path / 2 - char_size / 2;
+			}
+			 */
+			uint64_t base_y = path_layout_y[path_rank] * pix_per_path + pix_per_path / 2 - char_size / 2;
 
-				for (uint16_t i = 0; i < num_of_chars; i++) {
-					uint64_t base_x = (left_padding + i) * char_size;
+			for (uint16_t i = 0; i < num_of_chars; i++) {
+				uint64_t base_x = (left_padding + i) * char_size;
 
-					auto cb = (i < num_of_chars - 1 || !path_name_too_long) ? font_5x8[path_name[i]]
-																			: font_5x8_special[TRAILING_DOTS];
+				auto cb = (i < num_of_chars - 1 || !path_name_too_long) ? font_5x8[path_name[i]]
+																		: font_5x8_special[TRAILING_DOTS];
 
-					write_character_in_matrix(
-							image_path_names, width_path_names, cb,
-							char_size,
-							base_x, base_y,
-							0, 0, 0
-					);
-				}
+				write_character_in_matrix(
+						image_path_names, width_path_names, cb,
+						char_size,
+						base_x, base_y,
+						0, 0, 0
+				);
+			}
+			/// end path name part
+
 			double x = 1.0;
 			colorbrewer::palette_t cov_colors;
 			std::vector<double> cov_cuts;
-			// TODO let the user enter the color palette
-			cov_colors = colorbrewer::get_palette("RdBu", 11);
+			// Let the user enter the color palette
+			if (colorbrewer_palette) {
+				const auto parts = split(args::get(colorbrewer_palette), ':');
+				cov_colors = colorbrewer::get_palette(parts.front(), std::stoi(parts.back()));
+			} else {
+				// we also have a default color palette https://colorbrewer2.org/#type=diverging&scheme=RdBu&n=11
+				cov_colors = colorbrewer::get_palette("RdBu", 11);
+			}
 			uint64_t i = 0;
 			cov_cuts.resize(cov_colors.size());
 			double depth = 0.5;
@@ -991,7 +996,7 @@ namespace odgi {
 				depth += 1;
 			}
 
-			for (auto& entry : bins) {
+			for (auto &entry: bins) {
 				auto &sec = entry.second;
 				auto &curr_bin = entry.first;
 				sec.mean_depth /= _bin_width;
@@ -1015,10 +1020,12 @@ namespace odgi {
 					path_b = v.blue;
 				}
 				uint64_t path_y = path_layout_y[path_rank];
-					add_path_step(image, width, curr_bin - 1 - pangenomic_start_pos, path_y,
-								  (float) path_r * x, (float) path_g * x, (float) path_b * x);
+				add_path_step(image, width, curr_bin - 1 - pangenomic_start_pos, path_y,
+							  (float) path_r * x, (float) path_g * x, (float) path_b * x);
 			}
+			/// end compressed-mode
 
+			/// default case:
 		} else {
 
 			graph.for_each_path_handle([&](const path_handle_t &path) {
