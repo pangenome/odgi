@@ -112,6 +112,24 @@ to obtain the following PNG image:
 ``-z`` changes the color palette to respect the node strandedness. Black is forward, red is reverse.
 The red bar in a path indicates that that region is inverted in that path with respect to the ``pangenome sequence``.
 
+-----------------------------------
+Summarize path coverage information
+-----------------------------------
+
+We can vertically summarize the path coverage information. This is especially useful when we have hundreds or more paths
+in the graph.
+
+.. code-block:: bash
+
+    odgi viz -i DRB1-3123.og -o DRB1-3123.og.O.png -x 500 -O
+
+to obtain the following PNG image:
+
+.. image:: /img/DRB1-3123.og.O.png
+
+A heatmap color-coding from https://colorbrewer2.org/#type=diverging&scheme=RdBu&n=11
+is used to indicate low (dark-red) or high (dark-blue) coverage. This highlights variant regions.
+
 -----------------------------
 Build the Lipoprotein A graph
 -----------------------------
