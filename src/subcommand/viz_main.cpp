@@ -512,6 +512,8 @@ namespace odgi {
 
         const std::string ignore_prefix = _ignore_prefix ? args::get(_ignore_prefix) : "";
 
+        const std::string compressed_path_name = "COMPRESSED_MODE";
+
 		// TODO hardcode one name if we want to compress the view
         auto get_path_display_name =
             [&](const path_handle_t& p) {
@@ -649,29 +651,29 @@ namespace odgi {
         std::vector<uint8_t> image_path_names;
         if (!args::get(hide_path_names) && !args::get(pack_paths) && pix_per_path >= 8) {
             uint64_t _max_num_of_chars = std::numeric_limits<uint64_t>::min();
-            if (group_paths) {
-                for (auto& prefix : prefixes) {
-                    _max_num_of_chars = max((uint64_t) _max_num_of_chars, prefix.length());
-                }
+            if (compress) {
+                _max_num_of_chars = max((uint64_t) _max_num_of_chars, compressed_path_name.length());
             } else {
-                graph.for_each_path_handle(
-                    [&](const path_handle_t &path) {
-                        int64_t path_rank = get_path_idx(path);
-                        if (path_rank >= 0 && path_layout_y[path_rank] >= 0){
-                            _max_num_of_chars = max((uint64_t) _max_num_of_chars, graph.get_path_name(path).length());
-                        }
-                    });
+                if (group_paths) {
+                    for (auto& prefix : prefixes) {
+                        _max_num_of_chars = max((uint64_t) _max_num_of_chars, prefix.length());
+                    }
+                } else {
+                    graph.for_each_path_handle(
+                            [&](const path_handle_t &path) {
+                                int64_t path_rank = get_path_idx(path);
+                                if (path_rank >= 0 && path_layout_y[path_rank] >= 0){
+                                    _max_num_of_chars = max((uint64_t) _max_num_of_chars, graph.get_path_name(path).length());
+                                }
+                            });
+                }
             }
+
             max_num_of_chars = min(_max_num_of_chars, max_num_of_characters);
 
             char_size = min((uint16_t)((pix_per_path / 8) * 8), (uint16_t) PATH_NAMES_MAX_CHARACTER_SIZE);
 
             width_path_names = max_num_of_chars * char_size + char_size / 2;
-			// FIXME
-			if (compress) {
-				width_path_names = 16 * char_size + char_size / 2;
-			}
-
             image_path_names.resize(width_path_names * (height + path_space) * 4, 255);
         }
 
@@ -925,10 +927,10 @@ namespace odgi {
 			});
 
 			/// path name part
-			std::string path_name = "COMPRESSED_MODE";
+
 			// TODO we might be able to skip this directly
 			picosha2::byte_t hashed[picosha2::k_digest_size];
-			picosha2::hash256(path_name.begin(), path_name.end(), hashed, hashed + picosha2::k_digest_size);
+			picosha2::hash256(compressed_path_name.begin(), compressed_path_name.end(), hashed, hashed + picosha2::k_digest_size);
 
 			uint8_t path_r = 255;
 			uint8_t path_g = 255;
@@ -936,8 +938,8 @@ namespace odgi {
 
 			uint64_t path_rank = 0;
 
-            const uint8_t num_of_chars = min(path_name.length(), (uint64_t) max_num_of_chars);
-            const bool path_name_too_long = path_name.length() > num_of_chars;
+            const uint8_t num_of_chars = min(compressed_path_name.length(), (uint64_t) max_num_of_chars);
+            const bool path_name_too_long = compressed_path_name.length() > num_of_chars;
 
             const uint8_t left_padding = max_num_of_chars - num_of_chars;
 
@@ -957,7 +959,7 @@ namespace odgi {
 			for (uint16_t i = 0; i < num_of_chars; i++) {
                 const uint64_t base_x = (left_padding + i) * char_size;
 
-				auto cb = (i < num_of_chars - 1 || !path_name_too_long) ? font_5x8[path_name[i]]
+				auto cb = (i < num_of_chars - 1 || !path_name_too_long) ? font_5x8[compressed_path_name[i]]
 																		: font_5x8_special[TRAILING_DOTS];
 
 				write_character_in_matrix(
