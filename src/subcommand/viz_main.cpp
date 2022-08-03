@@ -514,7 +514,6 @@ namespace odgi {
 
         const std::string compressed_path_name = "COMPRESSED_MODE";
 
-		// TODO hardcode one name if we want to compress the view
         auto get_path_display_name =
             [&](const path_handle_t& p) {
 					if (!ignore_prefix.empty()
@@ -529,7 +528,6 @@ namespace odgi {
 					}
             };
 
-		// TODO hardcode the same id if we want to compress the view
         auto get_path_idx =
             [&](const path_handle_t& p) {
 			if (compress) {
@@ -913,7 +911,7 @@ namespace odgi {
         uint64_t total_links = 0;
         const bool _color_path_names_background = args::get(color_path_names_background);
 
-		// FIXME The new part starts here :)
+		// Compressed-Mode part starts here :)
 		if (compress) {
 			std::map <uint64_t, algorithms::path_info_t> bins;
 			graph.for_each_path_handle([&](const path_handle_t &path) {
@@ -930,10 +928,6 @@ namespace odgi {
 			});
 
 			/// path name part
-
-			// TODO we might be able to skip this directly
-			picosha2::byte_t hashed[picosha2::k_digest_size];
-			picosha2::hash256(compressed_path_name.begin(), compressed_path_name.end(), hashed, hashed + picosha2::k_digest_size);
 
 			uint8_t path_r = 255;
 			uint8_t path_g = 255;
@@ -1376,7 +1370,6 @@ namespace odgi {
 				//add_point(curr_bin - 1 - pangenomic_start_pos, 0, RGB_BIN_LINKS, RGB_BIN_LINKS, RGB_BIN_LINKS);
 			});
 
-			// FIXME
 		}
 
         /*
