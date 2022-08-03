@@ -651,22 +651,25 @@ namespace odgi {
         std::vector<uint8_t> image_path_names;
         if (!args::get(hide_path_names) && !args::get(pack_paths) && pix_per_path >= 8) {
             uint64_t _max_num_of_chars = std::numeric_limits<uint64_t>::min();
+
+            if (group_paths) {
+                for (auto& prefix : prefixes) {
+                    _max_num_of_chars = max((uint64_t) _max_num_of_chars, prefix.length());
+                }
+            } else {
+                graph.for_each_path_handle(
+                        [&](const path_handle_t &path) {
+                            int64_t path_rank = get_path_idx(path);
+                            if (path_rank >= 0 && path_layout_y[path_rank] >= 0){
+                                _max_num_of_chars = max((uint64_t) _max_num_of_chars, graph.get_path_name(path).length());
+                            }
+                        });
+            }
+
+            // In this way, compress_path_name will take up the same amount of space as the paths in uncompressed mode.
+            // This makes it easier to compare/view the two viewing modes, easing interpretation.
             if (compress) {
                 _max_num_of_chars = max((uint64_t) _max_num_of_chars, compressed_path_name.length());
-            } else {
-                if (group_paths) {
-                    for (auto& prefix : prefixes) {
-                        _max_num_of_chars = max((uint64_t) _max_num_of_chars, prefix.length());
-                    }
-                } else {
-                    graph.for_each_path_handle(
-                            [&](const path_handle_t &path) {
-                                int64_t path_rank = get_path_idx(path);
-                                if (path_rank >= 0 && path_layout_y[path_rank] >= 0){
-                                    _max_num_of_chars = max((uint64_t) _max_num_of_chars, graph.get_path_name(path).length());
-                                }
-                            });
-                }
             }
 
             max_num_of_chars = min(_max_num_of_chars, max_num_of_characters);
