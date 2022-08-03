@@ -249,7 +249,7 @@ namespace odgi {
         graph_t graph;
         assert(argc > 0);
         if (!args::get(dg_in_file).empty()) {
-            std::string infile = args::get(dg_in_file);
+            const std::string infile = args::get(dg_in_file);
             if (infile == "-") {
                 graph.deserialize(std::cin);
             } else {
@@ -897,11 +897,6 @@ namespace odgi {
                         hl = graph.get_length(h);
 
                         curr_len += hl;
-						// FIXME @Andrea: Why do we need this?
-                        p = position_map[number_bool_packing::unpack_number(h) - shift];
-                        for (uint64_t k = 0; k < hl; ++k) {
-                            int64_t curr_bin = (p + k) / _bin_width + 1;
-                        }
                     });
 
                     longest_path_len = std::max(longest_path_len, curr_len);
@@ -925,11 +920,8 @@ namespace odgi {
 					for (uint64_t k = 0; k < hl; ++k) {
 						int64_t curr_bin = (p + k) / _bin_width + 1;
 						++bins[curr_bin].mean_depth;
-
 					}
 				});
-
-
 			});
 
 			/// path name part
@@ -944,10 +936,10 @@ namespace odgi {
 
 			uint64_t path_rank = 0;
 
-			uint8_t num_of_chars = min(path_name.length(), (uint64_t) max_num_of_chars);
-			bool path_name_too_long = path_name.length() > num_of_chars;
+            const uint8_t num_of_chars = min(path_name.length(), (uint64_t) max_num_of_chars);
+            const bool path_name_too_long = path_name.length() > num_of_chars;
 
-			uint8_t left_padding = max_num_of_chars - num_of_chars;
+            const uint8_t left_padding = max_num_of_chars - num_of_chars;
 
 			// TODO Do we want this functionality?
 			// uint8_t ratio = char_size / 8;
@@ -960,10 +952,10 @@ namespace odgi {
 				}
 			}
 			 */
-			uint64_t base_y = path_layout_y[path_rank] * pix_per_path + pix_per_path / 2 - char_size / 2;
+            const uint64_t base_y = path_layout_y[path_rank] * pix_per_path + pix_per_path / 2 - char_size / 2;
 
 			for (uint16_t i = 0; i < num_of_chars; i++) {
-				uint64_t base_x = (left_padding + i) * char_size;
+                const uint64_t base_x = (left_padding + i) * char_size;
 
 				auto cb = (i < num_of_chars - 1 || !path_name_too_long) ? font_5x8[path_name[i]]
 																		: font_5x8_special[TRAILING_DOTS];
@@ -1194,11 +1186,11 @@ namespace odgi {
 					}
 
 					if (char_size >= 8) {
-						uint8_t num_of_chars = min(path_name.length(), (uint64_t) max_num_of_chars);
-						bool path_name_too_long = path_name.length() > num_of_chars;
+                        const uint8_t num_of_chars = min(path_name.length(), (uint64_t) max_num_of_chars);
+                        const bool path_name_too_long = path_name.length() > num_of_chars;
 
-						uint8_t ratio = char_size / 8;
-						uint8_t left_padding = max_num_of_chars - num_of_chars;
+                        const uint8_t ratio = char_size / 8;
+						const uint8_t left_padding = max_num_of_chars - num_of_chars;
 
 						if (_color_path_names_background) {
 							for (uint32_t x = left_padding * char_size; x <= max_num_of_chars * char_size; x++) {
@@ -1208,7 +1200,7 @@ namespace odgi {
 							}
 						}
 
-						uint64_t base_y = path_layout_y[path_rank] * pix_per_path + pix_per_path / 2 - char_size / 2;
+                        const uint64_t base_y = path_layout_y[path_rank] * pix_per_path + pix_per_path / 2 - char_size / 2;
 
 						for (uint16_t i = 0; i < num_of_chars; i++) {
 							uint64_t base_x = (left_padding + i) * char_size;
