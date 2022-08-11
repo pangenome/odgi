@@ -14,8 +14,7 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-The odgi flip command converts BED records against graph paths into new paths labeled by the BED record name.
-Flip allows us to import genome annotations as paths, and is useful to produce input to odgi untangle.
+The odgi flip command flips paths around if they tend to be in the reverse complement orientation relative to the graph.
 
 OPTIONS
 =======
