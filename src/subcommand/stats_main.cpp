@@ -636,8 +636,8 @@ int main_stats(int argc, char** argv) {
 
                         if (layout_in_file) {
                             // 2D metric
-                            double dx = X[2 * (unpacked_a - shift) + number_bool_packing::unpack_number(h)] - X[2 * (unpacked_b - shift) + number_bool_packing::unpack_bit(i)];
-                            double dy = Y[2 * (unpacked_a - shift) + number_bool_packing::unpack_number(h)] - Y[2 * (unpacked_b - shift) + number_bool_packing::unpack_bit(i)];
+                            double dx = X[2 * (unpacked_a - shift) + number_bool_packing::unpack_bit(h)] - X[2 * (unpacked_b - shift) + number_bool_packing::unpack_bit(i)];
+                            double dy = Y[2 * (unpacked_a - shift) + number_bool_packing::unpack_bit(h)] - Y[2 * (unpacked_b - shift) + number_bool_packing::unpack_bit(i)];
 
                             euclidean_distance_2D = sqrt(dx * dx + dy * dy);
                             sum_path_node_dist_2D_space += euclidean_distance_2D;
