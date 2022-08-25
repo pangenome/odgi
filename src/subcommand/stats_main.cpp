@@ -473,8 +473,8 @@ int main_stats(int argc, char** argv) {
 
                             if (layout_in_file) {
                                 // 2D metric
-                                double dx = X[2 * (unpacked_h - shift) + number_bool_packing::unpack_number(h)] - X[2 * (unpacked_i - shift) + number_bool_packing::unpack_bit(i)];
-                                double dy = Y[2 * (unpacked_h - shift) + number_bool_packing::unpack_number(h)] - Y[2 * (unpacked_i - shift) + number_bool_packing::unpack_bit(i)];
+                                double dx = X[2 * (unpacked_h - shift) + number_bool_packing::unpack_bit(h)] - X[2 * (unpacked_i - shift) + number_bool_packing::unpack_bit(i)];
+                                double dy = Y[2 * (unpacked_h - shift) + number_bool_packing::unpack_bit(h)] - Y[2 * (unpacked_i - shift) + number_bool_packing::unpack_bit(i)];
 
                                 sum_2D_space += sqrt(dx * dx + dy * dy);
                             }else{
