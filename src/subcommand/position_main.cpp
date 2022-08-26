@@ -843,7 +843,6 @@ int main_position(int argc, char** argv) {
 
 #pragma omp parallel for schedule(dynamic,1)
     for (auto& path_range : path_ranges) {
-        std::cerr << path_range.data << endl;
 		pos_t pos_begin, pos_end;
         // handle the lift into the target graph
 		step_handle_t step_handle_graph_pos_begin;
