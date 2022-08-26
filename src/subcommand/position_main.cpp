@@ -85,12 +85,14 @@ int main_position(int argc, char** argv) {
 
     odgi::graph_t target_graph;
     assert(argc > 0);
-    std::string infile = args::get(og_target_file);
-    if (infile.size()) {
-        if (infile == "-") {
-            target_graph.deserialize(std::cin);
-        } else {
-			utils::handle_gfa_odgi_input(infile, "position", args::get(progress), num_threads, target_graph);
+    {
+        const std::string infile = args::get(og_target_file);
+        if (!infile.empty()) {
+            if (infile == "-") {
+                target_graph.deserialize(std::cin);
+            } else {
+                utils::handle_gfa_odgi_input(infile, "position", args::get(progress), num_threads, target_graph);
+            }
         }
     }
 
@@ -841,6 +843,7 @@ int main_position(int argc, char** argv) {
 
 #pragma omp parallel for schedule(dynamic,1)
     for (auto& path_range : path_ranges) {
+        std::cerr << path_range.data << endl;
 		pos_t pos_begin, pos_end;
         // handle the lift into the target graph
 		step_handle_t step_handle_graph_pos_begin;
