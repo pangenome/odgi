@@ -408,16 +408,9 @@ namespace odgi {
                 }
             }
 
-            if (full_range) {
-                // Take the start and end node of this and fill things in
-                algorithms::extract_id_range(source, subgraph.min_node_id(), subgraph.max_node_id() , subgraph, show_progress
-                                                                                                                ? "[odgi::extract] collecting all nodes in the path range"
-                                                                                                                : "");
-            }
-
             // Check if there are nodes in the subgraph, to avoid extracting the whole graph
             // when nodes with functionality other than pangenomic paths/ranges are not specified
-            if (inverse && subgraph.get_path_count() > 0) {
+            if (inverse && subgraph.get_node_count() > 0) {
                 unordered_set<nid_t> node_ids_to_ignore;
                 subgraph.for_each_handle([&](const handle_t &h) {
                     node_ids_to_ignore.insert(subgraph.get_id(h));
@@ -447,14 +440,14 @@ namespace odgi {
                 }
             }
 
-            std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress;
-            if (show_progress) {
-                progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
-                        path_ranges.size(), "[odgi::extract] extracting path ranges");
-            }
-
             // Collect handles in path/pangenomic ranges (it is assumed they were already inverted outside, if needed)
             {
+                std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress;
+                if (show_progress) {
+                    progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+                            path_ranges.size(), "[odgi::extract] extracting path ranges");
+                }
+
                 atomicbitvector::atomic_bv_t keep_bv(source.get_node_count()+1);
 
 #pragma omp parallel for schedule(dynamic,1)
@@ -489,10 +482,18 @@ namespace odgi {
                     subgraph.create_handle(source.get_sequence(h),
                                            id_shifted + shift);
                 }
+
+                if (show_progress) {
+                    progress->finish();
+                }
             }
 
-            if (show_progress) {
-                progress->finish();
+            // Check if there are nodes in the subgraph, to avoid min_node_id == max_node_id == 0
+            if (full_range && subgraph.get_node_count() > 0) {
+                // Take the start and end node of this and fill things in
+                algorithms::extract_id_range(source, subgraph.min_node_id(), subgraph.max_node_id() , subgraph, show_progress
+                                                                                                                ? "[odgi::extract] collecting all nodes in the path range"
+                                                                                                                : "");
             }
 
             // These paths are treated differently: only the specified ranges are included in the extracted graph
