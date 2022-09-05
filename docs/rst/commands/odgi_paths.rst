@@ -47,7 +47,7 @@ Path Investigation Options
 | **-H, --haplotypes**
 | Print to stdout the paths in an approximate binary haplotype matrix
   based on the graph’s sort order. The output is tab-delimited:
-  **path.name**, *path.length*, *node.count*, *node.1*,
+  **path.name**, *path.length*, *path.step.count*, *node.1*,
   *node.2*, *node.n*. Each path entry is printed in its own line.
 
 | **-D, --delim**\ =\ *CHAR*

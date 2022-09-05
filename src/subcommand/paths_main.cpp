@@ -48,7 +48,7 @@ int main_paths(int argc, char** argv) {
                                                                              " **group.name** to stdout.", {'D', "delim"});
     args::Flag haplo_matrix(path_investigation_opts, "haplo", "Print to stdout the paths in an approximate binary haplotype matrix"
                                                               " based on the graph’s sort order. The output is tab-delimited:"
-                                                              " *path.name*, *path.length*, *node.count*, *node.1*,"
+                                                              " *path.name*, *path.length*, *path.step.count*, *node.1*,"
                                                               " *node.2*, *node.n*. Each path entry is printed in its own line.", {'H', "haplotypes"});
     args::Flag distance_matrix(path_investigation_opts, "distance", "Provides a sparse distance matrix for paths. If **-D, --delim** is"
                                                                     " set, it will be path groups distances. Each line prints in a tab-delimited format to stdout:"
@@ -146,7 +146,7 @@ int main_paths(int argc, char** argv) {
             }
             header << "path.name" << "\t"
                    << "path.length" << "\t"
-                   << "node.count";
+                   << "path.step.count";
             graph.for_each_handle(
                 [&](const handle_t& handle) {
                     header << "\t" << "node." << graph.get_id(handle);
