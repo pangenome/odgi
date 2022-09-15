@@ -181,6 +181,7 @@ namespace odgi {
                             // we'll sample from all path steps
                             std::uniform_int_distribution<uint64_t> dis_step = std::uniform_int_distribution<uint64_t>(0, np_bv.size() - 1);
                             std::uniform_int_distribution<uint64_t> flip(0, 1);
+                            uint64_t term_updates_local = 0;
                             while (work_todo.load()) {
                                 if (!snapshot_in_progress.load()) {
                                     // sample the first node from all the nodes in the graph
@@ -370,7 +371,11 @@ namespace odgi {
 #ifdef debug_path_sgd
                                     std::cerr << "after X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
 #endif
-                                    term_updates++; // atomic
+                                    term_updates_local++;
+                                    if (term_updates_local >= 1000) {
+                                        term_updates += term_updates_local;
+                                        term_updates_local = 0;
+                                    }
                                     if (progress) {
                                         progress_meter->increment(1);
                                     }
