@@ -66,7 +66,7 @@ color_t layer(const color_t& a, const color_t& b, const double& f) {
     //std::cerr << "got a = " << a.hex << " " << (int)a.c.r << "," << (int)a.c.g << "," << (int)a.c.b << std::endl;
     //std::cerr << "got b = " << b.hex << " " << (int)b.c.r << "," << (int)b.c.g << "," << (int)b.c.b << std::endl;
     //std::cerr << "f = " << f << std::endl;
-	if (.0d < f) {
+	if (.0 < f) {
 		out.c = (RGB) { inrange((double)b.c.r - ((double)(255 * (1-f) - a.c.r))),
                         inrange((double)b.c.g - ((double)(255 * (1-f) - a.c.g))),
                         inrange((double)b.c.b - ((double)(255 * (1-f) - a.c.b))),
@@ -88,11 +88,11 @@ color_t mix(const color_t& a, const color_t& b, const double& f) {
 
 double u_ipart(double x) { return std::floor(x); }
 
-double u_round(double x) { return u_ipart(x + 0.5d); }
+double u_round(double x) { return u_ipart(x + 0.5); }
 
 double u_fpart(double x) { return x - std::floor(x); }
 
-double u_rfpart(double x) { return 1.0d - u_fpart(x); }
+double u_rfpart(double x) { return 1.0 - u_fpart(x); }
 
 void wu_draw_line(const bool steep, const double_t gradient, double intery,
                   const xy_d_t pxl1, const xy_d_t pxl2, const color_t& color,
@@ -119,7 +119,7 @@ xy_d_t wu_calc_endpoint(xy_d_t xy, const double_t gradient, const bool steep,
     const xy_d_t end = {u_round(xy.x),
                         std::max(0.0, xy.y + gradient * (u_round(xy.x) - xy.x))};
     //std::cerr << "end is " << "(" << end.x << "," << end.y << ")" << std::endl;
-    const double xgap = u_rfpart(xy.x + 0.5d);
+    const double xgap = u_rfpart(xy.x + 0.5);
     const xy_d_t pxl = {end.x, u_ipart(end.y)};
     //std::cerr << "pxl is " << "(" << pxl.x << "," << pxl.y << ")" << std::endl;
 
