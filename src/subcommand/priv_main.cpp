@@ -26,6 +26,7 @@ int main_priv(int argc, char** argv) {
     args::ValueFlag<std::string> dg_out_file(mandatory_opts, "FILE", "Write the sorted dynamic succinct variation graph to this file. A file"
                                              " ending with *.og* is recommended.", {'o', "out"});
     args::Group mechanism_opts(parser, "[ Differential Privacy Mechanism Options ]");
+    args::ValueFlag<double> input_epsilon(mechanism_opts, "e", "Epsilon for exponential mechanism.", {'e', "epsilon"});
     args::ValueFlag<double> target_depth(mechanism_opts, "DEPTH", "Sample until we have approximately this path depth.", {'d', "target-depth"});
     args::Group threading_opts(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> threads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
@@ -74,10 +75,11 @@ int main_priv(int argc, char** argv) {
     }
 
     double depth = target_depth ? args::get(target_depth) : 0;
+    double epsilon = input_epsilon ? args::get(input_epsilon) : 0.001;
 
     graph_t priv;
 
-    algorithms::diff_priv(graph, priv, target_depth, 0);
+    algorithms::diff_priv(graph, priv, epsilon, target_depth, 0);
 
     const std::string outfile = args::get(dg_out_file);
     if (outfile == "-") {
