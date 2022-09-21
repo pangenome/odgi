@@ -8,6 +8,7 @@ void diff_priv(
     PathHandleGraph& priv,
     double epsilon,
     double target_coverage,
+    double min_haplotype_freq,
     uint64_t bp_limit) {
 
     std::random_device rd;
@@ -20,9 +21,13 @@ void diff_priv(
 
     bool todo = true;
     double step_count = 0;
+    std::cerr << "target coverage " << target_coverage << std::endl;
+    double target_steps = graph.get_node_count() * target_coverage;
+    std::cerr << "target steps = " << target_steps << std::endl;
 
     // algorithm
-    while (todo) {
+    while (step_count < target_steps) {
+        std::cerr << "steps vs " << step_count << " < " << target_steps << std::endl;
         // we randomly sample a starting node (todo: step)
         uint64_t rand_id = dist(mt);
         // we collect all steps on the node, picking a random orientation
@@ -34,10 +39,12 @@ void diff_priv(
                 ranges.push_back(std::make_pair(s, s));
             });
         double initial_count = ranges.size();
+        std::cerr << "doing a thing " << initial_count << std::endl;
         double walk_length = 0;
         // sampling loop
         while (!ranges.empty()) {
             // next handles
+            std::cerr << "step! with " << ranges.size() << " ranges" << std::endl;
             std::map<handle_t, step_ranges_t> nexts;
             for (auto& range : ranges) {
                 auto& s = range.second;
@@ -53,34 +60,46 @@ void diff_priv(
             std::vector<std::pair<double, handle_t>> weights;
             double sum_weights = 0;
             for (auto& n : nexts) {
-                double u = (double)n.second.size() / initial_count;
-                double d_u = (double)(n.second.size()-1)
-                    / std::max(1.0,initial_count-1);
-                double w = (epsilon * u) / (2 * d_u);
+                double u = (double)n.second.size();
+                // infs to remove
+                double d_u = u - (double)(n.second.size()-1);
+                double w = exp((epsilon * u) / (2 * d_u));
                 weights.push_back(std::make_pair(w, n.first));
                 sum_weights += w;
+                std::cerr << "u=" << u << " d_u=" << d_u << " w=" << w << std::endl;
             }
-            // normalize weights
+            //std::cerr << "sum weights " << sum_weights << std::endl;
+            //std::sort(weights.begin(), weights.end());
             for (auto& w : weights) {
-                w.first /= sum_weights;
+                std::cerr << "option " << w.first << " to " << graph.get_id(w.second) << std::endl;
             }
-            std::sort(weights.begin(), weights.end());
             // apply the exponential mechanism using weighted sampling
-            double d = unif(mt);
+            // first we sample within the range of the sum of weights
+            double d = unif(mt) * sum_weights;
             handle_t opt;
+            // respect ranges
+            double x = 0;
             for (auto& w : weights) {
-                if (w.first >= d) {
+                if (x + w.first >= d) {
+                    std::cerr << "taking " << w.first << " " << graph.get_id(w.second) << std::endl;
                     opt = w.second;
                     break;
                 }
+                // they areas, areas
+                x += w.first;
             }
             // set our ranges to the selected group
             ranges = nexts[opt];
             // check stopping conditions
+            // 1) depth < min_haplotype_freq (2 by default)
+            // 2) length > threshold
             // something weighted by utility
-            // if we draw >
             walk_length += graph.get_length(opt);
-            if (walk_length > bp_limit) {
+            if (ranges.size() < min_haplotype_freq) {
+                break; // do nothing
+            }
+            if (ranges.size() > min_haplotype_freq
+                && walk_length > bp_limit) {
                 // write the walk
                 std::cerr << "got walk : ";
                 for (step_handle_t s = ranges.front().first;
@@ -89,17 +108,12 @@ void diff_priv(
                     handle_t h = graph.get_handle_of_step(s);
                     std::cerr << (graph.get_is_reverse(h) ? "<" : ">")
                               << graph.get_id(h);
+                    ++step_count;
                     if (s == ranges.front().second) break;
                 }
                 std::cerr << std::endl;
                 break;
             }
-            //ranges.size() / initial_count;
-            /*
-            if (ranges.size() == 1) {
-                break;
-            }
-            */
         }
         todo = false; // one iteration for testing
     }

@@ -20,6 +20,7 @@ void diff_priv(
     PathHandleGraph& priv,
     double epsilon,
     double target_coverage,
+    double min_haplotype_freq,
     uint64_t bp_limit);
 
 }

@@ -28,7 +28,8 @@ int main_priv(int argc, char** argv) {
     args::Group mechanism_opts(parser, "[ Differential Privacy Mechanism Options ]");
     args::ValueFlag<double> input_epsilon(mechanism_opts, "e", "Epsilon for exponential mechanism.", {'e', "epsilon"});
     args::ValueFlag<double> target_depth(mechanism_opts, "DEPTH", "Sample until we have approximately this path depth.", {'d', "target-depth"});
-    args::ValueFlag<uint64_t> input_bp_limit(mechanism_opts, "bp", "Maximum sampled haplotype length.", {'b', "bp-limit"});
+    args::ValueFlag<uint64_t> input_min_hap_freq(mechanism_opts, "N", "Minimum frequency (count) of haplotype observation to emit. [default: 2]", {'c', "min-hap-freq"});
+    args::ValueFlag<uint64_t> input_bp_limit(mechanism_opts, "bp", "Maximum sampled haplotype length. [default: 10000]", {'b', "bp-limit"});
     args::Group threading_opts(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> threads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 	args::Group processing_info_opts(parser, "[ Processing Information ]");
@@ -75,13 +76,14 @@ int main_priv(int argc, char** argv) {
         }
     }
 
-    double depth = target_depth ? args::get(target_depth) : 0;
+    double depth = target_depth ? args::get(target_depth) : 1;
     double epsilon = input_epsilon ? args::get(input_epsilon) : 0.001;
     uint64_t bp_limit = input_bp_limit ? args::get(input_bp_limit) : 10000;
+    uint64_t min_haplotype_freq = input_min_hap_freq ? args::get(input_min_hap_freq) : 2;
 
     graph_t priv;
 
-    algorithms::diff_priv(graph, priv, epsilon, target_depth, bp_limit);
+    algorithms::diff_priv(graph, priv, epsilon, depth, min_haplotype_freq, bp_limit);
 
     const std::string outfile = args::get(dg_out_file);
     if (outfile == "-") {
