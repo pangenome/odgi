@@ -20,7 +20,7 @@ void diff_priv(
     PathHandleGraph& priv,
     double epsilon,
     double target_coverage,
-    uint64_t bp_limit = 0);
+    uint64_t bp_limit);
 
 }
 }
