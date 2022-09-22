@@ -15,20 +15,20 @@ DESCRIPTION
 ===========
 
 **odgi priv** generates a graph containing subpaths from the original graph which have been sampled under differential privacy guarantees.
-Specifically, we apply the exponential mechanism to sample path intervals.
+We apply the exponential mechanism to guide our sampling of path intervals.
 Each sampling iteration begins at a randomly-selected node and orientation.
-All the steps which overlap this node are bundled by the next node which they reach.
-The subsequent step is chosen using the exponential mechanism, in which the frequency of each subpath is treated as its *utility*.
-We choose the next step randomly, weighted by the exponentiated utility of each bundle scaled by a factor, ε (epsilon), which quantifies the degree of variation we expect when applying randomized algorithms to two datasets which differ by a single individual.
+All the steps which overlap this node are grouped by the next node which they reach, and the next step is chosen using the exponential mechanism.
+To parameterize the exponential mechanism, we require a *utility*, which is a socially-defined value that we take to be the frequency of each subpath.
+We then choose the next step with random sampling weighted by the exponentiated utility of each subpath extension scaled by a factor, ε (epsilon), which quantifies the degree of variation we expect when applying randomized algorithms to two datasets which differ by a single individual.
 The process continues until a user-specified target length is reached, which defaults to 10kbp.
 
 A few key parameters define properties of the output graph.
-Low ε implies stronger privacy guarantees.
+Low ε implies stronger privacy guarantees, while higher ε may include more rare haplotypes, and can be adjusted with **-e, --epsilon**.
 Sampling continues until we reach a target depth of coverage over the graph, which defaults to 1x but can be changed by **-d, --target-depth**.
 A minimum haplotype frequency is essential: the inclusion of singleton haplotypes violates differential privacy, so we do not recommend setting **-c, --min-hap-freq** below 2 except for testing the path cover properties of the system.
 The target haplotype length **-b, --bp-target** is the minimum length haplotype to emit.
 As very long haplotypes are rarely shared, except in extremely large cohorts, setting this too long (e.g. 100kb in 100 humans) will tend to cause the algorithm to stall, as it repeats sampling steps until it finds long haplotypes that occur at least **-c** times.
-For optimal pangenome coverage, we suggest setting **-c** lower than the default, such as to 1kbp.
+For optimal pangenome coverage, we suggest setting **-b** lower than the default, such as to 1kbp, with the caveat that this will reduce the length of novel variation that may be sampled from the graph.
 
 Note that the output of **odgi priv** is a graph that does *not* meet the differential privacy guarantees.
 We find that it is important to maintain the original graph for the purposes of debugging.
