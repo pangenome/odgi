@@ -152,7 +152,7 @@ namespace odgi {
                     uint64_t depth = ignore_paths ? 0 : graph.get_step_count(graph.get_handle(id));
                     node_coverage.emplace_back(id, static_cast<coverage_t>(depth));
                 }
-                
+
                 return node_coverage;
             }
 
