@@ -16,8 +16,6 @@ void diff_priv_worker(const uint64_t tid,
 
     std::random_device rd;
     std::mt19937 mt(rd()); // fully random seed
-    //std::uniform_int_distribution<uint64_t> dist(1, graph.get_node_count());
-    //std::uniform_int_distribution<uint64_t> coin(0, 1);
     std::uniform_real_distribution<double> unif(0,1);
     random_selector<> selector{};
 
@@ -28,20 +26,16 @@ void diff_priv_worker(const uint64_t tid,
         //std::cerr << "steps vs " << step_count << " < " << target_steps << std::endl;
         // we randomly sample a starting node and orientation, weighted by node length
         handle_t h = sample_handle(mt);
-        //handle_t h = graph.get_handle(rand_id, (bool)coin(mt));
         // we collect all potential forward extensions
         step_ranges_t ranges;
         graph.for_each_step_on_handle(
             h, [&](const step_handle_t& s) {
                 ranges.push_back(std::make_pair(s, s));
             });
-        double initial_count = ranges.size();
-        //std::cerr << "doing a thing " << initial_count << std::endl;
         double walk_length = 0;
         // sampling loop
         while (!ranges.empty()) {
             // next handles
-            //std::cerr << "step! with " << ranges.size() << " ranges" << std::endl;
             std::map<handle_t, step_ranges_t> nexts;
             for (auto& range : ranges) {
                 auto& s = range.second;
@@ -64,13 +58,6 @@ void diff_priv_worker(const uint64_t tid,
                 sum_weights += w;
                 //std::cerr << "u=" << u << " d_u=" << d_u << " w=" << w << std::endl;
             }
-            //std::cerr << "sum weights " << sum_weights << std::endl;
-            //std::sort(weights.begin(), weights.end());
-            /*
-            for (auto& w : weights) {
-                std::cerr << "option " << w.first << " to " << graph.get_id(w.second) << std::endl;
-            }
-            */
             // apply the exponential mechanism using weighted sampling
             // first we sample within the range of the sum of weights
             double d = unif(mt) * sum_weights;
@@ -79,7 +66,6 @@ void diff_priv_worker(const uint64_t tid,
             double x = 0;
             for (auto& w : weights) {
                 if (x + w.first >= d) {
-                    //std::cerr << "taking " << w.first << " " << graph.get_id(w.second) << std::endl;
                     opt = w.second;
                     break;
                 }
@@ -97,7 +83,7 @@ void diff_priv_worker(const uint64_t tid,
             }
             if (ranges.size() >= min_haplotype_freq
                 && walk_length > bp_limit) {
-                // get a random range
+                // get a random range to avoid orientation bias
                 auto& r = selector(ranges);
                 callback(r.first, r.second);
                 break;
@@ -122,12 +108,10 @@ void diff_priv(
     });
 
     std::atomic<uint64_t> step_count(0);
-    //std::cerr << "target coverage " << target_coverage << std::endl;
     uint64_t target_steps = graph.get_node_count() * target_coverage;
-    //std::cerr << "target steps = " << target_steps << std::endl;
     std::atomic<size_t> written_paths(0);
 
-    //
+    // handles our sampled ranges
     auto writer_callback = [&](step_handle_t a, step_handle_t b) {
         // write the walk
         uint64_t range_step_count = 0;
