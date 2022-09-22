@@ -28,7 +28,7 @@ int main_priv(int argc, char** argv) {
     args::ValueFlag<double> input_epsilon(mechanism_opts, "e", "Epsilon (ε) for exponential mechanism. [default: 0.001]", {'e', "epsilon"});
     args::ValueFlag<double> target_depth(mechanism_opts, "DEPTH", "Sample until we have approximately this path depth over the graph.", {'d', "target-depth"});
     args::ValueFlag<uint64_t> input_min_hap_freq(mechanism_opts, "N", "Minimum frequency (count) of haplotype observation to emit. Singularities occur at -c 1, so we warn against its use. [default: 2]", {'c', "min-hap-freq"});
-    args::ValueFlag<uint64_t> input_bp_limit(mechanism_opts, "bp", "Minimum sampled haplotype length. All long haplotypes tend to be rare, so setting this to lengths greater than the typical recombination block size will result in long runtimes and poor sampling of the graph. [default: 10000]", {'b', "bp-limit"});
+    args::ValueFlag<uint64_t> input_bp_limit(mechanism_opts, "bp", "Target sampled haplotype length. All long haplotypes tend to be rare, so setting this to lengths greater than the typical recombination block size will result in long runtimes and poor sampling of the graph. [default: 10000]", {'b', "bp-target"});
     args::Group threading_opts(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> threads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 	args::Group processing_info_opts(parser, "[ Processing Information ]");
