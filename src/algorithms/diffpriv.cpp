@@ -96,7 +96,7 @@ void diff_priv_worker(const uint64_t tid,
             if (ranges.size() < min_haplotype_freq) {
                 break; // do nothing
             }
-            if (ranges.size() > min_haplotype_freq
+            if (ranges.size() >= min_haplotype_freq
                 && walk_length > bp_limit) {
                 // get a random range
                 auto& r = selector(ranges);
