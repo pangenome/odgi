@@ -20,7 +20,7 @@ int main_priv(int argc, char** argv) {
     argv[0] = (char*)prog_name.c_str();
     --argc;
 
-    args::ArgumentParser parser("Differentially private transformation of graph path space.");
+    args::ArgumentParser parser("Differentially private sampling of graph subpaths.");
     args::Group mandatory_opts(parser, "[ MANDATORY ARGUMENTS ]");
     args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::ValueFlag<std::string> dg_out_file(mandatory_opts, "FILE", "Write the graph with sub-paths sampled under differential privacy to this FILE (.og recommended).", {'o', "out"});
@@ -101,7 +101,7 @@ int main_priv(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand odgi_priv("priv", "Make a differentially-private transformation of graph paths.",
+static Subcommand odgi_priv("priv", "Differentially private sampling of graph subpaths.",
                             PIPELINE, 3, main_priv);
 
 
