@@ -8,6 +8,7 @@
 #include <random>
 #include <iostream>
 #include <map>
+#include <atomic>
 #include "hash_map.hpp"
 
 namespace odgi {

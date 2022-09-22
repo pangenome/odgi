@@ -19,10 +19,9 @@ void diff_priv(
 
     typedef std::vector<std::pair<step_handle_t, step_handle_t>> step_ranges_t;
 
-    bool todo = true;
-    double step_count = 0;
+    std::atomic<uint64_t> step_count(0);
     std::cerr << "target coverage " << target_coverage << std::endl;
-    double target_steps = graph.get_node_count() * target_coverage;
+    uint64_t target_steps = graph.get_node_count() * target_coverage;
     std::cerr << "target steps = " << target_steps << std::endl;
 
     // algorithm
@@ -101,6 +100,7 @@ void diff_priv(
             if (ranges.size() > min_haplotype_freq
                 && walk_length > bp_limit) {
                 // write the walk
+                uint64_t range_step_count = 0;
                 std::cerr << "got walk : ";
                 for (step_handle_t s = ranges.front().first;
                      ;
@@ -108,14 +108,14 @@ void diff_priv(
                     handle_t h = graph.get_handle_of_step(s);
                     std::cerr << (graph.get_is_reverse(h) ? "<" : ">")
                               << graph.get_id(h);
-                    ++step_count;
+                    ++range_step_count;
                     if (s == ranges.front().second) break;
                 }
+                step_count.fetch_add(range_step_count);
                 std::cerr << std::endl;
                 break;
             }
         }
-        todo = false; // one iteration for testing
     }
 
     // and look for potential extensions of open path intervals
