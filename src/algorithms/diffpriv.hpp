@@ -9,6 +9,8 @@
 #include <iostream>
 #include <map>
 #include <atomic>
+#include <thread>
+#include <sstream>
 #include "hash_map.hpp"
 
 namespace odgi {
@@ -19,10 +21,11 @@ using namespace handlegraph;
 void diff_priv(
     const PathHandleGraph& graph,
     PathHandleGraph& priv,
-    double epsilon,
-    double target_coverage,
-    double min_haplotype_freq,
-    uint64_t bp_limit);
+    const double epsilon,
+    const double target_coverage,
+    const double min_haplotype_freq,
+    const uint64_t bp_limit,
+    const uint64_t nthreads);
 
 }
 }

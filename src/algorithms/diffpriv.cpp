@@ -3,30 +3,26 @@
 namespace odgi {
 namespace algorithms {
 
-void diff_priv(
-    const PathHandleGraph& graph,
-    PathHandleGraph& priv,
-    double epsilon,
-    double target_coverage,
-    double min_haplotype_freq,
-    uint64_t bp_limit) {
+void diff_priv_worker(const uint64_t tid,
+                      const PathHandleGraph& graph,
+                      const std::function<void(step_handle_t, step_handle_t)> callback,
+                      const std::atomic<uint64_t>& step_count,
+                      const double target_steps,
+                      const double epsilon,
+                      const double min_haplotype_freq,
+                      const uint64_t bp_limit) {
 
     std::random_device rd;
-    std::mt19937 mt(rd());
+    std::mt19937 mt(rd()); // fully random seed
     std::uniform_int_distribution<uint64_t> dist(1, graph.get_node_count());
     std::uniform_int_distribution<uint64_t> coin(0, 1);
     std::uniform_real_distribution<double> unif(0,1);
 
     typedef std::vector<std::pair<step_handle_t, step_handle_t>> step_ranges_t;
 
-    std::atomic<uint64_t> step_count(0);
-    std::cerr << "target coverage " << target_coverage << std::endl;
-    uint64_t target_steps = graph.get_node_count() * target_coverage;
-    std::cerr << "target steps = " << target_steps << std::endl;
-
     // algorithm
     while (step_count < target_steps) {
-        std::cerr << "steps vs " << step_count << " < " << target_steps << std::endl;
+        //std::cerr << "steps vs " << step_count << " < " << target_steps << std::endl;
         // we randomly sample a starting node (todo: step)
         uint64_t rand_id = dist(mt);
         // we collect all steps on the node, picking a random orientation
@@ -38,12 +34,12 @@ void diff_priv(
                 ranges.push_back(std::make_pair(s, s));
             });
         double initial_count = ranges.size();
-        std::cerr << "doing a thing " << initial_count << std::endl;
+        //std::cerr << "doing a thing " << initial_count << std::endl;
         double walk_length = 0;
         // sampling loop
         while (!ranges.empty()) {
             // next handles
-            std::cerr << "step! with " << ranges.size() << " ranges" << std::endl;
+            //std::cerr << "step! with " << ranges.size() << " ranges" << std::endl;
             std::map<handle_t, step_ranges_t> nexts;
             for (auto& range : ranges) {
                 auto& s = range.second;
@@ -65,13 +61,15 @@ void diff_priv(
                 double w = exp((epsilon * u) / (2 * d_u));
                 weights.push_back(std::make_pair(w, n.first));
                 sum_weights += w;
-                std::cerr << "u=" << u << " d_u=" << d_u << " w=" << w << std::endl;
+                //std::cerr << "u=" << u << " d_u=" << d_u << " w=" << w << std::endl;
             }
             //std::cerr << "sum weights " << sum_weights << std::endl;
             //std::sort(weights.begin(), weights.end());
+            /*
             for (auto& w : weights) {
                 std::cerr << "option " << w.first << " to " << graph.get_id(w.second) << std::endl;
             }
+            */
             // apply the exponential mechanism using weighted sampling
             // first we sample within the range of the sum of weights
             double d = unif(mt) * sum_weights;
@@ -80,7 +78,7 @@ void diff_priv(
             double x = 0;
             for (auto& w : weights) {
                 if (x + w.first >= d) {
-                    std::cerr << "taking " << w.first << " " << graph.get_id(w.second) << std::endl;
+                    //std::cerr << "taking " << w.first << " " << graph.get_id(w.second) << std::endl;
                     opt = w.second;
                     break;
                 }
@@ -99,27 +97,70 @@ void diff_priv(
             }
             if (ranges.size() > min_haplotype_freq
                 && walk_length > bp_limit) {
-                // write the walk
-                uint64_t range_step_count = 0;
-                std::cerr << "got walk : ";
-                for (step_handle_t s = ranges.front().first;
-                     ;
-                     s = graph.get_next_step(s)) {
-                    handle_t h = graph.get_handle_of_step(s);
-                    std::cerr << (graph.get_is_reverse(h) ? "<" : ">")
-                              << graph.get_id(h);
-                    ++range_step_count;
-                    if (s == ranges.front().second) break;
-                }
-                step_count.fetch_add(range_step_count);
-                std::cerr << std::endl;
+                auto& r = ranges.front();
+                callback(r.first, r.second);
                 break;
             }
         }
     }
+}
 
-    // and look for potential extensions of open path intervals
+void diff_priv(
+    const PathHandleGraph& graph,
+    PathHandleGraph& priv,
+    const double epsilon,
+    const double target_coverage,
+    const double min_haplotype_freq,
+    const uint64_t bp_limit,
+    const uint64_t nthreads) {
 
+    std::atomic<uint64_t> step_count(0);
+    std::cerr << "target coverage " << target_coverage << std::endl;
+    uint64_t target_steps = graph.get_node_count() * target_coverage;
+    std::cerr << "target steps = " << target_steps << std::endl;
+    uint64_t written_paths = 0;
+
+    //
+    auto writer_callback = [&](step_handle_t a, step_handle_t b) {
+        // write the walk
+        uint64_t range_step_count = 0;
+        std::stringstream ss;
+        ss << "hap" << written_paths << "\t";
+        for (step_handle_t s = a;
+             ;
+             s = graph.get_next_step(s)) {
+            handle_t h = graph.get_handle_of_step(s);
+            ss << (graph.get_is_reverse(h) ? "<" : ">")
+               << graph.get_id(h);
+            ++range_step_count;
+            if (s == b) break;
+        }
+        ss << std::endl;
+#pragma omp critical (cout)
+        std::cout << ss.str();
+        step_count.fetch_add(range_step_count);
+        ++written_paths;
+    };
+
+    std::vector<std::thread> workers;
+    workers.reserve(nthreads);
+    for (uint64_t t = 0; t < nthreads; ++t) {
+        workers.emplace_back(&diff_priv_worker,
+                             t,
+                             std::cref(graph),
+                             writer_callback,
+                             std::cref(step_count),
+                             target_steps,
+                             epsilon,
+                             min_haplotype_freq,
+                             bp_limit);
+    }
+
+    // stuff happens
+
+    for (uint64_t t = 0; t < nthreads; ++t) {
+        workers[t].join();
+    }
 }
 
 }

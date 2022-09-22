@@ -83,7 +83,7 @@ int main_priv(int argc, char** argv) {
 
     graph_t priv;
 
-    algorithms::diff_priv(graph, priv, epsilon, depth, min_haplotype_freq, bp_limit);
+    algorithms::diff_priv(graph, priv, epsilon, depth, min_haplotype_freq, bp_limit, num_threads);
 
     const std::string outfile = args::get(dg_out_file);
     if (outfile == "-") {
