@@ -8,8 +8,8 @@ void diff_priv_worker(const uint64_t tid,
                       const PathHandleGraph& graph,
                       const std::function<void(step_handle_t, step_handle_t)> callback,
                       const std::function<handle_t(std::mt19937&)> sample_handle,
-                      const std::atomic<uint64_t>& step_count,
-                      const double target_steps,
+                      std::atomic<uint64_t>& sampled_length,
+                      const uint64_t target_length,
                       const double epsilon,
                       const double min_haplotype_freq,
                       const uint64_t bp_limit) {
@@ -22,8 +22,8 @@ void diff_priv_worker(const uint64_t tid,
     typedef std::vector<std::pair<step_handle_t, step_handle_t>> step_ranges_t;
 
     // algorithm
-    while (step_count < target_steps) {
-        //std::cerr << "steps vs " << step_count << " < " << target_steps << std::endl;
+    while (sampled_length < target_length) {
+        //std::cerr << "length vs target " << sampled_length << " < " << target_length << std::endl;
         // we randomly sample a starting node and orientation, weighted by node length
         handle_t h = sample_handle(mt);
         // we collect all potential forward extensions
@@ -32,7 +32,7 @@ void diff_priv_worker(const uint64_t tid,
             h, [&](const step_handle_t& s) {
                 ranges.push_back(std::make_pair(s, s));
             });
-        double walk_length = 0;
+        uint64_t walk_length = graph.get_length(h);
         // sampling loop
         while (!ranges.empty()) {
             // next handles
@@ -85,6 +85,7 @@ void diff_priv_worker(const uint64_t tid,
                 && walk_length > bp_limit) {
                 // get a random range to avoid orientation bias
                 auto& r = selector(ranges);
+                sampled_length.fetch_add(walk_length);
                 callback(r.first, r.second);
                 break;
             }
@@ -107,14 +108,10 @@ void diff_priv(
         priv.create_handle(graph.get_sequence(h), graph.get_id(h));
     });
 
-    std::atomic<uint64_t> step_count(0);
-    uint64_t target_steps = graph.get_node_count() * target_coverage;
     std::atomic<size_t> written_paths(0);
-
     // handles our sampled ranges
     auto writer_callback = [&](step_handle_t a, step_handle_t b) {
         // write the walk
-        uint64_t range_step_count = 0;
         std::stringstream ss;
         ss << "hap" << ++written_paths;
         std::string name = ss.str();
@@ -129,10 +126,9 @@ void diff_priv(
             handle_t h = graph.get_handle_of_step(s);
             handle_t j = priv.get_handle(graph.get_id(h), graph.get_is_reverse(h));
             priv.append_step(p, j);
-            ++range_step_count;
+            //++range_step_count;
             if (s == b) break;
         }
-        step_count.fetch_add(range_step_count);
         if (write_samples) {
             std::stringstream ss;
             ss << name << "\t";
@@ -156,7 +152,10 @@ void diff_priv(
         [&](const handle_t& h) {
             graph_bp += graph.get_length(h);
         });
-    //sdsl::bit_vector graph_vec();
+
+    std::atomic<uint64_t> sampled_length(0);
+    uint64_t target_length = graph_bp * target_coverage;
+
     sdsl::bit_vector graph_bv(graph_bp);
     graph_bp = 0;
     graph.for_each_handle(
@@ -184,8 +183,8 @@ void diff_priv(
                              std::cref(graph),
                              writer_callback,
                              sample_handle,
-                             std::cref(step_count),
-                             target_steps,
+                             std::ref(sampled_length),
+                             target_length,
                              epsilon,
                              min_haplotype_freq,
                              bp_limit);
