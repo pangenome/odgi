@@ -17,6 +17,7 @@ void diff_priv_worker(const uint64_t tid,
     std::uniform_int_distribution<uint64_t> dist(1, graph.get_node_count());
     std::uniform_int_distribution<uint64_t> coin(0, 1);
     std::uniform_real_distribution<double> unif(0,1);
+    random_selector<> selector{};
 
     typedef std::vector<std::pair<step_handle_t, step_handle_t>> step_ranges_t;
 
@@ -97,7 +98,8 @@ void diff_priv_worker(const uint64_t tid,
             }
             if (ranges.size() > min_haplotype_freq
                 && walk_length > bp_limit) {
-                auto& r = ranges.front();
+                // get a random range
+                auto& r = selector(ranges);
                 callback(r.first, r.second);
                 break;
             }
@@ -112,7 +114,8 @@ void diff_priv(
     const double target_coverage,
     const double min_haplotype_freq,
     const uint64_t bp_limit,
-    const uint64_t nthreads) {
+    const uint64_t nthreads,
+    const bool write_samples) {
 
     // copy the sequence space of the graph into priv
     graph.for_each_handle([&](const handle_t& h) {
@@ -146,16 +149,21 @@ void diff_priv(
             ++range_step_count;
             if (s == b) break;
         }
-        /*
-        if (write_paths) {
-            ss << (graph.get_is_reverse(h) ? "<" : ">")
-               << graph.get_id(h);
-        }
-        ss << std::endl;
-        */
-//#pragma omp critical (cout)
-//        std::cout << ss.str();
         step_count.fetch_add(range_step_count);
+        if (write_samples) {
+            std::stringstream ss;
+            ss << name << "\t";
+            for (step_handle_t s = a;
+                 ;
+                 s = graph.get_next_step(s)) {
+                handle_t h = graph.get_handle_of_step(s);
+                ss << (graph.get_is_reverse(h) ? "<" : ">")
+                   << graph.get_id(h);
+                if (s == b) break;
+            }
+#pragma omp critical (cout)
+            std::cout << ss.str() << std::endl;
+        }
     };
 
     std::vector<std::thread> workers;
@@ -190,6 +198,11 @@ void diff_priv(
                 }
             });
     });
+
+    // the emitted graph is not "differentially private" as it may leak information
+    // due to its topology
+    // further filtering and normalization are indicated to achieve a differentially private result
+    // or, the path sequences can be extracted in FASTA and the graph rebuilt
 
 }
 

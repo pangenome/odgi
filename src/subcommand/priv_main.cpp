@@ -34,6 +34,7 @@ int main_priv(int argc, char** argv) {
     args::ValueFlag<uint64_t> threads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 	args::Group processing_info_opts(parser, "[ Processing Information ]");
 	args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
+    args::Flag input_write_haps(processing_info_opts, "haps", "Write each sampled haplotype to stdout.", {'W', "write-haps"});
     args::Group program_info_opts(parser, "[ Program Information ]");
     args::HelpFlag help(program_info_opts, "help", "Print a help message for odgi paths.", {'h', "help"});
 
@@ -81,13 +82,13 @@ int main_priv(int argc, char** argv) {
     uint64_t bp_limit = input_bp_limit ? args::get(input_bp_limit) : 10000;
     uint64_t min_haplotype_freq = input_min_hap_freq ? args::get(input_min_hap_freq) : 2;
     if (min_haplotype_freq < 2) {
-        std::cerr << "[odgi::priv] ERROR: setting -c, --min-hap-freq to less than 2 is not supported due to singularities that arise in the exponential mechanism." << std::endl;
-        return 1;
+        std::cerr << "[odgi::priv] WARNING: setting -c, --min-hap-freq to less than 2 is not recommended due to singularities that arise in the exponential mechanism." << std::endl;
     }
+    bool write_haps = args::get(input_write_haps);
 
     graph_t priv;
 
-    algorithms::diff_priv(graph, priv, epsilon, depth, min_haplotype_freq, bp_limit, num_threads);
+    algorithms::diff_priv(graph, priv, epsilon, depth, min_haplotype_freq, bp_limit, num_threads, write_haps);
 
     const std::string outfile = args::get(dg_out_file);
     if (outfile == "-") {
