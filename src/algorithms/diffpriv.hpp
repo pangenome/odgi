@@ -1,8 +1,5 @@
 #pragma once
 
-#include <handlegraph/path_handle_graph.hpp>
-#include <handlegraph/mutable_path_deletable_handle_graph.hpp>
-#include <handlegraph/util.hpp>
 #include <vector>
 #include <set>
 #include <deque>
@@ -12,7 +9,10 @@
 #include <atomic>
 #include <thread>
 #include <sstream>
-#include "hash_map.hpp"
+#include <handlegraph/path_handle_graph.hpp>
+#include <handlegraph/mutable_path_deletable_handle_graph.hpp>
+#include <handlegraph/util.hpp>
+//#include "hash_map.hpp"
 
 namespace odgi {
 namespace algorithms {

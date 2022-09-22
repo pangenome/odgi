@@ -1,4 +1,5 @@
 #include "diffpriv.hpp"
+#include <sdsl/bit_vectors.hpp>
 
 namespace odgi {
 namespace algorithms {
@@ -6,6 +7,7 @@ namespace algorithms {
 void diff_priv_worker(const uint64_t tid,
                       const PathHandleGraph& graph,
                       const std::function<void(step_handle_t, step_handle_t)> callback,
+                      const std::function<handle_t(std::mt19937&)> sample_handle,
                       const std::atomic<uint64_t>& step_count,
                       const double target_steps,
                       const double epsilon,
@@ -14,8 +16,8 @@ void diff_priv_worker(const uint64_t tid,
 
     std::random_device rd;
     std::mt19937 mt(rd()); // fully random seed
-    std::uniform_int_distribution<uint64_t> dist(1, graph.get_node_count());
-    std::uniform_int_distribution<uint64_t> coin(0, 1);
+    //std::uniform_int_distribution<uint64_t> dist(1, graph.get_node_count());
+    //std::uniform_int_distribution<uint64_t> coin(0, 1);
     std::uniform_real_distribution<double> unif(0,1);
     random_selector<> selector{};
 
@@ -24,10 +26,9 @@ void diff_priv_worker(const uint64_t tid,
     // algorithm
     while (step_count < target_steps) {
         //std::cerr << "steps vs " << step_count << " < " << target_steps << std::endl;
-        // we randomly sample a starting node (todo: step)
-        uint64_t rand_id = dist(mt);
-        // we collect all steps on the node, picking a random orientation
-        handle_t h = graph.get_handle(rand_id, (bool)coin(mt));
+        // we randomly sample a starting node and orientation, weighted by node length
+        handle_t h = sample_handle(mt);
+        //handle_t h = graph.get_handle(rand_id, (bool)coin(mt));
         // we collect all potential forward extensions
         step_ranges_t ranges;
         graph.for_each_step_on_handle(
@@ -57,7 +58,6 @@ void diff_priv_worker(const uint64_t tid,
             double sum_weights = 0;
             for (auto& n : nexts) {
                 double u = (double)n.second.size();
-                // infs to remove
                 double d_u = u - (double)(n.second.size()-1);
                 double w = exp((epsilon * u) / (2 * d_u));
                 weights.push_back(std::make_pair(w, n.first));
@@ -91,7 +91,6 @@ void diff_priv_worker(const uint64_t tid,
             // check stopping conditions
             // 1) depth < min_haplotype_freq (2 by default)
             // 2) length > threshold
-            // something weighted by utility
             walk_length += graph.get_length(opt);
             if (ranges.size() < min_haplotype_freq) {
                 break; // do nothing
@@ -166,6 +165,33 @@ void diff_priv(
         }
     };
 
+    uint64_t graph_bp = 0;
+    // make a rank select dictionary over our sequence space
+    // to get a node randomly distributed in the total length of the graph
+    graph.for_each_handle(
+        [&](const handle_t& h) {
+            graph_bp += graph.get_length(h);
+        });
+    //sdsl::bit_vector graph_vec();
+    sdsl::bit_vector graph_bv(graph_bp);
+    graph_bp = 0;
+    graph.for_each_handle(
+        [&](const handle_t& h) {
+            graph_bv[graph_bp] = 1;
+            graph_bp += graph.get_length(h);
+        });
+    sdsl::bit_vector::rank_1_type graph_bv_rank;
+    sdsl::util::assign(graph_bv_rank, sdsl::bit_vector::rank_1_type(&graph_bv));
+    std::uniform_int_distribution<uint64_t> dis_graph_pos = std::uniform_int_distribution<uint64_t>(0, graph_bp-1);
+    std::uniform_int_distribution<uint64_t> flip(0, 1);
+    auto sample_handle = [&](std::mt19937& gen) {
+        uint64_t pos = dis_graph_pos(gen)+1;
+        uint64_t id = graph_bv_rank(pos);
+        //std::cerr << "pos=" << pos << " id=" << id << std::endl;
+        handle_t h = graph.get_handle(id, flip(gen));
+        return h;
+    };
+
     std::vector<std::thread> workers;
     workers.reserve(nthreads);
     for (uint64_t t = 0; t < nthreads; ++t) {
@@ -173,6 +199,7 @@ void diff_priv(
                              t,
                              std::cref(graph),
                              writer_callback,
+                             sample_handle,
                              std::cref(step_count),
                              target_steps,
                              epsilon,
@@ -199,8 +226,7 @@ void diff_priv(
             });
     });
 
-    // the emitted graph is not "differentially private" as it may leak information
-    // due to its topology
+    // the emitted graph is not "differentially private" as it may leak information due to its topology
     // further filtering and normalization are indicated to achieve a differentially private result
     // or, the path sequences can be extracted in FASTA and the graph rebuilt
 
