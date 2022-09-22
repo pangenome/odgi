@@ -51,9 +51,9 @@ void diff_priv_worker(const uint64_t tid,
             std::vector<std::pair<double, handle_t>> weights;
             double sum_weights = 0;
             for (auto& n : nexts) {
-                double u = (double)n.second.size();
-                double d_u = u - (double)(n.second.size()-1);
-                double w = exp((epsilon * u) / (2 * d_u));
+                double u = (double)n.second.size(); // utility == count
+                double d_u = 1; // by definition, removing a represented individual haplotype reduces utility by 1
+                double w = exp((epsilon * u) / (2 * d_u)); // our weight
                 weights.push_back(std::make_pair(w, n.first));
                 sum_weights += w;
                 //std::cerr << "u=" << u << " d_u=" << d_u << " w=" << w << std::endl;
@@ -198,7 +198,12 @@ void diff_priv(
     }
 
     // embed edges
+    std::vector<path_handle_t> paths;
     priv.for_each_path_handle([&](const path_handle_t& p) {
+        paths.push_back(p);
+    });
+#pragma omp parallel for
+    for (auto& p : paths) {
         priv.for_each_step_in_path(
             p,
             [&](const step_handle_t& s) {
@@ -208,7 +213,7 @@ void diff_priv(
                         priv.get_handle_of_step(priv.get_next_step(s)));
                 }
             });
-    });
+    }
 
     // the emitted graph is not "differentially private" as it may leak information due to its topology
     // further filtering and normalization are indicated to achieve a differentially private result
