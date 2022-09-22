@@ -23,8 +23,7 @@ int main_priv(int argc, char** argv) {
     args::ArgumentParser parser("Differentially private transformation of graph path space.");
     args::Group mandatory_opts(parser, "[ MANDATORY ARGUMENTS ]");
     args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
-    args::ValueFlag<std::string> dg_out_file(mandatory_opts, "FILE", "Write the sorted dynamic succinct variation graph to this file. A file"
-                                             " ending with *.og* is recommended.", {'o', "out"});
+    args::ValueFlag<std::string> dg_out_file(mandatory_opts, "FILE", "Write the graph with sub-paths sampled under differential privacy to this FILE (.og recommended).", {'o', "out"});
     args::Group mechanism_opts(parser, "[ Differential Privacy Mechanism Options ]");
     args::ValueFlag<double> input_epsilon(mechanism_opts, "e", "Epsilon for exponential mechanism. [default: 0.001]", {'e', "epsilon"});
     args::ValueFlag<double> target_depth(mechanism_opts, "DEPTH", "Sample until we have approximately this path depth.", {'d', "target-depth"});
