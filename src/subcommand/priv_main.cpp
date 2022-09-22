@@ -84,10 +84,11 @@ int main_priv(int argc, char** argv) {
         std::cerr << "[odgi::priv] WARNING: setting -c, --min-hap-freq to less than 2 is not recommended due to singularities that arise in the exponential mechanism." << std::endl;
     }
     bool write_haps = args::get(input_write_haps);
+    bool show_progress = args::get(progress);
 
     graph_t priv;
 
-    algorithms::diff_priv(graph, priv, epsilon, depth, min_haplotype_freq, bp_limit, num_threads, write_haps);
+    algorithms::diff_priv(graph, priv, epsilon, depth, min_haplotype_freq, bp_limit, num_threads, show_progress, write_haps);
 
     const std::string outfile = args::get(dg_out_file);
     if (outfile == "-") {

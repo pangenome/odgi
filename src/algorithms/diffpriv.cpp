@@ -101,49 +101,13 @@ void diff_priv(
     const double min_haplotype_freq,
     const uint64_t bp_limit,
     const uint64_t nthreads,
+    const bool progress_reporting,
     const bool write_samples) {
 
     // copy the sequence space of the graph into priv
     graph.for_each_handle([&](const handle_t& h) {
         priv.create_handle(graph.get_sequence(h), graph.get_id(h));
     });
-
-    std::atomic<size_t> written_paths(0);
-    // handles our sampled ranges
-    auto writer_callback = [&](step_handle_t a, step_handle_t b) {
-        // write the walk
-        std::stringstream ss;
-        ss << "hap" << ++written_paths;
-        std::string name = ss.str();
-        path_handle_t p;
-#pragma omp critical (priv_path_create)
-        {
-            p = priv.create_path_handle(name);
-        }
-        for (step_handle_t s = a;
-             ;
-             s = graph.get_next_step(s)) {
-            handle_t h = graph.get_handle_of_step(s);
-            handle_t j = priv.get_handle(graph.get_id(h), graph.get_is_reverse(h));
-            priv.append_step(p, j);
-            //++range_step_count;
-            if (s == b) break;
-        }
-        if (write_samples) {
-            std::stringstream ss;
-            ss << name << "\t";
-            for (step_handle_t s = a;
-                 ;
-                 s = graph.get_next_step(s)) {
-                handle_t h = graph.get_handle_of_step(s);
-                ss << (graph.get_is_reverse(h) ? "<" : ">")
-                   << graph.get_id(h);
-                if (s == b) break;
-            }
-#pragma omp critical (cout)
-            std::cout << ss.str() << std::endl;
-        }
-    };
 
     uint64_t graph_bp = 0;
     // make a rank select dictionary over our sequence space
@@ -175,6 +139,52 @@ void diff_priv(
         return h;
     };
 
+    std::unique_ptr<progress_meter::ProgressMeter> sampling_progress;
+    if (progress_reporting) {
+        std::string banner = "[odgi::priv] exponential mechanism sampling subpaths:";
+        sampling_progress = std::make_unique<progress_meter::ProgressMeter>(target_length, banner);
+    }
+    std::atomic<size_t> written_paths(0);
+    // handles our sampled ranges
+    auto writer_callback = [&](step_handle_t a, step_handle_t b) {
+        // write the walk
+        std::stringstream ss;
+        ss << "hap" << ++written_paths;
+        std::string name = ss.str();
+        path_handle_t p;
+#pragma omp critical (priv_path_create)
+        {
+            p = priv.create_path_handle(name);
+        }
+        uint64_t sample_length = 0;
+        for (step_handle_t s = a;
+             ;
+             s = graph.get_next_step(s)) {
+            handle_t h = graph.get_handle_of_step(s);
+            sample_length += graph.get_length(h);
+            handle_t j = priv.get_handle(graph.get_id(h), graph.get_is_reverse(h));
+            priv.append_step(p, j);
+            if (s == b) break;
+        }
+        if (progress_reporting) {
+            sampling_progress->increment(sample_length);
+        }
+        if (write_samples) {
+            std::stringstream ss;
+            ss << name << "\t";
+            for (step_handle_t s = a;
+                 ;
+                 s = graph.get_next_step(s)) {
+                handle_t h = graph.get_handle_of_step(s);
+                ss << (graph.get_is_reverse(h) ? "<" : ">")
+                   << graph.get_id(h);
+                if (s == b) break;
+            }
+#pragma omp critical (cout)
+            std::cout << ss.str() << std::endl;
+        }
+    };
+
     std::vector<std::thread> workers;
     workers.reserve(nthreads);
     for (uint64_t t = 0; t < nthreads; ++t) {
@@ -194,6 +204,10 @@ void diff_priv(
 
     for (uint64_t t = 0; t < nthreads; ++t) {
         workers[t].join();
+    }
+
+    if (progress_reporting) {
+        sampling_progress->finish();
     }
 
     // embed edges

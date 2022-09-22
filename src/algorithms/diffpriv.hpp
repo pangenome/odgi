@@ -12,6 +12,7 @@
 #include <handlegraph/path_handle_graph.hpp>
 #include <handlegraph/mutable_path_deletable_handle_graph.hpp>
 #include <handlegraph/util.hpp>
+#include "progress.hpp"
 //#include "hash_map.hpp"
 
 namespace odgi {
@@ -28,6 +29,7 @@ void diff_priv(
     const double min_haplotype_freq,
     const uint64_t bp_limit,
     const uint64_t nthreads,
+    const bool progress_reporting,
     const bool write_samples);
 
 // for selecting one-of-a-set-of-steps, adapted from https://gist.github.com/cbsmith/5538174
