@@ -91,10 +91,10 @@ int main_priv(int argc, char** argv) {
 
     const std::string outfile = args::get(dg_out_file);
     if (outfile == "-") {
-        graph.serialize(std::cout);
+        priv.serialize(std::cout);
     } else {
         ofstream f(outfile.c_str());
-        graph.serialize(f);
+        priv.serialize(f);
         f.close();
     }
 

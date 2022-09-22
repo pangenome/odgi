@@ -1,6 +1,7 @@
 #pragma once
 
 #include <handlegraph/path_handle_graph.hpp>
+#include <handlegraph/mutable_path_deletable_handle_graph.hpp>
 #include <handlegraph/util.hpp>
 #include <vector>
 #include <set>
@@ -20,7 +21,8 @@ using namespace handlegraph;
 
 void diff_priv(
     const PathHandleGraph& graph,
-    PathHandleGraph& priv,
+    MutablePathDeletableHandleGraph& priv,
+    //PathHandleGraph& priv,
     const double epsilon,
     const double target_coverage,
     const double min_haplotype_freq,
