@@ -115,17 +115,17 @@ void diff_priv(
     const uint64_t nthreads) {
 
     std::atomic<uint64_t> step_count(0);
-    std::cerr << "target coverage " << target_coverage << std::endl;
+    //std::cerr << "target coverage " << target_coverage << std::endl;
     uint64_t target_steps = graph.get_node_count() * target_coverage;
-    std::cerr << "target steps = " << target_steps << std::endl;
-    uint64_t written_paths = 0;
+    //std::cerr << "target steps = " << target_steps << std::endl;
+    std::atomic<size_t> written_paths(0);
 
     //
     auto writer_callback = [&](step_handle_t a, step_handle_t b) {
         // write the walk
         uint64_t range_step_count = 0;
         std::stringstream ss;
-        ss << "hap" << written_paths << "\t";
+        ss << "hap" << ++written_paths << "\t";
         for (step_handle_t s = a;
              ;
              s = graph.get_next_step(s)) {
@@ -139,7 +139,6 @@ void diff_priv(
 #pragma omp critical (cout)
         std::cout << ss.str();
         step_count.fetch_add(range_step_count);
-        ++written_paths;
     };
 
     std::vector<std::thread> workers;

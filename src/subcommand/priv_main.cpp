@@ -80,6 +80,10 @@ int main_priv(int argc, char** argv) {
     double epsilon = input_epsilon ? args::get(input_epsilon) : 0.001;
     uint64_t bp_limit = input_bp_limit ? args::get(input_bp_limit) : 10000;
     uint64_t min_haplotype_freq = input_min_hap_freq ? args::get(input_min_hap_freq) : 2;
+    if (min_haplotype_freq < 2) {
+        std::cerr << "[odgi::priv] ERROR: setting -c, --min-hap-freq to less than 2 is not supported due to singularities that arise in the exponential mechanism." << std::endl;
+        return 1;
+    }
 
     graph_t priv;
 
