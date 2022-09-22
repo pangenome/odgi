@@ -53,7 +53,7 @@ Differential Privacy Mechanism
 ------------------------------
 
 | **-e, --epsilon**\ =\ *ε*
-| Epsilon (ε) for exponential mechanism. [default: 0.001]
+| Epsilon (ε) for exponential mechanism. [default: 0.01]
 
 | **-d, --target-depth**\ =\ *DEPTH*
 | Sample until we have approximately this path depth over the graph. [default: 1]
