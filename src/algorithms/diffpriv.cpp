@@ -51,12 +51,12 @@ void diff_priv_worker(const uint64_t tid,
             std::vector<std::pair<double, handle_t>> weights;
             double sum_weights = 0;
             for (auto& n : nexts) {
-                double u = (double)n.second.size(); // utility == count
-                double d_u = 1; // by definition, removing a represented individual haplotype reduces utility by 1
+                double u = std::log1p((double)n.second.size()); // utility == log(count)
+                double d_u = u - std::log1p((double)n.second.size()-1); // sensitivity
                 double w = exp((epsilon * u) / (2 * d_u)); // our weight
                 weights.push_back(std::make_pair(w, n.first));
                 sum_weights += w;
-                //std::cerr << "u=" << u << " d_u=" << d_u << " w=" << w << std::endl;
+                //std::cerr << "f=" << n.second.size() << " u=" << u << " d_u=" << d_u << " w=" << w << std::endl;
             }
             // apply the exponential mechanism using weighted sampling
             // first we sample within the range of the sum of weights
@@ -82,7 +82,7 @@ void diff_priv_worker(const uint64_t tid,
                 break; // do nothing
             }
             if (ranges.size() >= min_haplotype_freq
-                && walk_length > bp_limit) {
+                && walk_length >= bp_limit) {
                 // get a random range to avoid orientation bias
                 auto& r = selector(ranges);
                 sampled_length.fetch_add(walk_length);
