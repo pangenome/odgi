@@ -300,7 +300,6 @@ int main_layout(int argc, char **argv) {
           case 'r': {
               graph_X[pos].store(uniform_noise_in_length(rng));
               graph_Y[pos].store(uniform_noise_in_length(rng));
-              len += graph.get_length(h);
               graph_X[pos + 1].store(uniform_noise_in_length(rng));
               graph_Y[pos + 1].store(uniform_noise_in_length(rng));
               break;
