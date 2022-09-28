@@ -72,6 +72,9 @@ Path Modification Options
 | **-X, --drop-paths**\ =\ *[FILE]*
 | Drop paths listed (by line) in *FILE*.
 
+| **-o, --out**\ =\ *FILE*
+| Write the dynamic succinct variation graph to this file (e.g. *.og*)
+
 Threading
 ---------
 

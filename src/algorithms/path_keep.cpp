@@ -4,7 +4,6 @@ namespace odgi {
 namespace algorithms {
 
 void keep_paths(const graph_t& graph, graph_t& into, const ska::flat_hash_set<path_handle_t>& to_keep) {
-    // for each path, find its average orientation
     graph.for_each_handle([&](const handle_t& h) {
         into.create_handle(graph.get_sequence(h), graph.get_id(h));
     });
@@ -27,7 +26,7 @@ void keep_paths(const graph_t& graph, graph_t& into, const ska::flat_hash_set<pa
             into.create_path_handle(graph.get_path_name(path));
         }
     }
-    // then add the steps in parallel
+    // add the steps in parallel
 #pragma omp parallel for
     for (auto& path : paths) {
         if (to_keep.count(path)) {

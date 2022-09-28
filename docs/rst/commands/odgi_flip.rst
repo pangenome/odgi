@@ -26,7 +26,7 @@ MANDATORY OPTIONS
 | Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!
 
 | **-o, --out**\ =\ *FILE*
-| Write the graph with fliped paths to *.og*.
+| Write the graph with flipped paths to *.og*.
 
 Threading
 ---------
