@@ -5,6 +5,7 @@
 #include "position.hpp"
 #include <omp.h>
 #include "utils.hpp"
+#include "algorithms/path_keep.hpp"
 
 namespace odgi {
 
@@ -28,10 +29,11 @@ int main_paths(int argc, char** argv) {
     std::string prog_name = "odgi paths";
     argv[0] = (char*)prog_name.c_str();
     --argc;
-    
+
     args::ArgumentParser parser("Interrogate the embedded paths of a graph. Does not print anything to stdout by default!");
     args::Group mandatory_opts(parser, "[ MANDATORY ARGUMENTS ]");
     args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
+    args::ValueFlag<std::string> dg_out_file(mandatory_opts, "FILE", "Write the sorted dynamic succinct variation graph to this file (e.g. *.og*).", {'o', "out"});
     args::Group path_investigation_opts(parser, "[ Path Investigation Options ]");
     args::ValueFlag<std::string> overlaps_file(path_investigation_opts, "FILE", "Read in the path grouping *FILE* to generate the overlap statistics"
                                                                " from. The file must be tab-delimited. The first column lists a"
@@ -54,6 +56,9 @@ int main_paths(int argc, char** argv) {
                                                                     " set, it will be path groups distances. Each line prints in a tab-delimited format to stdout:"
                                                                     " *path.a*, *path.b*, *path.a.length*, *path.b.length*, *intersection*, *jaccard*, *euclidean*." , {'d', "distance"});
     args::Flag write_fasta(path_investigation_opts, "fasta", "Print paths in FASTA format to stdout. One line for the FASTA header, another line for the whole sequence.", {'f', "fasta"});
+    args::Group path_modification_opts(parser, "[ Path Modification Options ]");
+    args::ValueFlag<std::string> keep_paths_file(path_modification_opts, "FILE", "Keep paths listed (by line) in *FILE*.", {'K', "keep-paths"});
+    args::ValueFlag<std::string> drop_paths_file(path_modification_opts, "FILE", "Drop paths listed (by line) in *FILE*.", {'X', "drop-paths"});
     args::Group threading_opts(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> threads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 	args::Group processing_info_opts(parser, "[ Processing Information ]");
@@ -78,6 +83,11 @@ int main_paths(int argc, char** argv) {
 
     if (!dg_in_file) {
         std::cerr << "[odgi::paths] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
+        return 1;
+    }
+
+    if (!dg_out_file && (keep_paths_file || drop_paths_file)) {
+        std::cerr << "[odgi::paths] error: when keeping or dropping paths please specify an output file to store the graph via -o=[FILE], --out=[FILE]." << std::endl;
         return 1;
     }
 
@@ -374,11 +384,67 @@ int main_paths(int argc, char** argv) {
                     std::set_intersection(v1.begin(),v1.end(),
                                           v2.begin(),v2.end(),
                                           back_inserter(v3));
-                    //ska::flat_hash_map<std::string, std::vector<pos_t> > path_decomposition;                    
+                    //ska::flat_hash_map<std::string, std::vector<pos_t> > path_decomposition;
                     std::cout << group_name << "\t" << paths[i] << "\t" << paths[j]
                               << "\t" << v3.size()
                               << "\t" << (float)v3.size()/((float)(v1.size()+v2.size())/2) << std::endl;
                 }
+            }
+        }
+    }
+
+    if (keep_paths_file || drop_paths_file) {
+        //to_keep
+        ska::flat_hash_set<path_handle_t> to_keep;
+        if (keep_paths_file) {
+            std::string line;
+            auto& x = args::get(keep_paths_file);
+            std::ifstream infile(x);
+            while (std::getline(infile, line)) {
+                // This file should contain path names, one per line
+                auto& name = line;
+                if (graph.has_path(name)) {
+                    to_keep.insert(graph.get_path_handle(name));
+                } else {
+                    std::cerr << "[odgi::paths] error: path'" << name
+                              << "' does not exist in graph." << std::endl;
+                    return 1;
+                }
+            }
+        } else {
+            graph.for_each_path_handle([&to_keep](const path_handle_t& p) {
+                to_keep.insert(p);
+            });
+        }
+        if (drop_paths_file) {
+            std::string line;
+            auto& x = args::get(drop_paths_file);
+            std::ifstream infile(x);
+            while (std::getline(infile, line)) {
+                // This file should contain path names, one per line
+                auto& name = line;
+                if (graph.has_path(name)) {
+                    auto p = graph.get_path_handle(name);
+                    assert(to_keep.count(p) == 1);
+                    to_keep.erase(p);
+                } else {
+                    std::cerr << "[odgi::paths] error: path'" << name
+                              << "' does not exist in graph." << std::endl;
+                    return 1;
+                }
+            }
+        }
+        graph_t into;
+        algorithms::keep_paths(graph, into, to_keep);
+        // write the graph
+        if (dg_out_file) {
+            const std::string outfile = args::get(dg_out_file);
+            if (outfile == "-") {
+                into.serialize(std::cout);
+            } else {
+                ofstream f(outfile.c_str());
+                into.serialize(f);
+                f.close();
             }
         }
     }
