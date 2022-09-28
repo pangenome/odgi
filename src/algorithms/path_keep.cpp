@@ -10,11 +10,18 @@ void keep_paths(const graph_t& graph, graph_t& into, const ska::flat_hash_set<pa
     });
     std::vector<path_handle_t> paths;
     graph.for_each_path_handle([&](const path_handle_t& p) { paths.push_back(p); });
+    // ensure we have the same path handle order as in the original graph
+    for (auto& path : paths) {
+        if (to_keep.count(path)) {
+            into.create_path_handle(graph.get_path_name(path));
+        }
+    }
+    // then add the steps in parallel
 #pragma omp parallel for
     for (auto& path : paths) {
         if (to_keep.count(path)) {
             // add the path as-is
-            auto w = into.create_path_handle(graph.get_path_name(path));
+            auto w = into.get_path_handle(graph.get_path_name(path));
             graph.for_each_step_in_path(
                 path,
                 [&w,&into,&graph](const step_handle_t& s) {
