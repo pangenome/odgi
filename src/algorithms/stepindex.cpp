@@ -129,6 +129,10 @@ void step_index_t::load(const std::string& name) {
 	step_mphf->load(stpidx_in);
 }
 
+const uint64_t step_index_t::get_sample_rate() {
+	return this->sample_rate;
+}
+
 void step_index_t::serialize_members(std::ostream &out) const {
 	serialize_and_measure(out);
 }

@@ -79,6 +79,7 @@ namespace odgi {
 
 			SECTION("The index delivers the correct positions for a given step. Sample rate: 1.") {
 				step_index_t step_index_1(graph, paths, 1, false, 1);
+				REQUIRE(step_index_1.get_sample_rate() == 1);
 				graph.for_each_path_handle([&](const path_handle_t path) {
 					std::string cur_path = graph.get_path_name(path);
 					if (cur_path == "target") {
@@ -188,6 +189,7 @@ namespace odgi {
 
 			SECTION("The index delivers the correct positions for a given step. Sample rate: 2.") {
 				step_index_t step_index_2(graph, paths, 1, false, 2);
+				REQUIRE(step_index_2.get_sample_rate() == 2);
 				graph.for_each_path_handle([&](const path_handle_t path) {
 					std::string cur_path = graph.get_path_name(path);
 					if (cur_path == "target") {
@@ -281,99 +283,7 @@ namespace odgi {
 
 			SECTION("The index delivers the correct positions for a given step. Sample rate: 4.") {
 				step_index_t step_index_4(graph, paths, 1, false, 4);
-				graph.for_each_path_handle([&](const path_handle_t path) {
-					std::string cur_path = graph.get_path_name(path);
-					if (cur_path == "target") {
-						uint64_t cur_step_rank = 0;
-						graph.for_each_step_in_path(path, [&](const step_handle_t& occ) {
-							switch(cur_step_rank) {
-								case 0:
-									REQUIRE(step_index_4.get_position(occ, graph) == 0);
-									break;
-								case 1:
-									REQUIRE(step_index_4.get_position(occ, graph) == 1);
-									break;
-								case 2:
-									REQUIRE(step_index_4.get_position(occ, graph) == 2);
-									break;
-								case 3:
-									REQUIRE(step_index_4.get_position(occ, graph) == 5);
-									break;
-								case 4:
-									REQUIRE(step_index_4.get_position(occ, graph) == 8);
-									break;
-								case 5:
-									REQUIRE(step_index_4.get_position(occ, graph) == 11);
-									break;
-							}
-							cur_step_rank++;
-						});
-					}
-
-					if (cur_path == "query1") {
-						uint64_t cur_step_rank = 0;
-						graph.for_each_step_in_path(path, [&](const step_handle_t& occ) {
-							switch(cur_step_rank) {
-								case 0:
-									REQUIRE(step_index_4.get_position(occ, graph) == 0);
-									break;
-								case 1:
-									REQUIRE(step_index_4.get_position(occ, graph) == 1);
-									break;
-								case 2:
-									REQUIRE(step_index_4.get_position(occ, graph) == 2);
-									break;
-								case 3:
-									REQUIRE(step_index_4.get_position(occ, graph) == 5);
-									break;
-							}
-							cur_step_rank++;
-						});
-					}
-
-					if (cur_path == "query2") {
-						uint64_t cur_step_rank = 0;
-						graph.for_each_step_in_path(path, [&](const step_handle_t& occ) {
-							switch(cur_step_rank) {
-								case 0:
-									REQUIRE(step_index_4.get_position(occ, graph) == 0);
-									break;
-							}
-							cur_step_rank++;
-						});
-					}
-
-					if (cur_path == "query3") {
-						uint64_t cur_step_rank = 0;
-						graph.for_each_step_in_path(path, [&](const step_handle_t& occ) {
-							switch(cur_step_rank) {
-								case 0:
-									REQUIRE(step_index_4.get_position(occ, graph) == 0);
-									break;
-								case 1:
-									REQUIRE(step_index_4.get_position(occ, graph) == 3);
-									break;
-								case 2:
-									REQUIRE(step_index_4.get_position(occ, graph) == 4);
-									break;
-								case 3:
-									REQUIRE(step_index_4.get_position(occ, graph) == 5);
-									break;
-								case 4:
-									REQUIRE(step_index_4.get_position(occ, graph) == 8);
-									break;
-								case 5:
-									REQUIRE(step_index_4.get_position(occ, graph) == 11);
-									break;
-							}
-							cur_step_rank++;
-						});
-					}
-				});
-			}
-
-			SECTION("The index delivers the correct positions for a given step. Sample rate: 4.") {
-				step_index_t step_index_4(graph, paths, 1, false, 4);
+				REQUIRE(step_index_4.get_sample_rate() == 4);
 				graph.for_each_path_handle([&](const path_handle_t path) {
 					std::string cur_path = graph.get_path_name(path);
 					if (cur_path == "target") {
@@ -467,6 +377,7 @@ namespace odgi {
 
 			SECTION("The index delivers the correct positions for a given step. Sample rate: 8.") {
 				step_index_t step_index_8(graph, paths, 1, false, 8);
+				REQUIRE(step_index_8.get_sample_rate() == 8);
 				graph.for_each_path_handle([&](const path_handle_t path) {
 					std::string cur_path = graph.get_path_name(path);
 					if (cur_path == "target") {
@@ -560,6 +471,7 @@ namespace odgi {
 
 			SECTION("The index delivers the correct positions for a given step. Sample rate: 16.") {
 				step_index_t step_index_16(graph, paths, 1, false, 16);
+				REQUIRE(step_index_16.get_sample_rate() == 16);
 				graph.for_each_path_handle([&](const path_handle_t path) {
 					std::string cur_path = graph.get_path_name(path);
 					if (cur_path == "target") {
@@ -659,6 +571,9 @@ namespace odgi {
 
 				step_index_t step_index_loaded;
 				step_index_loaded.load(basename + "unittest.stpidx");
+
+				REQUIRE(step_index_to_save.get_sample_rate() == 8);
+				REQUIRE(step_index_loaded.get_sample_rate() == 8);
 
 				graph.for_each_path_handle([&](const path_handle_t path) {
 					std::string cur_path = graph.get_path_name(path);
