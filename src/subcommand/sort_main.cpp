@@ -12,7 +12,7 @@
 //#include "algorithms/mondriaan_sort.hpp"
 #include "algorithms/linear_sgd.hpp"
 #include "algorithms/xp.hpp"
-#include "algorithms/path_sgd.hpp"
+#include "algorithms/pg_sgd/path_sgd.hpp"
 #include "algorithms/groom.hpp"
 #include "algorithms/stepindex.hpp"
 
@@ -151,6 +151,13 @@ int main_sort(int argc, char** argv) {
         return 1;
     }
 
+	if (xp_in_file && ssi_in_file) {
+		std::cerr
+				<< "[odgi::sort] error: the PG-SGD algorithm can only work with an XP (odgi pathindex) or with a sample step index (odgi stepindex). Please only enter one of those."
+				<< std::endl;
+		return 1;
+	}
+
 	const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
 
 	graph_t graph;
@@ -227,6 +234,7 @@ int main_sort(int argc, char** argv) {
         return 1;
     }
 
+	// even if no XP is given, it is likely we will build one automatically
     if (tmp_base) {
         xp::temp_file::set_dir(args::get(tmp_base));
     } else {
@@ -333,7 +341,9 @@ int main_sort(int argc, char** argv) {
     uint64_t path_sgd_zipf_space, path_sgd_zipf_space_max, path_sgd_zipf_space_quantization_step, path_sgd_zipf_max_number_of_distributions;
     std::vector<path_handle_t> path_sgd_use_paths;
     xp::XP path_index;
-    bool fresh_path_index = false;
+	// TODO add SSI here
+	// const algorithms::step_index_t &sampled_step_index
+    bool fresh_step_index = false;
     std::string snapshot_prefix;
     if (snapshot) {
         snapshot_prefix = args::get(p_sgd_snapshot);
@@ -345,7 +355,7 @@ int main_sort(int argc, char** argv) {
 			target_paths = load_paths(args::get(_p_sgd_target_paths));
 			sort_graph_by_target_paths(graph, target_paths, is_ref);
 		}
-        // take care of path index
+        // TODO take care of path index or sampled step index
         if (xp_in_file) {
             std::ifstream in;
             in.open(args::get(xp_in_file));
@@ -354,7 +364,7 @@ int main_sort(int argc, char** argv) {
         } else {
             path_index.from_handle_graph(graph, num_threads);
         }
-        fresh_path_index = true;
+        fresh_step_index = true;
         // do we only want so sample from a subset of paths?
         if (p_sgd_in_file) {
             std::string buf;
@@ -450,7 +460,8 @@ int main_sort(int argc, char** argv) {
                     order = algorithms::random_order(graph);
                     break;
                 case 'Y': {
-                    if (!fresh_path_index) {
+                    if (!fresh_step_index) {
+						// TODO what about the SSI?
                         path_index.clean();
 						// do we have to sort by reference nodes first?
 						if (_p_sgd_target_paths) {
@@ -502,7 +513,7 @@ int main_sort(int argc, char** argv) {
                 assert(false);
             }
             graph.apply_ordering(order, true);
-            fresh_path_index = false;
+            fresh_step_index = false;
         }
     } else if (args::get(two)) {
         graph.apply_ordering(algorithms::two_way_topological_order(&graph), true);

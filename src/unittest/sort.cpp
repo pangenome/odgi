@@ -13,7 +13,7 @@
 #include <unordered_set>
 #include <random>
 #include <xp.hpp>
-#include <path_sgd.hpp>
+#include "algorithms/pg_sgd/path_sgd.hpp"
 
 namespace odgi {
 namespace unittest {

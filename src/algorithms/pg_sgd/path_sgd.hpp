@@ -10,17 +10,17 @@
 #include <atomic>
 #include <handlegraph/path_handle_graph.hpp>
 #include <handlegraph/handle_graph.hpp>
-#include "xp.hpp"
-#include "sgd_term.hpp"
+#include "../xp.hpp"
+#include "../sgd_term.hpp"
 #include "IITree.h"
 #include <zipfian_int_distribution.h>
 #include <iomanip>
 #include <string>
-#include "weakly_connected_components.hpp"
+#include "../weakly_connected_components.hpp"
 #include <sdsl/bit_vectors.hpp>
 #include "dirty_zipfian_int_distribution.h"
 #include "XoshiroCpp.hpp"
-#include "progress.hpp"
+#include "../progress.hpp"
 #include "utils.hpp"
 
 #include <fstream>

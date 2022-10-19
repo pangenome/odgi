@@ -4,8 +4,7 @@
 #include "args.hxx"
 #include <omp.h>
 #include "algorithms/xp.hpp"
-#include "algorithms/sgd_layout.hpp"
-#include "algorithms/path_sgd_layout.hpp"
+#include "algorithms/pg_sgd/path_sgd_layout.hpp"
 #include "algorithms/draw.hpp"
 #include "algorithms/layout.hpp"
 #include "hilbert.hpp"
