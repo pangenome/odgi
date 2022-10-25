@@ -15,6 +15,7 @@
 #include "algorithms/pg_sgd/path_sgd_helper.hpp"
 #include "algorithms/groom.hpp"
 #include "algorithms/stepindex.hpp"
+#include "utils.hpp"
 
 namespace odgi {
 
@@ -209,84 +210,6 @@ int main_sort(int argc, char** argv) {
         graph.optimize();
     }
 
-	// FIXME We have this function here and in flip_main.cpp, groom_main.cpp, tips_main.cpp, and untangle_main.cpp
-	// path loading
-	auto load_paths = [&](const std::string& path_names_file) {
-		std::ifstream path_names_in(path_names_file);
-		uint64_t num_of_paths_in_file = 0;
-		std::vector<bool> path_already_seen;
-		path_already_seen.resize(graph.get_path_count(), false);
-		std::string line;
-		std::vector<path_handle_t> paths;
-		while (std::getline(path_names_in, line)) {
-			if (!line.empty()) {
-				if (graph.has_path(line)) {
-					const path_handle_t path = graph.get_path_handle(line);
-					const uint64_t path_rank = as_integer(path) - 1;
-					if (!path_already_seen[path_rank]) {
-						path_already_seen[path_rank] = true;
-						paths.push_back(path);
-					} else {
-						std::cerr << "[odgi::sort] error: in the path list there are duplicated path names."
-								  << std::endl;
-						exit(1);
-					}
-				}
-				++num_of_paths_in_file;
-			}
-		}
-		path_names_in.close();
-		std::cerr << "[odgi::sort] found " << paths.size() << "/" << num_of_paths_in_file
-				  << " paths to consider." << std::endl;
-		if (paths.empty()) {
-			std::cerr << "[odgi::sort] error: no path to consider." << std::endl;
-			exit(1);
-		}
-		return paths;
-	};
-
-	// FIXME put this into the helper
-	auto sort_graph_by_target_paths = [&](graph_t& graph, std::vector<path_handle_t> target_paths, std::vector<bool>& is_ref) {
-		std::vector<handle_t> target_order;
-		std::fill_n(std::back_inserter(is_ref), graph.get_node_count(), false);
-		std::unique_ptr <odgi::algorithms::progress_meter::ProgressMeter> target_paths_progress;
-		if (args::get(progress)) {
-			std::string banner = "[odgi::sort] preparing target path vectors:";
-			target_paths_progress = std::make_unique<odgi::algorithms::progress_meter::ProgressMeter>(target_paths.size(), banner);
-		}
-		for (handlegraph::path_handle_t target_path: target_paths) {
-			graph.for_each_step_in_path(
-					target_path,
-					[&](const step_handle_t &step) {
-						handle_t handle = graph.get_handle_of_step(step);
-						uint64_t i = graph.get_id(handle) - 1;
-						if (!is_ref[i]) {
-							is_ref[i] = true;
-							target_order.push_back(handle);
-						}
-					});
-			if (args::get(progress)) {
-				target_paths_progress->increment(1);
-			}
-		}
-		if (args::get(progress))  {
-			target_paths_progress->finish();
-		}
-		uint64_t ref_nodes = 0;
-		for (uint64_t i = 0; i < is_ref.size(); i++) {
-			bool ref = is_ref[i];
-			if (!ref) {
-				target_order.push_back(graph.get_handle(i + 1));
-				ref_nodes++;
-			}
-		}
-		graph.apply_ordering(target_order, true);
-
-		// refill is_ref with start->ref_nodes: 1 and ref_nodes->end: 0
-		std::fill_n(is_ref.begin(), ref_nodes, true);
-		std::fill(is_ref.begin() + ref_nodes, is_ref.end(), false);
-	};
-
     uint64_t path_sgd_iter_max = args::get(p_sgd_iter_max) ? args::get(p_sgd_iter_max) : 100;
     uint64_t path_sgd_iter_max_learning_rate = args::get(p_sgd_iter_with_max_learning_rate) ? args::get(p_sgd_iter_with_max_learning_rate) : 0;
     double path_sgd_zipf_theta = args::get(p_sgd_zipf_theta) ? args::get(p_sgd_zipf_theta) : 0.99;
@@ -313,8 +236,8 @@ int main_sort(int argc, char** argv) {
 	std::vector<path_handle_t> target_paths;
     if (p_sgd || args::get(pipeline).find('Y') != std::string::npos) {
 		if (_p_sgd_target_paths) {
-			target_paths = load_paths(args::get(_p_sgd_target_paths));
-			sort_graph_by_target_paths(graph, target_paths, is_ref);
+			target_paths = utils::load_paths(args::get(_p_sgd_target_paths), graph, "sort");
+			algorithms::sort_graph_by_target_paths(graph, target_paths, is_ref, args::get(progress));
 		}
 		// FIXME SSI should be the new default, else we take the XP we received from the input or if the input is an empty string we generate a new one anyhow
         if (xp_in_file) {
@@ -427,7 +350,7 @@ int main_sort(int argc, char** argv) {
                         path_index.clean();
 						// do we have to sort by reference nodes first?
 						if (_p_sgd_target_paths) {
-							sort_graph_by_target_paths(graph, target_paths, is_ref);
+							algorithms::sort_graph_by_target_paths(graph, target_paths, is_ref, args::get(progress));
 						}
                         path_index.from_handle_graph(graph, num_threads);
                     }

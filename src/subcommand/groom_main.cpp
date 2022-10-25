@@ -73,45 +73,9 @@ int main_groom(int argc, char** argv) {
         }
     }
 
-	// TODO We have this function here, in untangle, maybe somewhere else? Refactor!
-	// path loading
-	auto load_paths = [&](const std::string& path_names_file) {
-		std::ifstream path_names_in(path_names_file);
-		uint64_t num_of_paths_in_file = 0;
-		std::vector<bool> path_already_seen;
-		path_already_seen.resize(graph.get_path_count(), false);
-		std::string line;
-		std::vector<path_handle_t> paths;
-		while (std::getline(path_names_in, line)) {
-			if (!line.empty()) {
-				if (graph.has_path(line)) {
-					const path_handle_t path = graph.get_path_handle(line);
-					const uint64_t path_rank = as_integer(path) - 1;
-					if (!path_already_seen[path_rank]) {
-						path_already_seen[path_rank] = true;
-						paths.push_back(path);
-					} else {
-						std::cerr << "[odgi::groom] error: in the path list there are duplicated path names."
-								  << std::endl;
-						exit(1);
-					}
-				}
-				++num_of_paths_in_file;
-			}
-		}
-		path_names_in.close();
-		std::cerr << "[odgi::groom] found " << paths.size() << "/" << num_of_paths_in_file
-				  << " paths to consider." << std::endl;
-		if (paths.empty()) {
-			std::cerr << "[odgi::groom] error: no path to consider." << std::endl;
-			exit(1);
-		}
-		return paths;
-	};
-
 	std::vector<path_handle_t> target_paths;
 	if (_target_paths) {
-		target_paths = load_paths(args::get(_target_paths));
+		target_paths = utils::load_paths(args::get(_target_paths), graph, "groom");
 	}
 
     graph.apply_ordering(algorithms::groom(graph, progress, target_paths, !args::get(use_dfs)));

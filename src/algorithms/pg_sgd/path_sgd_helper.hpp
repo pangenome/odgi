@@ -24,5 +24,9 @@ namespace odgi {
 		/// get the maximum path length in nucleotides using the SSI
 		const uint64_t get_max_path_length_ssi(const std::vector<path_handle_t> &path_sgd_use_paths,
 											   const algorithms::step_index_t &sampled_step_index);
+
+		const void sort_graph_by_target_paths(graph_t& graph, const std::vector<path_handle_t> &target_paths,
+											  std::vector<bool>& is_ref,
+											  const bool &progress);
 	}
 }
