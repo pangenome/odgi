@@ -62,6 +62,7 @@ int main_sort(int argc, char** argv) {
     /// path guided linear 1D SGD
     args::Group pg_sgd_opts(parser, "[ Path Guided 1D SGD Sort ]");
     args::Flag p_sgd(pg_sgd_opts, "path-sgd", "Apply the path-guided linear 1D SGD algorithm to organize graph.", {'Y', "path-sgd"});
+	args::Flag p_sgd_xp(pg_sgd_opts, "path-sgd", "Use the faster but memory expensive XP index.", {'m', "path-sgd-path-index"});
     args::ValueFlag<std::string> p_sgd_in_file(pg_sgd_opts, "FILE", "Specify a line separated list of paths to sample from for the on the"
                                                                     " fly term generation process in the path guided linear 1D SGD (default: sample from all paths).", {'f', "path-sgd-use-paths"});
     args::ValueFlag<double> p_sgd_min_term_updates_paths(pg_sgd_opts, "N", "The minimum number of terms to be updated before a new path guided"
@@ -152,9 +153,18 @@ int main_sort(int argc, char** argv) {
         return 1;
     }
 
-	if (xp_in_file && ssi_in_file) {
+	const bool xp_way = xp_in_file || p_sgd_xp;
+
+	if (xp_way && ssi_in_file) {
 		std::cerr
-				<< "[odgi::sort] error: the PG-SGD algorithm can only work with an XP (odgi pathindex) or with a sample step index (odgi stepindex). Please only enter one of those."
+				<< "[odgi::sort] error: please specify exclusively -X=[FILE]/--path-index=[FILE], -m/--path-sgd-path-index, or -e=[FILE]/--sampled-step-index=[FILE]."
+				<< std::endl;
+		return 1;
+	}
+
+	if (xp_in_file && p_sgd_xp) {
+		std::cerr
+				<< "[odgi::sort] error: please specify -X=[FILE]/--path-index=[FILE] or -m=/--path-sgd-path-index, not both."
 				<< std::endl;
 		return 1;
 	}
@@ -195,15 +205,18 @@ int main_sort(int argc, char** argv) {
         return 1;
     }
 
-	// even if no XP is given, it is likely we will build one automatically
-	// FIXME SSI should be the new default, else we take the XP we received from the input or if the input is an empty string we generate a new one anyhow
-    if (tmp_base) {
-        xp::temp_file::set_dir(args::get(tmp_base));
-    } else {
-        char* cwd = get_current_dir_name();
-        xp::temp_file::set_dir(std::string(cwd));
-        free(cwd);
-    }
+	// SSI should be the new default, else we take the XP we received from the input or if the input is an empty string we generate a new one anyhow
+	// if an XP is given or we want to work with an XP based PG-SGD, we should set the temporary file
+	if (xp_way) {
+		std::cerr << "[odgi::sort] using XP index for the PG-SGD algorithm" << std::endl;
+		if (tmp_base) {
+			xp::temp_file::set_dir(args::get(tmp_base));
+		} else {
+			char* cwd = get_current_dir_name();
+			xp::temp_file::set_dir(std::string(cwd));
+			free(cwd);
+		}
+	}
 
     // If required, first of all, optimize the graph so that it is optimized for subsequent algorithms (if required)
     if (args::get(optimize)) {
@@ -232,44 +245,56 @@ int main_sort(int argc, char** argv) {
     if (snapshot) {
         snapshot_prefix = args::get(p_sgd_snapshot);
     }
+	// do we only want so sample from a subset of paths?
+	if (p_sgd_in_file) {
+		std::string buf;
+		std::ifstream use_paths(args::get(p_sgd_in_file).c_str());
+		while (std::getline(use_paths, buf)) {
+			// check if the path is actually in the graph, else print an error and exit 1
+			if (graph.has_path(buf)) {
+				path_sgd_use_paths.push_back(graph.get_path_handle(buf));
+			} else {
+				std::cerr << "[odgi::sort] error: path '" << buf
+						  << "' as was given by -f=[FILE], --path-sgd-use-paths=[FILE]"
+							 " is not present in the graph. Please remove this path from the file and restart 'odgi sort'.";
+			}
+		}
+		use_paths.close();
+	} else {
+		graph.for_each_path_handle(
+				[&](const path_handle_t &path) {
+					path_sgd_use_paths.push_back(path);
+				});
+	}
 	std::vector<bool> is_ref;
 	std::vector<path_handle_t> target_paths;
+	uint64_t ssi_sample_rate = 8;
     if (p_sgd || args::get(pipeline).find('Y') != std::string::npos) {
 		if (_p_sgd_target_paths) {
 			target_paths = utils::load_paths(args::get(_p_sgd_target_paths), graph, "sort");
 			algorithms::sort_graph_by_target_paths(graph, target_paths, is_ref, args::get(progress));
 		}
-		// FIXME SSI should be the new default, else we take the XP we received from the input or if the input is an empty string we generate a new one anyhow
+		// SSI should be the new default, else we take the XP we received from the input or if the input is an empty string we generate a new one anyhow
         if (xp_in_file) {
             std::ifstream in;
             in.open(args::get(xp_in_file));
             path_index.load(in);
             in.close();
-        } else {
+        } else if (p_sgd_xp) {
+			// only if we set the flag!
             path_index.from_handle_graph(graph, num_threads);
-        }
+			// do we load the SSI from file?
+        } else if (ssi_in_file) {
+			sampled_step_index.load(args::get(ssi_in_file));
+			// store the SSI sampling rate
+			ssi_sample_rate = sampled_step_index.get_sample_rate();
+			// or do we build it from scratch?
+		} else {
+			// stepindex only for selected paths
+			sampled_step_index.from_handle_graph(graph, path_sgd_use_paths, num_threads, args::get(progress), ssi_sample_rate);
+		}
         fresh_step_index = true;
-        // do we only want so sample from a subset of paths?
-        if (p_sgd_in_file) {
-            std::string buf;
-            std::ifstream use_paths(args::get(p_sgd_in_file).c_str());
-            while (std::getline(use_paths, buf)) {
-                // check if the path is actually in the graph, else print an error and exit 1
-                if (graph.has_path(buf)) {
-                    path_sgd_use_paths.push_back(graph.get_path_handle(buf));
-                } else {
-                    std::cerr << "[odgi::sort] error: path '" << buf
-                              << "' as was given by -f=[FILE], --path-sgd-use-paths=[FILE]"
-                                 " is not present in the graph. Please remove this path from the file and restart 'odgi sort'.";
-                }
-            }
-            use_paths.close();
-        } else {
-            graph.for_each_path_handle(
-                [&](const path_handle_t &path) {
-                    path_sgd_use_paths.push_back(path);
-                });
-        }
+
         uint64_t sum_path_step_count = algorithms::get_sum_path_step_count(path_sgd_use_paths, graph);
         if (args::get(p_sgd_min_term_updates_paths)) {
             path_sgd_min_term_updates = args::get(p_sgd_min_term_updates_paths) * sum_path_step_count;
@@ -281,8 +306,12 @@ int main_sort(int argc, char** argv) {
             }
         }
         uint64_t max_path_step_count = algorithms::get_max_path_step_count(path_sgd_use_paths, graph);
-		// FIXME we might have to use the SSI here
-        path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? args::get(p_sgd_zipf_space) : algorithms::get_max_path_length_xp(path_sgd_use_paths, path_index);
+		// we might have to use the SSI here
+		if (xp_way) {
+			path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? args::get(p_sgd_zipf_space) : algorithms::get_max_path_length_xp(path_sgd_use_paths, path_index);
+		} else {
+			path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? args::get(p_sgd_zipf_space) : algorithms::get_max_path_length_ssi(path_sgd_use_paths, sampled_step_index);
+		}
         path_sgd_zipf_space_max = args::get(p_sgd_zipf_space_max) ? args::get(p_sgd_zipf_space_max) : 100;
 
         path_sgd_zipf_max_number_of_distributions = args::get(p_sgd_zipf_max_number_of_distributions) ? std::max(

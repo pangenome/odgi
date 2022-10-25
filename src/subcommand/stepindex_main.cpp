@@ -62,7 +62,7 @@ namespace odgi {
 			exit(1);
 		}
 
-		std::string step_index_out_file = dg_out_file ? args::get(dg_out_file) : (args::get(og_file) + ".stpidx");
+		std::string step_index_out_file = dg_out_file ? args::get(dg_out_file) : (args::get(og_file) + ".ssi");
 
 		const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
 

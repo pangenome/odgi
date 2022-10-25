@@ -47,7 +47,8 @@ typedef boomphf::mphf<uint64_t, boomphf::SingleHashFunctor<uint64_t>> boophf_uin
 
 struct step_index_t {
 	step_index_t();
-    step_index_t(const PathHandleGraph& graph,
+	// FIXME replace this with "from_handle_graph"
+	step_index_t(const PathHandleGraph& graph,
                  const std::vector<path_handle_t>& paths,
                  const uint64_t& nthreads,
                  const bool progress,
@@ -58,6 +59,13 @@ struct step_index_t {
 	step_index_t(step_index_t&& other) = delete;
 	step_index_t& operator=(const step_index_t& other) = delete;
 	step_index_t& operator=(step_index_t&& other) = delete;
+
+	/// This feels like cheating the actual constructor, but maybe I should just remove it
+	const void from_handle_graph(const PathHandleGraph& graph,
+					 const std::vector<path_handle_t>& paths,
+					 const uint64_t& nthreads,
+					 const bool progress,
+					 const uint64_t& sample_rate);
 
     const uint64_t get_position(const step_handle_t& step, const PathHandleGraph& graph) const;
 	const uint64_t get_path_len(const path_handle_t& path) const;
