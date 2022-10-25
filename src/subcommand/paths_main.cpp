@@ -47,7 +47,7 @@ int main_paths(int argc, char** argv) {
                                                                              " identifier. This parameter should only be set in combination with"
                                                                              " **-H, --haplotypes**. Prints an additional, first column"
                                                                              " **group.name** to stdout.", {'D', "delim"});
-    args::Flag haplo_matrix(path_investigation_opts, "haplo", "Print to stdout the paths in an approximate binary haplotype matrix"
+    args::Flag haplo_matrix(path_investigation_opts, "haplo", "Print to stdout the paths in a path coverage haplotype matrix"
                                                               " based on the graph’s sort order. The output is tab-delimited:"
                                                               " *path.name*, *path.length*, *path.step.count*, *node.1*,"
                                                               " *node.2*, *node.n*. Each path entry is printed in its own line.", {'H', "haplotypes"});
@@ -170,14 +170,14 @@ int main_paths(int argc, char** argv) {
                 std::string path_name = (delim ? full_path_name.substr(full_path_name.find(delim)+1) : full_path_name);
                 uint64_t path_length = 0;
                 uint64_t path_step_count = 0;
-                std::vector<bool> row(graph.get_node_count());
+                std::vector<uint64_t> row(graph.get_node_count());
                 graph.for_each_step_in_path(
                     p,
                     [&](const step_handle_t& s) {
                         const handle_t& h = graph.get_handle_of_step(s);
                         path_length += graph.get_length(h);
                         ++path_step_count;
-                        row[graph.get_id(h)-1] = 1;
+                        row[graph.get_id(h)-1]++;
                     });
                 if (delim) {
                     std::cout << group_name << "\t";
