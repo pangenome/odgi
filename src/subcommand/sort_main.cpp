@@ -13,6 +13,7 @@
 #include "algorithms/linear_sgd.hpp"
 #include "algorithms/xp.hpp"
 #include "algorithms/pg_sgd/path_sgd.hpp"
+#include "algorithms/pg_sgd/path_sgd_helper.hpp"
 #include "algorithms/groom.hpp"
 #include "algorithms/stepindex.hpp"
 
@@ -177,45 +178,7 @@ int main_sort(int argc, char** argv) {
 
     graph.set_number_of_threads(num_threads);
 
-    /// path guided linear 1D SGD sort helpers
-    // TODO beautify this, maybe put into its own file
-    std::function<uint64_t(const std::vector<path_handle_t> &,
-                           graph_t &)> get_sum_path_step_count
-            = [&](const std::vector<path_handle_t> &path_sgd_use_paths, graph_t &graph) {
-                uint64_t sum_path_step_count = 0;
-                for (auto& path : path_sgd_use_paths) {
-                    sum_path_step_count += graph.get_step_count(path);
-                }
-                return sum_path_step_count;
-              };
-    std::function<uint64_t(const std::vector<path_handle_t> &,
-                           graph_t &)> get_max_path_step_count
-            = [&](const std::vector<path_handle_t> &path_sgd_use_paths, graph_t &graph) {
-                uint64_t max_path_step_count = 0;
-                for (auto& path : path_sgd_use_paths) {
-                    max_path_step_count = std::max(max_path_step_count, graph.get_step_count(path));
-                }
-                return max_path_step_count;
-            };
-    std::function<uint64_t(const std::vector<path_handle_t> &,
-                           const xp::XP &)> get_max_path_length_xp
-            = [&](const std::vector<path_handle_t> &path_sgd_use_paths, const xp::XP &path_index) {
-                uint64_t max_path_length = std::numeric_limits<uint64_t>::min();
-                for (auto &path : path_sgd_use_paths) {
-                    max_path_length = std::max(max_path_length, path_index.get_path_length(path));
-                }
-                return max_path_length;
-            };
-
-	std::function<uint64_t(const std::vector<path_handle_t> &,
-	const algorithms::step_index_t &)> get_max_path_length_ssi
-							 = [&](const std::vector<path_handle_t> &path_sgd_use_paths, const algorithms::step_index_t &sampled_step_index) {
-				uint64_t max_path_length = std::numeric_limits<uint64_t>::min();
-				for (auto &path : path_sgd_use_paths) {
-					max_path_length = std::max(max_path_length, sampled_step_index.get_path_len(path));
-				}
-				return max_path_length;
-			};
+	// FIXME can we also do this for layout_main.cpp?
 
     // default parameters
     std::string path_sgd_seed;
@@ -386,7 +349,7 @@ int main_sort(int argc, char** argv) {
                     path_sgd_use_paths.push_back(path);
                 });
         }
-        uint64_t sum_path_step_count = get_sum_path_step_count(path_sgd_use_paths, graph);
+        uint64_t sum_path_step_count = algorithms::get_sum_path_step_count(path_sgd_use_paths, graph);
         if (args::get(p_sgd_min_term_updates_paths)) {
             path_sgd_min_term_updates = args::get(p_sgd_min_term_updates_paths) * sum_path_step_count;
         } else {
@@ -396,8 +359,9 @@ int main_sort(int argc, char** argv) {
                 path_sgd_min_term_updates = 1.0 * sum_path_step_count;
             }
         }
-        uint64_t max_path_step_count = get_max_path_step_count(path_sgd_use_paths, graph);
-        path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? args::get(p_sgd_zipf_space) : get_max_path_length_xp(path_sgd_use_paths, path_index);
+        uint64_t max_path_step_count = algorithms::get_max_path_step_count(path_sgd_use_paths, graph);
+		// TODO we might have to use the SSI here
+        path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? args::get(p_sgd_zipf_space) : algorithms::get_max_path_length_xp(path_sgd_use_paths, path_index);
         path_sgd_zipf_space_max = args::get(p_sgd_zipf_space_max) ? args::get(p_sgd_zipf_space_max) : 100;
 
         path_sgd_zipf_max_number_of_distributions = args::get(p_sgd_zipf_max_number_of_distributions) ? std::max(
