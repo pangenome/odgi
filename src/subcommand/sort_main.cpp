@@ -10,7 +10,6 @@
 #include "algorithms/dagify_sort.hpp"
 #include "algorithms/random_order.hpp"
 //#include "algorithms/mondriaan_sort.hpp"
-#include "algorithms/linear_sgd.hpp"
 #include "algorithms/xp.hpp"
 #include "algorithms/pg_sgd/path_sgd.hpp"
 #include "algorithms/pg_sgd/path_sgd_helper.hpp"
@@ -178,8 +177,6 @@ int main_sort(int argc, char** argv) {
 
     graph.set_number_of_threads(num_threads);
 
-	// FIXME can we also do this for layout_main.cpp?
-
     // default parameters
     std::string path_sgd_seed;
     if (p_sgd_seed) {
@@ -198,6 +195,7 @@ int main_sort(int argc, char** argv) {
     }
 
 	// even if no XP is given, it is likely we will build one automatically
+	// FIXME SSI should be the new default, else we take the XP we received from the input or if the input is an empty string we generate a new one anyhow
     if (tmp_base) {
         xp::temp_file::set_dir(args::get(tmp_base));
     } else {
@@ -211,7 +209,7 @@ int main_sort(int argc, char** argv) {
         graph.optimize();
     }
 
-	// TODO We have this function here, in untangle, maybe somewhere else? Refactor!
+	// FIXME We have this function here and in flip_main.cpp, groom_main.cpp, tips_main.cpp, and untangle_main.cpp
 	// path loading
 	auto load_paths = [&](const std::string& path_names_file) {
 		std::ifstream path_names_in(path_names_file);
@@ -247,6 +245,7 @@ int main_sort(int argc, char** argv) {
 		return paths;
 	};
 
+	// FIXME put this into the helper
 	auto sort_graph_by_target_paths = [&](graph_t& graph, std::vector<path_handle_t> target_paths, std::vector<bool>& is_ref) {
 		std::vector<handle_t> target_order;
 		std::fill_n(std::back_inserter(is_ref), graph.get_node_count(), false);
@@ -304,8 +303,7 @@ int main_sort(int argc, char** argv) {
     uint64_t path_sgd_zipf_space, path_sgd_zipf_space_max, path_sgd_zipf_space_quantization_step, path_sgd_zipf_max_number_of_distributions;
     std::vector<path_handle_t> path_sgd_use_paths;
     xp::XP path_index;
-	// TODO add SSI here
-	// const algorithms::step_index_t &sampled_step_index
+	algorithms::step_index_t sampled_step_index;
     bool fresh_step_index = false;
     std::string snapshot_prefix;
     if (snapshot) {
@@ -318,7 +316,7 @@ int main_sort(int argc, char** argv) {
 			target_paths = load_paths(args::get(_p_sgd_target_paths));
 			sort_graph_by_target_paths(graph, target_paths, is_ref);
 		}
-        // TODO take care of path index or sampled step index
+		// FIXME SSI should be the new default, else we take the XP we received from the input or if the input is an empty string we generate a new one anyhow
         if (xp_in_file) {
             std::ifstream in;
             in.open(args::get(xp_in_file));
@@ -360,7 +358,7 @@ int main_sort(int argc, char** argv) {
             }
         }
         uint64_t max_path_step_count = algorithms::get_max_path_step_count(path_sgd_use_paths, graph);
-		// TODO we might have to use the SSI here
+		// FIXME we might have to use the SSI here
         path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? args::get(p_sgd_zipf_space) : algorithms::get_max_path_length_xp(path_sgd_use_paths, path_index);
         path_sgd_zipf_space_max = args::get(p_sgd_zipf_space_max) ? args::get(p_sgd_zipf_space_max) : 100;
 
@@ -425,7 +423,7 @@ int main_sort(int argc, char** argv) {
                     break;
                 case 'Y': {
                     if (!fresh_step_index) {
-						// TODO what about the SSI?
+						// FIXME SSI should be the new default, else we take the XP we received from the input or if the input is an empty string we generate a new one anyhow
                         path_index.clean();
 						// do we have to sort by reference nodes first?
 						if (_p_sgd_target_paths) {
@@ -497,7 +495,8 @@ int main_sort(int argc, char** argv) {
     } else if (args::get(no_seeds)) {
         graph.apply_ordering(algorithms::topological_order(&graph, false, false, args::get(progress)), true);
     } else if (args::get(p_sgd)) {
-        std::vector<handle_t> order =
+		// FIXME SSI should be the new default, else we take the XP we received from the input or if the input is an empty string we generate a new one anyhow
+		std::vector<handle_t> order =
                 algorithms::path_linear_sgd_order(graph,
                                                   path_index,
                                                   path_sgd_use_paths,
