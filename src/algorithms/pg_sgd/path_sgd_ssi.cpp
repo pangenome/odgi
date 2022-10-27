@@ -26,7 +26,8 @@ namespace odgi {
 											const bool &snapshot,
 											std::vector<std::string> &snapshots,
 											const bool &target_sorting,
-											std::vector<bool>& target_nodes) {
+											std::vector<bool>& target_nodes,
+											const uint64_t &sum_path_step_count) {
 #ifdef debug_path_sgd
 			std::cerr << "iter_max: " << iter_max << std::endl;
             std::cerr << "min_term_updates: " << min_term_updates << std::endl;
@@ -41,6 +42,51 @@ namespace odgi {
 
 			uint64_t first_cooling_iteration = std::floor(cooling_start * (double)iter_max);
 			//std::cerr << "first cooling iteration " << first_cooling_iteration << std::endl;
+
+			/*
+			// FIXME this is for testing only
+			sdsl::bit_vector s_bv;
+			sdsl::util::assign(s_bv, sdsl::bit_vector(10));
+			s_bv[0] = 1;
+			s_bv[3] = 1;
+			s_bv[5] = 1;
+			s_bv[8] = 1;
+			for (auto bitty : s_bv) {
+				std::cerr << bitty << std::endl;
+			}
+			sdsl::rank_support_v<1> s_bv_rank;
+			sdsl::bit_vector::select_1_type s_bv_select;
+			sdsl::util::assign(s_bv_rank, sdsl::rank_support_v<1>(&s_bv));
+			sdsl::util::assign(s_bv_select, sdsl::bit_vector::select_1_type(&s_bv));
+			std::cerr << "assignment complete" << std::endl;
+			uint64_t k = 6;
+			uint64_t k_rank = s_bv_rank(k);
+			std::cerr << "rank at 6: " << k_rank << std::endl;
+			uint64_t k_rank_to_select = s_bv_select(k_rank);
+			std::cerr << "select at rank " << k_rank << ": " << k_rank_to_select << std::endl;
+			uint64_t step_on_node = k - k_rank_to_select - 1; // 0-based!
+			std::cerr << "step on node 0-based: " << step_on_node << std::endl;
+			 */
+
+			/// initialize the bitvector for random sampling
+			/// each time we see a node we add 1, and each time we see a step we keep it 0
+			sdsl::bit_vector ns_bv; // node-step bitvector
+			sdsl::util::assign(ns_bv, graph.get_node_count() + sum_path_step_count);
+			uint64_t l = 0;
+			graph.for_each_handle(
+					[&](const handle_t &h) {
+						ns_bv[l] = 1;
+						graph.for_each_step_on_handle(
+								h,
+								[&](const step_handle_t& step) {
+									l++;
+								});
+						l++;
+					});
+			sdsl::rank_support_v<1> ns_bv_rank;
+			sdsl::bit_vector::select_1_type ns_bv_select;
+			sdsl::util::assign(ns_bv_rank, sdsl::rank_support_v<1>(&ns_bv));
+			sdsl::util::assign(ns_bv_select, sdsl::bit_vector::select_1_type(&ns_bv));
 
 			/// FIXME this is just so that it runs
 			xp::XP path_index;
@@ -543,7 +589,8 @@ namespace odgi {
 													const bool &snapshot,
 													const std::string &snapshot_prefix,
 													const bool &target_sorting,
-													std::vector<bool>& target_nodes) {
+													std::vector<bool>& target_nodes,
+													const uint64_t &sum_path_step_count) {
 			std::vector<string> snapshots;
 			std::vector<double> layout = path_linear_sgd_ssi(graph,
 														 sampled_step_index,
@@ -564,7 +611,8 @@ namespace odgi {
 														 snapshot,
 														 snapshots,
 														 target_sorting,
-														 target_nodes);
+														 target_nodes,
+														 sum_path_step_count);
 			// TODO move the following into its own function that we can reuse
 #ifdef debug_components
 			std::cerr << "node count: " << graph.get_node_count() << std::endl;

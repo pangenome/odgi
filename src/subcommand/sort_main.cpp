@@ -270,6 +270,7 @@ int main_sort(int argc, char** argv) {
 	std::vector<bool> is_ref;
 	std::vector<path_handle_t> target_paths;
 	uint64_t ssi_sample_rate = 8;
+	uint64_t sum_path_step_count;
     if (p_sgd || args::get(pipeline).find('Y') != std::string::npos) {
 		if (_p_sgd_target_paths) {
 			target_paths = utils::load_paths(args::get(_p_sgd_target_paths), graph, "sort");
@@ -286,6 +287,7 @@ int main_sort(int argc, char** argv) {
             path_index.from_handle_graph(graph, num_threads);
 			// do we load the SSI from file?
         } else if (ssi_in_file) {
+			// FIXME we could also only allow an integer as input to build an ssi for the given sample rate
 			sampled_step_index.load(args::get(ssi_in_file));
 			// store the SSI sampling rate
 			ssi_sample_rate = sampled_step_index.get_sample_rate();
@@ -296,7 +298,7 @@ int main_sort(int argc, char** argv) {
 		}
         fresh_step_index = true;
 
-        uint64_t sum_path_step_count = algorithms::get_sum_path_step_count(path_sgd_use_paths, graph);
+        sum_path_step_count = algorithms::get_sum_path_step_count(path_sgd_use_paths, graph);
         if (args::get(p_sgd_min_term_updates_paths)) {
             path_sgd_min_term_updates = args::get(p_sgd_min_term_updates_paths) * sum_path_step_count;
         } else {
@@ -434,7 +436,8 @@ int main_sort(int argc, char** argv) {
 																  snapshot,
 																  snapshot_prefix,
 																  _p_sgd_target_paths,
-																  is_ref);
+																  is_ref,
+																  sum_path_step_count);
 					}
                     break;
                 }
@@ -524,7 +527,8 @@ int main_sort(int argc, char** argv) {
 													  snapshot,
 													  snapshot_prefix,
 													  _p_sgd_target_paths,
-													  is_ref);
+													  is_ref,
+													  sum_path_step_count);
 		}
         graph.apply_ordering(order, true);
     } else if (args::get(breadth_first)) {

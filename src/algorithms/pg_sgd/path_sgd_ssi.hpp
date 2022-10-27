@@ -50,7 +50,8 @@ namespace odgi {
 											const uint64_t &nthreads,
 											const bool &progress,
 											const bool &snapshot,
-											std::vector<std::string> &snapshots);
+											std::vector<std::string> &snapshots,
+											const uint64_t &sum_path_step_count);
 
 /// our learning schedule
 		std::vector<double> path_linear_sgd_schedule_ssi(const double &w_min,
@@ -79,7 +80,8 @@ namespace odgi {
 													const bool &snapshot,
 													const std::string &snapshot_prefix,
 													const bool &target_sorting,
-													std::vector<bool>& target_nodes);
+													std::vector<bool>& target_nodes,
+													const uint64_t &sum_path_step_count);
 
 	}
 
