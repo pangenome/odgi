@@ -594,6 +594,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/pg_sgd/path_sgd.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/pg_sgd/path_sgd_layout.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/pg_sgd/path_sgd_helper.cpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/pg_sgd/path_sgd_ssi.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/draw.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/layout.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/atomic_image.cpp
@@ -763,6 +764,7 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/algorithms/pg_sgd/path_sgd.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/pg_sgd/path_sgd_layout.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/pg_sgd/path_sgd_helper.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/pg_sgd/path_sgd_ssi.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/expand_context.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/id_ordered_paths.hpp
