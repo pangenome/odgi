@@ -9,6 +9,12 @@ namespace odgi {
 
 		using namespace handlegraph;
 
+		struct handle_layout_t {
+			uint64_t weak_component = 0;
+			double pos = 0;
+			handle_t handle = as_handle(0);
+		};
+
 		/// get the total number of steps in the graph
 		const uint64_t get_sum_path_step_count(const std::vector<path_handle_t> &path_sgd_use_paths,
 											   graph_t &graph);

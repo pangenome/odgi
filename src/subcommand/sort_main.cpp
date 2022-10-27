@@ -13,6 +13,7 @@
 #include "algorithms/xp.hpp"
 #include "algorithms/pg_sgd/path_sgd.hpp"
 #include "algorithms/pg_sgd/path_sgd_helper.hpp"
+#include "algorithms/pg_sgd/path_sgd_ssi.hpp"
 #include "algorithms/groom.hpp"
 #include "algorithms/stepindex.hpp"
 #include "utils.hpp"
@@ -390,28 +391,51 @@ int main_sort(int argc, char** argv) {
 							sampled_step_index.from_handle_graph(graph, path_sgd_use_paths, num_threads, args::get(progress), ssi_sample_rate);
 						}
                     }
-                    order = algorithms::path_linear_sgd_order(graph,
-                                                              path_index,
-                                                              path_sgd_use_paths,
-                                                              path_sgd_iter_max,
-                                                              path_sgd_iter_max_learning_rate,
-                                                              path_sgd_min_term_updates,
-                                                              path_sgd_delta,
-                                                              path_sgd_eps,
-                                                              path_sgd_max_eta,
-                                                              path_sgd_zipf_theta,
-                                                              path_sgd_zipf_space,
-                                                              path_sgd_zipf_space_max,
-                                                              path_sgd_zipf_space_quantization_step,
-                                                              path_sgd_cooling,
-                                                              num_threads,
-                                                              progress,
-                                                              path_sgd_seed,
-                                                              snapshot,
-                                                              snapshot_prefix,
-															  _p_sgd_target_paths,
-															  is_ref);
-					// FIXME SSI HERE
+					if (xp_way) {
+						order = algorithms::path_linear_sgd_order(graph,
+																  path_index,
+																  path_sgd_use_paths,
+																  path_sgd_iter_max,
+																  path_sgd_iter_max_learning_rate,
+																  path_sgd_min_term_updates,
+																  path_sgd_delta,
+																  path_sgd_eps,
+																  path_sgd_max_eta,
+																  path_sgd_zipf_theta,
+																  path_sgd_zipf_space,
+																  path_sgd_zipf_space_max,
+																  path_sgd_zipf_space_quantization_step,
+																  path_sgd_cooling,
+																  num_threads,
+																  progress,
+																  path_sgd_seed,
+																  snapshot,
+																  snapshot_prefix,
+																  _p_sgd_target_paths,
+																  is_ref);
+					} else {
+						order = algorithms::path_linear_sgd_order_ssi(graph,
+																  sampled_step_index,
+																  path_sgd_use_paths,
+																  path_sgd_iter_max,
+																  path_sgd_iter_max_learning_rate,
+																  path_sgd_min_term_updates,
+																  path_sgd_delta,
+																  path_sgd_eps,
+																  path_sgd_max_eta,
+																  path_sgd_zipf_theta,
+																  path_sgd_zipf_space,
+																  path_sgd_zipf_space_max,
+																  path_sgd_zipf_space_quantization_step,
+																  path_sgd_cooling,
+																  num_threads,
+																  progress,
+																  path_sgd_seed,
+																  snapshot,
+																  snapshot_prefix,
+																  _p_sgd_target_paths,
+																  is_ref);
+					}
                     break;
                 }
                 case 'f':
@@ -456,29 +480,52 @@ int main_sort(int argc, char** argv) {
         graph.apply_ordering(algorithms::topological_order(&graph, false, false, args::get(progress)), true);
     } else if (args::get(p_sgd)) {
 		// FIXME SSI should be the new default, else we take the XP we received from the input or if the input is an empty string we generate a new one anyhow
-		std::vector<handle_t> order =
-                algorithms::path_linear_sgd_order(graph,
-                                                  path_index,
-                                                  path_sgd_use_paths,
-                                                  path_sgd_iter_max,
-                                                  path_sgd_iter_max_learning_rate,
-                                                  path_sgd_min_term_updates,
-                                                  path_sgd_delta,
-                                                  path_sgd_eps,
-                                                  path_sgd_max_eta,
-                                                  path_sgd_zipf_theta,
-                                                  path_sgd_zipf_space,
-                                                  path_sgd_zipf_space_max,
-                                                  path_sgd_zipf_space_quantization_step,
-                                                  path_sgd_cooling,
-                                                  num_threads,
-                                                  progress,
-                                                  path_sgd_seed,
-                                                  snapshot,
-                                                  snapshot_prefix,
-												  _p_sgd_target_paths,
-												  is_ref);
-		// FIXME SSI HERE
+		std::vector<handle_t> order;
+		if (xp_way) {
+			order = algorithms::path_linear_sgd_order(graph,
+													  path_index,
+													  path_sgd_use_paths,
+													  path_sgd_iter_max,
+													  path_sgd_iter_max_learning_rate,
+													  path_sgd_min_term_updates,
+													  path_sgd_delta,
+													  path_sgd_eps,
+													  path_sgd_max_eta,
+													  path_sgd_zipf_theta,
+													  path_sgd_zipf_space,
+													  path_sgd_zipf_space_max,
+													  path_sgd_zipf_space_quantization_step,
+													  path_sgd_cooling,
+													  num_threads,
+													  progress,
+													  path_sgd_seed,
+													  snapshot,
+													  snapshot_prefix,
+													  _p_sgd_target_paths,
+													  is_ref);
+		} else {
+			order = algorithms::path_linear_sgd_order_ssi(graph,
+													  sampled_step_index,
+													  path_sgd_use_paths,
+													  path_sgd_iter_max,
+													  path_sgd_iter_max_learning_rate,
+													  path_sgd_min_term_updates,
+													  path_sgd_delta,
+													  path_sgd_eps,
+													  path_sgd_max_eta,
+													  path_sgd_zipf_theta,
+													  path_sgd_zipf_space,
+													  path_sgd_zipf_space_max,
+													  path_sgd_zipf_space_quantization_step,
+													  path_sgd_cooling,
+													  num_threads,
+													  progress,
+													  path_sgd_seed,
+													  snapshot,
+													  snapshot_prefix,
+													  _p_sgd_target_paths,
+													  is_ref);
+		}
         graph.apply_ordering(order, true);
     } else if (args::get(breadth_first)) {
         graph.apply_ordering(algorithms::breadth_first_topological_order(graph, bf_chunk_size), true);

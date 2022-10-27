@@ -22,6 +22,7 @@
 #include "XoshiroCpp.hpp"
 #include "../progress.hpp"
 #include "utils.hpp"
+#include "path_sgd_helper.hpp"
 
 #include <fstream>
 
@@ -29,12 +30,6 @@ namespace odgi {
 namespace algorithms {
 
 using namespace handlegraph;
-
-struct handle_layout_t {
-    uint64_t weak_component = 0;
-    double pos = 0;
-    handle_t handle = as_handle(0);
-};
 
 /// use SGD driven, by path guided, and partly zipfian distribution sampled pairwise distances to obtain a 1D linear layout of the graph that respects its topology
 std::vector<double> path_linear_sgd(const graph_t &graph,
