@@ -47,20 +47,20 @@ typedef boomphf::mphf<uint64_t, boomphf::SingleHashFunctor<uint64_t>> boophf_uin
 
 struct step_index_t {
 	step_index_t();
-	// FIXME replace this with "from_handle_graph"
+	/// Delete this in favour of this->from_handle_graph? For now, we have more interfaces.
 	step_index_t(const PathHandleGraph& graph,
                  const std::vector<path_handle_t>& paths,
                  const uint64_t& nthreads,
                  const bool progress,
 				 const uint64_t& sample_rate);
     ~step_index_t(void);
-	// We cannot move, assign, or copy until we add code to point SDSL supports at the new addresses for their vectors.
+	/// We cannot move, assign, or copy until we add code to point SDSL supports at the new addresses for their vectors. Taken from the XP index implementation.
 	step_index_t(const step_index_t& other) = delete;
 	step_index_t(step_index_t&& other) = delete;
 	step_index_t& operator=(const step_index_t& other) = delete;
 	step_index_t& operator=(step_index_t&& other) = delete;
 
-	/// This feels like cheating the actual constructor, but maybe I should just remove it
+	/// This feels like cheating the actual constructor, but how else could I invoke it again?
 	const void from_handle_graph(const PathHandleGraph& graph,
 					 const std::vector<path_handle_t>& paths,
 					 const uint64_t& nthreads,
