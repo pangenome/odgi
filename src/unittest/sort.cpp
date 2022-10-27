@@ -126,6 +126,7 @@ TEST_CASE("Sorting a graph with paths", "[sort]") {
     }
 }
 
+// FIXME add tests using SSI sorting
 TEST_CASE("Sorting a graph with paths 1 node long", "[sort]") {
     graph_t graph;
 

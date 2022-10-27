@@ -375,13 +375,20 @@ int main_sort(int argc, char** argv) {
                     break;
                 case 'Y': {
                     if (!fresh_step_index) {
-						// FIXME SSI should be the new default, else we take the XP we received from the input or if the input is an empty string we generate a new one anyhow
-                        path_index.clean();
+						if (xp_way) {
+							path_index.clean();
+						} else {
+							sampled_step_index.clean();
+						}
 						// do we have to sort by reference nodes first?
 						if (_p_sgd_target_paths) {
 							algorithms::sort_graph_by_target_paths(graph, target_paths, is_ref, args::get(progress));
 						}
-                        path_index.from_handle_graph(graph, num_threads);
+						if (xp_way) {
+							path_index.from_handle_graph(graph, num_threads);
+						} else {
+							sampled_step_index.from_handle_graph(graph, path_sgd_use_paths, num_threads, args::get(progress), ssi_sample_rate);
+						}
                     }
                     order = algorithms::path_linear_sgd_order(graph,
                                                               path_index,
@@ -404,6 +411,7 @@ int main_sort(int argc, char** argv) {
                                                               snapshot_prefix,
 															  _p_sgd_target_paths,
 															  is_ref);
+					// FIXME SSI HERE
                     break;
                 }
                 case 'f':
@@ -470,6 +478,7 @@ int main_sort(int argc, char** argv) {
                                                   snapshot_prefix,
 												  _p_sgd_target_paths,
 												  is_ref);
+		// FIXME SSI HERE
         graph.apply_ordering(order, true);
     } else if (args::get(breadth_first)) {
         graph.apply_ordering(algorithms::breadth_first_topological_order(graph, bf_chunk_size), true);

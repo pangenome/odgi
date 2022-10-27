@@ -295,6 +295,14 @@ step_index_t::~step_index_t(void) {
     delete step_mphf;
 }
 
+void step_index_t::clean() {
+	delete this->step_mphf;
+	// this should free all allocated memory https://www.techiedelight.com/delete-vector-free-memory-cpp/
+	sdsl::int_vector<64>().swap(this->pos);
+	sdsl::int_vector<64>().swap(this->path_len);
+	this->sample_rate = 0;
+}
+
 
 // path step index
 

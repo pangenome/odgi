@@ -72,6 +72,7 @@ struct step_index_t {
 	void save(const std::string& name) const;
 	void load(const std::string& name);
 	const uint64_t get_sample_rate();
+	void clean();
     // map from step to position in its path
     boophf_step_t* step_mphf = nullptr;
 	sdsl::int_vector<64> pos;

@@ -79,6 +79,8 @@ namespace odgi {
 
 			SECTION("The index delivers the correct positions for a given step. Sample rate: 1.") {
 				step_index_t step_index_1(graph, paths, 1, false, 1);
+				step_index_1.clean();
+				step_index_1.from_handle_graph(graph, paths, 1, false, 1);
 				REQUIRE(step_index_1.get_sample_rate() == 1);
 				graph.for_each_path_handle([&](const path_handle_t path) {
 					std::string cur_path = graph.get_path_name(path);
@@ -189,6 +191,8 @@ namespace odgi {
 
 			SECTION("The index delivers the correct positions for a given step. Sample rate: 2.") {
 				step_index_t step_index_2(graph, paths, 1, false, 2);
+				step_index_2.clean();
+				step_index_2.from_handle_graph(graph, paths, 1, false, 2);
 				REQUIRE(step_index_2.get_sample_rate() == 2);
 				graph.for_each_path_handle([&](const path_handle_t path) {
 					std::string cur_path = graph.get_path_name(path);
@@ -283,6 +287,8 @@ namespace odgi {
 
 			SECTION("The index delivers the correct positions for a given step. Sample rate: 4.") {
 				step_index_t step_index_4(graph, paths, 1, false, 4);
+				step_index_4.clean();
+				step_index_4.from_handle_graph(graph, paths, 1, false, 4);
 				REQUIRE(step_index_4.get_sample_rate() == 4);
 				graph.for_each_path_handle([&](const path_handle_t path) {
 					std::string cur_path = graph.get_path_name(path);
@@ -377,6 +383,8 @@ namespace odgi {
 
 			SECTION("The index delivers the correct positions for a given step. Sample rate: 8.") {
 				step_index_t step_index_8(graph, paths, 1, false, 8);
+				step_index_8.clean();
+				step_index_8.from_handle_graph(graph, paths, 1, false, 8);
 				REQUIRE(step_index_8.get_sample_rate() == 8);
 				graph.for_each_path_handle([&](const path_handle_t path) {
 					std::string cur_path = graph.get_path_name(path);
@@ -471,6 +479,8 @@ namespace odgi {
 
 			SECTION("The index delivers the correct positions for a given step. Sample rate: 16.") {
 				step_index_t step_index_16(graph, paths, 1, false, 16);
+				step_index_16.clean();
+				step_index_16.from_handle_graph(graph, paths, 1, false, 16);
 				REQUIRE(step_index_16.get_sample_rate() == 16);
 				graph.for_each_path_handle([&](const path_handle_t path) {
 					std::string cur_path = graph.get_path_name(path);
@@ -567,10 +577,10 @@ namespace odgi {
 				step_index_t step_index_to_save(graph, paths, 1, false, 8);
 				// Write index to temporary file in preparation for the next tests.
 				std::string basename = xp::temp_file::create();
-				step_index_to_save.save(basename + "unittest.stpidx");
+				step_index_to_save.save(basename + "unittest.ssi");
 
 				step_index_t step_index_loaded;
-				step_index_loaded.load(basename + "unittest.stpidx");
+				step_index_loaded.load(basename + "unittest.ssi");
 
 				REQUIRE(step_index_to_save.get_sample_rate() == 8);
 				REQUIRE(step_index_loaded.get_sample_rate() == 8);
