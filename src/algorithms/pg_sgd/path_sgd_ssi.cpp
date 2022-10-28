@@ -297,22 +297,36 @@ namespace odgi {
 								if (!snapshot_in_progress.load()) {
 									// sample the first node from all the nodes in the graph
 									// pick a random position from all paths
-									uint64_t step_index = dis_step(gen);
+									uint64_t node_step_index = dis_step(gen);
 #ifdef debug_sample_from_nodes
-									std::cerr << "step_index: " << step_index << std::endl;
+									std::cerr << "step_index: " << node_step_index << std::endl;
 #endif
-									// if ns_bv[step_index] == 1 we have to continue!
-									if (ns_bv[step_index] == 1) {
+									// if ns_bv[step_index] == 1 we have to continue, because we hit a node!
+									if (ns_bv[node_step_index] == 1) {
 										continue;
 									}
 									/// FIXME
-									uint64_t handle_rank_of_step_index = ns_bv_rank(step_index);
-									step_index = step_index - handle_rank_of_step_index;
-									uint64_t step_rank_on_node_of_step_index = step_index - ns_bv_select(handle_rank_of_step_index) - 1;
+									uint64_t handle_rank_of_step_index = ns_bv_rank(node_step_index); // because we have a compacted graph, this is the actual node id!
+									uint64_t step_index = node_step_index - handle_rank_of_step_index;
+									uint64_t step_rank_on_node_given_step_index = node_step_index - ns_bv_select(handle_rank_of_step_index) - 1;
+									// I want to have the handle
+									handle_t term_i_ssi = graph.get_handle(handle_rank_of_step_index, handle_orientation[step_index]);
+									// I want to have the step
+									uint64_t step_rank_on_handle = 0;
+									step_handle_t step_a_ssi;
+									graph.for_each_step_on_handle(
+											term_i_ssi,
+											[&](const step_handle_t& step) {
+												if (step_rank_on_handle == step_rank_on_node_given_step_index) {
+													step_a_ssi = step;
+												}
+												step_rank_on_handle++;
+											});
 
-									// FIXME get the actual step_index for testing
 									uint64_t path_i = npi_iv[step_index];
-									path_handle_t path = as_path_handle(path_i);
+									// FIXME delete this later
+									// path_handle_t path = as_path_handle(path_i);
+									path_handle_t path = graph.get_path_handle_of_step(step_a_ssi);
 
 									size_t path_step_count = graph.get_step_count(path);
 									if (path_step_count == 1){
@@ -323,7 +337,6 @@ namespace odgi {
 #endif
 									step_handle_t step_a, step_b;
 									as_integers(step_a)[0] = path_i; // path index
-									// FIXME use the bv here
 									size_t s_rank = nr_iv[step_index] - 1; // step rank in path
 									as_integers(step_a)[1] = s_rank;
 #ifdef debug_sample_from_nodes
@@ -361,7 +374,6 @@ namespace odgi {
 										}
 									} else {
 										// sample randomly across the path
-										graph.get_step_count(path);
 										std::uniform_int_distribution<uint64_t> rando(0, graph.get_step_count(path)-1);
 										as_integers(step_b)[0] = as_integer(path);
 										as_integers(step_b)[1] = rando(gen);
@@ -372,18 +384,13 @@ namespace odgi {
 
 									/// xp:
 									//as_integers(step)[0] // path_id
-									//as_integers(step)[1] // handle_rank
+									//as_integers(step)[1] // handle_rank or step_rank?
 									/// ODGI:
 									//as_integers(step)[0] // handle_rank
 									//as_integers(step)[1] // path_id
-									handle_t term_i = path_index.get_handle_of_step(step_a);
-								//	std::cerr << "term_i" << std::endl;
-								//	std::cerr << graph.get_id(term_i) << std::endl;
-								//	std::cerr << graph.get_id(graph.get_handle_of_step(step_a)) << std::endl;
-									// std::cerr << "term_j" << std::endl;
+									// handle_t term_i = path_index.get_handle_of_step(step_a);
+									handle_t term_i = term_i_ssi;
 									handle_t term_j = path_index.get_handle_of_step(step_b);
-									//std::cerr << graph.get_id(term_j) << std::endl;
-									//std::cerr << graph.get_id(graph.get_handle_of_step(step_b)) << std::endl;
 
 									bool update_term_i = true;
 									bool update_term_j = true;
@@ -408,8 +415,9 @@ namespace odgi {
 									}
 
 									// adjust the positions to the node starts
-									/// FIXME this should be coming from the bv
-									size_t pos_in_path_a = path_index.get_position_of_step(step_a);
+									/// FIXME remove this later
+									// size_t pos_in_path_a = path_index.get_position_of_step(step_a);
+									size_t pos_in_path_a = sampled_step_index.get_position(step_a_ssi, graph);
 									/// FIXME we use ODGI to run along until we reach the step with the rank of b
 									size_t pos_in_path_b = path_index.get_position_of_step(step_b);
 #ifdef debug_path_sgd
