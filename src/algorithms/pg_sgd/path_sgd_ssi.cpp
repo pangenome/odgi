@@ -76,12 +76,16 @@ namespace odgi {
 			std::cerr << "step on node 0-based: " << step_on_node << std::endl;
 			*/
 
-			exit(0);
 			/// initialize the bitvector for random sampling
 			/// each time we see a node we add 1, and each time we see a step we keep it 0
 			sdsl::bit_vector ns_bv; // node-step bitvector
 			sdsl::util::assign(ns_bv, graph.get_node_count() + sum_path_step_count);
+			/// to be super save we also record the orientation of each step
+			std::vector<bool> handle_orientation;
+			handle_orientation.reserve(sum_path_step_count);
 			uint64_t l = 0;
+			uint64_t m = 0;
+
 			/// FIXME merge this with the iteration below so we don't iterate twice across all nodes!!!!
 			/// FIXME add progress bar
 			graph.for_each_handle(
@@ -91,6 +95,8 @@ namespace odgi {
 								h,
 								[&](const step_handle_t& step) {
 									l++;
+									handle_orientation[m] = graph.get_is_reverse(graph.get_handle_of_step(step));
+									m++;
 								});
 						l++;
 					});
@@ -283,7 +289,8 @@ namespace odgi {
 							const sdsl::int_vector<> &npi_iv = path_index.get_npi_iv();
 							// we'll sample from all path steps
 							// we have a larger search space because of ns_bv + node_count
-							std::uniform_int_distribution<uint64_t> dis_step = std::uniform_int_distribution<uint64_t>(0, ns_bv.size() + graph.get_node_count() - 1);
+							// std::uniform_int_distribution<uint64_t> dis_step = std::uniform_int_distribution<uint64_t>(0, ns_bv.size() - 1);
+							std::uniform_int_distribution<uint64_t> dis_step = std::uniform_int_distribution<uint64_t>(0, np_bv.size() - 1);
 							std::uniform_int_distribution<uint64_t> flip(0, 1);
 							uint64_t term_updates_local = 0;
 							while (work_todo.load()) {
@@ -298,10 +305,11 @@ namespace odgi {
 									if (ns_bv[step_index] == 1) {
 										continue;
 									}
+									/* FIXME
 									uint64_t handle_rank_of_step_index = ns_bv_rank(step_index);
 									step_index = step_index - handle_rank_of_step_index;
 									uint64_t step_rank_on_node_of_step_index = step_index - ns_bv_select(handle_rank_of_step_index) - 1;
-
+									 */
 
 									// FIXME get the actual step_index for testing
 									uint64_t path_i = npi_iv[step_index];
