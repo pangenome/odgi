@@ -313,11 +313,12 @@ namespace odgi {
 									handle_t term_i_ssi = graph.get_handle(handle_rank_of_step_index, handle_orientation[step_index]);
 									// I want to have the step
 									uint64_t step_rank_on_handle = 0;
-									step_handle_t step_a_ssi;
+									step_handle_t step_a_ssi, step_b_ssi;
 									graph.for_each_step_on_handle(
 											term_i_ssi,
 											[&](const step_handle_t& step) {
 												if (step_rank_on_handle == step_rank_on_node_given_step_index) {
+													// FIXME once we found this, step out of it
 													step_a_ssi = step;
 												}
 												step_rank_on_handle++;
@@ -342,8 +343,9 @@ namespace odgi {
 #ifdef debug_sample_from_nodes
 									std::cerr << "step rank in path: " << nr_iv[step_index]  << std::endl;
 #endif
-
+									bool cool = false;
 									if (cooling.load() || flip(gen)) {
+										cool = true;
 										auto _theta = adj_theta.load();
 										if (s_rank > 0 && flip(gen) || s_rank == path_step_count-1) {
 											// go backward
@@ -375,8 +377,23 @@ namespace odgi {
 									} else {
 										// sample randomly across the path
 										std::uniform_int_distribution<uint64_t> rando(0, graph.get_step_count(path)-1);
+										// FIXME very inefficient solution!
+										uint64_t step_rank_b = rando(gen);
+										uint64_t n = 0;
+										step_handle_t cur_step = graph.path_begin(path);
+										bool lost = true;
+										// has_next_step is very, very costly!
+										while (lost) {
+											if (n == step_rank_b) {
+												cur_step = graph.get_next_step(cur_step);
+												lost = false;
+											}
+											n++;
+										}
+										step_b_ssi = cur_step;
+
 										as_integers(step_b)[0] = as_integer(path);
-										as_integers(step_b)[1] = rando(gen);
+										as_integers(step_b)[1] = step_rank_b;
 									}
 
 									// and the graph handles, which we need to record the update
@@ -389,8 +406,14 @@ namespace odgi {
 									//as_integers(step)[0] // handle_rank
 									//as_integers(step)[1] // path_id
 									// handle_t term_i = path_index.get_handle_of_step(step_a);
+
 									handle_t term_i = term_i_ssi;
-									handle_t term_j = path_index.get_handle_of_step(step_b);
+									handle_t term_j;
+									if (cool) {
+										term_j = path_index.get_handle_of_step(step_b);
+									} else {
+										term_j = graph.get_handle_of_step(step_b_ssi);
+									}
 
 									bool update_term_i = true;
 									bool update_term_j = true;
@@ -419,7 +442,12 @@ namespace odgi {
 									// size_t pos_in_path_a = path_index.get_position_of_step(step_a);
 									size_t pos_in_path_a = sampled_step_index.get_position(step_a_ssi, graph);
 									/// FIXME we use ODGI to run along until we reach the step with the rank of b
-									size_t pos_in_path_b = path_index.get_position_of_step(step_b);
+									size_t pos_in_path_b;
+									if (cool) {
+										pos_in_path_b = path_index.get_position_of_step(step_b);
+									} else {
+										pos_in_path_b = sampled_step_index.get_position(step_b_ssi, graph);
+									}
 #ifdef debug_path_sgd
 									std::cerr << "1. pos in path " << pos_in_path_a << " " << pos_in_path_b << std::endl;
 #endif
