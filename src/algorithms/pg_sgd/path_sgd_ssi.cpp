@@ -66,13 +66,24 @@ namespace odgi {
 			std::cerr << "select at rank " << k_rank << ": " << k_rank_to_select << std::endl;
 			uint64_t step_on_node = k - k_rank_to_select - 1; // 0-based!
 			std::cerr << "step on node 0-based: " << step_on_node << std::endl;
-			 */
+			// this case will be skipped anyhow
+			k = 5;
+			k_rank = s_bv_rank(k);
+			std::cerr << "rank at 6: " << k_rank << std::endl;
+			k_rank_to_select = s_bv_select(k_rank);
+			std::cerr << "select at rank " << k_rank << ": " << k_rank_to_select << std::endl;
+			step_on_node = k - k_rank_to_select - 1; // 0-based!
+			std::cerr << "step on node 0-based: " << step_on_node << std::endl;
+			*/
 
+			exit(0);
 			/// initialize the bitvector for random sampling
 			/// each time we see a node we add 1, and each time we see a step we keep it 0
 			sdsl::bit_vector ns_bv; // node-step bitvector
 			sdsl::util::assign(ns_bv, graph.get_node_count() + sum_path_step_count);
 			uint64_t l = 0;
+			/// FIXME merge this with the iteration below so we don't iterate twice across all nodes!!!!
+			/// FIXME add progress bar
 			graph.for_each_handle(
 					[&](const handle_t &h) {
 						ns_bv[l] = 1;
@@ -109,6 +120,7 @@ namespace odgi {
 			snapshot_progress[0].store(true);
 			// seed them with the graph order
 			uint64_t len = 0;
+			/// FIXME we can merge this iteration with the generation of the ns_bv
 			graph.for_each_handle(
 					[&X, &graph, &len](const handle_t &handle) {
 						// nb: we assume that the graph provides a compact handle set
@@ -270,7 +282,8 @@ namespace odgi {
 							const sdsl::int_vector<> &nr_iv = path_index.get_nr_iv();
 							const sdsl::int_vector<> &npi_iv = path_index.get_npi_iv();
 							// we'll sample from all path steps
-							std::uniform_int_distribution<uint64_t> dis_step = std::uniform_int_distribution<uint64_t>(0, np_bv.size() - 1);
+							// we have a larger search space because of ns_bv + node_count
+							std::uniform_int_distribution<uint64_t> dis_step = std::uniform_int_distribution<uint64_t>(0, ns_bv.size() + graph.get_node_count() - 1);
 							std::uniform_int_distribution<uint64_t> flip(0, 1);
 							uint64_t term_updates_local = 0;
 							while (work_todo.load()) {
@@ -281,16 +294,23 @@ namespace odgi {
 #ifdef debug_sample_from_nodes
 									std::cerr << "step_index: " << step_index << std::endl;
 #endif
-									// FIXME we should use a bv here with rank and select
+									// if ns_bv[step_index] == 1 we have to continue!
+									if (ns_bv[step_index] == 1) {
+										continue;
+									}
+									uint64_t handle_rank_of_step_index = ns_bv_rank(step_index);
+									step_index = step_index - handle_rank_of_step_index;
+									uint64_t step_rank_on_node_of_step_index = step_index - ns_bv_select(handle_rank_of_step_index) - 1;
+
+
+									// FIXME get the actual step_index for testing
 									uint64_t path_i = npi_iv[step_index];
 									path_handle_t path = as_path_handle(path_i);
 
-									// FIXME replace with ODGI
-									size_t path_step_count = path_index.get_path_step_count(path);
+									size_t path_step_count = graph.get_step_count(path);
 									if (path_step_count == 1){
 										continue;
 									}
-
 #ifdef debug_sample_from_nodes
 									std::cerr << "path integer: " << path_i << std::endl;
 #endif
@@ -341,9 +361,22 @@ namespace odgi {
 									}
 
 									// and the graph handles, which we need to record the update
-									// FIXME use ODGI here
+									// FIXME
+
+									/// xp:
+									//as_integers(step)[0] // path_id
+									//as_integers(step)[1] // handle_rank
+									/// ODGI:
+									//as_integers(step)[0] // handle_rank
+									//as_integers(step)[1] // path_id
 									handle_t term_i = path_index.get_handle_of_step(step_a);
+								//	std::cerr << "term_i" << std::endl;
+								//	std::cerr << graph.get_id(term_i) << std::endl;
+								//	std::cerr << graph.get_id(graph.get_handle_of_step(step_a)) << std::endl;
+									// std::cerr << "term_j" << std::endl;
 									handle_t term_j = path_index.get_handle_of_step(step_b);
+									//std::cerr << graph.get_id(term_j) << std::endl;
+									//std::cerr << graph.get_id(graph.get_handle_of_step(step_b)) << std::endl;
 
 									bool update_term_i = true;
 									bool update_term_j = true;
@@ -390,9 +423,8 @@ namespace odgi {
 										// term_dist = 1e-9;
 									}
 #ifdef eval_path_sgd
-									/// FIXME use ODGI
-									std::string path_name = path_index.get_path_name(path);
-                                std::cerr << path_name << "\t" << pos_in_path_a << "\t" << pos_in_path_b << "\t" << term_dist << std::endl;
+									std::string path_name = graph.get_path_name(path);
+                                	std::cerr << path_name << "\t" << pos_in_path_a << "\t" << pos_in_path_b << "\t" << term_dist << std::endl;
 #endif
 									// assert(term_dist == zipf_int);
 #ifdef debug_path_sgd
