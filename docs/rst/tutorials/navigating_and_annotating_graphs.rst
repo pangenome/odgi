@@ -2,6 +2,8 @@
 Navigating and annotating graphs
 ################################
 
+**Author**: `Simon Heumos <https://github.com/subwaystation>`_
+
 ========
 Synopsis
 ========
