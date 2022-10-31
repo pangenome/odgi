@@ -43,8 +43,9 @@ namespace odgi {
 			uint64_t first_cooling_iteration = std::floor(cooling_start * (double)iter_max);
 			//std::cerr << "first cooling iteration " << first_cooling_iteration << std::endl;
 
-			/*
+
 			// FIXME this is for testing only
+#ifdef debug_tests
 			sdsl::bit_vector s_bv;
 			sdsl::util::assign(s_bv, sdsl::bit_vector(10));
 			s_bv[0] = 1;
@@ -74,7 +75,7 @@ namespace odgi {
 			std::cerr << "select at rank " << k_rank << ": " << k_rank_to_select << std::endl;
 			step_on_node = k - k_rank_to_select - 1; // 0-based!
 			std::cerr << "step on node 0-based: " << step_on_node << std::endl;
-			*/
+#endif
 
 			/// initialize the bitvector for random sampling
 			/// each time we see a node we add 1, and each time we see a step we keep it 0
@@ -111,10 +112,6 @@ namespace odgi {
 			sdsl::util::assign(ns_bv_rank, sdsl::rank_support_v<1>(&ns_bv));
 			sdsl::util::assign(ns_bv_select, sdsl::bit_vector::select_1_type(&ns_bv));
 
-			/// FIXME this is just so that it runs
-			xp::XP path_index;
-			path_index.from_handle_graph(graph, nthreads);
-
 			uint64_t total_term_updates = iter_max * min_term_updates;
 			std::unique_ptr<progress_meter::ProgressMeter> progress_meter;
 			if (progress) {
@@ -139,7 +136,7 @@ namespace odgi {
 				size_t path_len = path_index.get_path_length(path);
                 std::cerr << path_name << " has length: " << path_len << std::endl;
 #endif
-				if (path_index.get_path_step_count(path) > 1){
+				if (graph.get_step_count(path) > 1){
 					at_least_one_path_with_more_than_one_step = true;
 					break;
 				}
@@ -164,6 +161,7 @@ namespace odgi {
 																	eps);
 
 				// cache zipf zetas for our full path space (heavy, but one-off)
+				// FIXME we need to adjust this for the new stuff, maybe for each path?
 				if (progress) {
 					std::cerr << "[odgi::path_linear_sgd] calculating zetas for " << (space <= space_max ? space : space_max + (space - space_max) / space_quantization_step + 1) << " zipf distributions" << std::endl;
 				}
@@ -257,11 +255,6 @@ namespace odgi {
 							// everyone tries to seed with their own random data
 							const std::uint64_t seed = 9399220 + tid;
 							XoshiroCpp::Xoshiro256Plus gen(seed); // a nice, fast PRNG
-							// FIXME these should be replaced by the bv and ssi
-							// some references to literal bitvectors in the path index hmmm
-							// const sdsl::bit_vector &np_bv = path_index.get_np_bv();
-							const sdsl::int_vector<> &nr_iv = path_index.get_nr_iv();
-							const sdsl::int_vector<> &npi_iv = path_index.get_npi_iv();
 							// we'll sample from all path steps
 							// we have a larger search space because of ns_bv + node_count
 							std::uniform_int_distribution<uint64_t> dis_step = std::uniform_int_distribution<uint64_t>(0, ns_bv.size() - 1);
@@ -300,40 +293,24 @@ namespace odgi {
 												step_rank_on_handle++;
 											});
 
-									uint64_t path_i = npi_iv[step_index];
-									// FIXME delete this later
-									// path_handle_t path = as_path_handle(path_i);
 									path_handle_t path = graph.get_path_handle_of_step(step_a_ssi);
-
 									size_t path_step_count = graph.get_step_count(path);
 									if (path_step_count == 1){
 										continue;
 									}
-#ifdef debug_sample_from_nodes
-									std::cerr << "path integer: " << path_i << std::endl;
-#endif
-									step_handle_t step_a, step_b;
-									as_integers(step_a)[0] = path_i; // path index
-									size_t s_rank = nr_iv[step_index] - 1; // step rank in path
-									as_integers(step_a)[1] = s_rank;
-#ifdef debug_sample_from_nodes
-									std::cerr << "step rank in path: " << nr_iv[step_index]  << std::endl;
-#endif
-									bool cool = false;
-									if (cooling.load() || flip(gen)) {
-										cool = true;
-										auto _theta = adj_theta.load();
 
-										/// IN PROGRESS
+									if (cooling.load() || flip(gen)) {
+										auto _theta = adj_theta.load();
 										bool path_end = false;
 										const uint64_t path_steps = sampled_step_index.get_path_len(path);
 										uint64_t local_space;
 										// FIXME we need to limit the jump length by the given path length?
 										// FIXME I think the problem is how the zetas are created?!
+										// FIXME @Andrea we need to fix this somehow
 										if (path_steps > space_max){
 											local_space = space_max + (path_steps - space_max) / space_quantization_step + 1;
 										}
-										//dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, path_steps, _theta, zetas[local_space]);
+										//dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, path_steps, _theta, zetas[local_space]); // FIXME @Andrea
 										dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, path_steps/1000, _theta);
 										dirtyzipf::dirty_zipfian_int_distribution<uint64_t> z(z_p);
 										uint64_t z_i = z(gen);
@@ -344,7 +321,8 @@ namespace odgi {
 										step_handle_t cur_step = step_a_ssi;
 
 										if (flip(gen)) {
-											// go backwards
+											// go backward
+											// FIXME if we have to go backward more steps than half the total number of steps, we should actually go forward, because we will have less steps to travel
 											while (!path_end) {
 												// did we reach the left end already?
 												if ((as_integers(cur_step)[0] == as_integers(first_step_in_path)[0]) &&
@@ -361,6 +339,7 @@ namespace odgi {
 											}
 											// go forward
 										} else {
+											// FIXME if we have to go forward more steps than halft the total number of steps, we should actually go backward, because we will have less steps to travel
 											while (!path_end) {
 												// did we reach the right already?
 												if ((as_integers(cur_step)[0] == as_integers(last_step_in_path)[0]) &&
@@ -376,39 +355,6 @@ namespace odgi {
 											}
 										}
 										step_b_ssi = cur_step;
-										/// IN PROGRESS END
-
-										// if I understand correctly, we can replace [s_rank == path_step_count - 1] with graph.has_next_step(step_a)?
-										// BUT TRY TO COMPARE AGAINST THE LAST STEP, BECAUSE HAS NEXT_STEP IS SLOW
-										if (s_rank > 0 && flip(gen) || s_rank == path_step_count-1) {
-											// FIXME why do we check if the step_rank is larger 0?
-											// go backward
-											uint64_t jump_space = std::min(space, s_rank);
-											uint64_t space = jump_space;
-											if (jump_space > space_max){
-												space = space_max + (jump_space - space_max) / space_quantization_step + 1;
-											}
-											dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, _theta, zetas[space]);
-											dirtyzipf::dirty_zipfian_int_distribution<uint64_t> z(z_p);
-											uint64_t z_i = z(gen);
-											//assert(z_i <= path_space);
-											// FIXME travel there :)
-											as_integers(step_b)[0] = as_integer(path);
-											as_integers(step_b)[1] = s_rank - z_i;
-										} else {
-											// go forward
-											uint64_t jump_space = std::min(space, path_step_count - s_rank - 1);
-											uint64_t space = jump_space;
-											if (jump_space > space_max){
-												space = space_max + (jump_space - space_max) / space_quantization_step + 1;
-											}
-											dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, _theta, zetas[space]);
-											dirtyzipf::dirty_zipfian_int_distribution<uint64_t> z(z_p);
-											uint64_t z_i = z(gen);
-											//assert(z_i <= path_space);
-											as_integers(step_b)[0] = as_integer(path);
-											as_integers(step_b)[1] = s_rank + z_i;
-										}
 									} else {
 										// sample randomly across the path
 										std::uniform_int_distribution<uint64_t> rando(0, graph.get_step_count(path)-1);
@@ -426,31 +372,10 @@ namespace odgi {
 											n++;
 										}
 										step_b_ssi = cur_step;
-
-										as_integers(step_b)[0] = as_integer(path);
-										as_integers(step_b)[1] = step_rank_b;
 									}
-
-									// and the graph handles, which we need to record the update
-									// FIXME
-
-									/// xp:
-									//as_integers(step)[0] // path_id
-									//as_integers(step)[1] // step_rank?
-									/// ODGI:
-									//as_integers(step)[0] // handle_rank
-									//as_integers(step)[1] // path_id
-									// handle_t term_i = path_index.get_handle_of_step(step_a);
 
 									handle_t term_i = term_i_ssi;
-									handle_t term_j;
-									if (cool) {
-										term_j = path_index.get_handle_of_step(step_b);
-										// FIXME laters!
-									} else {
-										term_j = graph.get_handle_of_step(step_b_ssi);
-									}
-									term_j = graph.get_handle_of_step(step_b_ssi);
+									handle_t term_j = graph.get_handle_of_step(step_b_ssi);
 
 									bool update_term_i = true;
 									bool update_term_j = true;
@@ -475,23 +400,13 @@ namespace odgi {
 									}
 
 									// adjust the positions to the node starts
-									/// FIXME remove this later
-									// size_t pos_in_path_a = path_index.get_position_of_step(step_a);
 									size_t pos_in_path_a = sampled_step_index.get_position(step_a_ssi, graph);
-									/// FIXME we use ODGI to run along until we reach the step with the rank of b
 									size_t pos_in_path_b = sampled_step_index.get_position(step_b_ssi, graph);
-									/*
-									if (cool) {
-										pos_in_path_b = path_index.get_position_of_step(step_b);
-									} else {
-										pos_in_path_b = sampled_step_index.get_position(step_b_ssi, graph);
-									}
-									*/
 #ifdef debug_path_sgd
 									std::cerr << "1. pos in path " << pos_in_path_a << " " << pos_in_path_b << std::endl;
 #endif
-									// assert(pos_in_path_a < path_index.get_path_length(path));
-									// assert(pos_in_path_b < path_index.get_path_length(path));
+									// assert(pos_in_path_a < sampled_step_index.get_path_len(path));
+									// assert(pos_in_path_b < sampled_step_index.get_path_len(path));
 
 #ifdef debug_path_sgd
 									std::cerr << "2. pos in path " << pos_in_path_a << " " << pos_in_path_b << std::endl;
