@@ -329,18 +329,20 @@ namespace odgi {
 										const uint64_t path_steps = sampled_step_index.get_path_len(path);
 										uint64_t local_space;
 										// FIXME we need to limit the jump length by the given path length?
+										// FIXME I think the problem is how the zetas are created?!
 										if (path_steps > space_max){
 											local_space = space_max + (path_steps - space_max) / space_quantization_step + 1;
 										}
-										dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, path_steps, _theta, zetas[local_space]);
+										//dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, path_steps, _theta, zetas[local_space]);
+										dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, path_steps/1000, _theta);
 										dirtyzipf::dirty_zipfian_int_distribution<uint64_t> z(z_p);
 										uint64_t z_i = z(gen);
+
 										uint64_t steps_travelled = 0;
 										step_handle_t last_step_in_path = graph.path_back(path);
 										step_handle_t first_step_in_path = graph.path_begin(path);
 										step_handle_t cur_step = step_a_ssi;
 
-										// FIXME building up alternative solution
 										if (flip(gen)) {
 											// go backwards
 											while (!path_end) {
@@ -381,7 +383,7 @@ namespace odgi {
 										if (s_rank > 0 && flip(gen) || s_rank == path_step_count-1) {
 											// FIXME why do we check if the step_rank is larger 0?
 											// go backward
-											uint64_t jump_space = std::min(space, s_rank); // replacing s_rank with space
+											uint64_t jump_space = std::min(space, s_rank);
 											uint64_t space = jump_space;
 											if (jump_space > space_max){
 												space = space_max + (jump_space - space_max) / space_quantization_step + 1;
@@ -448,6 +450,7 @@ namespace odgi {
 									} else {
 										term_j = graph.get_handle_of_step(step_b_ssi);
 									}
+									term_j = graph.get_handle_of_step(step_b_ssi);
 
 									bool update_term_i = true;
 									bool update_term_j = true;
