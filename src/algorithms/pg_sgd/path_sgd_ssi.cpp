@@ -326,24 +326,54 @@ namespace odgi {
 
 										/// IN PROGRESS
 										bool path_end = false;
-										// FIXME building up alternative solution
-										while (!path_end) {
-											// go backward
-											if (flip(gen)) {
-												uint64_t local_space;
-												// FIXME we need to limit the jump length by the given path length?
-												if (space > space_max){
-													local_space = space_max + (space - space_max) / space_quantization_step + 1;
-												}
-												dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, space, _theta, zetas[local_space]);
-												dirtyzipf::dirty_zipfian_int_distribution<uint64_t> z(z_p);
-												uint64_t z_i = z(gen);
-												path_end = true;
-												// go forward
-											} else {
+										const uint64_t path_steps = sampled_step_index.get_path_len(path);
+										uint64_t local_space;
+										// FIXME we need to limit the jump length by the given path length?
+										if (path_steps > space_max){
+											local_space = space_max + (path_steps - space_max) / space_quantization_step + 1;
+										}
+										dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, path_steps, _theta, zetas[local_space]);
+										dirtyzipf::dirty_zipfian_int_distribution<uint64_t> z(z_p);
+										uint64_t z_i = z(gen);
+										uint64_t steps_travelled = 0;
+										step_handle_t last_step_in_path = graph.path_back(path);
+										step_handle_t first_step_in_path = graph.path_begin(path);
+										step_handle_t cur_step = step_a_ssi;
 
+										// FIXME building up alternative solution
+										if (flip(gen)) {
+											// go backwards
+											while (!path_end) {
+												// did we reach the left end already?
+												if ((as_integers(cur_step)[0] == as_integers(first_step_in_path)[0]) &&
+													(as_integers(cur_step)[1] == as_integers(first_step_in_path)[1])) {
+													cur_step = graph.path_back(path);
+												} else {
+													cur_step = graph.get_previous_step(cur_step);
+												}
+												steps_travelled++;
+												// this assumes z_i is at least 1;
+												if (z_i == steps_travelled) {
+													path_end = true;
+												}
+											}
+											// go forward
+										} else {
+											while (!path_end) {
+												// did we reach the right already?
+												if ((as_integers(cur_step)[0] == as_integers(last_step_in_path)[0]) &&
+													(as_integers(cur_step)[1] == as_integers(last_step_in_path)[1])) {
+													cur_step = graph.path_begin(path);
+												} else {
+													cur_step = graph.get_next_step(cur_step);
+												}
+												steps_travelled++;
+												if (z_i == steps_travelled) {
+													path_end = true;
+												}
 											}
 										}
+										step_b_ssi = cur_step;
 										/// IN PROGRESS END
 
 										// if I understand correctly, we can replace [s_rank == path_step_count - 1] with graph.has_next_step(step_a)?
@@ -446,12 +476,14 @@ namespace odgi {
 									// size_t pos_in_path_a = path_index.get_position_of_step(step_a);
 									size_t pos_in_path_a = sampled_step_index.get_position(step_a_ssi, graph);
 									/// FIXME we use ODGI to run along until we reach the step with the rank of b
-									size_t pos_in_path_b;
+									size_t pos_in_path_b = sampled_step_index.get_position(step_b_ssi, graph);
+									/*
 									if (cool) {
 										pos_in_path_b = path_index.get_position_of_step(step_b);
 									} else {
 										pos_in_path_b = sampled_step_index.get_position(step_b_ssi, graph);
 									}
+									*/
 #ifdef debug_path_sgd
 									std::cerr << "1. pos in path " << pos_in_path_a << " " << pos_in_path_b << std::endl;
 #endif
@@ -697,6 +729,8 @@ namespace odgi {
 			std::cerr << "node count: " << graph.get_node_count() << std::endl;
 #endif
 			// refine order by weakly connected components
+
+			// prepare weakly connected components
 			std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components = algorithms::weakly_connected_components(
 					&graph);
 #ifdef debug_components
@@ -713,7 +747,7 @@ namespace odgi {
 				weak_component_order.push_back(std::make_pair(avg_id, i));
 			}
 			std::sort(weak_component_order.begin(), weak_component_order.end());
-			std::vector<uint64_t> weak_component_id; // maps rank to "id" based on the orignial sorted order
+			std::vector<uint64_t> weak_component_id; // maps rank to "id" based on the original sorted order
 			weak_component_id.resize(weak_component_order.size());
 			uint64_t component_id = 0;
 			for (auto &component_order : weak_component_order) {
@@ -734,6 +768,7 @@ namespace odgi {
 #endif
 			}
 			weak_components_map.clear();
+			// generate and write snapshot graphs
 			if (snapshot) {
 				for (int j = 0; j < snapshots.size(); j++) {
 					std::string snapshot_file_name = snapshots[j];
@@ -783,6 +818,7 @@ namespace odgi {
 					f.close();
 				}
 			}
+			// from layout to order
 			std::vector<algorithms::handle_layout_t> handle_layout;
 			uint64_t i = 0;
 			graph.for_each_handle(
