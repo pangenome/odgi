@@ -81,16 +81,22 @@ namespace odgi {
 			sdsl::bit_vector ns_bv; // node-step bitvector
 			sdsl::util::assign(ns_bv, graph.get_node_count() + sum_path_step_count);
 			/// to be super save we also record the orientation of each step
+			uint64_t len = 0;
+			uint64_t num_nodes = graph.get_node_count();
+			// our positions in 1D
+			std::vector<std::atomic<double>> X(num_nodes);
 			std::vector<bool> handle_orientation;
 			handle_orientation.reserve(sum_path_step_count);
 			uint64_t l = 0;
 			uint64_t m = 0;
 
-			/// FIXME merge this with the iteration below so we don't iterate twice across all nodes!!!!
-			/// FIXME add progress bar
+			// add progress bar here?
 			graph.for_each_handle(
 					[&](const handle_t &h) {
 						ns_bv[l] = 1;
+						// nb: we assume that the graph provides a compact handle set
+						X[number_bool_packing::unpack_number(h)].store(len);
+						len += graph.get_length(h);
 						graph.for_each_step_on_handle(
 								h,
 								[&](const step_handle_t& step) {
@@ -116,33 +122,11 @@ namespace odgi {
 						total_term_updates, "[odgi::path_linear_sgd] 1D path-guided SGD:");
 			}
 			using namespace std::chrono_literals; // for timing stuff
-			uint64_t num_nodes = graph.get_node_count();
-			// our positions in 1D
-			std::vector<std::atomic<double>> X(num_nodes);
 			atomic<bool> snapshot_in_progress;
 			snapshot_in_progress.store(false);
 			std::vector<atomic<bool>> snapshot_progress(iter_max);
 			// we will produce one less snapshot compared to iterations
 			snapshot_progress[0].store(true);
-			// seed them with the graph order
-			uint64_t len = 0;
-			/// FIXME we can merge this iteration with the generation of the ns_bv
-			graph.for_each_handle(
-					[&X, &graph, &len](const handle_t &handle) {
-						// nb: we assume that the graph provides a compact handle set
-						X[number_bool_packing::unpack_number(handle)].store(len);
-						len += graph.get_length(handle);
-					});
-			// the longest path length measured in nucleotides
-			//size_t longest_path_in_nucleotides = 0;
-			// the total path length in nucleotides
-			//size_t total_path_len_in_nucleotides = 0;
-			// here we store all path nucleotides lengths so we know later from which path we sampled our random position from
-			//IITree<uint64_t, path_handle_t> path_nucleotide_tree;
-			// iterate over all relevant path_handles:
-			//  1. build the interval tree
-			//  2. find out the longest path in nucleotides and store this number size_t
-			//  3. add the current path length to the total length
 			bool at_least_one_path_with_more_than_one_step = false;
 
 			for (auto &path : path_sgd_use_paths) {
@@ -155,19 +139,11 @@ namespace odgi {
 				size_t path_len = path_index.get_path_length(path);
                 std::cerr << path_name << " has length: " << path_len << std::endl;
 #endif
-				//path_nucleotide_tree.add(total_path_len_in_nucleotides, total_path_len_in_nucleotides + path_len, path);
-
-				//if (path_len > longest_path_in_nucleotides) {
-				//    longest_path_in_nucleotides = path_len;
-				//}
-				//total_path_len_in_nucleotides += path_len;
-
 				if (path_index.get_path_step_count(path) > 1){
 					at_least_one_path_with_more_than_one_step = true;
 					break;
 				}
 			}
-			//path_nucleotide_tree.index();
 
 			if (at_least_one_path_with_more_than_one_step){
 				double w_min = (double) 1.0 / (double) (eta_max);
@@ -194,7 +170,6 @@ namespace odgi {
 
 				std::vector<double> zetas((space <= space_max ? space : space_max + (space - space_max) / space_quantization_step + 1)+1);
 				uint64_t last_quantized_i = 0;
-				// FIXME add progress bar here?
 #pragma omp parallel for schedule(static,1)
 				for (uint64_t i = 1; i < space+1; ++i) {
 					uint64_t quantized_i = i;
@@ -284,7 +259,7 @@ namespace odgi {
 							XoshiroCpp::Xoshiro256Plus gen(seed); // a nice, fast PRNG
 							// FIXME these should be replaced by the bv and ssi
 							// some references to literal bitvectors in the path index hmmm
-							const sdsl::bit_vector &np_bv = path_index.get_np_bv();
+							// const sdsl::bit_vector &np_bv = path_index.get_np_bv();
 							const sdsl::int_vector<> &nr_iv = path_index.get_nr_iv();
 							const sdsl::int_vector<> &npi_iv = path_index.get_npi_iv();
 							// we'll sample from all path steps
@@ -305,7 +280,6 @@ namespace odgi {
 									if (ns_bv[node_step_index] == 1) {
 										continue;
 									}
-									/// FIXME
 									uint64_t handle_rank_of_step_index = ns_bv_rank(node_step_index); // because we have a compacted graph, this is the actual node id!
 									uint64_t step_index = node_step_index - handle_rank_of_step_index;
 									uint64_t step_rank_on_node_given_step_index = node_step_index - ns_bv_select(handle_rank_of_step_index) - 1;
@@ -318,8 +292,10 @@ namespace odgi {
 											term_i_ssi,
 											[&](const step_handle_t& step) {
 												if (step_rank_on_handle == step_rank_on_node_given_step_index) {
-													// FIXME once we found this, step out of it
 													step_a_ssi = step;
+													// FIXME once we found this, step out of it
+													// I am not sure what is happening here, but this return seems to abort the mission too early
+													// return;
 												}
 												step_rank_on_handle++;
 											});
@@ -347,9 +323,35 @@ namespace odgi {
 									if (cooling.load() || flip(gen)) {
 										cool = true;
 										auto _theta = adj_theta.load();
-										if (s_rank > 0 && flip(gen) || s_rank == path_step_count-1) {
+
+										/// IN PROGRESS
+										bool path_end = false;
+										// FIXME building up alternative solution
+										while (!path_end) {
 											// go backward
-											uint64_t jump_space = std::min(space, s_rank);
+											if (flip(gen)) {
+												uint64_t local_space;
+												// FIXME we need to limit the jump length by the given path length?
+												if (space > space_max){
+													local_space = space_max + (space - space_max) / space_quantization_step + 1;
+												}
+												dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, space, _theta, zetas[local_space]);
+												dirtyzipf::dirty_zipfian_int_distribution<uint64_t> z(z_p);
+												uint64_t z_i = z(gen);
+												path_end = true;
+												// go forward
+											} else {
+
+											}
+										}
+										/// IN PROGRESS END
+
+										// if I understand correctly, we can replace [s_rank == path_step_count - 1] with graph.has_next_step(step_a)?
+										// BUT TRY TO COMPARE AGAINST THE LAST STEP, BECAUSE HAS NEXT_STEP IS SLOW
+										if (s_rank > 0 && flip(gen) || s_rank == path_step_count-1) {
+											// FIXME why do we check if the step_rank is larger 0?
+											// go backward
+											uint64_t jump_space = std::min(space, s_rank); // replacing s_rank with space
 											uint64_t space = jump_space;
 											if (jump_space > space_max){
 												space = space_max + (jump_space - space_max) / space_quantization_step + 1;
@@ -358,6 +360,7 @@ namespace odgi {
 											dirtyzipf::dirty_zipfian_int_distribution<uint64_t> z(z_p);
 											uint64_t z_i = z(gen);
 											//assert(z_i <= path_space);
+											// FIXME travel there :)
 											as_integers(step_b)[0] = as_integer(path);
 											as_integers(step_b)[1] = s_rank - z_i;
 										} else {
@@ -377,7 +380,7 @@ namespace odgi {
 									} else {
 										// sample randomly across the path
 										std::uniform_int_distribution<uint64_t> rando(0, graph.get_step_count(path)-1);
-										// FIXME very inefficient solution!
+										// FIXME very inefficient solution! Is there a more random way?!
 										uint64_t step_rank_b = rando(gen);
 										uint64_t n = 0;
 										step_handle_t cur_step = graph.path_begin(path);
@@ -401,7 +404,7 @@ namespace odgi {
 
 									/// xp:
 									//as_integers(step)[0] // path_id
-									//as_integers(step)[1] // handle_rank or step_rank?
+									//as_integers(step)[1] // step_rank?
 									/// ODGI:
 									//as_integers(step)[0] // handle_rank
 									//as_integers(step)[1] // path_id
@@ -411,6 +414,7 @@ namespace odgi {
 									handle_t term_j;
 									if (cool) {
 										term_j = path_index.get_handle_of_step(step_b);
+										// FIXME laters!
 									} else {
 										term_j = graph.get_handle_of_step(step_b_ssi);
 									}
