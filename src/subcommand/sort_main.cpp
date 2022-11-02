@@ -154,7 +154,7 @@ int main_sort(int argc, char** argv) {
         return 1;
     }
 
-	const bool xp_way = xp_in_file || p_sgd_xp;
+	const bool xp_way = ((xp_in_file || p_sgd_xp) && p_sgd) ;
 
 	if (xp_way && ssi_in_file) {
 		std::cerr

@@ -44,7 +44,7 @@ namespace odgi {
 			//std::cerr << "first cooling iteration " << first_cooling_iteration << std::endl;
 
 
-			// FIXME this is for testing only
+			// this is for testing only
 #ifdef debug_tests
 			sdsl::bit_vector s_bv;
 			sdsl::util::assign(s_bv, sdsl::bit_vector(10));
@@ -302,16 +302,15 @@ namespace odgi {
 									if (cooling.load() || flip(gen)) {
 										auto _theta = adj_theta.load();
 										bool path_end = false;
-										const uint64_t path_steps = sampled_step_index.get_path_len(path);
 										uint64_t local_space;
 										// FIXME we need to limit the jump length by the given path length?
 										// FIXME I think the problem is how the zetas are created?!
 										// FIXME @Andrea we need to fix this somehow
-										if (path_steps > space_max){
-											local_space = space_max + (path_steps - space_max) / space_quantization_step + 1;
+										if (path_step_count > space_max){
+											local_space = space_max + (path_step_count - space_max) / space_quantization_step + 1;
 										}
-										//dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, path_steps, _theta, zetas[local_space]); // FIXME @Andrea
-										dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, path_steps/1000, _theta);
+										//dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, path_step_count, _theta, zetas[local_space]); // FIXME @Andrea
+										dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, path_step_count/100, _theta); // 100 for DRB1-3123 data set
 										dirtyzipf::dirty_zipfian_int_distribution<uint64_t> z(z_p);
 										uint64_t z_i = z(gen);
 
@@ -322,7 +321,6 @@ namespace odgi {
 
 										if (flip(gen)) {
 											// go backward
-											// FIXME if we have to go backward more steps than half the total number of steps, we should actually go forward, because we will have less steps to travel
 											while (!path_end) {
 												// did we reach the left end already?
 												if ((as_integers(cur_step)[0] == as_integers(first_step_in_path)[0]) &&
@@ -339,7 +337,6 @@ namespace odgi {
 											}
 											// go forward
 										} else {
-											// FIXME if we have to go forward more steps than halft the total number of steps, we should actually go backward, because we will have less steps to travel
 											while (!path_end) {
 												// did we reach the right already?
 												if ((as_integers(cur_step)[0] == as_integers(last_step_in_path)[0]) &&
@@ -349,6 +346,7 @@ namespace odgi {
 													cur_step = graph.get_next_step(cur_step);
 												}
 												steps_travelled++;
+												// this assumes z_i is at least 1;
 												if (z_i == steps_travelled) {
 													path_end = true;
 												}
@@ -361,16 +359,20 @@ namespace odgi {
 										// FIXME very inefficient solution! Is there a more random way?!
 										uint64_t step_rank_b = rando(gen);
 										uint64_t n = 0;
-										step_handle_t cur_step = graph.path_begin(path);
+										step_handle_t cur_step;
+										cur_step = graph.path_begin(path);
 										bool lost = true;
-										// has_next_step is very, very costly!
+										// has_next_step is very, very costly and already unfeasable for yeast!
+										// 10 minutes versus 15 seconds!
+										/*
 										while (lost) {
 											if (n == step_rank_b) {
-												cur_step = graph.get_next_step(cur_step);
 												lost = false;
 											}
+											cur_step = graph.get_next_step(cur_step);
 											n++;
 										}
+										*/
 										step_b_ssi = cur_step;
 									}
 
