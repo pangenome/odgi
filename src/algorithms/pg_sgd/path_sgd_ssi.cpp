@@ -319,7 +319,7 @@ namespace odgi {
 										step_handle_t first_step_in_path = graph.path_begin(path);
 										step_handle_t cur_step = step_a_ssi;
 
-										if (flip(gen)) {
+										if (flip(gen)) { // if (s_rank > 0 && flip(gen) || s_rank == path_step_count-1) { WHAT TO DO HERE?
 											// go backward
 											while (!path_end) {
 												// did we reach the left end already?
@@ -364,7 +364,6 @@ namespace odgi {
 										bool lost = true;
 										// has_next_step is very, very costly and already unfeasable for yeast!
 										// 10 minutes versus 15 seconds!
-										/*
 										while (lost) {
 											if (n == step_rank_b) {
 												lost = false;
@@ -372,7 +371,6 @@ namespace odgi {
 											cur_step = graph.get_next_step(cur_step);
 											n++;
 										}
-										*/
 										step_b_ssi = cur_step;
 									}
 
