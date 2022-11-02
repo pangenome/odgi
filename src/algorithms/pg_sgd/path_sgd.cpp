@@ -114,7 +114,7 @@ namespace odgi {
                     std::cerr << "[odgi::path_linear_sgd] calculating linear SGD schedule (" << w_min << " " << w_max << " "
                               << iter_max << " " << iter_with_max_learning_rate << " " << eps << ")" << std::endl;
                 }
-                std::vector<double> etas = path_linear_sgd_schedule(w_min,
+                std::vector<double> etas = algorithms::path_linear_sgd_schedule(w_min,
                                                                     w_max,
                                                                     iter_max,
                                                                     iter_with_max_learning_rate,
@@ -472,43 +472,6 @@ namespace odgi {
                 X_final[i++] = x.load();
             }
             return X_final;
-        }
-
-        std::vector<double> path_linear_sgd_schedule(const double &w_min,
-                                                     const double &w_max,
-                                                     const uint64_t &iter_max,
-                                                     const uint64_t &iter_with_max_learning_rate,
-                                                     const double &eps) {
-#ifdef debug_schedule
-            std::cerr << "w_min: " << w_min << std::endl;
-            std::cerr << "w_max: " << w_max << std::endl;
-            std::cerr << "iter_max: " << iter_max << std::endl;
-            std::cerr << "eps: " << eps << std::endl;
-#endif
-            double eta_max = 1.0 / w_min;
-            double eta_min = eps / w_max;
-            double lambda = log(eta_max / eta_min) / ((double) iter_max - 1);
-#ifdef debug_schedule
-            std::cerr << "eta_max: " << eta_max << std::endl;
-            std::cerr << "eta_min: " << eta_min << std::endl;
-            std::cerr << "lambda: " << lambda << std::endl;
-#endif
-            // initialize step sizes
-            std::vector<double> etas;
-            etas.reserve(iter_max + 1);
-#ifdef debug_schedule
-            std::cerr << "etas: ";
-#endif
-            for (int64_t t = 0; t <= iter_max; t++) {
-                etas.push_back(eta_max * exp(-lambda * (abs(t - (int64_t) iter_with_max_learning_rate))));
-#ifdef debug_schedule
-                std::cerr << etas.back() << ", ";
-#endif
-            }
-#ifdef debug_schedule
-            std::cerr << std::endl;
-#endif
-            return etas;
         }
 
         std::vector<handle_t> path_linear_sgd_order(const graph_t &graph,

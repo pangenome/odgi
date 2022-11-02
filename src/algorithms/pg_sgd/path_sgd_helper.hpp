@@ -31,8 +31,16 @@ namespace odgi {
 		const uint64_t get_max_path_length_ssi(const std::vector<path_handle_t> &path_sgd_use_paths,
 											   const algorithms::step_index_t &sampled_step_index);
 
+		/// sort the graph's nodes by given target paths, we need this for the reference based sorting
 		const void sort_graph_by_target_paths(graph_t& graph, const std::vector<path_handle_t> &target_paths,
 											  std::vector<bool>& is_ref,
 											  const bool &progress);
+
+		/// calculate the schedule
+		std::vector<double> path_linear_sgd_schedule(const double &w_min,
+														 const double &w_max,
+														 const uint64_t &iter_max,
+														 const uint64_t &iter_with_max_learning_rate,
+														 const double &eps);
 	}
 }
