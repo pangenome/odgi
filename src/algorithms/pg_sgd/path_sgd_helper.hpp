@@ -53,5 +53,11 @@ namespace odgi {
 													  std::vector<uint64_t>& weak_components_map,
 													  const std::string& snapshot_prefix,
 													  std::vector<string>& snapshots);
+
+		/// translate the 1D layout into an actual node order
+		const void from_layout_to_node_order(graph_t& graph,
+											 std::vector<uint64_t>& weak_components_map,
+											 std::vector<handle_t>& order,
+											 std::vector<double>& layout);
 	}
 }

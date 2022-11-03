@@ -41,6 +41,7 @@ int main_sort(int argc, char** argv) {
                                                              " ending with *.og* is recommended.", {'o', "out"});
     args::Group files_io_opts(parser, "[ Files IO Options ]");
     args::ValueFlag<std::string> xp_in_file(files_io_opts, "FILE", "Load the succinct variation graph index from this *FILE*. The file name usually ends with *.xp*.", {'X', "path-index"});
+	/// @Andrea new argument
 	args::ValueFlag<std::string> ssi_in_file(files_io_opts, "FILE", "Load the sampled step index from this *FILE*. The file name usually ends with *.ssi*.", {'e', "sampled-step-index"});
     args::ValueFlag<std::string> sort_order_in(files_io_opts, "FILE", "*FILE* containing the sort order. Each line contains one node identifer.", {'s', "sort-order"});
     args::ValueFlag<std::string> tmp_base(files_io_opts, "PATH", "directory for temporary files", {'C', "temp-dir"});
@@ -63,6 +64,7 @@ int main_sort(int argc, char** argv) {
     /// path guided linear 1D SGD
     args::Group pg_sgd_opts(parser, "[ Path Guided 1D SGD Sort ]");
     args::Flag p_sgd(pg_sgd_opts, "path-sgd", "Apply the path-guided linear 1D SGD algorithm to organize graph.", {'Y', "path-sgd"});
+	/// @Andrea new argument
 	args::Flag p_sgd_xp(pg_sgd_opts, "path-sgd", "Use the faster but memory expensive XP index.", {'m', "path-sgd-path-index"});
     args::ValueFlag<std::string> p_sgd_in_file(pg_sgd_opts, "FILE", "Specify a line separated list of paths to sample from for the on the"
                                                                     " fly term generation process in the path guided linear 1D SGD (default: sample from all paths).", {'f', "path-sgd-use-paths"});
@@ -269,6 +271,7 @@ int main_sort(int argc, char** argv) {
 	}
 	std::vector<bool> is_ref;
 	std::vector<path_handle_t> target_paths;
+	/// @Andrea
 	uint64_t ssi_sample_rate = 8;
 	uint64_t sum_path_step_count;
     if (p_sgd || args::get(pipeline).find('Y') != std::string::npos) {
@@ -277,6 +280,7 @@ int main_sort(int argc, char** argv) {
 			algorithms::sort_graph_by_target_paths(graph, target_paths, is_ref, args::get(progress));
 		}
 		// SSI should be the new default, else we take the XP we received from the input or if the input is an empty string we generate a new one anyhow
+		/// @Andrea
         if (xp_in_file) {
             std::ifstream in;
             in.open(args::get(xp_in_file));
@@ -287,7 +291,7 @@ int main_sort(int argc, char** argv) {
             path_index.from_handle_graph(graph, num_threads);
 			// do we load the SSI from file?
         } else if (ssi_in_file) {
-			// FIXME we could also only allow an integer as input to build an ssi for the given sample rate
+			// FIXME we could also only allow an integer as input to build an ssi for the given sample rate? @Andrea
 			sampled_step_index.load(args::get(ssi_in_file));
 			// store the SSI sampling rate
 			ssi_sample_rate = sampled_step_index.get_sample_rate();
@@ -297,7 +301,7 @@ int main_sort(int argc, char** argv) {
 			sampled_step_index.from_handle_graph(graph, path_sgd_use_paths, num_threads, args::get(progress), ssi_sample_rate);
 		}
         fresh_step_index = true;
-
+		/// @Andrea
         sum_path_step_count = algorithms::get_sum_path_step_count(path_sgd_use_paths, graph);
         if (args::get(p_sgd_min_term_updates_paths)) {
             path_sgd_min_term_updates = args::get(p_sgd_min_term_updates_paths) * sum_path_step_count;
@@ -308,6 +312,7 @@ int main_sort(int argc, char** argv) {
                 path_sgd_min_term_updates = 1.0 * sum_path_step_count;
             }
         }
+		/// @Andrea
         uint64_t max_path_step_count = algorithms::get_max_path_step_count(path_sgd_use_paths, graph);
 		// we might have to use the SSI here
 		if (xp_way) {

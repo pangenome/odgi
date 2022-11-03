@@ -526,33 +526,13 @@ namespace odgi {
 												   snapshot_prefix,
 												   snapshots);
 			}
-			std::vector<handle_layout_t> handle_layout;
-            uint64_t i = 0;
-            graph.for_each_handle(
-                    [&i, &layout, &weak_components_map, &handle_layout](const handle_t &handle) {
-                        handle_layout.push_back(
-                                {
-                                        weak_components_map[number_bool_packing::unpack_number(handle)],
-                                        layout[i++],
-                                        handle
-                                });
-                    });
-            // sort the graph layout by component, then pos, then handle rank
-            std::sort(handle_layout.begin(), handle_layout.end(),
-                      [&](const handle_layout_t &a,
-                          const handle_layout_t &b) {
-                          return a.weak_component < b.weak_component
-                                 || (a.weak_component == b.weak_component
-                                     && a.pos < b.pos
-                                     || (a.pos == b.pos
-                                         && as_integer(a.handle) < as_integer(b.handle)));
-                      });
-            std::vector<handle_t> order;
-            order.reserve(graph.get_node_count());
-            for (auto &layout_handle : handle_layout) {
-                order.push_back(layout_handle.handle);
-            }
-            return order;
+			// from layout to order
+			std::vector<handle_t> order;
+			algorithms::from_layout_to_node_order(graph,
+												  weak_components_map,
+												  order,
+												  layout);
+			return order;
         }
     }
 }
