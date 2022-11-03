@@ -3,6 +3,7 @@
 #include "odgi.hpp"
 #include "xp.hpp"
 #include "algorithms/stepindex.hpp"
+#include "../weakly_connected_components.hpp"
 
 namespace odgi {
 	namespace algorithms {
@@ -36,11 +37,15 @@ namespace odgi {
 											  std::vector<bool>& is_ref,
 											  const bool &progress);
 
-		/// calculate the schedule
+		/// calculate the SGD schedule
 		std::vector<double> path_linear_sgd_schedule(const double &w_min,
 														 const double &w_max,
 														 const uint64_t &iter_max,
 														 const uint64_t &iter_with_max_learning_rate,
 														 const double &eps);
+
+		/// prepare the weak components map which we will need later so we separate all graph components in 1D
+		const void prepare_weak_connected_components_map(graph_t& graph,
+											   std::vector<uint64_t>& weak_components_map);
 	}
 }

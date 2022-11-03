@@ -32,7 +32,7 @@ namespace algorithms {
 using namespace handlegraph;
 
 /// use SGD driven, by path guided, and partly zipfian distribution sampled pairwise distances to obtain a 1D linear layout of the graph that respects its topology
-std::vector<double> path_linear_sgd(const graph_t &graph,
+std::vector<double> path_linear_sgd(graph_t &graph,
                                     const xp::XP &path_index,
                                     const std::vector<path_handle_t>& path_sgd_use_paths,
                                     const uint64_t &iter_max,
@@ -58,7 +58,7 @@ std::vector<double> path_linear_sgd_schedule(const double &w_min,
                                              const uint64_t &iter_with_max_learning_rate,
                                              const double &eps);
 
-std::vector<handle_t> path_linear_sgd_order(const graph_t &graph,
+std::vector<handle_t> path_linear_sgd_order(graph_t &graph,
                                             const xp::XP &path_index,
                                             const std::vector<path_handle_t>& path_sgd_use_paths,
                                             const uint64_t &iter_max,

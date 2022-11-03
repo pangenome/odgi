@@ -8,7 +8,7 @@
 namespace odgi {
     namespace algorithms {
 
-        std::vector<double> path_linear_sgd(const graph_t &graph,
+        std::vector<double> path_linear_sgd(graph_t &graph,
                                             const xp::XP &path_index,
                                             const std::vector<path_handle_t> &path_sgd_use_paths,
                                             const uint64_t &iter_max,
@@ -474,7 +474,7 @@ namespace odgi {
             return X_final;
         }
 
-        std::vector<handle_t> path_linear_sgd_order(const graph_t &graph,
+        std::vector<handle_t> path_linear_sgd_order(graph_t &graph,
                                                     const xp::XP &path_index,
                                                     const std::vector<path_handle_t> &path_sgd_use_paths,
                                                     const uint64_t &iter_max,
@@ -516,48 +516,10 @@ namespace odgi {
                                                          snapshots,
 														 target_sorting,
 														 target_nodes);
-            // TODO move the following into its own function that we can reuse
-#ifdef debug_components
-            std::cerr << "node count: " << graph.get_node_count() << std::endl;
-#endif
-            // refine order by weakly connected components
-            std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components = algorithms::weakly_connected_components(
-                    &graph);
-#ifdef debug_components
-            std::cerr << "components count: " << weak_components.size() << std::endl;
-#endif
-            std::vector<std::pair<double, uint64_t>> weak_component_order;
-            for (int i = 0; i < weak_components.size(); i++) {
-                auto &weak_component = weak_components[i];
-                uint64_t id_sum = 0;
-                for (auto node_id : weak_component) {
-                    id_sum += node_id;
-                }
-                double avg_id = id_sum / (double) weak_component.size();
-                weak_component_order.push_back(std::make_pair(avg_id, i));
-            }
-            std::sort(weak_component_order.begin(), weak_component_order.end());
-            std::vector<uint64_t> weak_component_id; // maps rank to "id" based on the orignial sorted order
-            weak_component_id.resize(weak_component_order.size());
-            uint64_t component_id = 0;
-            for (auto &component_order : weak_component_order) {
-                weak_component_id[component_order.second] = component_id++;
-            }
-            std::vector<uint64_t> weak_components_map;
-            weak_components_map.resize(graph.get_node_count());
-            // reserve the space we need
-            for (int i = 0; i < weak_components.size(); i++) {
-                auto &weak_component = weak_components[i];
-                // store for each node identifier to component start index
-                for (auto node_id : weak_component) {
-                    weak_components_map[node_id - 1] = weak_component_id[i];
-                }
-#ifdef debug_components
-                std::cerr << "weak_component.size(): " << weak_component.size() << std::endl;
-                std::cerr << "component_index: " << i << std::endl;
-#endif
-            }
-            weak_components_map.clear();
+            // prepare the weak components map
+			std::vector<uint64_t> weak_components_map;
+			algorithms::prepare_weak_connected_components_map(graph, weak_components_map);
+			// prepare and write snapshots
             if (snapshot) {
                 for (int j = 0; j < snapshots.size(); j++) {
                     std::string snapshot_file_name = snapshots[j];

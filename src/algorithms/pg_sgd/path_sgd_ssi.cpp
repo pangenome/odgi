@@ -302,14 +302,17 @@ namespace odgi {
 									if (cooling.load() || flip(gen)) {
 										auto _theta = adj_theta.load();
 										bool path_end = false;
-										uint64_t local_space;
 										// FIXME we need to limit the jump length by the given path length?
 										// FIXME I think the problem is how the zetas are created?!
 										// FIXME @Andrea we need to fix this somehow
-										if (path_step_count > space_max){
-											local_space = space_max + (path_step_count - space_max) / space_quantization_step + 1;
+										/*
+										uint64_t jump_space = std::min(space, s_rank);
+										uint64_t space = jump_space;
+										if (jump_space > space_max){
+											space = space_max + (jump_space - space_max) / space_quantization_step + 1;
 										}
-										//dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, path_step_count, _theta, zetas[local_space]); // FIXME @Andrea
+										dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, _theta, zetas[space]); FIXME @Andrea
+										*/
 										dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, path_step_count/100, _theta); // 100 for DRB1-3123 data set
 										dirtyzipf::dirty_zipfian_int_distribution<uint64_t> z(z_p);
 										uint64_t z_i = z(gen);
@@ -605,50 +608,9 @@ namespace odgi {
 														 target_sorting,
 														 target_nodes,
 														 sum_path_step_count);
-			// TODO move the following into its own function that we can reuse
-#ifdef debug_components
-			std::cerr << "node count: " << graph.get_node_count() << std::endl;
-#endif
-			// refine order by weakly connected components
-
-			// prepare weakly connected components
-			std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components = algorithms::weakly_connected_components(
-					&graph);
-#ifdef debug_components
-			std::cerr << "components count: " << weak_components.size() << std::endl;
-#endif
-			std::vector<std::pair<double, uint64_t>> weak_component_order;
-			for (int i = 0; i < weak_components.size(); i++) {
-				auto &weak_component = weak_components[i];
-				uint64_t id_sum = 0;
-				for (auto node_id : weak_component) {
-					id_sum += node_id;
-				}
-				double avg_id = id_sum / (double) weak_component.size();
-				weak_component_order.push_back(std::make_pair(avg_id, i));
-			}
-			std::sort(weak_component_order.begin(), weak_component_order.end());
-			std::vector<uint64_t> weak_component_id; // maps rank to "id" based on the original sorted order
-			weak_component_id.resize(weak_component_order.size());
-			uint64_t component_id = 0;
-			for (auto &component_order : weak_component_order) {
-				weak_component_id[component_order.second] = component_id++;
-			}
+			// prepare the weak components map
 			std::vector<uint64_t> weak_components_map;
-			weak_components_map.resize(graph.get_node_count());
-			// reserve the space we need
-			for (int i = 0; i < weak_components.size(); i++) {
-				auto &weak_component = weak_components[i];
-				// store for each node identifier to component start index
-				for (auto node_id : weak_component) {
-					weak_components_map[node_id - 1] = weak_component_id[i];
-				}
-#ifdef debug_components
-				std::cerr << "weak_component.size(): " << weak_component.size() << std::endl;
-                std::cerr << "component_index: " << i << std::endl;
-#endif
-			}
-			weak_components_map.clear();
+			algorithms::prepare_weak_connected_components_map(graph, weak_components_map);
 			// generate and write snapshot graphs
 			if (snapshot) {
 				for (int j = 0; j < snapshots.size(); j++) {
