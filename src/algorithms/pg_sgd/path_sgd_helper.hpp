@@ -46,6 +46,12 @@ namespace odgi {
 
 		/// prepare the weak components map which we will need later so we separate all graph components in 1D
 		const void prepare_weak_connected_components_map(graph_t& graph,
-											   std::vector<uint64_t>& weak_components_map);
+														 std::vector<uint64_t>& weak_components_map);
+
+		/// prepare the weak components map which we will need later so we separate all graph components in 1D
+		const void generate_and_write_snapshot_graphs(graph_t& graph,
+													  std::vector<uint64_t>& weak_components_map,
+													  const std::string& snapshot_prefix,
+													  std::vector<string>& snapshots);
 	}
 }

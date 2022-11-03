@@ -162,5 +162,59 @@ namespace odgi {
 			}
 			weak_components_map.clear();
 		}
+
+		/// prepare the weak components map which we will need later so we separate all graph components in 1D
+		const void generate_and_write_snapshot_graphs(graph_t& graph,
+													  std::vector<uint64_t>& weak_components_map,
+													  const std::string& snapshot_prefix,
+													  std::vector<string>& snapshots) {
+			for (int j = 0; j < snapshots.size(); j++) {
+				std::string snapshot_file_name = snapshots[j];
+				std::ifstream snapshot_instream(snapshot_file_name);
+				std::vector<double> snapshot_layout;
+				std::string line;
+				while(std::getline(snapshot_instream, line)) {
+					snapshot_layout.push_back(std::stod(line));
+				}
+				snapshot_instream.close();
+				uint64_t i = 0;
+				std::vector<algorithms::handle_layout_t> snapshot_handle_layout;
+				graph.for_each_handle(
+						[&i, &snapshot_layout, &weak_components_map, &snapshot_handle_layout](
+								const handle_t &handle) {
+							snapshot_handle_layout.push_back(
+									{
+											weak_components_map[number_bool_packing::unpack_number(handle)],
+											snapshot_layout[i++],
+											handle
+									});
+						});
+				// sort the graph layout by component, then pos, then handle rank
+				std::sort(snapshot_handle_layout.begin(), snapshot_handle_layout.end(),
+						  [&](const algorithms::handle_layout_t &a,
+							  const algorithms::handle_layout_t &b) {
+							  return a.weak_component < b.weak_component
+									 || (a.weak_component == b.weak_component
+										 && a.pos < b.pos
+										 || (a.pos == b.pos
+											 && as_integer(a.handle) < as_integer(b.handle)));
+						  });
+				std::vector<handle_t> order;
+				order.reserve(graph.get_node_count());
+				for (auto &layout_handle : snapshot_handle_layout) {
+					order.push_back(layout_handle.handle);
+				}
+				std::cerr << "[odgi::path_linear_sgd] Applying order to graph of snapshot: " << std::to_string(j + 1)
+						  << std::endl;
+				std::string local_snapshot_prefix = snapshot_prefix + std::to_string(j + 1);
+				auto* graph_copy = new odgi::graph_t();
+				utils::graph_deep_copy(graph, graph_copy);
+				graph_copy->apply_ordering(order, true);
+				ofstream f(local_snapshot_prefix);
+				std::cerr << "[odgi::path_linear_sgd] Writing snapshot: " << std::to_string(j + 1) << std::endl;
+				graph_copy->serialize(f);
+				f.close();
+			}
+		}
 	}
 }
