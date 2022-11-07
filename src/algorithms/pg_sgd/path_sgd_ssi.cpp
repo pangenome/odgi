@@ -305,15 +305,14 @@ namespace odgi {
 										// FIXME we need to limit the jump length by the given path length?
 										// FIXME I think the problem is how the zetas are created?!
 										// FIXME @Andrea we need to fix this somehow
-										/*
-										uint64_t jump_space = std::min(space, s_rank);
+
+										uint64_t jump_space = std::min(space, path_step_count);
 										uint64_t space = jump_space;
 										if (jump_space > space_max){
 											space = space_max + (jump_space - space_max) / space_quantization_step + 1;
 										}
-										dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, _theta, zetas[space]); FIXME @Andrea
-										*/
-										dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, path_step_count/100, _theta); // 100 for DRB1-3123 data set
+										dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, jump_space, _theta, zetas[space]); // FIXME @Andrea
+										// dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, path_step_count/100, _theta); // 100 for DRB1-3123 data set
 										dirtyzipf::dirty_zipfian_int_distribution<uint64_t> z(z_p);
 										uint64_t z_i = z(gen);
 
