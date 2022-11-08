@@ -75,13 +75,7 @@ namespace odgi {
                        const std::string &buffer) {
         if (!buffer.empty() && buffer[0] != '#') {
             const auto vals = split(buffer, '\t');
-            /*
-            if (vals.size() != 3) {
-                std::cerr << "[odgi::add_bed_range] error: path position record is incomplete" << std::endl;
-                std::cerr << "[odgi::add_bed_range] error: got '" << buffer << "'" << std::endl;
-                exit(1);
-            }
-            */
+
             const auto &path_name = vals[0];
             if (!graph.has_path(path_name)) {
                 std::cerr << "[odgi::add_bed_range] error: path " << path_name << " not found in graph" << std::endl;
@@ -98,7 +92,7 @@ namespace odgi {
                     });
                 }
 
-                if (start > end) {
+                if (start >= end) {
                     std::cerr << "[odgi::add_bed_range] error: wrong input coordinates in row: " << buffer << std::endl;
                     exit(1);
                 }

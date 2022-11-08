@@ -47,7 +47,7 @@ Path Investigation Options
 | **-H, --haplotypes**
 | Print to stdout the paths in an approximate binary haplotype matrix
   based on the graph’s sort order. The output is tab-delimited:
-  **path.name**, *path.length*, *node.count*, *node.1*,
+  **path.name**, *path.length*, *path.step.count*, *node.1*,
   *node.2*, *node.n*. Each path entry is printed in its own line.
 
 | **-D, --delim**\ =\ *CHAR*
@@ -63,6 +63,17 @@ Path Investigation Options
 
 | **-f, --fasta**
 | Print paths in FASTA format to stdout. One line for the FASTA header, another line for the whole sequence.
+
+Path Modification Options
+---------------------
+| **-K, --keep-paths**\ =\ *[FILE]*
+| Keep paths listed (by line) in *FILE*.
+
+| **-X, --drop-paths**\ =\ *[FILE]*
+| Drop paths listed (by line) in *FILE*.
+
+| **-o, --out**\ =\ *FILE*
+| Write the dynamic succinct variation graph to this file (e.g. *.og*)
 
 Threading
 ---------
@@ -85,16 +96,16 @@ Program Information
 ..
 	EXIT STATUS
 	===========
-	
+
 	| **0**
 	| Success.
-	
+
 	| **1**
 	| Failure (syntax or usage error; parameter error; file processing
 	  failure; unexpected error).
-	
+
 	BUGS
 	====
-	
+
 	Refer to the **odgi** issue tracker at
 	https://github.com/pangenome/odgi/issues.

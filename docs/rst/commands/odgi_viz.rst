@@ -141,7 +141,7 @@ Binned Mode Options
 | Use the colorbrewer palette specified for < 0.5x and ~1x coverage bins (default: these bins are light and neutral grey).
 
 Gradient Mode Options
----------------------------------------------------
+---------------------
 
 | **-d, --change-darkness**
 | Change the color darkness based on nucleotide position in the path.
@@ -157,6 +157,15 @@ Gradient Mode Options
 | **-u, --white-to-black**
 | Change the color darkness from white (for the first nucleotide
   position) to black (for the last nucleotide position).
+
+Compressed Mode Options
+-----------------------
+
+| **-O, --compressed-mode**
+| Compress the view vertically, summarizing the path coverage across all
+  paths displaying the information using only one path **COMPRESSED_MODE**.
+  A heatmap color-coding from https://colorbrewer2.org/#type=diverging&scheme=RdBu&n=11
+  is used. Alternatively, one can enter a colorbrewer palette via -B, --colorbrewer-palette\ =\ *SCHEME:N*.
 
 Threading
 ---------

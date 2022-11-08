@@ -139,6 +139,15 @@ namespace odgi {
         args::Flag longest_path(grad_mode_opts, "longest-path", "Use the longest path length to change the color darkness.", {'l', "longest-path"});
         args::Flag white_to_black(grad_mode_opts, "white-to-black", "Change the color darkness from white (for the first nucleotide"
                                                                     " position) to black (for the last nucleotide position).", {'u', "white-to-black"});
+
+		/// Compressed mode
+		args::Group compressed_mode_opts(parser, "[ Compressed Mode Options ]");
+		args::Flag compress(compressed_mode_opts, "compressed", "Compress the view vertically, summarizing the path coverage across all paths dis"
+															  "playing the information using only one path 'COMPRESSED_MODE'. "
+															  "A heatmap color-coding from https://colorbrewer2.org/#type=diverging&scheme=RdBu&n=11"
+															  " is used. Alternatively, one can enter a colorbrewer palette via "
+															  "-B, --colorbrewer-palette.", {'O', "compressed-mode"});
+
 		args::Group threading(parser, "[ Threading ]");
 		args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 		args::Group processing_info_opts(parser, "[ Processing Information ]");
@@ -240,7 +249,7 @@ namespace odgi {
         graph_t graph;
         assert(argc > 0);
         if (!args::get(dg_in_file).empty()) {
-            std::string infile = args::get(dg_in_file);
+            const std::string infile = args::get(dg_in_file);
             if (infile == "-") {
                 graph.deserialize(std::cin);
             } else {
@@ -503,32 +512,38 @@ namespace odgi {
 
         const std::string ignore_prefix = _ignore_prefix ? args::get(_ignore_prefix) : "";
 
+        const std::string compressed_path_name = "COMPRESSED_MODE";
+
         auto get_path_display_name =
             [&](const path_handle_t& p) {
-                if (!ignore_prefix.empty()
-                    && graph.get_path_name(p).find(ignore_prefix) == 0) {
-                    return std::string();
-                } else {
-                    if (group_paths) {
-                        return prefixes[path_group[as_integer(p) - 1]];
-                    } else {
-                        return graph.get_path_name(p);
-                    }
-                }
+					if (!ignore_prefix.empty()
+						&& graph.get_path_name(p).find(ignore_prefix) == 0) {
+						return std::string();
+					} else {
+						if (group_paths) {
+							return prefixes[path_group[as_integer(p) - 1]];
+						} else {
+							return graph.get_path_name(p);
+						}
+					}
             };
 
         auto get_path_idx =
             [&](const path_handle_t& p) {
-                if (!ignore_prefix.empty()
-                    && graph.get_path_name(p).find(ignore_prefix) == 0) {
-                    return (int64_t)-1;
-                } else {
-                    if (group_paths) {
-                        return (int64_t)path_group[as_integer(p) - 1];
-                    } else {
-                        return (int64_t)(as_integer(p) - 1);
-                    }
-                }
+			if (compress) {
+				return (int64_t) 0;
+			} else {
+				if (!ignore_prefix.empty()
+					&& graph.get_path_name(p).find(ignore_prefix) == 0) {
+					return (int64_t) - 1;
+				} else {
+					if (group_paths) {
+						return (int64_t) path_group[as_integer(p) - 1];
+					} else {
+						return (int64_t)(as_integer(p) - 1);
+					}
+				}
+			}
             };
 
         // map from path id to its starting y position
@@ -634,25 +649,32 @@ namespace odgi {
         std::vector<uint8_t> image_path_names;
         if (!args::get(hide_path_names) && !args::get(pack_paths) && pix_per_path >= 8) {
             uint64_t _max_num_of_chars = std::numeric_limits<uint64_t>::min();
+
             if (group_paths) {
                 for (auto& prefix : prefixes) {
                     _max_num_of_chars = max((uint64_t) _max_num_of_chars, prefix.length());
                 }
             } else {
                 graph.for_each_path_handle(
-                    [&](const path_handle_t &path) {
-                        int64_t path_rank = get_path_idx(path);
-                        if (path_rank >= 0 && path_layout_y[path_rank] >= 0){
-                            _max_num_of_chars = max((uint64_t) _max_num_of_chars, graph.get_path_name(path).length());
-                        }
-                    });
+                        [&](const path_handle_t &path) {
+                            int64_t path_rank = get_path_idx(path);
+                            if (path_rank >= 0 && path_layout_y[path_rank] >= 0){
+                                _max_num_of_chars = max((uint64_t) _max_num_of_chars, graph.get_path_name(path).length());
+                            }
+                        });
             }
+
+            // In this way, compress_path_name will take up the same amount of space as the paths in uncompressed mode.
+            // This makes it easier to compare/view the two viewing modes, easing interpretation.
+            if (compress) {
+                _max_num_of_chars = max((uint64_t) _max_num_of_chars, compressed_path_name.length());
+            }
+
             max_num_of_chars = min(_max_num_of_chars, max_num_of_characters);
 
             char_size = min((uint16_t)((pix_per_path / 8) * 8), (uint16_t) PATH_NAMES_MAX_CHARACTER_SIZE);
 
             width_path_names = max_num_of_chars * char_size + char_size / 2;
-
             image_path_names.resize(width_path_names * (height + path_space) * 4, 255);
         }
 
@@ -733,24 +755,30 @@ namespace odgi {
 
         {
             std::function<bool(const handle_t)> is_a_handle_to_hide;
-            if (path_count < graph.get_path_count()){
-                is_a_handle_to_hide = [&](const handle_t &h) {
-                    return graph.for_each_step_on_handle(h, [&](const step_handle_t &step) {
-                        auto path_handle = graph.get_path_handle_of_step(step);
-                        if (path_layout_y[as_integer(path_handle) - 1] >= 0) {
-                            return false;
-                        }
+			if (compress) {
+				is_a_handle_to_hide = [&](const handle_t &h) {
+					return false;
+				};
+			} else {
+				if (path_count < graph.get_path_count()) {
+					is_a_handle_to_hide = [&](const handle_t &h) {
+						return graph.for_each_step_on_handle(h, [&](const step_handle_t &step) {
+							auto path_handle = graph.get_path_handle_of_step(step);
+							if (path_layout_y[as_integer(path_handle) - 1] >= 0) {
+								return false;
+							}
 
-                        return true;
-                    });
-                };
-            }else{
-                is_a_handle_to_hide = [&](const handle_t &h) {
-                    return false;
-                };
-            }
+							return true;
+						});
+					};
+				} else {
+					is_a_handle_to_hide = [&](const handle_t &h) {
+						return false;
+					};
+				}
+			}
 
-            /*
+            /* FIXME Can we remove this?
             if (_binned_mode){
                 graph.for_each_handle([&](const handle_t &h) {
                     if (!is_a_handle_to_hide(h)){
@@ -872,11 +900,6 @@ namespace odgi {
                         hl = graph.get_length(h);
 
                         curr_len += hl;
-
-                        p = position_map[number_bool_packing::unpack_number(h) - shift];
-                        for (uint64_t k = 0; k < hl; ++k) {
-                            int64_t curr_bin = (p + k) / _bin_width + 1;
-                        }
                     });
 
                     longest_path_len = std::max(longest_path_len, curr_len);
@@ -884,348 +907,470 @@ namespace odgi {
             });
         }
 
-        std::unordered_set<pair<uint64_t, uint64_t>> edges_drawn;
         uint64_t gap_links_removed = 0;
         uint64_t total_links = 0;
         const bool _color_path_names_background = args::get(color_path_names_background);
 
-        graph.for_each_path_handle([&](const path_handle_t &path) {
-            int64_t path_rank = get_path_idx(path);
-            //std::cerr << graph.get_path_name(path) << " -> " << path_rank << std::endl;
-            if (path_rank >= 0 && path_layout_y[path_rank] >= 0){
-                // use a sha256 to get a few bytes that we'll use for a color
-                std::string path_name = get_path_display_name(path);
+		// Compressed-Mode part starts here :)
+		if (compress) {
+			std::map <uint64_t, algorithms::path_info_t> bins;
+			graph.for_each_path_handle([&](const path_handle_t &path) {
+				graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
+					handle_t h = graph.get_handle_of_step(occ);
+					uint64_t hl = graph.get_length(h);
 
-    #ifdef debug_odgi_viz
-                std::cerr << "path_name: " << path_name << std::endl;
-    #endif
+					uint64_t p = position_map[number_bool_packing::unpack_number(h) - shift];
+					for (uint64_t k = 0; k < hl; ++k) {
+						int64_t curr_bin = (p + k) / _bin_width + 1;
+						++bins[curr_bin].mean_depth;
+					}
+				});
+			});
 
-                bool is_aln = true;
-                if (aln_mode) {
-                    std::string::size_type n = path_name.find(aln_prefix);
-                    if (n != 0) {
-                        is_aln = false;
-                    }
-                }
-                // use a sha256 to get a few bytes that we'll use for a color
-                picosha2::byte_t hashed[picosha2::k_digest_size];
-                if (color_by_prefix) {
-                    std::string path_name_prefix = prefix(path_name, path_name_prefix_separator);
-                    picosha2::hash256(path_name_prefix.begin(), path_name_prefix.end(), hashed, hashed + picosha2::k_digest_size);
-                } else {
-                    picosha2::hash256(path_name.begin(), path_name.end(), hashed, hashed + picosha2::k_digest_size);
-                }
+			/// path name part
 
-                uint8_t path_r = hashed[24];
-                uint8_t path_g = hashed[8];
-                uint8_t path_b = hashed[16];
-                float path_r_f = (float) path_r / (float) (std::numeric_limits<uint8_t>::max());
-                float path_g_f = (float) path_g / (float) (std::numeric_limits<uint8_t>::max());
-                float path_b_f = (float) path_b / (float) (std::numeric_limits<uint8_t>::max());
-                float sum = path_r_f + path_g_f + path_b_f;
-                path_r_f /= sum;
-                path_g_f /= sum;
-                path_b_f /= sum;
+			uint8_t path_r = 255;
+			uint8_t path_g = 255;
+			uint8_t path_b = 255;
 
-                // Calculate the number or steps, the reverse steps and the length of the path if any of this information
-                // is needed depending on the input arguments.
-                uint64_t steps = 0;
-                uint64_t rev = 0;
-                uint64_t path_len_to_use = 0;
-                std::map<uint64_t, algorithms::path_info_t> bins;
-                if (is_aln) {
-                    if (
-                            _show_strands ||
-                            (_change_darkness && !_longest_path) ||
-                            (_binned_mode && (_color_by_mean_depth || _color_by_mean_inversion_rate || _change_darkness || _color_by_uncalled_bases))
-                            ) {
-                        handle_t h;
-                        uint64_t hl, p;
-                        bool is_rev;
-                        uint64_t num_uncalled_bases;
-                        graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
-                            h = graph.get_handle_of_step(occ);
-                            is_rev = graph.get_is_reverse(h);
-                            hl = graph.get_length(h);
+			uint64_t path_rank = 0;
 
-                            if (_color_by_uncalled_bases){
-                                num_uncalled_bases = 0;
-                                for(auto c : graph.get_sequence(h)) {
-                                    if (c == 'N' || c == 'n') {
-                                        num_uncalled_bases++;
-                                    }
-                                }
-                            }
+            const uint8_t num_of_chars = min(compressed_path_name.length(), (uint64_t) max_num_of_chars);
+            const bool path_name_too_long = compressed_path_name.length() > num_of_chars;
 
-                            if (_show_strands) {
-                                ++steps;
+            const uint8_t left_padding = max_num_of_chars - num_of_chars;
 
-                                rev += is_rev;
-                            }
+			// TODO Do we want this functionality?
+			// uint8_t ratio = char_size / 8;
+			/*
+			if (_color_path_names_background) {
+				for (uint32_t x = left_padding * char_size; x <= max_num_of_chars * char_size; x++) {
+					add_path_step(image_path_names, width_path_names,
+								  (double) (x + ratio) * (1.0 / scale_x), path_layout_y[path_rank], path_r,
+								  path_g, path_b);
+				}
+			}
+			 */
+            const uint64_t base_y = path_layout_y[path_rank] * pix_per_path + pix_per_path / 2 - char_size / 2;
 
-                            if (_change_darkness && !_longest_path) {
-                                path_len_to_use += hl;
-                            }
+			for (uint16_t i = 0; i < num_of_chars; i++) {
+                const uint64_t base_x = (left_padding + i) * char_size;
 
-                            if (_binned_mode && (_color_by_mean_depth || _color_by_mean_inversion_rate || _change_darkness)){
-                                p = position_map[number_bool_packing::unpack_number(h) - shift];
-                                for (uint64_t k = 0; k < hl; ++k) {
-                                    int64_t curr_bin = (p + k) / _bin_width + 1;
+				auto cb = (i < num_of_chars - 1 || !path_name_too_long) ? font_5x8[compressed_path_name[i]]
+																		: font_5x8_special[TRAILING_DOTS];
 
-                                    ++bins[curr_bin].mean_depth;
-                                    if (is_rev) {
-                                        ++bins[curr_bin].mean_inv;
-                                    }
-                                }
-                            } else if (_binned_mode && _color_by_uncalled_bases) {
-                                p = position_map[number_bool_packing::unpack_number(h) - shift];
-                                for (uint64_t k = 0; k < hl; ++k) {
-                                    int64_t curr_bin = (p + k) / _bin_width + 1;
+				write_character_in_matrix(
+						image_path_names, width_path_names, cb,
+						char_size,
+						base_x, base_y,
+						0, 0, 0
+				);
+			}
+			/// end path name part
 
-                                    // Use the `mean_depth` field as 'mean_Ns`
-                                    bins[curr_bin].mean_depth += num_uncalled_bases;
-                                }
-                            }
-                        });
+			double x = 1.0;
+			colorbrewer::palette_t cov_colors;
+			std::vector<double> cov_cuts;
+			// Let the user enter the color palette
+			if (colorbrewer_palette) {
+				const auto parts = split(args::get(colorbrewer_palette), ':');
+				cov_colors = colorbrewer::get_palette(parts.front(), std::stoi(parts.back()));
+			} else {
+				// we also have a default color palette https://colorbrewer2.org/#type=diverging&scheme=RdBu&n=11
+				cov_colors = colorbrewer::get_palette("RdBu", 11);
+			}
+			uint64_t i = 0;
+			cov_cuts.resize(cov_colors.size());
+			double depth = 0.5;
+			for (auto &color: cov_colors) {
+				cov_cuts[i++] = depth;
+				depth += 1;
+			}
 
-                        if (_binned_mode && (_color_by_mean_depth || _color_by_mean_inversion_rate || _change_darkness)) {
-                            for (auto &entry : bins) {
-                                auto &v = entry.second;
-                                v.mean_inv /= (v.mean_depth ? v.mean_depth : 1);
-                                v.mean_depth /= _bin_width;
-                            }
-                        } else if (_binned_mode && _color_by_uncalled_bases) {
-                            for (auto &entry : bins) {
-                                auto &v = entry.second;
-                                v.mean_depth /= _bin_width;
-                            }
-                        }
-                    }
+			for (auto &entry: bins) {
+				auto &sec = entry.second;
+				auto &curr_bin = entry.first;
+				sec.mean_depth /= _bin_width;
+				// std::cerr << "MEAN DEPTH OF BIN: " << v.mean_depth << std::endl;
+				auto &mean_depth = sec.mean_depth;
+				uint64_t j = 0;
+				for (; j < cov_cuts.size(); ++j) {
+					if (mean_depth <= cov_cuts[j]) {
+						auto &v = cov_colors[j];
+						path_r = v.red;
+						path_g = v.green;
+						path_b = v.blue;
+						break;
+					}
+				}
+				// take the max color
+				if (j == cov_cuts.size()) {
+					auto &v = cov_colors[j - 1];
+					path_r = v.red;
+					path_g = v.green;
+					path_b = v.blue;
+				}
+				uint64_t path_y = path_layout_y[path_rank];
+				add_path_step(image, width, curr_bin - 1 - pangenomic_start_pos, path_y,
+							  (float) path_r * x, (float) path_g * x, (float) path_b * x);
+			}
+			/// end compressed-mode
 
-                    if (_change_darkness && _longest_path){
-                        path_len_to_use = longest_path_len;
-                    }
+			/// default case:
+		} else {
 
-                    if (_show_strands) {
-                        float x = path_r_f;
-                        path_r_f = (x + 0.5 * 9) / 10;
-                        path_g_f = (x + 0.5 * 9) / 10;
-                        path_b_f = (x + 0.5 * 9) / 10;
-                        // check the path orientations
-                        bool is_rev = (float) rev / (float) steps > 0.5;
-                        if (is_rev) {
-                            path_r_f = path_r_f * 0.9;
-                            path_g_f = path_g_f * 0.9;
-                            path_b_f = path_b_f * 1.2;
-                        } else {
-                            path_b_f = path_b_f * 0.9;
-                            path_g_f = path_g_f * 0.9;
-                            path_r_f = path_r_f * 1.2;
-                        }
-                    } else if (_change_darkness && _white_to_black) {
-                        path_r = 220;
-                        path_g = 220;
-                        path_b = 220;
-                    } else if (_color_by_mean_inversion_rate) {
-                        path_r = 255;
-                        path_g = 0;
-                        path_b = 0;
-                    } else if (_color_by_uncalled_bases) {
-                        path_r = 0;
-                        path_g = 255;
-                        path_b = 0;
-                    }
-                }
-
-                if (!(
-                        is_aln && (( _change_darkness && _white_to_black) || _color_by_mean_inversion_rate || (_binned_mode && (_color_by_mean_depth || _change_darkness || _color_by_uncalled_bases)))
-                        )) {
-                    // brighten the color
-                    float f = std::min(1.5, 1.0 / std::max(std::max(path_r_f, path_g_f), path_b_f));
-                    path_r = (uint8_t) std::round(255 * std::min(path_r_f * f, (float) 1.0));
-                    path_g = (uint8_t) std::round(255 * std::min(path_g_f * f, (float) 1.0));
-                    path_b = (uint8_t) std::round(255 * std::min(path_b_f * f, (float) 1.0));
-                }
-
-                if (char_size >= 8){
-                    uint8_t num_of_chars = min(path_name.length(), (uint64_t) max_num_of_chars);
-                    bool path_name_too_long = path_name.length() > num_of_chars;
-
-                    uint8_t ratio = char_size / 8;
-                    uint8_t left_padding = max_num_of_chars - num_of_chars;
-
-                    if (_color_path_names_background){
-                        for (uint32_t x = left_padding * char_size; x <= max_num_of_chars * char_size; x++){
-                            add_path_step(image_path_names, width_path_names, (double)(x + ratio) * (1.0 / scale_x), path_layout_y[path_rank], path_r, path_g, path_b);
-                        }
-                    }
-
-                    uint64_t base_y = path_layout_y[path_rank] * pix_per_path + pix_per_path / 2 - char_size / 2;
-
-                    for(uint16_t i = 0; i < num_of_chars; i++){
-                        uint64_t base_x = (left_padding + i) * char_size;
-
-                        auto cb = (i < num_of_chars - 1 || !path_name_too_long) ? font_5x8[path_name[i]] : font_5x8_special[TRAILING_DOTS];
-
-                        write_character_in_matrix(
-                                image_path_names, width_path_names, cb,
-                                char_size,
-                                base_x, base_y,
-                                0, 0, 0
-                        );
-                    }
-                }
-
-                uint64_t curr_len = 0;
-                double x = 1.0;
-                if (_binned_mode) {
-                    colorbrewer::palette_t cov_colors;
-                    std::vector<double> cov_cuts;
-                    if (_color_by_mean_depth) {
-                        if (colorbrewer_palette) {
-                            const auto parts = split(args::get(colorbrewer_palette), ':');
-                            cov_colors = colorbrewer::get_palette(parts.front(), std::stoi(parts.back()));
-                        } else {
-                            cov_colors = colorbrewer::get_palette("Spectral", 11);
-                        }
-                        if (!args::get(no_grey_depth)) {
-                            std::reverse(cov_colors.begin(),
-                                         cov_colors.end());
-                            cov_colors.push_back({128,128,128});
-                            cov_colors.push_back({196,196,196});
-                            std::reverse(cov_colors.begin(),
-                                         cov_colors.end());
-                        }
-                        uint64_t i = 0;
-                        cov_cuts.resize(cov_colors.size());
-                        double depth = 0.5;
-                        for (auto& color : cov_colors) {
-                            cov_cuts[i++] = depth;
-                            depth += 1;
-                        }
-                    }
-
-                    std::vector<std::pair<uint64_t, uint64_t>> links;
-                    std::vector<uint64_t> bin_ids;
-                    int64_t last_bin = 0; // flag meaning "null bin"
-
-                    handle_t h;
-                    uint64_t p, hl;
-
-                    graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
-                        h = graph.get_handle_of_step(occ);
-                        p = position_map[number_bool_packing::unpack_number(h) - shift];
-                        hl = graph.get_length(h);
-
-                        // make contents for the bases in the node
-
-                        uint64_t path_y = path_layout_y[path_rank];
-                        for (uint64_t k = 0; k < hl; ++k) {
-                            int64_t curr_bin = (p + k) / _bin_width + 1;
-
-                            if (curr_bin != last_bin) {
-                                bin_ids.push_back(curr_bin);
+			graph.for_each_path_handle([&](const path_handle_t &path) {
+				int64_t path_rank = get_path_idx(path);
+				//std::cerr << graph.get_path_name(path) << " -> " << path_rank << std::endl;
+				if (path_rank >= 0 && path_layout_y[path_rank] >= 0) {
+					// use a sha256 to get a few bytes that we'll use for a color
+					std::string path_name = get_path_display_name(path);
 
 #ifdef debug_odgi_viz
-                                std::cerr << "curr_bin: " << curr_bin << std::endl;
+					std::cerr << "path_name: " << path_name << std::endl;
 #endif
 
-                                if (is_aln) {
-                                    if (_change_darkness){
-                                        uint64_t ii = bins[curr_bin].mean_inv > 0.5 ? (hl - k) : k;
-                                        x = 1.0 - ( (double)(curr_len + ii) / (double)(path_len_to_use)) * 0.9;
-                                    } else if (_color_by_mean_depth) {
-                                        auto& mean_depth = bins[curr_bin].mean_depth;
-                                        uint64_t j = 0;
-                                        for ( ; j < cov_cuts.size(); ++j) {
-                                            if (mean_depth <= cov_cuts[j]) {
-                                                auto& v = cov_colors[j];
-                                                path_r = v.red;
-                                                path_g = v.green;
-                                                path_b = v.blue;
-                                                break;
-                                            }
-                                        }
-                                        // take the max color
-                                        if (j == cov_cuts.size()) {
-                                            auto& v = cov_colors[j-1];
-                                            path_r = v.red;
-                                            path_g = v.green;
-                                            path_b = v.blue;
-                                        }
-                                    } else if (_color_by_mean_inversion_rate) {
-                                        x = bins[curr_bin].mean_inv;
-                                    } else if (_color_by_uncalled_bases) {
-                                        x = bins[curr_bin].mean_depth;
-                                    }
-                                }
+					bool is_aln = true;
+					if (aln_mode) {
+						std::string::size_type n = path_name.find(aln_prefix);
+						if (n != 0) {
+							is_aln = false;
+						}
+					}
+					// use a sha256 to get a few bytes that we'll use for a color
+					picosha2::byte_t hashed[picosha2::k_digest_size];
+					if (color_by_prefix) {
+						std::string path_name_prefix = prefix(path_name, path_name_prefix_separator);
+						picosha2::hash256(path_name_prefix.begin(), path_name_prefix.end(), hashed,
+										  hashed + picosha2::k_digest_size);
+					} else {
+						picosha2::hash256(path_name.begin(), path_name.end(), hashed, hashed + picosha2::k_digest_size);
+					}
 
-                                if (curr_bin - 1 >= pangenomic_start_pos && curr_bin - 1 <= pangenomic_end_pos) {
-                                    add_path_step(image, width, curr_bin - 1 - pangenomic_start_pos, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
-                                }
+					uint8_t path_r = hashed[24];
+					uint8_t path_g = hashed[8];
+					uint8_t path_b = hashed[16];
+					float path_r_f = (float) path_r / (float) (std::numeric_limits<uint8_t>::max());
+					float path_g_f = (float) path_g / (float) (std::numeric_limits<uint8_t>::max());
+					float path_b_f = (float) path_b / (float) (std::numeric_limits<uint8_t>::max());
+					float sum = path_r_f + path_g_f + path_b_f;
+					path_r_f /= sum;
+					path_g_f /= sum;
+					path_b_f /= sum;
 
-                            }
+					// Calculate the number or steps, the reverse steps and the length of the path if any of this information
+					// is needed depending on the input arguments.
+					uint64_t steps = 0;
+					uint64_t rev = 0;
+					uint64_t path_len_to_use = 0;
+					std::map <uint64_t, algorithms::path_info_t> bins;
+					if (is_aln) {
+						if (
+								_show_strands ||
+								(_change_darkness && !_longest_path) ||
+								(_binned_mode &&
+								 (_color_by_mean_depth || _color_by_mean_inversion_rate || _change_darkness ||
+								  _color_by_uncalled_bases))
+								) {
+							handle_t h;
+							uint64_t hl, p;
+							bool is_rev;
+							uint64_t num_uncalled_bases;
+							graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
+								h = graph.get_handle_of_step(occ);
+								is_rev = graph.get_is_reverse(h);
+								hl = graph.get_length(h);
 
-                            last_bin = curr_bin;
-                        }
+								if (_color_by_uncalled_bases) {
+									num_uncalled_bases = 0;
+									for (auto c: graph.get_sequence(h)) {
+										if (c == 'N' || c == 'n') {
+											num_uncalled_bases++;
+										}
+									}
+								}
 
-                        curr_len += hl;
-                    });
+								if (_show_strands) {
+									++steps;
 
-                }else{
-                    /// Loop over all the steps along a path, from first through last and draw them
-                    graph.for_each_step_in_path(path, [&](const step_handle_t& occ) {
-                        handle_t h = graph.get_handle_of_step(occ);
-                        uint64_t p = position_map[number_bool_packing::unpack_number(h) - shift];
-                        uint64_t hl = graph.get_length(h);
-                        // make contects for the bases in the node
-                        uint64_t path_y = path_layout_y[path_rank];
-                        for (uint64_t i = 0; i < hl; i+=1/scale_x) {
-                            if (is_aln) {
-                                if (_change_darkness){
-                                    uint64_t ii = graph.get_is_reverse(h) ? (hl - i) : i;
-                                    x = 1.0 - ((double)(curr_len + ii*scale_x) / (double)(path_len_to_use))*0.9;
-                                } else if (_color_by_mean_inversion_rate) {
-                                    if (graph.get_is_reverse(h)) {
-                                        path_r = 255;
-                                    } else {
-                                        path_r = 0;
-                                    }
-                                };
-                            }
+									rev += is_rev;
+								}
 
-                            if ((p + i) >= pangenomic_start_pos && (p + i) <= pangenomic_end_pos) {
-                                add_path_step(image, width, p+i - pangenomic_start_pos, path_y, (float)path_r * x, (float)path_g * x, (float)path_b * x);
-                            }
-                        }
+								if (_change_darkness && !_longest_path) {
+									path_len_to_use += hl;
+								}
 
-                        curr_len += hl;
-                    });
-                }
+								if (_binned_mode &&
+									(_color_by_mean_depth || _color_by_mean_inversion_rate || _change_darkness)) {
+									p = position_map[number_bool_packing::unpack_number(h) - shift];
+									for (uint64_t k = 0; k < hl; ++k) {
+										int64_t curr_bin = (p + k) / _bin_width + 1;
 
-                // add in a visual motif that shows the links between path pieces
-                // this is most meaningful in a linear layout
-                if (args::get(link_path_pieces)) {
-                    uint64_t min_x = std::numeric_limits<uint64_t>::max();
-                    uint64_t max_x = std::numeric_limits<uint64_t>::min(); // 0
+										++bins[curr_bin].mean_depth;
+										if (is_rev) {
+											++bins[curr_bin].mean_inv;
+										}
+									}
+								} else if (_binned_mode && _color_by_uncalled_bases) {
+									p = position_map[number_bool_packing::unpack_number(h) - shift];
+									for (uint64_t k = 0; k < hl; ++k) {
+										int64_t curr_bin = (p + k) / _bin_width + 1;
 
-                    // In binned mode, the min/max_x values changes based on the bin width; in standard mode, _bin_width is 1, so nothing changes here
-                    graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
-                        handle_t h = graph.get_handle_of_step(occ);
-                        uint64_t p = position_map[number_bool_packing::unpack_number(h) - shift];
-                        min_x = std::min(min_x, (uint64_t)(p / _bin_width));
-                        max_x = std::max(max_x, (uint64_t)((p + graph.get_length(h)) / _bin_width));
-                    });
+										// Use the `mean_depth` field as 'mean_Ns`
+										bins[curr_bin].mean_depth += num_uncalled_bases;
+									}
+								}
+							});
 
-                    // now touch up the range
-                    uint64_t path_y = path_layout_y[path_rank];
-                    for (uint64_t i = min_x; i < max_x; i += 1 / scale_x) {
-                        add_path_link(i, path_y, path_r, path_g, path_b);
-                    }
-                }
-            }
-            //add_point(curr_bin - 1 - pangenomic_start_pos, 0, RGB_BIN_LINKS, RGB_BIN_LINKS, RGB_BIN_LINKS);
-        });
+							if (_binned_mode &&
+								(_color_by_mean_depth || _color_by_mean_inversion_rate || _change_darkness)) {
+								for (auto &entry: bins) {
+									auto &v = entry.second;
+									v.mean_inv /= (v.mean_depth ? v.mean_depth : 1);
+									v.mean_depth /= _bin_width;
+								}
+							} else if (_binned_mode && _color_by_uncalled_bases) {
+								for (auto &entry: bins) {
+									auto &v = entry.second;
+									v.mean_depth /= _bin_width;
+								}
+							}
+						}
+
+						if (_change_darkness && _longest_path) {
+							path_len_to_use = longest_path_len;
+						}
+
+						if (_show_strands) {
+							float x = path_r_f;
+							path_r_f = (x + 0.5 * 9) / 10;
+							path_g_f = (x + 0.5 * 9) / 10;
+							path_b_f = (x + 0.5 * 9) / 10;
+							// check the path orientations
+							bool is_rev = (float) rev / (float) steps > 0.5;
+							if (is_rev) {
+								path_r_f = path_r_f * 0.9;
+								path_g_f = path_g_f * 0.9;
+								path_b_f = path_b_f * 1.2;
+							} else {
+								path_b_f = path_b_f * 0.9;
+								path_g_f = path_g_f * 0.9;
+								path_r_f = path_r_f * 1.2;
+							}
+						} else if (_change_darkness && _white_to_black) {
+							path_r = 220;
+							path_g = 220;
+							path_b = 220;
+						} else if (_color_by_mean_inversion_rate) {
+							path_r = 255;
+							path_g = 0;
+							path_b = 0;
+						} else if (_color_by_uncalled_bases) {
+							path_r = 0;
+							path_g = 255;
+							path_b = 0;
+						}
+					}
+
+					if (!(
+							is_aln && ((_change_darkness && _white_to_black) || _color_by_mean_inversion_rate ||
+									   (_binned_mode &&
+										(_color_by_mean_depth || _change_darkness || _color_by_uncalled_bases)))
+					)) {
+						// brighten the color
+						float f = std::min(1.5, 1.0 / std::max(std::max(path_r_f, path_g_f), path_b_f));
+						path_r = (uint8_t) std::round(255 * std::min(path_r_f * f, (float) 1.0));
+						path_g = (uint8_t) std::round(255 * std::min(path_g_f * f, (float) 1.0));
+						path_b = (uint8_t) std::round(255 * std::min(path_b_f * f, (float) 1.0));
+					}
+
+					if (char_size >= 8) {
+                        const uint8_t num_of_chars = min(path_name.length(), (uint64_t) max_num_of_chars);
+                        const bool path_name_too_long = path_name.length() > num_of_chars;
+
+                        const uint8_t ratio = char_size / 8;
+						const uint8_t left_padding = max_num_of_chars - num_of_chars;
+
+						if (_color_path_names_background) {
+							for (uint32_t x = left_padding * char_size; x <= max_num_of_chars * char_size; x++) {
+								add_path_step(image_path_names, width_path_names,
+											  (double) (x + ratio) * (1.0 / scale_x), path_layout_y[path_rank], path_r,
+											  path_g, path_b);
+							}
+						}
+
+                        const uint64_t base_y = path_layout_y[path_rank] * pix_per_path + pix_per_path / 2 - char_size / 2;
+
+						for (uint16_t i = 0; i < num_of_chars; i++) {
+							uint64_t base_x = (left_padding + i) * char_size;
+
+							auto cb = (i < num_of_chars - 1 || !path_name_too_long) ? font_5x8[path_name[i]]
+																					: font_5x8_special[TRAILING_DOTS];
+
+							write_character_in_matrix(
+									image_path_names, width_path_names, cb,
+									char_size,
+									base_x, base_y,
+									0, 0, 0
+							);
+						}
+					}
+
+					uint64_t curr_len = 0;
+					double x = 1.0;
+					if (_binned_mode) {
+						colorbrewer::palette_t cov_colors;
+						std::vector<double> cov_cuts;
+						if (_color_by_mean_depth) {
+							if (colorbrewer_palette) {
+								const auto parts = split(args::get(colorbrewer_palette), ':');
+								cov_colors = colorbrewer::get_palette(parts.front(), std::stoi(parts.back()));
+							} else {
+								cov_colors = colorbrewer::get_palette("Spectral", 11);
+							}
+							if (!args::get(no_grey_depth)) {
+								std::reverse(cov_colors.begin(),
+											 cov_colors.end());
+								cov_colors.push_back({128, 128, 128});
+								cov_colors.push_back({196, 196, 196});
+								std::reverse(cov_colors.begin(),
+											 cov_colors.end());
+							}
+							uint64_t i = 0;
+							cov_cuts.resize(cov_colors.size());
+							double depth = 0.5;
+							for (auto &color: cov_colors) {
+								cov_cuts[i++] = depth;
+								depth += 1;
+							}
+						}
+
+						std::vector <std::pair<uint64_t, uint64_t>> links;
+						std::vector <uint64_t> bin_ids;
+						int64_t last_bin = 0; // flag meaning "null bin"
+
+						handle_t h;
+						uint64_t p, hl;
+
+						graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
+							h = graph.get_handle_of_step(occ);
+							p = position_map[number_bool_packing::unpack_number(h) - shift];
+							hl = graph.get_length(h);
+
+							// make contents for the bases in the node
+
+							uint64_t path_y = path_layout_y[path_rank];
+							for (uint64_t k = 0; k < hl; ++k) {
+								int64_t curr_bin = (p + k) / _bin_width + 1;
+
+								if (curr_bin != last_bin) {
+									bin_ids.push_back(curr_bin);
+
+#ifdef debug_odgi_viz
+									std::cerr << "curr_bin: " << curr_bin << std::endl;
+#endif
+
+									if (is_aln) {
+										if (_change_darkness) {
+											uint64_t ii = bins[curr_bin].mean_inv > 0.5 ? (hl - k) : k;
+											x = 1.0 - ((double) (curr_len + ii) / (double) (path_len_to_use)) * 0.9;
+										} else if (_color_by_mean_depth) {
+											auto &mean_depth = bins[curr_bin].mean_depth;
+											uint64_t j = 0;
+											for (; j < cov_cuts.size(); ++j) {
+												if (mean_depth <= cov_cuts[j]) {
+													auto &v = cov_colors[j];
+													path_r = v.red;
+													path_g = v.green;
+													path_b = v.blue;
+													break;
+												}
+											}
+											// take the max color
+											if (j == cov_cuts.size()) {
+												auto &v = cov_colors[j - 1];
+												path_r = v.red;
+												path_g = v.green;
+												path_b = v.blue;
+											}
+										} else if (_color_by_mean_inversion_rate) {
+											x = bins[curr_bin].mean_inv;
+										} else if (_color_by_uncalled_bases) {
+											x = bins[curr_bin].mean_depth;
+										}
+									}
+
+									if (curr_bin - 1 >= pangenomic_start_pos && curr_bin - 1 <= pangenomic_end_pos) {
+										add_path_step(image, width, curr_bin - 1 - pangenomic_start_pos, path_y,
+													  (float) path_r * x, (float) path_g * x, (float) path_b * x);
+									}
+
+								}
+
+								last_bin = curr_bin;
+							}
+
+							curr_len += hl;
+						});
+
+					} else {
+						/// Loop over all the steps along a path, from first through last and draw them
+						graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
+							handle_t h = graph.get_handle_of_step(occ);
+							uint64_t p = position_map[number_bool_packing::unpack_number(h) - shift];
+							uint64_t hl = graph.get_length(h);
+							// make contects for the bases in the node
+							uint64_t path_y = path_layout_y[path_rank];
+							for (uint64_t i = 0; i < hl; i += 1 / scale_x) {
+								if (is_aln) {
+									if (_change_darkness) {
+										uint64_t ii = graph.get_is_reverse(h) ? (hl - i) : i;
+										x = 1.0 -
+											((double) (curr_len + ii * scale_x) / (double) (path_len_to_use)) * 0.9;
+									} else if (_color_by_mean_inversion_rate) {
+										if (graph.get_is_reverse(h)) {
+											path_r = 255;
+										} else {
+											path_r = 0;
+										}
+									};
+								}
+
+								if ((p + i) >= pangenomic_start_pos && (p + i) <= pangenomic_end_pos) {
+									add_path_step(image, width, p + i - pangenomic_start_pos, path_y,
+												  (float) path_r * x, (float) path_g * x, (float) path_b * x);
+								}
+							}
+
+							curr_len += hl;
+						});
+					}
+
+					// add in a visual motif that shows the links between path pieces
+					// this is most meaningful in a linear layout
+					if (args::get(link_path_pieces)) {
+						uint64_t min_x = std::numeric_limits<uint64_t>::max();
+						uint64_t max_x = std::numeric_limits<uint64_t>::min(); // 0
+
+						// In binned mode, the min/max_x values changes based on the bin width; in standard mode, _bin_width is 1, so nothing changes here
+						graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
+							handle_t h = graph.get_handle_of_step(occ);
+							uint64_t p = position_map[number_bool_packing::unpack_number(h) - shift];
+							min_x = std::min(min_x, (uint64_t)(p / _bin_width));
+							max_x = std::max(max_x, (uint64_t)((p + graph.get_length(h)) / _bin_width));
+						});
+
+						// now touch up the range
+						uint64_t path_y = path_layout_y[path_rank];
+						for (uint64_t i = min_x; i < max_x; i += 1 / scale_x) {
+							add_path_link(i, path_y, path_r, path_g, path_b);
+						}
+					}
+				}
+				//add_point(curr_bin - 1 - pangenomic_start_pos, 0, RGB_BIN_LINKS, RGB_BIN_LINKS, RGB_BIN_LINKS);
+			});
+
+		}
 
         /*
         if (args::get(drop_gap_links)) {

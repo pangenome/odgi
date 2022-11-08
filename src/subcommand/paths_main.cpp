@@ -5,6 +5,7 @@
 #include "position.hpp"
 #include <omp.h>
 #include "utils.hpp"
+#include "algorithms/path_keep.hpp"
 
 namespace odgi {
 
@@ -28,7 +29,7 @@ int main_paths(int argc, char** argv) {
     std::string prog_name = "odgi paths";
     argv[0] = (char*)prog_name.c_str();
     --argc;
-    
+
     args::ArgumentParser parser("Interrogate the embedded paths of a graph. Does not print anything to stdout by default!");
     args::Group mandatory_opts(parser, "[ MANDATORY ARGUMENTS ]");
     args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
@@ -46,14 +47,18 @@ int main_paths(int argc, char** argv) {
                                                                              " identifier. This parameter should only be set in combination with"
                                                                              " **-H, --haplotypes**. Prints an additional, first column"
                                                                              " **group.name** to stdout.", {'D', "delim"});
-    args::Flag haplo_matrix(path_investigation_opts, "haplo", "Print to stdout the paths in an approximate binary haplotype matrix"
+    args::Flag haplo_matrix(path_investigation_opts, "haplo", "Print to stdout the paths in a path coverage haplotype matrix"
                                                               " based on the graph’s sort order. The output is tab-delimited:"
-                                                              " *path.name*, *path.length*, *node.count*, *node.1*,"
+                                                              " *path.name*, *path.length*, *path.step.count*, *node.1*,"
                                                               " *node.2*, *node.n*. Each path entry is printed in its own line.", {'H', "haplotypes"});
     args::Flag distance_matrix(path_investigation_opts, "distance", "Provides a sparse distance matrix for paths. If **-D, --delim** is"
                                                                     " set, it will be path groups distances. Each line prints in a tab-delimited format to stdout:"
                                                                     " *path.a*, *path.b*, *path.a.length*, *path.b.length*, *intersection*, *jaccard*, *euclidean*." , {'d', "distance"});
     args::Flag write_fasta(path_investigation_opts, "fasta", "Print paths in FASTA format to stdout. One line for the FASTA header, another line for the whole sequence.", {'f', "fasta"});
+    args::Group path_modification_opts(parser, "[ Path Modification Options ]");
+    args::ValueFlag<std::string> keep_paths_file(path_modification_opts, "FILE", "Keep paths listed (by line) in *FILE*.", {'K', "keep-paths"});
+    args::ValueFlag<std::string> drop_paths_file(path_modification_opts, "FILE", "Drop paths listed (by line) in *FILE*.", {'X', "drop-paths"});
+    args::ValueFlag<std::string> dg_out_file(path_modification_opts, "FILE", "Write the dynamic succinct variation graph to this file (e.g. *.og*).", {'o', "out"});
     args::Group threading_opts(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> threads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 	args::Group processing_info_opts(parser, "[ Processing Information ]");
@@ -78,6 +83,11 @@ int main_paths(int argc, char** argv) {
 
     if (!dg_in_file) {
         std::cerr << "[odgi::paths] error: please specify an input file from where to load the graph via -i=[FILE], --idx=[FILE]." << std::endl;
+        return 1;
+    }
+
+    if (!dg_out_file && (keep_paths_file || drop_paths_file)) {
+        std::cerr << "[odgi::paths] error: when keeping or dropping paths please specify an output file to store the graph via -o=[FILE], --out=[FILE]." << std::endl;
         return 1;
     }
 
@@ -146,7 +156,7 @@ int main_paths(int argc, char** argv) {
             }
             header << "path.name" << "\t"
                    << "path.length" << "\t"
-                   << "node.count";
+                   << "path.step.count";
             graph.for_each_handle(
                 [&](const handle_t& handle) {
                     header << "\t" << "node." << graph.get_id(handle);
@@ -160,14 +170,14 @@ int main_paths(int argc, char** argv) {
                 std::string path_name = (delim ? full_path_name.substr(full_path_name.find(delim)+1) : full_path_name);
                 uint64_t path_length = 0;
                 uint64_t path_step_count = 0;
-                std::vector<bool> row(graph.get_node_count());
+                std::vector<uint64_t> row(graph.get_node_count());
                 graph.for_each_step_in_path(
                     p,
                     [&](const step_handle_t& s) {
                         const handle_t& h = graph.get_handle_of_step(s);
                         path_length += graph.get_length(h);
                         ++path_step_count;
-                        row[graph.get_id(h)-1] = 1;
+                        row[graph.get_id(h)-1]++;
                     });
                 if (delim) {
                     std::cout << group_name << "\t";
@@ -374,11 +384,67 @@ int main_paths(int argc, char** argv) {
                     std::set_intersection(v1.begin(),v1.end(),
                                           v2.begin(),v2.end(),
                                           back_inserter(v3));
-                    //ska::flat_hash_map<std::string, std::vector<pos_t> > path_decomposition;                    
+                    //ska::flat_hash_map<std::string, std::vector<pos_t> > path_decomposition;
                     std::cout << group_name << "\t" << paths[i] << "\t" << paths[j]
                               << "\t" << v3.size()
                               << "\t" << (float)v3.size()/((float)(v1.size()+v2.size())/2) << std::endl;
                 }
+            }
+        }
+    }
+
+    if (keep_paths_file || drop_paths_file) {
+        //to_keep
+        ska::flat_hash_set<path_handle_t> to_keep;
+        if (keep_paths_file) {
+            std::string line;
+            auto& x = args::get(keep_paths_file);
+            std::ifstream infile(x);
+            while (std::getline(infile, line)) {
+                // This file should contain path names, one per line
+                auto& name = line;
+                if (graph.has_path(name)) {
+                    to_keep.insert(graph.get_path_handle(name));
+                } else {
+                    std::cerr << "[odgi::paths] error: path'" << name
+                              << "' does not exist in graph." << std::endl;
+                    return 1;
+                }
+            }
+        } else {
+            graph.for_each_path_handle([&to_keep](const path_handle_t& p) {
+                to_keep.insert(p);
+            });
+        }
+        if (drop_paths_file) {
+            std::string line;
+            auto& x = args::get(drop_paths_file);
+            std::ifstream infile(x);
+            while (std::getline(infile, line)) {
+                // This file should contain path names, one per line
+                auto& name = line;
+                if (graph.has_path(name)) {
+                    auto p = graph.get_path_handle(name);
+                    assert(to_keep.count(p) == 1);
+                    to_keep.erase(p);
+                } else {
+                    std::cerr << "[odgi::paths] error: path'" << name
+                              << "' does not exist in graph." << std::endl;
+                    return 1;
+                }
+            }
+        }
+        graph_t into;
+        algorithms::keep_paths(graph, into, to_keep);
+        // write the graph
+        if (dg_out_file) {
+            const std::string outfile = args::get(dg_out_file);
+            if (outfile == "-") {
+                into.serialize(std::cout);
+            } else {
+                ofstream f(outfile.c_str());
+                into.serialize(f);
+                f.close();
             }
         }
     }

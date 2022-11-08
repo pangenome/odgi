@@ -31,7 +31,7 @@ int main_stats(int argc, char** argv) {
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
     args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::Group summary_opts(parser, "[ Summary Options ]");
-    args::Flag _summarize(summary_opts, "summarize", "Summarize the graph properties and dimensions. Print to stdout the #nucleotides, #nodes, #edges, #paths in a tab-delimited format.", {'S', "summarize"});
+    args::Flag _summarize(summary_opts, "summarize", "Summarize the graph properties and dimensions. Print to stdout the #nucleotides, #nodes, #edges, #paths, #steps in a tab-delimited format.", {'S', "summarize"});
 
     args::Flag _weakly_connected_components(summary_opts, "show-components", "Shows the properties of the weakly connected components.", {'W', "weak-connected-components"});
 
@@ -185,14 +185,21 @@ int main_stats(int argc, char** argv) {
 
         uint64_t edge_count = graph.get_edge_count();
         uint64_t path_count = graph.get_path_count();
+
+		uint64_t step_count = 0;
+		graph.for_each_path_handle([&](const path_handle_t& p) {
+			step_count += graph.get_step_count(p);
+		});
+
         if (_multiqc || _yaml) {
         	std::cout << "length: " << length_in_bp << std::endl;
         	std::cout << "nodes: " << node_count << std::endl;
         	std::cout << "edges: " << edge_count << std::endl;
         	std::cout << "paths: " << path_count << std::endl;
+			std::cout << "steps: " << step_count << std::endl;
         } else {
-			std::cout << "#length\tnodes\tedges\tpaths" << std::endl;
-			std::cout << length_in_bp << "\t" << node_count << "\t" << edge_count << "\t" << path_count << std::endl;
+			std::cout << "#length\tnodes\tedges\tpaths\tsteps" << std::endl;
+			std::cout << length_in_bp << "\t" << node_count << "\t" << edge_count << "\t" << path_count << "\t" << step_count << std::endl;
 		}
     }
 
@@ -466,8 +473,8 @@ int main_stats(int argc, char** argv) {
 
                             if (layout_in_file) {
                                 // 2D metric
-                                double dx = X[2 * (unpacked_h - shift) + number_bool_packing::unpack_number(h)] - X[2 * (unpacked_i - shift) + number_bool_packing::unpack_bit(i)];
-                                double dy = Y[2 * (unpacked_h - shift) + number_bool_packing::unpack_number(h)] - Y[2 * (unpacked_i - shift) + number_bool_packing::unpack_bit(i)];
+                                double dx = X[2 * (unpacked_h - shift) + number_bool_packing::unpack_bit(h)] - X[2 * (unpacked_i - shift) + number_bool_packing::unpack_bit(i)];
+                                double dy = Y[2 * (unpacked_h - shift) + number_bool_packing::unpack_bit(h)] - Y[2 * (unpacked_i - shift) + number_bool_packing::unpack_bit(i)];
 
                                 sum_2D_space += sqrt(dx * dx + dy * dy);
                             }else{
@@ -629,8 +636,8 @@ int main_stats(int argc, char** argv) {
 
                         if (layout_in_file) {
                             // 2D metric
-                            double dx = X[2 * (unpacked_a - shift) + number_bool_packing::unpack_number(h)] - X[2 * (unpacked_b - shift) + number_bool_packing::unpack_bit(i)];
-                            double dy = Y[2 * (unpacked_a - shift) + number_bool_packing::unpack_number(h)] - Y[2 * (unpacked_b - shift) + number_bool_packing::unpack_bit(i)];
+                            double dx = X[2 * (unpacked_a - shift) + number_bool_packing::unpack_bit(h)] - X[2 * (unpacked_b - shift) + number_bool_packing::unpack_bit(i)];
+                            double dy = Y[2 * (unpacked_a - shift) + number_bool_packing::unpack_bit(h)] - Y[2 * (unpacked_b - shift) + number_bool_packing::unpack_bit(i)];
 
                             euclidean_distance_2D = sqrt(dx * dx + dy * dy);
                             sum_path_node_dist_2D_space += euclidean_distance_2D;

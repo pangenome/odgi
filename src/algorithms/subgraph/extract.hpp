@@ -19,6 +19,10 @@ namespace odgi {
 
         void add_full_paths_to_component(const graph_t &source, graph_t &component, const uint64_t num_threads);
 
+        std::string make_path_name(const string &path_name, size_t offset, size_t end_offset);
+
+        path_handle_t create_subpath(graph_t &subgraph, const string &subpath_name, const bool is_circular);
+
         /// add subpaths to the subgraph, providing a concatenation of subpaths that are discontiguous over the subgraph
         void add_subpaths_to_subgraph(const graph_t &source, const std::vector<path_handle_t> source_paths,
                                       graph_t &subgraph, uint64_t num_threads,
@@ -53,7 +57,7 @@ namespace odgi {
 
         bool check_and_get_windows_in_out_parameter(
                 const std::string& parameter,
-                uint64_t &windows_len, uint64_t &windows_min, uint64_t &windows_max);
+                uint64_t &windows_len, uint64_t &windows_min, uint64_t &windows_max, bool &only_tips);
 
     }
 }
