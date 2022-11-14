@@ -18,6 +18,9 @@ namespace utils {
 	/// this function will return n % d
 	/// it is assumed that d is one of 1, 2, 4, 8, 16, 32, ....
 	uint64_t modulo(const uint64_t n, const uint64_t d);
+
+	// load path names from file, they are written line by line
+	std::vector<path_handle_t> load_paths(const std::string& path_names_file, odgi::graph_t &graph, const std::string subcommmand_name);
 }
 
 

@@ -8,16 +8,22 @@ step_index_t::step_index_t() {
 	step_mphf = new boophf_step_t();
 }
 
-
-
 step_index_t::step_index_t(const PathHandleGraph& graph,
                            const std::vector<path_handle_t>& paths,
                            const uint64_t& nthreads,
                            const bool progress,
 						   const uint64_t& sample_rate) {
+	this->from_handle_graph(graph, paths, nthreads, progress, sample_rate);
+}
+
+const void step_index_t::from_handle_graph(const PathHandleGraph& graph,
+				 const std::vector<path_handle_t>& paths,
+				 const uint64_t& nthreads,
+				 const bool progress,
+				 const uint64_t& sample_rate) {
 	this->sample_rate = sample_rate;
-    // iterate through the paths, recording steps in the structure we'll use to build the mphf
-    std::vector<step_handle_t> steps;
+	// iterate through the paths, recording steps in the structure we'll use to build the mphf
+	std::vector<step_handle_t> steps;
 	std::unique_ptr<algorithms::progress_meter::ProgressMeter> collecting_steps_progress_meter;
 	if (progress) {
 		collecting_steps_progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
@@ -25,17 +31,17 @@ step_index_t::step_index_t(const PathHandleGraph& graph,
 	}
 	path_len.resize(paths.size());
 #pragma omp parallel for schedule(dynamic,1)
-    for (auto& path : paths) {
-        std::vector<step_handle_t> my_steps;
+	for (auto& path : paths) {
+		std::vector<step_handle_t> my_steps;
 		uint64_t path_length = 0;
-        graph.for_each_step_in_path(
-            path, [&](const step_handle_t& step) {
-				path_length += graph.get_length(graph.get_handle_of_step(step));
-				// sampling
-				if (0 == utils::modulo(graph.get_id(graph.get_handle_of_step(step)), sample_rate)) {
-					my_steps.push_back(step);
-				}
-			});
+		graph.for_each_step_in_path(
+				path, [&](const step_handle_t& step) {
+					path_length += graph.get_length(graph.get_handle_of_step(step));
+					// sampling
+					if (0 == utils::modulo(graph.get_id(graph.get_handle_of_step(step)), sample_rate)) {
+						my_steps.push_back(step);
+					}
+				});
 		// sampling
 		if (0 == utils::modulo(graph.get_id(graph.get_handle_of_step(graph.path_end(path))), sample_rate)) {
 			my_steps.push_back(graph.path_end(path));
@@ -43,44 +49,44 @@ step_index_t::step_index_t(const PathHandleGraph& graph,
 #pragma omp critical (path_len)
 		path_len[as_integer(path) - 1] = path_length;
 #pragma omp critical (steps_collect)
-        steps.insert(steps.end(), my_steps.begin(), my_steps.end());
-        if(progress) {
-        	collecting_steps_progress_meter->increment(1);
-        }
-    }
+		steps.insert(steps.end(), my_steps.begin(), my_steps.end());
+		if(progress) {
+			collecting_steps_progress_meter->increment(1);
+		}
+	}
 	if (progress) {
 		collecting_steps_progress_meter->finish();
 	}
-    // sort the steps
-    ips4o::parallel::sort(steps.begin(), steps.end(), std::less<>(), nthreads);
-    // build the hash function (quietly)
-    step_mphf = new boophf_step_t(steps.size(), steps, nthreads, 2.0, false, false);
-    // use the hash function to record the step positions
-    pos.resize(steps.size());
+	// sort the steps
+	ips4o::parallel::sort(steps.begin(), steps.end(), std::less<>(), nthreads);
+	// build the hash function (quietly)
+	step_mphf = new boophf_step_t(steps.size(), steps, nthreads, 2.0, false, false);
+	// use the hash function to record the step positions
+	pos.resize(steps.size());
 	std::unique_ptr<algorithms::progress_meter::ProgressMeter> building_progress_meter;
 	if (progress) {
 		building_progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
 				paths.size(), "[odgi::algorithms::stepindex] Building Progress:");
 	}
 #pragma omp parallel for schedule(dynamic,1)
-    for (auto& path : paths) {
-        uint64_t offset = 0;
-        graph.for_each_step_in_path(
-            path, [&](const step_handle_t& step) {
-				// sampling
-				if (0 == utils::modulo(graph.get_id(graph.get_handle_of_step(step)), sample_rate)) {
-					pos[step_mphf->lookup(step)] = offset;
-				}
-				offset += graph.get_length(graph.get_handle_of_step(step));
+	for (auto& path : paths) {
+		uint64_t offset = 0;
+		graph.for_each_step_in_path(
+				path, [&](const step_handle_t& step) {
+					// sampling
+					if (0 == utils::modulo(graph.get_id(graph.get_handle_of_step(step)), sample_rate)) {
+						pos[step_mphf->lookup(step)] = offset;
+					}
+					offset += graph.get_length(graph.get_handle_of_step(step));
 				});
 		// sampling
 		if (0 == utils::modulo(graph.get_id(graph.get_handle_of_step(graph.path_end(path))), sample_rate)) {
 			pos[step_mphf->lookup(graph.path_end(path))] = offset;
 		}
-        if (progress) {
-        	building_progress_meter->increment(1);
-        }
-    }
+		if (progress) {
+			building_progress_meter->increment(1);
+		}
+	}
 	if (progress) {
 		building_progress_meter->finish();
 	}
@@ -127,6 +133,10 @@ void step_index_t::load(const std::string& name) {
 	std::ifstream stpidx_in(name);
 	deserialize_members(stpidx_in);
 	step_mphf->load(stpidx_in);
+}
+
+const uint64_t step_index_t::get_sample_rate() {
+	return this->sample_rate;
 }
 
 void step_index_t::serialize_members(std::ostream &out) const {
@@ -214,6 +224,14 @@ void step_index_t::load_sdsl(std::istream &in) {
 
 step_index_t::~step_index_t(void) {
     delete step_mphf;
+}
+
+void step_index_t::clean() {
+	delete this->step_mphf;
+	// this should free all allocated memory https://www.techiedelight.com/delete-vector-free-memory-cpp/
+	sdsl::int_vector<64>().swap(this->pos);
+	sdsl::int_vector<64>().swap(this->path_len);
+	this->sample_rate = 0;
 }
 
 

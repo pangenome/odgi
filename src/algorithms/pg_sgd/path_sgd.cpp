@@ -8,7 +8,7 @@
 namespace odgi {
     namespace algorithms {
 
-        std::vector<double> path_linear_sgd(const graph_t &graph,
+        std::vector<double> path_linear_sgd(graph_t &graph,
                                             const xp::XP &path_index,
                                             const std::vector<path_handle_t> &path_sgd_use_paths,
                                             const uint64_t &iter_max,
@@ -114,7 +114,7 @@ namespace odgi {
                     std::cerr << "[odgi::path_linear_sgd] calculating linear SGD schedule (" << w_min << " " << w_max << " "
                               << iter_max << " " << iter_with_max_learning_rate << " " << eps << ")" << std::endl;
                 }
-                std::vector<double> etas = path_linear_sgd_schedule(w_min,
+                std::vector<double> etas = algorithms::path_linear_sgd_schedule(w_min,
                                                                     w_max,
                                                                     iter_max,
                                                                     iter_with_max_learning_rate,
@@ -474,44 +474,7 @@ namespace odgi {
             return X_final;
         }
 
-        std::vector<double> path_linear_sgd_schedule(const double &w_min,
-                                                     const double &w_max,
-                                                     const uint64_t &iter_max,
-                                                     const uint64_t &iter_with_max_learning_rate,
-                                                     const double &eps) {
-#ifdef debug_schedule
-            std::cerr << "w_min: " << w_min << std::endl;
-            std::cerr << "w_max: " << w_max << std::endl;
-            std::cerr << "iter_max: " << iter_max << std::endl;
-            std::cerr << "eps: " << eps << std::endl;
-#endif
-            double eta_max = 1.0 / w_min;
-            double eta_min = eps / w_max;
-            double lambda = log(eta_max / eta_min) / ((double) iter_max - 1);
-#ifdef debug_schedule
-            std::cerr << "eta_max: " << eta_max << std::endl;
-            std::cerr << "eta_min: " << eta_min << std::endl;
-            std::cerr << "lambda: " << lambda << std::endl;
-#endif
-            // initialize step sizes
-            std::vector<double> etas;
-            etas.reserve(iter_max + 1);
-#ifdef debug_schedule
-            std::cerr << "etas: ";
-#endif
-            for (int64_t t = 0; t <= iter_max; t++) {
-                etas.push_back(eta_max * exp(-lambda * (abs(t - (int64_t) iter_with_max_learning_rate))));
-#ifdef debug_schedule
-                std::cerr << etas.back() << ", ";
-#endif
-            }
-#ifdef debug_schedule
-            std::cerr << std::endl;
-#endif
-            return etas;
-        }
-
-        std::vector<handle_t> path_linear_sgd_order(const graph_t &graph,
+        std::vector<handle_t> path_linear_sgd_order(graph_t &graph,
                                                     const xp::XP &path_index,
                                                     const std::vector<path_handle_t> &path_sgd_use_paths,
                                                     const uint64_t &iter_max,
@@ -553,124 +516,23 @@ namespace odgi {
                                                          snapshots,
 														 target_sorting,
 														 target_nodes);
-            // TODO move the following into its own function that we can reuse
-#ifdef debug_components
-            std::cerr << "node count: " << graph.get_node_count() << std::endl;
-#endif
-            // refine order by weakly connected components
-            std::vector<ska::flat_hash_set<handlegraph::nid_t>> weak_components = algorithms::weakly_connected_components(
-                    &graph);
-#ifdef debug_components
-            std::cerr << "components count: " << weak_components.size() << std::endl;
-#endif
-            std::vector<std::pair<double, uint64_t>> weak_component_order;
-            for (int i = 0; i < weak_components.size(); i++) {
-                auto &weak_component = weak_components[i];
-                uint64_t id_sum = 0;
-                for (auto node_id : weak_component) {
-                    id_sum += node_id;
-                }
-                double avg_id = id_sum / (double) weak_component.size();
-                weak_component_order.push_back(std::make_pair(avg_id, i));
-            }
-            std::sort(weak_component_order.begin(), weak_component_order.end());
-            std::vector<uint64_t> weak_component_id; // maps rank to "id" based on the orignial sorted order
-            weak_component_id.resize(weak_component_order.size());
-            uint64_t component_id = 0;
-            for (auto &component_order : weak_component_order) {
-                weak_component_id[component_order.second] = component_id++;
-            }
-            std::vector<uint64_t> weak_components_map;
-            weak_components_map.resize(graph.get_node_count());
-            // reserve the space we need
-            for (int i = 0; i < weak_components.size(); i++) {
-                auto &weak_component = weak_components[i];
-                // store for each node identifier to component start index
-                for (auto node_id : weak_component) {
-                    weak_components_map[node_id - 1] = weak_component_id[i];
-                }
-#ifdef debug_components
-                std::cerr << "weak_component.size(): " << weak_component.size() << std::endl;
-                std::cerr << "component_index: " << i << std::endl;
-#endif
-            }
-            weak_components_map.clear();
-            if (snapshot) {
-                for (int j = 0; j < snapshots.size(); j++) {
-                    std::string snapshot_file_name = snapshots[j];
-                    std::ifstream snapshot_instream(snapshot_file_name);
-                    std::vector<double> snapshot_layout;
-                    std::string line;
-                    while(std::getline(snapshot_instream, line)) {
-                        snapshot_layout.push_back(std::stod(line));
-                    }
-                    snapshot_instream.close();
-                    uint64_t i = 0;
-                    std::vector<handle_layout_t> snapshot_handle_layout;
-                    graph.for_each_handle(
-                            [&i, &snapshot_layout, &weak_components_map, &snapshot_handle_layout](
-                                    const handle_t &handle) {
-                                snapshot_handle_layout.push_back(
-                                        {
-                                                weak_components_map[number_bool_packing::unpack_number(handle)],
-                                                snapshot_layout[i++],
-                                                handle
-                                        });
-                            });
-                    // sort the graph layout by component, then pos, then handle rank
-                    std::sort(snapshot_handle_layout.begin(), snapshot_handle_layout.end(),
-                              [&](const handle_layout_t &a,
-                                  const handle_layout_t &b) {
-                                  return a.weak_component < b.weak_component
-                                         || (a.weak_component == b.weak_component
-                                             && a.pos < b.pos
-                                             || (a.pos == b.pos
-                                                 && as_integer(a.handle) < as_integer(b.handle)));
-                              });
-                    std::vector<handle_t> order;
-                    order.reserve(graph.get_node_count());
-                    for (auto &layout_handle : snapshot_handle_layout) {
-                        order.push_back(layout_handle.handle);
-                    }
-                    std::cerr << "[odgi::path_linear_sgd] Applying order to graph of snapshot: " << std::to_string(j + 1)
-                              << std::endl;
-                    std::string local_snapshot_prefix = snapshot_prefix + std::to_string(j + 1);
-                    auto* graph_copy = new odgi::graph_t();
-                    utils::graph_deep_copy(graph, graph_copy);
-                    graph_copy->apply_ordering(order, true);
-                    ofstream f(local_snapshot_prefix);
-                    std::cerr << "[odgi::path_linear_sgd] Writing snapshot: " << std::to_string(j + 1) << std::endl;
-                    graph_copy->serialize(f);
-                    f.close();
-                }
-            }
-            std::vector<handle_layout_t> handle_layout;
-            uint64_t i = 0;
-            graph.for_each_handle(
-                    [&i, &layout, &weak_components_map, &handle_layout](const handle_t &handle) {
-                        handle_layout.push_back(
-                                {
-                                        weak_components_map[number_bool_packing::unpack_number(handle)],
-                                        layout[i++],
-                                        handle
-                                });
-                    });
-            // sort the graph layout by component, then pos, then handle rank
-            std::sort(handle_layout.begin(), handle_layout.end(),
-                      [&](const handle_layout_t &a,
-                          const handle_layout_t &b) {
-                          return a.weak_component < b.weak_component
-                                 || (a.weak_component == b.weak_component
-                                     && a.pos < b.pos
-                                     || (a.pos == b.pos
-                                         && as_integer(a.handle) < as_integer(b.handle)));
-                      });
-            std::vector<handle_t> order;
-            order.reserve(graph.get_node_count());
-            for (auto &layout_handle : handle_layout) {
-                order.push_back(layout_handle.handle);
-            }
-            return order;
+            // prepare the weak components map
+			std::vector<uint64_t> weak_components_map;
+			algorithms::prepare_weak_connected_components_map(graph, weak_components_map);
+			// prepare and write snapshots
+			if (snapshot) {
+				generate_and_write_snapshot_graphs(graph,
+												   weak_components_map,
+												   snapshot_prefix,
+												   snapshots);
+			}
+			// from layout to order
+			std::vector<handle_t> order;
+			algorithms::from_layout_to_node_order(graph,
+												  weak_components_map,
+												  order,
+												  layout);
+			return order;
         }
     }
 }

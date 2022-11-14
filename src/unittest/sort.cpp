@@ -13,7 +13,7 @@
 #include <unordered_set>
 #include <random>
 #include <xp.hpp>
-#include <path_sgd.hpp>
+#include "algorithms/pg_sgd/path_sgd.hpp"
 
 namespace odgi {
 namespace unittest {
@@ -126,6 +126,7 @@ TEST_CASE("Sorting a graph with paths", "[sort]") {
     }
 }
 
+// FIXME add tests using SSI sorting
 TEST_CASE("Sorting a graph with paths 1 node long", "[sort]") {
     graph_t graph;
 

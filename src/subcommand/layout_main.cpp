@@ -4,8 +4,8 @@
 #include "args.hxx"
 #include <omp.h>
 #include "algorithms/xp.hpp"
-#include "algorithms/sgd_layout.hpp"
-#include "algorithms/path_sgd_layout.hpp"
+#include "algorithms/pg_sgd/path_sgd_layout.hpp"
+#include "algorithms/pg_sgd/path_sgd_helper.hpp"
 #include "algorithms/draw.hpp"
 #include "algorithms/layout.hpp"
 #include "hilbert.hpp"
@@ -148,26 +148,7 @@ int main_layout(int argc, char **argv) {
     const double eps = !p_sgd_eps ? 0.01 : args::get(p_sgd_eps);
     const double sgd_delta = p_sgd_delta ? args::get(p_sgd_delta) : 0;
     const bool show_progress = progress ? args::get(progress) : false;
-    /// path guided linear 2D SGD sort helpers
-    // TODO beautify this, maybe put into its own file
-    std::function<uint64_t(const std::vector<path_handle_t> &,
-                           const xp::XP &)> get_sum_path_step_count
-        = [&](const std::vector<path_handle_t> &path_sgd_use_paths, const xp::XP &path_index) {
-              uint64_t sum_path_step_count = 0;
-              for (auto& path : path_sgd_use_paths) {
-                  sum_path_step_count += path_index.get_path_step_count(path);
-              }
-              return sum_path_step_count;
-          };
-    std::function<uint64_t(const std::vector<path_handle_t> &,
-                           const xp::XP &)> get_max_path_step_count
-        = [&](const std::vector<path_handle_t> &path_sgd_use_paths, const xp::XP &path_index) {
-              uint64_t max_path_step_count = 0;
-              for (auto& path : path_sgd_use_paths) {
-                  max_path_step_count = std::max(max_path_step_count, path_index.get_path_step_count(path));
-              }
-              return max_path_step_count;
-          };
+
     // default parameters
     /* We don't do this, yet.
     std::string path_sgd_seed;
@@ -243,7 +224,7 @@ int main_layout(int argc, char **argv) {
     }
 
 
-    uint64_t sum_path_step_count = get_sum_path_step_count(path_sgd_use_paths, path_index);
+    uint64_t sum_path_step_count = algorithms::get_sum_path_step_count(path_sgd_use_paths, graph);
     if (args::get(p_sgd_min_term_updates_paths)) {
         path_sgd_min_term_updates = args::get(p_sgd_min_term_updates_paths) * sum_path_step_count;
     } else {
@@ -253,7 +234,7 @@ int main_layout(int argc, char **argv) {
             path_sgd_min_term_updates = 10.0 * sum_path_step_count;
         }
     }
-    uint64_t max_path_step_count = get_max_path_step_count(path_sgd_use_paths, path_index);
+    uint64_t max_path_step_count = algorithms::get_max_path_step_count(path_sgd_use_paths, graph);
     path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? std::min(args::get(p_sgd_zipf_space), max_path_step_count) : max_path_step_count;
     double path_sgd_max_eta = args::get(p_sgd_eta_max) ? args::get(p_sgd_eta_max) : (double) max_path_step_count * max_path_step_count;
 

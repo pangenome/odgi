@@ -10,10 +10,13 @@
 #include "algorithms/dagify_sort.hpp"
 #include "algorithms/random_order.hpp"
 //#include "algorithms/mondriaan_sort.hpp"
-#include "algorithms/linear_sgd.hpp"
 #include "algorithms/xp.hpp"
-#include "algorithms/path_sgd.hpp"
+#include "algorithms/pg_sgd/path_sgd.hpp"
+#include "algorithms/pg_sgd/path_sgd_helper.hpp"
+#include "algorithms/pg_sgd/path_sgd_ssi.hpp"
 #include "algorithms/groom.hpp"
+#include "algorithms/stepindex.hpp"
+#include "utils.hpp"
 
 namespace odgi {
 
@@ -38,6 +41,8 @@ int main_sort(int argc, char** argv) {
                                                              " ending with *.og* is recommended.", {'o', "out"});
     args::Group files_io_opts(parser, "[ Files IO Options ]");
     args::ValueFlag<std::string> xp_in_file(files_io_opts, "FILE", "Load the succinct variation graph index from this *FILE*. The file name usually ends with *.xp*.", {'X', "path-index"});
+	/// @Andrea new argument
+	args::ValueFlag<std::string> ssi_in_file(files_io_opts, "FILE", "Load the sampled step index from this *FILE*. The file name usually ends with *.ssi*.", {'e', "sampled-step-index"});
     args::ValueFlag<std::string> sort_order_in(files_io_opts, "FILE", "*FILE* containing the sort order. Each line contains one node identifer.", {'s', "sort-order"});
     args::ValueFlag<std::string> tmp_base(files_io_opts, "PATH", "directory for temporary files", {'C', "temp-dir"});
     args::Group topo_sorts_opts(parser, "[ Topological Sort Options ]");
@@ -59,6 +64,8 @@ int main_sort(int argc, char** argv) {
     /// path guided linear 1D SGD
     args::Group pg_sgd_opts(parser, "[ Path Guided 1D SGD Sort ]");
     args::Flag p_sgd(pg_sgd_opts, "path-sgd", "Apply the path-guided linear 1D SGD algorithm to organize graph.", {'Y', "path-sgd"});
+	/// @Andrea new argument
+	args::Flag p_sgd_xp(pg_sgd_opts, "path-sgd", "Use the faster but memory expensive XP index.", {'m', "path-sgd-path-index"});
     args::ValueFlag<std::string> p_sgd_in_file(pg_sgd_opts, "FILE", "Specify a line separated list of paths to sample from for the on the"
                                                                     " fly term generation process in the path guided linear 1D SGD (default: sample from all paths).", {'f', "path-sgd-use-paths"});
     args::ValueFlag<double> p_sgd_min_term_updates_paths(pg_sgd_opts, "N", "The minimum number of terms to be updated before a new path guided"
@@ -149,6 +156,22 @@ int main_sort(int argc, char** argv) {
         return 1;
     }
 
+	const bool xp_way = ((xp_in_file || p_sgd_xp) && p_sgd) ;
+
+	if (xp_way && ssi_in_file) {
+		std::cerr
+				<< "[odgi::sort] error: please specify exclusively -X=[FILE]/--path-index=[FILE], -m/--path-sgd-path-index, or -e=[FILE]/--sampled-step-index=[FILE]."
+				<< std::endl;
+		return 1;
+	}
+
+	if (xp_in_file && p_sgd_xp) {
+		std::cerr
+				<< "[odgi::sort] error: please specify -X=[FILE]/--path-index=[FILE] or -m=/--path-sgd-path-index, not both."
+				<< std::endl;
+		return 1;
+	}
+
 	const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
 
 	graph_t graph;
@@ -168,36 +191,6 @@ int main_sort(int argc, char** argv) {
 
     graph.set_number_of_threads(num_threads);
 
-    /// path guided linear 1D SGD sort helpers
-    // TODO beautify this, maybe put into its own file
-    std::function<uint64_t(const std::vector<path_handle_t> &,
-                           const xp::XP &)> get_sum_path_step_count
-            = [&](const std::vector<path_handle_t> &path_sgd_use_paths, const xp::XP &path_index) {
-                uint64_t sum_path_step_count = 0;
-                for (auto& path : path_sgd_use_paths) {
-                    sum_path_step_count += path_index.get_path_step_count(path);
-                }
-                return sum_path_step_count;
-              };
-    std::function<uint64_t(const std::vector<path_handle_t> &,
-                           const xp::XP &)> get_max_path_step_count
-            = [&](const std::vector<path_handle_t> &path_sgd_use_paths, const xp::XP &path_index) {
-                uint64_t max_path_step_count = 0;
-                for (auto& path : path_sgd_use_paths) {
-                    max_path_step_count = std::max(max_path_step_count, path_index.get_path_step_count(path));
-                }
-                return max_path_step_count;
-            };
-    std::function<uint64_t(const std::vector<path_handle_t> &,
-                           const xp::XP &)> get_max_path_length
-            = [&](const std::vector<path_handle_t> &path_sgd_use_paths, const xp::XP &path_index) {
-                uint64_t max_path_length = std::numeric_limits<uint64_t>::min();
-                for (auto &path : path_sgd_use_paths) {
-                    max_path_length = std::max(max_path_length, path_index.get_path_length(path));
-                }
-                return max_path_length;
-            };
-
     // default parameters
     std::string path_sgd_seed;
     if (p_sgd_seed) {
@@ -215,95 +208,23 @@ int main_sort(int argc, char** argv) {
         return 1;
     }
 
-    if (tmp_base) {
-        xp::temp_file::set_dir(args::get(tmp_base));
-    } else {
-        char* cwd = get_current_dir_name();
-        xp::temp_file::set_dir(std::string(cwd));
-        free(cwd);
-    }
+	// SSI should be the new default, else we take the XP we received from the input or if the input is an empty string we generate a new one anyhow
+	// if an XP is given or we want to work with an XP based PG-SGD, we should set the temporary file
+	if (xp_way) {
+		std::cerr << "[odgi::sort] using XP index for the PG-SGD algorithm" << std::endl;
+		if (tmp_base) {
+			xp::temp_file::set_dir(args::get(tmp_base));
+		} else {
+			char* cwd = get_current_dir_name();
+			xp::temp_file::set_dir(std::string(cwd));
+			free(cwd);
+		}
+	}
 
     // If required, first of all, optimize the graph so that it is optimized for subsequent algorithms (if required)
     if (args::get(optimize)) {
         graph.optimize();
     }
-
-	// TODO We have this function here, in untangle, maybe somewhere else? Refactor!
-	// path loading
-	auto load_paths = [&](const std::string& path_names_file) {
-		std::ifstream path_names_in(path_names_file);
-		uint64_t num_of_paths_in_file = 0;
-		std::vector<bool> path_already_seen;
-		path_already_seen.resize(graph.get_path_count(), false);
-		std::string line;
-		std::vector<path_handle_t> paths;
-		while (std::getline(path_names_in, line)) {
-			if (!line.empty()) {
-				if (graph.has_path(line)) {
-					const path_handle_t path = graph.get_path_handle(line);
-					const uint64_t path_rank = as_integer(path) - 1;
-					if (!path_already_seen[path_rank]) {
-						path_already_seen[path_rank] = true;
-						paths.push_back(path);
-					} else {
-						std::cerr << "[odgi::sort] error: in the path list there are duplicated path names."
-								  << std::endl;
-						exit(1);
-					}
-				}
-				++num_of_paths_in_file;
-			}
-		}
-		path_names_in.close();
-		std::cerr << "[odgi::sort] found " << paths.size() << "/" << num_of_paths_in_file
-				  << " paths to consider." << std::endl;
-		if (paths.empty()) {
-			std::cerr << "[odgi::sort] error: no path to consider." << std::endl;
-			exit(1);
-		}
-		return paths;
-	};
-
-	auto sort_graph_by_target_paths = [&](graph_t& graph, std::vector<path_handle_t> target_paths, std::vector<bool>& is_ref) {
-		std::vector<handle_t> target_order;
-		std::fill_n(std::back_inserter(is_ref), graph.get_node_count(), false);
-		std::unique_ptr <odgi::algorithms::progress_meter::ProgressMeter> target_paths_progress;
-		if (args::get(progress)) {
-			std::string banner = "[odgi::sort] preparing target path vectors:";
-			target_paths_progress = std::make_unique<odgi::algorithms::progress_meter::ProgressMeter>(target_paths.size(), banner);
-		}
-		for (handlegraph::path_handle_t target_path: target_paths) {
-			graph.for_each_step_in_path(
-					target_path,
-					[&](const step_handle_t &step) {
-						handle_t handle = graph.get_handle_of_step(step);
-						uint64_t i = graph.get_id(handle) - 1;
-						if (!is_ref[i]) {
-							is_ref[i] = true;
-							target_order.push_back(handle);
-						}
-					});
-			if (args::get(progress)) {
-				target_paths_progress->increment(1);
-			}
-		}
-		if (args::get(progress))  {
-			target_paths_progress->finish();
-		}
-		uint64_t ref_nodes = 0;
-		for (uint64_t i = 0; i < is_ref.size(); i++) {
-			bool ref = is_ref[i];
-			if (!ref) {
-				target_order.push_back(graph.get_handle(i + 1));
-				ref_nodes++;
-			}
-		}
-		graph.apply_ordering(target_order, true);
-
-		// refill is_ref with start->ref_nodes: 1 and ref_nodes->end: 0
-		std::fill_n(is_ref.begin(), ref_nodes, true);
-		std::fill(is_ref.begin() + ref_nodes, is_ref.end(), false);
-	};
 
     uint64_t path_sgd_iter_max = args::get(p_sgd_iter_max) ? args::get(p_sgd_iter_max) : 100;
     uint64_t path_sgd_iter_max_learning_rate = args::get(p_sgd_iter_with_max_learning_rate) ? args::get(p_sgd_iter_with_max_learning_rate) : 0;
@@ -321,50 +242,67 @@ int main_sort(int argc, char** argv) {
     uint64_t path_sgd_zipf_space, path_sgd_zipf_space_max, path_sgd_zipf_space_quantization_step, path_sgd_zipf_max_number_of_distributions;
     std::vector<path_handle_t> path_sgd_use_paths;
     xp::XP path_index;
-    bool fresh_path_index = false;
+	algorithms::step_index_t sampled_step_index;
+    bool fresh_step_index = false;
     std::string snapshot_prefix;
     if (snapshot) {
         snapshot_prefix = args::get(p_sgd_snapshot);
     }
+	// do we only want so sample from a subset of paths?
+	if (p_sgd_in_file) {
+		std::string buf;
+		std::ifstream use_paths(args::get(p_sgd_in_file).c_str());
+		while (std::getline(use_paths, buf)) {
+			// check if the path is actually in the graph, else print an error and exit 1
+			if (graph.has_path(buf)) {
+				path_sgd_use_paths.push_back(graph.get_path_handle(buf));
+			} else {
+				std::cerr << "[odgi::sort] error: path '" << buf
+						  << "' as was given by -f=[FILE], --path-sgd-use-paths=[FILE]"
+							 " is not present in the graph. Please remove this path from the file and restart 'odgi sort'.";
+			}
+		}
+		use_paths.close();
+	} else {
+		graph.for_each_path_handle(
+				[&](const path_handle_t &path) {
+					path_sgd_use_paths.push_back(path);
+				});
+	}
 	std::vector<bool> is_ref;
 	std::vector<path_handle_t> target_paths;
+	/// @Andrea
+	uint64_t ssi_sample_rate = 8;
+	uint64_t sum_path_step_count;
     if (p_sgd || args::get(pipeline).find('Y') != std::string::npos) {
 		if (_p_sgd_target_paths) {
-			target_paths = load_paths(args::get(_p_sgd_target_paths));
-			sort_graph_by_target_paths(graph, target_paths, is_ref);
+			target_paths = utils::load_paths(args::get(_p_sgd_target_paths), graph, "sort");
+			algorithms::sort_graph_by_target_paths(graph, target_paths, is_ref, args::get(progress));
 		}
-        // take care of path index
+		// SSI should be the new default, else we take the XP we received from the input or if the input is an empty string we generate a new one anyhow
+		/// @Andrea
         if (xp_in_file) {
             std::ifstream in;
             in.open(args::get(xp_in_file));
             path_index.load(in);
             in.close();
-        } else {
+        } else if (p_sgd_xp) {
+			// only if we set the flag!
             path_index.from_handle_graph(graph, num_threads);
-        }
-        fresh_path_index = true;
-        // do we only want so sample from a subset of paths?
-        if (p_sgd_in_file) {
-            std::string buf;
-            std::ifstream use_paths(args::get(p_sgd_in_file).c_str());
-            while (std::getline(use_paths, buf)) {
-                // check if the path is actually in the graph, else print an error and exit 1
-                if (graph.has_path(buf)) {
-                    path_sgd_use_paths.push_back(graph.get_path_handle(buf));
-                } else {
-                    std::cerr << "[odgi::sort] error: path '" << buf
-                              << "' as was given by -f=[FILE], --path-sgd-use-paths=[FILE]"
-                                 " is not present in the graph. Please remove this path from the file and restart 'odgi sort'.";
-                }
-            }
-            use_paths.close();
-        } else {
-            graph.for_each_path_handle(
-                [&](const path_handle_t &path) {
-                    path_sgd_use_paths.push_back(path);
-                });
-        }
-        uint64_t sum_path_step_count = get_sum_path_step_count(path_sgd_use_paths, path_index);
+			// do we load the SSI from file?
+        } else if (ssi_in_file) {
+			// FIXME we could also only allow an integer as input to build an ssi for the given sample rate? @Andrea
+			sampled_step_index.load(args::get(ssi_in_file));
+			// store the SSI sampling rate
+			ssi_sample_rate = sampled_step_index.get_sample_rate();
+			// or do we build it from scratch?
+		} else {
+			// stepindex only for selected paths
+			sampled_step_index.from_handle_graph(graph, path_sgd_use_paths, num_threads, args::get(progress), ssi_sample_rate);
+		}
+        fresh_step_index = true;
+		/// @Andrea
+        sum_path_step_count = algorithms::get_sum_path_step_count(path_sgd_use_paths, graph);
         if (args::get(p_sgd_min_term_updates_paths)) {
             path_sgd_min_term_updates = args::get(p_sgd_min_term_updates_paths) * sum_path_step_count;
         } else {
@@ -374,8 +312,14 @@ int main_sort(int argc, char** argv) {
                 path_sgd_min_term_updates = 1.0 * sum_path_step_count;
             }
         }
-        uint64_t max_path_step_count = get_max_path_step_count(path_sgd_use_paths, path_index);
-        path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? args::get(p_sgd_zipf_space) : get_max_path_length(path_sgd_use_paths, path_index);
+		/// @Andrea
+        uint64_t max_path_step_count = algorithms::get_max_path_step_count(path_sgd_use_paths, graph);
+		// we might have to use the SSI here
+		if (xp_way) {
+			path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? args::get(p_sgd_zipf_space) : algorithms::get_max_path_length_xp(path_sgd_use_paths, path_index);
+		} else {
+			path_sgd_zipf_space = args::get(p_sgd_zipf_space) ? args::get(p_sgd_zipf_space) : algorithms::get_max_path_length_ssi(path_sgd_use_paths, sampled_step_index);
+		}
         path_sgd_zipf_space_max = args::get(p_sgd_zipf_space_max) ? args::get(p_sgd_zipf_space_max) : 100;
 
         path_sgd_zipf_max_number_of_distributions = args::get(p_sgd_zipf_max_number_of_distributions) ? std::max(
@@ -438,35 +382,68 @@ int main_sort(int argc, char** argv) {
                     order = algorithms::random_order(graph);
                     break;
                 case 'Y': {
-                    if (!fresh_path_index) {
-                        path_index.clean();
+                    if (!fresh_step_index) {
+						if (xp_way) {
+							path_index.clean();
+						} else {
+							sampled_step_index.clean();
+						}
 						// do we have to sort by reference nodes first?
 						if (_p_sgd_target_paths) {
-							sort_graph_by_target_paths(graph, target_paths, is_ref);
+							algorithms::sort_graph_by_target_paths(graph, target_paths, is_ref, args::get(progress));
 						}
-                        path_index.from_handle_graph(graph, num_threads);
+						if (xp_way) {
+							path_index.from_handle_graph(graph, num_threads);
+						} else {
+							sampled_step_index.from_handle_graph(graph, path_sgd_use_paths, num_threads, args::get(progress), ssi_sample_rate);
+						}
                     }
-                    order = algorithms::path_linear_sgd_order(graph,
-                                                              path_index,
-                                                              path_sgd_use_paths,
-                                                              path_sgd_iter_max,
-                                                              path_sgd_iter_max_learning_rate,
-                                                              path_sgd_min_term_updates,
-                                                              path_sgd_delta,
-                                                              path_sgd_eps,
-                                                              path_sgd_max_eta,
-                                                              path_sgd_zipf_theta,
-                                                              path_sgd_zipf_space,
-                                                              path_sgd_zipf_space_max,
-                                                              path_sgd_zipf_space_quantization_step,
-                                                              path_sgd_cooling,
-                                                              num_threads,
-                                                              progress,
-                                                              path_sgd_seed,
-                                                              snapshot,
-                                                              snapshot_prefix,
-															  _p_sgd_target_paths,
-															  is_ref);
+					if (xp_way) {
+						order = algorithms::path_linear_sgd_order(graph,
+																  path_index,
+																  path_sgd_use_paths,
+																  path_sgd_iter_max,
+																  path_sgd_iter_max_learning_rate,
+																  path_sgd_min_term_updates,
+																  path_sgd_delta,
+																  path_sgd_eps,
+																  path_sgd_max_eta,
+																  path_sgd_zipf_theta,
+																  path_sgd_zipf_space,
+																  path_sgd_zipf_space_max,
+																  path_sgd_zipf_space_quantization_step,
+																  path_sgd_cooling,
+																  num_threads,
+																  progress,
+																  path_sgd_seed,
+																  snapshot,
+																  snapshot_prefix,
+																  _p_sgd_target_paths,
+																  is_ref);
+					} else {
+						order = algorithms::path_linear_sgd_order_ssi(graph,
+																  sampled_step_index,
+																  path_sgd_use_paths,
+																  path_sgd_iter_max,
+																  path_sgd_iter_max_learning_rate,
+																  path_sgd_min_term_updates,
+																  path_sgd_delta,
+																  path_sgd_eps,
+																  path_sgd_max_eta,
+																  path_sgd_zipf_theta,
+																  path_sgd_zipf_space,
+																  path_sgd_zipf_space_max,
+																  path_sgd_zipf_space_quantization_step,
+																  path_sgd_cooling,
+																  num_threads,
+																  progress,
+																  path_sgd_seed,
+																  snapshot,
+																  snapshot_prefix,
+																  _p_sgd_target_paths,
+																  is_ref,
+																  sum_path_step_count);
+					}
                     break;
                 }
                 case 'f':
@@ -490,7 +467,7 @@ int main_sort(int argc, char** argv) {
                 assert(false);
             }
             graph.apply_ordering(order, true);
-            fresh_path_index = false;
+            fresh_step_index = false;
         }
     } else if (args::get(two)) {
         graph.apply_ordering(algorithms::two_way_topological_order(&graph), true);
@@ -510,28 +487,54 @@ int main_sort(int argc, char** argv) {
     } else if (args::get(no_seeds)) {
         graph.apply_ordering(algorithms::topological_order(&graph, false, false, args::get(progress)), true);
     } else if (args::get(p_sgd)) {
-        std::vector<handle_t> order =
-                algorithms::path_linear_sgd_order(graph,
-                                                  path_index,
-                                                  path_sgd_use_paths,
-                                                  path_sgd_iter_max,
-                                                  path_sgd_iter_max_learning_rate,
-                                                  path_sgd_min_term_updates,
-                                                  path_sgd_delta,
-                                                  path_sgd_eps,
-                                                  path_sgd_max_eta,
-                                                  path_sgd_zipf_theta,
-                                                  path_sgd_zipf_space,
-                                                  path_sgd_zipf_space_max,
-                                                  path_sgd_zipf_space_quantization_step,
-                                                  path_sgd_cooling,
-                                                  num_threads,
-                                                  progress,
-                                                  path_sgd_seed,
-                                                  snapshot,
-                                                  snapshot_prefix,
-												  _p_sgd_target_paths,
-												  is_ref);
+		// FIXME SSI should be the new default, else we take the XP we received from the input or if the input is an empty string we generate a new one anyhow
+		std::vector<handle_t> order;
+		if (xp_way) {
+			order = algorithms::path_linear_sgd_order(graph,
+													  path_index,
+													  path_sgd_use_paths,
+													  path_sgd_iter_max,
+													  path_sgd_iter_max_learning_rate,
+													  path_sgd_min_term_updates,
+													  path_sgd_delta,
+													  path_sgd_eps,
+													  path_sgd_max_eta,
+													  path_sgd_zipf_theta,
+													  path_sgd_zipf_space,
+													  path_sgd_zipf_space_max,
+													  path_sgd_zipf_space_quantization_step,
+													  path_sgd_cooling,
+													  num_threads,
+													  progress,
+													  path_sgd_seed,
+													  snapshot,
+													  snapshot_prefix,
+													  _p_sgd_target_paths,
+													  is_ref);
+		} else {
+			order = algorithms::path_linear_sgd_order_ssi(graph,
+													  sampled_step_index,
+													  path_sgd_use_paths,
+													  path_sgd_iter_max,
+													  path_sgd_iter_max_learning_rate,
+													  path_sgd_min_term_updates,
+													  path_sgd_delta,
+													  path_sgd_eps,
+													  path_sgd_max_eta,
+													  path_sgd_zipf_theta,
+													  path_sgd_zipf_space,
+													  path_sgd_zipf_space_max,
+													  path_sgd_zipf_space_quantization_step,
+													  path_sgd_cooling,
+													  num_threads,
+													  progress,
+													  path_sgd_seed,
+													  snapshot,
+													  snapshot_prefix,
+													  _p_sgd_target_paths,
+													  is_ref,
+													  sum_path_step_count);
+		}
         graph.apply_ordering(order, true);
     } else if (args::get(breadth_first)) {
         graph.apply_ordering(algorithms::breadth_first_topological_order(graph, bf_chunk_size), true);

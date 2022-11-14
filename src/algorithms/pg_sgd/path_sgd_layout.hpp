@@ -10,7 +10,7 @@
 #include <atomic>
 #include <handlegraph/path_handle_graph.hpp>
 #include <handlegraph/handle_graph.hpp>
-#include "xp.hpp"
+#include "../xp.hpp"
 #include "IITree.h"
 #include <zipfian_int_distribution.h>
 #include <iomanip>
@@ -18,7 +18,7 @@
 #include <sdsl/bit_vectors.hpp>
 #include "dirty_zipfian_int_distribution.h"
 #include "XoshiroCpp.hpp"
-#include "progress.hpp"
+#include "../progress.hpp"
 
 namespace odgi {
     namespace algorithms {
