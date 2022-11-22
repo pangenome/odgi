@@ -306,9 +306,6 @@ namespace odgi {
 									if (!update_term_j && !update_term_i) {
 										// we also have to update the number of terms here, because else we will over sample and the sorting will take much longer
 										term_updates_local++;
-										if (progress) {
-											progress_meter->increment(1);
-										}
 										continue;
 									}
 
@@ -407,10 +404,10 @@ namespace odgi {
                                     term_updates_local++;
                                     if (term_updates_local >= 1000) {
                                         term_updates += term_updates_local;
+                                        if (progress) {
+                                            progress_meter->increment(term_updates_local);
+                                        }
                                         term_updates_local = 0;
-                                    }
-                                    if (progress) {
-                                        progress_meter->increment(1);
                                     }
                                 }
                             }
