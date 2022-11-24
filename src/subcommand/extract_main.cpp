@@ -664,16 +664,20 @@ namespace odgi {
             std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress_checking;
             if (show_progress) {
                 progress_checking = std::make_unique<algorithms::progress_meter::ProgressMeter>(
-                        subpaths.size(), "[odgi::extract] checking missing edges");
+                        subpaths.size(), "[odgi::extract] checking missing edges and empty subpaths");
             }
 
             ska::flat_hash_set<std::pair<handle_t, handle_t>> edges_to_create;
+            std::vector<path_handle_t> empty_subpaths;
 
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
             for (auto path: subpaths) {
+                uint64_t num_steps = 0;
                 handle_t last;
                 const step_handle_t begin_step = subgraph.path_begin(path);
                 subgraph.for_each_step_in_path(path, [&](const step_handle_t &step) {
+                    ++num_steps;
+
                     handle_t h = subgraph.get_handle_of_step(step);
                     if (step != begin_step && !subgraph.has_edge(last, h)) {
 #pragma omp critical (edges_to_create)
@@ -681,6 +685,11 @@ namespace odgi {
                     }
                     last = h;
                 });
+
+                if (num_steps == 0) {
+#pragma omp critical (empty_subpaths)
+                    empty_subpaths.push_back(path);
+                }
 
                 if (show_progress) {
                     progress_checking->increment(1);
@@ -700,6 +709,15 @@ namespace odgi {
 
             if (show_progress && edges_to_create.size() > 0) {
                 std::cerr << "[odgi::extract] fixed " << edges_to_create.size() << " edge(s)" << std::endl;
+            }
+
+            // remove empty subpaths
+            for(auto& path : empty_subpaths) {
+                subgraph.destroy_path(path);
+            }
+
+            if (show_progress && empty_subpaths.size() > 0) {
+                std::cerr << "[odgi::extract] removed " << empty_subpaths.size() << " empty subpath(s)." << std::endl;
             }
 
             // This should not be necessary, if the extraction works correctly
