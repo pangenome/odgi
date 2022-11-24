@@ -668,16 +668,12 @@ namespace odgi {
             }
 
             ska::flat_hash_set<std::pair<handle_t, handle_t>> edges_to_create;
-            std::vector<path_handle_t> empty_subpaths;
 
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
             for (auto path: subpaths) {
-                uint64_t num_steps = 0;
                 handle_t last;
                 const step_handle_t begin_step = subgraph.path_begin(path);
                 subgraph.for_each_step_in_path(path, [&](const step_handle_t &step) {
-                    ++num_steps;
-
                     handle_t h = subgraph.get_handle_of_step(step);
                     if (step != begin_step && !subgraph.has_edge(last, h)) {
 #pragma omp critical (edges_to_create)
@@ -685,11 +681,6 @@ namespace odgi {
                     }
                     last = h;
                 });
-
-                if (num_steps == 0) {
-#pragma omp critical (empty_subpaths)
-                    empty_subpaths.push_back(path);
-                }
 
                 if (show_progress) {
                     progress_checking->increment(1);
@@ -700,24 +691,28 @@ namespace odgi {
                 progress_checking->finish();
             }
 
+            // remove empty subpaths
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
+            for (auto path: subpaths) {
+                if (subgraph.is_empty(path)) {
+#pragma omp critical (subgraph)
+                    subgraph.destroy_path(path);
+                }
+            }
+
+            if (show_progress && subgraph.get_path_count() < subpaths.size()) {
+                std::cerr << "[odgi::extract] removed " << (subpaths.size() - subgraph.get_path_count()) << " empty subpath(s)." << std::endl;
+            }
+
             subpaths.clear();
 
-            // force embed the paths
+            // add missing edges
             for (auto edge: edges_to_create) {
                 subgraph.create_edge(edge.first, edge.second);
             }
 
             if (show_progress && edges_to_create.size() > 0) {
                 std::cerr << "[odgi::extract] fixed " << edges_to_create.size() << " edge(s)" << std::endl;
-            }
-
-            // remove empty subpaths
-            for(auto& path : empty_subpaths) {
-                subgraph.destroy_path(path);
-            }
-
-            if (show_progress && empty_subpaths.size() > 0) {
-                std::cerr << "[odgi::extract] removed " << empty_subpaths.size() << " empty subpath(s)." << std::endl;
             }
 
             // This should not be necessary, if the extraction works correctly
