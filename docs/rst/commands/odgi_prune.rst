@@ -88,6 +88,9 @@ Path Options
 | **-D, --drop-all-paths**
 | Remove all paths from the graph.
 
+| **-y, --drop-empty-paths**
+| Remove empty paths from the graph.
+
 | **-m, --cut-tips-min-depth**\ =\ *N*
 | Remove nodes which are graph tips and have less than *N* path depth.
 
