@@ -374,7 +374,9 @@ namespace odgi {
                                     term_updates_local++;
                                     if (term_updates_local >= 1000) {
                                         term_updates += term_updates_local;
-                                        progress_meter->increment(term_updates_local);
+                                        if (progress) {
+                                            progress_meter->increment(term_updates_local);
+                                        }
                                         term_updates_local = 0;
                                     }
                                 }
