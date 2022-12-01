@@ -47,10 +47,11 @@ int main_paths(int argc, char** argv) {
                                                                              " identifier. This parameter should only be set in combination with"
                                                                              " **-H, --haplotypes**. Prints an additional, first column"
                                                                              " **group.name** to stdout.", {'D', "delim"});
-    args::Flag haplo_matrix(path_investigation_opts, "haplo", "Print to stdout the paths in an approximate binary haplotype matrix"
+    args::Flag haplo_matrix(path_investigation_opts, "haplo", "Print to stdout the paths in a path coverage haplotype matrix"
                                                               " based on the graph’s sort order. The output is tab-delimited:"
                                                               " *path.name*, *path.length*, *path.step.count*, *node.1*,"
                                                               " *node.2*, *node.n*. Each path entry is printed in its own line.", {'H', "haplotypes"});
+    args::Flag scale_by_node_length(path_investigation_opts, "haplo", "Scale the haplotype matrix cells by node length.", {'N', "scale-by-node-len"});
     args::Flag distance_matrix(path_investigation_opts, "distance", "Provides a sparse distance matrix for paths. If **-D, --delim** is"
                                                                     " set, it will be path groups distances. Each line prints in a tab-delimited format to stdout:"
                                                                     " *path.a*, *path.b*, *path.a.length*, *path.b.length*, *intersection*, *jaccard*, *euclidean*." , {'d', "distance"});
@@ -163,6 +164,7 @@ int main_paths(int argc, char** argv) {
                 });
             std::cout << header.str() << std::endl;
         }
+        bool node_length_scale = args::get(scale_by_node_length);
         graph.for_each_path_handle(
             [&](const path_handle_t& p) {
                 std::string full_path_name = graph.get_path_name(p);
@@ -170,14 +172,14 @@ int main_paths(int argc, char** argv) {
                 std::string path_name = (delim ? full_path_name.substr(full_path_name.find(delim)+1) : full_path_name);
                 uint64_t path_length = 0;
                 uint64_t path_step_count = 0;
-                std::vector<bool> row(graph.get_node_count());
+                std::vector<uint64_t> row(graph.get_node_count());
                 graph.for_each_step_in_path(
                     p,
                     [&](const step_handle_t& s) {
                         const handle_t& h = graph.get_handle_of_step(s);
                         path_length += graph.get_length(h);
                         ++path_step_count;
-                        row[graph.get_id(h)-1] = 1;
+                        row[graph.get_id(h)-1]++;
                     });
                 if (delim) {
                     std::cout << group_name << "\t";
@@ -185,8 +187,14 @@ int main_paths(int argc, char** argv) {
                 std::cout << path_name << "\t"
                           << path_length << "\t"
                           << path_step_count;
-                for (uint64_t i = 0; i < row.size(); ++i) {
-                    std::cout << "\t" << row[i];
+                if (node_length_scale) {
+                    for (uint64_t i = 0; i < row.size(); ++i) {
+                        std::cout << "\t" << row[i] * graph.get_length(graph.get_handle(i+1));
+                    }
+                } else {
+                    for (uint64_t i = 0; i < row.size(); ++i) {
+                        std::cout << "\t" << row[i];
+                    }
                 }
                 std::cout << std::endl;
             });

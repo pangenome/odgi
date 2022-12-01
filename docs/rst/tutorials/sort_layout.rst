@@ -4,6 +4,8 @@
 Sort and Layout
 ###############
 
+**Author**: `Simon Heumos <https://github.com/subwaystation>`_
+
 ========
 Synopsis
 ========

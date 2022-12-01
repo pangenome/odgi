@@ -4,6 +4,8 @@
 Exploratory analysis
 ####################
 
+**Author**: `Andrea Guarracino <https://github.com/AndreaGuarracino>`_
+
 ========
 Synopsis
 ========

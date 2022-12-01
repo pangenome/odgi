@@ -50,6 +50,9 @@ Path Investigation Options
   **path.name**, *path.length*, *path.step.count*, *node.1*,
   *node.2*, *node.n*. Each path entry is printed in its own line.
 
+| **-N, --scale-by-node-len**
+| Scale the haplotype matrix cells by node length.
+
 | **-D, --delim**\ =\ *CHAR*
 | The part of each path name before this delimiter is a group
   identifier. This parameter should only be set in combination with
