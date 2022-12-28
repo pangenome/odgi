@@ -27,8 +27,8 @@ std::vector<std::vector<handle_t>> simple_components(
 
     graph.for_each_handle(
         [&](const handle_t& h) {
-            uint64_t h_i = bphf.lookup(as_integer(h));
-            uint64_t h_j = bphf.lookup(as_integer(graph.flip(h)));
+            //uint64_t h_i = bphf.lookup(as_integer(h));
+            //uint64_t h_j = bphf.lookup(as_integer(graph.flip(h)));
             if (graph.get_degree(h, true) == 1) {
                 // go backward
                 graph.follow_edges(
@@ -109,28 +109,31 @@ std::vector<std::vector<handle_t>> simple_components(
             } else {
                 h = *h_itr;
             }
-            handle_components.emplace_back();
-            // walk from our start node through the component
-            auto& sorted_comp = handle_components.back();
-            bool fail = false;
-            do {
-                sorted_comp.push_back(h);
-                graph.follow_edges(h, false, [&](const handle_t& next) {
-                                                 if (comp_set.count(graph.get_id(next))) {
-                                                     h = next;
-                                                 } else {
-                                                     // previous ordering assumptions are violated
-                                                     // this can be caused by self-looping head or tail nodes
-                                                     // in the component
-                                                     fail = true;
-                                                 }
-                                             });
-            } while (sorted_comp.size() < comp.size() && !fail);
-            if (sorted_comp.size() < min_size
-                || sorted_comp.size() < comp.size()) {
-                handle_components.pop_back();
-            } else {
-                assert(sorted_comp.front() != sorted_comp.back());
+            // To avoid pushing the same handle (h in sorted_comp) until you have comp.size() elements
+            if (graph.get_degree(h, false) > 0) {
+                handle_components.emplace_back();
+                // walk from our start node through the component
+                auto& sorted_comp = handle_components.back();
+                bool fail = false;
+                do {
+                    sorted_comp.push_back(h);
+                    graph.follow_edges(h, false, [&](const handle_t& next) {
+                                                    if (comp_set.count(graph.get_id(next))) {
+                                                        h = next;
+                                                    } else {
+                                                        // previous ordering assumptions are violated
+                                                        // this can be caused by self-looping head or tail nodes
+                                                        // in the component
+                                                        fail = true;
+                                                    }
+                                                });
+                } while (sorted_comp.size() < comp.size() && !fail);
+                if (sorted_comp.size() < min_size
+                    || sorted_comp.size() < comp.size()) {
+                    handle_components.pop_back();
+                } else {
+                    assert(sorted_comp.front() != sorted_comp.back());
+                }
             }
         }
     }
