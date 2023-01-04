@@ -611,6 +611,7 @@ int main_stats(int argc, char** argv) {
 			}
 
             // TODO Could we run this in parallel?
+			handle_t last_handle;
             graph.for_each_path_handle([&](const path_handle_t &path) {
 #ifdef debug_odgi_stats
                 std::cerr << "path_name: " << graph.get_path_name(path) << std::endl;
@@ -625,9 +626,11 @@ int main_stats(int argc, char** argv) {
 
                 graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
                     handle_t h = graph.get_handle_of_step(occ);
+					last_handle = h;
 
                     if (graph.has_next_step(occ)){
                         handle_t i = graph.get_handle_of_step(graph.get_next_step(occ));
+						last_handle = i;
 
                         uint64_t unpacked_a = number_bool_packing::unpack_number(h);
                         uint64_t unpacked_b = number_bool_packing::unpack_number(i);
@@ -675,6 +678,10 @@ int main_stats(int argc, char** argv) {
                     len_path_node_space++;
                     len_path_nt_space += graph.get_length(h);
                 });
+
+				// TODO add end of of path
+				sum_path_node_dist_node_space++;
+				sum_path_node_dist_nt_space += graph.get_length(last_handle);
 
 				/// this could land in the YAML, but we don't force it, because we don't need it for the MultiQC module
                 if (args::get(path_statistics)) {
