@@ -435,8 +435,8 @@ int main_stats(int argc, char** argv) {
 			}
 
             // TODO Could we run this in parallel?
-            graph.for_each_path_handle([&](const path_handle_t &path) {
-                std::set<uint64_t> ordered_unpacked_numbers_in_path; // ordered set to retain the positions order
+			graph.for_each_path_handle([&](const path_handle_t &path) {
+				std::set<uint64_t> ordered_unpacked_numbers_in_path; // ordered set to retain the positions order
 
                 uint64_t sum_node_space = 0;
                 uint64_t sum_nt_space = 0;
@@ -774,7 +774,11 @@ int main_stats(int argc, char** argv) {
     }
 
     if (args::get(weighted_feedback_arc)) {
-        std::cout << "path\tweighted_feedback_arc" << std::endl;
+		if (_multiqc || _yaml) {
+			std::cout << "weighted_feedback_arc: ";
+		} else {
+			std::cout << "path\tweighted_feedback_arc" << std::endl;
+		}
 
         uint64_t wfa_all_paths = 0;
 
@@ -791,7 +795,7 @@ int main_stats(int argc, char** argv) {
                     uint64_t unpacked_a = number_bool_packing::unpack_number(h);
                     uint64_t unpacked_b = number_bool_packing::unpack_number(i);
 
-                    // Check if it is a feedback arc (edge joining out-sides with in-sides such that the outside node does not precedes the inside node)
+                    // Check if it is a feedback arc (edge joining out-sides with in-sides such that the outside node does not precede the inside node)
                     if (
                         (!graph.get_is_reverse(h) && !graph.get_is_reverse(i) && unpacked_a >= unpacked_b) ||
                         ( graph.get_is_reverse(h) &&  graph.get_is_reverse(i) && unpacked_a <= unpacked_b)
@@ -809,12 +813,19 @@ int main_stats(int argc, char** argv) {
 #pragma omp critical (wfa_all_paths)
             wfa_all_paths += wfa_current_path;
         }
-
-        std::cout << "all_paths" << "\t" << wfa_all_paths << std::endl;
+		if (_multiqc || _yaml) {
+			std::cout << wfa_all_paths << std::endl;
+		} else {
+			std::cout << "all_paths" << "\t" << wfa_all_paths << std::endl;
+		}
     }
 
     if (args::get(weighted_reversing_join)) {
-        std::cout << "path\tweighted_reversing_join" << std::endl;
+		if (_multiqc || _yaml) {
+			std::cout << "weighted_reversing_join: ";
+		} else {
+			std::cout << "path\tweighted_reversing_join" << std::endl;
+		}
 
         uint64_t wrj_all_paths = 0;
 
@@ -846,8 +857,11 @@ int main_stats(int argc, char** argv) {
 #pragma omp critical (cout)
             wrj_all_paths += wrj_current_path;
         }
-
-        std::cout << "all_paths" << "\t" << wrj_all_paths << std::endl;
+		if (_multiqc || _yaml) {
+			std::cout << wrj_all_paths << std::endl;
+		} else {
+			std::cout << "all_paths" << "\t" << wrj_all_paths << std::endl;
+		}
     }
 
 
