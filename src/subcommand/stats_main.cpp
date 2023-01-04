@@ -679,7 +679,7 @@ int main_stats(int argc, char** argv) {
                     len_path_nt_space += graph.get_length(h);
                 });
 
-				// TODO add end of of path
+				// add end of path so the best metric equals 1
 				sum_path_node_dist_node_space++;
 				sum_path_node_dist_nt_space += graph.get_length(last_handle);
 
