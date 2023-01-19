@@ -890,6 +890,11 @@ int main_stats(int argc, char** argv) {
 		for (auto& path : paths) {
 			uint64_t links_len_curr_path = 0;
 			uint64_t nuc_curr_path = 0;
+			std::set<uint64_t> ordered_unpacked_numbers_in_path; // ordered set to retain the positions order
+
+			graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
+				ordered_unpacked_numbers_in_path.insert(number_bool_packing::unpack_number(graph.get_handle_of_step(occ)));
+			});
 
 			graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
 				handle_t h = graph.get_handle_of_step(occ);
@@ -897,8 +902,10 @@ int main_stats(int argc, char** argv) {
 
 				if (graph.has_next_step(occ)) {
 					handle_t i = graph.get_handle_of_step(graph.get_next_step(occ));
-					uint64_t pos_h = pan_pos[number_bool_packing::unpack_number(h) - shift];
-					uint64_t pos_i = pan_pos[number_bool_packing::unpack_number(i) - shift];
+					uint64_t unpacked_h = number_bool_packing::unpack_number(h);
+					uint64_t unpacked_i = number_bool_packing::unpack_number(i);
+					uint64_t pos_h = pan_pos[unpacked_h - shift];
+					uint64_t pos_i = pan_pos[unpacked_i - shift];
 					uint64_t len_h = graph.get_length(h);
 					uint64_t len_i = graph.get_length(i);
 					uint64_t nid_h = graph.get_id(h);
@@ -912,8 +919,10 @@ int main_stats(int argc, char** argv) {
 					if (!is_rev_h && !is_rev_i) {
 						/// nid_h <= nid_i
 						if (nid_h <= nid_i) {
-							// TODO What if this is a gap link?
-							links_len_curr_path += pos_i - (pos_h + len_h);
+							/// If we have a gap link, we don't count up
+							if (next(ordered_unpacked_numbers_in_path.find(unpacked_h)) != ordered_unpacked_numbers_in_path.find(unpacked_i)) {
+								links_len_curr_path += pos_i - (pos_h + len_h);
+							}
 							/// nid_h > nid_i
 						} else {
 							links_len_curr_path += pos_h - pos_i + len_h;
