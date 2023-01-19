@@ -71,7 +71,8 @@ int main_stats(int argc, char** argv) {
 	args::Flag path_statistics(sorting_goodness_evaluation_opts, "path_statistics", "Display the statistics (mean links length or sum path nodes distances) for each path.", {'p', "path-statistics"});
 	
     args::Flag weighted_feedback_arc(sorting_goodness_evaluation_opts, "weighted_feedback_arc", "Compute the sum of weigths of all feedback arcs, i.e. backward pointing edges the statistics (the weight is the number of times the edge is traversed by paths).", {'w', "weighted-feedback-arc"});
-	args::Flag weighted_reversing_join(sorting_goodness_evaluation_opts, "weighted_reversing_join", "Compute the sum of weigths of all reversing joins, i.e. edges joining two in- or two out-sides (the weight is the number of times the edge is traversed by paths).", {'j', "weighted-reversing-join"});   
+	args::Flag weighted_reversing_join(sorting_goodness_evaluation_opts, "weighted_reversing_join", "Compute the sum of weigths of all reversing joins, i.e. edges joining two in- or two out-sides (the weight is the number of times the edge is traversed by paths).", {'j', "weighted-reversing-join"});
+	args::Flag links_length_per_nuc(sorting_goodness_evaluation_opts, "links_length_per_nuc", "Compute the links length per nucleotide, i.e. sum up the links lengths of all paths and divide this value by the nucleotide lengths of all paths. This metric can be used to compare the linearity of different graphs.", {'q', "links_length_per_nuc"});
 
     args::Group io_format_opts(parser, "[ IO Format Options ]");
     args::Flag _multiqc(io_format_opts, "multiqc", "Setting this option prints all! statistics in YAML format instead of pseudo TSV to stdout. This includes *-S,--summarize*, *-W,--weak-connected-components*, *-L,--self-loops*, *-b,--base-content*, *-l,--mean-links-length*, *-g,--no-gap-links*, *-s,--sum-path-nodes-distances*, *-f,--file-size*, and *-d,--penalize-different-orientation*. *-p,path-statistics* is still optional. Not applicable to *-N,--nondeterministic-edges*. Overwrites all other given OPTIONs! The output is perfectly curated for the ODGI MultiQC module.", {'m', "multiqc"});
@@ -767,7 +768,7 @@ int main_stats(int argc, char** argv) {
     paths.reserve(graph.get_path_count());
 
     // Check if we are going to use the vector with the path handles
-    if (args::get(weighted_feedback_arc) || args::get(weighted_reversing_join)) {
+    if (args::get(weighted_feedback_arc) || args::get(weighted_reversing_join) || args::get(links_length_per_nuc)) {
         graph.for_each_path_handle([&](const path_handle_t path) {
             paths.push_back(path);
         });
@@ -864,6 +865,98 @@ int main_stats(int argc, char** argv) {
 		}
     }
 
+	std::atomic<uint64_t> total_links_length = 0;
+	std::atomic<uint64_t> total_num_nuc = 0;
+
+	if (args::get(links_length_per_nuc)) {
+		if (_multiqc || _yaml) {
+			std::cout << "links_length_per_nuc: ";
+		} else {
+			std::cout << "path\tlinks_length_per_nuc" << std::endl;
+		}
+		// TODO maybe combine this with other position_maps?
+		std::vector<uint64_t> pan_pos(graph.get_node_count());
+		uint64_t pos = 0;
+		graph.for_each_handle([&](const handle_t &h) {
+			pan_pos[number_bool_packing::unpack_number(h) - shift] = pos;
+			uint64_t hl = graph.get_length(h);
+			pos += hl;
+#ifdef debug_odgi_viz
+			std::cerr << "SEGMENT ID: " << graph.get_id(h) << " - " << as_integer(h) << " - index_in_position_map (" << number_bool_packing::unpack_number(h) << ") = " << len << std::endl;
+#endif
+		});
+
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
+		for (auto& path : paths) {
+			uint64_t links_len_curr_path = 0;
+			uint64_t nuc_curr_path = 0;
+
+			graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
+				handle_t h = graph.get_handle_of_step(occ);
+				nuc_curr_path += graph.get_length(h);
+
+				if (graph.has_next_step(occ)) {
+					handle_t i = graph.get_handle_of_step(graph.get_next_step(occ));
+					uint64_t pos_h = pan_pos[number_bool_packing::unpack_number(h) - shift];
+					uint64_t pos_i = pan_pos[number_bool_packing::unpack_number(i) - shift];
+					uint64_t len_h = graph.get_length(h);
+					uint64_t len_i = graph.get_length(i);
+					uint64_t nid_h = graph.get_id(h);
+					uint64_t nid_i = graph.get_id(i);
+					bool is_rev_h = graph.get_is_reverse(h);
+					bool is_rev_i = graph.get_is_reverse(i);
+
+					/// f means forward oriented step, r means reverse oriented step
+
+					/// handle_h: f, handle_i: f
+					if (!is_rev_h && !is_rev_i) {
+						/// nid_h <= nid_i
+						if (nid_h <= nid_i) {
+							// TODO What if this is a gap link?
+							links_len_curr_path += pos_i - (pos_h + len_h);
+							/// nid_h > nid_i
+						} else {
+							links_len_curr_path += pos_h - pos_i + len_h;
+						}
+						/// handle_h: f, handle_i: r
+					} else if (!is_rev_h && is_rev_i) {
+						if (nid_h <= nid_i) {
+							links_len_curr_path += pos_i + len_i - (pos_h + len_h);
+							/// nid_h > nid_i
+						} else {
+							links_len_curr_path += pos_h - pos_i - len_i + len_h;
+						}
+						/// handle_h: r, handle_i: f
+					} else if (is_rev_h && !is_rev_i) {
+						if (nid_h <= nid_i) {
+							links_len_curr_path += pos_i - pos_h;
+							/// nid_h > nid_i
+						} else {
+							links_len_curr_path += pos_h - pos_i + len_h + len_i;
+						}
+						/// handle_h: r, handle_i: r
+					} else {
+						if (nid_h <= nid_i) {
+							links_len_curr_path += pos_i - pos_h + len_h + len_i;
+							/// nid_h > nid_i
+						} else {
+							links_len_curr_path += pos_h - (pos_i + len_i);
+						}
+					}
+				}
+			});
+
+			total_links_length += links_len_curr_path;
+			total_num_nuc += nuc_curr_path;
+		}
+
+		double result_links_length_per_nuc = (double)total_links_length / (double) total_num_nuc;
+		if (_multiqc || _yaml) {
+			std::cout << result_links_length_per_nuc << std::endl;
+		} else {
+			std::cout << "all_paths\t" << result_links_length_per_nuc << std::endl;
+		}
+	}
 
     bool using_delim = !args::get(path_delim).empty();
     char delim = '\0';
