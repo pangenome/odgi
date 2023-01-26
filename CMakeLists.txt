@@ -789,7 +789,7 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/algorithms/distance_to_head.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/is_single_stranded.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/shortest_cycle.hpp
-  ${CMAKE_SOURCE_DIR}/src/algorithms/bed_records.hpp
+  ${CMAKE_SOURCE_DIR}/src/algorithms/tension/tension_bed_records_queued_writer.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/untangle.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/progress.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/tips.hpp

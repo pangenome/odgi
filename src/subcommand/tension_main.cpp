@@ -4,7 +4,7 @@
 #include "args.hxx"
 #include <omp.h>
 #include "algorithms/layout.hpp"
-#include "algorithms/bed_records.hpp"
+#include "algorithms/tension/tension_bed_records_queued_writer.hpp"
 #include <numeric>
 #include "progress.hpp"
 
@@ -24,15 +24,19 @@ int main_tension(int argc, char **argv) {
 
     args::ArgumentParser parser(
         "evaluate the tension of a graph helping to locate structural variants and abnormalities");
-    args::HelpFlag help(parser, "help", "display this help summary", {'h', "help"});
-    args::ValueFlag<std::string> dg_in_file(parser, "FILE", "load the graph from this file", {'i', "idx"});
-    args::ValueFlag<std::string> layout_in_file(parser, "FILE", "read the layout coordinates from this .lay format file produced by odgi sort or odgi layout", {'c', "coords-in"});
-    args::ValueFlag<double> window_size(parser, "N", "window size in bases in which each tension is calculated, DEFAULT: 1kb", {'w', "window-size"});
-    args::ValueFlag<std::string> tsv_out_file(parser, "FILE", "write the TSV layout to this file", {'T', "tsv"});
-    // args::ValueFlag<std::string> bed_out_file(parser, "FILE", "write the BED intervals to this file", {'B', "bed"}); we write to stdout
-    args::Flag node_sized_windows(parser, "node-sized-windows", "instead of manual window sizes, each window has the size of the node of the step we are currently iterating", {'n', "node-sized-windows"});
-    args::Flag progress(parser, "progress", "display progress", {'P', "progress"});
-    args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel phases", {'t', "threads"});
+	args::Group mandatory_opts(parser, "[ MANDATORY ARGUMENTS ]");
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "load the graph from this file", {'i', "idx"});
+	args::ValueFlag<std::string> layout_in_file(mandatory_opts, "FILE", "read the layout coordinates from this .lay format file produced by odgi sort or odgi layout", {'c', "coords-in"});
+	args::Group tension_opts(parser, "[ Tension Options ]");
+	args::ValueFlag<double> window_size(tension_opts, "N", "window size in bases in which each tension is calculated, DEFAULT: 1kb", {'w', "window-size"});
+	args::ValueFlag<std::string> tsv_out_file(tension_opts, "FILE", "write the BED intervals to this file", {'B', "bed"});
+	args::Flag node_sized_windows(tension_opts, "node-sized-windows", "instead of manual window sizes, each window has the size of the node of the step we are currently iterating", {'n', "node-sized-windows"});
+	args::Group threading_opts(parser, "[ Threading ]");
+	args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel phases", {'t', "threads"});
+	args::Group processing_info_opts(parser, "[ Processing Information ]");
+	args::Flag progress(processing_info_opts, "progress", "display progress", {'P', "progress"});
+	args::Group program_info_opts(parser, "[ Program Information ]");
+	args::HelpFlag help(program_info_opts, "help", "display this help summary", {'h', "help"});
 
     try {
         parser.ParseCLI(argc, argv);
