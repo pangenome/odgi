@@ -29,8 +29,9 @@ int main_tension(int argc, char **argv) {
 	args::ValueFlag<std::string> layout_in_file(mandatory_opts, "FILE", "read the layout coordinates from this .lay format file produced by odgi sort or odgi layout", {'c', "coords-in"});
 	args::Group tension_opts(parser, "[ Tension Options ]");
 	args::ValueFlag<double> window_size(tension_opts, "N", "window size in bases in which each tension is calculated, DEFAULT: 1kb", {'w', "window-size"});
-	args::ValueFlag<std::string> tsv_out_file(tension_opts, "FILE", "write the BED intervals to this file", {'B', "bed"});
+	// args::ValueFlag<std::string> tsv_out_file(tension_opts, "FILE", "write the tension intervals to this TSV file", {'t', "tsv"});
 	args::Flag node_sized_windows(tension_opts, "node-sized-windows", "instead of manual window sizes, each window has the size of the node of the step we are currently iterating", {'n', "node-sized-windows"});
+	args::Flag pangenome_mode(tension_opts, "run tension in pangenome mode", "calculate the tension for each node of the pangenome: node tension is the sum of the tension of all steps visiting that node", {'p', "pangenome-mode"});
 	args::Group threading_opts(parser, "[ Threading ]");
 	args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel phases", {'t', "threads"});
 	args::Group processing_info_opts(parser, "[ Processing Information ]");
@@ -97,30 +98,28 @@ int main_tension(int argc, char **argv) {
     if (window_size) {
         window_size_ = args::get(window_size);
     }
-    if (node_sized_windows && window_size) {
+    if ((node_sized_windows && window_size) || (pangenome_mode && window_size) || (pangenome_mode && node_sized_windows)) {
         std::cerr
-                << "[odgi tension] error: Please specify only one of -w=[N], --window-size=[N] or -n, --node-sized-windows"
+                << "[odgi tension] error: Please specify only one of -w=[N], --window-size=[N] or -n, --node-sized-windows or -p, --pangenome-mode."
                 << std::endl;
         return 1;
     }
-    const bool node_sized_windows_ = args::get(node_sized_windows);
 
-    vector<path_handle_t> p_handles;
+    vector<path_handle_t> paths;
     graph.for_each_path_handle([&] (const path_handle_t &p) {
-       p_handles.push_back(p);
+       paths.push_back(p);
     });
 
     std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress_meter;
     if (progress) {
         progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
-                p_handles.size(), "[odgi::tension::main] BED Progress:");
+                paths.size(), "[odgi::tension::main] BED Progress:");
     }
 
     algorithms::bed_records_class bed;
     bed.open_writer();
 #pragma omp parallel for schedule(static, 1) num_threads(thread_count)
-    for (uint64_t idx = 0; idx < p_handles.size(); idx++) {
-        path_handle_t p = p_handles[idx];
+    for (auto p : paths) {
         std::string path_name = graph.get_path_name(p);
         uint64_t cur_window_start = 1;
         uint64_t cur_window_end = 0;
@@ -190,10 +189,9 @@ int main_tension(int argc, char **argv) {
                 uint64_t nuc_dist = graph.get_length(h);
                 path_nuc_dist += nuc_dist;
                 cur_window_end += nuc_dist;
-                // TODO if we stepped over the given window size or if we are in node-sized-windows, we have to finish this one
             }
             // we add a new bed entry for each step
-            if (node_sized_windows_) {
+            if (node_sized_windows) {
                 double path_layout_nuc_dist_ratio = (double) path_layout_dist / (double) path_nuc_dist;
                 bed.append(path_name,
                            (cur_window_start - 1),
@@ -222,7 +220,7 @@ int main_tension(int argc, char **argv) {
         });
         /// we have to add the last window
         // we add a new bed entry for each step
-        if (!node_sized_windows_) {
+        if (!node_sized_windows) {
             double path_layout_nuc_dist_ratio = (double) path_layout_dist / (double) path_nuc_dist;
             bed.append(path_name,
                        (cur_window_start - 1),
@@ -239,7 +237,7 @@ int main_tension(int argc, char **argv) {
     if (progress) {
         progress_meter->finish();
     }
-
+/* FIXME
     if (tsv_out_file) {
         auto& outfile = args::get(tsv_out_file);
         if (outfile.size()) {
@@ -252,6 +250,7 @@ int main_tension(int argc, char **argv) {
             }
         }
     }
+    */
 
     return 0;
 }
