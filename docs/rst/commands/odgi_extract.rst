@@ -54,10 +54,10 @@ Extract Options
 
 | **-c, --context-steps**\ =\ *N*
 | The number of steps (nodes) *N* away from our initial subgraph that we should
-  collect.
+  collect [default: 0 (disabled)].
 
 | **-L, --context-bases**
-| The number of bases *N* away from our initial subgraph that we should collect.
+| The number of bases *N* away from our initial subgraph that we should collect [default: 0 (disabled)].
 
 | **-r, --path-range**
 | Find the node(s) in the specified path range TARGET=path[:pos1[-pos2]]
@@ -75,12 +75,24 @@ Extract Options
   very complex graphs.
 
 | **-p, --paths-to-extract**\ =\ *FILE*
-| List of paths to consider in the extraction. The *FILE* must contain one
+| List of paths to keep in the extracted graph. The *FILE* must contain one
   path name per line and a subset of all paths can be specified.
+ Paths specified in the input path ranges (with ``-r/--path-range`` and/or ``-b/--bed-file``)
+ will be kept in any case.
 
 | **-R, --lace-paths**\ =\ *FILE*
 | List of paths to fully retain in the extracted graph. Must contain one
   path name per line and a subset of all paths can be specified.
+
+| **-d, --max-distance-subpaths**\ =\ *N*
+| Maximum distance between subpaths allowed for merging them.
+  It reduces the fragmentation of unspecified paths in the input path ranges.
+  Set 0 to disable it.
+
+| **-e, --max-merging-iterations**\ =\ *N*
+| Maximum number of iterations in attempting to merge close subpaths. 
+  It stops early if during an iteration no subpaths were merged [default: 3].
+
 
 Threading
 ---------

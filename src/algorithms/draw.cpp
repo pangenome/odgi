@@ -164,7 +164,8 @@ std::vector<uint8_t> rasterize(const std::vector<double> &X,
                                uint64_t& height,
                                const double& line_width,
                                const double& path_line_spacing,
-                               bool color_paths) {
+                               bool color_paths,
+                               std::vector<algorithms::color_t>& node_id_to_color) {
 
     std::vector<std::vector<handle_t>> weak_components;
     coord_range_2d_t rendered_range;
@@ -188,7 +189,8 @@ std::vector<uint8_t> rasterize(const std::vector<double> &X,
 
     // determine height and width based on the width, if width = 0
     if (width == 0) {
-        width = std::ceil(height * (source_width / source_height));
+        // Avoid too big images that would require too much memory
+        width = std::min(100000.0, std::ceil(height * (source_width / source_height)));
     }
     //std::cerr << "source " << source_width << "×" << source_height << std::endl;
     //std::cerr << "raster " << width << "×" << height << std::endl;
@@ -241,7 +243,9 @@ std::vector<uint8_t> rasterize(const std::vector<double> &X,
                        image,
                        line_width);
                 */
-                wu_calc_wide_line(xy0, xy1, COLOR_BLACK, image, line_width);
+                const algorithms::color_t node_color = !node_id_to_color.empty() ? node_id_to_color[graph.get_id(handle)] : COLOR_BLACK;
+
+                wu_calc_wide_line(xy0, xy1, node_color, image, line_width);
             }
         }
     }
@@ -261,7 +265,8 @@ void draw_png(const std::string& filename,
               uint64_t height,
               const double& line_width,
               const double& path_line_spacing,
-              bool color_paths) {
+              bool color_paths,
+              std::vector<algorithms::color_t>& node_id_to_color) {
     auto bytes = rasterize(X, Y,
                            graph,
                            scale,
@@ -270,7 +275,8 @@ void draw_png(const std::string& filename,
                            height,
                            line_width,
                            path_line_spacing,
-                           color_paths);
+                           color_paths,
+                           node_id_to_color);
     png::encodeOneStep(filename.c_str(), bytes, width, height);
 }
 

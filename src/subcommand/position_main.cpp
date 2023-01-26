@@ -85,12 +85,14 @@ int main_position(int argc, char** argv) {
 
     odgi::graph_t target_graph;
     assert(argc > 0);
-    std::string infile = args::get(og_target_file);
-    if (infile.size()) {
-        if (infile == "-") {
-            target_graph.deserialize(std::cin);
-        } else {
-			utils::handle_gfa_odgi_input(infile, "position", args::get(progress), num_threads, target_graph);
+    {
+        const std::string infile = args::get(og_target_file);
+        if (!infile.empty()) {
+            if (infile == "-") {
+                target_graph.deserialize(std::cin);
+            } else {
+                utils::handle_gfa_odgi_input(infile, "position", args::get(progress), num_threads, target_graph);
+            }
         }
     }
 

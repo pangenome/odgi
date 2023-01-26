@@ -33,7 +33,7 @@ Summary Options
 
 | **-S, --summarize**
 | Summarize the graph properties and dimensions. Print to stdout the
-  #nucleotides, #nodes, #edges and #paths in a tab-delimited format.
+  #nucleotides, #nodes, #edges, #paths, and #steps in a tab-delimited format.
 
 | **-W, --weak-connected-components**
 | Shows the properties of the weakly connected components.
@@ -86,6 +86,15 @@ Sorting Goodness Eval Options
 
 | **-p, --path-statistics**
 | Display the statistics (mean links length or sum path nodes distances) for each path.
+
+| **-w, --weighted-feedback-arc**
+| Compute the sum of weights of all feedback arcs, i.e. backward pointing edges the statistics (the weight is the number of times the edge is traversed by paths).
+
+| **-j, --weighted-reversing-join**
+| Compute the sum of weights of all reversing joins, i.e. edges joining two in- or two out-sides (the weight is the number of times the edge is traversed by paths).
+
+| **-q, --links_length_per_nuc**
+| Compute the links length per nucleotide, i.e. sum up the links lengths of all paths and divide this value by the nucleotide lengths of all paths. This metric can be used to compare the linearity of different graphs. By default we don't count gap links.
 
 IO Format Options
 -----------------

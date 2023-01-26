@@ -52,17 +52,17 @@ namespace odgi {
             return out_name;
         }
 
+        path_handle_t create_subpath(graph_t &subgraph, const string &subpath_name, const bool is_circular) {
+            if (subgraph.has_path(subpath_name)) {
+                subgraph.destroy_path(subgraph.get_path_handle(subpath_name));
+            }
+            return subgraph.create_path_handle(subpath_name, is_circular);
+        };
+
         void add_subpaths_to_subgraph(const graph_t &source, const std::vector<path_handle_t> source_paths,
                                       graph_t &subgraph, const uint64_t num_threads,
                                       const std::string &progress_message) {
             const bool show_progress = !progress_message.empty();
-
-            auto create_subpath = [](graph_t &subgraph, const string &subpath_name, const bool is_circular) {
-                if (subgraph.has_path(subpath_name)) {
-                    subgraph.destroy_path(subgraph.get_path_handle(subpath_name));
-                }
-                path_handle_t path = subgraph.create_path_handle(subpath_name, is_circular);
-            };
 
             std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress;
             if (show_progress) {
@@ -334,10 +334,7 @@ namespace odgi {
             for (nid_t id = id1; id <= id2; ++id) {
                 if (!subgraph.has_node(id)) {
                     const handle_t cur_handle = source.get_handle(id);
-                    subgraph.create_handle(
-                            source.get_sequence(
-                                    source.get_is_reverse(cur_handle) ? source.flip(cur_handle) : cur_handle),
-                            id);
+                    subgraph.create_handle(source.get_sequence(cur_handle), id);
                 }
 
                 if (show_progress) {
@@ -462,17 +459,20 @@ namespace odgi {
 
         bool check_and_get_windows_in_out_parameter(
                 const std::string& parameter,
-                uint64_t &windows_len, uint64_t &windows_min, uint64_t &windows_max) {
+                uint64_t &windows_len, uint64_t &windows_min, uint64_t &windows_max, bool &only_tips) {
             const std::regex regex(":");
             const std::vector<std::string> splitted(
                     std::sregex_token_iterator(parameter.begin(), parameter.end(), regex, -1),
                     std::sregex_token_iterator()
             );
 
-            if (splitted.size() != 3) {
+            if (splitted.size() != 4) {
                 return false;
             }
-            if (!utils::is_number(splitted[0]) || !utils::is_number(splitted[1]) || !utils::is_number(splitted[2])) {
+            if (!utils::is_number(splitted[0])
+                || !utils::is_number(splitted[1])
+                || !utils::is_number(splitted[2])
+                || !utils::is_number(splitted[3])) {
                 return false;
             }
             if (stoull(splitted[1]) > stoull(splitted[2])) {
@@ -482,7 +482,7 @@ namespace odgi {
             windows_len = stoull(splitted[0]);
             windows_min = stoull(splitted[1]);
             windows_max = stoull(splitted[2]);
-
+            only_tips = (stoull(splitted[3]) == 1);
             return true;
         }
     }

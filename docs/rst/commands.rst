@@ -32,6 +32,7 @@ Commands
     commands/odgi_pav
     commands/odgi_paths
     commands/odgi_position
+    commands/odgi_priv
     commands/odgi_prune
     commands/odgi_procbed
     commands/odgi_server

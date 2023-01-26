@@ -181,6 +181,7 @@ namespace odgi {
                             // we'll sample from all path steps
                             std::uniform_int_distribution<uint64_t> dis_step = std::uniform_int_distribution<uint64_t>(0, np_bv.size() - 1);
                             std::uniform_int_distribution<uint64_t> flip(0, 1);
+                            uint64_t term_updates_local = 0;
                             while (work_todo.load()) {
                                 if (!snapshot_in_progress.load()) {
                                     // sample the first node from all the nodes in the graph
@@ -191,6 +192,12 @@ namespace odgi {
 #endif
                                     uint64_t path_i = npi_iv[step_index];
                                     path_handle_t path = as_path_handle(path_i);
+
+                                    size_t path_step_count = path_index.get_path_step_count(path);
+                                    if (path_step_count == 1){
+                                        continue;
+                                    }
+
 #ifdef debug_sample_from_nodes
                                     std::cerr << "path integer: " << path_i << std::endl;
 #endif
@@ -201,10 +208,6 @@ namespace odgi {
 #ifdef debug_sample_from_nodes
                                     std::cerr << "step rank in path: " << nr_iv[step_index]  << std::endl;
 #endif
-                                    size_t path_step_count = path_index.get_path_step_count(path);
-                                    if (path_step_count == 1){
-                                        continue;
-                                    }
 
                                     if (cooling.load() || flip(gen)) {
                                         if (s_rank > 0 && flip(gen) || s_rank == path_step_count-1) {
@@ -236,7 +239,6 @@ namespace odgi {
                                         }
                                     } else {
                                         // sample randomly across the path
-                                        graph.get_step_count(path);
                                         std::uniform_int_distribution<uint64_t> rando(0, graph.get_step_count(path)-1);
                                         as_integers(step_b)[0] = as_integer(path);
                                         as_integers(step_b)[1] = rando(gen);
@@ -369,9 +371,13 @@ namespace odgi {
 #ifdef debug_path_sgd
                                     std::cerr << "after X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
 #endif
-                                    term_updates++; // atomic
-                                    if (progress) {
-                                        progress_meter->increment(1);
+                                    term_updates_local++;
+                                    if (term_updates_local >= 1000) {
+                                        term_updates += term_updates_local;
+                                        if (progress) {
+                                            progress_meter->increment(term_updates_local);
+                                        }
+                                        term_updates_local = 0;
                                     }
                                 }
                             }
@@ -428,13 +434,6 @@ namespace odgi {
 
             if (progress) {
                 progress_meter->finish();
-            }
-
-            // drop out of atomic stuff... maybe not the best way to do this
-            std::vector<double> X_final(X.size());
-            uint64_t i = 0;
-            for (auto &x : X) {
-                X_final[i++] = x.load();
             }
         }
 
@@ -836,13 +835,6 @@ namespace odgi {
                     }
                 }
                 term_updates.store(0);
-            }
-
-            // drop out of atomic stuff... maybe not the best way to do this
-            std::vector<double> X_final(X.size());
-            uint64_t i = 0;
-            for (auto &x : X) {
-                X_final[i++] = x.load();
             }
         }*/
     }

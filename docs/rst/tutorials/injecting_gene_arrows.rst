@@ -4,6 +4,8 @@
 Injecting gene arrows
 ######################
 
+**Author**: `Erik Garrison <https://github.com/ekg>`_
+
 ========
 Synopsis
 ========

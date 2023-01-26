@@ -5,6 +5,7 @@
 #include "split.hpp"
 #include "algorithms/bfs.hpp"
 #include "algorithms/depth.hpp"
+#include "algorithms/path_length.hpp"
 #include <omp.h>
 
 #include "src/algorithms/subgraph/extract.hpp"
@@ -69,14 +70,17 @@ namespace odgi {
                                    "Provide a summary of the depth distribution in the graph, in a tab-delimited format it prints to stdout: node.count, graph.length, step.count, path.length, mean.node.depth (step.count/node.count), and mean.graph.depth (path.length/graph.length).",
                                    {'S', "summarize"});
 
-        args::ValueFlag<std::string> _windows_in(depth_opts, "LEN:MIN:MAX",
+        args::ValueFlag<std::string> _windows_in(depth_opts, "LEN:MIN:MAX:TIPS",
                                                 "Print to stdout a BED file of path intervals where the depth is between MIN and MAX, "
-                                                "merging regions not separated by more than LEN bp.",
+                                                "merging regions not separated by more than LEN bp."
+                                                " When TIPS=1, retain only tips.",
                                                 {'w', "windows-in"});
-        args::ValueFlag<std::string> _windows_out(depth_opts, "LEN:MIN:MAX",
+        args::ValueFlag<std::string> _windows_out(depth_opts, "LEN:MIN:MAX:TIPS",
                                                  "Print to stdout a BED file of path intervals where the depth is outside of MIN and MAX, "
-                                                 "merging regions not separated by more than LEN bp.",
+                                                 "merging regions not separated by more than LEN bp."
+                                                 " When TIPS=1, retain only tips.",
                                                  {'W', "windows-out"});
+
         args::Group threading_opts(parser, "[ Threading ] ");
         args::ValueFlag<uint64_t> _num_threads(threading_opts, "N", "Number of threads to use in parallel operations.", {'t', "threads"});
 		args::Group processing_info_opts(parser, "[ Processing Information ]");
@@ -109,20 +113,24 @@ namespace odgi {
         }
 
         uint64_t windows_in_len = 0, windows_in_min = 0, windows_in_max = 0;
+        bool windows_in_only_tips = false;
         if (_windows_in) {
-            if (!algorithms::check_and_get_windows_in_out_parameter(args::get(_windows_in), windows_in_len, windows_in_min, windows_in_max)) {
-                std::cerr << "[odgi::depth] error: please specify a valid string (LEN:MIN:MAX) for the -w/--windows-in option." << std::endl;
+            if (!algorithms::check_and_get_windows_in_out_parameter(args::get(_windows_in), windows_in_len, windows_in_min, windows_in_max, windows_in_only_tips)) {
+                std::cerr << "[odgi::depth] error: please specify a valid string (LEN:MIN:MAX:TIPS) for the -w/--windows-in option." << std::endl;
                 return 1;
             }
         }
 
         uint64_t windows_out_len = 0, windows_out_min = 0, windows_out_max = 0;
+        bool windows_out_only_tips = false;
         if (_windows_out) {
-            if (!algorithms::check_and_get_windows_in_out_parameter(args::get(_windows_out), windows_out_len, windows_out_min, windows_out_max)) {
-                std::cerr << "[odgi::depth] error: please specify a valid string (LEN:MIN:MAX) for the -W/--windows-out option." << std::endl;
+            if (!algorithms::check_and_get_windows_in_out_parameter(args::get(_windows_out), windows_out_len, windows_out_min, windows_out_max, windows_out_only_tips)) {
+                std::cerr << "[odgi::depth] error: please specify a valid string (LEN:MIN:MAX:TIPS) for the -W/--windows-out option." << std::endl;
                 return 1;
             }
         }
+
+        bool windows_only_tips = windows_in_only_tips || windows_out_only_tips;
 
 		const uint64_t num_threads = args::get(_num_threads) ? args::get(_num_threads) : 1;
 
@@ -438,15 +446,21 @@ namespace odgi {
                     return _windows_in ? (depth >= windows_in_min && depth <= windows_in_max) : (depth < windows_out_min || depth > windows_out_max);
                 };
 
+            auto path_length = algorithms::get_path_length(graph);
+
             std::cout << "#path\tstart\tend" << std::endl;
 
             algorithms::windows_in_out(graph, paths, in_bounds, _windows_in ? windows_in_len : windows_out_len,
                            [&](const std::vector<path_range_t>& path_ranges) {
 #pragma omp critical (cout)
                                for (auto path_range : path_ranges) {
-                                   std::cout << graph.get_path_name(path_range.begin.path) << "\t"
-                                             << path_range.begin.offset << "\t"
-                                             << path_range.end.offset << std::endl;
+                                   if (!windows_only_tips
+                                       || path_range.begin.offset == 0
+                                       || path_range.end.offset == path_length[path_range.begin.path]) {
+                                       std::cout << graph.get_path_name(path_range.begin.path) << "\t"
+                                                 << path_range.begin.offset << "\t"
+                                                 << path_range.end.offset << std::endl;
+                                   }
                                }
                            }, num_threads);
         }

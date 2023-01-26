@@ -14,8 +14,7 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-The odgi flip command converts BED records against graph paths into new paths labeled by the BED record name.
-Flip allows us to import genome annotations as paths, and is useful to produce input to odgi untangle.
+The odgi flip command flips paths around if they tend to be in the reverse complement orientation relative to the graph.
 
 OPTIONS
 =======
@@ -27,7 +26,7 @@ MANDATORY OPTIONS
 | Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!
 
 | **-o, --out**\ =\ *FILE*
-| Write the graph with fliped paths to *.og*.
+| Write the graph with flipped paths to *.og*.
 
 Threading
 ---------

@@ -51,6 +51,7 @@ int main_prune(int argc, char** argv) {
                                                   "contain one path name per line and a subset of all paths can be specified.",
                                                   {'r', "drop-paths"});
     args::Flag drop_all_paths(path_opts, "bool", "Remove all paths from the graph.", {'D', "drop-all-paths"});
+    args::Flag drop_empty_paths(path_opts, "bool", "Remove empty paths from the graph.", {'y', "drop-empty-paths"});
     args::ValueFlag<uint64_t> cut_tips_min_depth(path_opts, "N", "Remove nodes which are graph tips and have less than *N* path depth.", {'m', "cut-tips-min-depth"});
     args::Flag remove_isolated(path_opts, "bool", "Remove isolated nodes covered by a single path.", {'I', "remove-isolated"});
     args::Group threading_opts(parser, "[ Threading ]");
@@ -182,6 +183,19 @@ int main_prune(int argc, char** argv) {
     }
     if (args::get(drop_all_paths)) {
         graph.clear_paths();
+    }
+    if (args::get(drop_empty_paths)) {
+        std::vector<path_handle_t> empty_paths;
+        empty_paths.reserve(graph.get_path_count());
+        graph.for_each_path_handle([&](const path_handle_t& path) {
+            if (graph.is_empty(path)) {
+                empty_paths.push_back(path);
+            }
+        });
+
+        for (auto path: empty_paths) {
+            graph.destroy_path(path);
+        }
     } else if (!args::get(drop_paths).empty()){
         std::vector<path_handle_t> paths_to_remove;
 

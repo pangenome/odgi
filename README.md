@@ -131,9 +131,41 @@ Wherever possible, destructive operations on the graph maintain path validity.
 Each time `odgi` is build, the current version is inferred via `git describe --always --tags`. Assuming, [version.cpp](./src/version.cpp)
 is up to date, `odgi version` will not only print out the current tagged version, but its release codename, too.
 
-## prepare release
-This section is important for developers only. Each time we make a new release, we invoke [prepare_release.sh](./scripts/prepare_release.sh) (`cd` into folder [scripts](./scripts) first!)
-with a new release version and codename. [version.cpp](./src/version.cpp) is updated and the documentation version is bumped up.
+## new release (developers only)
+
+- Create a new release [on GitHub](https://github.com/pangenome/odgi/releases/new)
+  - `Choose a tag`: v0.X.Y
+  - Fill the `Release title`: ODGI v0.X.Y - Miao
+  - Fill the `Describe this release` section
+  - Tick `This is a pre-release`
+  - Click `Publish release`
+- Produce a buildable source tarball, containing code for `odgi` and all submodules, and upload it to the release.
+    - Execute the following instructions:
+    ```shell
+    mkdir source-tarball
+    cd source-tarball
+    git clone --recursive https://github.com/pangenome/odgi
+    cd odgi
+    git fetch --tags origin
+    LATEST_TAG="$(git describe --tags `git rev-list --tags --max-count=1`)"
+    git checkout "${LATEST_TAG}"
+    git submodule update --init --recursive
+    mkdir include
+    bash scripts/generate_git_version.sh include
+    sed 's/execute_process(COMMAND bash/#execute_process(COMMAND bash/g' CMakeLists.txt -i
+    rm -Rf .git
+    find deps -name ".git" -exec rm -Rf "{}" \;
+    cd ..
+    mv odgi "odgi-${LATEST_TAG}"
+    tar -czf "odgi-${LATEST_TAG}.tar.gz" "odgi-${LATEST_TAG}"
+    rm -Rf "odgi-${LATEST_TAG}"
+    ```
+  - Open the (pre-)release created earlier
+  - Upload the `odgi-v0.X.Y.tar.gz` file
+  - Remove the tick on `This is a pre-release`
+  - Click `Publish release` (this will trigger the update [on bioconda](http://bioconda.github.io/recipes/odgi/README.html))
+
+[//]: # (This section is important for developers only. Each time we make a new release, we invoke [prepare_release.sh]&#40;./scripts/prepare_release.sh&#41; &#40;`cd` into folder [scripts]&#40;./scripts&#41; first!&#41; with a new release version and codename. [version.cpp]&#40;./src/version.cpp&#41; is updated and the documentation version is bumped up.)
 
 ## presentations
 
