@@ -245,7 +245,98 @@ int main_tension(int argc, char **argv) {
 		// tension = (lay/nuc);
 		// if (tension < 1) { tension = 1/tension };
 	} else {
+		std::vector<double> node_tensions(graph.get_node_count() + 1, 0.0);
+		std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress_meter;
+		if (progress) {
+			progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+					paths.size(), "[odgi::tension::main] Pangenome Mode Progress:");
+		}
 		std::cout << "TEST PANGENOME MODE" << std::endl;
+#pragma omp parallel for schedule(static, 1) num_threads(thread_count) shared(node_tensions)
+		for (auto p: paths) {
+			double path_layout_dist = 0;
+			uint64_t path_nuc_dist = 0;
+			graph.for_each_step_in_path(p, [&](const step_handle_t &s) {
+				handle_t h = graph.get_handle_of_step(s);
+				algorithms::xy_d_t h_coords_start;
+				algorithms::xy_d_t h_coords_end;
+				if (graph.get_is_reverse(h)) {
+					h_coords_start = layout.coords(graph.flip(h));
+					h_coords_end = layout.coords(h);
+				} else {
+					h_coords_start = layout.coords(h);
+					h_coords_end = layout.coords(graph.flip(h));
+				}
+				// TODO refactor into function start
+				// did we hit the first step?
+				if (graph.has_previous_step(s)) {
+					step_handle_t prev_s = graph.get_previous_step(s);
+					handle_t prev_h = graph.get_handle_of_step(prev_s);
+					algorithms::xy_d_t prev_h_coords_start;
+					algorithms::xy_d_t prev_h_coords_end;
+					if (graph.get_is_reverse(prev_h)) {
+						prev_h_coords_start = layout.coords(graph.flip(prev_h));
+						prev_h_coords_end = layout.coords(prev_h);
+					} else {
+						prev_h_coords_start = layout.coords(prev_h);
+						prev_h_coords_end = layout.coords(graph.flip(prev_h));
+					}
+					double within_node_dist = 0;
+					double from_node_to_node_dist = 0;
+					if (!graph.get_is_reverse(prev_h)) {
+						/// f + f
+						if (!graph.get_is_reverse(h)) {
+							within_node_dist = algorithms::layout::coord_dist(h_coords_start, h_coords_end);
+							from_node_to_node_dist = algorithms::layout::coord_dist(prev_h_coords_end, h_coords_start);
+						} else {
+							/// f + r
+							within_node_dist = algorithms::layout::coord_dist(h_coords_start, h_coords_end);
+							from_node_to_node_dist = algorithms::layout::coord_dist(prev_h_coords_end, h_coords_end);
+						}
+					} else {
+						/// r + r
+						if (graph.get_is_reverse(h)) {
+							within_node_dist = algorithms::layout::coord_dist(h_coords_end, h_coords_start);
+							from_node_to_node_dist = algorithms::layout::coord_dist(prev_h_coords_start, h_coords_end);
+						} else {
+							/// r + f
+							within_node_dist = algorithms::layout::coord_dist(h_coords_end, h_coords_start);
+							from_node_to_node_dist = algorithms::layout::coord_dist(prev_h_coords_start,
+																					h_coords_start);
+						}
+					}
+					path_layout_dist += within_node_dist;
+					path_layout_dist += from_node_to_node_dist;
+					uint64_t nuc_dist = graph.get_length(h);
+					path_nuc_dist += nuc_dist;
+					// cur_window_end += nuc_dist;
+				} else {
+					// we only take a look at the current node
+					/// f
+					if (!graph.get_is_reverse(h)) {
+						path_layout_dist += algorithms::layout::coord_dist(h_coords_start, h_coords_end);
+					} else {
+						/// r
+						path_layout_dist += algorithms::layout::coord_dist(h_coords_end, h_coords_start);
+					}
+					uint64_t nuc_dist = graph.get_length(h);
+					path_nuc_dist += nuc_dist;
+					// cur_window_end += nuc_dist;
+				} // TODO refactor into function end
+				double tension = (double)path_layout_dist / (double)path_nuc_dist;
+				if (tension < 1.0) {
+					tension = 1 / tension;
+				}
+
+				node_tensions[graph.get_id(h)] = node_tensions[graph.get_id(h)] + tension;
+			});
+			if (progress) {
+				progress_meter->increment(1);
+			}
+		}
+		if (progress) {
+			progress_meter->finish();
+		}
 	}
 
     return 0;
