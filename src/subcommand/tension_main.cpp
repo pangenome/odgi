@@ -31,7 +31,7 @@ int main_tension(int argc, char **argv) {
 	args::ValueFlag<double> window_size(tension_opts, "N", "window size in bases in which each tension is calculated, DEFAULT: 1kb", {'w', "window-size"});
 	// args::ValueFlag<std::string> tsv_out_file(tension_opts, "FILE", "write the tension intervals to this TSV file", {'t', "tsv"});
 	args::Flag node_sized_windows(tension_opts, "node-sized-windows", "instead of manual window sizes, each window has the size of the node of the step we are currently iterating", {'n', "node-sized-windows"});
-	args::Flag pangenome_mode(tension_opts, "run tension in pangenome mode", "calculate the tension for each node of the pangenome: node tension is the sum of the tension of all steps visiting that node. Results are written in TSV format to stdout. 1st col: node identifier. 2nd col: tension=(path_layout_dist/path_nuc_dist). 3rd col: 2nd_col/#steps_on_node.", {'p', "pangenome-mode"});
+	args::Flag pangenome_mode(tension_opts, "run tension in pangenome mode", "calculate the tension for each node of the pangenome: node tension is the sum of the tension of all steps visiting that node. Results are written in TSV format to stdout. 1st col: node identifier. 2nd col: tension=(path_layout_dist/path_nuc_dist). 3rd col: 2nd_col/#steps_on_node. (DEFAULT: ENABLED)", {'p', "pangenome-mode"});
 	args::Group threading_opts(parser, "[ Threading ]");
 	args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel phases", {'t', "threads"});
 	args::Group processing_info_opts(parser, "[ Processing Information ]");
