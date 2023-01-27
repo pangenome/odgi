@@ -31,7 +31,7 @@ int main_tension(int argc, char **argv) {
 	args::ValueFlag<double> window_size(tension_opts, "N", "window size in bases in which each tension is calculated, DEFAULT: 1kb", {'w', "window-size"});
 	// args::ValueFlag<std::string> tsv_out_file(tension_opts, "FILE", "write the tension intervals to this TSV file", {'t', "tsv"});
 	args::Flag node_sized_windows(tension_opts, "node-sized-windows", "instead of manual window sizes, each window has the size of the node of the step we are currently iterating", {'n', "node-sized-windows"});
-	args::Flag pangenome_mode(tension_opts, "run tension in pangenome mode", "calculate the tension for each node of the pangenome: node tension is the sum of the tension of all steps visiting that node", {'p', "pangenome-mode"});
+	args::Flag pangenome_mode(tension_opts, "run tension in pangenome mode", "calculate the tension for each node of the pangenome: node tension is the sum of the tension of all steps visiting that node. Results are written in TSV format to stdout. 1st col: node identifier. 2nd col: tension=(path_layout_dist/path_nuc_dist). 3rd col: 2nd_col/#steps_on_node.", {'p', "pangenome-mode"});
 	args::Group threading_opts(parser, "[ Threading ]");
 	args::ValueFlag<uint64_t> nthreads(parser, "N", "number of threads to use for parallel phases", {'t', "threads"});
 	args::Group processing_info_opts(parser, "[ Processing Information ]");
@@ -251,7 +251,7 @@ int main_tension(int argc, char **argv) {
 			progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
 					paths.size(), "[odgi::tension::main] Pangenome Mode Progress:");
 		}
-		std::cout << "TEST PANGENOME MODE" << std::endl;
+		// std::cout << "TEST\tPANGENOME\tMODE" << std::endl;
 #pragma omp parallel for schedule(static, 1) num_threads(thread_count) shared(node_tensions)
 		for (auto p: paths) {
 			double path_layout_dist = 0;
@@ -337,6 +337,13 @@ int main_tension(int argc, char **argv) {
 		if (progress) {
 			progress_meter->finish();
 		}
+		graph.for_each_handle([&](const handle_t &h) {
+			uint64_t n_id = graph.get_id(h);
+			double handle_tension = node_tensions[n_id];
+			uint64_t step_count_h = graph.get_step_count(h);
+			double handle_tension_norm = handle_tension / (double)step_count_h;
+			std::cout << n_id << "\t" << handle_tension << "\t" << handle_tension_norm << std::endl;
+		});
 	}
 
     return 0;
