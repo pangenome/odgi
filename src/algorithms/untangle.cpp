@@ -258,7 +258,18 @@ segment_map_t::segment_map_t(
     const step_index_t& step_index,
     const std::function<bool(const handle_t&)>& is_cut,
     const uint64_t& merge_dist,
-    const size_t& num_threads) {
+    const size_t& num_threads,
+    const bool& show_progress) {
+
+    std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress;
+
+    if (show_progress) {
+        std::cerr << "[odgi::algorithms::untangle] building target segment index" << std::endl;
+
+        progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+                paths.size(), "[odgi::algorithms::untangle] untangle and merge cuts");
+    }
+
     std::vector<std::pair<uint64_t, int64_t>> node_to_segment;
     std::vector<std::vector<step_handle_t>> all_cuts(paths.size());
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
@@ -277,11 +288,22 @@ segment_map_t::segment_map_t(
                 merge_dist,
                 step_index,
 				graph);
+
+        if (show_progress) {
+            progress->increment(1);
+        }
+    }
+    if (show_progress) {
+        progress->finish();
     }
     // the index construction must be serial
 
     // Put fake stuff in the 1-st position to avoid having segments with id 0
     // becahse we can't discriminate +0 and -0 for the strandness
+    if (show_progress) {
+        progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+                paths.size(), "[odgi::algorithms::untangle] prepare segment cuts");
+    }
     segment_cut.push_back(graph.path_begin(paths[0]));
     segment_length.push_back(0);
 
@@ -313,13 +335,28 @@ segment_map_t::segment_map_t(
             uint64_t node_length = graph.get_length(h);
             *curr_length += node_length;
         }
+
+        if (show_progress) {
+            progress->increment(1);
+        }
+    }
+
+    if (show_progress) {
+        progress->finish();
     }
     //std::cerr << "segment_cut.size() " << segment_cut.size() << std::endl;
     //std::cerr << "segment_length.size() " << segment_length.size() << std::endl;
+
     ips4o::parallel::sort(node_to_segment.begin(),
                           node_to_segment.end(),
                           std::less<>(),
                           num_threads);
+
+    if (show_progress) {
+        progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+                node_to_segment.size(), "[odgi::algorithms::untangle] make the mapping");
+    }
+
     // make the mapping
     uint64_t prev_node = 0;
     for (auto& node_segment : node_to_segment) {
@@ -332,7 +369,15 @@ segment_map_t::segment_map_t(
         }
         segments.push_back(node_segment.second);
         prev_node = node_id;
+
+        if (show_progress) {
+            progress->increment(1);
+        }
     }
+    if (show_progress) {
+        progress->finish();
+    }
+
     auto max_id = graph.get_node_count();
     while (prev_node < max_id) {
         node_idx.push_back(segments.size());
@@ -661,11 +706,13 @@ void untangle(
     const std::string& cut_points_input,
     const std::string& cut_points_output,
     const size_t& num_threads,
-    const bool& progress,
+    const bool& show_progress,
 	const step_index_t& step_index,
 	const std::vector<path_handle_t>& paths) {
 
-    if (progress) {
+    std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress;
+
+    if (show_progress) {
         std::cerr << "[odgi::algorithms::untangle] untangling " << queries.size() << " queries with " << targets.size() << " targets" << std::endl;
     }
 
@@ -676,8 +723,13 @@ void untangle(
     atomicbitvector::atomic_bv_t cut_nodes(graph.get_node_count()+1);
 
     if (cut_points_input.empty()) {
-        if (progress) {
+        if (show_progress) {
             std::cerr << "[odgi::algorithms::untangle] establishing initial cuts for " << paths.size() << " paths" << std::endl;
+        }
+
+        if (show_progress) {
+            progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+                    targets.size(), "[odgi::algorithms::untangle] set target nodes");
         }
 
         // which nodes are traversed by our target paths?
@@ -685,9 +737,21 @@ void untangle(
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
         for (auto& target : targets) {
             graph.for_each_step_in_path(
-                    target, [&](const step_handle_t& step) {
-                        target_nodes.set(graph.get_id(graph.get_handle_of_step(step)), true);
-                    });
+                target, [&](const step_handle_t& step) {
+                    target_nodes.set(graph.get_id(graph.get_handle_of_step(step)), true);
+                });
+
+            if (show_progress) {
+                progress->increment(1);
+            }
+        }
+        if (show_progress) {
+            progress->finish();
+        }
+
+        if (show_progress) {
+            progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+                    targets.size(), "[odgi::algorithms::untangle] untangle and merge cuts");
         }
 
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
@@ -719,9 +783,22 @@ void untangle(
             if (graph.has_node(node_id_back)) {
                 cut_nodes.set(node_id_back, true);
             }
+
+            if (show_progress) {
+                progress->increment(1);
+            }
+        }
+
+        if (show_progress) {
+            progress->finish();
         }
 
         if (cut_every > 0) {
+            if (show_progress) {
+                progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+                        graph.get_node_count(), "[odgi::algorithms::untangle] mark nodes every " + to_string(cut_every) + " bp");
+            }
+
             /*
     #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
             for (auto& target : targets) {
@@ -749,11 +826,26 @@ void untangle(
                         ++segment;
                     }
                     node_to_segment[graph.get_id(h)] = segment;
+
+                    if (show_progress) {
+                        progress->increment(1);
+                    }
                 });
+
+            if (show_progress) {
+                progress->finish();
+            }
+            
             // todo: split up the graph space into regions of cut_every bp
             // write a map from node ids to segments
             // walk along every path
             // mark cut points the first nodes in each segment that we get to
+
+            if (show_progress) {
+                progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+                        paths.size(), "[odgi::algorithms::untangle] add new cut points");
+            }
+
     #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
             for (auto& path : paths) {
                 uint64_t segment = 0;
@@ -768,12 +860,21 @@ void untangle(
                         }
                         last = segment;
                     });
+
+                if (show_progress) {
+                    progress->increment(1);
+                }
             }
+
+            if (show_progress) {
+                progress->finish();
+            }
+            
         }
     } else {
         uint64_t num_cut_points_read = 0;
 
-        if (progress) {
+        if (show_progress) {
             std::cerr << "[odgi::algorithms::untangle] loading input cuts" << std::endl;
         }
         std::ifstream bed_in(cut_points_input.c_str());
@@ -799,16 +900,13 @@ void untangle(
             exit(1);
         }
 
-        if (progress) {
+        if (show_progress) {
             std::cerr << "[odgi::algorithms::untangle] loaded " << num_cut_points_read << " cuts points" << std::endl;
         }
     }
 
     //auto step_pos = make_step_index(graph, queries);
     // node to reference segmentation mapping
-    if (progress) {
-        std::cerr << "[odgi::algorithms::untangle] building target segment index" << std::endl;
-    }
 
     segment_map_t target_segments(graph,
                                   targets,
@@ -817,14 +915,12 @@ void untangle(
                                       return cut_nodes.test(graph.get_id(h));
                                   },
                                   merge_dist,
-                                  num_threads);
+                                  num_threads,
+                                  show_progress);
 
     //show_steps(graph, step_pos);
     //std::cout << "path\tfrom\tto" << std::endl;
     //auto step_pos = make_step_index(graph, queries);
-    if (progress) {
-        std::cerr << "[odgi::algorithms::untangle] untangling " << queries.size() << " queries" << std::endl;
-    }
 
     ska::flat_hash_map<path_handle_t, uint64_t> path_to_len;
 
@@ -853,6 +949,11 @@ void untangle(
         // nothing to do
     }
 
+    if (show_progress) {
+        progress = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+                queries.size(), "[odgi::algorithms::untangle] untangling " + to_string(queries.size()) + " queries");
+    }
+
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
     for (auto& query : queries) {
         auto self_index = path_step_index_t(graph, query, threads_per);
@@ -875,7 +976,16 @@ void untangle(
                      output_type, path_to_len);
 
         //write_cuts(graph, query, cuts, step_pos);
+
+        if (show_progress) {
+            progress->increment(1);
+        }
     }
+
+    if (show_progress) {
+        progress->finish();
+    }
+
     //self_dotplot(graph, query, step_pos);
 
     // If requested, write cut points to a file
