@@ -246,7 +246,8 @@ int main_untangle(int argc, char **argv) {
 								 args::get(output_cut_points),
 								 num_threads,
 								 progress,
-								 step_index,paths);
+								 step_index,
+                                 paths);
 		}
     }
 
