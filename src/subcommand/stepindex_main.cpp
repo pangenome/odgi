@@ -24,7 +24,7 @@ namespace odgi {
 		args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
 		args::ValueFlag<std::string> og_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "input"});
 		args::Group step_index_opts(parser, "[ Step Index Options ]");
-		args::ValueFlag<uint64_t> _step_index_sample_rate(step_index_opts, "N", "The sample rate when building the step index. We index a node only if mod(node_id, step-index-sample-rate) == 0! Number must be dividable by 2. (default: 8).",
+		args::ValueFlag<uint64_t> _step_index_sample_rate(step_index_opts, "N", "The sample rate when building the step index. We index a node only if mod(node_id, step-index-sample-rate) == 0! Number must be dividable by 2 or 0 to disable sampling. (default: 8).",
 														  {'a', "step-index-sample-rate"});
 		args::ValueFlag<std::string> dg_out_file(mandatory_opts, "FILE", "Write the created step index to the specified file. A file"
 																		 " ending with *.stpidx* is recommended. (default: *INPUT_GRAPH.stpidx*).", {'o', "out"});
@@ -56,8 +56,8 @@ namespace odgi {
 			return 1;
 		}
 
-		uint64_t  step_index_sample_rate = args::get(_step_index_sample_rate) ? args::get(_step_index_sample_rate) : 8;
-		if (step_index_sample_rate % 2 != 0) {
+		uint64_t step_index_sample_rate = args::get(_step_index_sample_rate);
+		if (step_index_sample_rate > 0 && step_index_sample_rate % 2 != 0) {
 			std::cerr << "[odgi::stepindex] error: The given sample rate of " << step_index_sample_rate << " is not dividable by 2. Please provide a different sample rate." << std::endl;
 			exit(1);
 		}

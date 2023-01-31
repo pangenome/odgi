@@ -664,7 +664,7 @@ namespace odgi {
             std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress_checking;
             if (show_progress) {
                 progress_checking = std::make_unique<algorithms::progress_meter::ProgressMeter>(
-                        subpaths.size(), "[odgi::extract] checking missing edges");
+                        subpaths.size(), "[odgi::extract] checking missing edges and empty subpaths");
             }
 
             ska::flat_hash_set<std::pair<handle_t, handle_t>> edges_to_create;
@@ -691,9 +691,22 @@ namespace odgi {
                 progress_checking->finish();
             }
 
+            // remove empty subpaths
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
+            for (auto path: subpaths) {
+                if (subgraph.is_empty(path)) {
+#pragma omp critical (subgraph)
+                    subgraph.destroy_path(path);
+                }
+            }
+
+            if (show_progress && subgraph.get_path_count() < subpaths.size()) {
+                std::cerr << "[odgi::extract] removed " << (subpaths.size() - subgraph.get_path_count()) << " empty subpath(s)." << std::endl;
+            }
+
             subpaths.clear();
 
-            // force embed the paths
+            // add missing edges
             for (auto edge: edges_to_create) {
                 subgraph.create_edge(edge.first, edge.second);
             }

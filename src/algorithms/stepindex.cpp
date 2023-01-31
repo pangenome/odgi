@@ -16,6 +16,7 @@ step_index_t::step_index_t(const PathHandleGraph& graph,
                            const bool progress,
 						   const uint64_t& sample_rate) {
 	this->sample_rate = sample_rate;
+
     // iterate through the paths, recording steps in the structure we'll use to build the mphf
     std::vector<step_handle_t> steps;
 	std::unique_ptr<algorithms::progress_meter::ProgressMeter> collecting_steps_progress_meter;
@@ -32,14 +33,15 @@ step_index_t::step_index_t(const PathHandleGraph& graph,
             path, [&](const step_handle_t& step) {
 				path_length += graph.get_length(graph.get_handle_of_step(step));
 				// sampling
-				if (0 == utils::modulo(graph.get_id(graph.get_handle_of_step(step)), sample_rate)) {
+				if (sample_rate == 0 || 0 == utils::modulo(graph.get_id(graph.get_handle_of_step(step)), sample_rate)) {
 					my_steps.push_back(step);
 				}
 			});
 		// sampling
-		if (0 == utils::modulo(graph.get_id(graph.get_handle_of_step(graph.path_end(path))), sample_rate)) {
+		if (sample_rate == 0 || 0 == utils::modulo(graph.get_id(graph.get_handle_of_step(graph.path_end(path))), sample_rate)) {
 			my_steps.push_back(graph.path_end(path));
 		}
+
 #pragma omp critical (path_len)
 		path_len[as_integer(path) - 1] = path_length;
 #pragma omp critical (steps_collect)
@@ -68,13 +70,13 @@ step_index_t::step_index_t(const PathHandleGraph& graph,
         graph.for_each_step_in_path(
             path, [&](const step_handle_t& step) {
 				// sampling
-				if (0 == utils::modulo(graph.get_id(graph.get_handle_of_step(step)), sample_rate)) {
+				if (sample_rate == 0 || 0 == utils::modulo(graph.get_id(graph.get_handle_of_step(step)), sample_rate)) {
 					pos[step_mphf->lookup(step)] = offset;
 				}
 				offset += graph.get_length(graph.get_handle_of_step(step));
 				});
 		// sampling
-		if (0 == utils::modulo(graph.get_id(graph.get_handle_of_step(graph.path_end(path))), sample_rate)) {
+		if (sample_rate == 0 || 0 == utils::modulo(graph.get_id(graph.get_handle_of_step(graph.path_end(path))), sample_rate)) {
 			pos[step_mphf->lookup(graph.path_end(path))] = offset;
 		}
         if (progress) {
@@ -91,7 +93,7 @@ const uint64_t step_index_t::get_position(const step_handle_t& step, const PathH
 	handle_t h = graph.get_handle_of_step(step);
 	uint64_t n_id = graph.get_id(h);
 	step_handle_t cur_step = step;
-	if (0 == utils::modulo(n_id, this->sample_rate)) {
+	if (this->sample_rate == 0 || 0 == utils::modulo(n_id, this->sample_rate)) {
 		return pos[step_mphf->lookup(step)];
 	} else {
 		// did we hit the first step anyhow?

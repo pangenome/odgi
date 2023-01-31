@@ -51,6 +51,7 @@ int main_paths(int argc, char** argv) {
                                                               " based on the graph’s sort order. The output is tab-delimited:"
                                                               " *path.name*, *path.length*, *path.step.count*, *node.1*,"
                                                               " *node.2*, *node.n*. Each path entry is printed in its own line.", {'H', "haplotypes"});
+    args::Flag scale_by_node_length(path_investigation_opts, "haplo", "Scale the haplotype matrix cells by node length.", {'N', "scale-by-node-len"});
     args::Flag distance_matrix(path_investigation_opts, "distance", "Provides a sparse distance matrix for paths. If **-D, --delim** is"
                                                                     " set, it will be path groups distances. Each line prints in a tab-delimited format to stdout:"
                                                                     " *path.a*, *path.b*, *path.a.length*, *path.b.length*, *intersection*, *jaccard*, *euclidean*." , {'d', "distance"});
@@ -163,6 +164,7 @@ int main_paths(int argc, char** argv) {
                 });
             std::cout << header.str() << std::endl;
         }
+        bool node_length_scale = args::get(scale_by_node_length);
         graph.for_each_path_handle(
             [&](const path_handle_t& p) {
                 std::string full_path_name = graph.get_path_name(p);
@@ -185,8 +187,14 @@ int main_paths(int argc, char** argv) {
                 std::cout << path_name << "\t"
                           << path_length << "\t"
                           << path_step_count;
-                for (uint64_t i = 0; i < row.size(); ++i) {
-                    std::cout << "\t" << row[i];
+                if (node_length_scale) {
+                    for (uint64_t i = 0; i < row.size(); ++i) {
+                        std::cout << "\t" << row[i] * graph.get_length(graph.get_handle(i+1));
+                    }
+                } else {
+                    for (uint64_t i = 0; i < row.size(); ++i) {
+                        std::cout << "\t" << row[i];
+                    }
                 }
                 std::cout << std::endl;
             });

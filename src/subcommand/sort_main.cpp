@@ -9,7 +9,7 @@
 #include "algorithms/split_strands.hpp"
 #include "algorithms/dagify_sort.hpp"
 #include "algorithms/random_order.hpp"
-//#include "algorithms/mondriaan_sort.hpp"
+// TODO can we remove this import?
 #include "algorithms/linear_sgd.hpp"
 #include "algorithms/xp.hpp"
 #include "algorithms/path_sgd.hpp"
@@ -94,6 +94,7 @@ int main_sort(int argc, char** argv) {
                                                                        " argument only works when *-Y, –path-sgd* was specified. Not applicable"
                                                                        " in a pipeline of sorts.", {'u', "path-sgd-snapshot"});
 	args::ValueFlag<std::string> _p_sgd_target_paths(pg_sgd_opts, "FILE", "Read the paths that should be considered as target paths (references) from this *FILE*. PG-SGD will keep the nodes of the given paths fixed. A path's rank determines it's weight for decision making and is given by its position in the given *FILE*.", {'H', "target-paths"});
+	args::ValueFlag<std::string> p_sgd_layout(pg_sgd_opts, "STRING", "write the layout of a sorted, path guided 1D SGD graph to this file, no default", {'e', "path-sgd-layout"});
 
 	/// pipeline
     args::Group pipeline_sort_opts(parser, "[ Pipeline Sorting Options ]");
@@ -326,6 +327,10 @@ int main_sort(int argc, char** argv) {
     if (snapshot) {
         snapshot_prefix = args::get(p_sgd_snapshot);
     }
+    std::string layout_out;
+    if (p_sgd_layout) {
+        layout_out = args::get(p_sgd_layout);
+    }
 	std::vector<bool> is_ref;
 	std::vector<path_handle_t> target_paths;
     if (p_sgd || args::get(pipeline).find('Y') != std::string::npos) {
@@ -405,7 +410,7 @@ int main_sort(int argc, char** argv) {
         path_sgd_max_eta = args::get(p_sgd_eta_max) ? args::get(p_sgd_eta_max) : max_path_step_count * max_path_step_count;
     }
 
-    // did we groom the graph?
+    // is it a pipeline of sorts?
     if (!args::get(pipeline).empty()) {
         // for each sort type, apply it to the graph
         std::vector<handle_t> order;
@@ -465,6 +470,8 @@ int main_sort(int argc, char** argv) {
                                                               path_sgd_seed,
                                                               snapshot,
                                                               snapshot_prefix,
+															  p_sgd_layout,
+															  layout_out,
 															  _p_sgd_target_paths,
 															  is_ref);
                     break;
@@ -530,6 +537,8 @@ int main_sort(int argc, char** argv) {
                                                   path_sgd_seed,
                                                   snapshot,
                                                   snapshot_prefix,
+												  p_sgd_layout,
+												  layout_out,
 												  _p_sgd_target_paths,
 												  is_ref);
         graph.apply_ordering(order, true);
