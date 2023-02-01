@@ -124,11 +124,9 @@ int main_tension(int argc, char **argv) {
 			std::string path_name = graph.get_path_name(p);
 			uint64_t cur_window_start = 1;
 			uint64_t cur_window_end = 0;
-			double path_layout_dist;
-			uint64_t path_nuc_dist;
+			double path_layout_dist = 0;
+			uint64_t path_nuc_dist = 0;
 			graph.for_each_step_in_path(p, [&](const step_handle_t &s) {
-				path_layout_dist = 0;
-				path_nuc_dist = 0;
 				handle_t h = graph.get_handle_of_step(s);
 				algorithms::xy_d_t h_coords_start;
 				algorithms::xy_d_t h_coords_end;
