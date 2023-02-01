@@ -254,9 +254,11 @@ int main_tension(int argc, char **argv) {
 		// std::cout << "TEST\tPANGENOME\tMODE" << std::endl;
 #pragma omp parallel for schedule(static, 1) num_threads(thread_count) shared(node_tensions)
 		for (auto p: paths) {
-			double path_layout_dist = 0;
-			uint64_t path_nuc_dist = 0;
+			double path_layout_dist;
+			uint64_t path_nuc_dist;
 			graph.for_each_step_in_path(p, [&](const step_handle_t &s) {
+				path_layout_dist = 0;
+				path_nuc_dist = 0;
 				handle_t h = graph.get_handle_of_step(s);
 				algorithms::xy_d_t h_coords_start;
 				algorithms::xy_d_t h_coords_end;
