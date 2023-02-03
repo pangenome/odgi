@@ -18,24 +18,24 @@ then
   rm -r bin
 fi
 
-#if [[ ! -z "$SSE4_2" ]];
-#then
-#  echo "SSE4_2";
-#  cmake -H. -Bsse4_2 -DEXTRA_FLAGS="-Ofast -pipe -msse4.2" && cmake --build sse4_2 -- -j 15
-#  mv bin/odgi sse4_2
-#  rm -r bin
-#  mv sse2/odgi release/odgi_sse2
-#  mv sse4_2/odgi release/odgi_sse4_2
-#fi
-#
-#if [[ ! -z "$AVX" ]];
-#then
-#  echo "AVX";
-#  cmake -H. -Bavx -DEXTRA_FLAGS="-Ofast -pipe -mavx" && cmake --build avx -- -j 15
-#  mv bin/odgi avx
-#  rm -r bin
-#  mv avx/odgi release/odgi_avx
-#fi
+if [[ ! -z "$SSE4_2" ]];
+then
+  echo "SSE4_2";
+  cmake -H. -Bsse4_2 -DEXTRA_FLAGS="-Ofast -pipe -msse4.2" && cmake --build sse4_2 -- -j 15
+  mv bin/odgi sse4_2
+  rm -r bin
+  mv sse2/odgi release/odgi_sse2
+  mv sse4_2/odgi release/odgi_sse4_2
+fi
+
+if [[ ! -z "$AVX" ]];
+then
+  echo "AVX";
+  cmake -H. -Bavx -DEXTRA_FLAGS="-Ofast -pipe -mavx" && cmake --build avx -- -j 15
+  mv bin/odgi avx
+  rm -r bin
+  mv avx/odgi release/odgi_avx
+fi
 
 if [[ ! -z "$AVX2" ]];
 then
