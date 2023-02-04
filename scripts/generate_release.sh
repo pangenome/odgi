@@ -51,7 +51,7 @@ then
   echo "AVX512";
   # TODO maybe only enable -mavx512f so it has the best compatibility - https://en.wikipedia.org/wiki/AVX-512#SIMD_modes - https://gcc.gnu.org/onlinedocs/gcc-6.1.0/gcc/x86-Options.html
   # AVX512_FLAGS=$(lscpu | grep "avx512" | sed 's/ /\n/g' | grep "avx512" | sed 's/avx/-mavx/g' | tr '\n' ' ')
-  cmake -H. -Bavx512 -DEXTRA_FLAGS="-Ofast -pipe mavx512f" && cmake --build avx512 -- -j 15
+  cmake -H. -Bavx512 -DEXTRA_FLAGS="-Ofast -pipe -mavx512f" && cmake --build avx512 -- -j 15
   mv bin/odgi avx512
   rm -r bin
   mv avx512/odgi release/odgi_avx512
@@ -60,20 +60,30 @@ fi
 sed -i '55 s/^#//' CMakeLists.txt
 
 ODGI="#!/bin/bash
+
+# https://stackoverflow.com/questions/59895/how-do-i-get-the-directory-where-a-bash-script-is-located-from-within-the-script#
+SOURCE=\${BASH_SOURCE[0]}
+while [ -L \"\$SOURCE\" ]; do # resolve \$SOURCE until the file is no longer a symlink
+  DIR=\$( cd -P \"\$( dirname \"\$SOURCE\" )\" >/dev/null 2>&1 && pwd )
+  SOURCE=\$(readlink \"\$SOURCE\")
+  [[ \$SOURCE != /* ]] && SOURCE=\$DIR/\$SOURCE # if \$SOURCE was a relative symlink, we need to resolve it relative to the path where the symlink file was located
+done
+DIR=\$( cd -P \"\$( dirname \"\$SOURCE\" )\" >/dev/null 2>&1 && pwd )
+
 if [[ -f odgi_avx512 ]];
 then
-  ./odgi_avx512
+  \"\$DIR\"/odgi_avx512 \"\$@\"
 elif [[ -f odgi_avx2 ]];
 then
-  ./odgi_avx2
+  \"\$DIR\"/odgi_avx2 \"\$@\"
 elif [[ -f odgi_avx ]];
 then
-  ./odgi_avx
+  \"\$DIR\"/odgi_avx \"\$@\"
 elif [[ -f odgi_sse4_2 ]];
 then
-  ./odgi_sse4_2
+  \"\$DIR\"/odgi_sse4_2 \"\$@\"
 else
-  ./odgi_sse2
+  \"\$DIR\"/odgi_sse2 \"\$@\"
 fi"
 echo "$ODGI" > release/odgi
 chmod +x release/odgi
