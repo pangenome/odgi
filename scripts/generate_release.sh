@@ -50,8 +50,8 @@ if [[ ! -z "$AVX512" ]];
 then
   echo "AVX512";
   # TODO maybe only enable -mavx512f so it has the best compatibility - https://en.wikipedia.org/wiki/AVX-512#SIMD_modes - https://gcc.gnu.org/onlinedocs/gcc-6.1.0/gcc/x86-Options.html
-  AVX512_FLAGS=$(lscpu | grep "avx512" | sed 's/ /\n/g' | grep "avx512" | sed 's/avx/-mavx/g' | tr '\n' ' ')
-  cmake -H. -Bavx512 -DEXTRA_FLAGS="-Ofast -pipe $AVX512_FLAGS" && cmake --build avx512 -- -j 15
+  # AVX512_FLAGS=$(lscpu | grep "avx512" | sed 's/ /\n/g' | grep "avx512" | sed 's/avx/-mavx/g' | tr '\n' ' ')
+  cmake -H. -Bavx512 -DEXTRA_FLAGS="-Ofast -pipe mavx512f" && cmake --build avx512 -- -j 15
   mv bin/odgi avx512
   rm -r bin
   mv avx512/odgi release/odgi_avx512
@@ -65,8 +65,6 @@ then
   ./odgi_avx512
 elif [[ -f odgi_avx2 ]];
 then
-# debugging
-#  echo "SLJLEJLEJFLSJFLÖ"
   ./odgi_avx2
 elif [[ -f odgi_avx ]];
 then
