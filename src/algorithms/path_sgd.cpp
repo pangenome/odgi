@@ -1,5 +1,6 @@
 #include "path_sgd.hpp"
 #include "dirty_zipfian_int_distribution.h"
+#include "layout.hpp"
 
 //#define debug_path_sgd
 // #define eval_path_sgd

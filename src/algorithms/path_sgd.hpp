@@ -21,7 +21,6 @@
 #include "dirty_zipfian_int_distribution.h"
 #include "XoshiroCpp.hpp"
 #include "progress.hpp"
-#include "algorithms/layout.hpp"
 #include "utils.hpp"
 
 #include <fstream>
