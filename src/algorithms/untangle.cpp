@@ -74,7 +74,10 @@ std::vector<step_handle_t> untangle_cuts(
                     found_loop = true;
                 }
             }
-            if (found_loop) {
+            if (found_loop
+                && !is_seen_fwd_step(step) && !is_seen_rev_step(step)
+                && !is_seen_fwd_step(other) && !is_seen_rev_step(other)
+                ) {
                 //  recurse this function into it, taking start as our current handle other side of the loop as our end
                 //  to cut_points we add the start position, the result from recursion, and our end position
                 //std::cerr << "Found loop! " << step_index.get_position(step) << " " << step_index.get_position(other) << std::endl;
@@ -120,7 +123,10 @@ std::vector<step_handle_t> untangle_cuts(
                     found_loop = true;
                 }
             }
-            if (found_loop) {
+            if (found_loop
+                && !is_seen_rev_step(other) && !is_seen_fwd_step(other)
+                && !is_seen_rev_step(step) && !is_seen_fwd_step(step)
+                ) {
                 //  recurse this function into it, taking start as our current handle other side of the loop as our end
                 //  to cut_points we add the start position, the result from recursion, and our end position
                 todo.push_back(std::make_pair(other, step));
@@ -137,12 +143,13 @@ std::vector<step_handle_t> untangle_cuts(
                   const step_handle_t& b) {
                   return step_index.get_position(a, graph) < step_index.get_position(b, graph);
               });
-    //auto prev_size = cut_points.size();
+    auto prev_size = cut_points.size();
     // then take unique positions
     cut_points.erase(std::unique(cut_points.begin(),
                                  cut_points.end()),
                      cut_points.end());
-    //std::cerr << "prev_size " << prev_size << " curr_size " << cut_points.size() << std::endl;
+    std::cerr << "[odgi untangle] cuts for " << path_name
+              << " prev_size " << prev_size << " curr_size " << cut_points.size() << std::endl;
     return cut_points;
 }
 
@@ -835,7 +842,7 @@ void untangle(
             if (show_progress) {
                 progress->finish();
             }
-            
+
             // todo: split up the graph space into regions of cut_every bp
             // write a map from node ids to segments
             // walk along every path
@@ -869,7 +876,7 @@ void untangle(
             if (show_progress) {
                 progress->finish();
             }
-            
+
         }
     } else {
         uint64_t num_cut_points_read = 0;
