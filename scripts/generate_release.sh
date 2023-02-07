@@ -1,12 +1,63 @@
 #!/bin/bash
 
+cmd=$0" "$@
+TEMP=`getopt -o i:o:D:a:p:n:s:l:K:F:k:x:f:B:XH:j:P:O:Me:t:T:vhASY:G:Q:d:I:R:NbrmZzV: --long input-fasta:,output-dir:,temp-dir:,input-paf:,map-pct-id:,n-mappings:,segment-length:,block-length-min:,mash-kmer:,mash-kmer-thres:,min-match-length:,sparse-map:,sparse-factor:,transclose-batch:,skip-normalization,n-haps:,path-jump-max:,subpath-min:,edge-jump-max:,threads:,poa-threads:,skip-viz,do-layout,help,no-merge-segments,do-stats,exclude-delim:,poa-length-target:,poa-params:,poa-padding:,run-abpoa,global-poa,write-maf,consensus-spec:,consensus-prefix:,pad-max-depth:,block-id-min:,block-ratio-min:,no-splits,resume,keep-temp-files,multiqc,compress,vcf-spec:,version -n 'pggb' -- "$@"`
+eval set -- "$TEMP"
+
+# extract options and their arguments into variables.
+while true ; do
+    case "$1" in
+        -i|--input-fasta) input_fasta=$2 ; shift 2 ;;
+        -s|--segment-length) segment_length=$2 ; shift 2 ;;
+        -l|--block-length) block_length=$2 ; shift 2 ;;
+        -p|--map-pct-id) map_pct_id=$2 ; shift 2 ;;
+        -n|--n-haplotypes) n_mappings=$2 ; shift 2 ;;
+        -N|--no-splits) no_splits=true ; shift ;;
+        -x|--sparse-map) sparse_map=$2 ; shift 2 ;;
+        -K|--mash-kmer) mash_kmer=$2 ; shift 2 ;;
+        -F|--mash-kmer-thres) mash_kmer_thres=$2 ; shift 2 ;;
+        -Y|--exclude-delim) exclude_delim=$2 ; shift 2 ;;
+        -k|--min-match-length) min_match_length=$2 ; shift 2 ;;
+        -f|--sparse-factor) sparse_factor=$2 ; shift 2 ;;
+        -B|--transclose-batch) transclose_batch=$2 ; shift 2 ;;
+        -X|--skip-normalization) skip_normalization=true ; shift ;;
+        -H|--n-haplotypes-smooth) n_haps=$2 ; shift 2 ;;
+        -j|--path-jump-max) max_path_jump=$2 ; shift 2 ;;
+        -e|--edge-jump-max) max_edge_jump=$2 ; shift 2 ;;
+        -G|--poa-length-target) target_poa_length=$2 ; shift 2 ;;
+        -P|--poa-params) poa_params=$2 ; shift 2 ;;
+        -O|--poa-padding) poa_padding=$2 ; shift 2 ;;
+        -d|--pad-max-depth) pad_max_depth=$2 ; shift 2 ;;
+        -b|--run-abpoa) run_abpoa=true ; shift ;;
+        -z|--global-poa) run_global_poa=true ; shift ;;
+        -M|--write-maf) write_maf=true ; shift ;;
+        #-C|--consensus-spec) consensus_spec=$2 ; shift 2 ;;
+        -Q|--consensus-prefix) consensus_prefix=$2 ; shift 2 ;;
+        -v|--skip-viz) do_viz=false ; do_layout=false; shift ;;
+        -S|--do-stats) do_stats=true ; shift ;;
+        -V|--vcf-spec) vcf_spec=$2 ; shift 2 ;;
+        -m|--multiqc) multiqc=true ; shift ;;
+        -o|--output-dir) output_dir=$2 ; shift 2 ;;
+        -D|--temp-dir) input_temp_dir=$2 ; shift 2 ;;
+        -a|--input-paf) input_paf=$2 ; shift 2 ;;
+        -r|--resume) resume=true ; shift ;;
+        -t|--threads) threads=$2 ; shift 2 ;;
+        -T|--poa-threads) poa_threads=$2 ; shift 2 ;;
+        -A|--keep-temp-files) keep_intermediate_files=true ; shift ;;
+        -Z|--compress) compress=true ; shift ;;
+        --version) show_version=true ; shift ;;
+        -h|--help) show_help=true ; shift ;;
+        --) shift ; break ;;
+        *) echo "$2" "Internal error!" ; exit 1 ;;
+    esac
+done
+
 SSE2=$(lscpu | grep "Flags" | grep "sse2")
 SSE4_2=$(lscpu | grep "Flags" | grep "sse4_2")
 AVX=$(lscpu | grep "Flags" | grep "avx")
 AVX2=$(lscpu | grep "Flags" | grep "avx2")
 AVX512=$(lscpu | grep "Flags" | grep "avx512")
 
-# sed CMakeLists.txt 's//g'
 mkdir release
 sed -i '55 s/^/#/' CMakeLists.txt
 
