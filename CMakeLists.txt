@@ -554,6 +554,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/procbed_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/flip_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/pav_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/travis_main.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/topological_sort.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/kmer.cpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/hash.cpp
