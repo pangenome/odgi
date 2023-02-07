@@ -52,7 +52,7 @@ std::vector<step_handle_t> untangle_cuts(
         for (step_handle_t step = start; step != end; step = graph.get_next_step(step)) {
             //  we take the first and shortest loop we find
             // TODO change this, it can be computed based on the node length
-            if (is_seen_fwd_step(step)) {
+            if (is_seen_fwd_step(step) || is_seen_rev_step(step)) {
                 continue;
             }
             auto curr_pos = step_index.get_position(step, graph);
@@ -75,7 +75,6 @@ std::vector<step_handle_t> untangle_cuts(
                 }
             }
             if (found_loop
-                && !is_seen_fwd_step(step) && !is_seen_rev_step(step)
                 && !is_seen_fwd_step(other) && !is_seen_rev_step(other)
                 ) {
                 //  recurse this function into it, taking start as our current handle other side of the loop as our end
@@ -98,7 +97,7 @@ std::vector<step_handle_t> untangle_cuts(
         for (step_handle_t step = end;
              step_index.get_position(step, graph) > start_pos;
              step = graph.get_previous_step(step)) {
-            if (is_seen_rev_step(step)) {
+            if (is_seen_rev_step(step) || is_seen_fwd_step(step)) {
                 continue;
             }
             //  we take the first and shortest loop we find
@@ -125,7 +124,6 @@ std::vector<step_handle_t> untangle_cuts(
             }
             if (found_loop
                 && !is_seen_rev_step(other) && !is_seen_fwd_step(other)
-                && !is_seen_rev_step(step) && !is_seen_fwd_step(step)
                 ) {
                 //  recurse this function into it, taking start as our current handle other side of the loop as our end
                 //  to cut_points we add the start position, the result from recursion, and our end position
