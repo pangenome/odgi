@@ -44,6 +44,7 @@ std::vector<step_handle_t> untangle_cuts(
         auto start = todo.front().first;
         auto end = todo.front().second;
         uint64_t start_pos = step_index.get_position(start, graph);
+        uint64_t curr_pos = start_pos;
         uint64_t end_pos = step_index.get_position(end, graph);
         //std::cerr << "todo: " << start_pos << " " << end_pos << std::endl;
         cut_points.push_back(start);
@@ -51,12 +52,11 @@ std::vector<step_handle_t> untangle_cuts(
         // we go forward until we see a loop, where the other step has position < end_pos and > start_pos
         for (step_handle_t step = start; step != end; step = graph.get_next_step(step)) {
             //  we take the first and shortest loop we find
-            // TODO change this, it can be computed based on the node length
+            handle_t handle = graph.get_handle_of_step(step);
             if (is_seen_fwd_step(step) || is_seen_rev_step(step)) {
+                curr_pos += graph.get_length(handle);
                 continue;
             }
-            auto curr_pos = step_index.get_position(step, graph);
-            handle_t handle = graph.get_handle_of_step(step);
             if (is_cut(handle)) {
                 cut_points.push_back(step);
             }
@@ -84,6 +84,7 @@ std::vector<step_handle_t> untangle_cuts(
                 //  we then step forward to the loop end and continue iterating
                 step = other;
             }
+            curr_pos += graph.get_length(handle);
         }
         // TODO this block is the same as the previous one, but in reverse
         // the differences in how positions are managed are subtle, making it hard to fold the
@@ -97,13 +98,12 @@ std::vector<step_handle_t> untangle_cuts(
         for (step_handle_t step = end;
              step_index.get_position(step, graph) > start_pos;
              step = graph.get_previous_step(step)) {
+            handle_t handle = graph.get_handle_of_step(step);
+            curr_pos -= graph.get_length(handle);
             if (is_seen_rev_step(step) || is_seen_fwd_step(step)) {
                 continue;
             }
             //  we take the first and shortest loop we find
-            // TODO change this, it can be computed based on the node length
-            auto curr_pos = step_index.get_position(step, graph);
-            handle_t handle = graph.get_handle_of_step(step);
             if (is_cut(handle)) {
                 cut_points.push_back(step);
             }
@@ -146,8 +146,8 @@ std::vector<step_handle_t> untangle_cuts(
     cut_points.erase(std::unique(cut_points.begin(),
                                  cut_points.end()),
                      cut_points.end());
-    std::cerr << "[odgi untangle] cuts for " << path_name
-              << " prev_size " << prev_size << " curr_size " << cut_points.size() << std::endl;
+    //std::cerr << "[odgi untangle] cuts for " << path_name
+    //          << " prev_size " << prev_size << " curr_size " << cut_points.size() << std::endl;
     return cut_points;
 }
 
