@@ -82,9 +82,17 @@ namespace odgi {
 				uint64_t h_id = graph.get_id(h);
 				uint64_t h_len = graph.get_length(h);
 				std::string seq = graph.get_sequence(h);
-				seq_out_stream << seq;
 				for (uint64_t i = 0; i < h_len; i++) {
+					if (i != 0) {
+						node_out_stream << ",";
+						seq_out_stream << ",";
+					}
 					node_out_stream << h_id;
+					seq_out_stream << seq[i];
+				}
+				if (graph.has_next_step(step)) {
+					node_out_stream << "\t";
+					seq_out_stream << "\t";
 				}
 			});
 			seq_out_stream << std::endl;
