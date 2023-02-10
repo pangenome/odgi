@@ -99,8 +99,8 @@ std::vector<step_handle_t> untangle_cuts(
              step_index.get_position(step, graph) > start_pos;
              step = graph.get_previous_step(step)) {
             handle_t handle = graph.get_handle_of_step(step);
-            curr_pos -= graph.get_length(handle);
             if (is_seen_rev_step(step) || is_seen_fwd_step(step)) {
+                curr_pos -= graph.get_length(handle);
                 continue;
             }
             //  we take the first and shortest loop we find
@@ -131,6 +131,7 @@ std::vector<step_handle_t> untangle_cuts(
                 //  we then step forward to the loop end and continue iterating
                 step = other;
             }
+            curr_pos -= graph.get_length(handle);
         }
         cut_points.push_back(end);
     }
