@@ -158,7 +158,11 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
         if (path_intervals.find(path) != path_intervals.end()) {
             auto& intervals = path_intervals.find(path)->second;
             auto ival = intervals.begin();
-            std::map<std::pair<std::string, uint64_t>, std::pair<std::string, step_handle_t>> open_intervals_by_end;
+            // IMPORTANT: in the key of the map, the end position (uint64_t) has to come
+            //            first to keep the open intervals sorted by end coordinates.
+            //            The annotation name (std::string) is necessary to avoid loosing
+            //            annotations having the same end coordinates.
+            std::map<std::pair<uint64_t, std::string>, step_handle_t> open_intervals_by_end;
             uint64_t pos = 0;
             handle_t last_h;
             graph.for_each_step_in_path(
@@ -166,15 +170,14 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
                 [&](const step_handle_t& step) {
                     // remove intervals that ended before this node
                     while (open_intervals_by_end.size()
-                           && open_intervals_by_end.begin()->first.second <= pos) {
+                           && open_intervals_by_end.begin()->first.first <= pos) {
                         // get reference to name
-                        auto& i = open_intervals_by_end.begin()->second;
-                        auto& name = i.first;
-                        if (open_intervals_by_end.begin()->first.second != pos) {
+                        auto& name = open_intervals_by_end.begin()->first.second;
+                        if (open_intervals_by_end.begin()->first.first != pos) {
                             std::cerr << "[odgi::algorithms::inject_ranges] "
                                       << "injection end point for interval " << name
                                       << " is not at a node boundary: "
-                                      << "off by " << open_intervals_by_end.begin()->first.second
+                                      << "off by " << open_intervals_by_end.begin()->first.first
                                       << " vs " << pos
                                       << " on a node "
                                       << graph.get_length(graph.get_handle_of_step(step))
@@ -190,7 +193,7 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
                             assert(f != injected_paths.end());
                             p = f->second;
                         }
-                        auto c = i.second;
+                        auto& c = open_intervals_by_end.begin()->second;
                         auto end = step;
                         do {
                             graph.append_step(p, graph.get_handle_of_step(c));
@@ -206,7 +209,7 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
                            && ival->first.first >= pos
                            && ival->first.first < pos + len) {
                         // the intervals must start at the node start
-                        open_intervals_by_end[std::make_pair(ival->second, ival->first.second)] = std::make_pair(ival->second, step);
+                        open_intervals_by_end[std::make_pair(ival->first.second, ival->second)] = step;
                         ++ival;
                         if (show_progress) {
                             progress->increment(1);
@@ -218,10 +221,9 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
 
             // Add last paths
             while (open_intervals_by_end.size()
-                   && open_intervals_by_end.begin()->first.second <= pos) {
+                   && open_intervals_by_end.begin()->first.first <= pos) {
                 // get reference to name
-                auto& i = open_intervals_by_end.begin()->second;
-                auto& name = i.first;
+                auto& name = open_intervals_by_end.begin()->first.second;
                 // add the path
                 path_handle_t p;
 #pragma omp critical (get_path)
@@ -230,7 +232,7 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
                     assert(f != injected_paths.end());
                     p = f->second;
                 }
-                auto c = i.second;
+                auto& c = open_intervals_by_end.begin()->second;
                 auto end = graph.path_end(path);
                 do {
                     graph.append_step(p, graph.get_handle_of_step(c));
