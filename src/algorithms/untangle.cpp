@@ -53,7 +53,7 @@ std::vector<step_handle_t> untangle_cuts(
         for (step_handle_t step = start; step != end; step = graph.get_next_step(step)) {
             //  we take the first and shortest loop we find
             handle_t handle = graph.get_handle_of_step(step);
-            if (is_seen_fwd_step(step) || is_seen_rev_step(step)) {
+            if (is_seen_fwd_step(step)) {
                 curr_pos += graph.get_length(handle);
                 continue;
             }
@@ -74,9 +74,7 @@ std::vector<step_handle_t> untangle_cuts(
                     found_loop = true;
                 }
             }
-            if (found_loop
-                && !is_seen_fwd_step(other) && !is_seen_rev_step(other)
-                ) {
+            if (found_loop) {
                 //  recurse this function into it, taking start as our current handle other side of the loop as our end
                 //  to cut_points we add the start position, the result from recursion, and our end position
                 //std::cerr << "Found loop! " << step_index.get_position(step) << " " << step_index.get_position(other) << std::endl;
@@ -94,12 +92,14 @@ std::vector<step_handle_t> untangle_cuts(
         if (end == path_begin || !graph.has_previous_step(end)) {
             return cut_points;
         }
+        step_handle_t _step = graph.get_previous_step(end);
+        curr_pos = step_index.get_position(_step, graph);
         //std::cerr << "reversing" << std::endl;
-        for (step_handle_t step = end;
-             step_index.get_position(step, graph) > start_pos;
+        for (step_handle_t step = _step;
+             step != start;
              step = graph.get_previous_step(step)) {
             handle_t handle = graph.get_handle_of_step(step);
-            if (is_seen_rev_step(step) || is_seen_fwd_step(step)) {
+            if (is_seen_rev_step(step)) {
                 curr_pos -= graph.get_length(handle);
                 continue;
             }
@@ -122,9 +122,7 @@ std::vector<step_handle_t> untangle_cuts(
                     found_loop = true;
                 }
             }
-            if (found_loop
-                && !is_seen_rev_step(other) && !is_seen_fwd_step(other)
-                ) {
+            if (found_loop) {
                 //  recurse this function into it, taking start as our current handle other side of the loop as our end
                 //  to cut_points we add the start position, the result from recursion, and our end position
                 todo.push_back(std::make_pair(other, step));
