@@ -158,10 +158,10 @@ void inject_ranges(MutablePathDeletableHandleGraph& graph,
         if (path_intervals.find(path) != path_intervals.end()) {
             auto& intervals = path_intervals.find(path)->second;
             auto ival = intervals.begin();
-            // IMPORTANT: in the key of the map, the end position (uint64_t) has to come
-            //            first to keep the open intervals sorted by end coordinates.
-            //            The annotation name (std::string) is necessary to avoid loosing
-            //            annotations having the same end coordinates.
+            // IMPORTANT: in the key of the map, the end position (uint64_t) has
+            // to come first to keep the open intervals sorted by end coordinates.
+            // The annotation name (std::string) is necessary to avoid losing
+            // annotations having the same end coordinates.
             std::map<std::pair<uint64_t, std::string>, step_handle_t> open_intervals_by_end;
             uint64_t pos = 0;
             handle_t last_h;
