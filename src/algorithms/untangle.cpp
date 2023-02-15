@@ -88,12 +88,12 @@ std::vector<step_handle_t> untangle_cuts(
             uint64_t other_pos = 0;
             auto x = self_index.get_next_step_on_node(graph.get_id(handle), step);
             if (x.first) {
-                other_pos = step_index.get_position(x.second, graph);
+                other_pos = x.second.second;
                 if (other_pos > start_pos
                     && other_pos < end_pos
                     && other_pos > curr_pos
-                    && !is_seen_fwd_step(x.second)) {
-                    other = x.second;
+                    && !is_seen_fwd_step(x.second.first)) {
+                    other = x.second.first;
                     found_loop = true;
                 }
             }
@@ -146,12 +146,12 @@ std::vector<step_handle_t> untangle_cuts(
             auto x = self_index.get_prev_step_on_node(graph.get_id(handle), step);
             uint64_t other_pos = 0;
             if (x.first) {
-                other_pos = step_index.get_position(x.second, graph);
+                other_pos = x.second.second;
                 if (other_pos > start_pos
                     && other_pos < end_pos
                     && other_pos < curr_pos
-                    && !is_seen_rev_step(x.second)) {
-                    other = x.second;
+                    && !is_seen_rev_step(x.second.first)) {
+                    other = x.second.first;
                     found_loop = true;
                 }
             }
