@@ -74,9 +74,13 @@ namespace odgi {
 			paths.push_back(path);
 		});
 
+		std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress_meter;
+		if (progress) {
+			progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+					paths.size(), "[odgi::travis::main] Path Progress:");
+		}
+
 		for (auto path : paths) {
-			seq_out_stream << graph.get_path_name(path) << "\t";
-			node_out_stream << graph.get_path_name(path) << "\t";
 			graph.for_each_step_in_path(path, [&](const step_handle_t& step) {
 				handle_t h = graph.get_handle_of_step(step);
 				uint64_t h_id = graph.get_id(h);
@@ -84,23 +88,27 @@ namespace odgi {
 				std::string seq = graph.get_sequence(h);
 				for (uint64_t i = 0; i < h_len; i++) {
 					if (i != 0) {
-						node_out_stream << ",";
-						seq_out_stream << ",";
+						node_out_stream << " ";
 					}
 					node_out_stream << h_id;
 					seq_out_stream << seq[i];
 				}
 				if (graph.has_next_step(step)) {
 					node_out_stream << "\t";
-					seq_out_stream << "\t";
 				}
 			});
-			seq_out_stream << std::endl;
 			node_out_stream << std::endl;
+			if (progress) {
+				progress_meter->increment(1);
+			}
 		}
 
 		seq_out_stream.close();
 		node_out_stream.close();
+
+		if (progress) {
+			progress_meter->finish();
+		}
 
 		return 0;
 	}
