@@ -124,7 +124,7 @@ while [ -L \"\$SOURCE\" ]; do # resolve \$SOURCE until the file is no longer a s
 done
 DIR=\$( cd -P \"\$( dirname \"\$SOURCE\" )\" >/dev/null 2>&1 && pwd )
 
-if [[ -f \"\$DIR\"/oit dgi_avx512 ]];
+if [[ -f \"\$DIR\"/odgi_avx512 ]];
 then
   echo \"avx512\"
   \"\$DIR\"/odgi_avx512 \"\$@\"
