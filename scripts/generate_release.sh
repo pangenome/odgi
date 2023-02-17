@@ -42,6 +42,11 @@ then
   rm -rf avx
   rm -rf avx2
   rm -rf avx512
+  LINE55=$(sed -n 55p CMakeLists.txt)
+  if [[ "$LINE55" = \#* ]]
+  then
+    sed -i '55 s/^#//' CMakeLists.txt
+  fi
   exit 0
 fi
 
@@ -53,7 +58,11 @@ AVX512=$(lscpu | grep "Flags" | grep "avx512")
 
 mkdir release
 # we want to enable our own extra flags
-sed -i '55 s/^/#/' CMakeLists.txt
+LINE55=$(sed -n 55p CMakeLists.txt)
+if [[ ! "$LINE55" = \#* ]]
+then
+  sed -i '55 s/^/#/' CMakeLists.txt
+fi
 
 if [[ ! -z "$SSE2" ]];
 then
@@ -115,19 +124,19 @@ while [ -L \"\$SOURCE\" ]; do # resolve \$SOURCE until the file is no longer a s
 done
 DIR=\$( cd -P \"\$( dirname \"\$SOURCE\" )\" >/dev/null 2>&1 && pwd )
 
-if [[ -f odgi_avx512 ]];
+if [[ -f \"\$DIR\"/oit dgi_avx512 ]];
 then
   echo \"avx512\"
   \"\$DIR\"/odgi_avx512 \"\$@\"
-elif [[ -f odgi_avx2 ]];
+elif [[ -f \"\$DIR\"/odgi_avx2 ]];
 then
   echo \"avx2\"
   \"\$DIR\"/odgi_avx2 \"\$@\"
-elif [[ -f odgi_avx ]];
+elif [[ -f \"\$DIR\"/odgi_avx ]];
 then
   echo \"avx\"
   \"\$DIR\"/odgi_avx \"\$@\"
-elif [[ -f odgi_sse4_2 ]];
+elif [[ -f \"\$DIR\"/odgi_sse4_2 ]];
 then
   echo \"sse4_2\"
   \"\$DIR\"/odgi_sse4_2 \"\$@\"
