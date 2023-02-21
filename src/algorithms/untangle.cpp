@@ -30,10 +30,16 @@ std::vector<step_handle_t> untangle_cuts(
         return seen_rev_step[self_index.get_step_idx(step)];
     };
     auto mark_seen_fwd_step = [&seen_fwd_step,&self_index](const step_handle_t& step) {
-        seen_fwd_step[self_index.get_step_idx(step)] = true;
+        auto idx = self_index.get_step_idx(step);
+        bool state = seen_fwd_step[idx];
+        seen_fwd_step[idx] = true;
+        return state;
     };
     auto mark_seen_rev_step = [&seen_rev_step,&self_index](const step_handle_t& step) {
-        seen_rev_step[self_index.get_step_idx(step)] = true;
+        auto idx = self_index.get_step_idx(step);
+        bool state = seen_rev_step[idx];
+        seen_rev_step[idx] = true;
+        return state;
     };
 
     std::vector<std::pair<uint64_t, step_handle_t>> cut_points;
@@ -65,10 +71,12 @@ std::vector<step_handle_t> untangle_cuts(
         cut_points.push_back(std::pair(curr_pos, start));
         todo.pop_front();
         // we go forward until we see a loop, where the other step has position < end_pos and > start_pos
-        for (step_handle_t step = start; step != end; step = graph.get_next_step(step)) {
+        for (step_handle_t step = start;
+             step != end;
+             step = graph.get_next_step(step)) {
             //  we take the first and shortest loop we find
             handle_t handle = graph.get_handle_of_step(step);
-            if (is_seen_fwd_step(step)) {
+            if (mark_seen_fwd_step(step)) {
                 curr_pos += graph.get_length(handle);
                 continue;
             }
@@ -82,7 +90,6 @@ std::vector<step_handle_t> untangle_cuts(
                 cut_points.push_back(std::pair(curr_pos, step));
                 //cut_points.push_back(std::make_pair(step_index.get_position(step, graph), step));
             }
-            mark_seen_fwd_step(step);
             bool found_loop = false;
             step_handle_t other;
             uint64_t other_pos = 0;
@@ -126,7 +133,7 @@ std::vector<step_handle_t> untangle_cuts(
              step = graph.get_previous_step(step)) {
             handle_t handle = graph.get_handle_of_step(step);
             curr_pos -= graph.get_length(handle);
-            if (is_seen_rev_step(step)) {
+            if (mark_seen_rev_step(step)) {
                 continue;
             }
             //  we take the first and shortest loop we find
@@ -139,7 +146,6 @@ std::vector<step_handle_t> untangle_cuts(
                 */
                 cut_points.push_back(std::pair(curr_pos, step));
             }
-            mark_seen_rev_step(step);
             //std::cerr << "rev on step " << graph.get_id(handle) << " " << curr_pos << std::endl;
             bool found_loop = false;
             step_handle_t other;
