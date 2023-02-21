@@ -1725,4 +1725,16 @@ void graph_t::copy(const graph_t& other) {
         });
 }
 
+void graph_t::set_static(void) {
+    for (auto& node : node_v) {
+        node->set_static();
+    }
+}
+
+void graph_t::set_volatile(void) {
+    for (auto& node : node_v) {
+        node->set_volatile();
+    }
+}
+
 }

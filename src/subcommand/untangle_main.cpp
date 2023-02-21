@@ -112,6 +112,7 @@ int main_untangle(int argc, char **argv) {
                                              graph);
             }
         }
+        graph.set_static();
     }
 
     // path loading
