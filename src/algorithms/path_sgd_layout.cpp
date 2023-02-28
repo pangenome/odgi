@@ -84,29 +84,6 @@ namespace odgi {
                                                                            eps);
 
                 // cache zipf zetas for our full path space
-                auto start_zeta = std::chrono::high_resolution_clock::now();
-                /*
-                // reference zeta computation
-                std::vector<double> zetas_ref((space <= space_max ? space : space_max + (space - space_max) / space_quantization_step + 1)+1);
-                uint64_t last_quantized_i = 0;
-#pragma omp parallel for schedule(static,1)
-                for (uint64_t i = 1; i < space+1; ++i) {
-                    uint64_t quantized_i = i;
-                    uint64_t compressed_space = i;
-                    if (i > space_max){
-                        quantized_i = space_max + (i - space_max) / space_quantization_step + 1;
-                        compressed_space = space_max + ((i - space_max) / space_quantization_step) * space_quantization_step;
-                    }
-
-                    if (quantized_i != last_quantized_i){
-                        dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, compressed_space, theta);
-                        zetas_ref[quantized_i] = z_p.zeta();
-
-                        last_quantized_i = quantized_i;
-                    }
-                }
-                */
-                // fast zeta computation
                 std::vector<double> zetas((space <= space_max ? space : space_max + (space - space_max) / space_quantization_step + 1)+1);
                 double zeta_tmp = 0.0;
                 for (uint64_t i = 1; i < space + 1; i++) {
@@ -118,21 +95,6 @@ namespace odgi {
                         zetas[space_max + 1 + (i - space_max) / space_quantization_step] = zeta_tmp;
                     }
                 }
-                auto end_zeta = std::chrono::high_resolution_clock::now();
-                uint32_t duration_zeta_ms = std::chrono::duration_cast<std::chrono::milliseconds>(end_zeta - start_zeta).count();
-                std::cout << "zeta precomputation took " << duration_zeta_ms << "ms" << std::endl;
-
-
-                /*
-                for (int i = 1; i < zetas.size(); i++) {
-                    if (zetas[i] != zetas_ref[i]) {
-                        std::cout << "WARNING[" << i << "]: " << zetas[i] << " vs " << zetas_ref[i] << std::endl;
-                    }
-                }
-
-                std::cout << zetas[zetas.size() - 1] << std::endl;
-                return;
-                */
 
                 // how many term updates we make
                 std::atomic<uint64_t> term_updates;
