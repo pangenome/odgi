@@ -256,6 +256,12 @@ int main_paths(int argc, char** argv) {
                 path_max = std::max(path_max, (uint32_t)as_integer(p));
             });
 
+        // Initialize first to avoid possible bugs later
+        for (uint32_t i = 0; i < path_max; ++i) {
+            path_handle_t p = as_path_handle(i + 1);
+            bp_count[get_path_id(p)] = 0;
+        }
+
 #pragma omp parallel for
         for (uint32_t i = 0; i < path_max; ++i) {
             path_handle_t p = as_path_handle(i + 1);
