@@ -213,7 +213,7 @@ int main_paths(int argc, char** argv) {
             uint32_t i = 0;
             graph.for_each_path_handle(
                 [&](const path_handle_t& p) {
-                        std::string group_name = split(graph.get_path_name(p), delim)[0];
+                    std::string group_name = split(graph.get_path_name(p), delim)[0];
                     auto f = path_group_ids.find(group_name);
                     if (f == path_group_ids.end()) {
                         path_group_ids[group_name] = i++;
