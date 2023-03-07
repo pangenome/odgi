@@ -210,17 +210,17 @@ int main_paths(int argc, char** argv) {
         std::vector<std::string> path_groups;
         if (using_delim) {
             delim = args::get(path_delim).at(0);
-        uint32_t i = 0;
-        graph.for_each_path_handle(
-            [&](const path_handle_t& p) {
-                    std::string group_name = split(graph.get_path_name(p), delim)[0];
-                auto f = path_group_ids.find(group_name);
-                if (f == path_group_ids.end()) {
-                    path_group_ids[group_name] = i++;
-                    path_groups.push_back(group_name);
-                }
-                path_handle_group_ids[p] = path_group_ids[group_name];
-            });
+            uint32_t i = 0;
+            graph.for_each_path_handle(
+                [&](const path_handle_t& p) {
+                        std::string group_name = split(graph.get_path_name(p), delim)[0];
+                    auto f = path_group_ids.find(group_name);
+                    if (f == path_group_ids.end()) {
+                        path_group_ids[group_name] = i++;
+                        path_groups.push_back(group_name);
+                    }
+                    path_handle_group_ids[p] = path_group_ids[group_name];
+                });
         }
 
         auto get_path_name
@@ -265,7 +265,6 @@ int main_paths(int argc, char** argv) {
 #pragma omp parallel for
         for (uint32_t i = 0; i < path_max; ++i) {
             path_handle_t p = as_path_handle(i + 1);
-
             uint64_t path_length = 0;
             graph.for_each_step_in_path(
                 p,
