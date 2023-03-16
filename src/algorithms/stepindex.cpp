@@ -232,7 +232,7 @@ path_step_index_t::path_step_index_t(const PathHandleGraph& graph,
                 steps.push_back(step);
                 nodes.push_back(graph.get_id(graph.get_handle_of_step(step)));
             });
-        steps.push_back(graph.path_end(path));
+        steps.push_back(graph.path_end(path)); // dangerous...
         // sort the steps, nb. they're unique
         ips4o::parallel::sort(steps.begin(), steps.end(), std::less<>(), nthreads);
         // build the hash function (quietly)
@@ -253,10 +253,10 @@ path_step_index_t::path_step_index_t(const PathHandleGraph& graph,
         // here, we sort steps by handle and then position
         // and build our handle->step list and step->offset maps
         // these are steps sorted by the bbhash of their node id, and then their offset in the path
-        std::vector<std::tuple<uint64_t, uint64_t, step_it>> steps_by_node;
+        std::vector<std::tuple<uint64_t, uint64_t, step_handle_t, step_it>> steps_by_node;
         uint64_t offset = 0;
         for (step_it step = steps.begin(); step != steps.end(); ++step) {
-            steps_by_node.emplace_back(node_mphf->lookup(graph.get_id(graph.get_handle_of_step(*step))), offset, step);
+            steps_by_node.emplace_back(node_mphf->lookup(graph.get_id(graph.get_handle_of_step(*step))), offset, *step, step);
             offset += graph.get_length(graph.get_handle_of_step(*step));
         }
         if (offset == 0) {
@@ -273,12 +273,13 @@ path_step_index_t::path_step_index_t(const PathHandleGraph& graph,
             auto& idx = std::get<0>(node_step);
             auto& offset = std::get<1>(node_step); // just used for sorting
             auto& step = std::get<2>(node_step);
+            auto& it_step = std::get<3>(node_step);
             //std::cerr << "idx = " << idx << " " << as_integers(step)[0] << ":" << as_integers(step)[1] << std::endl;
             if (idx != last_idx) {
                 node_offset[idx] = node_steps.size();
             }
-            step_offset[step_mphf->lookup(*step)] = node_steps.size();
-            node_steps.push_back(std::make_pair(step, offset));
+            step_offset[step_mphf->lookup(step)] = node_steps.size();
+            node_steps.push_back(std::make_pair(it_step, offset));
             last_idx = idx;
         }
         if (last_idx != node_count-1) {
@@ -344,7 +345,7 @@ path_step_index_t::step_it path_step_index_t::path_begin(void) const {
 
 // get the last step in the path
 path_step_index_t::step_it path_step_index_t::path_back(void) const {
-    return steps.end()-1;
+    return std::prev(std::prev(steps.end()));
 }
 
 

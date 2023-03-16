@@ -299,6 +299,7 @@ segment_map_t::segment_map_t(
     for (uint64_t i = 0; i < paths.size(); ++i) { //auto& path : paths) {
         auto& path = paths[i];
         auto path_name = graph.get_path_name(path);
+        //std::cerr << "path " << path_name << std::endl;
         auto self_index = path_step_index_t(graph, path, 1);
         all_cuts[i] =
             merge_cuts(
