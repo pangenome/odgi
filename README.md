@@ -112,6 +112,11 @@ work with output from `odgi stats`! For more details take a look at the document
 **Andrea Guarracino\*, Simon Heumos\*, Sven Nahnsen, Pjotr Prins, Erik Garrison**. [ODGI: understanding pangenome graphs](https://doi.org/10.1093/bioinformatics/btac308), Bioinformatics, 2022\
 **\*Shared first authorship**
 
+## funding sources
+
+`odgi` has been funded through a variety of mechanisms, including a Wellcome Sanger PhD fellowship and diverse NIH and NSF grants (listed in our paper), as well as funding from the State of Tennessee.
+Of particular note is the [contribution of NLnet to the development of a differential privacy model](https://nlnet.nl/project/VariationGraph/), ["privvg"](https://privvg.github.io/), which supported significant maintenance and development effort in the `odgi` toolkit.
+
 ## tests
 
 Unittests from `vg` have been ported here and are used to validate the behavior of the algorithm.
