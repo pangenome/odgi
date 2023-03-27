@@ -44,6 +44,9 @@ Path Investigation Options
 | **-l, --list-paths-start-end**
 | If **-L,--list-paths** was specified, this additionally prints the start and end positions of each path in additional, tab-delimited coloumns.
 
+| **-f, --fasta**
+| Print paths in FASTA format to stdout. One line for the FASTA header, another line for the whole sequence.
+
 | **-H, --haplotypes**
 | Print to stdout the paths in an approximate binary haplotype matrix
   based on the graph’s sort order. The output is tab-delimited:
@@ -53,19 +56,19 @@ Path Investigation Options
 | **-N, --scale-by-node-len**
 | Scale the haplotype matrix cells by node length.
 
-| **-D, --delim**\ =\ *CHAR*
-| The part of each path name before this delimiter is a group
-  identifier. This parameter should only be set in combination with
-  **-H, --haplotypes**. Prints an additional, first column
-  **group.name** to stdout.
-
 | **-d, --distance**
 | Provides a sparse distance matrix for paths. If **-D, --delim** is
   set, it will be path groups distances. Each line prints in a tab-delimited format to stdout:
   *path.a*, *path.b*, *path.a.length*, *path.b.length*, *intersection*, *jaccard*, *euclidean*.
 
-| **-f, --fasta**
-| Print paths in FASTA format to stdout. One line for the FASTA header, another line for the whole sequence.
+| **-D, --delim**\ =\ *CHAR*
+| The part of each path name before this delimiter is a group
+  identifier. For use with **-d, distance** or **-H, --haplotypes**.
+  With the latter, it prints an additional, first column   **group.name** to stdout.
+
+| **-p, --delim-pos**\ =\ *N*
+| Consider a specific occurrence of the delimiter specified with **-D, --delim** to obtain the
+  group identifier. Specify 0 for the 1st occurrence (default), 1 for the 2nd occurrence, ..."
 
 Path Modification Options
 ---------------------

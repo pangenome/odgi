@@ -56,6 +56,9 @@ int main_paths(int argc, char** argv) {
                                                     " identifier. For use with **-d, distance** or **-H, --haplotypes**. "
                                                     " With the latter, it prints an additional, first column **group.name** to stdout.",
                                                     {'D', "delim"});
+    args::ValueFlag<std::uint16_t> path_delim_pos(path_investigation_opts, "N", "Consider a specific occurrence of the delimiter specified with **-D, --delim**"
+                                                    " to obtain the group identifier. Specify 0 for the 1st occurrence (default), 1 for the 2nd occurrence, ...",
+                                                    {'p', "delim-pos"});                         
     args::Group path_modification_opts(parser, "[ Path Modification Options ]");
     args::ValueFlag<std::string> keep_paths_file(path_modification_opts, "FILE", "Keep paths listed (by line) in *FILE*.", {'K', "keep-paths"});
     args::ValueFlag<std::string> drop_paths_file(path_modification_opts, "FILE", "Drop paths listed (by line) in *FILE*.", {'X', "drop-paths"});
@@ -144,6 +147,23 @@ int main_paths(int argc, char** argv) {
             });
     }
 
+    const uint16_t delim_pos = path_delim_pos ? args::get(path_delim_pos) : 0;
+
+    auto group_identified_pos = [](const std::string& path_name, char delim, uint16_t delim_pos) -> int32_t {
+        int32_t pos = -1;
+        int32_t cnt = -1;
+
+        while ( cnt != delim_pos ) {
+            ++pos;
+            pos = path_name.find(delim, pos);
+            if (pos == std::string::npos) {
+                return -1;
+            }
+            ++cnt;
+        }
+
+        return pos;
+    };
 
     if (args::get(haplo_matrix)) {
         char delim = '\0';
@@ -168,8 +188,13 @@ int main_paths(int argc, char** argv) {
         graph.for_each_path_handle(
             [&](const path_handle_t& p) {
                 std::string full_path_name = graph.get_path_name(p);
-                std::string group_name = (delim ? split(full_path_name, delim)[0] : "");
-                std::string path_name = (delim ? full_path_name.substr(full_path_name.find(delim)+1) : full_path_name);
+                const int32_t pos = delim ? group_identified_pos(full_path_name, delim, delim_pos) : 0;
+                if ( pos < 0 ) {
+                    std::cerr << "[odgi::paths] error: path name " << graph.get_path_name(p) << " has not enough occurrences of '" << delim << "'." << std::endl;
+                    exit(-1);
+                }
+                std::string group_name = (delim ? full_path_name.substr(0, pos) : "");
+                std::string path_name = (delim ? full_path_name.substr(pos+1) : full_path_name);
                 uint64_t path_length = 0;
                 uint64_t path_step_count = 0;
                 std::vector<uint64_t> row(graph.get_node_count());
@@ -213,7 +238,12 @@ int main_paths(int argc, char** argv) {
             uint32_t i = 0;
             graph.for_each_path_handle(
                 [&](const path_handle_t& p) {
-                    std::string group_name = split(graph.get_path_name(p), delim)[0];
+                    const int32_t pos = delim ? group_identified_pos(graph.get_path_name(p), delim, delim_pos) : 0;
+                    if ( pos < 0 ) {
+                        std::cerr << "[odgi::paths] error: path name " << graph.get_path_name(p) << " has not enough occurrences of '" << delim << "'." << std::endl;
+                        exit(-1);
+                    }
+                    std::string group_name = graph.get_path_name(p).substr(0, pos);
                     auto f = path_group_ids.find(group_name);
                     if (f == path_group_ids.end()) {
                         path_group_ids[group_name] = i++;
