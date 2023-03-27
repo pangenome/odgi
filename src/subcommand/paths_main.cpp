@@ -43,10 +43,7 @@ int main_paths(int argc, char** argv) {
                                                 " own line.", {'L', "list-paths"});
 	args::Flag list_path_start_end(path_investigation_opts, "list-path-start-end", "If -L,--list-paths was specified, this additionally prints the start and end positions of each path in additional, tab-delimited coloumns."
 						   , {'l', "list-path-start-end"});
-    args::ValueFlag<std::string> path_delim(path_investigation_opts, "CHAR", "The part of each path name before this delimiter CHAR is a group"
-                                                                             " identifier. This parameter should only be set in combination with"
-                                                                             " **-H, --haplotypes**. Prints an additional, first column"
-                                                                             " **group.name** to stdout.", {'D', "delim"});
+    args::Flag write_fasta(path_investigation_opts, "fasta", "Print paths in FASTA format to stdout. One line for the FASTA header, another line for the whole sequence.", {'f', "fasta"});
     args::Flag haplo_matrix(path_investigation_opts, "haplo", "Print to stdout the paths in a path coverage haplotype matrix"
                                                               " based on the graph’s sort order. The output is tab-delimited:"
                                                               " *path.name*, *path.length*, *path.step.count*, *node.1*,"
@@ -55,7 +52,10 @@ int main_paths(int argc, char** argv) {
     args::Flag distance_matrix(path_investigation_opts, "distance", "Provides a sparse distance matrix for paths. If **-D, --delim** is"
                                                                     " set, it will be path groups distances. Each line prints in a tab-delimited format to stdout:"
                                                                     " *path.a*, *path.b*, *path.a.length*, *path.b.length*, *intersection*, *jaccard*, *euclidean*." , {'d', "distance"});
-    args::Flag write_fasta(path_investigation_opts, "fasta", "Print paths in FASTA format to stdout. One line for the FASTA header, another line for the whole sequence.", {'f', "fasta"});
+    args::ValueFlag<std::string> path_delim(path_investigation_opts, "CHAR", "The part of each path name before this delimiter CHAR is a group"
+                                                    " identifier. For use with **-d, distance** or **-H, --haplotypes**. "
+                                                    " With the latter, it prints an additional, first column **group.name** to stdout.",
+                                                    {'D', "delim"});
     args::Group path_modification_opts(parser, "[ Path Modification Options ]");
     args::ValueFlag<std::string> keep_paths_file(path_modification_opts, "FILE", "Keep paths listed (by line) in *FILE*.", {'K', "keep-paths"});
     args::ValueFlag<std::string> drop_paths_file(path_modification_opts, "FILE", "Drop paths listed (by line) in *FILE*.", {'X', "drop-paths"});
