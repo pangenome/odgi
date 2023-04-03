@@ -334,6 +334,7 @@ int main_sort(int argc, char** argv) {
     if (p_sgd || args::get(pipeline).find('Y') != std::string::npos) {
 		if (_p_sgd_target_paths) {
 			target_paths = load_paths(args::get(_p_sgd_target_paths));
+			sort_graph_by_target_paths(graph, target_paths, is_ref);
 		}
         // take care of path index
         if (xp_in_file) {
@@ -440,10 +441,11 @@ int main_sort(int argc, char** argv) {
                     order = algorithms::random_order(graph);
                     break;
                 case 'Y': {
-					if (_p_sgd_target_paths) {
-						sort_graph_by_target_paths(graph, target_paths, is_ref);
-					}
 					if (!fresh_path_index) {
+						if (_p_sgd_target_paths) {
+							is_ref = std::vector<bool>();
+							sort_graph_by_target_paths(graph, target_paths, is_ref);
+						}
 						path_index.clean();
 						path_index.from_handle_graph(graph, num_threads);
 					}
@@ -515,7 +517,6 @@ int main_sort(int argc, char** argv) {
     } else if (args::get(no_seeds)) {
         graph.apply_ordering(algorithms::topological_order(&graph, false, false, args::get(progress)), true);
     } else if (args::get(p_sgd)) {
-		sort_graph_by_target_paths(graph, target_paths, is_ref);
         std::vector<handle_t> order =
                 algorithms::path_linear_sgd_order(graph,
                                                   path_index,
