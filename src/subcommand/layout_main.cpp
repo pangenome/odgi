@@ -81,6 +81,7 @@ int main_layout(int argc, char **argv) {
     args::ValueFlag<std::string> p_sgd_snapshot(pg_sgd_opts, "STRING",
                                                 "Set the prefix to which each snapshot layout of a path guided 2D SGD iteration should be written to (default: NONE).",
                                                 {'u', "path-sgd-snapshot"});
+	args::ValueFlag<std::string> p_sgd_target_paths(pg_sgd_opts, "FILE", "Read the paths that should be considered as target paths (references) from this *FILE*. PG-SGD will keep the nodes of the given paths fixed. A path's rank determines it's weight for decision making and is given by its position in the given *FILE*.", {'H', "target-paths"});
     args::Group threading_opts(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> nthreads(threading_opts, "N",
                                        "Number of threads to use for parallel operations.",
