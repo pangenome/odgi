@@ -473,7 +473,6 @@ int main_sort(int argc, char** argv) {
 															  _p_sgd_target_paths,
 															  is_ref);
 					// reset is_ref or we will break when we apply it again
-					is_ref = std::vector<bool>();
                     break;
                 }
                 case 'f':
