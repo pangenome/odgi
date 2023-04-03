@@ -441,9 +441,9 @@ int main_sort(int argc, char** argv) {
                     order = algorithms::random_order(graph);
                     break;
                 case 'Y': {
-					is_ref = std::vector<bool>();
 					if (!fresh_path_index) {
 						if (_p_sgd_target_paths) {
+							is_ref = std::vector<bool>();
 							sort_graph_by_target_paths(graph, target_paths, is_ref);
 						}
 						path_index.clean();
