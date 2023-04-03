@@ -264,7 +264,6 @@ int main_sort(int argc, char** argv) {
 	};
 
 	auto sort_graph_by_target_paths = [&](graph_t& graph, std::vector<path_handle_t> target_paths, std::vector<bool>& is_ref) {
-		std::cerr << "TEST" << std::endl;
 		std::vector<handle_t> target_order;
 		std::fill_n(std::back_inserter(is_ref), graph.get_node_count(), false);
 		std::unique_ptr <odgi::algorithms::progress_meter::ProgressMeter> target_paths_progress;
