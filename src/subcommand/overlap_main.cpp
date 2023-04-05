@@ -159,7 +159,7 @@ namespace odgi {
         };
 
         if (!path_ranges.empty()) {
-            std::cout << "#path\tpath_touched" << std::endl;
+            std::cout << "#path\tstart\tend\tpath.touched" << std::endl;
 
 //#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
             for (auto &path_range : path_ranges) {
