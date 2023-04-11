@@ -220,10 +220,12 @@ TEST_CASE("Sorting a graph with paths 1 node long", "[sort]") {
             2,
             false,
             path_sgd_seed,
-            false,
-            "",
-			false,
-			target_nodes
+            false, // snapshot
+            "", // snapshot prefix
+			false, // write 1D layout
+			"", // layout file name
+			false, // target base sorting
+			target_nodes // actual target nodes
     );
 
     graph.apply_ordering(order, true);

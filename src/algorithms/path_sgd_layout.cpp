@@ -144,7 +144,7 @@ namespace odgi {
                                         iteration++;
                                         snapshot_in_progress.store(false);
                                     }
-                                    if (iteration > iter_max) {
+                                    if (iteration >= iter_max) {
                                         work_todo.store(false);
                                     } else if (Delta_max.load() <= delta) { // nb: this will also break at 0
                                         if (progress) {

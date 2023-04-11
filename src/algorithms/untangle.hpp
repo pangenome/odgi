@@ -49,7 +49,8 @@ public:
                   const step_index_t& step_index,
                   const std::function<bool(const handle_t&)>& is_cut,
                   const uint64_t& merge_dist,
-                  const size_t& num_threads);
+                  const size_t& num_threads,
+                  const bool& show_progress);
     void for_segment_on_node(
         uint64_t node_id,
         const std::function<void(const uint64_t& segment_id, const bool& is_rev)>& func) const;
@@ -125,7 +126,7 @@ void untangle(
     const std::string& cut_points_input,
     const std::string& cut_points_output,
     const size_t& num_threads,
-	const bool& progress,
+	const bool& show_progress,
 	const step_index_t& step_index,
 	const std::vector<path_handle_t>& paths);
 
