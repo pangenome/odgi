@@ -181,7 +181,7 @@ int main_sort(int argc, char** argv) {
     std::function<uint64_t(const std::vector<path_handle_t> &,
                            const xp::XP &)> get_max_path_step_count
             = [&](const std::vector<path_handle_t> &path_sgd_use_paths, const xp::XP &path_index) {
-                uint64_t max_path_step_count = 0;
+                size_t max_path_step_count = 0;
                 for (auto& path : path_sgd_use_paths) {
                     max_path_step_count = std::max(max_path_step_count, path_index.get_path_step_count(path));
                 }
@@ -190,7 +190,7 @@ int main_sort(int argc, char** argv) {
     std::function<uint64_t(const std::vector<path_handle_t> &,
                            const xp::XP &)> get_max_path_length
             = [&](const std::vector<path_handle_t> &path_sgd_use_paths, const xp::XP &path_index) {
-                uint64_t max_path_length = std::numeric_limits<uint64_t>::min();
+                size_t max_path_length = std::numeric_limits<uint64_t>::min();
                 for (auto &path : path_sgd_use_paths) {
                     max_path_length = std::max(max_path_length, path_index.get_path_length(path));
                 }
