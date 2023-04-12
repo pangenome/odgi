@@ -217,9 +217,9 @@ int main_sort(int argc, char** argv) {
     if (tmp_base) {
         xp::temp_file::set_dir(args::get(tmp_base));
     } else {
-        char* cwd = get_current_dir_name();
+        char cwd[512];
+        getcwd(cwd, sizeof(cwd));
         xp::temp_file::set_dir(std::string(cwd));
-        free(cwd);
     }
 
     // If required, first of all, optimize the graph so that it is optimized for subsequent algorithms (if required)
