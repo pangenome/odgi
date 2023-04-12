@@ -695,10 +695,14 @@ set(odgi_LIBS
   # ${lodepng_lib}
   ${libbf_lib}
   "-ldl"
-  "-latomic"
   )
   #"-lefence") # for malloc error checking
   #"-ltcmalloc") # for heap profiling
+
+# macOS does not need `-latomic` to use atomics.
+if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    list(APPEND odgi_LIBS "-latomic")
+endif (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 if (NOT INLINE_HANDLEGRAPH_SOURCES)
     list(APPEND odgi_LIBS "${handlegraph_LIB}/libhandlegraph.a")
