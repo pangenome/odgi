@@ -16,7 +16,6 @@
 #include "handlegraph/path_position_handle_graph.hpp"
 #include "mmmultimap.hpp"
 #include "odgi.hpp"
-#include <arpa/inet.h>
 #include "mutex"
 
 namespace xp {
