@@ -67,8 +67,8 @@ Path Investigation Options
   With the latter, it prints an additional, first column   **group.name** to stdout.
 
 | **-p, --delim-pos**\ =\ *N*
-| Consider a specific occurrence of the delimiter specified with **-D, --delim** to obtain the
-  group identifier. Specify 0 for the 1st occurrence (default), 1 for the 2nd occurrence, ..."
+| Consider the N-th occurrence of the delimiter specified with **-D, --delim** to obtain the
+  group identifier. Specify 1 for the 1st occurrence (default)."
 
 Path Modification Options
 ---------------------
