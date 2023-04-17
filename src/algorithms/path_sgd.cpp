@@ -254,7 +254,7 @@ namespace odgi {
                                         auto _theta = adj_theta.load();
                                         if (s_rank > 0 && flip(gen) || s_rank == path_step_count-1) {
                                             // go backward
-                                            uint64_t jump_space = std::min(space, s_rank);
+                                            uint64_t jump_space = std::min(space, (uint64_t) s_rank);
                                             uint64_t space = jump_space;
                                             if (jump_space > space_max){
                                                 space = space_max + (jump_space - space_max) / space_quantization_step + 1;
@@ -267,7 +267,7 @@ namespace odgi {
                                             as_integers(step_b)[1] = s_rank - z_i;
                                         } else {
                                             // go forward
-                                            uint64_t jump_space = std::min(space, path_step_count - s_rank - 1);
+                                            uint64_t jump_space = std::min(space, (uint64_t) (path_step_count - s_rank - 1));
                                             uint64_t space = jump_space;
                                             if (jump_space > space_max){
                                                 space = space_max + (jump_space - space_max) / space_quantization_step + 1;
