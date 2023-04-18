@@ -524,6 +524,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/unitig_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/viz_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/paths_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/similarity_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/priv_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/prune_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/unchop_main.cpp
