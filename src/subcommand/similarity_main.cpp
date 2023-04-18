@@ -248,12 +248,15 @@ int main_similarity(int argc, char** argv) {
         decode_pair(p.first, &id_a, &id_b);
 
         auto& intersection = p.second;
+
+        double jaccard = (double)intersection / (double)(bp_count[id_a] + bp_count[id_b] - intersection);
+
         std::cout << get_path_name(id_a) << "\t"
                     << get_path_name(id_b) << "\t"
                     << bp_count[id_a] << "\t"
                     << bp_count[id_b] << "\t"
                     << intersection << "\t"
-                    << 1.0 - (double)intersection / (double)(bp_count[id_a] + bp_count[id_b] - intersection) << "\t"
+                    << jaccard << "\t"
                     << std::sqrt((double)((bp_count[id_a] + bp_count[id_b] - intersection) - intersection)) << std::endl;
     }
 

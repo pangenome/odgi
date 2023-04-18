@@ -56,15 +56,9 @@ Path Investigation Options
 | **-N, --scale-by-node-len**
 | Scale the haplotype matrix cells by node length.
 
-| **-d, --distance**
-| Provides a sparse distance matrix for paths. If **-D, --delim** is
-  set, it will be path groups distances. Each line prints in a tab-delimited format to stdout:
-  *path.a*, *path.b*, *path.a.length*, *path.b.length*, *intersection*, *jaccard*, *euclidean*.
-
 | **-D, --delim**\ =\ *CHAR*
 | The part of each path name before this delimiter is a group
-  identifier. For use with **-d, distance** or **-H, --haplotypes**.
-  With the latter, it prints an additional, first column   **group.name** to stdout.
+  identifier. For use with **-H, --haplotypes**: it prints an additional, first column   **group.name** to stdout.
 
 | **-p, --delim-pos**\ =\ *N*
 | Consider the N-th occurrence of the delimiter specified with **-D, --delim** to obtain the

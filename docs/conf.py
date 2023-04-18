@@ -20,13 +20,13 @@ sys.path.insert(0, os.path.abspath('../lib/'))
 # -- Project information -----------------------------------------------------
 
 project = u'odgi'
-copyright = '2020-2022, *Guarracino A., *Heumos S., Nahnsen S., Prins P., Garrison E. Revision v0.8.1-7731530'
+copyright = '2020-2023, *Guarracino A., *Heumos S., Nahnsen S., Prins P., Garrison E. Revision v0.8.2-1fa78aa'
 author = u'*Andrea Guarracino, *Simon Heumos, Sven Nahnsen, Pjotr Prins, Erik Garrison'
 
 # The short X.Y version
-version = 'v0.8.1'
+version = 'v0.8.2'
 # The full version, including alpha/beta/rc tags
-release = '7731530'
+release = '1fa78aa'
 
 
 # -- General configuration ---------------------------------------------------
@@ -191,7 +191,9 @@ man_pages = [
      [SH], 1),
     ('man/odgi_paths', 'odgi_paths', u'Interrogate the embedded paths of a graph. Does not print anything to stdout '
                                      u'by default!',
-     [EG], 1),
+     [EG, AG], 1),
+    ('man/odgi_similarity', 'odgi_similarity', u'Provides a sparse similarity matrix for paths or path groups',
+     [EG, AG], 1),
     ('man/odgi_position', 'odgi_position', u'Find, translate, and liftover graph and path positions between graphs. '
                                            u'Results are printed to stdout.',
      [EG], 1),
