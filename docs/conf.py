@@ -192,7 +192,7 @@ man_pages = [
     ('man/odgi_paths', 'odgi_paths', u'Interrogate the embedded paths of a graph. Does not print anything to stdout '
                                      u'by default!',
      [EG, AG], 1),
-    ('man/odgi_similarity', 'odgi_similarity', u'Provides a sparse similarity matrix for paths or path groups',
+    ('man/odgi_similarity', 'odgi_similarity', u'Provides a sparse similarity matrix for paths or groups of paths.',
      [EG, AG], 1),
     ('man/odgi_position', 'odgi_position', u'Find, translate, and liftover graph and path positions between graphs. '
                                            u'Results are printed to stdout.',

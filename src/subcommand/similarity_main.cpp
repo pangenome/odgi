@@ -36,8 +36,10 @@ int main_similarity(int argc, char** argv) {
                                                     {'D', "delim"});
     args::ValueFlag<std::uint16_t> path_delim_pos(path_investigation_opts, "N", "Consider the N-th occurrence of the delimiter specified with **-D, --delim**"
                                                     " to obtain the group identifier. Specify 1 for the 1st occurrence (default).",
-                                                    {'p', "delim-pos"});                         
-    args::Group threading_opts(parser, "[ Threading ]");
+                                                        {'p', "delim-pos"});   
+    args::Flag distances(path_investigation_opts, "distances", "Provide distances (dissimilarities) instead of similarities. "
+                                                             "Outputs an additional column with the Euclidean distance." , {'d', "distances"});
+args::Group threading_opts(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> threads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 	args::Group processing_info_opts(parser, "[ Processing Information ]");
 	args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
@@ -86,6 +88,8 @@ int main_similarity(int argc, char** argv) {
     }
 
     const uint16_t delim_pos = path_delim_pos ? args::get(path_delim_pos) - 1 : 0;
+
+    const bool emit_distances = args::get(distances);
 
     auto group_identified_pos = [](const std::string& path_name, char delim, uint16_t delim_pos) -> std::pair<int32_t, int32_t> {
         int32_t pos = -1;
@@ -239,8 +243,12 @@ int main_similarity(int argc, char** argv) {
             << "group.b.length" << "\t"
             << "intersection" << "\t";
     
-    std::cout << "jaccard.distance" << "\t"
-        << "euclidean.distance";
+    if (emit_distances) {
+        std::cout << "jaccard.distance" << "\t"
+            << "euclidean.distance";
+    } else {
+        std::cout << "jaccard.similarity";
+    }
 
     std::cout << std::endl;
     for (auto& p : path_intersection_length) {
@@ -250,14 +258,21 @@ int main_similarity(int argc, char** argv) {
         auto& intersection = p.second;
 
         double jaccard = (double)intersection / (double)(bp_count[id_a] + bp_count[id_b] - intersection);
+        if (emit_distances) {
+            jaccard = 1 - jaccard;
+        }
 
         std::cout << get_path_name(id_a) << "\t"
                     << get_path_name(id_b) << "\t"
                     << bp_count[id_a] << "\t"
                     << bp_count[id_b] << "\t"
                     << intersection << "\t"
-                    << jaccard << "\t"
-                    << std::sqrt((double)((bp_count[id_a] + bp_count[id_b] - intersection) - intersection)) << std::endl;
+                    << jaccard;
+        if (emit_distances) {
+            std::cout << "\t" << std::sqrt((double)((bp_count[id_a] + bp_count[id_b] - intersection) - intersection)) << std::endl;
+        } else {
+            std::cout << std::endl;
+        }
     }
 
     return 0;
