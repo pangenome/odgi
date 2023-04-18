@@ -38,7 +38,7 @@ int main_similarity(int argc, char** argv) {
                                                     " to obtain the group identifier. Specify 1 for the 1st occurrence (default).",
                                                         {'p', "delim-pos"});   
     args::Flag distances(path_investigation_opts, "distances", "Provide distances (dissimilarities) instead of similarities. "
-                                                             "Outputs an additional column with the Euclidean distance." , {'d', "distances"});
+                                                             "Outputs additional columns with the Euclidean and Manhattan distances." , {'d', "distances"});
 args::Group threading_opts(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> threads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 	args::Group processing_info_opts(parser, "[ Processing Information ]");
@@ -245,10 +245,17 @@ args::Group threading_opts(parser, "[ Threading ]");
     
     if (emit_distances) {
         std::cout << "jaccard.distance" << "\t"
+                  << "cosine.distance" << "\t"
+                  << "dice.distance" << "\t"
+                  << "tanimoto.distance" << "\t"
                   << "estimated.difference.rate" << "\t"
-                  << "euclidean.distance";
+                  << "euclidean.distance" << "\t"
+                  << "manhattan.distance";
     } else {
         std::cout << "jaccard.similarity" << "\t"
+                  << "cosine.similarity" << "\t"
+                  << "dice.similarity" << "\t"
+                  << "tanimoto.similarity" << "\t"
                   << "estimated.identity";
     }
 
@@ -259,23 +266,35 @@ args::Group threading_opts(parser, "[ Threading ]");
 
         auto& intersection = p.second;
 
+        // From https://stats.stackexchange.com/questions/58706/distance-metrics-for-binary-vectors
         const double jaccard = (double)intersection / (double)(bp_count[id_a] + bp_count[id_b] - intersection);
+        const double cosine = (double)intersection / std::sqrt((double)(bp_count[id_a] * bp_count[id_b]));
+        const double dice = 2.0 * ((double) intersection / (double)(bp_count[id_a] + bp_count[id_b]));
+        const double tanimoto = (double)intersection / (bp_count[id_a] + bp_count[id_b] - (double)intersection);
         const double estimated_identity = 2.0 * jaccard / (1.0 + jaccard);
 
         std::cout << get_path_name(id_a) << "\t"
-                    << get_path_name(id_b) << "\t"
-                    << bp_count[id_a] << "\t"
-                    << bp_count[id_b] << "\t"
-                    << intersection << "\t";
+                  << get_path_name(id_b) << "\t"
+                  << bp_count[id_a] << "\t"
+                  << bp_count[id_b] << "\t"
+                  << intersection << "\t";
 
         if (emit_distances) {
             const double euclidian_distance = std::sqrt((double)((bp_count[id_a] + bp_count[id_b] - intersection) - intersection));
-            std::cout << 1.0 - jaccard << "\t"
-                      << 1.0 - estimated_identity << "\t"
-                      << euclidian_distance << std::endl;
+            const uint64_t manhattan_distance = (bp_count[id_a] + bp_count[id_b] - intersection) - intersection;
+            std::cout << (1.0 - jaccard) << "\t"
+                      << (1.0 - cosine) << "\t"
+                      << (1.0 - dice) << "\t"
+                      << (1.0 - tanimoto) << "\t"
+                      << (1.0 - estimated_identity) << "\t"
+                      << euclidian_distance << "\t"
+                      << manhattan_distance << std::endl;
         } else {
-            std::cout << estimated_identity << "\t"
-                      << jaccard << std::endl;
+            std::cout << jaccard << "\t"
+                      << cosine << "\t"
+                      << dice << "\t"
+                      << tanimoto << "\t"
+                      << estimated_identity << std::endl;
         }
     }
 
