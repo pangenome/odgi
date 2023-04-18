@@ -43,10 +43,7 @@ int main_paths(int argc, char** argv) {
                                                 " own line.", {'L', "list-paths"});
 	args::Flag list_path_start_end(path_investigation_opts, "list-path-start-end", "If -L,--list-paths was specified, this additionally prints the start and end positions of each path in additional, tab-delimited coloumns."
 						   , {'l', "list-path-start-end"});
-    args::ValueFlag<std::string> path_delim(path_investigation_opts, "CHAR", "The part of each path name before this delimiter CHAR is a group"
-                                                                             " identifier. This parameter should only be set in combination with"
-                                                                             " **-H, --haplotypes**. Prints an additional, first column"
-                                                                             " **group.name** to stdout.", {'D', "delim"});
+    args::Flag write_fasta(path_investigation_opts, "fasta", "Print paths in FASTA format to stdout. One line for the FASTA header, another line for the whole sequence.", {'f', "fasta"});
     args::Flag haplo_matrix(path_investigation_opts, "haplo", "Print to stdout the paths in a path coverage haplotype matrix"
                                                               " based on the graph’s sort order. The output is tab-delimited:"
                                                               " *path.name*, *path.length*, *path.step.count*, *node.1*,"
@@ -55,7 +52,13 @@ int main_paths(int argc, char** argv) {
     args::Flag distance_matrix(path_investigation_opts, "distance", "Provides a sparse distance matrix for paths. If **-D, --delim** is"
                                                                     " set, it will be path groups distances. Each line prints in a tab-delimited format to stdout:"
                                                                     " *path.a*, *path.b*, *path.a.length*, *path.b.length*, *intersection*, *jaccard*, *euclidean*." , {'d', "distance"});
-    args::Flag write_fasta(path_investigation_opts, "fasta", "Print paths in FASTA format to stdout. One line for the FASTA header, another line for the whole sequence.", {'f', "fasta"});
+    args::ValueFlag<std::string> path_delim(path_investigation_opts, "CHAR", "The part of each path name before this delimiter CHAR is a group"
+                                                    " identifier. For use with **-d, distance** or **-H, --haplotypes**. "
+                                                    " With the latter, it prints an additional, first column **group.name** to stdout.",
+                                                    {'D', "delim"});
+    args::ValueFlag<std::uint16_t> path_delim_pos(path_investigation_opts, "N", "Consider the N-th occurrence of the delimiter specified with **-D, --delim**"
+                                                    " to obtain the group identifier. Specify 1 for the 1st occurrence (default).",
+                                                    {'p', "delim-pos"});                         
     args::Group path_modification_opts(parser, "[ Path Modification Options ]");
     args::ValueFlag<std::string> keep_paths_file(path_modification_opts, "FILE", "Keep paths listed (by line) in *FILE*.", {'K', "keep-paths"});
     args::ValueFlag<std::string> drop_paths_file(path_modification_opts, "FILE", "Drop paths listed (by line) in *FILE*.", {'X', "drop-paths"});
@@ -94,6 +97,11 @@ int main_paths(int argc, char** argv) {
 
 	if (list_path_start_end && !list_names) {
 		std::cerr << "[odgi::paths] error: please specify also -L,--list-path with the -l,--list-path-start-end option!" << std::endl;
+		return 1;
+	}
+
+    if (path_delim_pos && args::get(path_delim_pos) < 1) {
+		std::cerr << "[odgi::paths] error: -p,--delim-pos has to specify a value greater than 0." << std::endl;
 		return 1;
 	}
 
@@ -144,12 +152,38 @@ int main_paths(int argc, char** argv) {
             });
     }
 
+    const uint16_t delim_pos = path_delim_pos ? args::get(path_delim_pos) - 1 : 0;
+
+    auto group_identified_pos = [](const std::string& path_name, char delim, uint16_t delim_pos) -> std::pair<int32_t, int32_t> {
+        int32_t pos = -1;
+        int32_t cnt = -1;
+
+        while (cnt != delim_pos) {
+            ++pos;
+            const int32_t current_pos = path_name.find(delim, pos);
+            if (current_pos == std::string::npos) {
+                return std::make_pair(cnt, pos - 1);
+            }
+            pos = current_pos;
+            ++cnt;
+        }
+
+        return std::make_pair(cnt, pos);
+    };
+
+    char delim = '\0';
+    if (!args::get(path_delim).empty()) {
+        delim = args::get(path_delim).at(0);
+    }
+
+    /* for debugging
+    graph.for_each_path_handle([&](const path_handle_t& p) {
+        std::string full_path_name = graph.get_path_name(p);
+        const std::pair<int32_t, int32_t> cnt_pos = delim ? group_identified_pos(full_path_name, delim, delim_pos) : std::make_pair(0, 0);
+        std::cerr << graph.get_path_name(p) << " -- " << cnt_pos.first << " - " << cnt_pos.second << std::endl;
+    });*/
 
     if (args::get(haplo_matrix)) {
-        char delim = '\0';
-        if (!args::get(path_delim).empty()) {
-            delim = args::get(path_delim).at(0);
-        }
         { // write the header
             stringstream header;
             if (delim) {
@@ -168,8 +202,16 @@ int main_paths(int argc, char** argv) {
         graph.for_each_path_handle(
             [&](const path_handle_t& p) {
                 std::string full_path_name = graph.get_path_name(p);
-                std::string group_name = (delim ? split(full_path_name, delim)[0] : "");
-                std::string path_name = (delim ? full_path_name.substr(full_path_name.find(delim)+1) : full_path_name);
+                const std::pair<int32_t, int32_t> cnt_pos = delim ? group_identified_pos(full_path_name, delim, delim_pos) : std::make_pair(0, 0);
+                if (cnt_pos.first < 0) {
+                    std::cerr << "[odgi::paths] error: path name '" << full_path_name << "' has not occurrences of '" << delim << "'." << std::endl;
+                    exit(-1);
+                } else if (cnt_pos.first != delim_pos) {
+                    std::cerr << "[odgi::paths] warning: path name '" << full_path_name << "' has too few occurrences of '" << delim << "'. "
+                              << "The " << cnt_pos.first + 1 << "-th occurrence is used." << std::endl;
+                }
+                std::string group_name = (delim ? full_path_name.substr(0, cnt_pos.second) : "");
+                std::string path_name = (delim ? full_path_name.substr(cnt_pos.second+1) : full_path_name);
                 uint64_t path_length = 0;
                 uint64_t path_step_count = 0;
                 std::vector<uint64_t> row(graph.get_node_count());
@@ -213,7 +255,15 @@ int main_paths(int argc, char** argv) {
             uint32_t i = 0;
             graph.for_each_path_handle(
                 [&](const path_handle_t& p) {
-                    std::string group_name = split(graph.get_path_name(p), delim)[0];
+                    const std::pair<int32_t, int32_t> cnt_pos = delim ? group_identified_pos(graph.get_path_name(p), delim, delim_pos) : std::make_pair(0, 0);
+                    if (cnt_pos.first < 0) {
+                        std::cerr << "[odgi::paths] error: path name '" << graph.get_path_name(p) << "' has not occurrences of '" << delim << "'." << std::endl;
+                        exit(-1);
+                    } else if (cnt_pos.first != delim_pos) {
+                        std::cerr << "[odgi::paths] warning: path name '" << graph.get_path_name(p) << "' has too few occurrences of '" << delim << "'. "
+                                << "The " << cnt_pos.first + 1 << "-th occurrence is used." << std::endl;
+                    }
+                    std::string group_name = graph.get_path_name(p).substr(0, cnt_pos.second);
                     auto f = path_group_ids.find(group_name);
                     if (f == path_group_ids.end()) {
                         path_group_ids[group_name] = i++;
