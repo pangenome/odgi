@@ -36,6 +36,10 @@ Path Investigation Options
 | Consider the N-th occurrence of the delimiter specified with **-D, --delim** to obtain the
   group identifier. Specify 1 for the 1st occurrence (default)."
 
+| **-d, --distances**
+| Provide distances (dissimilarities) instead of similarities.
+  Outputs an additional column with the Euclidean distance.
+
 Threading
 ---------
 

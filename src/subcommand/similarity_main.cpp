@@ -245,9 +245,11 @@ args::Group threading_opts(parser, "[ Threading ]");
     
     if (emit_distances) {
         std::cout << "jaccard.distance" << "\t"
-            << "euclidean.distance";
+                  << "estimated.difference.rate" << "\t"
+                  << "euclidean.distance";
     } else {
-        std::cout << "jaccard.similarity";
+        std::cout << "jaccard.similarity" << "\t"
+                  << "estimated.identity";
     }
 
     std::cout << std::endl;
@@ -257,21 +259,23 @@ args::Group threading_opts(parser, "[ Threading ]");
 
         auto& intersection = p.second;
 
-        double jaccard = (double)intersection / (double)(bp_count[id_a] + bp_count[id_b] - intersection);
-        if (emit_distances) {
-            jaccard = 1 - jaccard;
-        }
+        const double jaccard = (double)intersection / (double)(bp_count[id_a] + bp_count[id_b] - intersection);
+        const double estimated_identity = 2.0 * jaccard / (1.0 + jaccard);
 
         std::cout << get_path_name(id_a) << "\t"
                     << get_path_name(id_b) << "\t"
                     << bp_count[id_a] << "\t"
                     << bp_count[id_b] << "\t"
-                    << intersection << "\t"
-                    << jaccard;
+                    << intersection << "\t";
+
         if (emit_distances) {
-            std::cout << "\t" << std::sqrt((double)((bp_count[id_a] + bp_count[id_b] - intersection) - intersection)) << std::endl;
+            const double euclidian_distance = std::sqrt((double)((bp_count[id_a] + bp_count[id_b] - intersection) - intersection));
+            std::cout << 1.0 - jaccard << "\t"
+                      << 1.0 - estimated_identity << "\t"
+                      << euclidian_distance << std::endl;
         } else {
-            std::cout << std::endl;
+            std::cout << estimated_identity << "\t"
+                      << jaccard << std::endl;
         }
     }
 
