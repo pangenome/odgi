@@ -247,7 +247,6 @@ args::Group threading_opts(parser, "[ Threading ]");
         std::cout << "jaccard.distance" << "\t"
                   << "cosine.distance" << "\t"
                   << "dice.distance" << "\t"
-                  << "tanimoto.distance" << "\t"
                   << "estimated.difference.rate" << "\t"
                   << "euclidean.distance" << "\t"
                   << "manhattan.distance";
@@ -255,7 +254,6 @@ args::Group threading_opts(parser, "[ Threading ]");
         std::cout << "jaccard.similarity" << "\t"
                   << "cosine.similarity" << "\t"
                   << "dice.similarity" << "\t"
-                  << "tanimoto.similarity" << "\t"
                   << "estimated.identity";
     }
 
@@ -270,7 +268,6 @@ args::Group threading_opts(parser, "[ Threading ]");
         const double jaccard = (double)intersection / (double)(bp_count[id_a] + bp_count[id_b] - intersection);
         const double cosine = (double)intersection / std::sqrt((double)(bp_count[id_a] * bp_count[id_b]));
         const double dice = 2.0 * ((double) intersection / (double)(bp_count[id_a] + bp_count[id_b]));
-        const double tanimoto = (double)intersection / (bp_count[id_a] + bp_count[id_b] - (double)intersection);
         const double estimated_identity = 2.0 * jaccard / (1.0 + jaccard);
 
         std::cout << get_path_name(id_a) << "\t"
@@ -285,7 +282,6 @@ args::Group threading_opts(parser, "[ Threading ]");
             std::cout << (1.0 - jaccard) << "\t"
                       << (1.0 - cosine) << "\t"
                       << (1.0 - dice) << "\t"
-                      << (1.0 - tanimoto) << "\t"
                       << (1.0 - estimated_identity) << "\t"
                       << euclidian_distance << "\t"
                       << manhattan_distance << std::endl;
@@ -293,7 +289,6 @@ args::Group threading_opts(parser, "[ Threading ]");
             std::cout << jaccard << "\t"
                       << cosine << "\t"
                       << dice << "\t"
-                      << tanimoto << "\t"
                       << estimated_identity << std::endl;
         }
     }
