@@ -11,15 +11,6 @@ namespace odgi {
 
 using namespace odgi::subcommand;
 
-// Functions used for the distance matrix generation
-inline uint64_t encode_pair(uint32_t v, uint32_t h) {
-    return ((uint64_t)v << 32) | (uint64_t)h;
-}
-inline void decode_pair(uint64_t pair, uint32_t *v, uint32_t *h) {
-    *v = pair >> 32;
-    *h = pair & 0x00000000FFFFFFFF;
-}
-
 int main_paths(int argc, char** argv) {
 
     // trick argumentparser to do the right thing with the subcommand
@@ -43,19 +34,18 @@ int main_paths(int argc, char** argv) {
                                                 " own line.", {'L', "list-paths"});
 	args::Flag list_path_start_end(path_investigation_opts, "list-path-start-end", "If -L,--list-paths was specified, this additionally prints the start and end positions of each path in additional, tab-delimited coloumns."
 						   , {'l', "list-path-start-end"});
-    args::ValueFlag<std::string> path_delim(path_investigation_opts, "CHAR", "The part of each path name before this delimiter CHAR is a group"
-                                                                             " identifier. This parameter should only be set in combination with"
-                                                                             " **-H, --haplotypes**. Prints an additional, first column"
-                                                                             " **group.name** to stdout.", {'D', "delim"});
+    args::Flag write_fasta(path_investigation_opts, "fasta", "Print paths in FASTA format to stdout. One line for the FASTA header, another line for the whole sequence.", {'f', "fasta"});
     args::Flag haplo_matrix(path_investigation_opts, "haplo", "Print to stdout the paths in a path coverage haplotype matrix"
                                                               " based on the graph’s sort order. The output is tab-delimited:"
                                                               " *path.name*, *path.length*, *path.step.count*, *node.1*,"
                                                               " *node.2*, *node.n*. Each path entry is printed in its own line.", {'H', "haplotypes"});
     args::Flag scale_by_node_length(path_investigation_opts, "haplo", "Scale the haplotype matrix cells by node length.", {'N', "scale-by-node-len"});
-    args::Flag distance_matrix(path_investigation_opts, "distance", "Provides a sparse distance matrix for paths. If **-D, --delim** is"
-                                                                    " set, it will be path groups distances. Each line prints in a tab-delimited format to stdout:"
-                                                                    " *path.a*, *path.b*, *path.a.length*, *path.b.length*, *intersection*, *jaccard*, *euclidean*." , {'d', "distance"});
-    args::Flag write_fasta(path_investigation_opts, "fasta", "Print paths in FASTA format to stdout. One line for the FASTA header, another line for the whole sequence.", {'f', "fasta"});
+    args::ValueFlag<std::string> path_delim(path_investigation_opts, "CHAR", "The part of each path name before this delimiter CHAR is a group"
+                                                    " identifier. For use with -H, --haplotypes**: it prints an additional, first column **group.name** to stdout.",
+                                                    {'D', "delim"});
+    args::ValueFlag<std::uint16_t> path_delim_pos(path_investigation_opts, "N", "Consider the N-th occurrence of the delimiter specified with **-D, --delim**"
+                                                    " to obtain the group identifier. Specify 1 for the 1st occurrence (default).",
+                                                    {'p', "delim-pos"});                         
     args::Group path_modification_opts(parser, "[ Path Modification Options ]");
     args::ValueFlag<std::string> keep_paths_file(path_modification_opts, "FILE", "Keep paths listed (by line) in *FILE*.", {'K', "keep-paths"});
     args::ValueFlag<std::string> drop_paths_file(path_modification_opts, "FILE", "Drop paths listed (by line) in *FILE*.", {'X', "drop-paths"});
@@ -94,6 +84,11 @@ int main_paths(int argc, char** argv) {
 
 	if (list_path_start_end && !list_names) {
 		std::cerr << "[odgi::paths] error: please specify also -L,--list-path with the -l,--list-path-start-end option!" << std::endl;
+		return 1;
+	}
+
+    if (path_delim_pos && args::get(path_delim_pos) < 1) {
+		std::cerr << "[odgi::paths] error: -p,--delim-pos has to specify a value greater than 0." << std::endl;
 		return 1;
 	}
 
@@ -144,12 +139,31 @@ int main_paths(int argc, char** argv) {
             });
     }
 
+    const uint16_t delim_pos = path_delim_pos ? args::get(path_delim_pos) - 1 : 0;
+
+    auto group_identified_pos = [](const std::string& path_name, char delim, uint16_t delim_pos) -> std::pair<int32_t, int32_t> {
+        int32_t pos = -1;
+        int32_t cnt = -1;
+
+        while (cnt != delim_pos) {
+            ++pos;
+            const int32_t current_pos = path_name.find(delim, pos);
+            if (current_pos == std::string::npos) {
+                return std::make_pair(cnt, pos - 1);
+            }
+            pos = current_pos;
+            ++cnt;
+        }
+
+        return std::make_pair(cnt, pos);
+    };
 
     if (args::get(haplo_matrix)) {
         char delim = '\0';
         if (!args::get(path_delim).empty()) {
             delim = args::get(path_delim).at(0);
         }
+        
         { // write the header
             stringstream header;
             if (delim) {
@@ -168,8 +182,16 @@ int main_paths(int argc, char** argv) {
         graph.for_each_path_handle(
             [&](const path_handle_t& p) {
                 std::string full_path_name = graph.get_path_name(p);
-                std::string group_name = (delim ? split(full_path_name, delim)[0] : "");
-                std::string path_name = (delim ? full_path_name.substr(full_path_name.find(delim)+1) : full_path_name);
+                const std::pair<int32_t, int32_t> cnt_pos = delim ? group_identified_pos(full_path_name, delim, delim_pos) : std::make_pair(0, 0);
+                if (cnt_pos.first < 0) {
+                    std::cerr << "[odgi::paths] error: path name '" << full_path_name << "' has not occurrences of '" << delim << "'." << std::endl;
+                    exit(-1);
+                } else if (cnt_pos.first != delim_pos) {
+                    std::cerr << "[odgi::paths] warning: path name '" << full_path_name << "' has too few occurrences of '" << delim << "'. "
+                              << "The " << cnt_pos.first + 1 << "-th occurrence is used." << std::endl;
+                }
+                std::string group_name = (delim ? full_path_name.substr(0, cnt_pos.second) : "");
+                std::string path_name = (delim ? full_path_name.substr(cnt_pos.second+1) : full_path_name);
                 uint64_t path_length = 0;
                 uint64_t path_step_count = 0;
                 std::vector<uint64_t> row(graph.get_node_count());
@@ -198,144 +220,6 @@ int main_paths(int argc, char** argv) {
                 }
                 std::cout << std::endl;
             });
-    }
-
-    if (args::get(distance_matrix)) {
-        // We support up to 4 billion paths (there are uint32_t variables in the implementation)
-
-        bool using_delim = !args::get(path_delim).empty();
-        char delim = '\0';
-        ska::flat_hash_map<std::string, uint32_t> path_group_ids;
-        ska::flat_hash_map<path_handle_t, uint32_t> path_handle_group_ids;
-        std::vector<std::string> path_groups;
-        if (using_delim) {
-            delim = args::get(path_delim).at(0);
-            uint32_t i = 0;
-            graph.for_each_path_handle(
-                [&](const path_handle_t& p) {
-                    std::string group_name = split(graph.get_path_name(p), delim)[0];
-                    auto f = path_group_ids.find(group_name);
-                    if (f == path_group_ids.end()) {
-                        path_group_ids[group_name] = i++;
-                        path_groups.push_back(group_name);
-                    }
-                    path_handle_group_ids[p] = path_group_ids[group_name];
-                });
-        }
-
-        auto get_path_name
-            = (using_delim ?
-               (std::function<std::string(const uint32_t&)>)
-               [&](const uint32_t& id) { return path_groups[id]; }
-               :
-               (std::function<std::string(const uint32_t&)>)
-               [&](const uint32_t& id) { return graph.get_path_name(as_path_handle(id)); });
-
-        auto get_path_id
-            = (using_delim ?
-               (std::function<uint32_t(const path_handle_t&)>)
-               [&](const path_handle_t& p) {
-                   return path_handle_group_ids[p];
-               }
-               :
-               (std::function<uint32_t(const path_handle_t&)>)
-               [&](const path_handle_t& p) {
-                   return (uint32_t)as_integer(p);
-               });
-
-        std::vector<uint64_t> bp_count;
-        if (using_delim) {
-            bp_count.resize(path_groups.size());
-        } else {
-            bp_count.resize(graph.get_path_count());
-        }
-
-        uint32_t path_max = 0;
-        graph.for_each_path_handle(
-            [&](const path_handle_t& p) {
-                path_max = std::max(path_max, (uint32_t)as_integer(p));
-            });
-
-        // Initialize first to avoid possible bugs later
-        for (uint32_t i = 0; i < path_max; ++i) {
-            path_handle_t p = as_path_handle(i + 1);
-            bp_count[get_path_id(p)] = 0;
-        }
-
-#pragma omp parallel for
-        for (uint32_t i = 0; i < path_max; ++i) {
-            path_handle_t p = as_path_handle(i + 1);
-            uint64_t path_length = 0;
-            graph.for_each_step_in_path(
-                p,
-                [&](const step_handle_t& s) {
-                    path_length += graph.get_length(graph.get_handle_of_step(s));
-                });
-#pragma omp critical (bp_count)
-            bp_count[get_path_id(p)] += path_length;
-        }
-
-        const bool show_progress = args::get(progress);
-        std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress_meter;
-        if (show_progress) {
-            progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
-                    graph.get_node_count(), "[odgi::paths] collecting path intersection lengths");
-        }
-
-        // ska::flat_hash_map<std::pair<uint64_t, uint64_t>, uint64_t> leads to huge memory usage with deep graphs
-        ska::flat_hash_map<uint64_t, uint64_t> path_intersection_length;
-        graph.for_each_handle(
-            [&](const handle_t& h) {
-                ska::flat_hash_map<uint32_t, uint64_t> local_path_lengths;
-                size_t l = graph.get_length(h);
-                graph.for_each_step_on_handle(
-                    h,
-                    [&](const step_handle_t& s) {
-                        local_path_lengths[get_path_id(graph.get_path_handle_of_step(s))] += l;
-                    });
-
-#pragma omp critical (path_intersection_length)
-                for (auto& p : local_path_lengths) {
-                    for (auto& q : local_path_lengths) {
-                        path_intersection_length[encode_pair(p.first, q.first)] += std::min(p.second, q.second);
-                    }
-                }
-
-                if (show_progress) {
-                    progress_meter->increment(1);
-                }
-            }, true);
-
-        if (show_progress) {
-            progress_meter->finish();
-        }
-
-        if (using_delim) {
-            std::cout << "group.a" << "\t"
-                      << "group.b" << "\t";
-        } else {
-            std::cout << "path.a" << "\t"
-                      << "path.b" << "\t";
-        }
-        std::cout << "path.a.length" << "\t"
-                  << "path.b.length" << "\t"
-                  << "intersection" << "\t"
-                  << "jaccard" << "\t"
-                  << "euclidean"
-                  << std::endl;
-        for (auto& p : path_intersection_length) {
-            uint32_t id_a, id_b;
-            decode_pair(p.first, &id_a, &id_b);
-
-            auto& intersection = p.second;
-            std::cout << get_path_name(id_a) << "\t"
-                      << get_path_name(id_b) << "\t"
-                      << bp_count[id_a] << "\t"
-                      << bp_count[id_b] << "\t"
-                      << intersection << "\t"
-                      << (double)intersection / (double)(bp_count[id_a] + bp_count[id_b] - intersection) << "\t"
-                      << std::sqrt((double)((bp_count[id_a] + bp_count[id_b] - intersection) - intersection)) << std::endl;
-        }
     }
 
     if (!args::get(overlaps_file).empty()) {

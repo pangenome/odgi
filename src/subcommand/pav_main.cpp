@@ -305,7 +305,7 @@ int main_pav(int argc, char **argv) {
         const uint64_t index = path_handle_2_index[path_range.begin.path];
         auto& tree = trees[index];
 
-        std::vector<uint64_t> node_ids_info;
+        std::vector<size_t> node_ids_info;
         tree.overlap(begin, end, node_ids_info); // retrieve overlaps
 
         uint64_t len_unique_nodes_in_range = 0;

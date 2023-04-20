@@ -121,27 +121,19 @@ namespace odgi {
                                                                     iter_with_max_learning_rate,
                                                                     eps);
 
-                // cache zipf zetas for our full path space (heavy, but one-off)
+                // cache zipf zetas for our full path space
                 if (progress) {
                     std::cerr << "[odgi::path_linear_sgd] calculating zetas for " << (space <= space_max ? space : space_max + (space - space_max) / space_quantization_step + 1) << " zipf distributions" << std::endl;
                 }
-
                 std::vector<double> zetas((space <= space_max ? space : space_max + (space - space_max) / space_quantization_step + 1)+1);
-                uint64_t last_quantized_i = 0;
-#pragma omp parallel for schedule(static,1)
-                for (uint64_t i = 1; i < space+1; ++i) {
-                    uint64_t quantized_i = i;
-                    uint64_t compressed_space = i;
-                    if (i > space_max){
-                        quantized_i = space_max + (i - space_max) / space_quantization_step + 1;
-                        compressed_space = space_max + ((i - space_max) / space_quantization_step) * space_quantization_step;
+                double zeta_tmp = 0.0;
+                for (uint64_t i = 1; i < space + 1; i++) {
+                    zeta_tmp += dirtyzipf::fast_precise_pow(1.0 / i, theta);
+                    if (i <= space_max) {
+                        zetas[i] = zeta_tmp;
                     }
-
-                    if (quantized_i != last_quantized_i){
-                        dirtyzipf::dirty_zipfian_int_distribution<uint64_t>::param_type z_p(1, compressed_space, theta);
-                        zetas[quantized_i] = z_p.zeta();
-
-                        last_quantized_i = quantized_i;
+                    if (i >= space_max && (i - space_max) % space_quantization_step == 0) {
+                        zetas[space_max + 1 + (i - space_max) / space_quantization_step] = zeta_tmp;
                     }
                 }
 
@@ -254,7 +246,7 @@ namespace odgi {
                                         auto _theta = adj_theta.load();
                                         if (s_rank > 0 && flip(gen) || s_rank == path_step_count-1) {
                                             // go backward
-                                            uint64_t jump_space = std::min(space, s_rank);
+                                            uint64_t jump_space = std::min(space, (uint64_t) s_rank);
                                             uint64_t space = jump_space;
                                             if (jump_space > space_max){
                                                 space = space_max + (jump_space - space_max) / space_quantization_step + 1;
@@ -267,7 +259,7 @@ namespace odgi {
                                             as_integers(step_b)[1] = s_rank - z_i;
                                         } else {
                                             // go forward
-                                            uint64_t jump_space = std::min(space, path_step_count - s_rank - 1);
+                                            uint64_t jump_space = std::min(space, (uint64_t) (path_step_count - s_rank - 1));
                                             uint64_t space = jump_space;
                                             if (jump_space > space_max){
                                                 space = space_max + (jump_space - space_max) / space_quantization_step + 1;

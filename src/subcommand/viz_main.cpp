@@ -93,7 +93,7 @@ namespace odgi {
         args::Group path_names_viz_opts(parser, "[ Path Names Viz Options ]");
         args::Flag hide_path_names(path_names_viz_opts, "bool", "Hide the path names on the left of the generated image.",{'H', "hide-path-names"});
         args::Flag color_path_names_background(path_names_viz_opts, "bool", "Color path names background with the same color as paths.",{'C', "color-path-names-background"});
-        args::ValueFlag<uint64_t> _max_num_of_characters(path_names_viz_opts, "N", "Maximum number of characters to display for each path name (max 128"
+        args::ValueFlag<size_t> _max_num_of_characters(path_names_viz_opts, "N", "Maximum number of characters to display for each path name (max 128"
                                                                                    " characters). The default value is *the length of the longest path"
                                                                                    " name* (up to 32 characters).",{'c', "max-num-of-characters"});
 
@@ -395,7 +395,7 @@ namespace odgi {
             }
         }
 
-        const uint64_t max_num_of_characters = args::get(_max_num_of_characters) > 1 ? min(args::get(_max_num_of_characters), (uint64_t) PATH_NAMES_MAX_NUM_OF_CHARACTERS) : 32;
+        const size_t max_num_of_characters = args::get(_max_num_of_characters) > 1 ? min(args::get(_max_num_of_characters), (size_t) PATH_NAMES_MAX_NUM_OF_CHARACTERS) : 32;
 
         uint64_t path_count = graph.get_path_count();
         const uint64_t pix_per_path = args::get(path_height) ? args::get(path_height) : 10;
@@ -648,18 +648,18 @@ namespace odgi {
 
         std::vector<uint8_t> image_path_names;
         if (!args::get(hide_path_names) && !args::get(pack_paths) && pix_per_path >= 8) {
-            uint64_t _max_num_of_chars = std::numeric_limits<uint64_t>::min();
+            size_t _max_num_of_chars = std::numeric_limits<size_t>::min();
 
             if (group_paths) {
                 for (auto& prefix : prefixes) {
-                    _max_num_of_chars = max((uint64_t) _max_num_of_chars, prefix.length());
+                    _max_num_of_chars = max(_max_num_of_chars, prefix.length());
                 }
             } else {
                 graph.for_each_path_handle(
                         [&](const path_handle_t &path) {
                             int64_t path_rank = get_path_idx(path);
                             if (path_rank >= 0 && path_layout_y[path_rank] >= 0){
-                                _max_num_of_chars = max((uint64_t) _max_num_of_chars, graph.get_path_name(path).length());
+                                _max_num_of_chars = max(_max_num_of_chars, graph.get_path_name(path).length());
                             }
                         });
             }
@@ -667,7 +667,7 @@ namespace odgi {
             // In this way, compress_path_name will take up the same amount of space as the paths in uncompressed mode.
             // This makes it easier to compare/view the two viewing modes, easing interpretation.
             if (compress) {
-                _max_num_of_chars = max((uint64_t) _max_num_of_chars, compressed_path_name.length());
+                _max_num_of_chars = max(_max_num_of_chars, compressed_path_name.length());
             }
 
             max_num_of_chars = min(_max_num_of_chars, max_num_of_characters);
@@ -935,7 +935,7 @@ namespace odgi {
 
 			uint64_t path_rank = 0;
 
-            const uint8_t num_of_chars = min(compressed_path_name.length(), (uint64_t) max_num_of_chars);
+            const uint8_t num_of_chars = min(compressed_path_name.length(), (size_t)max_num_of_chars);
             const bool path_name_too_long = compressed_path_name.length() > num_of_chars;
 
             const uint8_t left_padding = max_num_of_chars - num_of_chars;
@@ -1185,7 +1185,7 @@ namespace odgi {
 					}
 
 					if (char_size >= 8) {
-                        const uint8_t num_of_chars = min(path_name.length(), (uint64_t) max_num_of_chars);
+                        const uint8_t num_of_chars = min(path_name.length(), (size_t) max_num_of_chars);
                         const bool path_name_too_long = path_name.length() > num_of_chars;
 
                         const uint8_t ratio = char_size / 8;

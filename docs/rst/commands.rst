@@ -36,6 +36,7 @@ Commands
     commands/odgi_prune
     commands/odgi_procbed
     commands/odgi_server
+    commands/odgi_similarity
     commands/odgi_sort
     commands/odgi_squeeze
     commands/odgi_stats

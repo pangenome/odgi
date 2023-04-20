@@ -2,13 +2,13 @@
 //
 // Copyright © 2022 Pjotr Prins
 
-#include "odgi.hpp"
-#include "odgi-api.h"
-
 // Pybind11
 #include <pybind11/pybind11.h>
 #include <pybind11/functional.h>
 #include <pybind11/iostream.h>
+
+#include "odgi.hpp"
+#include "odgi-api.h"
 
 PYBIND11_MAKE_OPAQUE(ograph_t);
 
