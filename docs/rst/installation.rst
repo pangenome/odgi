@@ -60,7 +60,7 @@ BIOCONDA
 
 .. code-block:: bash
 
-	conda install -c bioconda odgi
+	conda install -c conda-forge -c bioconda odgi
 
 GUIX
 ====
