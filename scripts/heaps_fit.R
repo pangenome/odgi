@@ -32,5 +32,5 @@ print(z * (f(n) - f(n-1)))
 print(z * (f(2) - f(1)))
 #print(f(n) - f(n-1))
 
-ggplot(x, aes(x=nth.genome, y=base.pairs/1e9)) + geom_point(alpha=I(1/10)) + stat_function(fun=function(x) (fit$par[1] * x^fit$par[2] + fit$par[3]) * m) + scale_y_continuous("observed pangenome size (Gbp)") + scale_x_continuous("Nth included genome (200 permutations)")
+ggplot(x, aes(x=nth.genome, y=base.pairs/1e9)) + geom_point(alpha=I(1/10)) + stat_function(fun=function(x) (fit$par[1] * x^fit$par[2] + fit$par[3]) * m) + scale_y_continuous("observed pangenome size (Gbp)") + scale_x_continuous(paste("Nth included genome (", max(x$permutation)+1 ," permutations)", sep = ""))
 ggsave(args[2], height=5, width=9)
