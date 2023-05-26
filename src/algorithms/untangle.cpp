@@ -739,6 +739,24 @@ void untangle(
             graph.for_each_step_in_path(
                 target, [&](const step_handle_t& step) {
                     target_nodes.set(graph.get_id(graph.get_handle_of_step(step)), true);
+
+                    if (!graph.has_previous_step(step)) {
+                        //std::cerr << "start.id = " << graph.get_id(graph.get_handle_of_step(step)) << std::endl;
+                        cut_nodes.set(graph.get_id(graph.get_handle_of_step(step)), true);
+                        graph.follow_edges(graph.get_handle_of_step(step), true, [&](const handle_t& h) {
+                            //std::cerr << "start.idX = " << graph.get_id(h) << std::endl;
+                            cut_nodes.set(graph.get_id(h), true);
+                        });
+                    }
+
+                    if (!graph.has_next_step(step)) {
+                        //std::cerr << "end.id   = " << graph.get_id(graph.get_handle_of_step(step)) << std::endl;
+                        cut_nodes.set(graph.get_id(graph.get_handle_of_step(step)), true);
+                        graph.follow_edges(graph.get_handle_of_step(step), false, [&](const handle_t& h) {
+                            //std::cerr << "end.idX = " << graph.get_id(h) << std::endl;
+                            cut_nodes.set(graph.get_id(h), true);
+                        });
+                    }
                 });
 
             if (show_progress) {
@@ -792,6 +810,31 @@ void untangle(
         if (show_progress) {
             progress->finish();
         }
+
+if (false) {
+#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
+        for (auto& query : queries) {
+            set<uint64_t> prev_targets_on_step;
+
+            graph.for_each_step_in_path(query, [&](const step_handle_t& step) {
+                const auto handle = graph.get_handle_of_step(step);
+
+                set<uint64_t> curr_targets_on_step;
+                graph.for_each_step_on_handle(handle, [&](const step_handle_t& s) {
+                    const auto path_handle = graph.get_path_handle_of_step(s);
+
+                    curr_targets_on_step.insert(as_integer(path_handle));
+                });
+
+                if (prev_targets_on_step.size() > 0 && prev_targets_on_step != curr_targets_on_step) {
+                    cut_nodes.set(graph.get_id(handle), true);
+                    prev_targets_on_step = curr_targets_on_step;
+                } else if (prev_targets_on_step.size() == 0) {
+                    prev_targets_on_step = curr_targets_on_step;
+                }
+            });
+        }
+}
 
         if (cut_every > 0) {
             if (show_progress) {
