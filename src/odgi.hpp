@@ -305,7 +305,7 @@ public:
 
     /// Reorder the graph's internal structure to match that given.
     /// Optionally compact the id space of the graph to match the ordering, from 1->|ordering|.
-    void apply_ordering(const std::vector<handle_t>& order, bool compact_ids = false);
+    bool apply_ordering(const std::vector<handle_t>& order, bool compact_ids = false);
 
     /// Organize the graph for better performance and memory use
     void optimize(bool allow_id_reassignment = true);
