@@ -781,7 +781,7 @@ void graph_t::reassign_node_ids(const std::function<nid_t(const nid_t&)>& get_ne
 
 /// Reorder the graph's internal structure to match that given.
 /// Optionally compact the id space of the graph to match the ordering, from 1->|ordering|.
-void graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact_ids) {
+bool graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact_ids) {
     // get mapping from old to new id
     // if we're given an empty order, just compact the ids based on our ordering
     const std::vector<handle_t>* order;
