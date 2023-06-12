@@ -45,7 +45,7 @@
 	url = https://github.com/jeizenga/structures.git
 [submodule "deps/libbf"]
 	path = deps/libbf
-	url = https://github.com/mavam/libbf.git
+	url = https://github.com/subwaystation/libbf.git
 [submodule "deps/cpp-httplib"]
 	path = deps/cpp-httplib
 	url = https://github.com/yhirose/cpp-httplib.git
