@@ -1,7 +1,6 @@
 #include "subcommand.hpp"
 #include "args.hxx"
 #include "../version.hpp"
-#include <cstdint>
 
 namespace odgi {
 
