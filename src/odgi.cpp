@@ -894,6 +894,8 @@ bool graph_t::apply_ordering(const std::vector<handle_t>& order_in, bool compact
     }
     node_v = new_node_v;
     deleted_nodes.clear();
+
+    return true;
 }
 
 void graph_t::apply_path_ordering(const std::vector<path_handle_t>& order) {
