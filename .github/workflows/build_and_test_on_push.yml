@@ -3,7 +3,7 @@ on: [ push ]
 name: build and test
 
 jobs:
-  build_and_test:
+  linux:
     runs-on: ubuntu-20.04
     steps:
       - uses: actions/checkout@v2
@@ -26,4 +26,21 @@ jobs:
       - name: Run odgi program tests
         run: ASAN_OPTIONS=detect_leaks=1:symbolize=1 LSAN_OPTIONS=verbosity=0:log_threads=1 bin/odgi test
       - name: Run remaining tests 
+        run: ctest --test-dir build -E odgi-test --verbose
+
+  macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Install required packages
+        run: brew update && brew install cmake llvm jemalloc
+      - name: Init and update submodules
+        run: git submodule update --init --recursive
+      - name: Build odgi
+        run: |
+          CC=$(brew --prefix llvm)/bin/clang CXX=$(brew --prefix llvm)/bin/clang++ LDFLAGS=-L/opt/homebrew/lib cmake . -Bbuild
+          CC=$(brew --prefix llvm)/bin/clang CXX=$(brew --prefix llvm)/bin/clang++ LDFLAGS=-L/opt/homebrew/lib cmake --build build -- -j
+      - name: Run odgi program tests
+        run: ASAN_OPTIONS=detect_leaks=1:symbolize=1 LSAN_OPTIONS=verbosity=0:log_threads=1 bin/odgi test
+      - name: Run remaining tests
         run: ctest --test-dir build -E odgi-test --verbose
