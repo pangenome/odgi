@@ -128,6 +128,11 @@ int main_heaps(int argc, char **argv) {
                 auto vals = split(path_name, '#');
                 path_groups_map[vals.front()].push_back(p);
             });
+        } else {
+            // no groups
+            graph.for_each_path_handle([&](const path_handle_t& p) {
+                path_groups_map[graph.get_path_name(p)].push_back(p);
+            });
         }
         path_groups.reserve(path_groups_map.size());
         for (auto& g : path_groups_map) {
