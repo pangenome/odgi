@@ -742,7 +742,7 @@ void untangle(
 
                     if (!graph.has_previous_step(step)) {
                         //std::cerr << "start.id = " << graph.get_id(graph.get_handle_of_step(step)) << std::endl;
-                        cut_nodes.set(graph.get_id(graph.get_handle_of_step(step)), true);
+                        //cut_nodes.set(graph.get_id(graph.get_handle_of_step(step)), true);
                         graph.follow_edges(graph.get_handle_of_step(step), true, [&](const handle_t& h) {
                             //std::cerr << "start.idX = " << graph.get_id(h) << std::endl;
                             cut_nodes.set(graph.get_id(h), true);
@@ -751,7 +751,7 @@ void untangle(
 
                     if (!graph.has_next_step(step)) {
                         //std::cerr << "end.id   = " << graph.get_id(graph.get_handle_of_step(step)) << std::endl;
-                        cut_nodes.set(graph.get_id(graph.get_handle_of_step(step)), true);
+                        //cut_nodes.set(graph.get_id(graph.get_handle_of_step(step)), true);
                         graph.follow_edges(graph.get_handle_of_step(step), false, [&](const handle_t& h) {
                             //std::cerr << "end.idX = " << graph.get_id(h) << std::endl;
                             cut_nodes.set(graph.get_id(h), true);
