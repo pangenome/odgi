@@ -119,7 +119,7 @@ int main_pav(int argc, char **argv) {
                     auto vals = split(line, '\t');
                     if (vals.size() != 2) {
                         std::cerr << "[odgi::pav] line does not have a path.name and path.group value:"
-                        << std::endl << line << std::endl;
+                                  << std::endl << line << std::endl;
                         return 1;
                     }
                     auto& path_name = vals.front();
@@ -136,8 +136,8 @@ int main_pav(int argc, char **argv) {
 
             if (group_2_index.empty()) {
                 std::cerr
-                << "[odgi::pav] error: 0 path groups were read. Please specify at least one path group via -p/--path-groups."
-                << std::endl;
+                        << "[odgi::pav] error: 0 path groups were read. Please specify at least one path group via -p/--path-groups."
+                        << std::endl;
                 return 1;
             }
         } else if (_group_by_sample) {
@@ -185,7 +185,6 @@ int main_pav(int argc, char **argv) {
             add_bed_range(path_ranges, graph, line);
         }
     }
-
     if (path_ranges.empty()) {
         std::cerr
             << "[odgi::pav] error: please specify path ranges via -b/--bed-file."
@@ -225,7 +224,12 @@ int main_pav(int argc, char **argv) {
         path_handle_2_index[p2mm.first] = i++;
     }
 
-    // Prepare the interval trees to query target path ranges
+    // Prepare the interval trees for querying target path ranges
+    std::unique_ptr <odgi::algorithms::progress_meter::ProgressMeter> operation_progress;
+    if (show_progress) {
+        std::string banner = "[odgi::pav] preparing the interval trees for querying target path ranges:";
+		operation_progress = std::make_unique<odgi::algorithms::progress_meter::ProgressMeter>(path_handles.size(), banner);
+    }
     std::vector<IITree<uint64_t, uint64_t>> trees;
     trees.resize(path_handles.size());
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
@@ -250,7 +254,12 @@ int main_pav(int argc, char **argv) {
         }
 
         tree.index(); // index
+
+        if (show_progress) {
+            operation_progress->increment(1);
+        }
     }
+    operation_progress->finish();
 
     const bool emit_matrix_else_table = args::get(_matrix_output);
 
@@ -295,6 +304,11 @@ int main_pav(int argc, char **argv) {
                   << group_name << "\t"
                   << (emit_binary_values ? pav_ratio >= binary_threshold : pav_ratio) << "\n";
     };
+
+    if (show_progress) {
+        std::string banner = "[odgi::pav] emitting PAV results:";
+		operation_progress = std::make_unique<odgi::algorithms::progress_meter::ProgressMeter>(path_ranges.size(), banner);
+    }
 
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
     for (uint64_t i = 0; i < path_ranges.size(); ++i) {
@@ -386,7 +400,13 @@ int main_pav(int argc, char **argv) {
                 }
             }
         }
+
+
+        if (show_progress) {
+            operation_progress->increment(1);
+        }
     }
+    operation_progress->finish();
 
     return 0;
 }
