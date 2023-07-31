@@ -524,6 +524,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/subcommand/unitig_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/viz_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/paths_main.cpp
+  ${CMAKE_SOURCE_DIR}/src/subcommand/similarity_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/priv_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/prune_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/unchop_main.cpp
@@ -695,10 +696,14 @@ set(odgi_LIBS
   # ${lodepng_lib}
   ${libbf_lib}
   "-ldl"
-  "-latomic"
   )
   #"-lefence") # for malloc error checking
   #"-ltcmalloc") # for heap profiling
+
+# macOS does not need `-latomic` to use atomics.
+if (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
+    list(APPEND odgi_LIBS "-latomic")
+endif (NOT ${CMAKE_SYSTEM_NAME} MATCHES "Darwin")
 
 if (NOT INLINE_HANDLEGRAPH_SOURCES)
     list(APPEND odgi_LIBS "${handlegraph_LIB}/libhandlegraph.a")
@@ -834,7 +839,7 @@ else (NOT PIC)
   pybind11_add_module(odgi_ffi "${CMAKE_SOURCE_DIR}/src/pythonffi.cpp")
   add_dependencies(odgi_ffi ${odgi_DEPS} libodgi_shared)
   target_include_directories(odgi_ffi PUBLIC ${odgi_INCLUDES})
-  target_link_libraries(odgi_ffi PUBLIC "${odgi_LIBS}" "${CMAKE_SOURCE_DIR}/lib/libodgi.so")
+  target_link_libraries(odgi_ffi PUBLIC "${odgi_LIBS}" $<TARGET_FILE:libodgi_shared>)
   set_target_properties(odgi_ffi PROPERTIES OUTPUT_NAME "odgi_ffi")
   install(TARGETS odgi_ffi LIBRARY DESTINATION lib)
   add_pydoctest(odgi_ffi)

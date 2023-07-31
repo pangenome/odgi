@@ -125,41 +125,8 @@ namespace odgi {
             }
         }
 
-        auto get_graph_pos = [](const odgi::graph_t &graph,
-                                const path_pos_t &pos) {
-            auto path_end = graph.path_end(pos.path);
-            uint64_t walked = 0;
-            for (step_handle_t s = graph.path_begin(pos.path);
-                 s != path_end; s = graph.get_next_step(s)) {
-                handle_t h = graph.get_handle_of_step(s);
-                uint64_t node_length = graph.get_length(h);
-                if (walked + node_length > pos.offset) {
-                    return make_pos_t(graph.get_id(h), graph.get_is_reverse(h), pos.offset - walked);
-                }
-                walked += node_length;
-            }
-
-#pragma omp critical (cout)
-            std::cerr << "[odgi::overlap] warning: position " << graph.get_path_name(pos.path) << ":" << pos.offset
-                      << " outside of path" << std::endl;
-            return make_pos_t(0, false, 0);
-        };
-
-        auto get_offset_in_path = [](const odgi::graph_t &graph,
-                                     const path_handle_t &path, const step_handle_t &target) {
-            auto path_end = graph.path_end(path);
-            uint64_t walked = 0;
-            step_handle_t s = graph.path_begin(path);
-            for (; s != target; s = graph.get_next_step(s)) {
-                handle_t h = graph.get_handle_of_step(s);
-                walked += graph.get_length(h);
-            }
-            assert(s != path_end);
-            return walked;
-        };
-
         if (!path_ranges.empty()) {
-            std::cout << "#path\tpath_touched" << std::endl;
+            std::cout << "#path\tstart\tend\tpath.touched" << std::endl;
 
 //#pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
             for (auto &path_range : path_ranges) {

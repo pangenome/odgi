@@ -59,7 +59,7 @@
 
 // Sanity check that we are compiling on x86_64.
 #if !__x86_64__
-#error "odgi can only be built on an x86_64 machine (64-bit Intel/AMD)"
+#warning "odgi should only be built on an x86_64 machine (64-bit Intel/AMD)"
 #endif
 
 namespace odgi {

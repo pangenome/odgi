@@ -175,7 +175,7 @@ int main_draw(int argc, char **argv) {
     const bool _color_paths = args::get(color_paths);
     const double _png_path_line_spacing = png_path_line_spacing ? args::get(png_path_line_spacing) : 0.0;
     const double svg_scale = !render_scale ? 1.0 : args::get(render_scale);
-    uint64_t max_node_depth = 0;
+    size_t max_node_depth = 0;
     graph.for_each_handle(
         [&](const handle_t& h) {
             max_node_depth = std::max(graph.get_step_count(h), max_node_depth);

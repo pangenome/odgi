@@ -136,9 +136,9 @@ int main_layout(int argc, char **argv) {
     if (tmp_base) {
         xp::temp_file::set_dir(args::get(tmp_base));
     } else {
-        char* cwd = get_current_dir_name();
+        char cwd[512];
+        getcwd(cwd, sizeof(cwd));
         xp::temp_file::set_dir(std::string(cwd));
-        free(cwd);
     }
 
     if (!graph.is_optimized()) {
@@ -163,7 +163,7 @@ int main_layout(int argc, char **argv) {
     std::function<uint64_t(const std::vector<path_handle_t> &,
                            const xp::XP &)> get_max_path_step_count
         = [&](const std::vector<path_handle_t> &path_sgd_use_paths, const xp::XP &path_index) {
-              uint64_t max_path_step_count = 0;
+              size_t max_path_step_count = 0;
               for (auto& path : path_sgd_use_paths) {
                   max_path_step_count = std::max(max_path_step_count, path_index.get_path_step_count(path));
               }

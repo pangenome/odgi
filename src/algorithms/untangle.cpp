@@ -937,7 +937,11 @@ void untangle(
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
         for (uint64_t i = 0; i < paths.size(); ++i) {
             auto& path = paths[i];
-            path_to_len[path] = get_path_length(graph, path);
+            const uint16_t path_len = get_path_length(graph, paths[i]);
+
+            // You can't write on such a data structure in parallel
+#pragma omp critical (path_to_len)
+            path_to_len[path] = path_len;
         }
     } else if (output_type == untangle_output_t::BEDPE) {
         std::cout << "#query.name\tquery.start\tquery.end\tref.name\tref.start\tref.end\tscore\tinv\tself.cov\tnth.best" << std::endl;
