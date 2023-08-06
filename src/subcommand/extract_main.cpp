@@ -84,6 +84,8 @@ namespace odgi {
                                                        "List of paths to fully retain in the extracted graph. Must "
                                                        "contain one path name per line and a subset of all paths can be specified.",
                                                       {'R', "lace-paths"});
+        args::Flag _optimize(extract_opts, "optimize", "Compact the node ID space in the extracted graph(s).",
+                             {'O', "optimize"});
         args::Group threading_opts(parser, "[ Threading ]");
         args::ValueFlag<uint64_t> nthreads(threading_opts, "N", "Number of threads to use for parallel operations.",
                                            {'t', "threads"});
@@ -384,6 +386,7 @@ namespace odgi {
 
 
         const bool show_progress = args::get(_show_progress);
+        const bool optimize = args::get(_optimize);
         const uint64_t context_steps = _context_steps ? args::get(_context_steps) : 0;
         const uint64_t context_bases = _context_bases ? args::get(_context_bases) : 0;
 
@@ -395,7 +398,7 @@ namespace odgi {
                              std::vector<odgi::path_range_t> path_ranges, std::vector<std::pair<uint64_t, uint64_t>> pangenomic_ranges,
                              const uint64_t context_steps, const uint64_t context_bases, const bool full_range, const bool inverse,
                              const uint64_t max_dist_subpaths, const uint64_t num_iterations,
-                             const uint64_t num_threads, const bool show_progress) {
+                             const uint64_t num_threads, const bool show_progress, const bool optimize) {
             if (context_steps > 0 || context_bases > 0) {
                 if (show_progress) {
                     std::cerr << "[odgi::extract] expansion and adding connecting edges" << std::endl;
@@ -717,6 +720,10 @@ namespace odgi {
 
             // This should not be necessary, if the extraction works correctly
             // subgraph.remove_orphan_edges();
+
+            if (optimize) {
+                subgraph.optimize();
+            }
         };
 
         auto check_and_create_handle = [&](const graph_t &source, graph_t &subgraph, const nid_t node_id) {
@@ -744,7 +751,13 @@ namespace odgi {
                               << path_range.end.offset << std::endl;
                 }
 
-                prep_graph(graph, &paths, lace_paths, subgraph, {path_range}, *pangenomic_ranges, context_steps, context_bases, _full_range, false, args::get(_max_dist_subpaths), num_iterations, num_threads, show_progress);
+                prep_graph(
+                    graph, &paths,
+                    lace_paths, subgraph,
+                    {path_range}, *pangenomic_ranges,
+                    context_steps, context_bases, _full_range, false,
+                    args::get(_max_dist_subpaths), num_iterations,
+                    num_threads, show_progress, optimize);
 
                 const string filename = graph.get_path_name(path_range.begin.path) + ":" + to_string(path_range.begin.offset) + "-" + to_string(path_range.end.offset) + ".og";
 
@@ -771,7 +784,13 @@ namespace odgi {
                 }
             }
 
-            prep_graph(graph, &paths, lace_paths, subgraph, *path_ranges, *pangenomic_ranges, context_steps, context_bases, _full_range, _inverse, args::get(_max_dist_subpaths), num_iterations, num_threads, show_progress);
+            prep_graph(
+                graph, &paths,
+                lace_paths, subgraph,
+                *path_ranges, *pangenomic_ranges,
+                context_steps, context_bases, _full_range, _inverse,
+                args::get(_max_dist_subpaths), num_iterations,
+                num_threads, show_progress, optimize);
 
             {
                 const std::string outfile = args::get(og_out_file);
