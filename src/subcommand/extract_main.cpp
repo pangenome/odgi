@@ -31,16 +31,16 @@ namespace odgi {
         args::Group graph_files_io_opts(parser, "[ Graph Files IO ]");
         args::ValueFlag<std::string> og_out_file(graph_files_io_opts, "FILE", "Store all subgraphs in this FILE. The file name usually ends with *.og*.",
                                                  {'o', "out"});
-        args::ValueFlag<uint64_t> _max_dist_subpaths(mandatory_opts, "N",
+        args::Group extract_opts(parser, "[ Extract Options ]");
+        args::ValueFlag<uint64_t> _max_dist_subpaths(extract_opts, "N",
                                                      "Maximum distance between subpaths allowed for merging them. "
                                                      "It reduces the fragmentation of unspecified paths in the input path ranges. "
-                                                     "Set 0 to disable it.",
+                                                     "Set 0 to disable it [default: 100000].",
                                                      {'d', "max-distance-subpaths"});
-        args::ValueFlag<uint64_t> _num_iterations(mandatory_opts, "N",
+        args::ValueFlag<uint64_t> _num_iterations(extract_opts, "N",
                                                   "Maximum number of iterations in attempting to merge close subpaths. "
                                                   "It stops early if during an iteration no subpaths were merged [default: 3].",
                                                   {'e', "max-merging-iterations"});
-        args::Group extract_opts(parser, "[ Extract Options ]");
         args::Flag _split_subgraphs(extract_opts, "split_subgraphs",
                                     "Instead of writing the target subgraphs into a single graph, "
                                     "write one subgraph per given target to a separate file named path:start-end.og "
@@ -118,10 +118,6 @@ namespace odgi {
             return 1;
         }
 
-        if (!_max_dist_subpaths) {
-            std::cerr << "[odgi::extract] error: please specify -d/--max-distance-subpaths. Values equal to or greater than 0 are allowed." << std::endl;
-            return 1;
-        }
         if ((!_max_dist_subpaths || args::get(_max_dist_subpaths) == 0) && _num_iterations) {
             std::cerr << "[odgi::extract] error: specified -e/--max-merging-iterations without specifying -d/--max-distance-subpaths greater than 0." << std::endl;
             return 1;
@@ -138,7 +134,8 @@ namespace odgi {
             return 1;
         }
 
-        const uint64_t num_iterations =  _num_iterations && args::get(_num_iterations) > 0 ? args::get(_num_iterations) : 3;
+        const uint64_t max_dist_subpaths = _max_dist_subpaths && args::get(_max_dist_subpaths) >= 0 ? args::get(_max_dist_subpaths) : 100000;
+        const uint64_t num_iterations = _num_iterations && args::get(_num_iterations) > 0 ? args::get(_num_iterations) : 3;
 
         if (_split_subgraphs) {
             if (og_out_file) {
@@ -756,7 +753,7 @@ namespace odgi {
                     lace_paths, subgraph,
                     {path_range}, *pangenomic_ranges,
                     context_steps, context_bases, _full_range, false,
-                    args::get(_max_dist_subpaths), num_iterations,
+                    max_dist_subpaths, num_iterations,
                     num_threads, show_progress, optimize);
 
                 const string filename = graph.get_path_name(path_range.begin.path) + ":" + to_string(path_range.begin.offset) + "-" + to_string(path_range.end.offset) + ".og";
@@ -789,7 +786,7 @@ namespace odgi {
                 lace_paths, subgraph,
                 *path_ranges, *pangenomic_ranges,
                 context_steps, context_bases, _full_range, _inverse,
-                args::get(_max_dist_subpaths), num_iterations,
+                max_dist_subpaths, num_iterations,
                 num_threads, show_progress, optimize);
 
             {
