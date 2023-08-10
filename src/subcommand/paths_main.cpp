@@ -46,7 +46,8 @@ int main_paths(int argc, char** argv) {
     args::ValueFlag<std::uint16_t> path_delim_pos(path_investigation_opts, "N", "Consider the N-th occurrence of the delimiter specified with **-D, --delim**"
                                                     " to obtain the group identifier. Specify 1 for the 1st occurrence (default).",
                                                     {'p', "delim-pos"});
-    args::ValueFlag<std::string> non_reference_paths(path_investigation_opts, "FILE", "Print to stdout (in BED format) path ranges that are not in the paths listed (by line) in *FILE*.", {'n', "non-reference-paths"});
+    args::ValueFlag<std::string> non_reference_nodes(path_investigation_opts, "FILE", "Print to stdout IDs of nodes that are not in the paths listed (by line) in *FILE*.", {"non-reference-nodes"});
+    args::ValueFlag<std::string> non_reference_ranges(path_investigation_opts, "FILE", "Print to stdout (in BED format) path ranges that are not in the paths listed (by line) in *FILE*.", {"non-reference-ranges"});
     args::Group path_modification_opts(parser, "[ Path Modification Options ]");
     args::ValueFlag<std::string> keep_paths_file(path_modification_opts, "FILE", "Keep paths listed (by line) in *FILE*.", {'K', "keep-paths"});
     args::ValueFlag<std::string> drop_paths_file(path_modification_opts, "FILE", "Drop paths listed (by line) in *FILE*.", {'X', "drop-paths"});
@@ -92,6 +93,11 @@ int main_paths(int argc, char** argv) {
 		std::cerr << "[odgi::paths] error: -p,--delim-pos has to specify a value greater than 0." << std::endl;
 		return 1;
 	}
+
+    if (non_reference_nodes && non_reference_ranges) {
+		std::cerr << "[odgi::paths] error: specify --non-reference-nodes or non-reference-ranges, not both." << std::endl;
+		return 1;
+    }
 
 	const uint64_t num_threads = args::get(threads) ? args::get(threads) : 1;
     omp_set_num_threads(num_threads);
@@ -348,7 +354,10 @@ int main_paths(int argc, char** argv) {
         }
     }
 
-    if (non_reference_paths && !args::get(non_reference_paths).empty()) {
+    if (
+        (non_reference_nodes && !args::get(non_reference_nodes).empty()) ||
+        (non_reference_ranges && !args::get(non_reference_ranges).empty())
+        ) {
         // Check if the node IDs are compacted
         const uint64_t shift = graph.min_node_id();
         if (graph.max_node_id() - shift >= graph.get_node_count()){
@@ -359,7 +368,7 @@ int main_paths(int argc, char** argv) {
         // Read paths to use as reference paths
         std::vector<path_handle_t> reference_paths;
         std::string line;
-        auto& x = args::get(non_reference_paths);
+        auto& x = non_reference_nodes && !args::get(non_reference_nodes).empty() ? args::get(non_reference_nodes) : args::get(non_reference_ranges);
         std::ifstream infile(x);
         while (std::getline(infile, line)) {
             // This file should contain path names, one per line
@@ -373,50 +382,89 @@ int main_paths(int argc, char** argv) {
             }
         }
 
-        // Set the reference nodes
-        atomicbitvector::atomic_bv_t reference_nodes(graph.get_node_count()+1);
+        if (non_reference_nodes && !args::get(non_reference_nodes).empty()){
+            // Emit non-reference nodes
+
+            // Set non-reference nodes
+            atomicbitvector::atomic_bv_t non_reference_nodes(graph.get_node_count());
+            for(uint64_t i = 0; i < non_reference_nodes.size(); i++) {
+                non_reference_nodes.set(i);
+            }
 #pragma omp parallel for schedule(dynamic,1)
-        for (auto &path : reference_paths) {
-			graph.for_each_step_in_path(path, [&](const step_handle_t& step) {
-                const handle_t handle = graph.get_handle_of_step(step);
-                reference_nodes.set(graph.get_id(handle) - shift);
-            });
-        }
+            for (auto &path : reference_paths) {
+                graph.for_each_step_in_path(path, [&](const step_handle_t& step) {
+                    const handle_t handle = graph.get_handle_of_step(step);
+                    non_reference_nodes.reset(graph.get_id(handle) - shift);
+                });
+            }
 
-        std::vector<path_handle_t> non_reference_paths;
-		graph.for_each_path_handle([&non_reference_paths](const path_handle_t& path) {
-			non_reference_paths.push_back(path);
-        });
-
-        // Prepare non reference path handles for parallel processing
-        std::sort(non_reference_paths.begin(), non_reference_paths.end());
-        std::sort(reference_paths.begin(), reference_paths.end());
-
-        non_reference_paths.erase(
-            std::remove_if(non_reference_paths.begin(), non_reference_paths.end(), 
-            [&reference_paths](const auto &x) { 
-                return std::binary_search(reference_paths.begin(), reference_paths.end(), x); 
-            }), non_reference_paths.end());
-
-		// Traverse non reference paths to emit non reference ranges
-#pragma omp parallel for schedule(dynamic, 1)
-		for (auto& path : non_reference_paths) {
-            uint64_t start = 0, end = 0;
-			graph.for_each_step_in_path(path, [&](const step_handle_t& step) {
-                const handle_t handle = graph.get_handle_of_step(step);
-                const uint64_t index = graph.get_id(handle) - shift;
-                if (reference_nodes.test(index)) {
-                    // Emit the previous non reference range, if any
-                    if (end > start) {
-                        #pragma omp critical (cout)
-                            std::cout << graph.get_path_name(path) << "\t" << start << "\t" << end << std::endl;
+            // Emit non-reference nodes
+            std::cout << "#node.id\tpaths" << std::endl;
+            for (auto x : non_reference_nodes) {
+                const handle_t handle = graph.get_handle(x + shift);
+            
+                // Check paths that go through this node, if any
+                std::unordered_set<path_handle_t> unique_path_handles;
+                graph.for_each_step_on_handle(handle, [&](const step_handle_t& step) {
+                    unique_path_handles.insert(graph.get_path_handle_of_step(step));
+                });
+                std::string result;
+                for (const auto& path : unique_path_handles) {
+                    if (!result.empty()) {
+                        result += ",";
                     }
-                    end += graph.get_length(handle);
-                    start = end;
-                } else {
-                    end += graph.get_length(handle);
+                    result += graph.get_path_name(path);
                 }
+
+                std::cout << graph.get_id(handle) << "\t" << result << std::endl;
+            }
+        } else {
+            // Emit non-reference ranges
+
+            // Set the reference nodes
+            atomicbitvector::atomic_bv_t reference_nodes(graph.get_node_count());
+    #pragma omp parallel for schedule(dynamic,1)
+            for (auto &path : reference_paths) {
+                graph.for_each_step_in_path(path, [&](const step_handle_t& step) {
+                    const handle_t handle = graph.get_handle_of_step(step);
+                    reference_nodes.set(graph.get_id(handle) - shift);
+                });
+            }
+
+            // Prepare non reference path handles for parallel processing
+            std::vector<path_handle_t> non_reference_paths;
+            graph.for_each_path_handle([&non_reference_paths](const path_handle_t& path) {
+                non_reference_paths.push_back(path);
             });
+            std::sort(non_reference_paths.begin(), non_reference_paths.end());
+            std::sort(reference_paths.begin(), reference_paths.end());
+            non_reference_paths.erase(
+                std::remove_if(non_reference_paths.begin(), non_reference_paths.end(), 
+                [&reference_paths](const auto &x) { 
+                    return std::binary_search(reference_paths.begin(), reference_paths.end(), x); 
+                }), non_reference_paths.end());
+
+            // Traverse non reference paths to emit non-reference ranges
+            std::cout << "#path.name\tstart\tend" << std::endl;
+    #pragma omp parallel for schedule(dynamic, 1)
+            for (auto& path : non_reference_paths) {
+                uint64_t start = 0, end = 0;
+                graph.for_each_step_in_path(path, [&](const step_handle_t& step) {
+                    const handle_t handle = graph.get_handle_of_step(step);
+                    const uint64_t index = graph.get_id(handle) - shift;
+                    if (reference_nodes.test(index)) {
+                        // Emit the previous non reference range, if any
+                        if (end > start) {
+                            #pragma omp critical (cout)
+                                std::cout << graph.get_path_name(path) << "\t" << start << "\t" << end << std::endl;
+                        }
+                        end += graph.get_length(handle);
+                        start = end;
+                    } else {
+                        end += graph.get_length(handle);
+                    }
+                });
+            }
         }
     }
 
