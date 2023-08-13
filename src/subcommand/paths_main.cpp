@@ -49,6 +49,7 @@ int main_paths(int argc, char** argv) {
     args::ValueFlag<std::string> non_reference_nodes(path_investigation_opts, "FILE", "Print to stdout IDs of nodes that are not in the paths listed (by line) in *FILE*.", {"non-reference-nodes"});
     args::ValueFlag<std::string> non_reference_ranges(path_investigation_opts, "FILE", "Print to stdout (in BED format) path ranges that are not in the paths listed (by line) in *FILE*.", {"non-reference-ranges"});
     args::ValueFlag<uint64_t> min_size(path_investigation_opts, "N", "Minimum size (in bps) of nodes (with --non-reference-nodes) or ranges (with --non-reference-ranges).", {"min-size"});
+    args::Flag show_step_ranges(path_investigation_opts, "N", "Show steps (that is, node IDs and strands) of --non-reference-ranges.", {"show-step-ranges"});
     args::Group path_modification_opts(parser, "[ Path Modification Options ]");
     args::ValueFlag<std::string> keep_paths_file(path_modification_opts, "FILE", "Keep paths listed (by line) in *FILE*.", {'K', "keep-paths"});
     args::ValueFlag<std::string> drop_paths_file(path_modification_opts, "FILE", "Drop paths listed (by line) in *FILE*.", {'X', "drop-paths"});
@@ -426,6 +427,8 @@ int main_paths(int argc, char** argv) {
         } else {
             // Emit non-reference ranges
 
+            const bool _show_step_ranges = args::get(show_step_ranges);
+
             // Set the reference nodes
             atomicbitvector::atomic_bv_t reference_nodes(graph.get_node_count());
     #pragma omp parallel for schedule(dynamic,1)
@@ -450,23 +453,44 @@ int main_paths(int argc, char** argv) {
                 }), non_reference_paths.end());
 
             // Traverse non reference paths to emit non-reference ranges
-            std::cout << "#path.name\tstart\tend" << std::endl;
+            if (_show_step_ranges) {
+                std::cout << "#path.name\tstart\tend\tsteps" << std::endl;
+            } else {
+                std::cout << "#path.name\tstart\tend" << std::endl;
+            }
     #pragma omp parallel for schedule(dynamic, 1)
             for (auto& path : non_reference_paths) {
                 uint64_t start = 0, end = 0;
+                std::vector<step_handle_t> step_range;
                 graph.for_each_step_in_path(path, [&](const step_handle_t& step) {
                     const handle_t handle = graph.get_handle_of_step(step);
                     const uint64_t index = graph.get_id(handle) - shift;
                     if (reference_nodes.test(index)) {
                         // Emit the previous non reference range, if any
                         if (end > start && (end - start) >= min_size_in_bp) {
-                            #pragma omp critical (cout)
-                                std::cout << graph.get_path_name(path) << "\t" << start << "\t" << end << std::endl;
+                            if (_show_step_ranges) {
+                                std::string step_range_str = "";
+                                for (auto& step : step_range) {
+                                    const handle_t handle = graph.get_handle_of_step(step);
+                                    step_range_str += std::to_string(graph.get_id(handle)) + (graph.get_is_reverse(handle) ? "-" : "+") + ",";
+                                }
+                                #pragma omp critical (cout)
+                                    std::cout << graph.get_path_name(path) << "\t" << start << "\t" << end << "\t" << step_range_str.substr(0, step_range_str.size() - 1) << std::endl; // trim the trailing comma from step_range
+                            } else {
+                                #pragma omp critical (cout)
+                                    std::cout << graph.get_path_name(path) << "\t" << start << "\t" << end << std::endl;
+                            }
                         }
                         end += graph.get_length(handle);
                         start = end;
+                        if (_show_step_ranges) {
+                            step_range.clear();
+                        }
                     } else {
                         end += graph.get_length(handle);
+                    }
+                    if (_show_step_ranges) {
+                        step_range.push_back(step);
                     }
                 });
             }
