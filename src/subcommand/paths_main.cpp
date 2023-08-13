@@ -48,6 +48,7 @@ int main_paths(int argc, char** argv) {
                                                     {'p', "delim-pos"});
     args::ValueFlag<std::string> non_reference_nodes(path_investigation_opts, "FILE", "Print to stdout IDs of nodes that are not in the paths listed (by line) in *FILE*.", {"non-reference-nodes"});
     args::ValueFlag<std::string> non_reference_ranges(path_investigation_opts, "FILE", "Print to stdout (in BED format) path ranges that are not in the paths listed (by line) in *FILE*.", {"non-reference-ranges"});
+    args::ValueFlag<uint64_t> min_size(path_investigation_opts, "N", "Minimum size (in bps) of nodes (with --non-reference-nodes) or ranges (with --non-reference-ranges).", {"min-size"});
     args::Group path_modification_opts(parser, "[ Path Modification Options ]");
     args::ValueFlag<std::string> keep_paths_file(path_modification_opts, "FILE", "Keep paths listed (by line) in *FILE*.", {'K', "keep-paths"});
     args::ValueFlag<std::string> drop_paths_file(path_modification_opts, "FILE", "Drop paths listed (by line) in *FILE*.", {'X', "drop-paths"});
@@ -95,7 +96,7 @@ int main_paths(int argc, char** argv) {
 	}
 
     if (non_reference_nodes && non_reference_ranges) {
-		std::cerr << "[odgi::paths] error: specify --non-reference-nodes or non-reference-ranges, not both." << std::endl;
+		std::cerr << "[odgi::paths] error: specify --non-reference-nodes or --non-reference-ranges, not both." << std::endl;
 		return 1;
     }
 
@@ -358,6 +359,8 @@ int main_paths(int argc, char** argv) {
         (non_reference_nodes && !args::get(non_reference_nodes).empty()) ||
         (non_reference_ranges && !args::get(non_reference_ranges).empty())
         ) {
+        const uint64_t min_size_in_bp = min_size ? args::get(min_size) : 0;
+            
         // Check if the node IDs are compacted
         const uint64_t shift = graph.min_node_id();
         if (graph.max_node_id() - shift >= graph.get_node_count()){
@@ -387,8 +390,10 @@ int main_paths(int argc, char** argv) {
 
             // Set non-reference nodes
             atomicbitvector::atomic_bv_t non_reference_nodes(graph.get_node_count());
-            for(uint64_t i = 0; i < non_reference_nodes.size(); i++) {
-                non_reference_nodes.set(i);
+            for(uint64_t x = 0; x < non_reference_nodes.size(); ++x) {
+                if (min_size_in_bp == 0 || graph.get_length(graph.get_handle(x + shift)) >= min_size_in_bp) {
+                    non_reference_nodes.set(x);
+                }
             }
 #pragma omp parallel for schedule(dynamic,1)
             for (auto &path : reference_paths) {
@@ -454,7 +459,7 @@ int main_paths(int argc, char** argv) {
                     const uint64_t index = graph.get_id(handle) - shift;
                     if (reference_nodes.test(index)) {
                         // Emit the previous non reference range, if any
-                        if (end > start) {
+                        if (end > start && (end - start) >= min_size_in_bp) {
                             #pragma omp critical (cout)
                                 std::cout << graph.get_path_name(path) << "\t" << start << "\t" << end << std::endl;
                         }
