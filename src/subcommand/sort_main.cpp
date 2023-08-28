@@ -271,6 +271,7 @@ int main_sort(int argc, char** argv) {
 			std::string banner = "[odgi::sort] preparing target path vectors:";
 			target_paths_progress = std::make_unique<odgi::algorithms::progress_meter::ProgressMeter>(target_paths.size(), banner);
 		}
+		uint64_t ref_nodes = 0;
 		for (handlegraph::path_handle_t target_path: target_paths) {
 			graph.for_each_step_in_path(
 					target_path,
@@ -280,6 +281,7 @@ int main_sort(int argc, char** argv) {
 						if (!is_ref[i]) {
 							is_ref[i] = true;
 							target_order.push_back(handle);
+							ref_nodes++;
 						}
 					});
 			if (args::get(progress)) {
@@ -289,12 +291,10 @@ int main_sort(int argc, char** argv) {
 		if (args::get(progress))  {
 			target_paths_progress->finish();
 		}
-		uint64_t ref_nodes = 0;
 		for (uint64_t i = 0; i < is_ref.size(); i++) {
 			bool ref = is_ref[i];
 			if (!ref) {
 				target_order.push_back(graph.get_handle(i + 1));
-				ref_nodes++;
 			}
 		}
 		graph.apply_ordering(target_order, true);
