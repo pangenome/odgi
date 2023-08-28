@@ -267,25 +267,46 @@ namespace odgi {
 
         std::vector<odgi::path_range_t> input_path_ranges;
 
-        // handle targets from BED
-        if (_path_bed_file && !args::get(_path_bed_file).empty()) {
-            std::ifstream bed_in(args::get(_path_bed_file));
-            std::string line;
-            while (std::getline(bed_in, line)) {
-                add_bed_range(input_path_ranges, graph, line);
+        {
+            // handle targets from BED
+            if (_path_bed_file && !args::get(_path_bed_file).empty()) {
+                std::ifstream bed_in(args::get(_path_bed_file));
+                std::string line;
+                while (std::getline(bed_in, line)) {
+                    add_bed_range(input_path_ranges, graph, line);
+                }
             }
-        }
 
-        // handle targets from command line
-        if (_path_range) {
-            Region region;
-            parse_region(args::get(_path_range), region);
+            // handle targets from command line
+            if (_path_range) {
+                Region region;
+                parse_region(args::get(_path_range), region);
 
-            // no coordinates given, we do whole thing (0,-1)
-            if (region.start < 0 || region.end < 0) {
-                add_bed_range(input_path_ranges, graph, region.seq);
-            } else {
-                add_bed_range(input_path_ranges, graph, region.seq + "\t" + std::to_string(region.start) + "\t" + std::to_string(region.end));
+                // no coordinates given, we do whole thing (0,-1)
+                if (region.start < 0 || region.end < 0) {
+                    add_bed_range(input_path_ranges, graph, region.seq);
+                } else {
+                    add_bed_range(input_path_ranges, graph, region.seq + "\t" + std::to_string(region.start) + "\t" + std::to_string(region.end));
+                }
+            }
+
+            // Check duplicates
+            std::vector<path_range_t> copy_ranges = input_path_ranges; // Create a copy of the vector to avoid sorting the original one
+
+            auto compare_path_range = [](const path_range_t& a, const path_range_t& b) -> bool {
+                if (a.begin.path != b.begin.path) return a.begin.path < b.begin.path;
+                if (a.begin.offset != b.begin.offset) return a.begin.offset < b.begin.offset;
+                if (a.end.path != b.end.path) return a.end.path < b.end.path;
+                return a.end.offset < b.end.offset;
+            }; // Lambda function to compare two path_range_t objects
+
+            std::sort(copy_ranges.begin(), copy_ranges.end(), compare_path_range); // Sort the copied vector using the lambda function
+
+            for (size_t i = 1; i < copy_ranges.size(); i++) {
+                if (!compare_path_range(copy_ranges[i-1], copy_ranges[i])) {
+                    std::cerr << "[odgi::extract] error: " << graph.get_path_name(copy_ranges[i].begin.path) << ":" << copy_ranges[i].begin.offset << "-" << copy_ranges[i].end.offset << " is a duplicated path range" << std::endl;
+                    return 1;
+                }
             }
         }
 
@@ -610,6 +631,7 @@ namespace odgi {
                 const std::string path_name = source.get_path_name(path_range.begin.path);
 
                 subpaths_from_path_ranges.push_back(
+                        // The function assumes that every path is new and unique
                         odgi::algorithms::create_subpath(
                             subgraph,
                             odgi::algorithms::make_path_name(path_name, path_range.begin.offset, path_range.end.offset),
