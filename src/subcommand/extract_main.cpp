@@ -31,16 +31,16 @@ namespace odgi {
         args::Group graph_files_io_opts(parser, "[ Graph Files IO ]");
         args::ValueFlag<std::string> og_out_file(graph_files_io_opts, "FILE", "Store all subgraphs in this FILE. The file name usually ends with *.og*.",
                                                  {'o', "out"});
-        args::ValueFlag<uint64_t> _max_dist_subpaths(mandatory_opts, "N",
+        args::Group extract_opts(parser, "[ Extract Options ]");
+        args::ValueFlag<uint64_t> _max_dist_subpaths(extract_opts, "N",
                                                      "Maximum distance between subpaths allowed for merging them. "
                                                      "It reduces the fragmentation of unspecified paths in the input path ranges. "
-                                                     "Set 0 to disable it.",
+                                                     "Set 0 to disable it [default: 100000].",
                                                      {'d', "max-distance-subpaths"});
-        args::ValueFlag<uint64_t> _num_iterations(mandatory_opts, "N",
+        args::ValueFlag<uint64_t> _num_iterations(extract_opts, "N",
                                                   "Maximum number of iterations in attempting to merge close subpaths. "
                                                   "It stops early if during an iteration no subpaths were merged [default: 3].",
                                                   {'e', "max-merging-iterations"});
-        args::Group extract_opts(parser, "[ Extract Options ]");
         args::Flag _split_subgraphs(extract_opts, "split_subgraphs",
                                     "Instead of writing the target subgraphs into a single graph, "
                                     "write one subgraph per given target to a separate file named path:start-end.og "
@@ -84,6 +84,8 @@ namespace odgi {
                                                        "List of paths to fully retain in the extracted graph. Must "
                                                        "contain one path name per line and a subset of all paths can be specified.",
                                                       {'R', "lace-paths"});
+        args::Flag _optimize(extract_opts, "optimize", "Compact the node ID space in the extracted graph(s).",
+                             {'O', "optimize"});
         args::Group threading_opts(parser, "[ Threading ]");
         args::ValueFlag<uint64_t> nthreads(threading_opts, "N", "Number of threads to use for parallel operations.",
                                            {'t', "threads"});
@@ -116,10 +118,6 @@ namespace odgi {
             return 1;
         }
 
-        if (!_max_dist_subpaths) {
-            std::cerr << "[odgi::extract] error: please specify -d/--max-distance-subpaths. Values equal to or greater than 0 are allowed." << std::endl;
-            return 1;
-        }
         if ((!_max_dist_subpaths || args::get(_max_dist_subpaths) == 0) && _num_iterations) {
             std::cerr << "[odgi::extract] error: specified -e/--max-merging-iterations without specifying -d/--max-distance-subpaths greater than 0." << std::endl;
             return 1;
@@ -136,7 +134,8 @@ namespace odgi {
             return 1;
         }
 
-        const uint64_t num_iterations =  _num_iterations && args::get(_num_iterations) > 0 ? args::get(_num_iterations) : 3;
+        const uint64_t max_dist_subpaths = _max_dist_subpaths && args::get(_max_dist_subpaths) >= 0 ? args::get(_max_dist_subpaths) : 100000;
+        const uint64_t num_iterations = _num_iterations && args::get(_num_iterations) > 0 ? args::get(_num_iterations) : 3;
 
         if (_split_subgraphs) {
             if (og_out_file) {
@@ -268,25 +267,46 @@ namespace odgi {
 
         std::vector<odgi::path_range_t> input_path_ranges;
 
-        // handle targets from BED
-        if (_path_bed_file && !args::get(_path_bed_file).empty()) {
-            std::ifstream bed_in(args::get(_path_bed_file));
-            std::string line;
-            while (std::getline(bed_in, line)) {
-                add_bed_range(input_path_ranges, graph, line);
+        {
+            // handle targets from BED
+            if (_path_bed_file && !args::get(_path_bed_file).empty()) {
+                std::ifstream bed_in(args::get(_path_bed_file));
+                std::string line;
+                while (std::getline(bed_in, line)) {
+                    add_bed_range(input_path_ranges, graph, line);
+                }
             }
-        }
 
-        // handle targets from command line
-        if (_path_range) {
-            Region region;
-            parse_region(args::get(_path_range), region);
+            // handle targets from command line
+            if (_path_range) {
+                Region region;
+                parse_region(args::get(_path_range), region);
 
-            // no coordinates given, we do whole thing (0,-1)
-            if (region.start < 0 || region.end < 0) {
-                add_bed_range(input_path_ranges, graph, region.seq);
-            } else {
-                add_bed_range(input_path_ranges, graph, region.seq + "\t" + std::to_string(region.start) + "\t" + std::to_string(region.end));
+                // no coordinates given, we do whole thing (0,-1)
+                if (region.start < 0 || region.end < 0) {
+                    add_bed_range(input_path_ranges, graph, region.seq);
+                } else {
+                    add_bed_range(input_path_ranges, graph, region.seq + "\t" + std::to_string(region.start) + "\t" + std::to_string(region.end));
+                }
+            }
+
+            // Check duplicates
+            std::vector<path_range_t> copy_ranges = input_path_ranges; // Create a copy of the vector to avoid sorting the original one
+
+            auto compare_path_range = [](const path_range_t& a, const path_range_t& b) -> bool {
+                if (a.begin.path != b.begin.path) return a.begin.path < b.begin.path;
+                if (a.begin.offset != b.begin.offset) return a.begin.offset < b.begin.offset;
+                if (a.end.path != b.end.path) return a.end.path < b.end.path;
+                return a.end.offset < b.end.offset;
+            }; // Lambda function to compare two path_range_t objects
+
+            std::sort(copy_ranges.begin(), copy_ranges.end(), compare_path_range); // Sort the copied vector using the lambda function
+
+            for (size_t i = 1; i < copy_ranges.size(); i++) {
+                if (!compare_path_range(copy_ranges[i-1], copy_ranges[i])) {
+                    std::cerr << "[odgi::extract] error: " << graph.get_path_name(copy_ranges[i].begin.path) << ":" << copy_ranges[i].begin.offset << "-" << copy_ranges[i].end.offset << " is a duplicated path range" << std::endl;
+                    return 1;
+                }
             }
         }
 
@@ -384,6 +404,7 @@ namespace odgi {
 
 
         const bool show_progress = args::get(_show_progress);
+        const bool optimize = args::get(_optimize);
         const uint64_t context_steps = _context_steps ? args::get(_context_steps) : 0;
         const uint64_t context_bases = _context_bases ? args::get(_context_bases) : 0;
 
@@ -395,7 +416,7 @@ namespace odgi {
                              std::vector<odgi::path_range_t> path_ranges, std::vector<std::pair<uint64_t, uint64_t>> pangenomic_ranges,
                              const uint64_t context_steps, const uint64_t context_bases, const bool full_range, const bool inverse,
                              const uint64_t max_dist_subpaths, const uint64_t num_iterations,
-                             const uint64_t num_threads, const bool show_progress) {
+                             const uint64_t num_threads, const bool show_progress, const bool optimize) {
             if (context_steps > 0 || context_bases > 0) {
                 if (show_progress) {
                     std::cerr << "[odgi::extract] expansion and adding connecting edges" << std::endl;
@@ -610,6 +631,7 @@ namespace odgi {
                 const std::string path_name = source.get_path_name(path_range.begin.path);
 
                 subpaths_from_path_ranges.push_back(
+                        // The function assumes that every path is new and unique
                         odgi::algorithms::create_subpath(
                             subgraph,
                             odgi::algorithms::make_path_name(path_name, path_range.begin.offset, path_range.end.offset),
@@ -717,6 +739,10 @@ namespace odgi {
 
             // This should not be necessary, if the extraction works correctly
             // subgraph.remove_orphan_edges();
+
+            if (optimize) {
+                subgraph.optimize();
+            }
         };
 
         auto check_and_create_handle = [&](const graph_t &source, graph_t &subgraph, const nid_t node_id) {
@@ -744,7 +770,13 @@ namespace odgi {
                               << path_range.end.offset << std::endl;
                 }
 
-                prep_graph(graph, &paths, lace_paths, subgraph, {path_range}, *pangenomic_ranges, context_steps, context_bases, _full_range, false, args::get(_max_dist_subpaths), num_iterations, num_threads, show_progress);
+                prep_graph(
+                    graph, &paths,
+                    lace_paths, subgraph,
+                    {path_range}, *pangenomic_ranges,
+                    context_steps, context_bases, _full_range, false,
+                    max_dist_subpaths, num_iterations,
+                    num_threads, show_progress, optimize);
 
                 const string filename = graph.get_path_name(path_range.begin.path) + ":" + to_string(path_range.begin.offset) + "-" + to_string(path_range.end.offset) + ".og";
 
@@ -771,7 +803,13 @@ namespace odgi {
                 }
             }
 
-            prep_graph(graph, &paths, lace_paths, subgraph, *path_ranges, *pangenomic_ranges, context_steps, context_bases, _full_range, _inverse, args::get(_max_dist_subpaths), num_iterations, num_threads, show_progress);
+            prep_graph(
+                graph, &paths,
+                lace_paths, subgraph,
+                *path_ranges, *pangenomic_ranges,
+                context_steps, context_bases, _full_range, _inverse,
+                max_dist_subpaths, num_iterations,
+                num_threads, show_progress, optimize);
 
             {
                 const std::string outfile = args::get(og_out_file);

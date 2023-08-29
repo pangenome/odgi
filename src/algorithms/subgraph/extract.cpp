@@ -53,9 +53,10 @@ namespace odgi {
         }
 
         path_handle_t create_subpath(graph_t &subgraph, const string &subpath_name, const bool is_circular) {
-            if (subgraph.has_path(subpath_name)) {
-                subgraph.destroy_path(subgraph.get_path_handle(subpath_name));
-            }
+            // The function assumes that every path is new and unique
+            // if (subgraph.has_path(subpath_name)) {
+            //     subgraph.destroy_path(subgraph.get_path_handle(subpath_name));
+            // }
             return subgraph.create_path_handle(subpath_name, is_circular);
         };
 
