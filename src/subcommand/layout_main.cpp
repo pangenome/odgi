@@ -356,7 +356,7 @@ int main_layout(int argc, char **argv) {
 		for (uint64_t i = 0; i < is_ref.size(); i++) {
 			bool ref = is_ref[i];
 			if (!ref) {
-				handle_t h = graph.get_handle(is_ref[i] + 1);
+				handle_t h = graph.get_handle(i + 1);
 				uint64_t pos = 2 * number_bool_packing::unpack_number(h);
 				graph_X[pos].store(len);
 				graph_Y[pos].store(gaussian_noise(rng));
