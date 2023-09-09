@@ -118,7 +118,7 @@ namespace odgi {
             return 1;
         }
 
-        if ((!_max_dist_subpaths || args::get(_max_dist_subpaths) == 0) && _num_iterations) {
+        if ((_max_dist_subpaths && args::get(_max_dist_subpaths) == 0) && _num_iterations) {
             std::cerr << "[odgi::extract] error: specified -e/--max-merging-iterations without specifying -d/--max-distance-subpaths greater than 0." << std::endl;
             return 1;
         }
