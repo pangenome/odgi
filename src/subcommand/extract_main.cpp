@@ -35,11 +35,11 @@ namespace odgi {
         args::ValueFlag<uint64_t> _max_dist_subpaths(extract_opts, "N",
                                                      "Maximum distance between subpaths allowed for merging them. "
                                                      "It reduces the fragmentation of unspecified paths in the input path ranges. "
-                                                     "Set 0 to disable it [default: 100000].",
+                                                     "Set 0 to disable it [default: 300000].",
                                                      {'d', "max-distance-subpaths"});
         args::ValueFlag<uint64_t> _num_iterations(extract_opts, "N",
                                                   "Maximum number of iterations in attempting to merge close subpaths. "
-                                                  "It stops early if during an iteration no subpaths were merged [default: 3].",
+                                                  "It stops early if during an iteration no subpaths were merged [default: 6].",
                                                   {'e', "max-merging-iterations"});
         args::Flag _split_subgraphs(extract_opts, "split_subgraphs",
                                     "Instead of writing the target subgraphs into a single graph, "
@@ -134,8 +134,8 @@ namespace odgi {
             return 1;
         }
 
-        const uint64_t max_dist_subpaths = _max_dist_subpaths && args::get(_max_dist_subpaths) >= 0 ? args::get(_max_dist_subpaths) : 100000;
-        const uint64_t num_iterations = _num_iterations && args::get(_num_iterations) > 0 ? args::get(_num_iterations) : 3;
+        const uint64_t max_dist_subpaths = _max_dist_subpaths && args::get(_max_dist_subpaths) >= 0 ? args::get(_max_dist_subpaths) : 300000;
+        const uint64_t num_iterations = _num_iterations && args::get(_num_iterations) > 0 ? args::get(_num_iterations) : 6;
 
         if (_split_subgraphs) {
             if (og_out_file) {
