@@ -477,11 +477,37 @@ namespace odgi {
                     if (show_progress) {
                         progress->increment(1);
                     }
-                    algorithms::for_handle_in_path_range(
-                            source, path_handle, path_range.begin.offset, path_range.end.offset,
-                            [&](const handle_t& handle) {
-                                keep_bv.set(source.get_id(handle) - shift);
-                            });
+
+                    // The extraction does not cut nodes, so the input path ranges have to be
+                    // extended if their ranges (start, end) fall in the middle of the nodes.
+                    bool first = true;
+                    uint64_t new_start = 0;
+                    uint64_t new_end = 0;
+                    
+                    const uint64_t start = path_range.begin.offset;
+                    const uint64_t end = path_range.end.offset;
+
+                    uint64_t walked = 0;
+                    const auto path_end = source.path_end(path_handle);
+                    for (step_handle_t cur_step = source.path_begin(path_handle);
+                        cur_step != path_end && walked < end; cur_step = source.get_next_step(cur_step)) {
+                        const handle_t cur_handle = source.get_handle_of_step(cur_step);
+                        walked += source.get_length(cur_handle);
+                        if (walked > start) {
+                            keep_bv.set(source.get_id(cur_handle) - shift);
+
+                            if (first) {
+                                first = false;
+                                new_start = walked - source.get_length(cur_handle);
+                            }
+                        }
+                    }
+                    new_end = walked;
+
+                    // Extend path range to entirely include the first and the last node of the range.
+                    // Thi is important to path names with the correct path ranges.
+                    path_range.begin.offset = new_start;
+                    path_range.end.offset = new_end;
                 }
                 if (!pangenomic_ranges.empty()) {
                     uint64_t pos = 0;
