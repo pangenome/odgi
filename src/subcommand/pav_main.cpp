@@ -259,8 +259,9 @@ int main_pav(int argc, char **argv) {
             operation_progress->increment(1);
         }
     }
-    operation_progress->finish();
-
+    if (show_progress) {
+        operation_progress->finish();
+    }
     const bool emit_matrix_else_table = args::get(_matrix_output);
 
     // Emit the PAV matrix
@@ -406,8 +407,9 @@ int main_pav(int argc, char **argv) {
             operation_progress->increment(1);
         }
     }
-    operation_progress->finish();
-
+    if (show_progress) {
+        operation_progress->finish();
+    }
     return 0;
 }
 
