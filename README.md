@@ -51,6 +51,14 @@ Static builds are unlikely to be supported on OSX, and require appropriate stati
 
 For more information on optimisations, debugging and GNU Guix builds, see [INSTALL.md](./INSTALL.md) and [CMakeLists.txt](./CMakeLists.txt).
 
+### Nix build
+
+If you have `nix`, build and installation in your profile are as simple as:
+
+```
+nix-build && nix-env -i ./result
+```
+
 #### Notes for distribution
 
 If you need to avoid machine-specific optimizations, use the `CMAKE_BUILD_TYPE=Generic` build type:
