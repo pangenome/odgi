@@ -116,10 +116,6 @@ int main_paths(int argc, char** argv) {
     }
 
     const uint64_t shift = graph.min_node_id();
-    std::cerr << "graph.min_node_id() "  << graph.min_node_id() << std::endl;
-    std::cerr << "graph.max_node_id() "  << graph.max_node_id() << std::endl;
-    std::cerr << "graph.get_node_count() "  << graph.get_node_count() << std::endl;
-    std::cerr << "graph.max_node_id() - shift "  << (graph.max_node_id() - shift) << std::endl;
     if (
         args::get(haplo_matrix) || 
         (non_reference_nodes && !args::get(non_reference_nodes).empty()) ||
