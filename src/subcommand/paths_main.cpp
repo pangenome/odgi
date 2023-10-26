@@ -115,6 +115,23 @@ int main_paths(int argc, char** argv) {
         }
     }
 
+    const uint64_t shift = graph.min_node_id();
+    std::cerr << "graph.min_node_id() "  << graph.min_node_id() << std::endl;
+    std::cerr << "graph.max_node_id() "  << graph.max_node_id() << std::endl;
+    std::cerr << "graph.get_node_count() "  << graph.get_node_count() << std::endl;
+    std::cerr << "graph.max_node_id() - shift "  << (graph.max_node_id() - shift) << std::endl;
+    if (
+        args::get(haplo_matrix) || 
+        (non_reference_nodes && !args::get(non_reference_nodes).empty()) ||
+        (non_reference_ranges && !args::get(non_reference_ranges).empty())
+        ) {
+        // Check if the node IDs are compacted
+        if (graph.max_node_id() - shift >= graph.get_node_count()){
+            std::cerr << "[odgi::paths] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
+            exit(1);
+        }
+    }
+
     if (list_path_start_end && list_names) {
     	std::vector<path_handle_t> paths;
 		graph.for_each_path_handle([&](const path_handle_t& p) {
@@ -204,13 +221,18 @@ int main_paths(int argc, char** argv) {
                 uint64_t path_length = 0;
                 uint64_t path_step_count = 0;
                 std::vector<uint64_t> row(graph.get_node_count());
+                // Initialize first to avoid possible bugs later
+                for (uint32_t i = 0; i < graph.get_node_count(); ++i) {
+                    row[i] = 0;
+                }
+
                 graph.for_each_step_in_path(
                     p,
                     [&](const step_handle_t& s) {
                         const handle_t& h = graph.get_handle_of_step(s);
                         path_length += graph.get_length(h);
                         ++path_step_count;
-                        row[graph.get_id(h)-1]++;
+                        row[graph.get_id(h)-shift]++;
                     });
                 if (delim) {
                     std::cout << group_name << "\t";
@@ -220,7 +242,7 @@ int main_paths(int argc, char** argv) {
                           << path_step_count;
                 if (node_length_scale) {
                     for (uint64_t i = 0; i < row.size(); ++i) {
-                        std::cout << "\t" << row[i] * graph.get_length(graph.get_handle(i+1));
+                        std::cout << "\t" << row[i] * graph.get_length(graph.get_handle(i+shift));
                     }
                 } else {
                     for (uint64_t i = 0; i < row.size(); ++i) {
@@ -361,13 +383,6 @@ int main_paths(int argc, char** argv) {
         (non_reference_ranges && !args::get(non_reference_ranges).empty())
         ) {
         const uint64_t min_size_in_bp = min_size ? args::get(min_size) : 0;
-            
-        // Check if the node IDs are compacted
-        const uint64_t shift = graph.min_node_id();
-        if (graph.max_node_id() - shift >= graph.get_node_count()){
-            std::cerr << "[odgi::paths] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
-            exit(1);
-        }
 
         // Read paths to use as reference paths
         std::vector<path_handle_t> reference_paths;
