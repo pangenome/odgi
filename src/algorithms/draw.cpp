@@ -104,7 +104,9 @@ void draw_svg(std::ostream &out,
               const std::vector<double> &Y,
               const PathHandleGraph &graph,
               const double& scale,
-              const double& border) {
+              const double& border,
+			  const double& line_width,
+			  std::vector<algorithms::color_t>& node_id_to_color) {
 
     std::vector<std::vector<handle_t>> weak_components;
     coord_range_2d_t rendered_range;
@@ -124,9 +126,10 @@ void draw_svg(std::ostream &out,
         << "viewBox=\"" << viewbox_x1 << " " << viewbox_y1
         << " " << width << " " << height << "\""
         << " xmlns=\"http://www.w3.org/2000/svg\">"
-        << "<style type=\"text/css\">"
-        << "line{stroke:black;stroke-width:1.0;stroke-opacity:1.0;stroke-linecap:round;};"
-        << "</style>"
+		// interferes with the styling of the lines
+        //<< "<style type=\"text/css\">"
+        //<< "line{stroke:black;stroke-width:1.0;stroke-opacity:1.0;stroke-linecap:round;};"
+        //<< "</style>"
         << std::endl;
 
     auto range_itr = component_ranges.begin();
@@ -134,8 +137,10 @@ void draw_svg(std::ostream &out,
         auto& range = *range_itr++;
         auto& x_off = range.x_offset;
         auto& y_off = range.y_offset;
+		//const algorithms::color_t node_color = !node_id_to_color.empty() ? node_id_to_color[graph.get_id(handle)] : COLOR_BLACK;
         for (auto& handle : component) {
             uint64_t a = 2 * number_bool_packing::unpack_number(handle);
+			algorithms::color_t color = node_id_to_color.empty() ? COLOR_BLACK : node_id_to_color[graph.get_id(handle)];
             out << "<line x1=\""
                 << (X[a] * scale) - x_off
                 << "\" x2=\""
@@ -144,6 +149,8 @@ void draw_svg(std::ostream &out,
                 << (Y[a] * scale) + y_off
                 << "\" y2=\""
                 << (Y[a + 1] * scale) + y_off
+				<< "\" stroke=\"" << to_rgba(color)
+				<< "\" stroke-width=\"" << line_width
                 << "\"/>"
                 << std::endl;
 
