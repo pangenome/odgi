@@ -41,7 +41,7 @@ int main_draw(int argc, char **argv) {
     args::ValueFlag<uint64_t> png_height(visualizations_opts, "FILE", "Height of PNG rendering (default: 1000).", {'H', "png-height"});
     args::ValueFlag<uint64_t> png_border(visualizations_opts, "FILE", "Size of PNG border in bp (default: 10).", {'E', "png-border"});
     args::Flag color_paths(visualizations_opts, "color-paths", "Color paths (in PNG output).", {'C', "color-paths"});
-    args::ValueFlag<double> render_scale(visualizations_opts, "N", "Image scaling (default 1.0).", {'R', "scale"});
+    args::ValueFlag<double> render_scale(visualizations_opts, "N", "Image scaling (default 0.001).", {'R', "scale"});
     args::ValueFlag<double> render_border(visualizations_opts, "N", "Image border (in approximate bp) (default 100.0).", {'B', "border"});
     args::ValueFlag<double> png_line_width(visualizations_opts, "N", "Line width (in approximate bp) (default 0.0).", {'w', "line-width"});
     //args::ValueFlag<double> png_line_overlay(parser, "N", "line width (in approximate bp) (default 10.0)", {'O', "line-overlay"});
@@ -174,7 +174,7 @@ int main_draw(int argc, char **argv) {
     const double _png_line_width = png_line_width ? args::get(png_line_width) : 0;
     const bool _color_paths = args::get(color_paths);
     const double _png_path_line_spacing = png_path_line_spacing ? args::get(png_path_line_spacing) : 0.0;
-    const double svg_scale = !render_scale ? 1.0 : args::get(render_scale);
+    const double svg_scale = !render_scale ? 0.01 : args::get(render_scale);
     size_t max_node_depth = 0;
     graph.for_each_handle(
         [&](const handle_t& h) {
@@ -216,7 +216,7 @@ int main_draw(int argc, char **argv) {
         // todo could be done with callbacks
         std::vector<double> X = layout.get_X();
         std::vector<double> Y = layout.get_Y();
-        algorithms::draw_svg(f, X, Y, graph, svg_scale, border_bp);
+        algorithms::draw_svg(f, X, Y, graph, svg_scale, border_bp, _png_line_width, node_id_to_color);
         f.close();    
     }
 

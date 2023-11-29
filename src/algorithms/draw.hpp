@@ -69,7 +69,9 @@ void draw_svg(std::ostream &out,
               const std::vector<double> &Y,
               const PathHandleGraph &graph,
               const double& scale,
-              const double& border);
+              const double& border,
+			  const double& line_width,
+			  std::vector<algorithms::color_t>& node_id_to_color);
 
 std::vector<uint8_t> rasterize(const std::vector<double> &X,
                                const std::vector<double> &Y,
