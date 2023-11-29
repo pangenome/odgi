@@ -84,6 +84,25 @@ color_t mix(const color_t& a, const color_t& b, const double& f) {
     return out;
 }
 
+std::string to_hex(const color_t& c) {
+	std::stringstream ss;
+	ss << "#";
+	ss << std::hex << std::setfill('0') << std::setw(2) << (int)c.c.r;
+	ss << std::hex << std::setfill('0') << std::setw(2) << (int)c.c.g;
+	ss << std::hex << std::setfill('0') << std::setw(2) << (int)c.c.b;
+	return ss.str();
+}
+
+std::string to_rgba(const color_t& c) {
+	std::stringstream ss;
+	ss << "rgba(";
+	ss << (int)c.c.r << ",";
+	ss << (int)c.c.g << ",";
+	ss << (int)c.c.b << ",";
+	ss << (int)c.c.a << ")";
+	return ss.str();
+}
+
 // helpers
 
 double u_ipart(double x) { return std::floor(x); }

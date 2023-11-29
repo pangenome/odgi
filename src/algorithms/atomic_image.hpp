@@ -10,6 +10,7 @@
 #include <cmath>
 #include <memory>
 #include <iostream>
+#include <iomanip>
 #include "picosha2.h"
 
 namespace odgi {
@@ -91,6 +92,9 @@ color_t brighten(const color_t& a, const color_t& b, const double& f);
 color_t darkest(const color_t& a, const color_t& b);
 color_t layer(const color_t& a, const color_t& b, const double& f);
 color_t mix(const color_t& a, const color_t& b, const double& f);
+
+std::string to_hex(const color_t& c);
+std::string to_rgba(const color_t& c);
 
 const color_t COLOR_BLACK = { 0xff000000 };
 const color_t COLOR_LIGHTGRAY = { 0xffD3D3D3 };
