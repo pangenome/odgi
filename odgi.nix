@@ -1,4 +1,4 @@
-{ lib, stdenv, fetchFromGitHub, cmake, jemalloc, python3, pkgconfig, gcc, git, zlib, htslib, gsl }:
+{ lib, stdenv, fetchFromGitHub, cmake, jemalloc, python3, pkg-config, gcc, git, zlib, htslib, gsl }:
 
 stdenv.mkDerivation rec {
   pname = "odgi";
@@ -12,7 +12,7 @@ stdenv.mkDerivation rec {
     fetchSubmodules = true;
   };
 
-  nativeBuildInputs = [ cmake pkgconfig ];
+  nativeBuildInputs = [ cmake pkg-config ];
   
   buildInputs = [
     jemalloc
