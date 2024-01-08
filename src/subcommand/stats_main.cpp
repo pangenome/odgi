@@ -167,7 +167,7 @@ int main_stats(int argc, char** argv) {
 
 	const uint64_t shift = number_bool_packing::unpack_number(graph.get_handle(graph.min_node_id()));
 
-    if (args::get(mean_links_length) || args::get(sum_of_path_node_distances) || _multiqc) {
+    if (args::get(mean_links_length) || args::get(sum_of_path_node_distances)) {
 		if (number_bool_packing::unpack_number(graph.get_handle(graph.max_node_id())) - shift >= graph.get_node_count()){
 			std::cerr << "[odgi::stats] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
 			exit(1);
@@ -371,7 +371,7 @@ int main_stats(int argc, char** argv) {
 		// TODO clear all sets?
 	}
 
-    if (args::get(mean_links_length) || args::get(sum_of_path_node_distances) || _multiqc) {
+    if (args::get(mean_links_length) || args::get(sum_of_path_node_distances)) {
         // This vector is needed for computing the metrics in 1D and for detecting gap-links
         std::vector<uint64_t> position_map(graph.get_node_count() + 1);
 
@@ -409,7 +409,7 @@ int main_stats(int argc, char** argv) {
             position_map[position_map.size() - 1] = len;
         }
 
-        if (args::get(mean_links_length) || _multiqc){
+        if (args::get(mean_links_length)){
             bool _dont_penalize_gap_links = args::get(dont_penalize_gap_links);
 
             uint64_t sum_all_node_space = 0;
@@ -582,7 +582,7 @@ int main_stats(int argc, char** argv) {
 			}
         }
 
-        if (args::get(sum_of_path_node_distances) || _multiqc){
+        if (args::get(sum_of_path_node_distances)){
             bool _penalize_diff_orientation = args::get(penalize_diff_orientation);
 
             uint64_t sum_all_path_node_dist_node_space = 0;
