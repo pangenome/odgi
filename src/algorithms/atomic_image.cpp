@@ -39,6 +39,10 @@ std::ostream& operator<<(std::ostream& out, const color_t& c) {
     return out;
 }
 
+bool operator==(const color_t& a, const color_t& b) {
+	return a.c.r == b.c.r && a.c.g == b.c.g && a.c.b == b.c.b && a.c.a == b.c.a;
+}
+
 color_t lighten(const color_t& c, const double& f) {
     return layer(c, COLOR_WHITE, f);
 }
