@@ -39,12 +39,12 @@ to take a look at the calculated layout using static and interactive tools.
 Build the unsorted DRB1-3123 graph
 ----------------------------------
 
-Assuming that your current working directory is the root of the ``odgi`` project, to construct an ``odgi`` graph from the
-``DRB1-3123`` dataset in ``GFA`` format, execute:
+To construct an ``odgi`` graph from the ``DRB1-3123`` dataset in ``GFA`` format, execute:
 
 .. code-block:: bash
 
-    odgi build -g test/DRB1-3123_unsorted.gfa -o DRB1-3123_unsorted.og
+	wget https://raw.githubusercontent.com/pangenome/odgi/master/test/DRB1-3123_unsorted.gfa
+    odgi build -g DRB1-3123_unsorted.gfa -o DRB1-3123_unsorted.og
 
 The command creates a file called ``DRB1-3123_unsorted.og``, which contains the input graph in ``odgi`` format. This graph contains
 12 ALT sequences of the `HLA-DRB1 gene <https://www.ncbi.nlm.nih.gov/gene/3123>`_ from the GRCh38 reference genome.
