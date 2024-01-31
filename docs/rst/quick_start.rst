@@ -18,12 +18,12 @@ version 1 (`GFAv1 <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC8006571/#FN8>`_)
 Build graph from GFA
 ----------------------------
 
-Assuming that your current working directory is the root of the ``odgi`` project, to construct an ``odgi`` file from a
-``GFA`` file, execute:
+To construct an ``odgi`` file from a ``GFA`` file, execute:
 
 .. code-block:: bash
 
-    odgi build -g test/DRB1-3123.gfa -o DRB1-3123.og
+	wget https://raw.githubusercontent.com/pangenome/odgi/master/test/DRB1-3123.gfa
+    odgi build -g DRB1-3123.gfa -o DRB1-3123.og
 
 The command creates a file called ``DRB1-3123.og``, which contains the input graph in ``odgi`` format.
 

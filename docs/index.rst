@@ -79,7 +79,7 @@ Core Functionalities
     :target: rst/tutorials/extract_selected_loci.html
 
 .. |sorting_layouting| image:: img/DRB1-3123_sorting_layouting.png
-    :target: rst/tutorials/sorting_layouting.html
+    :target: rst/tutorials/sort_layout.html
 
 .. |navigating_and_annotating_graphs| image:: img/nav_welcome.png
     :target: rst/tutorials/navigating_and_annotating_graphs.html
