@@ -43,7 +43,7 @@ To construct an ``odgi`` graph from the ``DRB1-3123`` dataset in ``GFA`` format,
 
 .. code-block:: bash
 
-	wget https://raw.githubusercontent.com/pangenome/odgi/master/test/DRB1-3123_unsorted.gfa
+    wget https://raw.githubusercontent.com/pangenome/odgi/master/test/DRB1-3123_unsorted.gfa
     odgi build -g DRB1-3123_unsorted.gfa -o DRB1-3123_unsorted.og
 
 The command creates a file called ``DRB1-3123_unsorted.og``, which contains the input graph in ``odgi`` format. This graph contains
