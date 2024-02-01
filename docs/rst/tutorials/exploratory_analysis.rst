@@ -76,7 +76,7 @@ Color with respect to the node position
 
 This is a linearized visualization, but the pangenome graphs are not linear when the embedded genomes present structural
 variation. However, a graph can be optimized for being better visualized in 1-Dimension by sorting its nodes properly
-(see the :ref:`sorting-layouting` tutorial for more information).
+(see the :ref:`sort-layout` tutorial for more information).
 
 To color the bars with respect to the node position in each path, execute:
 

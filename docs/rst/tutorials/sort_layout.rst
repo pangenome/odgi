@@ -187,6 +187,73 @@ This prints to stdout:
 
 Compared to before, these metrics show that the goodness of the sorting of the graph improved significantly.
 
+--------------------------------------------
+Playing around with the 1D PG-SGD parameters
+--------------------------------------------
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+What happens if the maximum number of iterations is very low?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: bash
+
+    odgi sort -i DRB1-3123_unsorted.og --threads 2 -P -Y -x 2 -o DRB1-3123_sorted.x2.og
+    odgi viz -i DRB1-3123_sorted.x2.og -o DRB1-3123_sorted.x2.png
+
+.. image:: /img/DRB1-3123_sorted.x2.png
+
+The graph appears very complex and not quite human readable. That's because in total there were two times the number
+of total path steps node position updates instead of one hundred times the number of total path steps, which is the current default.
+For very complex graphs, one may have to increase this number even further.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+What happens if the minimum number of term updates is very high?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: bash
+
+    odgi sort -i DRB1-3123_unsorted.og --threads 2 -P -Y -U 1000 -o DRB1-3123_sorted.U1000.og
+    odgi viz -i DRB1-3123_sorted.U1000.og -o DRB1-3123_sorted.U1000.png
+
+.. image:: /img/DRB1-3123_sorted.U1000.png
+
+The graph lost it's complexity and is now linear. Compared to the 1D visualization using the default parameters, it is hard
+to spot any differences. So let's take a look at the metrics:
+
+.. code-block:: bash
+
+    odgi stats -i DRB1-3123_sorted.U1000.og -s -d -l -g
+
+This prints to stdout:
+
+.. code-block:: bash
+
+	#mean_links_length
+	path    in_node_space   in_nucleotide_space     num_links_considered    num_gap_links_not_penalized
+	all_paths       1.00361 8.30677 21870   15195
+	#sum_of_path_node_distances
+	path    in_node_space   in_nucleotide_space     nodes   nucleotides     num_penalties   num_penalties_different_orientation
+	all_paths       3.23238 3.73489 21882   163416  3750    1
+
+We actually were able to improve the metrics compared to using default parameters. However, the runtime increased from under 1 second to ~30 seconds.
+So one needs to be careful with such a parameter. Compared to the gains in linearity, such an additional time usage would be a huge
+waste with very large graphs.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+What happens if the threshold of the maximum distance of two nodes is very high?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: bash
+
+    odgi sort -i DRB1-3123_unsorted.og --threads 2 -P -Y -j 10000 -o DRB1-3123_sorted.j10000.og
+    odgi viz -i DRB1-3123_sorted.j10000.og -o DRB1-3123_sorted.j10000.png
+
+.. image:: /img/DRB1-3123_sorted.j10000.png
+
+The graph appears very complex and not quite human readable. That's because the iterations are terminated as soon as the
+expected distance of two nodes, the nucleotide distance given by two randomly chosen path steps, is as close as 10000.
+Naturally, this happens very soon.
+
 =========================================================
 1D reference-guided grooming and reference-guided sorting
 =========================================================
