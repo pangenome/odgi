@@ -49,9 +49,8 @@ order:
    force-directed graph drawing algorithm minimizes the graph’s energy
    function or stress level. It applies stochastic gradient descent
    (SGD) to move a single pair of nodes at a time. The path index is
-   used to pick the terms to move stochastically. If ran with 1 thread
-   only, the resulting order of the graph is deterministic. The seed is
-   adjustable.
+   used to pick the terms to move stochastically. For more details about
+   the algorithm, please take a look at https://www.biorxiv.org/content/10.1101/2023.09.22.558964v2.
 
 Sorting the paths in a graph my refine the sorting process. For the
 users’ convenience, it is possible to specify a whole pipeline of sorts
