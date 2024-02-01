@@ -38,7 +38,7 @@ To see the full statistics in YAML format of the graph, execute:
 
 .. code-block:: bash
 
-    odgi stats -i DRB1-3123.gfa.og -m
+    odgi stats -i DRB1-3123.gfa.og -m -sgdl
 
 This prints the following YAML to stdout:
 
@@ -89,7 +89,7 @@ Let's save the statistics this time:
 
 .. code-block:: bash
 
-	odgi stats -i DRB1-3123.gfa.og -m > DRB1-3123.gfa.og.stats.yaml
+	odgi stats -i DRB1-3123.gfa.og -m -sgdl > DRB1-3123.gfa.og.stats.yaml
 
 .. note::
 
@@ -167,7 +167,7 @@ Assuming, we have several graphs, of which we want to compare the statistics fro
 .. code-bock:: bash
 
 	odgi build -g LPA.gfa -o LPA.gfa.og
-	odgi stats -i LPA.gfa.og -y > LPA.gfa.og.stats.yaml
+	odgi stats -i LPA.gfa.og -m -sgdl > LPA.gfa.og.stats.yaml
 	odgi viz -i LPA.gfa.og -o LPA.gfa.og.viz_mqc.png
 	odgi layout -i LPA.gfa.og -o LPA.gfa.og.lay
 	odgi draw -i LPA.gfa.og -c LPA.gfa.og.lay -p LPA.gfa.og.lay.draw_mqc.png -w 10 -C
