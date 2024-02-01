@@ -1,4 +1,4 @@
-.. _sorting-layouting:
+.. _sort-layout:
 
 ###############
 Sort and Layout
@@ -15,6 +15,8 @@ downstream analyses, visualization, mapping, and interpretation. Graph sorting a
 a 1D and 2D layout to simplify these complex regions.
 This tutorial shows how to sort and visualize a graph in 1D. It explains how to generate a 2D layout of a graph, and how
 to take a look at the calculated layout using static and interactive tools.
+
+For more details about the applied algorithm, please take a look at https://www.biorxiv.org/content/10.1101/2023.09.22.558964v2.
 
 .. Pangenome graphs embed linear pangenomic sequences as paths in
 .. the graph, but to our knowledge, no algorithm takes into account this biological information in the sorting. Moreover,
@@ -129,6 +131,22 @@ nodes.
 
 .. note::
     The PG-SGD is not deterministic, because of its `Hogwild! <https://papers.nips.cc/paper/2011/hash/218a0aefd1d1a4be65601cc6ddc1520e-Abstract.html>`_ approach.
+    For more details about the applied algorithm, please take a look at https://www.biorxiv.org/content/10.1101/2023.09.22.558964v2.
+
+.. note::
+    The 1D PG-SGD implementation comes with a huge amount of tunable parameters. Based on our experience applying it to hundreds of graphs, the current
+    defaults usually work well for most graphs. However, if you feel the sorting did not work well enough, there are 2 key parameters one can tune:
+
+        |    **-G, --path-sgd-min-term-updates-paths**\ =\ *N*: The minimum number of terms to be
+                                          updated before a new path-guided
+                                          linear 1D SGD iteration with adjusted
+                                          learning rate eta starts, expressed as
+                                          a multiple of total path steps (default: 1.0).
+        |    **-x, --path-sgd-iter-max**\ =\ *N*: The maximum number of iterations for path-guided linear 1D SGD model (default: 100).
+
+    Increasing both can lead to a better sorted graph. For example, one can start optimizing with setting **-x, --path-sgd-iter-max**\ =\ *200*.
+    For more parameter details please take
+    a look at :ref:`odgi sort`.
 
 ..    To reproduce the visualization below, the sorted graph can be found under ``test/DRB1-3123_sorted.og``.
 
@@ -267,6 +285,8 @@ We can clearly observe, that the path positions of the two reference now define 
 2D layout
 =========
 
+The 2D PG-SGD layout algorithm is described in https://www.biorxiv.org/content/10.1101/2023.09.22.558964v2.
+
 -----------------------------------------
 2D layout of the unsorted DRB1-3123 graph
 -----------------------------------------
@@ -276,6 +296,23 @@ We want to have a 2D layout of our DRB1-3123 graph:
 .. code-block:: bash
 
     odgi layout -i DRB1-3123_unsorted.og -o DRB1-3123_unsorted.og.lay -P --threads 2
+
+.. note::
+    The 2D PG-SGD implementation comes with a huge amount of tunable parameters. Based on our experience applying it to hundreds of graphs, the current
+    defaults usually work well for most graphs. However, if you feel the resulting 2D layout is not of a good enough quality, there are 2 key parameters one can tune:
+
+        |    **-G, --path-sgd-min-term-updates-paths**\ =\ *N*: Minimum number of terms N to be
+                                          updated before a new path-guided 2D
+                                          SGD iteration with adjusted learning
+                                          rate eta starts, expressed as a
+                                          multiple of total path length
+                                          (default: 10).
+        |    **-x, --path-sgd-iter-max**\ =\ *N*: The maximum number of iterations N for
+                                          the path-guided 2D SGD model (default:
+                                          30).
+
+    Increasing both can lead to a better graph layout. For example, one can start optimizing with setting **-x, --path-sgd-iter-max**\ =\ *100*.
+    For more parameter details please take a look at :ref:`odgi layout`.
 
 --------------------------------------------
 Drawing the 2D layout of the DRB1-3123 graph
