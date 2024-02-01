@@ -4,7 +4,7 @@
 MultiQC Module
 ==============
 
-Since v1.19 `MultiQC <https://multiqc.info/>`_ has an `ODGI module <https://multiqc.info/docs/#odgi>`_. This module can only
+Since v1.11 `MultiQC <https://multiqc.info/>`_ has an `ODGI module <https://multiqc.info/docs/#odgi>`_. This module can only
 work with output from :ref:`odgi stats`! In the following, it is shown how to use ODGI in order to get a nice MultiQC report.
 
 ---------------
