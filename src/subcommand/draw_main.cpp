@@ -168,21 +168,25 @@ int main_draw(int argc, char **argv) {
                     }
                 }
 
+                bool first_handle_taken = path_range.name.empty(); // To avoid checking if there is no name to take
                 algorithms::for_handle_in_path_range(
                         graph, path_handle, path_range.begin.offset, path_range.end.offset,
                         [&](const handle_t& handle) {
-                            node_id_to_color[graph.get_id(handle)] = path_color;
+                            const auto node_id = graph.get_id(handle);
+                            node_id_to_color[node_id] = path_color;
+
+                            if (!first_handle_taken) {
+                                first_handle_taken = true;
+                                if (node_id_to_label_map.find(node_id) == node_id_to_label_map.end()) {
+                                    node_id_to_label_map[node_id] = path_range.name;
+                                } else{
+                                    node_id_to_label_map[node_id] = node_id_to_label_map[node_id] + "\n" + path_range.name;
+                                }
+                            }
                         });
             }
         }
     }
-
-
-    std::cerr << node_id_to_label_map.size() << " labels found" << std::endl;
-    for (auto x : node_id_to_label_map) {
-        std::cerr << "Node " << x.first << " has label " << x.second << std::endl;
-    }
-
 
     const uint64_t _png_height = png_height ? args::get(png_height) : 1000;
     const double _png_line_width = png_line_width ? args::get(png_line_width) : 10.0;
