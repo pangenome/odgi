@@ -85,6 +85,7 @@ typedef union rgb_t {
 } color_t;
 
 std::ostream& operator<<(std::ostream& out, const color_t& c);
+bool operator==(const color_t& a, const color_t& b);
 
 color_t hash_color(const std::string& s);
 color_t lighten(const color_t& c, const double& f);

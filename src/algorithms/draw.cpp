@@ -208,11 +208,18 @@ std::vector<uint8_t> rasterize(const std::vector<double> &X,
                              source_min_x, source_min_y);
 
     auto range_itr = component_ranges.begin();
+	struct draw_target_t {
+		xy_d_t xy0;
+		xy_d_t xy1;
+		algorithms::color_t color;
+	};
+	
     for (auto& component : weak_components) {
         auto& range = *range_itr++;
         auto& x_off = range.x_offset;
         auto& y_off = range.y_offset;
-#pragma omp parallel for
+		std::vector<draw_target_t> highlights;
+//#pragma omp parallel for
         for (uint64_t i = 0; i < component.size(); ++i) {
             const handle_t& handle = component[i];
             uint64_t a = 2 * number_bool_packing::unpack_number(handle);
@@ -252,9 +259,18 @@ std::vector<uint8_t> rasterize(const std::vector<double> &X,
                 */
                 const algorithms::color_t node_color = !node_id_to_color.empty() ? node_id_to_color[graph.get_id(handle)] : COLOR_BLACK;
 
-                wu_calc_wide_line(xy0, xy1, node_color, image, line_width);
+				// if gray or black color, otherwise save for later
+				if (node_color == COLOR_BLACK || node_color == COLOR_LIGHTGRAY) {
+					wu_calc_wide_line(xy0, xy1, node_color, image, line_width);
+				} else {
+					highlights.push_back({xy0, xy1, node_color});
+				}
             }
         }
+		// color highlights
+		for (auto& highlight : highlights) {
+			wu_calc_wide_line(highlight.xy0, highlight.xy1, highlight.color, image, line_width);
+		}
     }
 
     // todo, edges, paths, coverage, bins
