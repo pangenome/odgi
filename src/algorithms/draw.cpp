@@ -138,9 +138,34 @@ void draw_svg(std::ostream &out,
         auto& x_off = range.x_offset;
         auto& y_off = range.y_offset;
 		//const algorithms::color_t node_color = !node_id_to_color.empty() ? node_id_to_color[graph.get_id(handle)] : COLOR_BLACK;
+
+        std::vector<handle_t> highlights;
+
         for (auto& handle : component) {
             uint64_t a = 2 * number_bool_packing::unpack_number(handle);
 			algorithms::color_t color = node_id_to_color.empty() ? COLOR_BLACK : node_id_to_color[graph.get_id(handle)];
+            if (color == COLOR_BLACK || color == COLOR_LIGHTGRAY) {
+                out << "<line x1=\""
+                    << (X[a] * scale) - x_off
+                    << "\" x2=\""
+                    << (X[a + 1] * scale) - x_off
+                    << "\" y1=\""
+                    << (Y[a] * scale) + y_off
+                    << "\" y2=\""
+                    << (Y[a + 1] * scale) + y_off
+                    << "\" stroke=\"" << to_hexrgb(color) //to_rgba(color) // with rgb, nodes are invisible with InkScape
+                    << "\" stroke-width=\"" << line_width
+                    << "\"/>"
+                    << std::endl;
+            } else {
+                highlights.push_back(handle);
+            }
+        }
+
+        // color highlights
+        for (auto& handle : highlights) {
+            uint64_t a = 2 * number_bool_packing::unpack_number(handle);
+            algorithms::color_t color = node_id_to_color.empty() ? COLOR_BLACK : node_id_to_color[graph.get_id(handle)];
             out << "<line x1=\""
                 << (X[a] * scale) - x_off
                 << "\" x2=\""
@@ -149,11 +174,10 @@ void draw_svg(std::ostream &out,
                 << (Y[a] * scale) + y_off
                 << "\" y2=\""
                 << (Y[a + 1] * scale) + y_off
-				<< "\" stroke=\"" << to_hexrgb(color) //to_rgba(color) // with rgb, nodes are invisible with InkScape
-				<< "\" stroke-width=\"" << line_width
+                << "\" stroke=\"" << to_hexrgb(color) //to_rgba(color) // with rgb, nodes are invisible with InkScape
+                << "\" stroke-width=\"" << line_width
                 << "\"/>"
                 << std::endl;
-
         }
     }
 
