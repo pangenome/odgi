@@ -99,7 +99,20 @@ void get_layout(const std::vector<double> &X,
 
 }
 
-
+struct label_info_t {
+    double x, y;
+    std::string content;
+    // Simple constructor for convenience
+    label_info_t(double x, double y, std::string content) : x(x), y(y), content(std::move(content)) {}
+};
+bool is_too_close(double x, double y, const std::string& content, double threshold, std::vector<label_info_t>& placed_labels) {
+    for (const auto& label : placed_labels) {
+        if (label.content == content && std::abs(label.x - x) < threshold && std::abs(label.y - y) < threshold) {
+            return true; // Found a label too close with the same content
+        }
+    }
+    return false;
+}
 void draw_svg(std::ostream &out,
               const std::vector<double> &X,
               const std::vector<double> &Y,
@@ -108,7 +121,7 @@ void draw_svg(std::ostream &out,
               const double& border,
 			  const double& line_width,
 			  std::vector<algorithms::color_t>& node_id_to_color,
-              ska::flat_hash_map<handlegraph::nid_t, std::string>& node_id_to_label_map) {
+              ska::flat_hash_map<handlegraph::nid_t, std::set<std::string>>& node_id_to_label_map) {
 
     std::vector<std::vector<handle_t>> weak_components;
     coord_range_2d_t rendered_range;
@@ -122,6 +135,8 @@ void draw_svg(std::ostream &out,
     
     double width = rendered_range.width();
     double height = rendered_range.height();
+
+    std::vector<label_info_t> placed_labels;
 
     out << std::setprecision(std::numeric_limits<double>::digits10 + 1);
     out << "<svg width=\"" << width << "\" height=\"" << height << "\" "
@@ -163,14 +178,27 @@ void draw_svg(std::ostream &out,
                 highlights.push_back(handle);
             }
 
+            double x = (X[a] * scale) - x_off;
+            double y = (Y[a] * scale) + y_off;
+            // Check if this is a node with a label
             if (node_id_to_label_map.count(graph.get_id(handle))){
-                out << "<text font-family=\"Arial\" font-size=\"20\" fill=\"#000000\" stroke=\"#000000\" x=\"" << (X[a] * scale) - x_off << "\" y=\"" << (Y[a] * scale) - x_off << "\">";
-                auto vals = split(node_id_to_label_map[graph.get_id(handle)], '\n');
-                for (auto x : vals){
-                    out << "<tspan x=\"" << (X[a] * scale) - x_off << "\" dy=\"1.0em\">" << x << "</tspan>";
+                // Collect the labels that can be put without overlapping identical ones
+                std::vector<std::string> labels;
+                for (auto text : node_id_to_label_map[graph.get_id(handle)]){
+                    if (!is_too_close(x, y, text, 30.0, placed_labels)) {
+                        labels.push_back(text);
+                    }
                 }
-                out << "</text>"
-                    << std::endl;
+                // Check if there is something to label
+                if (!labels.empty()){
+                    out << "<text font-family=\"Arial\" font-size=\"20\" fill=\"#000000\" stroke=\"#000000\" y=\"" << y << "\">";
+                    for (auto text : labels){
+                        out << "<tspan x=\"" << x << "\" dy=\"1.0em\">" << text << "</tspan>";
+                        placed_labels.emplace_back(x, y, text); // Record the label's placement
+                    }
+                    out << "</text>"
+                        << std::endl;
+                }
             }
         }
 

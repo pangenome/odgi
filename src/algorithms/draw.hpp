@@ -72,7 +72,7 @@ void draw_svg(std::ostream &out,
               const double& border,
 			  const double& line_width,
 			  std::vector<algorithms::color_t>& node_id_to_color,
-              ska::flat_hash_map<handlegraph::nid_t, std::string>& node_id_to_label_map);
+              ska::flat_hash_map<handlegraph::nid_t, std::set<std::string>>& node_id_to_label_map);
 
 std::vector<uint8_t> rasterize(const std::vector<double> &X,
                                const std::vector<double> &Y,

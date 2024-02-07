@@ -117,7 +117,8 @@ int main_draw(int argc, char **argv) {
     // handle targets from BED
     std::vector<odgi::path_range_t> path_ranges;
     std::vector<algorithms::color_t> node_id_to_color;
-    ska::flat_hash_map<handlegraph::nid_t, std::string> node_id_to_label_map; // To remember the unique node to label for each path range
+    ska::flat_hash_map<handlegraph::nid_t, std::set<std::string>> node_id_to_label_map; // To remember the unique node to label for each path range
+
     if (_path_bed_file && !args::get(_path_bed_file).empty()) {
         std::ifstream bed_in(args::get(_path_bed_file));
         std::string line;
@@ -158,14 +159,6 @@ int main_draw(int argc, char **argv) {
                     } else {
                         path_color = algorithms::hash_color(path_range.name);
                     }
-
-                    const step_handle_t first_step = graph.path_begin(path_range.begin.path);
-                    const handle_t first_handle = graph.get_handle_of_step(first_step);
-                    if (node_id_to_label_map.find(graph.get_id(first_handle)) == node_id_to_label_map.end()) {
-                        node_id_to_label_map[graph.get_id(first_handle)] = path_range.name;
-                    } else{
-                        node_id_to_label_map[graph.get_id(first_handle)] = node_id_to_label_map[graph.get_id(first_handle)] + "\n" + path_range.name;
-                    }
                 }
 
                 bool first_handle_taken = path_range.name.empty(); // To avoid checking if there is no name to take
@@ -177,11 +170,8 @@ int main_draw(int argc, char **argv) {
 
                             if (!first_handle_taken) {
                                 first_handle_taken = true;
-                                if (node_id_to_label_map.find(node_id) == node_id_to_label_map.end()) {
-                                    node_id_to_label_map[node_id] = path_range.name;
-                                } else{
-                                    node_id_to_label_map[node_id] = node_id_to_label_map[node_id] + "\n" + path_range.name;
-                                }
+                                // The set automatically handles uniqueness of labels within the set.
+                                node_id_to_label_map[node_id].insert(path_range.name);
                             }
                         });
             }
