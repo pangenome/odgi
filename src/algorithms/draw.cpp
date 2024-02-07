@@ -149,7 +149,7 @@ void draw_svg(std::ostream &out,
                 << (Y[a] * scale) + y_off
                 << "\" y2=\""
                 << (Y[a + 1] * scale) + y_off
-				<< "\" stroke=\"" << to_rgba(color)
+				<< "\" stroke=\"" << to_hexrgb(color) //to_rgba(color) // with rgb, nodes are invisible with InkScape
 				<< "\" stroke-width=\"" << line_width
                 << "\"/>"
                 << std::endl;

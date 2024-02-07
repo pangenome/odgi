@@ -43,7 +43,7 @@ int main_draw(int argc, char **argv) {
     args::Flag color_paths(visualizations_opts, "color-paths", "Color paths (in PNG output).", {'C', "color-paths"});
     args::ValueFlag<double> render_scale(visualizations_opts, "N", "Image scaling (default 0.001).", {'R', "scale"});
     args::ValueFlag<double> render_border(visualizations_opts, "N", "Image border (in approximate bp) (default 100.0).", {'B', "border"});
-    args::ValueFlag<double> png_line_width(visualizations_opts, "N", "Line width (in approximate bp) (default 0.0).", {'w', "line-width"});
+    args::ValueFlag<double> png_line_width(visualizations_opts, "N", "Line width (in approximate bp) (default 10.0).", {'w', "line-width"});
     //args::ValueFlag<double> png_line_overlay(parser, "N", "line width (in approximate bp) (default 10.0)", {'O', "line-overlay"});
     args::ValueFlag<double> png_path_line_spacing(visualizations_opts, "N", "Spacing between path lines in PNG layout (in approximate bp) (default 0.0).", {'S', "path-line-spacing"});
     args::ValueFlag<std::string> _path_bed_file(visualizations_opts, "FILE",
@@ -171,7 +171,7 @@ int main_draw(int argc, char **argv) {
     }
 
     const uint64_t _png_height = png_height ? args::get(png_height) : 1000;
-    const double _png_line_width = png_line_width ? args::get(png_line_width) : 0;
+    const double _png_line_width = png_line_width ? args::get(png_line_width) : 10.0;
     const bool _color_paths = args::get(color_paths);
     const double _png_path_line_spacing = png_path_line_spacing ? args::get(png_path_line_spacing) : 0.0;
     const double svg_scale = !render_scale ? 0.01 : args::get(render_scale);
