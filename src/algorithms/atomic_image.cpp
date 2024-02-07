@@ -99,7 +99,7 @@ std::string to_rgba(const color_t& c) {
 	ss << (int)c.c.r << ",";
 	ss << (int)c.c.g << ",";
 	ss << (int)c.c.b << ",";
-	ss << (int)1 << ")";
+    ss << (int)c.c.a << ")";
 	return ss.str();
 }
 
