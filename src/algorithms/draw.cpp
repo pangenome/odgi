@@ -1,4 +1,5 @@
 #include "draw.hpp"
+#include "split.hpp"
 
 namespace odgi {
 
@@ -106,7 +107,8 @@ void draw_svg(std::ostream &out,
               const double& scale,
               const double& border,
 			  const double& line_width,
-			  std::vector<algorithms::color_t>& node_id_to_color) {
+			  std::vector<algorithms::color_t>& node_id_to_color,
+              ska::flat_hash_map<handlegraph::nid_t, std::string>& node_id_to_label_map) {
 
     std::vector<std::vector<handle_t>> weak_components;
     coord_range_2d_t rendered_range;
@@ -159,6 +161,17 @@ void draw_svg(std::ostream &out,
                     << std::endl;
             } else {
                 highlights.push_back(handle);
+            }
+        
+            // Check if number_bool_packing::unpack_number(handle) is even, becasue each node is present twice
+            if (node_id_to_label_map.count(graph.get_id(handle)) && (number_bool_packing::unpack_number(handle) % 2) == 0){
+                out << "<text font-family=\"Arial\" font-size=\"20\" fill=\"#000000\" stroke=\"#000000\">";
+                auto vals = split(node_id_to_label_map[graph.get_id(handle)], '\n');
+                for (auto x : vals){
+                    out << "<tspan x=\"" << (X[a] * scale) - x_off << "\" dy=\"1.0em\">" << x << "</tspan>";
+                }
+                out << "</text>"
+                    << std::endl;
             }
         }
 
