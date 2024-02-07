@@ -95,6 +95,7 @@ color_t mix(const color_t& a, const color_t& b, const double& f);
 
 std::string to_hex(const color_t& c);
 std::string to_rgba(const color_t& c);
+std::string to_hexrgb(const color_t& c);
 
 const color_t COLOR_BLACK = { 0xff000000 };
 const color_t COLOR_LIGHTGRAY = { 0xffD3D3D3 };
