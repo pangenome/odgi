@@ -113,6 +113,23 @@ bool is_too_close(double x, double y, const std::string& content, double thresho
     }
     return false;
 }
+
+uint64_t node_hash(const nid_t& node_id) {
+    uint64_t x = node_id;
+    x = (~x) + (x << 21); // x = (x << 21) - x - 1;
+    x = x ^ (x >> 24);
+    x = (x + (x << 3)) + (x << 8); // x * 265
+    x = x ^ (x >> 14);
+    x = (x + (x << 2)) + (x << 4); // x * 21
+    x = x ^ (x >> 28);
+    x = x + (x << 31);
+    return x;
+}
+bool keep_node(const nid_t& node_id, const float f) {
+    // hash the node_id and check if it's accepted given our sparsification factor
+    return node_hash(node_id) < std::numeric_limits<uint64_t>::max() * f;
+}
+
 void draw_svg(std::ostream &out,
               const std::vector<double> &X,
               const std::vector<double> &Y,
@@ -121,7 +138,8 @@ void draw_svg(std::ostream &out,
               const double& border,
 			  const double& line_width,
 			  std::vector<algorithms::color_t>& node_id_to_color,
-              ska::flat_hash_map<handlegraph::nid_t, std::set<std::string>>& node_id_to_label_map) {
+              ska::flat_hash_map<handlegraph::nid_t, std::set<std::string>>& node_id_to_label_map,
+              const float& sparsification_factor) {
 
     std::vector<std::vector<handle_t>> weak_components;
     coord_range_2d_t rendered_range;
@@ -161,6 +179,11 @@ void draw_svg(std::ostream &out,
         for (auto& handle : component) {
             uint64_t a = 2 * number_bool_packing::unpack_number(handle);
 			algorithms::color_t color = node_id_to_color.empty() ? COLOR_BLACK : node_id_to_color[graph.get_id(handle)];
+
+            if (!(sparsification_factor == 0 || keep_node(graph.get_id(handle), sparsification_factor) || node_id_to_label_map.count(graph.get_id(handle)))) {
+                continue; // Skip this node to output a lighter SVG (do not nodes with labels, if any)
+            }
+
             if (color == COLOR_BLACK || color == COLOR_LIGHTGRAY) {
                 out << "<line x1=\""
                     << (X[a] * scale) - x_off

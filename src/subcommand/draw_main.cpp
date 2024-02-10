@@ -51,6 +51,7 @@ int main_draw(int argc, char **argv) {
                                                 "Colors are derived from the 4th column, if present, else from the path name."
                                                 "If the 4th column value is in the format 'string#RRGGBB', the RRGGBB color (in hex notation) will be used.",
                                                 {'b', "bed-file"});
+    args::ValueFlag<float> node_sparsification(parser, "N", "Remove this fraction of nodes from the SVG output (to output smaller files) (default: 0.0, keep all nodes).", {'f', "sparse-factor-svg"});
     args::Group threading(parser, "[ Threading ]");
 	args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 	args::Group processing_info_opts(parser, "[ Processing Information ]");
@@ -182,7 +183,6 @@ int main_draw(int argc, char **argv) {
     const double _png_line_width = png_line_width ? args::get(png_line_width) : 10.0;
     const bool _color_paths = args::get(color_paths);
     const double _png_path_line_spacing = png_path_line_spacing ? args::get(png_path_line_spacing) : 0.0;
-    const double svg_scale = !svg_render_scale ? 0.01 : args::get(svg_render_scale);
     size_t max_node_depth = 0;
     graph.for_each_handle(
         [&](const handle_t& h) {
@@ -219,12 +219,14 @@ int main_draw(int argc, char **argv) {
     }
 
     if (svg_out_file) {
+        const double svg_scale = !svg_render_scale ? 0.01 : args::get(svg_render_scale);
+        const float sparse_nodes = node_sparsification ? args::get(node_sparsification) : 0.0;
         auto& outfile = args::get(svg_out_file);
         ofstream f(outfile.c_str());
         // todo could be done with callbacks
         std::vector<double> X = layout.get_X();
         std::vector<double> Y = layout.get_Y();
-        algorithms::draw_svg(f, X, Y, graph, svg_scale, border_bp, _png_line_width, node_id_to_color, node_id_to_label_map);
+        algorithms::draw_svg(f, X, Y, graph, svg_scale, border_bp, _png_line_width, node_id_to_color, node_id_to_label_map, sparse_nodes);
         f.close();    
     }
 
