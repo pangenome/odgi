@@ -117,6 +117,8 @@ int main_draw(int argc, char **argv) {
     // handle targets from BED
     std::vector<odgi::path_range_t> path_ranges;
     std::vector<algorithms::color_t> node_id_to_color;
+    ska::flat_hash_map<handlegraph::nid_t, std::set<std::string>> node_id_to_label_map; // To remember the unique node to label for each path range
+
     if (_path_bed_file && !args::get(_path_bed_file).empty()) {
         std::ifstream bed_in(args::get(_path_bed_file));
         std::string line;
@@ -137,6 +139,8 @@ int main_draw(int argc, char **argv) {
                 if (!path_range.name.empty()) {
                     auto vals = split(path_range.name, '#');
                     if (vals.size() == 2 && vals[1].length() == 6) {
+                        path_range.name = vals[0]; // Remove the color from the name
+
                         // Colors are given in RRGGBB in the BED file, but they are taken in BBGGRR, so we need to switch BB/RR
 
                         char temp = vals[1][0];
@@ -157,14 +161,18 @@ int main_draw(int argc, char **argv) {
                     }
                 }
 
-
-
-
-
+                bool first_handle_taken = path_range.name.empty(); // To avoid checking if there is no name to take
                 algorithms::for_handle_in_path_range(
                         graph, path_handle, path_range.begin.offset, path_range.end.offset,
                         [&](const handle_t& handle) {
-                            node_id_to_color[graph.get_id(handle)] = path_color;
+                            const auto node_id = graph.get_id(handle);
+                            node_id_to_color[node_id] = path_color;
+
+                            if (!first_handle_taken) {
+                                first_handle_taken = true;
+                                // The set automatically handles uniqueness of labels within the set.
+                                node_id_to_label_map[node_id].insert(path_range.name);
+                            }
                         });
             }
         }
@@ -216,7 +224,7 @@ int main_draw(int argc, char **argv) {
         // todo could be done with callbacks
         std::vector<double> X = layout.get_X();
         std::vector<double> Y = layout.get_Y();
-        algorithms::draw_svg(f, X, Y, graph, svg_scale, border_bp, _png_line_width, node_id_to_color);
+        algorithms::draw_svg(f, X, Y, graph, svg_scale, border_bp, _png_line_width, node_id_to_color, node_id_to_label_map);
         f.close();    
     }
 
