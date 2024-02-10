@@ -51,7 +51,7 @@ int main_draw(int argc, char **argv) {
                                                 "Colors are derived from the 4th column, if present, else from the path name."
                                                 "If the 4th column value is in the format 'string#RRGGBB', the RRGGBB color (in hex notation) will be used.",
                                                 {'b', "bed-file"});
-    args::ValueFlag<float> node_sparsification(parser, "N", "Remove this fraction of nodes from the SVG output (to output smaller files) (default: 0.0, keep all nodes).", {'f', "sparse-factor-svg"});
+    args::ValueFlag<float> node_sparsification(parser, "N", "Remove this fraction of nodes from the SVG output (to output smaller files) (default: 0.0, keep all nodes).", {'f', "svg-sparse-factor"});
     args::Group threading(parser, "[ Threading ]");
 	args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 	args::Group processing_info_opts(parser, "[ Processing Information ]");
@@ -92,6 +92,12 @@ int main_draw(int argc, char **argv) {
         std::cerr
             << "[odgi::draw] error: please specify an output file to where to store the layout via -p/--png=[FILE], -s/--svg=[FILE], -T/--tsv=[FILE]"
             << std::endl;
+        return 1;
+    }
+
+    const float sparse_nodes = node_sparsification ? args::get(node_sparsification) : 0.0;
+    if (sparse_nodes < 0.0 || sparse_nodes > 1.0) {
+        std::cerr << "[odgi::draw] error: -f/--svg-sparse-factor must be in the range [0.0, 1.0]." << std::endl;
         return 1;
     }
 
@@ -220,7 +226,6 @@ int main_draw(int argc, char **argv) {
 
     if (svg_out_file) {
         const double svg_scale = !svg_render_scale ? 0.01 : args::get(svg_render_scale);
-        const float sparse_nodes = node_sparsification ? args::get(node_sparsification) : 0.0;
         auto& outfile = args::get(svg_out_file);
         ofstream f(outfile.c_str());
         // todo could be done with callbacks
