@@ -88,6 +88,15 @@ struct path_range_t {
     std::string data;
 };
 
+struct path_range_comparator {
+    bool operator() (const path_range_t& lhs, const path_range_t& rhs) const {
+        if (lhs.begin.path != rhs.begin.path) return lhs.begin.path < rhs.begin.path;
+        if (lhs.end.path != rhs.end.path) return lhs.end.path < rhs.end.path;
+        if (lhs.begin.offset != rhs.begin.offset) return lhs.begin.offset < rhs.begin.offset;
+        return lhs.end.offset < rhs.end.offset;
+    }
+};
+
 inline std::string& get_long_path_name(std::tuple<std::string, uint64_t, uint64_t> path_long_start_end) {
 	return std::get<0>(path_long_start_end);
 }
