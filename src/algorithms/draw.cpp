@@ -166,7 +166,7 @@ Coordinates adjustNodeLength(double x1, double y1, double x2, double y2, double 
     // Return the new coordinates
     return Coordinates{new_x1, new_y1, new_x2, new_y2};
 }
-Coordinates adjustNodeEndpoints(const handle_t& handle, const std::vector<double>& X, const std::vector<double>& Y, double scale, double x_off, double y_off, double sparsification_factor) {
+Coordinates adjustNodeEndpoints(const handle_t& handle, const std::vector<double>& X, const std::vector<double>& Y, double scale, double x_off, double y_off, double sparsification_factor, bool lengthen_left_nodes) {
     // Original coordinates
     uint64_t a = 2 * number_bool_packing::unpack_number(handle);
     double x1 = (X[a] * scale) - x_off;
@@ -178,7 +178,7 @@ Coordinates adjustNodeEndpoints(const handle_t& handle, const std::vector<double
     double length = std::sqrt(std::pow(x2 - x1, 2) + std::pow(y2 - y1, 2));
 
     // Adjust length based on 1.0 / sparsification_factor
-    double new_length = sparsification_factor == 0 ? length : length * (1.0 / sparsification_factor);
+    double new_length = !lengthen_left_nodes || sparsification_factor == 0 ? length : length * (1.0 / sparsification_factor);
 
     // Calculate the midpoint
     double mid_x = (x1 + x2) / 2.0;
@@ -207,7 +207,8 @@ void draw_svg(std::ostream &out,
 			  const double& line_width,
 			  std::vector<algorithms::color_t>& node_id_to_color,
               ska::flat_hash_map<handlegraph::nid_t, std::set<std::string>>& node_id_to_label_map,
-              const float& sparsification_factor) {
+              const float& sparsification_factor,
+              const bool& lengthen_left_nodes) {
 
     std::vector<std::vector<handle_t>> weak_components;
     coord_range_2d_t rendered_range;
@@ -251,7 +252,7 @@ void draw_svg(std::ostream &out,
                 continue; // Skip this node to output a lighter SVG (do not nodes with labels, if any)
             }
 
-            Coordinates newEndpoints = adjustNodeEndpoints(handle, X, Y, scale, x_off, y_off, sparsification_factor);
+            Coordinates newEndpoints = adjustNodeEndpoints(handle, X, Y, scale, x_off, y_off, sparsification_factor, lengthen_left_nodes);
 
             if (color == COLOR_BLACK || color == COLOR_LIGHTGRAY) {
                 out << "<line x1=\""
@@ -294,7 +295,7 @@ void draw_svg(std::ostream &out,
 
         // color highlights
         for (auto& handle : highlights) {
-            Coordinates newEndpoints = adjustNodeEndpoints(handle, X, Y, scale, x_off, y_off, sparsification_factor);
+            Coordinates newEndpoints = adjustNodeEndpoints(handle, X, Y, scale, x_off, y_off, sparsification_factor, lengthen_left_nodes);
             algorithms::color_t color = node_id_to_color.empty() ? COLOR_BLACK : node_id_to_color[graph.get_id(handle)];
             out << "<line x1=\""
                 << newEndpoints.x1

@@ -51,7 +51,8 @@ int main_draw(int argc, char **argv) {
                                                 "Colors are derived from the 4th column, if present, else from the path name."
                                                 "If the 4th column value is in the format 'string#RRGGBB', the RRGGBB color (in hex notation) will be used.",
                                                 {'b', "bed-file"});
-    args::ValueFlag<float> node_sparsification(parser, "N", "Remove this fraction of nodes from the SVG output (to output smaller files) (default: 0.0, keep all nodes).", {'f', "svg-sparse-factor"});
+    args::ValueFlag<float> node_sparsification(visualizations_opts, "N", "Remove this fraction of nodes from the SVG output (to output smaller files) (default: 0.0, keep all nodes).", {'f', "svg-sparse-factor"});
+    args::Flag lengthen_left_nodes(visualizations_opts, "lengthen", "When node sparsitication is active, lengthen the remaining nodes proportionally with the sparsification factor", {'l', "svg-lengthen-nodes"});
     args::Group threading(parser, "[ Threading ]");
 	args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 	args::Group processing_info_opts(parser, "[ Processing Information ]");
@@ -111,7 +112,7 @@ int main_draw(int argc, char **argv) {
             if (infile == "-") {
                 graph.deserialize(std::cin);
             } else {
-                utils::handle_gfa_odgi_input(infile, "draw", args::get(progress), num_threads, graph);
+                utils::handle_gfa_odgi_input(infile, "draw", lengthen_left_nodes, num_threads, graph);
             }
         }
     }
@@ -231,7 +232,7 @@ int main_draw(int argc, char **argv) {
         // todo could be done with callbacks
         std::vector<double> X = layout.get_X();
         std::vector<double> Y = layout.get_Y();
-        algorithms::draw_svg(f, X, Y, graph, svg_scale, border_bp, _png_line_width, node_id_to_color, node_id_to_label_map, sparse_nodes);
+        algorithms::draw_svg(f, X, Y, graph, svg_scale, border_bp, _png_line_width, node_id_to_color, node_id_to_label_map, sparse_nodes, args::get(lengthen_left_nodes));
         f.close();    
     }
 

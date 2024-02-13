@@ -73,7 +73,8 @@ void draw_svg(std::ostream &out,
 			  const double& line_width,
 			  std::vector<algorithms::color_t>& node_id_to_color,
               ska::flat_hash_map<handlegraph::nid_t, std::set<std::string>>& node_id_to_label_map,
-              const float& sparsification_factor);
+              const float& sparsification_factor,
+              const bool& lengthen_left_nodes);
 
 std::vector<uint8_t> rasterize(const std::vector<double> &X,
                                const std::vector<double> &Y,
