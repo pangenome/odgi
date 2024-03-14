@@ -504,6 +504,22 @@ int main_paths(int argc, char** argv) {
                         step_range.push_back(step);
                     }
                 });
+
+                // Emit last non reference range, if any
+                if (end > start && (end - start) >= min_size_in_bp) {
+                    if (_show_step_ranges) {
+                        std::string step_range_str = "";
+                        for (auto& step : step_range) {
+                            const handle_t handle = graph.get_handle_of_step(step);
+                            step_range_str += std::to_string(graph.get_id(handle)) + (graph.get_is_reverse(handle) ? "-" : "+") + ",";
+                        }
+                        #pragma omp critical (cout)
+                            std::cout << graph.get_path_name(path) << "\t" << start << "\t" << end << "\t" << step_range_str.substr(0, step_range_str.size() - 1) << std::endl; // trim the trailing comma from step_range
+                    } else {
+                        #pragma omp critical (cout)
+                            std::cout << graph.get_path_name(path) << "\t" << start << "\t" << end << std::endl;
+                    }
+                }
             }
         }
     }
