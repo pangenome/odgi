@@ -57,22 +57,26 @@ int main_paths(int argc, char** argv) {
                                                               " *path.name*, *path.length*, *path.step.count*, *node.1*,"
                                                               " *node.2*, *node.n*. Each path entry is printed in its own line.", {'H', "haplotypes"});
     args::Flag scale_by_node_length(path_investigation_opts, "haplo", "Scale the haplotype matrix cells by node length.", {'N', "scale-by-node-len"});
-    args::ValueFlag<std::string> path_delim(path_investigation_opts, "CHAR", "The part of each path name before this delimiter CHAR is a group"
-                                                    " identifier. For use with -H, --haplotypes**: it prints an additional, first column **group.name** to stdout.",
-                                                    {'D', "delim"});
-    args::ValueFlag<std::uint16_t> path_delim_pos(path_investigation_opts, "N", "Consider the N-th occurrence of the delimiter specified with **-D, --delim**"
-                                                    " to obtain the group identifier. Specify 1 for the 1st occurrence (default).",
-                                                    {'p', "delim-pos"});
+   
     args::Group non_ref_opts(parser, "[ Non-ref. Sequence Options ]");
     args::ValueFlag<std::string> non_reference_nodes(non_ref_opts, "FILE", "Print to stdout IDs of nodes that are not in the paths listed (by line) in *FILE*.", {"non-reference-nodes"});
     args::ValueFlag<std::string> non_reference_ranges(non_ref_opts, "FILE", "Print to stdout (in BED format) path ranges that are not in the paths listed (by line) in *FILE*.", {"non-reference-ranges"});
-    args::Flag show_step_ranges(non_ref_opts, "N", "Show steps (that is, node IDs and strands) of --non-reference-ranges.", {"show-step-ranges"});
 
     args::Group seq_type_opts(parser, "[ Sequence Type Options ]");
     args::ValueFlag<std::string> coverage_levels(seq_type_opts, "c1,c2,...,cN", "List of coverage thresholds (number of paths that pass through the node). Print to stdout a TAB-separated table with node ID, node length, and class.", {"coverage-levels"});
     args::ValueFlag<std::string> fraction_levels(seq_type_opts, "f1,f2,...,fN", "List of fraction thresholds (fraction of paths that pass through the node). Print to stdout a TAB-separated table with node ID , node length, and class.')]", {"fraction-levels"});
     args::Flag path_range_class(seq_type_opts, "N", "Instead of node information, print to stdout a TAB-separated table with path range and class.", {"path-range-class"});
-    args::ValueFlag<uint64_t> min_size(non_ref_opts, "N", "Minimum size (in bps) of nodes (with --non-reference-nodes or --coverage-levels/fraction-levels) or ranges (with --non-reference-ranges or --coverage-levels/fraction-levels + --path-range-class).", {"min-size"});
+    
+    args::Group common_opts(parser, "[ Common Options ]");
+    args::ValueFlag<uint64_t> min_size(common_opts, "N", "Minimum size (in bps) of nodes (with --non-reference-nodes or --coverage-levels/fraction-levels) or ranges (with --non-reference-ranges or --coverage-levels/fraction-levels together with --path-range-class).", {"min-size"});
+    args::Flag show_step_ranges(common_opts, "N", "Show steps (that is, node IDs and strands) (with --non-reference-ranges or --coverage-levels/fraction-levels together with --path-range-class).", {"show-step-ranges"});
+    args::ValueFlag<std::string> path_delim(common_opts, "CHAR", "The part of each path name before this delimiter CHAR is a group"
+                                                    " identifier. For use with -H/--haplotypes, --non-reference-ranges or --coverage-levels/fraction-levels. "
+                                                    "With -H/--haplotypes it prints an additional, first column **group.name** to stdout.",
+                                                    {'D', "delim"});
+    args::ValueFlag<std::uint16_t> path_delim_pos(common_opts, "N", "Consider the N-th occurrence of the delimiter specified with **-D, --delim**"
+                                                    " to obtain the group identifier. Specify 1 for the 1st occurrence (default).",
+                                                    {'p', "delim-pos"});
 
     args::Group path_modification_opts(parser, "[ Path Modification Options ]");
     args::ValueFlag<std::string> keep_paths_file(path_modification_opts, "FILE", "Keep paths listed (by line) in *FILE*.", {'K', "keep-paths"});
@@ -441,7 +445,7 @@ int main_paths(int argc, char** argv) {
             }
         }
 
-        if (non_reference_nodes && fraction_levels){
+        if (non_reference_nodes && !args::get(non_reference_nodes).empty()){
             // Emit non-reference nodes
 
             // Set non-reference nodes
@@ -569,6 +573,11 @@ int main_paths(int argc, char** argv) {
     }
 
     if (coverage_levels || fraction_levels) {
+        char delim = '\0';
+        if (!args::get(path_delim).empty()) {
+            delim = args::get(path_delim).at(0);
+        }
+
         const uint64_t min_size_in_bp = min_size ? args::get(min_size) : 0;
 
         // Read levels and sort them
@@ -586,19 +595,31 @@ int main_paths(int argc, char** argv) {
 
         std::vector<ska::flat_hash_set<handle_t>> set_of_handles_for_level(sorted_levels.size());
 
-        // Classify nodes in parallel
-        const char delim = '?'; //////////////////////////////todo delim_pos[0][0];
-		uint64_t sample_pos = 0; //////////////////////////////todo std::stoul(delim_pos[1]);
-
         ska::flat_hash_map<path_handle_t, std::string> phandle_2_name;
 		ska::flat_hash_set<std::string> sample_names;
 		graph.for_each_path_handle([&](const path_handle_t &path) {
 			const std::string path_name = graph.get_path_name(path);
-			const std::vector<string> path_name_split = split(path_name, delim);
-			const std::string sample_name = path_name_split[sample_pos];
+
+            std::string sample_name;
+            if (delim) {
+                const std::pair<int32_t, int32_t> cnt_pos = group_identified_pos(path_name, delim, delim_pos);
+                if (cnt_pos.first < 0) {
+                    std::cerr << "[odgi::paths] error: path name '" << path_name << "' has not occurrences of '" << delim << "'." << std::endl;
+                    exit(-1);
+                } else if (cnt_pos.first != delim_pos) {
+                    std::cerr << "[odgi::paths] warning: path name '" << path_name << "' has too few occurrences of '" << delim << "'. "
+                              << "The " << cnt_pos.first + 1 << "-th occurrence is used." << std::endl;
+                }           
+                sample_name = path_name.substr(0, cnt_pos.second);
+            } else {
+                sample_name = path_name;
+            }
+
 			phandle_2_name[path] = sample_name;
 			sample_names.insert(sample_name);
 		});
+
+        // Classify nodes in parallel
 		graph.for_each_handle([&](const handle_t &h) {
 			const uint64_t hl = graph.get_length(h);
 			ska::flat_hash_set<std::string> samples;
