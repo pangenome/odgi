@@ -679,7 +679,14 @@ int main_paths(int argc, char** argv) {
                     if (last_class != -1 && (last_class != current_class)) {
                         // Emit the previous range, if any
                         if (end > start && (end - start) >= min_size_in_bp) {
-                            const std::string symbol = (last_class == 0) ? "< " : ">= ";
+                            std::string seq_class;
+                            if (last_class == 0){
+                                seq_class = "<" + utils::to_string_custom(sorted_levels[last_class]);
+                            } else if (last_class == set_of_handles_for_level.size() - 1){
+                                seq_class = ">=" + utils::to_string_custom(sorted_levels[last_class]);
+                            } else {
+                                seq_class = utils::to_string_custom(sorted_levels[last_class]) + "<=x<" + utils::to_string_custom(sorted_levels[last_class + 1]);
+                            }
                             if (_show_step_ranges) {
                                 std::string step_range_str = "";
                                 for (auto& step : step_range) {
@@ -688,10 +695,10 @@ int main_paths(int argc, char** argv) {
                                 }
                                 
                                 #pragma omp critical (cout)
-                                    std::cout << graph.get_path_name(path) << "\t" << start << "\t" << end << "\t" << symbol << sorted_levels[last_class] << "\t" << step_range_str.substr(0, step_range_str.size() - 1) << std::endl; // trim the trailing comma from step_range
+                                    std::cout << graph.get_path_name(path) << "\t" << start << "\t" << end << "\t" << seq_class << "\t" << step_range_str.substr(0, step_range_str.size() - 1) << std::endl; // trim the trailing comma from step_range
                             } else {
                                 #pragma omp critical (cout)
-                                    std::cout << graph.get_path_name(path) << "\t" << start << "\t" << end << "\t" << symbol << sorted_levels[last_class] << std::endl;
+                                    std::cout << graph.get_path_name(path) << "\t" << start << "\t" << end << "\t" << seq_class << std::endl;
                             }
                         }
                         start = end;
@@ -710,7 +717,14 @@ int main_paths(int argc, char** argv) {
 
                 // Emit last range, if any
                 if (end > start && (end - start) >= min_size_in_bp) {
-                    const std::string symbol = (last_class == 0) ? "< " : ">= ";
+                    std::string seq_class;
+                    if (last_class == 0){
+                        seq_class = "<" + utils::to_string_custom(sorted_levels[last_class]);
+                    } else if (last_class == set_of_handles_for_level.size() - 1){
+                        seq_class = ">=" + utils::to_string_custom(sorted_levels[last_class]);
+                    } else {
+                        seq_class = utils::to_string_custom(sorted_levels[last_class]) + "<=x<" + utils::to_string_custom(sorted_levels[last_class + 1]);
+                    }
                     if (_show_step_ranges) {
                         std::string step_range_str = "";
                         for (auto& step : step_range) {
@@ -719,10 +733,10 @@ int main_paths(int argc, char** argv) {
                         }
                         
                         #pragma omp critical (cout)
-                            std::cout << graph.get_path_name(path) << "\t" << start << "\t" << end << "\t" << symbol << sorted_levels[last_class] << "\t" << step_range_str.substr(0, step_range_str.size() - 1) << std::endl; // trim the trailing comma from step_range
+                            std::cout << graph.get_path_name(path) << "\t" << start << "\t" << end << "\t" << seq_class << "\t" << step_range_str.substr(0, step_range_str.size() - 1) << std::endl; // trim the trailing comma from step_range
                     } else {
                         #pragma omp critical (cout)
-                            std::cout << graph.get_path_name(path) << "\t" << start << "\t" << end << "\t" << symbol << sorted_levels[last_class] << std::endl;
+                            std::cout << graph.get_path_name(path) << "\t" << start << "\t" << end << "\t" << seq_class << std::endl;
                     }
                 }
             }
@@ -733,8 +747,15 @@ int main_paths(int argc, char** argv) {
                     const uint64_t hl = graph.get_length(h);
 
                     if (hl >= min_size_in_bp) {
-                        const std::string symbol = (i == 0) ? "< " : ">= ";
-                        std::cout << graph.get_id(h) << "\t" << hl << "\t" << symbol << sorted_levels[i] << std::endl;
+                        std::string seq_class;
+                        if (i == 0){
+                            seq_class = "<" + utils::to_string_custom(sorted_levels[i]);
+                        } else if (i == set_of_handles_for_level.size() - 1){
+                            seq_class = ">=" + utils::to_string_custom(sorted_levels[i]);
+                        } else {
+                            seq_class = utils::to_string_custom(sorted_levels[i]) + "<=x<" + utils::to_string_custom(sorted_levels[i + 1]);
+                        }
+                        std::cout << graph.get_id(h) << "\t" << hl << "\t" << seq_class << std::endl;
                     }
                 }
             }
