@@ -39,6 +39,10 @@ std::ostream& operator<<(std::ostream& out, const color_t& c) {
     return out;
 }
 
+bool operator==(const color_t& a, const color_t& b) {
+	return a.c.r == b.c.r && a.c.g == b.c.g && a.c.b == b.c.b && a.c.a == b.c.a;
+}
+
 color_t lighten(const color_t& c, const double& f) {
     return layer(c, COLOR_WHITE, f);
 }
@@ -99,8 +103,18 @@ std::string to_rgba(const color_t& c) {
 	ss << (int)c.c.r << ",";
 	ss << (int)c.c.g << ",";
 	ss << (int)c.c.b << ",";
-	ss << (int)c.c.a << ")";
+    ss << (int)c.c.a << ")";
 	return ss.str();
+}
+
+std::string to_hexrgb(const color_t& c) {
+    std::stringstream ss;
+    ss << "#";
+    ss << std::hex << std::uppercase; // Use hexadecimal format
+    ss << std::setfill('0') << std::setw(2) << (int)c.c.r;
+    ss << std::setfill('0') << std::setw(2) << (int)c.c.g;
+    ss << std::setfill('0') << std::setw(2) << (int)c.c.b;
+    return ss.str();
 }
 
 // helpers

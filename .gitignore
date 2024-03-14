@@ -11,3 +11,6 @@ docs/sphinx_build_man
 docs/_build
 Testing/
 .idea/
+.vscode/
+.cmake/
+cmake-build-debug/

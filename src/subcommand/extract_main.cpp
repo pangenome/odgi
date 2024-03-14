@@ -556,6 +556,17 @@ namespace odgi {
                 return std::binary_search(source_paths_from_path_ranges.begin(), source_paths_from_path_ranges.end(), x);
             }), source_paths->end());
 
+            // We don't cut nodes for the extraction, so close path intervals can generate identical subpaths.
+            // To avoid duplicated subpaths in the final subgraph, we remove duplicated path ranges.
+            {
+                std::set<odgi::path_range_t, odgi::path_range_comparator> unique_path_ranges;
+
+                for (const auto& path_range : path_ranges) {
+                    unique_path_ranges.insert(path_range);
+                }
+
+                path_ranges.assign(unique_path_ranges.begin(), unique_path_ranges.end());
+            }
 
             if (max_dist_subpaths > 0) {
                 // Iterate multiple times to merge subpaths which became mergeable during the first iteration where new nodes were added
