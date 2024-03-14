@@ -11,6 +11,23 @@ namespace odgi {
 
 using namespace odgi::subcommand;
 
+
+bool isNumberAndLessThanOrEqualToX(const std::string& s, double x) {
+    char* end = nullptr;
+    double val = strtod(s.c_str(), &end);
+    return end != s.c_str() && *end == '\0' && val <= x;
+}
+
+bool isValid(const std::string& levels, double max_val) {
+    const std::vector<string> levels_vector = split(levels, ',');
+    for (auto l : levels_vector) {
+        if (!isNumberAndLessThanOrEqualToX(l, max_val)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 int main_paths(int argc, char** argv) {
 
     // trick argumentparser to do the right thing with the subcommand
@@ -46,10 +63,17 @@ int main_paths(int argc, char** argv) {
     args::ValueFlag<std::uint16_t> path_delim_pos(path_investigation_opts, "N", "Consider the N-th occurrence of the delimiter specified with **-D, --delim**"
                                                     " to obtain the group identifier. Specify 1 for the 1st occurrence (default).",
                                                     {'p', "delim-pos"});
-    args::ValueFlag<std::string> non_reference_nodes(path_investigation_opts, "FILE", "Print to stdout IDs of nodes that are not in the paths listed (by line) in *FILE*.", {"non-reference-nodes"});
-    args::ValueFlag<std::string> non_reference_ranges(path_investigation_opts, "FILE", "Print to stdout (in BED format) path ranges that are not in the paths listed (by line) in *FILE*.", {"non-reference-ranges"});
-    args::ValueFlag<uint64_t> min_size(path_investigation_opts, "N", "Minimum size (in bps) of nodes (with --non-reference-nodes) or ranges (with --non-reference-ranges).", {"min-size"});
-    args::Flag show_step_ranges(path_investigation_opts, "N", "Show steps (that is, node IDs and strands) of --non-reference-ranges.", {"show-step-ranges"});
+    args::Group non_ref_opts(parser, "[ Non-ref. Sequence Options ]");
+    args::ValueFlag<std::string> non_reference_nodes(non_ref_opts, "FILE", "Print to stdout IDs of nodes that are not in the paths listed (by line) in *FILE*.", {"non-reference-nodes"});
+    args::ValueFlag<std::string> non_reference_ranges(non_ref_opts, "FILE", "Print to stdout (in BED format) path ranges that are not in the paths listed (by line) in *FILE*.", {"non-reference-ranges"});
+    args::Flag show_step_ranges(non_ref_opts, "N", "Show steps (that is, node IDs and strands) of --non-reference-ranges.", {"show-step-ranges"});
+
+    args::Group seq_type_opts(parser, "[ Sequence Type Options ]");
+    args::ValueFlag<std::string> coverage_levels(seq_type_opts, "c1,c2,...,cN", "List of coverage thresholds (number of paths that pass through the node). Print to stdout a TAB-separated table with node ID, node length, and class.", {"coverage-levels"});
+    args::ValueFlag<std::string> fraction_levels(seq_type_opts, "f1,f2,...,fN", "List of fraction thresholds (fraction of paths that pass through the node). Print to stdout a TAB-separated table with node ID , node length, and class.')]", {"fraction-levels"});
+    args::Flag path_range_class(seq_type_opts, "N", "Instead of node information, print to stdout a TAB-separated table with path range and class.", {"path-range-class"});
+    args::ValueFlag<uint64_t> min_size(non_ref_opts, "N", "Minimum size (in bps) of nodes (with --non-reference-nodes or --coverage-levels/fraction-levels) or ranges (with --non-reference-ranges or --coverage-levels/fraction-levels + --path-range-class).", {"min-size"});
+
     args::Group path_modification_opts(parser, "[ Path Modification Options ]");
     args::ValueFlag<std::string> keep_paths_file(path_modification_opts, "FILE", "Keep paths listed (by line) in *FILE*.", {'K', "keep-paths"});
     args::ValueFlag<std::string> drop_paths_file(path_modification_opts, "FILE", "Drop paths listed (by line) in *FILE*.", {'X', "drop-paths"});
@@ -99,6 +123,26 @@ int main_paths(int argc, char** argv) {
     if (non_reference_nodes && non_reference_ranges) {
 		std::cerr << "[odgi::paths] error: specify --non-reference-nodes or --non-reference-ranges, not both." << std::endl;
 		return 1;
+    }
+
+    if (coverage_levels && fraction_levels) {
+        std::cerr << "[odgi::paths] error: specify --coverage-levels or --fraction-levels, not both." << std::endl;
+        return 1;
+    }
+
+    if ((non_reference_nodes || non_reference_ranges) && (coverage_levels || fraction_levels)) {
+        std::cerr << "[odgi::paths] error: specify only one of --non-reference-nodes, --non-reference-range, --coverage-levels or --fraction-levels." << std::endl;
+        return 1;
+    }
+
+    if (coverage_levels && !isValid(args::get(coverage_levels), std::numeric_limits<double>::max())) {
+        std::cerr << "[odgi::paths] error: invalid coverage levels. Only comma-separated numbers are accepted." << std::endl;
+        return 1;
+    }
+
+    if (fraction_levels && !isValid(args::get(fraction_levels), 1.0)) {
+        std::cerr << "[odgi::paths] error: invalid fraction levels. Only comma-separated numbers <= 1.0 are accepted." << std::endl;
+        return 1;
     }
 
 	const uint64_t num_threads = args::get(threads) ? args::get(threads) : 1;
@@ -397,7 +441,7 @@ int main_paths(int argc, char** argv) {
             }
         }
 
-        if (non_reference_nodes && !args::get(non_reference_nodes).empty()){
+        if (non_reference_nodes && fraction_levels){
             // Emit non-reference nodes
 
             // Set non-reference nodes
@@ -504,6 +548,158 @@ int main_paths(int argc, char** argv) {
                         step_range.push_back(step);
                     }
                 });
+            }
+        }
+    }
+
+    if (coverage_levels || fraction_levels) {
+        const uint64_t min_size_in_bp = min_size ? args::get(min_size) : 0;
+
+        // Read levels and sort them
+        std::vector<double> sorted_levels;
+        {
+            const std::string levels = coverage_levels ? args::get(coverage_levels) : args::get(fraction_levels);
+            const std::vector<string> levels_vector = split(levels, ',');
+            for (auto l : levels_vector) {
+                sorted_levels.push_back(std::stod(l));
+            }
+            std::sort(sorted_levels.begin(), sorted_levels.end());
+            // Duplicate the first value by inserting it at the beginning (this to manage values < min_value)
+            sorted_levels.insert(sorted_levels.begin(), sorted_levels.front());
+        }
+
+        std::vector<ska::flat_hash_set<handle_t>> set_of_handles_for_level(sorted_levels.size());
+
+        // Classify nodes in parallel
+        const char delim = '?'; //////////////////////////////todo delim_pos[0][0];
+		uint64_t sample_pos = 0; //////////////////////////////todo std::stoul(delim_pos[1]);
+
+        ska::flat_hash_map<path_handle_t, std::string> phandle_2_name;
+		ska::flat_hash_set<std::string> sample_names;
+		graph.for_each_path_handle([&](const path_handle_t &path) {
+			const std::string path_name = graph.get_path_name(path);
+			const std::vector<string> path_name_split = split(path_name, delim);
+			const std::string sample_name = path_name_split[sample_pos];
+			phandle_2_name[path] = sample_name;
+			sample_names.insert(sample_name);
+		});
+		graph.for_each_handle([&](const handle_t &h) {
+			const uint64_t hl = graph.get_length(h);
+			ska::flat_hash_set<std::string> samples;
+			graph.for_each_step_on_handle(h, [&](const step_handle_t &occ) {
+				const path_handle_t p_h = graph.get_path_handle_of_step(occ);
+				samples.insert(phandle_2_name[p_h]);
+			});
+            // Number of samples or fraction of samples
+            const double value = coverage_levels ? samples.size() : (double) samples.size() / (double) sample_names.size();
+
+            for (int64_t i = sorted_levels.size() - 1; i >= 0; --i) {
+                // if i == 0, then value < min_level
+                if (i == 0 || value >= sorted_levels[i]) {
+                    #pragma omp critical (set_of_handles_for_level)
+                        set_of_handles_for_level[i].insert(h); // Save the forward handle
+                    // #pragma omp critical (cout)
+                    //     std::cout << graph.get_id(h) << "\t" << hl << "\t" << value << "\t" << ">= " << sorted_levels[i] << std::endl;
+                    break;
+                }
+            }
+		}, true);
+
+        if (args::get(path_range_class)) {
+            const bool _show_step_ranges = args::get(show_step_ranges);
+            
+            // Traverse all paths to emit classified path ranges
+            if (_show_step_ranges) {
+                std::cout << "#path.name\tstart\tend\tclass\tsteps" << std::endl;
+            } else {
+                std::cout << "#path.name\tstart\tend\tclass" << std::endl;
+            }
+            std::vector<path_handle_t> all_paths;
+            graph.for_each_path_handle([&all_paths](const path_handle_t& path) {
+                all_paths.push_back(path);
+            });
+
+    #pragma omp parallel for schedule(dynamic, 1)
+            for (auto& path : all_paths) {
+                uint64_t start = 0, end = 0;
+                int64_t last_class = -1;
+                std::vector<step_handle_t> step_range;
+                graph.for_each_step_in_path(path, [&](const step_handle_t& step) {
+                    handle_t handle = graph.get_handle_of_step(step);
+                    if (graph.get_is_reverse(handle)) {
+                        handle = graph.flip(handle); // We saved the forward handle
+                    }
+
+                    // Check the class of the node
+                    int64_t current_class = -1;
+                    for (uint64_t i = 0; i < set_of_handles_for_level.size(); ++i) {
+                        if (set_of_handles_for_level[i].count(handle)) {
+                            current_class = i;
+                            break;
+                        }
+                    }
+
+                    if (last_class != -1 && (last_class != current_class)) {
+                        // Emit the previous range, if any
+                        if (end > start && (end - start) >= min_size_in_bp) {
+                            const std::string symbol = (last_class == 0) ? "< " : ">= ";
+                            if (_show_step_ranges) {
+                                std::string step_range_str = "";
+                                for (auto& step : step_range) {
+                                    const handle_t handle = graph.get_handle_of_step(step);
+                                    step_range_str += std::to_string(graph.get_id(handle)) + (graph.get_is_reverse(handle) ? "-" : "+") + ",";
+                                }
+                                
+                                #pragma omp critical (cout)
+                                    std::cout << graph.get_path_name(path) << "\t" << start << "\t" << end << "\t" << symbol << sorted_levels[last_class] << "\t" << step_range_str.substr(0, step_range_str.size() - 1) << std::endl; // trim the trailing comma from step_range
+                            } else {
+                                #pragma omp critical (cout)
+                                    std::cout << graph.get_path_name(path) << "\t" << start << "\t" << end << "\t" << symbol << sorted_levels[last_class] << std::endl;
+                            }
+                        }
+                        start = end;
+                        end += graph.get_length(handle);
+                        if (_show_step_ranges) {
+                            step_range.clear();
+                        }
+                    } else {
+                        end += graph.get_length(handle);
+                    }
+                    if (_show_step_ranges) {
+                        step_range.push_back(step);
+                    }
+                    last_class = current_class;
+                });
+
+                // Emit last range, if any
+                if (end > start && (end - start) >= min_size_in_bp) {
+                    const std::string symbol = (last_class == 0) ? "< " : ">= ";
+                    if (_show_step_ranges) {
+                        std::string step_range_str = "";
+                        for (auto& step : step_range) {
+                            const handle_t handle = graph.get_handle_of_step(step);
+                            step_range_str += std::to_string(graph.get_id(handle)) + (graph.get_is_reverse(handle) ? "-" : "+") + ",";
+                        }
+                        
+                        #pragma omp critical (cout)
+                            std::cout << graph.get_path_name(path) << "\t" << start << "\t" << end << "\t" << symbol << sorted_levels[last_class] << "\t" << step_range_str.substr(0, step_range_str.size() - 1) << std::endl; // trim the trailing comma from step_range
+                    } else {
+                        #pragma omp critical (cout)
+                            std::cout << graph.get_path_name(path) << "\t" << start << "\t" << end << "\t" << symbol << sorted_levels[last_class] << std::endl;
+                    }
+                }
+            }
+        } else {
+            std::cout << "#node.id\tnode.len\tclass" << std::endl;
+            for (uint64_t i = 0; i < set_of_handles_for_level.size(); ++i) {
+                for (auto h : set_of_handles_for_level[i]) {
+                    const uint64_t hl = graph.get_length(h);
+
+                    if (hl >= min_size_in_bp) {
+                        const std::string symbol = (i == 0) ? "< " : ">= ";
+                        std::cout << graph.get_id(h) << "\t" << hl << "\t" << symbol << sorted_levels[i] << std::endl;
+                    }
+                }
             }
         }
     }
