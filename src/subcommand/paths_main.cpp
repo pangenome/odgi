@@ -642,6 +642,8 @@ int main_paths(int argc, char** argv) {
             }
 		}, true);
 
+        const std::string symbol = coverage_levels ? "c" : "f";
+
         if (args::get(path_range_class)) {
             const bool _show_step_ranges = args::get(show_step_ranges);
             
@@ -681,11 +683,11 @@ int main_paths(int argc, char** argv) {
                         if (end > start && (end - start) >= min_size_in_bp) {
                             std::string seq_class;
                             if (last_class == 0){
-                                seq_class = "<" + utils::to_string_custom(sorted_levels[last_class]);
+                                seq_class = symbol + "<" + utils::to_string_custom(sorted_levels[last_class]);
                             } else if (last_class == set_of_handles_for_level.size() - 1){
-                                seq_class = ">=" + utils::to_string_custom(sorted_levels[last_class]);
+                                seq_class = symbol + ">=" + utils::to_string_custom(sorted_levels[last_class]);
                             } else {
-                                seq_class = utils::to_string_custom(sorted_levels[last_class]) + "<=x<" + utils::to_string_custom(sorted_levels[last_class + 1]);
+                                seq_class = utils::to_string_custom(sorted_levels[last_class]) + "<=" + symbol + "<" + utils::to_string_custom(sorted_levels[last_class + 1]);
                             }
                             if (_show_step_ranges) {
                                 std::string step_range_str = "";
@@ -719,11 +721,11 @@ int main_paths(int argc, char** argv) {
                 if (end > start && (end - start) >= min_size_in_bp) {
                     std::string seq_class;
                     if (last_class == 0){
-                        seq_class = "<" + utils::to_string_custom(sorted_levels[last_class]);
+                        seq_class = symbol + "<" + utils::to_string_custom(sorted_levels[last_class]);
                     } else if (last_class == set_of_handles_for_level.size() - 1){
-                        seq_class = ">=" + utils::to_string_custom(sorted_levels[last_class]);
+                        seq_class = symbol + ">=" + utils::to_string_custom(sorted_levels[last_class]);
                     } else {
-                        seq_class = utils::to_string_custom(sorted_levels[last_class]) + "<=x<" + utils::to_string_custom(sorted_levels[last_class + 1]);
+                        seq_class = utils::to_string_custom(sorted_levels[last_class]) + "<=" + symbol + "<" + utils::to_string_custom(sorted_levels[last_class + 1]);
                     }
                     if (_show_step_ranges) {
                         std::string step_range_str = "";
@@ -749,11 +751,11 @@ int main_paths(int argc, char** argv) {
                     if (hl >= min_size_in_bp) {
                         std::string seq_class;
                         if (i == 0){
-                            seq_class = "<" + utils::to_string_custom(sorted_levels[i]);
+                            seq_class = symbol + "<" + utils::to_string_custom(sorted_levels[i]);
                         } else if (i == set_of_handles_for_level.size() - 1){
-                            seq_class = ">=" + utils::to_string_custom(sorted_levels[i]);
+                            seq_class = symbol + ">=" + utils::to_string_custom(sorted_levels[i]);
                         } else {
-                            seq_class = utils::to_string_custom(sorted_levels[i]) + "<=x<" + utils::to_string_custom(sorted_levels[i + 1]);
+                            seq_class = utils::to_string_custom(sorted_levels[i]) + "<=" + symbol + "<" + utils::to_string_custom(sorted_levels[i + 1]);
                         }
                         std::cout << graph.get_id(h) << "\t" << hl << "\t" << seq_class << std::endl;
                     }
