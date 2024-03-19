@@ -81,7 +81,8 @@ int main_layout(int argc, char **argv) {
     args::ValueFlag<std::string> p_sgd_snapshot(pg_sgd_opts, "STRING",
                                                 "Set the prefix to which each snapshot layout of a path guided 2D SGD iteration should be written to (default: NONE).",
                                                 {'u', "path-sgd-snapshot"});
-    args::Group threading_opts(parser, "[ Threading ]");
+	args::ValueFlag<std::string> _p_sgd_target_paths(pg_sgd_opts, "FILE", "Read the paths that should be considered as target paths (references) from this *FILE*. PG-SGD will keep the nodes of the given paths fixed. A path's rank determines it's weight for decision making and is given by its position in the given *FILE*.", {'H', "target-paths"});
+	args::Group threading_opts(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> nthreads(threading_opts, "N",
                                        "Number of threads to use for parallel operations.",
                                        {'t', "threads"});
@@ -168,6 +169,42 @@ int main_layout(int argc, char **argv) {
               }
               return max_path_step_count;
           };
+
+	// TODO We have this function here, in untangle, maybe somewhere else? Refactor!
+	// path loading
+	auto load_paths = [&](const std::string& path_names_file) {
+		std::ifstream path_names_in(path_names_file);
+		uint64_t num_of_paths_in_file = 0;
+		std::vector<bool> path_already_seen;
+		path_already_seen.resize(graph.get_path_count(), false);
+		std::string line;
+		std::vector<path_handle_t> paths;
+		while (std::getline(path_names_in, line)) {
+			if (!line.empty()) {
+				if (graph.has_path(line)) {
+					const path_handle_t path = graph.get_path_handle(line);
+					const uint64_t path_rank = as_integer(path) - 1;
+					if (!path_already_seen[path_rank]) {
+						path_already_seen[path_rank] = true;
+						paths.push_back(path);
+					} else {
+						std::cerr << "[odgi::layout] error: in the path list there are duplicated path names."
+								  << std::endl;
+						exit(1);
+					}
+				}
+				++num_of_paths_in_file;
+			}
+		}
+		path_names_in.close();
+		std::cerr << "[odgi::layout] found " << paths.size() << "/" << num_of_paths_in_file
+				  << " paths to consider." << std::endl;
+		if (paths.empty()) {
+			std::cerr << "[odgi::layout] error: no path to consider." << std::endl;
+			exit(1);
+		}
+		return paths;
+	};
     // default parameters
     /* We don't do this, yet.
     std::string path_sgd_seed;
@@ -183,6 +220,13 @@ int main_layout(int argc, char **argv) {
         path_sgd_seed = "pangenomic!";
     }
     */
+
+	std::vector<bool> is_ref;
+	std::vector<path_handle_t> target_paths;
+	if (_p_sgd_target_paths) {
+		target_paths = load_paths(args::get(_p_sgd_target_paths));
+	}
+
     if (p_sgd_min_term_updates_paths && p_sgd_min_term_updates_num_nodes) {
         std::cerr
             << "[odgi::layout] error: there can only be one argument provided for the minimum number of term updates in the path guided 1D SGD."
@@ -279,50 +323,104 @@ int main_layout(int argc, char **argv) {
 
     uint64_t square_space = graph.get_node_count() * 2;
     uint64_t x, y;
-    graph.for_each_handle([&](const handle_t &h) {
-          uint64_t pos = 2 * number_bool_packing::unpack_number(h);
-          switch (layout_initialization) {
-          case 'g': {
-              graph_X[pos].store(gaussian_noise(rng));
-              graph_Y[pos].store(gaussian_noise(rng));
-              graph_X[pos + 1].store(gaussian_noise(rng));
-              graph_Y[pos + 1].store(gaussian_noise(rng));
-              break;
-          }
-          case 'u': {
-              graph_X[pos].store(len);
-              graph_Y[pos].store(uniform_noise(rng));
-              len += graph.get_length(h);
-              graph_X[pos + 1].store(len);
-              graph_Y[pos + 1].store(uniform_noise(rng));
-              break;
-          }
-          case 'r': {
-              graph_X[pos].store(uniform_noise_in_length(rng));
-              graph_Y[pos].store(uniform_noise_in_length(rng));
-              graph_X[pos + 1].store(uniform_noise_in_length(rng));
-              graph_Y[pos + 1].store(uniform_noise_in_length(rng));
-              break;
-          }
-          case 'h': {
-              d2xy(square_space, pos, &x, &y);
-              graph_X[pos].store(x);
-              graph_Y[pos].store(y);
-              d2xy(square_space, pos + 1, &x, &y);
-              graph_X[pos + 1].store(x);
-              graph_Y[pos + 1].store(y);
-              break;
-          }
-          default: {
-              graph_X[pos].store(len);
-              graph_Y[pos].store(gaussian_noise(rng));
-              len += graph.get_length(h);
-              graph_X[pos + 1].store(len);
-              graph_Y[pos + 1].store(gaussian_noise(rng));
-          }
-          }
-          //std::cerr << pos << ": " << graph_X[pos] << "," << graph_Y[pos] << " ------ " << graph_X[pos + 1] << "," << graph_Y[pos + 1] << std::endl;
-      });
+	if (_p_sgd_target_paths) {
+		std::unique_ptr <odgi::algorithms::progress_meter::ProgressMeter> target_paths_progress;
+		if (args::get(progress)) {
+			std::string banner = "[odgi::layout] preparing target path vectors:";
+			target_paths_progress = std::make_unique<odgi::algorithms::progress_meter::ProgressMeter>(target_paths.size(), banner);
+		}
+		std::fill_n(std::back_inserter(is_ref), graph.get_node_count(), false);
+		for (auto target_path : target_paths) {
+			graph.for_each_step_in_path(
+					target_path,
+					[&](const step_handle_t &step) {
+						handle_t h = graph.get_handle_of_step(step);
+						uint64_t pos = 2 * number_bool_packing::unpack_number(h);
+						graph_X[pos].store(len);
+						graph_Y[pos].store(100);
+						len += graph.get_length(h);
+						graph_X[pos + 1].store(len);
+						graph_Y[pos + 1].store(100);
+						uint64_t i = graph.get_id(h) - 1;
+						if (!is_ref[i]) {
+							is_ref[i] = true;
+						}
+					});
+			if (args::get(progress)) {
+				target_paths_progress->increment(1);
+			}
+		}
+		if (args::get(progress))  {
+			target_paths_progress->finish();
+		}
+		for (uint64_t i = 0; i < is_ref.size(); i++) {
+			bool ref = is_ref[i];
+			if (!ref) {
+				handle_t h = graph.get_handle(i + 1);
+				uint64_t pos = 2 * number_bool_packing::unpack_number(h);
+				graph_X[pos].store(len);
+				graph_Y[pos].store(gaussian_noise(rng));
+				len += graph.get_length(h);
+				graph_X[pos + 1].store(len);
+				graph_Y[pos + 1].store(gaussian_noise(rng));
+			}
+		}
+		std::vector<double> X_final(graph_X.size());
+		uint64_t i = 0;
+		for (auto& x : graph_X) {
+			X_final[i++] = x.load();
+		}
+		std::vector<double> Y_final(graph_Y.size());
+		i = 0;
+		for (auto& y : graph_Y) {
+			Y_final[i++] = y.load();
+		}
+	} else {
+		graph.for_each_handle([&](const handle_t &h) {
+			uint64_t pos = 2 * number_bool_packing::unpack_number(h);
+			switch (layout_initialization) {
+				case 'g': {
+					graph_X[pos].store(gaussian_noise(rng));
+					graph_Y[pos].store(gaussian_noise(rng));
+					graph_X[pos + 1].store(gaussian_noise(rng));
+					graph_Y[pos + 1].store(gaussian_noise(rng));
+					break;
+				}
+				case 'u': {
+					graph_X[pos].store(len);
+					graph_Y[pos].store(uniform_noise(rng));
+					len += graph.get_length(h);
+					graph_X[pos + 1].store(len);
+					graph_Y[pos + 1].store(uniform_noise(rng));
+					break;
+				}
+				case 'r': {
+					graph_X[pos].store(uniform_noise_in_length(rng));
+					graph_Y[pos].store(uniform_noise_in_length(rng));
+					graph_X[pos + 1].store(uniform_noise_in_length(rng));
+					graph_Y[pos + 1].store(uniform_noise_in_length(rng));
+					break;
+				}
+				case 'h': {
+					d2xy(square_space, pos, &x, &y);
+					graph_X[pos].store(x);
+					graph_Y[pos].store(y);
+					d2xy(square_space, pos + 1, &x, &y);
+					graph_X[pos + 1].store(x);
+					graph_Y[pos + 1].store(y);
+					break;
+				}
+				default: {
+					graph_X[pos].store(len);
+					graph_Y[pos].store(gaussian_noise(rng));
+					len += graph.get_length(h);
+					graph_X[pos + 1].store(len);
+					graph_Y[pos + 1].store(gaussian_noise(rng));
+				}
+			}
+			//std::cerr << pos << ": " << graph_X[pos] << "," << graph_Y[pos] << " ------ " << graph_X[pos + 1] << "," << graph_Y[pos + 1] << std::endl;
+		});
+	}
 
     //double max_x = 0;
     algorithms::path_linear_sgd_layout(
@@ -345,8 +443,9 @@ int main_layout(int argc, char **argv) {
         snapshot,
         snapshot_prefix,
         graph_X,
-        graph_Y
-        );
+        graph_Y,
+		_p_sgd_target_paths,
+		is_ref);
 
     // drop out of atomic stuff... maybe not the best way to do this
     // TODO: use directly the atomic vector?

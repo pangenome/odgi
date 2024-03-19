@@ -23,7 +23,9 @@ namespace odgi {
                                     const bool &snapshot,
                                     const std::string &snapshot_prefix,
                                     std::vector<std::atomic<double>> &X,
-                                    std::vector<std::atomic<double>> &Y) {
+                                    std::vector<std::atomic<double>> &Y,
+									const bool &p_sgd_target_paths,
+									const std::vector<bool> &is_ref) {
 #ifdef debug_path_sgd
             std::cerr << "iter_max: " << iter_max << std::endl;
             std::cerr << "min_term_updates: " << min_term_updates << std::endl;
@@ -244,6 +246,23 @@ namespace odgi {
                                     uint64_t term_i_length = graph.get_length(term_i);
                                     uint64_t term_j_length = graph.get_length(term_j);
 
+									bool update_term_i = true;
+									bool update_term_j = true;
+
+									if (p_sgd_target_paths) {
+										if (is_ref[graph.get_id(term_i) - 1]) {
+											update_term_i = false;
+										}
+										if (is_ref[graph.get_id(term_j) - 1]) {
+											update_term_j = false;
+										}
+									}
+									if (!update_term_j && !update_term_i) {
+										// we also have to update the number of terms here, because else we will over sample and the sorting will take much longer
+										term_updates_local++;
+										continue;
+									}
+
                                     // adjust the positions to the node starts
                                     size_t pos_in_path_a = path_index.get_position_of_step(step_a);
                                     size_t pos_in_path_b = path_index.get_position_of_step(step_b);
@@ -357,10 +376,14 @@ namespace odgi {
 #ifdef debug_path_sgd
                                     std::cerr << "before X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
 #endif
-                                    X[2 * i + offset_i].store(X[2 * i + offset_i].load() - r_x);
-                                    Y[2 * i + offset_i].store(Y[2 * i + offset_i].load() - r_y);
-                                    X[2 * j + offset_j].store(X[2 * j + offset_j].load() + r_x);
-                                    Y[2 * j + offset_j].store(Y[2 * j + offset_j].load() + r_y);
+									if (update_term_i) {
+										X[2 * i + offset_i].store(X[2 * i + offset_i].load() - r_x);
+										Y[2 * i + offset_i].store(Y[2 * i + offset_i].load() - r_y);
+									}
+									if (update_term_j) {
+										Y[2 * j + offset_j].store(Y[2 * j + offset_j].load() + r_y);
+										X[2 * j + offset_j].store(X[2 * j + offset_j].load() + r_x);
+									}
 #ifdef debug_path_sgd
                                     std::cerr << "after X[i] " << X[i].load() << " X[j] " << X[j].load() << std::endl;
 #endif
