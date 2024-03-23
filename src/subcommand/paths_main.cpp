@@ -416,7 +416,7 @@ int main_paths(int argc, char** argv) {
             }
 
             // Emit non-reference nodes
-            std::cout << "#node.id\tnode.len\tpaths" << std::endl;
+            std::cout << "#node.id\tnode.len\tnum.uncalled.bases\tpaths" << std::endl;
             for (auto x : non_reference_nodes) {
                 const handle_t handle = graph.get_handle(x + shift);
             
@@ -433,7 +433,14 @@ int main_paths(int argc, char** argv) {
                     result += graph.get_path_name(path);
                 }
 
-                std::cout << graph.get_id(handle) << "\t" << graph.get_length(handle) << "\t" << result << std::endl;
+                uint64_t n_count = 0;
+                for (auto c : graph.get_sequence(handle)) {
+                    if (c == 'N' || c == 'n') { // Increment n_count if character is 'N' or 'n'
+                        ++n_count;
+                    }
+                }
+
+                std::cout << graph.get_id(handle) << "\t" << graph.get_length(handle) << "\t" << n_count << "\t" << result << std::endl;
             }
         } else {
             // Emit non-reference ranges
