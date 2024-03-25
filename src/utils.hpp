@@ -10,6 +10,7 @@ using namespace handlegraph;
 
 namespace utils {
     bool is_number(const std::string &s);
+    std::string to_string_custom(double value);
     void graph_deep_copy(const odgi::graph_t &source,
                          odgi::graph_t* target);
 	bool ends_with(const std::string &fullString, const std::string &ending);
