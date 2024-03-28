@@ -7,6 +7,29 @@ namespace utils {
         return !s.empty() && std::all_of(s.begin(), s.end(), ::isdigit);
     }
 
+    std::string to_string_custom(double value) {
+        std::ostringstream out;
+        
+        // Start with fixed-point notation.
+        out << std::fixed << std::setprecision(5) << value;
+        
+        std::string str = out.str();
+        
+        // Check if there is a decimal point in the string.
+        size_t decimal_pos = str.find('.');
+        if (decimal_pos != std::string::npos) {
+            // Remove trailing zeros.
+            str.erase(str.find_last_not_of('0') + 1, std::string::npos);
+            
+            // If the decimal point is now the last character, remove it too.
+            if (str.back() == '.') {
+                str.erase(str.length() - 1);
+            }
+        }
+        
+        return str;
+    }
+
     void graph_deep_copy(const odgi::graph_t& source,
                          odgi::graph_t* target) {
         // copy the now-compacted graph to our output_graph
