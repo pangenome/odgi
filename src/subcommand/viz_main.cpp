@@ -714,7 +714,7 @@ namespace odgi {
             if (a >= pangenomic_start_pos && a <= pangenomic_end_pos || b >= pangenomic_start_pos && b <= pangenomic_end_pos) {
                 // In binned mode, the Links have to be tall to be visible; in standard mode, _bin_width is 1, so nothing changes here
                 const uint64_t dist = (b - a) * _bin_width;
-
+                
                 double i = 0.0;
 
                 for (; i < dist; i += 1.0 / scale_y) {
@@ -741,21 +741,21 @@ namespace odgi {
             // map into our bins
             const uint64_t index_h = number_bool_packing::unpack_number(h) + !number_bool_packing::unpack_bit(h) - shift;
             const uint64_t index_o = number_bool_packing::unpack_number(o) + number_bool_packing::unpack_bit(o) - shift;
-            const uint64_t _a = position_map[index_h] / _bin_width;
-            const uint64_t _b = position_map[index_o] / _bin_width;
+            const uint64_t h_pos = position_map[index_h] / _bin_width;
+            const uint64_t o_pos = position_map[index_o] / _bin_width;
 
             // The last node has to be treated differently, as it has no following node, and its outgoing links would start outside the image
             const double x_shift = (index_h == position_map.size() - 1) || (index_o == position_map.size() - 1) ? (1.0 / _bin_width) : 0.0;
 
-            const uint64_t a = std::min(_a, _b);
-            const uint64_t b = std::max(_a, _b) >= x_shift ? (std::max(_a, _b) - x_shift) : 0;
+            const uint64_t a = std::min(h_pos, o_pos);
+            const uint64_t b = std::max(h_pos, o_pos) >= x_shift ? (std::max(h_pos, o_pos) - x_shift) : 0;
 
 #ifdef debug_odgi_viz
             std::cerr << graph.get_id(h) << " (" << number_bool_packing::unpack_bit(h) << ") --> " << graph.get_id(o) << " (" << number_bool_packing::unpack_bit(o) << ") " << std::endl;
             std::cerr << "edge " << a << " --> " << b << std::endl;
 #endif
 
-            add_edge_from_positions(a, b, 0);
+            add_edge_from_positions(std::min(a, b), std::max(a, b), 0);
         };
 
         {
