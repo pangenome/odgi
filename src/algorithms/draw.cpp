@@ -244,6 +244,7 @@ void draw_svg(std::ostream &out,
 		//const algorithms::color_t node_color = !node_id_to_color.empty() ? node_id_to_color[graph.get_id(handle)] : COLOR_BLACK;
 
         std::vector<handle_t> highlights;
+        std::vector<handle_t> nodes_with_labels;
 
         for (auto& handle : component) {
 			algorithms::color_t color = node_id_to_color.empty() ? COLOR_BLACK : node_id_to_color[graph.get_id(handle)];
@@ -273,27 +274,11 @@ void draw_svg(std::ostream &out,
 
             // Check if this is a node with a label
             if (node_id_to_label_map.count(graph.get_id(handle))){
-                // Collect the labels that can be put without overlapping identical ones
-                std::vector<std::string> labels;
-                for (auto text : node_id_to_label_map[graph.get_id(handle)]){
-                    if (!is_too_close(newEndpoints.x2, newEndpoints.y2, text, 30.0, placed_labels)) {
-                        labels.push_back(text);
-                    }
-                }
-                // Check if there is something to label
-                if (!labels.empty()){
-                    out << "<text font-family=\"Arial\" font-size=\"20\" fill=\"#000000\" stroke=\"#000000\" y=\"" << newEndpoints.y2 << "\">";
-                    for (auto text : labels){
-                        out << "<tspan x=\"" << newEndpoints.x2 << "\" dy=\"1.0em\">" << text << "</tspan>";
-                        placed_labels.emplace_back(newEndpoints.x2, newEndpoints.y2, text); // Record the label's placement
-                    }
-                    out << "</text>"
-                        << std::endl;
-                }
+                nodes_with_labels.push_back(handle);
             }
         }
 
-        // color highlights
+        // Color highlights and put them after grey nodes to have colored nodes on top of grey ones
         for (auto& handle : highlights) {
             Coordinates newEndpoints = adjustNodeEndpoints(handle, X, Y, scale, x_off, y_off, sparsification_factor, lengthen_left_nodes);
             algorithms::color_t color = node_id_to_color.empty() ? COLOR_BLACK : node_id_to_color[graph.get_id(handle)];
@@ -309,6 +294,29 @@ void draw_svg(std::ostream &out,
                 << "\" stroke-width=\"" << line_width
                 << "\"/>"
                 << std::endl;
+        }
+
+        // Render labels at the end, to have them on top of everything
+        for (auto& handle : nodes_with_labels) {
+            Coordinates newEndpoints = adjustNodeEndpoints(handle, X, Y, scale, x_off, y_off, sparsification_factor, lengthen_left_nodes);
+
+            // Collect the labels that can be put without overlapping identical ones
+            std::vector<std::string> labels;
+            for (auto text : node_id_to_label_map[graph.get_id(handle)]){
+                if (!is_too_close(newEndpoints.x2, newEndpoints.y2, text, 30.0, placed_labels)) {
+                    labels.push_back(text);
+                }
+            }
+            // Check if there is something to label
+            if (!labels.empty()){
+                out << "<text font-family=\"Arial\" font-size=\"20\" fill=\"#000000\" stroke=\"#000000\" y=\"" << newEndpoints.y2 << "\">";
+                for (auto text : labels){
+                    out << "<tspan x=\"" << newEndpoints.x2 << "\" dy=\"1.0em\">" << text << "</tspan>";
+                    placed_labels.emplace_back(newEndpoints.x2, newEndpoints.y2, text); // Record the label's placement
+                }
+                out << "</text>"
+                    << std::endl;
+            }
         }
     }
 
