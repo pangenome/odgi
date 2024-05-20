@@ -95,7 +95,7 @@ namespace odgi {
         args::Flag color_path_names_background(path_names_viz_opts, "bool", "Color path names background with the same color as paths.",{'C', "color-path-names-background"});
         args::ValueFlag<size_t> _max_num_of_characters(path_names_viz_opts, "N", "Maximum number of characters to display for each path name (max 128"
                                                                                    " characters). The default value is *the length of the longest path"
-                                                                                   " name* (up to 32 characters).",{'c', "max-num-of-characters"});
+                                                                                   " name* (up to 128 characters).",{'c', "max-num-of-characters"});
 
         /// Binned mode
         args::Group bin_opts(parser, "[ Binned Mode Options ]");
@@ -395,7 +395,7 @@ namespace odgi {
             }
         }
 
-        const size_t max_num_of_characters = args::get(_max_num_of_characters) > 1 ? min(args::get(_max_num_of_characters), (size_t) PATH_NAMES_MAX_NUM_OF_CHARACTERS) : 32;
+        const size_t max_num_of_characters = args::get(_max_num_of_characters) > 1 ? min(args::get(_max_num_of_characters), (size_t) PATH_NAMES_MAX_NUM_OF_CHARACTERS) : PATH_NAMES_MAX_NUM_OF_CHARACTERS;
 
         uint64_t path_count = graph.get_path_count();
         const uint64_t pix_per_path = args::get(path_height) ? args::get(path_height) : 10;
