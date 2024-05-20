@@ -52,6 +52,7 @@ int main_position(int argc, char** argv) {
     args::ValueFlag<uint64_t> _search_radius(position_opts, "DISTANCE", "Limit coordinate conversion breadth-first search up to DISTANCE bp from each given position (default: 10000).", {'d',"search-radius"});
 	args::ValueFlag<uint64_t> _walking_dist(position_opts, "N", "Maximum walking distance in nucleotides for one orientation when finding the best target (reference) range for each query path (default: 10000). Note: If we walked 9999 base pairs and **w, --jaccard-context** is **10000**, we will also include the next node, even if we overflow the actual limit.",
 											{'w', "jaccard-context"});
+    args::Flag all_positions_of_ref_path(position_opts, "all-positions", "Emit all positions for all nodes in the specified ref-paths.", {"all-positions"});
     args::Group threading_opts(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> threads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 	args::Group processing_info_opts(parser, "[ Processing Information ]");
@@ -139,6 +140,24 @@ int main_position(int argc, char** argv) {
     } else {
         // using all the paths in the graph
         target_graph.for_each_path_handle([&](const path_handle_t& path) { ref_paths.push_back(path); });
+    }
+
+    if (ref_paths.size() > 0 && args::get(all_positions_of_ref_path)){
+        std::cout << "path\tnode_id\tposition" << std::endl;
+        for (auto &path_handle : ref_paths) {
+            uint64_t walked = 0;
+            const auto path_end = target_graph.path_end(path_handle);
+            auto path_name = target_graph.get_path_name(path_handle);
+            for (step_handle_t cur_step = target_graph.path_begin(path_handle);
+                 cur_step != path_end;
+                 cur_step = target_graph.get_next_step(cur_step)) {
+                const handle_t cur_handle = target_graph.get_handle_of_step(cur_step);
+                std::cout << path_name << "\t" 
+                          << target_graph.get_id(cur_handle) << "\t" 
+                          << walked << std::endl;
+                walked += target_graph.get_length(cur_handle);
+            }
+        }
     }
 
 	std::unordered_map<std::string, std::tuple<std::string, uint64_t, uint64_t>> path_start_end_pos_map;
