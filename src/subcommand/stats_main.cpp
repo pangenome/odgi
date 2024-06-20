@@ -177,7 +177,26 @@ int main_stats(int argc, char** argv) {
     	std::cout << "---" << std::endl;
     }
 
-    if (args::get(_summarize) || _multiqc) {
+	// per default, we want option -S to be shown
+	const bool no_args = !(args::get(_weakly_connected_components) ||
+			args::get(_num_self_loops) ||
+			args::get(_show_nondeterministic_edges) ||
+			args::get(base_content) ||
+			path_delim ||
+			args::get(_file_size) ||
+			_pangenome_sequence_class_counts ||
+			args::get(mean_links_length) ||
+			args::get(dont_penalize_gap_links) ||
+			args::get(sum_of_path_node_distances) ||
+			args::get(penalize_diff_orientation) ||
+			args::get(path_statistics) ||
+			args::get(weighted_feedback_arc) ||
+			args::get(weighted_reversing_join) ||
+			args::get(links_length_per_nuc) ||
+			args::get(_multiqc) ||
+			args::get(_yaml));
+
+    if (args::get(_summarize) || _multiqc || no_args) {
         uint64_t length_in_bp = 0, node_count = 0;
         graph.for_each_handle([&](const handle_t& h) {
                 length_in_bp += graph.get_length(h);
