@@ -167,7 +167,7 @@ int main_stats(int argc, char** argv) {
 
 	const uint64_t shift = number_bool_packing::unpack_number(graph.get_handle(graph.min_node_id()));
 
-    if (args::get(mean_links_length) || args::get(sum_of_path_node_distances) || _multiqc) {
+    if (args::get(mean_links_length) || args::get(sum_of_path_node_distances)) {
 		if (number_bool_packing::unpack_number(graph.get_handle(graph.max_node_id())) - shift >= graph.get_node_count()){
 			std::cerr << "[odgi::stats] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
 			exit(1);
@@ -177,7 +177,26 @@ int main_stats(int argc, char** argv) {
     	std::cout << "---" << std::endl;
     }
 
-    if (args::get(_summarize) || _multiqc) {
+	// per default, we want option -S to be shown
+	const bool no_args = !(args::get(_weakly_connected_components) ||
+			args::get(_num_self_loops) ||
+			args::get(_show_nondeterministic_edges) ||
+			args::get(base_content) ||
+			path_delim ||
+			args::get(_file_size) ||
+			_pangenome_sequence_class_counts ||
+			args::get(mean_links_length) ||
+			args::get(dont_penalize_gap_links) ||
+			args::get(sum_of_path_node_distances) ||
+			args::get(penalize_diff_orientation) ||
+			args::get(path_statistics) ||
+			args::get(weighted_feedback_arc) ||
+			args::get(weighted_reversing_join) ||
+			args::get(links_length_per_nuc) ||
+			args::get(_multiqc) ||
+			args::get(_yaml));
+
+    if (args::get(_summarize) || _multiqc || no_args) {
         uint64_t length_in_bp = 0, node_count = 0;
         graph.for_each_handle([&](const handle_t& h) {
                 length_in_bp += graph.get_length(h);
@@ -371,7 +390,7 @@ int main_stats(int argc, char** argv) {
 		// TODO clear all sets?
 	}
 
-    if (args::get(mean_links_length) || args::get(sum_of_path_node_distances) || _multiqc) {
+    if (args::get(mean_links_length) || args::get(sum_of_path_node_distances)) {
         // This vector is needed for computing the metrics in 1D and for detecting gap-links
         std::vector<uint64_t> position_map(graph.get_node_count() + 1);
 
@@ -409,7 +428,7 @@ int main_stats(int argc, char** argv) {
             position_map[position_map.size() - 1] = len;
         }
 
-        if (args::get(mean_links_length) || _multiqc){
+        if (args::get(mean_links_length)){
             bool _dont_penalize_gap_links = args::get(dont_penalize_gap_links);
 
             uint64_t sum_all_node_space = 0;
@@ -582,7 +601,7 @@ int main_stats(int argc, char** argv) {
 			}
         }
 
-        if (args::get(sum_of_path_node_distances) || _multiqc){
+        if (args::get(sum_of_path_node_distances)){
             bool _penalize_diff_orientation = args::get(penalize_diff_orientation);
 
             uint64_t sum_all_path_node_dist_node_space = 0;

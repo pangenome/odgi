@@ -162,7 +162,7 @@ args::Group threading_opts(parser, "[ Threading ]");
     if (using_delim) {
         bp_count.resize(path_groups.size());
     } else {
-        bp_count.resize(graph.get_path_count());
+        bp_count.resize(graph.get_path_count() + 1);
     }
 
     uint32_t path_max = 0;

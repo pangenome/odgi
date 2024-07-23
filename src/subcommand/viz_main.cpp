@@ -95,7 +95,7 @@ namespace odgi {
         args::Flag color_path_names_background(path_names_viz_opts, "bool", "Color path names background with the same color as paths.",{'C', "color-path-names-background"});
         args::ValueFlag<size_t> _max_num_of_characters(path_names_viz_opts, "N", "Maximum number of characters to display for each path name (max 128"
                                                                                    " characters). The default value is *the length of the longest path"
-                                                                                   " name* (up to 32 characters).",{'c', "max-num-of-characters"});
+                                                                                   " name* (up to 128 characters).",{'c', "max-num-of-characters"});
 
         /// Binned mode
         args::Group bin_opts(parser, "[ Binned Mode Options ]");
@@ -395,7 +395,7 @@ namespace odgi {
             }
         }
 
-        const size_t max_num_of_characters = args::get(_max_num_of_characters) > 1 ? min(args::get(_max_num_of_characters), (size_t) PATH_NAMES_MAX_NUM_OF_CHARACTERS) : 32;
+        const size_t max_num_of_characters = args::get(_max_num_of_characters) > 1 ? min(args::get(_max_num_of_characters), (size_t) PATH_NAMES_MAX_NUM_OF_CHARACTERS) : PATH_NAMES_MAX_NUM_OF_CHARACTERS;
 
         uint64_t path_count = graph.get_path_count();
         const uint64_t pix_per_path = args::get(path_height) ? args::get(path_height) : 10;
@@ -714,7 +714,7 @@ namespace odgi {
             if (a >= pangenomic_start_pos && a <= pangenomic_end_pos || b >= pangenomic_start_pos && b <= pangenomic_end_pos) {
                 // In binned mode, the Links have to be tall to be visible; in standard mode, _bin_width is 1, so nothing changes here
                 const uint64_t dist = (b - a) * _bin_width;
-
+                
                 double i = 0.0;
 
                 for (; i < dist; i += 1.0 / scale_y) {
@@ -739,18 +739,23 @@ namespace odgi {
 
         auto add_edge_from_handles = [&](const handle_t& h, const handle_t& o) {
             // map into our bins
-            const uint64_t _a = position_map[number_bool_packing::unpack_number(h) + !number_bool_packing::unpack_bit(h) - shift] / _bin_width + 1;
-            const uint64_t _b = position_map[number_bool_packing::unpack_number(o) + number_bool_packing::unpack_bit(o) - shift] / _bin_width + 1;
+            const uint64_t index_h = number_bool_packing::unpack_number(h) + !number_bool_packing::unpack_bit(h) - shift;
+            const uint64_t index_o = number_bool_packing::unpack_number(o) + number_bool_packing::unpack_bit(o) - shift;
+            const uint64_t h_pos = position_map[index_h] / _bin_width;
+            const uint64_t o_pos = position_map[index_o] / _bin_width;
 
-            const uint64_t a = std::min(_a, _b);
-            const uint64_t b = std::max(_a, _b);
+            // The last node has to be treated differently, as it has no following node, and its outgoing links would start outside the image
+            const double x_shift = (index_h == position_map.size() - 1) || (index_o == position_map.size() - 1) ? (1.0 / _bin_width) : 0.0;
+
+            const uint64_t a = std::min(h_pos, o_pos);
+            const uint64_t b = std::max(h_pos, o_pos) >= x_shift ? (std::max(h_pos, o_pos) - x_shift) : 0;
 
 #ifdef debug_odgi_viz
             std::cerr << graph.get_id(h) << " (" << number_bool_packing::unpack_bit(h) << ") --> " << graph.get_id(o) << " (" << number_bool_packing::unpack_bit(o) << ") " << std::endl;
             std::cerr << "edge " << a << " --> " << b << std::endl;
 #endif
 
-            add_edge_from_positions(a, b, 0);
+            add_edge_from_positions(std::min(a, b), std::max(a, b), 0);
         };
 
         {

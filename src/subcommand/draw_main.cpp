@@ -41,9 +41,9 @@ int main_draw(int argc, char **argv) {
     args::ValueFlag<uint64_t> png_height(visualizations_opts, "FILE", "Height of PNG rendering (default: 1000).", {'H', "png-height"});
     args::ValueFlag<uint64_t> png_border(visualizations_opts, "FILE", "Size of PNG border in bp (default: 10).", {'E', "png-border"});
     args::Flag color_paths(visualizations_opts, "color-paths", "Color paths (in PNG output).", {'C', "color-paths"});
-    args::ValueFlag<double> render_scale(visualizations_opts, "N", "Image scaling (default 1.0).", {'R', "scale"});
+    args::ValueFlag<double> svg_render_scale(visualizations_opts, "N", "SVG image scaling (default 0.01).", {'R', "scale"});
     args::ValueFlag<double> render_border(visualizations_opts, "N", "Image border (in approximate bp) (default 100.0).", {'B', "border"});
-    args::ValueFlag<double> png_line_width(visualizations_opts, "N", "Line width (in approximate bp) (default 0.0).", {'w', "line-width"});
+    args::ValueFlag<double> png_line_width(visualizations_opts, "N", "Line width (in approximate bp) (default 10.0).", {'w', "line-width"});
     //args::ValueFlag<double> png_line_overlay(parser, "N", "line width (in approximate bp) (default 10.0)", {'O', "line-overlay"});
     args::ValueFlag<double> png_path_line_spacing(visualizations_opts, "N", "Spacing between path lines in PNG layout (in approximate bp) (default 0.0).", {'S', "path-line-spacing"});
     args::ValueFlag<std::string> _path_bed_file(visualizations_opts, "FILE",
@@ -51,6 +51,8 @@ int main_draw(int argc, char **argv) {
                                                 "Colors are derived from the 4th column, if present, else from the path name."
                                                 "If the 4th column value is in the format 'string#RRGGBB', the RRGGBB color (in hex notation) will be used.",
                                                 {'b', "bed-file"});
+    args::ValueFlag<float> node_sparsification(visualizations_opts, "N", "Remove this fraction of nodes from the SVG output (to output smaller files) (default: 0.0, keep all nodes).", {'f', "svg-sparse-factor"});
+    args::Flag lengthen_left_nodes(visualizations_opts, "lengthen", "When node sparsitication is active, lengthen the remaining nodes proportionally with the sparsification factor", {'l', "svg-lengthen-nodes"});
     args::Group threading(parser, "[ Threading ]");
 	args::ValueFlag<uint64_t> nthreads(threading, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 	args::Group processing_info_opts(parser, "[ Processing Information ]");
@@ -94,6 +96,12 @@ int main_draw(int argc, char **argv) {
         return 1;
     }
 
+    const float sparse_nodes = node_sparsification ? args::get(node_sparsification) : 0.0;
+    if (sparse_nodes < 0.0 || sparse_nodes > 1.0) {
+        std::cerr << "[odgi::draw] error: -f/--svg-sparse-factor must be in the range [0.0, 1.0]." << std::endl;
+        return 1;
+    }
+
 	const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
 
 	graph_t graph;
@@ -104,7 +112,7 @@ int main_draw(int argc, char **argv) {
             if (infile == "-") {
                 graph.deserialize(std::cin);
             } else {
-                utils::handle_gfa_odgi_input(infile, "draw", args::get(progress), num_threads, graph);
+                utils::handle_gfa_odgi_input(infile, "draw", lengthen_left_nodes, num_threads, graph);
             }
         }
     }
@@ -117,6 +125,8 @@ int main_draw(int argc, char **argv) {
     // handle targets from BED
     std::vector<odgi::path_range_t> path_ranges;
     std::vector<algorithms::color_t> node_id_to_color;
+    ska::flat_hash_map<handlegraph::nid_t, std::set<std::string>> node_id_to_label_map; // To remember the unique node to label for each path range
+
     if (_path_bed_file && !args::get(_path_bed_file).empty()) {
         std::ifstream bed_in(args::get(_path_bed_file));
         std::string line;
@@ -137,6 +147,8 @@ int main_draw(int argc, char **argv) {
                 if (!path_range.name.empty()) {
                     auto vals = split(path_range.name, '#');
                     if (vals.size() == 2 && vals[1].length() == 6) {
+                        path_range.name = vals[0]; // Remove the color from the name
+
                         // Colors are given in RRGGBB in the BED file, but they are taken in BBGGRR, so we need to switch BB/RR
 
                         char temp = vals[1][0];
@@ -157,24 +169,27 @@ int main_draw(int argc, char **argv) {
                     }
                 }
 
-
-
-
-
+                bool first_handle_taken = path_range.name.empty(); // To avoid checking if there is no name to take
                 algorithms::for_handle_in_path_range(
                         graph, path_handle, path_range.begin.offset, path_range.end.offset,
                         [&](const handle_t& handle) {
-                            node_id_to_color[graph.get_id(handle)] = path_color;
+                            const auto node_id = graph.get_id(handle);
+                            node_id_to_color[node_id] = path_color;
+
+                            if (!first_handle_taken) {
+                                first_handle_taken = true;
+                                // The set automatically handles uniqueness of labels within the set.
+                                node_id_to_label_map[node_id].insert(path_range.name);
+                            }
                         });
             }
         }
     }
 
     const uint64_t _png_height = png_height ? args::get(png_height) : 1000;
-    const double _png_line_width = png_line_width ? args::get(png_line_width) : 0;
+    const double _png_line_width = png_line_width ? args::get(png_line_width) : 10.0;
     const bool _color_paths = args::get(color_paths);
     const double _png_path_line_spacing = png_path_line_spacing ? args::get(png_path_line_spacing) : 0.0;
-    const double svg_scale = !render_scale ? 1.0 : args::get(render_scale);
     size_t max_node_depth = 0;
     graph.for_each_handle(
         [&](const handle_t& h) {
@@ -211,12 +226,13 @@ int main_draw(int argc, char **argv) {
     }
 
     if (svg_out_file) {
+        const double svg_scale = !svg_render_scale ? 0.01 : args::get(svg_render_scale);
         auto& outfile = args::get(svg_out_file);
         ofstream f(outfile.c_str());
         // todo could be done with callbacks
         std::vector<double> X = layout.get_X();
         std::vector<double> Y = layout.get_Y();
-        algorithms::draw_svg(f, X, Y, graph, svg_scale, border_bp);
+        algorithms::draw_svg(f, X, Y, graph, svg_scale, border_bp, _png_line_width, node_id_to_color, node_id_to_label_map, sparse_nodes, args::get(lengthen_left_nodes));
         f.close();    
     }
 

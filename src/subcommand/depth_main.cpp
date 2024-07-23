@@ -80,6 +80,10 @@ namespace odgi {
                                                  "merging regions not separated by more than LEN bp."
                                                  " When TIPS=1, retain only tips.",
                                                  {'W', "windows-out"});
+        args::Flag window_unique_depth(depth_opts, "window-unique-depth",
+                              "For --window-in and --window-out, count UNIQUE depth, not total node depth",
+                              {'U', "window-unique-depth"});
+
 
         args::Group threading_opts(parser, "[ Threading ] ");
         args::ValueFlag<uint64_t> _num_threads(threading_opts, "N", "Number of threads to use in parallel operations.", {'t', "threads"});
@@ -437,7 +441,11 @@ namespace odgi {
             graph.for_each_handle(
                 [&](const handle_t& h) {
                     auto id = graph.get_id(h);
-                    depths[id - shift] = get_graph_node_depth(graph, id, paths_to_consider).first;
+                    if (window_unique_depth) {
+                        depths[id - shift] = get_graph_node_depth(graph, id, paths_to_consider).second; // Unique depth
+                    } else {
+                        depths[id - shift] = get_graph_node_depth(graph, id, paths_to_consider).first; // Total depth
+                    }
                 }, true);
 
             auto in_bounds =

@@ -1,4 +1,4 @@
-.. _sorting-layouting:
+.. _sort-layout:
 
 ###############
 Sort and Layout
@@ -15,6 +15,8 @@ downstream analyses, visualization, mapping, and interpretation. Graph sorting a
 a 1D and 2D layout to simplify these complex regions.
 This tutorial shows how to sort and visualize a graph in 1D. It explains how to generate a 2D layout of a graph, and how
 to take a look at the calculated layout using static and interactive tools.
+
+For more details about the applied algorithm, please take a look at https://www.biorxiv.org/content/10.1101/2023.09.22.558964v2.
 
 .. Pangenome graphs embed linear pangenomic sequences as paths in
 .. the graph, but to our knowledge, no algorithm takes into account this biological information in the sorting. Moreover,
@@ -39,12 +41,12 @@ to take a look at the calculated layout using static and interactive tools.
 Build the unsorted DRB1-3123 graph
 ----------------------------------
 
-Assuming that your current working directory is the root of the ``odgi`` project, to construct an ``odgi`` graph from the
-``DRB1-3123`` dataset in ``GFA`` format, execute:
+To construct an ``odgi`` graph from the ``DRB1-3123`` dataset in ``GFA`` format, execute:
 
 .. code-block:: bash
 
-    odgi build -g test/DRB1-3123_unsorted.gfa -o DRB1-3123_unsorted.og
+    wget https://raw.githubusercontent.com/pangenome/odgi/master/test/DRB1-3123_unsorted.gfa
+    odgi build -g DRB1-3123_unsorted.gfa -o DRB1-3123_unsorted.og
 
 The command creates a file called ``DRB1-3123_unsorted.og``, which contains the input graph in ``odgi`` format. This graph contains
 12 ALT sequences of the `HLA-DRB1 gene <https://www.ncbi.nlm.nih.gov/gene/3123>`_ from the GRCh38 reference genome.
@@ -129,6 +131,22 @@ nodes.
 
 .. note::
     The PG-SGD is not deterministic, because of its `Hogwild! <https://papers.nips.cc/paper/2011/hash/218a0aefd1d1a4be65601cc6ddc1520e-Abstract.html>`_ approach.
+    For more details about the applied algorithm, please take a look at https://www.biorxiv.org/content/10.1101/2023.09.22.558964v2.
+
+.. note::
+    The 1D PG-SGD implementation comes with a huge amount of tunable parameters. Based on our experience applying it to hundreds of graphs, the current
+    defaults usually work well for most graphs. However, if you feel the sorting did not work well enough, there are 2 key parameters one can tune:
+
+        |    **-G, --path-sgd-min-term-updates-paths**\ =\ *N*: The minimum number of terms to be
+                                          updated before a new path-guided
+                                          linear 1D SGD iteration with adjusted
+                                          learning rate eta starts, expressed as
+                                          a multiple of total path steps (default: 1.0).
+        |    **-x, --path-sgd-iter-max**\ =\ *N*: The maximum number of iterations for path-guided linear 1D SGD model (default: 100).
+
+    Increasing both can lead to a better sorted graph. For example, one can start optimizing with setting **-x, --path-sgd-iter-max**\ =\ *200*.
+    For more parameter details please take
+    a look at :ref:`odgi sort`.
 
 ..    To reproduce the visualization below, the sorted graph can be found under ``test/DRB1-3123_sorted.og``.
 
@@ -168,6 +186,73 @@ This prints to stdout:
     all_paths	4.66114	4.72171	21882	163416	5948	1
 
 Compared to before, these metrics show that the goodness of the sorting of the graph improved significantly.
+
+--------------------------------------------
+Playing around with the 1D PG-SGD parameters
+--------------------------------------------
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+What happens if the maximum number of iterations is very low?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: bash
+
+    odgi sort -i DRB1-3123_unsorted.og --threads 2 -P -Y -x 2 -o DRB1-3123_sorted.x2.og
+    odgi viz -i DRB1-3123_sorted.x2.og -o DRB1-3123_sorted.x2.png
+
+.. image:: /img/DRB1-3123_sorted.x2.png
+
+The graph appears very complex and not quite human readable. That's because in total there were two times the number
+of total path steps node position updates instead of one hundred times the number of total path steps, which is the current default.
+For very complex graphs, one may have to increase this number even further.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+What happens if the minimum number of term updates is very high?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: bash
+
+    odgi sort -i DRB1-3123_unsorted.og --threads 2 -P -Y -U 1000 -o DRB1-3123_sorted.U1000.og
+    odgi viz -i DRB1-3123_sorted.U1000.og -o DRB1-3123_sorted.U1000.png
+
+.. image:: /img/DRB1-3123_sorted.U1000.png
+
+The graph lost it's complexity and is now linear. Compared to the 1D visualization using the default parameters, it is hard
+to spot any differences. So let's take a look at the metrics:
+
+.. code-block:: bash
+
+    odgi stats -i DRB1-3123_sorted.U1000.og -s -d -l -g
+
+This prints to stdout:
+
+.. code-block:: bash
+
+	#mean_links_length
+	path    in_node_space   in_nucleotide_space     num_links_considered    num_gap_links_not_penalized
+	all_paths       1.00361 8.30677 21870   15195
+	#sum_of_path_node_distances
+	path    in_node_space   in_nucleotide_space     nodes   nucleotides     num_penalties   num_penalties_different_orientation
+	all_paths       3.23238 3.73489 21882   163416  3750    1
+
+We actually were able to improve the metrics compared to using default parameters. However, the runtime increased from under 1 second to ~30 seconds.
+So one needs to be careful with such a parameter. Compared to the gains in linearity, such an additional time usage would be a huge
+waste with very large graphs.
+
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+What happens if the threshold of the maximum distance of two nodes is very high?
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+.. code-block:: bash
+
+    odgi sort -i DRB1-3123_unsorted.og --threads 2 -P -Y -j 10000 -o DRB1-3123_sorted.j10000.og
+    odgi viz -i DRB1-3123_sorted.j10000.og -o DRB1-3123_sorted.j10000.png
+
+.. image:: /img/DRB1-3123_sorted.j10000.png
+
+The graph appears very complex and not quite human readable. That's because the iterations are terminated as soon as the
+expected distance of two nodes, the nucleotide distance given by two randomly chosen path steps, is as close as 10000.
+Naturally, this happens very soon.
 
 =========================================================
 1D reference-guided grooming and reference-guided sorting
@@ -267,6 +352,8 @@ We can clearly observe, that the path positions of the two reference now define 
 2D layout
 =========
 
+The 2D PG-SGD layout algorithm is described in https://www.biorxiv.org/content/10.1101/2023.09.22.558964v2.
+
 -----------------------------------------
 2D layout of the unsorted DRB1-3123 graph
 -----------------------------------------
@@ -276,6 +363,23 @@ We want to have a 2D layout of our DRB1-3123 graph:
 .. code-block:: bash
 
     odgi layout -i DRB1-3123_unsorted.og -o DRB1-3123_unsorted.og.lay -P --threads 2
+
+.. note::
+    The 2D PG-SGD implementation comes with a huge amount of tunable parameters. Based on our experience applying it to hundreds of graphs, the current
+    defaults usually work well for most graphs. However, if you feel the resulting 2D layout is not of a good enough quality, there are 2 key parameters one can tune:
+
+        |    **-G, --path-sgd-min-term-updates-paths**\ =\ *N*: Minimum number of terms N to be
+                                          updated before a new path-guided 2D
+                                          SGD iteration with adjusted learning
+                                          rate eta starts, expressed as a
+                                          multiple of total path length
+                                          (default: 10).
+        |    **-x, --path-sgd-iter-max**\ =\ *N*: The maximum number of iterations N for
+                                          the path-guided 2D SGD model (default:
+                                          30).
+
+    Increasing both can lead to a better graph layout. For example, one can start optimizing with setting **-x, --path-sgd-iter-max**\ =\ *100*.
+    For more parameter details please take a look at :ref:`odgi layout`.
 
 --------------------------------------------
 Drawing the 2D layout of the DRB1-3123 graph

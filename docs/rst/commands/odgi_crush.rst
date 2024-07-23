@@ -15,7 +15,7 @@ SYNOPSIS
 DESCRIPTION
 ===========
 
-Divide nodes into smaller pieces preserving node topology and order.
+Replaces runs of Ns with single Ns (for example, ANNNT becomes ANT).
 
 OPTIONS
 =======

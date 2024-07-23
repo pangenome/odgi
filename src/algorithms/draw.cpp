@@ -1,4 +1,5 @@
 #include "draw.hpp"
+#include "split.hpp"
 
 namespace odgi {
 
@@ -98,13 +99,116 @@ void get_layout(const std::vector<double> &X,
 
 }
 
+struct label_info_t {
+    double x, y;
+    std::string content;
+    // Simple constructor for convenience
+    label_info_t(double x, double y, std::string content) : x(x), y(y), content(std::move(content)) {}
+};
+bool is_too_close(double x, double y, const std::string& content, double threshold, std::vector<label_info_t>& placed_labels) {
+    for (const auto& label : placed_labels) {
+        if (label.content == content && std::abs(label.x - x) < threshold && std::abs(label.y - y) < threshold) {
+            return true; // Found a label too close with the same content
+        }
+    }
+    return false;
+}
+
+uint64_t node_hash(const nid_t& node_id) {
+    uint64_t x = node_id;
+    x = (~x) + (x << 21); // x = (x << 21) - x - 1;
+    x = x ^ (x >> 24);
+    x = (x + (x << 3)) + (x << 8); // x * 265
+    x = x ^ (x >> 14);
+    x = (x + (x << 2)) + (x << 4); // x * 21
+    x = x ^ (x >> 28);
+    x = x + (x << 31);
+    return x;
+}
+bool keep_node(const nid_t& node_id, const float f) {
+    // hash the node_id and check if it's accepted given our sparsification factor
+    return node_hash(node_id) < std::numeric_limits<uint64_t>::max() * f;
+}
+// Define a struct to hold the coordinates for simplicity
+struct Coordinates {
+    double x1, y1, x2, y2;
+};
+
+// Function to adjust node length
+Coordinates adjustNodeLength(double x1, double y1, double x2, double y2, double scale, double x_off, double y_off, double sparsification_factor) {
+    // Apply scale and offsets to original coordinates
+    x1 = (x1 * scale) - x_off;
+    y1 = (y1 * scale) + y_off;
+    x2 = (x2 * scale) - x_off;
+    y2 = (y2 * scale) + y_off;
+
+    // Calculate the original length
+    double length = sqrt(pow(x2 - x1, 2) + pow(y2 - y1, 2));
+
+    // Adjust length based on 1.0 / sparsification_factor
+    double new_length = sparsification_factor == 0 ? length : length * (1.0 / sparsification_factor);
+
+    // Calculate the midpoint
+    double mid_x = (x1 + x2) / 2.0;
+    double mid_y = (y1 + y2) / 2.0;
+
+    // Calculate the unit vector for the direction
+    double unit_x = (x2 - x1) / length;
+    double unit_y = (y2 - y1) / length;
+
+    // Calculate new endpoints using the new length
+    double half_new_length = new_length / 2.0;
+    double new_x1 = mid_x - half_new_length * unit_x;
+    double new_y1 = mid_y - half_new_length * unit_y;
+    double new_x2 = mid_x + half_new_length * unit_x;
+    double new_y2 = mid_y + half_new_length * unit_y;
+
+    // Return the new coordinates
+    return Coordinates{new_x1, new_y1, new_x2, new_y2};
+}
+Coordinates adjustNodeEndpoints(const handle_t& handle, const std::vector<double>& X, const std::vector<double>& Y, double scale, double x_off, double y_off, double sparsification_factor, bool lengthen_left_nodes) {
+    // Original coordinates
+    uint64_t a = 2 * number_bool_packing::unpack_number(handle);
+    double x1 = (X[a] * scale) - x_off;
+    double y1 = (Y[a] * scale) + y_off;
+    double x2 = (X[a + 1] * scale) - x_off;
+    double y2 = (Y[a + 1] * scale) + y_off;
+
+    // Calculate the original length
+    double length = std::sqrt(std::pow(x2 - x1, 2) + std::pow(y2 - y1, 2));
+
+    // Adjust length based on 1.0 / sparsification_factor
+    double new_length = !lengthen_left_nodes || sparsification_factor == 0 ? length : length * (1.0 / sparsification_factor);
+
+    // Calculate the midpoint
+    double mid_x = (x1 + x2) / 2.0;
+    double mid_y = (y1 + y2) / 2.0;
+
+    // Calculate the unit vector for the direction
+    double unit_x = (x2 - x1) / length;
+    double unit_y = (y2 - y1) / length;
+
+    // Calculate new endpoints using the new length
+    double half_new_length = new_length / 2.0;
+    double new_x1 = mid_x - half_new_length * unit_x;
+    double new_y1 = mid_y - half_new_length * unit_y;
+    double new_x2 = mid_x + half_new_length * unit_x;
+    double new_y2 = mid_y + half_new_length * unit_y;
+
+    return Coordinates{new_x1, new_y1, new_x2, new_y2};
+}
 
 void draw_svg(std::ostream &out,
               const std::vector<double> &X,
               const std::vector<double> &Y,
               const PathHandleGraph &graph,
               const double& scale,
-              const double& border) {
+              const double& border,
+			  const double& line_width,
+			  std::vector<algorithms::color_t>& node_id_to_color,
+              ska::flat_hash_map<handlegraph::nid_t, std::set<std::string>>& node_id_to_label_map,
+              const float& sparsification_factor,
+              const bool& lengthen_left_nodes) {
 
     std::vector<std::vector<handle_t>> weak_components;
     coord_range_2d_t rendered_range;
@@ -119,14 +223,17 @@ void draw_svg(std::ostream &out,
     double width = rendered_range.width();
     double height = rendered_range.height();
 
+    std::vector<label_info_t> placed_labels;
+
     out << std::setprecision(std::numeric_limits<double>::digits10 + 1);
     out << "<svg width=\"" << width << "\" height=\"" << height << "\" "
         << "viewBox=\"" << viewbox_x1 << " " << viewbox_y1
         << " " << width << " " << height << "\""
         << " xmlns=\"http://www.w3.org/2000/svg\">"
-        << "<style type=\"text/css\">"
-        << "line{stroke:black;stroke-width:1.0;stroke-opacity:1.0;stroke-linecap:round;};"
-        << "</style>"
+		// interferes with the styling of the lines
+        //<< "<style type=\"text/css\">"
+        //<< "line{stroke:black;stroke-width:1.0;stroke-opacity:1.0;stroke-linecap:round;};"
+        //<< "</style>"
         << std::endl;
 
     auto range_itr = component_ranges.begin();
@@ -134,19 +241,82 @@ void draw_svg(std::ostream &out,
         auto& range = *range_itr++;
         auto& x_off = range.x_offset;
         auto& y_off = range.y_offset;
+		//const algorithms::color_t node_color = !node_id_to_color.empty() ? node_id_to_color[graph.get_id(handle)] : COLOR_BLACK;
+
+        std::vector<handle_t> highlights;
+        std::vector<handle_t> nodes_with_labels;
+
         for (auto& handle : component) {
-            uint64_t a = 2 * number_bool_packing::unpack_number(handle);
+			algorithms::color_t color = node_id_to_color.empty() ? COLOR_BLACK : node_id_to_color[graph.get_id(handle)];
+
+            if (!(sparsification_factor == 0 || keep_node(graph.get_id(handle), sparsification_factor) || node_id_to_label_map.count(graph.get_id(handle)))) {
+                continue; // Skip this node to output a lighter SVG (do not nodes with labels, if any)
+            }
+
+            Coordinates newEndpoints = adjustNodeEndpoints(handle, X, Y, scale, x_off, y_off, sparsification_factor, lengthen_left_nodes);
+
+            if (color == COLOR_BLACK || color == COLOR_LIGHTGRAY) {
+                out << "<line x1=\""
+                    << newEndpoints.x1
+                    << "\" x2=\""
+                    << newEndpoints.x2
+                    << "\" y1=\""
+                    << newEndpoints.y1
+                    << "\" y2=\""
+                    << newEndpoints.y2
+                    << "\" stroke=\"" << to_hexrgb(color)
+                    << "\" stroke-width=\"" << line_width
+                    << "\"/>"
+                    << std::endl;
+            } else {
+                highlights.push_back(handle);
+            }
+
+            // Check if this is a node with a label
+            if (node_id_to_label_map.count(graph.get_id(handle))){
+                nodes_with_labels.push_back(handle);
+            }
+        }
+
+        // Color highlights and put them after grey nodes to have colored nodes on top of grey ones
+        for (auto& handle : highlights) {
+            Coordinates newEndpoints = adjustNodeEndpoints(handle, X, Y, scale, x_off, y_off, sparsification_factor, lengthen_left_nodes);
+            algorithms::color_t color = node_id_to_color.empty() ? COLOR_BLACK : node_id_to_color[graph.get_id(handle)];
             out << "<line x1=\""
-                << (X[a] * scale) - x_off
+                << newEndpoints.x1
                 << "\" x2=\""
-                << (X[a + 1] * scale) - x_off
+                << newEndpoints.x2
                 << "\" y1=\""
-                << (Y[a] * scale) + y_off
+                << newEndpoints.y1
                 << "\" y2=\""
-                << (Y[a + 1] * scale) + y_off
+                << newEndpoints.y2
+                << "\" stroke=\"" << to_hexrgb(color) //to_rgba(color) // with rgba, nodes are invisible with InkScape
+                << "\" stroke-width=\"" << line_width
                 << "\"/>"
                 << std::endl;
+        }
 
+        // Render labels at the end, to have them on top of everything
+        for (auto& handle : nodes_with_labels) {
+            Coordinates newEndpoints = adjustNodeEndpoints(handle, X, Y, scale, x_off, y_off, sparsification_factor, lengthen_left_nodes);
+
+            // Collect the labels that can be put without overlapping identical ones
+            std::vector<std::string> labels;
+            for (auto text : node_id_to_label_map[graph.get_id(handle)]){
+                if (!is_too_close(newEndpoints.x2, newEndpoints.y2, text, 30.0, placed_labels)) {
+                    labels.push_back(text);
+                }
+            }
+            // Check if there is something to label
+            if (!labels.empty()){
+                out << "<text font-family=\"Arial\" font-size=\"20\" fill=\"#000000\" stroke=\"#000000\" y=\"" << newEndpoints.y2 << "\">";
+                for (auto text : labels){
+                    out << "<tspan x=\"" << newEndpoints.x2 << "\" dy=\"1.0em\">" << text << "</tspan>";
+                    placed_labels.emplace_back(newEndpoints.x2, newEndpoints.y2, text); // Record the label's placement
+                }
+                out << "</text>"
+                    << std::endl;
+            }
         }
     }
 
@@ -201,11 +371,18 @@ std::vector<uint8_t> rasterize(const std::vector<double> &X,
                              source_min_x, source_min_y);
 
     auto range_itr = component_ranges.begin();
+	struct draw_target_t {
+		xy_d_t xy0;
+		xy_d_t xy1;
+		algorithms::color_t color;
+	};
+	
     for (auto& component : weak_components) {
         auto& range = *range_itr++;
         auto& x_off = range.x_offset;
         auto& y_off = range.y_offset;
-#pragma omp parallel for
+		std::vector<draw_target_t> highlights;
+//#pragma omp parallel for
         for (uint64_t i = 0; i < component.size(); ++i) {
             const handle_t& handle = component[i];
             uint64_t a = 2 * number_bool_packing::unpack_number(handle);
@@ -245,9 +422,18 @@ std::vector<uint8_t> rasterize(const std::vector<double> &X,
                 */
                 const algorithms::color_t node_color = !node_id_to_color.empty() ? node_id_to_color[graph.get_id(handle)] : COLOR_BLACK;
 
-                wu_calc_wide_line(xy0, xy1, node_color, image, line_width);
+				// if gray or black color, otherwise save for later
+				if (node_color == COLOR_BLACK || node_color == COLOR_LIGHTGRAY) {
+					wu_calc_wide_line(xy0, xy1, node_color, image, line_width);
+				} else {
+					highlights.push_back({xy0, xy1, node_color});
+				}
             }
         }
+		// color highlights
+		for (auto& highlight : highlights) {
+			wu_calc_wide_line(highlight.xy0, highlight.xy1, highlight.color, image, line_width);
+		}
     }
 
     // todo, edges, paths, coverage, bins

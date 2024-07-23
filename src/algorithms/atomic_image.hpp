@@ -10,6 +10,7 @@
 #include <cmath>
 #include <memory>
 #include <iostream>
+#include <iomanip>
 #include "picosha2.h"
 
 namespace odgi {
@@ -84,6 +85,7 @@ typedef union rgb_t {
 } color_t;
 
 std::ostream& operator<<(std::ostream& out, const color_t& c);
+bool operator==(const color_t& a, const color_t& b);
 
 color_t hash_color(const std::string& s);
 color_t lighten(const color_t& c, const double& f);
@@ -91,6 +93,10 @@ color_t brighten(const color_t& a, const color_t& b, const double& f);
 color_t darkest(const color_t& a, const color_t& b);
 color_t layer(const color_t& a, const color_t& b, const double& f);
 color_t mix(const color_t& a, const color_t& b, const double& f);
+
+std::string to_hex(const color_t& c);
+std::string to_rgba(const color_t& c);
+std::string to_hexrgb(const color_t& c);
 
 const color_t COLOR_BLACK = { 0xff000000 };
 const color_t COLOR_LIGHTGRAY = { 0xffD3D3D3 };
