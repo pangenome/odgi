@@ -18,14 +18,15 @@ int main_flip(int argc, char **argv) {
     }
     const std::string prog_name = "odgi flip";
     argv[0] = (char *) prog_name.c_str();
-    --argc
-;
+    --argc;
+
     args::ArgumentParser parser("Flip (reverse complement) paths to match the graph.");
     args::Group mandatory_opts(parser, "[ MANDATORY ARGUMENTS ]");
     args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. GFA is also supported.", {'i', "idx"});
     args::ValueFlag<std::string> og_out_file(mandatory_opts, "FILE", "Write the sorted dynamic succinct variation graph to this file (e.g. *.og*).", {'o', "out"});
     args::Group flip_opts(parser, "[ Flip Options ]");
     args::ValueFlag<std::string> _no_flips(flip_opts, "FILE", "Don't flip paths listed one per line in FILE.", {'n', "no-flips"});
+    args::ValueFlag<std::string> _ref_flips(flip_opts, "FILE", "Flip paths to match the orientation of the paths listed one per line in FILE.", {'r', "ref-flips"});
     args::Group threading_opts(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> nthreads(threading_opts, "N", "Number of threads to use for parallel operations.",
                                        {'t', "threads"});
@@ -80,7 +81,8 @@ int main_flip(int argc, char **argv) {
     graph.set_number_of_threads(num_threads);
 
     std::vector<path_handle_t> no_flips;
-    if (_no_flips) {
+    std::vector<path_handle_t> ref_flips;
+    if (_no_flips || _ref_flips) {
         // path loading
         auto load_paths = [&](const std::string& path_names_file) {
             std::ifstream path_names_in(path_names_file);
@@ -116,11 +118,16 @@ int main_flip(int argc, char **argv) {
             return paths;
         };
 
-        no_flips = load_paths(args::get(_no_flips));
+        if (_no_flips) {
+            no_flips = load_paths(args::get(_no_flips));
+        }
+        if (_ref_flips) {
+            ref_flips = load_paths(args::get(_ref_flips));
+        }
     }
 
     graph_t into;
-    algorithms::flip_paths(graph, into, no_flips);
+    algorithms::flip_paths(graph, into, no_flips, ref_flips);
 
     const std::string outfile = args::get(og_out_file);
     if (outfile == "-") {

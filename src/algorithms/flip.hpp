@@ -27,7 +27,8 @@ using namespace handlegraph;
 /// the graph in the forward orientation.
 void flip_paths(graph_t& graph,
                 graph_t& into,
-                const std::vector<path_handle_t>& no_flips);
+                const std::vector<path_handle_t>& no_flips,
+                const std::vector<path_handle_t>& ref_flips);
 
 }
 
