@@ -45,9 +45,14 @@ void gfa_to_handle(const string& gfa_filename,
                 gg.for_each_sequence_line_in_file(
                     filename,
                     [&](gfak::sequence_elem s) {
-                        uint64_t id = stol(s.name);
-                        min_id = std::min(min_id, id);
-                        max_id = std::max(max_id, id);
+                        try {
+                            uint64_t id = stol(s.name);
+                            min_id = std::min(min_id, id);
+                            max_id = std::max(max_id, id);
+                        } catch (const std::exception& e) {
+                            std::cerr << "[odgi::gfa_to_handle] Error parsing segment '" << s.name << "': " << e.what() << std::endl;
+                            exit(1);
+                        }
                     });
             });
         line_counts = gfa_line_counts(filename);
@@ -67,8 +72,13 @@ void gfa_to_handle(const string& gfa_filename,
         gg.for_each_sequence_line_in_file(
             filename,
             [&](const gfak::sequence_elem& s) {
-                uint64_t id = stol(s.name);
-                graph->create_handle(s.sequence, id - id_increment);
+                try {
+                    uint64_t id = stol(s.name);
+                    graph->create_handle(s.sequence, id - id_increment);
+                } catch (const std::exception& e) {
+                    std::cerr << "[odgi::gfa_to_handle] Error creating node '" << s.name << ": " << e.what() << std::endl;
+                    exit(1);
+                }
                 if (progress) progress_meter->increment(1);
             });
         if (progress) {
@@ -86,9 +96,22 @@ void gfa_to_handle(const string& gfa_filename,
             filename,
             [&](const gfak::edge_elem& e) {
                 if (e.source_name.empty()) return;
-                handlegraph::handle_t a = graph->get_handle(stol(e.source_name) - id_increment, !e.source_orientation_forward);
-                handlegraph::handle_t b = graph->get_handle(stol(e.sink_name) - id_increment, !e.sink_orientation_forward);
-                graph->create_edge(a, b);
+                try {
+                    uint64_t source_id = stol(e.source_name) - id_increment;
+                    uint64_t sink_id = stol(e.sink_name) - id_increment;
+                    if (graph->has_node(source_id) && graph->has_node(sink_id)) {
+                        handlegraph::handle_t a = graph->get_handle(stol(e.source_name) - id_increment, !e.source_orientation_forward);
+                        handlegraph::handle_t b = graph->get_handle(stol(e.sink_name) - id_increment, !e.sink_orientation_forward);
+                        graph->create_edge(a, b);
+                    } else {
+                        std::cerr << "[odgi::gfa_to_handle] Error creating edge '" << e.source_name << " <--> " << e.sink_name << "' due to missing node(s)" << std::endl;
+                        exit(1);
+                    }
+                } catch (const std::exception& exc) {
+                    std::cerr << "[odgi::gfa_to_handle] Error creating edge '" << e.source_name << " <--> " << e.sink_name << "': " << exc.what() << std::endl;
+                    exit(1);
+                }
+
                 if (progress) progress_meter->increment(1);
             });
         if (progress) {
@@ -116,17 +139,21 @@ void gfa_to_handle(const string& gfa_filename,
                             uint64_t id = 0;
                             try {
                                 id = std::stoull(s) - id_increment;
+                                if (graph->has_node(id)) {
+                                    graph->append_step(p->path,
+                                                graph->get_handle(id,
+                                                                    // in gfak, true == +
+                                                                    !p->gfak.orientations[i++]));
+                                } else {
+                                    std::cerr << "[odgi::gfa_to_handle] Error creating path '" << graph->get_path_name(p->path) << "' due to missing node '" << s << "'" << std::endl;
+                                    exit(1);
+                                }
                             } catch (...) {
-                                std::cerr << std::endl // pad
-                                          << "[odgi::gfa_to_handle] id parsing failure for path "
+                                std::cerr << "[odgi::gfa_to_handle] id parsing failure for path "
                                           << graph->get_path_name(p->path)
                                           << " attempting to parse node id from '" << s << "'" << std::endl;
-                                throw;
+                                exit(1);
                             }
-                            graph->append_step(p->path,
-                                               graph->get_handle(id,
-                                                                 // in gfak, true == +
-                                                                 !p->gfak.orientations[i++]));
                         }
                         delete p;
                         if (progress) progress_meter->increment(1);
