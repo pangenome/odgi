@@ -21,7 +21,7 @@
 cmake_minimum_required(VERSION 3.16)
 
 # Project's name
-project(odgi)
+project(odgi LANGUAGES CXX)
 
 # Enforce c++17
 set(CMAKE_CXX_STANDARD 17)
@@ -30,6 +30,8 @@ set(CMAKE_CXX_STANDARD 17)
 option(PIC "Compile all odgi sources with -fPIC - required for shared libs" ON)
 option(ASAN "Use address sanitiser" OFF)
 option(INLINE_HANDLEGRAPH_SOURCES "Compile handlegraph sources inline" OFF)
+# Add the GPU option (default is OFF)
+option(USE_GPU "Enable GPU support if available" OFF)
 
 include(ExternalProject)
 include(FeatureSummary)
@@ -37,6 +39,18 @@ include(FeatureSummary)
 find_package(PkgConfig REQUIRED)
 find_package(pybind11 CONFIG)
 find_package(OpenMP)
+# Find CUDA if GPU option is enabled
+if (USE_GPU)
+    find_package(CUDA REQUIRED)  # Adjust this if you're using modern CMake with FindCUDAToolkit.
+    if(CUDA_FOUND)
+        enable_language(CUDA)
+        message(STATUS "CUDA found. GPU support enabled.")
+    else()
+        message(FATAL_ERROR "CUDA not found! Cannot enable GPU support.")
+    endif()
+else()
+    message(STATUS "Building with CPU-only support.")
+endif()
 
 feature_summary(
   FATAL_ON_MISSING_REQUIRED_PACKAGES
@@ -621,6 +635,9 @@ add_library(odgi_objs OBJECT
   ${lodepng_SOURCES}
   ${handlegraph_sources}
 )
+if (USE_GPU)
+  target_sources(odgi_objs PRIVATE "${CMAKE_SOURCE_DIR}/src/cuda/layout.cu")
+endif (USE_GPU)
 
 set(odgi_DEPS
     # lodepng
@@ -687,6 +704,9 @@ set(odgi_INCLUDES
   "${xoshiro_INCLUDE}"
   "${atomicbitvector_INCLUDE}"
   "${mio_INCLUDE}")
+if (USE_GPU)
+  list(APPEND odgi_INCLUDES "${CUDA_INCLUDE_DIRS}")
+endif (USE_GPU)
 
 set(odgi_LIBS
   jemalloc
@@ -803,8 +823,25 @@ set(odgi_HEADERS
   ${CMAKE_SOURCE_DIR}/src/algorithms/path_length.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/path_keep.hpp
   ${CMAKE_SOURCE_DIR}/src/algorithms/diffpriv.cpp)
+if (USE_GPU)
+  list(APPEND odgi_HEADERS "${CMAKE_SOURCE_DIR}/src/cuda/layout.h")
+endif (USE_GPU)
 
 target_include_directories(odgi_objs PUBLIC ${odgi_INCLUDES})
+
+if (USE_GPU)
+  include(FindCUDA/select_compute_arch)
+  CUDA_DETECT_INSTALLED_GPUS(INSTALLED_GPU_CCS_1)
+  string(STRIP "${INSTALLED_GPU_CCS_1}" INSTALLED_GPU_CCS_2)
+  string(REPLACE " " ";" INSTALLED_GPU_CCS_3 "${INSTALLED_GPU_CCS_2}")
+  string(REPLACE "." "" CUDA_ARCH_LIST "${INSTALLED_GPU_CCS_3}")
+  SET(CMAKE_CUDA_ARCHITECTURES ${CUDA_ARCH_LIST})
+  message(STATUS "CUDA_ARCH_LIST: ${CUDA_ARCH_LIST}")
+  # Apply compile options. Detects different GPU compute capability. 
+  target_compile_options(odgi_objs PRIVATE $<$<COMPILE_LANGUAGE:CUDA>: -std=c++17 -Xcompiler=-fopenmp -lineinfo>)
+  # add USE_GPU macro when building with GPU
+  target_compile_definitions(odgi_objs PRIVATE USE_GPU)
+endif (USE_GPU)
 
 add_library(libodgi_static STATIC $<TARGET_OBJECTS:odgi_objs>)
 set_target_properties(libodgi_static PROPERTIES OUTPUT_NAME "odgi")
