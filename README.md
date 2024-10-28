@@ -51,6 +51,21 @@ Static builds are unlikely to be supported on OSX, and require appropriate stati
 
 For more information on optimisations, debugging and GNU Guix builds, see [INSTALL.md](./INSTALL.md) and [CMakeLists.txt](./CMakeLists.txt).
 
+### building with GPU
+
+If you have GPUs and CUDA installed, you can build with GPU to use our GPU-accelerated `odgi-layout`. This will provide significant 57.3x speedup compared to the CPU solution on NVIDIA A100 GPU, reducing execution time from hours to minutes. Check out this [paper](https://arxiv.org/abs/2409.00876) and [repo](https://github.com/tonyjie/odgi) for the detailed performance speedup number. It's going to be presented at [SC'24](https://sc24.conference-program.com/presentation/?id=pap443&sess=sess382)!
+
+Simply build with `-DUSE_GPU=ON` when cmake: 
+```
+cmake -DUSE_GPU=ON -H. -Bbuild && cmake --build build -- -j 3
+```
+
+To run `odgi layout` with GPU, simply add a `--gpu` with the other arguments like: 
+```
+odgi layout -i ${OG_FILE} -o ${LAY_FILE} --threads ${NUM_THREAD} --gpu
+```
+
+
 ### Nix build
 
 If you have `nix`, build and installation in your profile are as simple as:
@@ -119,6 +134,8 @@ work with output from `odgi stats`! For more details take a look at the document
 ## Citation
 **Andrea Guarracino\*, Simon Heumos\*, Sven Nahnsen, Pjotr Prins, Erik Garrison**. [ODGI: understanding pangenome graphs](https://doi.org/10.1093/bioinformatics/btac308), Bioinformatics, 2022\
 **\*Shared first authorship**
+
+**Jiajie Li, Jan-Niklas Schmelzle, Yixiao Du, Simon Heumos, Andrea Guarracino, Giulia Guidi, Pjotr Prins, Erik Garrison, Zhiru Zhang**. [Rapid GPU-Based Pangenome Graph Layout](https://arxiv.org/abs/2409.00876), SC (The International Conference for High Performance Computing, Networking, Storage, and Analysis), 2024
 
 ## funding sources
 
