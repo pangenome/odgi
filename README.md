@@ -122,7 +122,10 @@ For more information see [INSTALL](./INSTALL.md).
 
 ## FAQs
 
-`odgi` is supported by default by [`PGGB`](https://github.com/pangenome/pggb). However, it cannot be run out-of-the-box with [`minigraph-CACTUS`](https://github.com/ComparativeGenomicsToolkit/cactus/blob/master/doc/pangenome.md) pangenomes; this requires few steps for the conversion from GFA v1.1 to GFA v1.0 — which is the one used by `odgi`. The main difference between the two is whether or not including a W field to encode walks in the pangenome graph, a feature that is not as yet supported in `odgi`; hence why `minigraph-CACTUS` has to go through the following conversion step:
+`odgi` is supported by default by [`PGGB`](https://github.com/pangenome/pggb) and part of the standard construction pipeline. Since `Cactus 2.6.1`, `odgi` has been integrated in the [`minigraph-CACTUS`](https://github.com/ComparativeGenomicsToolkit/cactus/blob/master/doc/pangenome.md) pangenome build with the additional option `--odgi`; this produces the native `odgi` file format for the full graph, which can later be represented as a 1D visualization or a 2D layout according to the respective parameters — for more information on this users are encouraged to look at [`help guide for minigraph-CACTUS`](https://github.com/ComparativeGenomicsToolkit/cactus/blob/master/doc/pangenome.md#odgi).
+
+Regardless, if for any reason the `minigraph-CACTUS` pangenome has been built without the additional `--odgi` option, a simple conversion step can be done to achieve the desired output.
+Specifically, the new GFA v1.1 format has to be converted to a GFA v1.0 — the one used by `odgi`. The main difference between the two is whether or not including a W field to encode walks in the pangenome graph, a feature that is not as yet supported in `odgi`; hence why `minigraph-CACTUS` has to go through the following conversion step:
 
 ```
 vg convert -W -t <n_of_threads> -g <pangenome_v1.1>.gfa -f > <pangenome_v1.0>.gfa
@@ -134,16 +137,16 @@ After converting the `minigraph-CACTUS` graph in GFA v1.0 format; it is then pos
 odgi build -g <pangenome_v1.0>.gfa -o <graph>.og -s -O -t <n_of_threads>
 ```
 
-which is often useful to speed up `odgi` operations using its native format, especially when integrated into pipelines or called multiple times. Afterwards, paths can be extracted with `odgi paths`
+which is often useful to speed up `odgi` operations using its native format, especially when part of pipelines or called multiple times. Afterwards, paths can be extracted with `odgi paths`:
 
 ```
-odgi paths -i <graph.og> -L -t <n_of_threads> | cut -f 1,2 -d '#' | sort | uniq > <prefixes>.tsv
+odgi paths -i <graph>.og -L -t <n_of_threads> | cut -f 1,2 -d '#' | sort | uniq > <prefixes>.tsv
 ```
 
 and, lasty, any 1D visualization or 2D layout can be produced also for this graph. Below, an example of a 1D viz that colors haplotypes based on their ID:
 
 ```
-odgi viz -i <graph>.og -o <graph_viz>.png -s # -M <prefixes>.tsv -t <n_of_threads>
+odgi viz -i <graph>.og -o <graph_viz>.png -s '#' -M <prefixes>.tsv -t <n_of_threads>
 ```
 
 ## documentation
