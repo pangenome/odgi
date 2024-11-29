@@ -31,7 +31,8 @@ int main_similarity(int argc, char** argv) {
     args::ArgumentParser parser("Provides a sparse similarity matrix for paths or groups of paths. Each line prints in a tab-delimited format to stdout.");
     args::Group mandatory_opts(parser, "[ MANDATORY ARGUMENTS ]");
     args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
-    args::ValueFlag<std::string> mask_file(mandatory_opts, "FILE", "Load node mask from this file. Each line contains a 0 or 1, where 0 means the node at that position should be ignored in similarity computation.", {'m', "mask"});
+    args::Group node_mask_opts(parser, "[ Node Masking Options ]");
+    args::ValueFlag<std::string> mask_file(node_mask_opts, "FILE", "Load node mask from this file. Each line contains a 0 or 1, where 0 means the node at that position should be ignored in similarity computation.", {'m', "mask"});
     args::Group path_investigation_opts(parser, "[ Path Investigation Options ]");
     args::ValueFlag<std::string> path_delim(path_investigation_opts, "CHAR", "The part of each path name before this delimiter CHAR is a group identifier.",
                                                     {'D', "delim"});
