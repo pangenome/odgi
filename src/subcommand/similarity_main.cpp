@@ -200,27 +200,32 @@ args::Group threading_opts(parser, "[ Threading ]");
 
     // ska::flat_hash_map<std::pair<uint64_t, uint64_t>, uint64_t> leads to huge memory usage with deep graphs
     // Load mask if specified
-    std::vector<bool> node_mask;
+    std::vector<bool> node_mask(graph.get_node_count(), true);  // Default all nodes included
     if (mask_file) {
         std::ifstream mask_in(args::get(mask_file));
         std::string line;
+        uint64_t line_count = 0;
         while (std::getline(mask_in, line)) {
+            if (line_count >= graph.get_node_count()) {
+                std::cerr << "[odgi::similarity] error: mask file has more lines than graph nodes (" 
+                         << graph.get_node_count() << ")" << std::endl;
+                return 1;
+            }
             if (line == "0") {
-                node_mask.push_back(false);
+                node_mask[line_count] = false;
             } else if (line == "1") {
-                node_mask.push_back(true);
+                node_mask[line_count] = true;
             } else {
                 std::cerr << "[odgi::similarity] error: mask file should contain only 0 or 1 values, found: " << line << std::endl;
                 return 1;
             }
+            line_count++;
         }
-        if (node_mask.size() != graph.get_node_count()) {
-            std::cerr << "[odgi::similarity] error: mask file should have exactly " << graph.get_node_count() << " lines, found: " << node_mask.size() << std::endl;
+        if (line_count != graph.get_node_count()) {
+            std::cerr << "[odgi::similarity] error: mask file should have exactly " << graph.get_node_count() 
+                     << " lines, found: " << line_count << std::endl;
             return 1;
         }
-    } else {
-        // If no mask specified, include all nodes
-        node_mask.resize(graph.get_node_count(), true);
     }
 
     ska::flat_hash_map<uint64_t, uint64_t> path_intersection_length;
