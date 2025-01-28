@@ -140,6 +140,36 @@ args::Group threading_opts(parser, "[ Threading ]");
             });
     }
 
+    // ska::flat_hash_map<std::pair<uint64_t, uint64_t>, uint64_t> leads to huge memory usage with deep graphs
+    // Load mask if specified
+    std::vector<bool> node_mask(graph.get_node_count(), true);  // Default all nodes included
+    if (mask_file) {
+        std::ifstream mask_in(args::get(mask_file));
+        std::string line;
+        uint64_t line_count = 0;
+        while (std::getline(mask_in, line)) {
+            if (line_count >= graph.get_node_count()) {
+                std::cerr << "[odgi::similarity] error: mask file has more lines than graph nodes (" 
+                         << graph.get_node_count() << ")" << std::endl;
+                return 1;
+            }
+            if (line == "0") {
+                node_mask[line_count] = false;
+            } else if (line == "1") {
+                node_mask[line_count] = true;
+            } else {
+                std::cerr << "[odgi::similarity] error: mask file should contain only 0 or 1 values, found: " << line << std::endl;
+                return 1;
+            }
+            line_count++;
+        }
+        if (line_count != graph.get_node_count()) {
+            std::cerr << "[odgi::similarity] error: mask file should have exactly " << graph.get_node_count() 
+                     << " lines, found: " << line_count << std::endl;
+            return 1;
+        }
+    }
+
     auto get_path_name
         = (using_delim ?
             (std::function<std::string(const uint32_t&)>)
@@ -186,7 +216,12 @@ args::Group threading_opts(parser, "[ Threading ]");
         graph.for_each_step_in_path(
             p,
             [&](const step_handle_t& s) {
-                path_length += graph.get_length(graph.get_handle_of_step(s));
+                auto h = graph.get_handle_of_step(s);
+                // Skip masked-out nodes
+                if (!node_mask[graph.get_id(h) - 1]) {
+                    return;
+                }
+                path_length += graph.get_length(h);
             });
 #pragma omp critical (bp_count)
         bp_count[get_path_id(p)] += path_length;
@@ -197,36 +232,6 @@ args::Group threading_opts(parser, "[ Threading ]");
     if (show_progress) {
         progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
                 graph.get_node_count(), "[odgi::similarity] collecting path intersection lengths");
-    }
-
-    // ska::flat_hash_map<std::pair<uint64_t, uint64_t>, uint64_t> leads to huge memory usage with deep graphs
-    // Load mask if specified
-    std::vector<bool> node_mask(graph.get_node_count(), true);  // Default all nodes included
-    if (mask_file) {
-        std::ifstream mask_in(args::get(mask_file));
-        std::string line;
-        uint64_t line_count = 0;
-        while (std::getline(mask_in, line)) {
-            if (line_count >= graph.get_node_count()) {
-                std::cerr << "[odgi::similarity] error: mask file has more lines than graph nodes (" 
-                         << graph.get_node_count() << ")" << std::endl;
-                return 1;
-            }
-            if (line == "0") {
-                node_mask[line_count] = false;
-            } else if (line == "1") {
-                node_mask[line_count] = true;
-            } else {
-                std::cerr << "[odgi::similarity] error: mask file should contain only 0 or 1 values, found: " << line << std::endl;
-                return 1;
-            }
-            line_count++;
-        }
-        if (line_count != graph.get_node_count()) {
-            std::cerr << "[odgi::similarity] error: mask file should have exactly " << graph.get_node_count() 
-                     << " lines, found: " << line_count << std::endl;
-            return 1;
-        }
     }
 
     ska::flat_hash_map<uint64_t, uint64_t> path_intersection_length;
