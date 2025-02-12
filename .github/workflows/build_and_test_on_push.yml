@@ -17,8 +17,7 @@ jobs:
           python3-dev \
           autoconf \
           build-essential \
-          libjemalloc-dev
-        python3 -m pip install distutils
+          libjemalloc-dev && python3 -m pip install distutils
       - name: Init and update submodules
         run: git submodule update --init --recursive
       - name: Build odgi
