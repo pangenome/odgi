@@ -8,16 +8,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Install required packages
-        run: sudo apt-get update && sudo apt-get install -y \
-          git \
-          bash \
-          cmake \
-          make \
-          g++ \
-          python3-dev \
-          autoconf \
-          build-essential \
-          libjemalloc-dev && python3 -m pip install distutils
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            git \
+            bash \
+            cmake \
+            make \
+            g++ \
+            python3-dev \
+            autoconf \
+            build-essential \
+            libjemalloc-dev
+          python3 -m pip install distutils
       - name: Init and update submodules
         run: git submodule update --init --recursive
       - name: Build odgi
