@@ -41,7 +41,9 @@ int main_similarity(int argc, char** argv) {
                                                         {'p', "delim-pos"});   
     args::Flag distances(path_investigation_opts, "distances", "Provide distances (dissimilarities) instead of similarities. "
                                                              "Outputs additional columns with the Euclidean and Manhattan distances." , {'d', "distances"});
-args::Group threading_opts(parser, "[ Threading ]");
+    args::Flag all_pairs(path_investigation_opts, "all", "Emit entries for all pairs of paths/groups, including those with zero intersection.", {'a', "all"});
+    
+    args::Group threading_opts(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> threads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 	args::Group processing_info_opts(parser, "[ Processing Information ]");
 	args::Flag progress(processing_info_opts, "progress", "Write the current progress to stderr.", {'P', "progress"});
@@ -235,6 +237,41 @@ args::Group threading_opts(parser, "[ Threading ]");
     }
 
     ska::flat_hash_map<uint64_t, uint64_t> path_intersection_length;
+
+    const bool emit_all_pairs = args::get(all_pairs);
+    if (emit_all_pairs) {
+        if (show_progress) {
+            std::cerr << "[odgi::similarity] Pre-populating pair map for --all output..." << std::endl;
+        }
+        if (using_delim) {
+            const uint32_t num_groups = path_groups.size();
+            for (uint32_t i = 0; i < num_groups; ++i) {
+                for (uint32_t j = 0; j < num_groups; ++j) {
+                    // Initialize with 0 intersection. Will be updated later if intersection > 0.
+                    path_intersection_length[encode_pair(i, j)] = 0;
+                }
+            }
+        } else {
+            std::vector<uint32_t> actual_path_ids; // Stores individual path integer IDs if not grouping
+            // If not grouping, collect the actual integer path handles used
+            actual_path_ids.reserve(graph.get_path_count());
+            graph.for_each_path_handle([&](const path_handle_t& p) {
+                actual_path_ids.push_back((uint32_t)as_integer(p));
+            });
+
+            // Iterate through all actual path integer IDs collected earlier
+            for (const uint32_t id_i : actual_path_ids) {
+                for (const uint32_t id_j : actual_path_ids) {
+                     // Initialize with 0 intersection.
+                    path_intersection_length[encode_pair(id_i, id_j)] = 0;
+                }
+            }
+        }
+        if (show_progress) {
+             std::cerr << "[odgi::similarity] Pre-population complete. Map size: " << path_intersection_length.size() << std::endl;
+        }
+    }
+
     graph.for_each_handle(
         [&](const handle_t& h) {
             // Skip masked-out nodes
