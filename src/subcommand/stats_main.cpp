@@ -382,6 +382,7 @@ int main_stats(int argc, char** argv) {
 				std::cout << "      shell: " << sample_count.second.shell << std::endl;
 			}
 		} else {
+            std::cout << "#name\tcore\tprivate\tshell" << std::endl;
 			for (auto& sample_count : sample_counts) {
 				std::cout << sample_count.first << "\t" << sample_count.second.core << "\t" << sample_count.second.priv
 				<< "\t" << sample_count.second.shell << std::endl;
