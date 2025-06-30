@@ -157,6 +157,8 @@ if (${CMAKE_SYSTEM_NAME} MATCHES "Darwin") # untested
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS}")
   set (CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} ${OpenMP_EXE_LINKER_FLAGS} -lomp")
   set(CMAKE_SHARED_LINKER_FLAGS "${CMAKE_SHARED_LINKER_FLAGS} -lomp")  # explicitly link OpenMP for building shared libs
+elseif (${CMAKE_SYSTEM_NAME} MATCHES "Linux")
+  find_package(OpenMP REQUIRED)
   # add the flags it detects to the compile flags
   set (CMAKE_C_FLAGS "${CMAKE_C_FLAGS} ${OpenMP_C_FLAGS} -fopenmp")
   set (CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} ${OpenMP_CXX_FLAGS} -fopenmp")
