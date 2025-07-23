@@ -211,8 +211,12 @@ int main_similarity(int argc, char** argv) {
         bp_count[get_path_id(p)] = 0;
     }
 
+    // Use thread-local storage to avoid critical section
+    std::vector<std::vector<uint64_t>> thread_bp_counts(num_threads, std::vector<uint64_t>(bp_count.size(), 0));
+
 #pragma omp parallel for
     for (uint32_t i = 0; i < path_max; ++i) {
+        int thread_id = omp_get_thread_num();
         path_handle_t p = as_path_handle(i + 1);
         uint64_t path_length = 0;
         graph.for_each_step_in_path(
@@ -225,8 +229,14 @@ int main_similarity(int argc, char** argv) {
                 }
                 path_length += graph.get_length(h);
             });
-#pragma omp critical (bp_count)
-        bp_count[get_path_id(p)] += path_length;
+        thread_bp_counts[thread_id][get_path_id(p)] += path_length;
+    }
+
+    // Merge results from all threads
+    for (int t = 0; t < num_threads; ++t) {
+        for (size_t i = 0; i < bp_count.size(); ++i) {
+            bp_count[i] += thread_bp_counts[t][i];
+        }
     }
 
     const bool show_progress = args::get(progress);
@@ -245,9 +255,11 @@ int main_similarity(int argc, char** argv) {
         }
         if (using_delim) {
             const uint32_t num_groups = path_groups.size();
+#pragma omp parallel for collapse(2)
             for (uint32_t i = 0; i < num_groups; ++i) {
                 for (uint32_t j = 0; j < num_groups; ++j) {
                     // Initialize with 0 intersection. Will be updated later if intersection > 0.
+#pragma omp critical
                     path_intersection_length[encode_pair(i, j)] = 0;
                 }
             }
@@ -259,11 +271,14 @@ int main_similarity(int argc, char** argv) {
                 actual_path_ids.push_back((uint32_t)as_integer(p));
             });
 
-            // Iterate through all actual path integer IDs collected earlier
-            for (const uint32_t id_i : actual_path_ids) {
-                for (const uint32_t id_j : actual_path_ids) {
-                     // Initialize with 0 intersection.
-                    path_intersection_length[encode_pair(id_i, id_j)] = 0;
+            // Parallelize the nested loop for path pairs
+            const size_t num_paths = actual_path_ids.size();
+#pragma omp parallel for collapse(2) // / Both loops are flattened into one iteration space, so all i,j combinations distributed across threads
+            for (size_t i = 0; i < num_paths; ++i) {
+                for (size_t j = 0; j < num_paths; ++j) {
+                    // Initialize with 0 intersection.
+#pragma omp critical
+                    path_intersection_length[encode_pair(actual_path_ids[i], actual_path_ids[j])] = 0;
                 }
             }
         }
@@ -272,11 +287,21 @@ int main_similarity(int argc, char** argv) {
         }
     }
 
-    graph.for_each_handle(
-        [&](const handle_t& h) {
+    // Use thread-local storage to avoid critical section bottleneck
+    std::vector<ska::flat_hash_map<uint64_t, uint64_t>> thread_local_maps(num_threads);
+    std::vector<uint64_t> progress_counters(num_threads, 0);
+
+#pragma omp parallel
+    {
+        int thread_id = omp_get_thread_num();
+        auto& local_map = thread_local_maps[thread_id];
+        
+#pragma omp for
+        for (uint64_t node_id = 1; node_id <= graph.get_node_count(); ++node_id) {
+            handle_t h = graph.get_handle(node_id);
             // Skip masked-out nodes
             if (!node_mask[graph.get_id(h) - 1]) {
-                return;
+                continue;
             }
             ska::flat_hash_map<uint32_t, uint64_t> local_path_lengths;
             size_t l = graph.get_length(h);
@@ -286,17 +311,34 @@ int main_similarity(int argc, char** argv) {
                     local_path_lengths[get_path_id(graph.get_path_handle_of_step(s))] += l;
                 });
 
-#pragma omp critical (path_intersection_length)
             for (auto& p : local_path_lengths) {
                 for (auto& q : local_path_lengths) {
-                    path_intersection_length[encode_pair(p.first, q.first)] += std::min(p.second, q.second);
+                    local_map[encode_pair(p.first, q.first)] += std::min(p.second, q.second);
                 }
             }
 
             if (show_progress) {
+                progress_counters[thread_id]++;
                 progress_meter->increment(1);
             }
-        }, true);
+        }
+    }
+
+    // Merge thread-local maps into the main map
+    for (const auto& local_map : thread_local_maps) {
+        for (const auto& pair : local_map) {
+            path_intersection_length[pair.first] += pair.second;
+        }
+    }
+
+    // Update progress meter with total progress
+    if (show_progress) {
+        uint64_t total_progress = 0;
+        for (const auto& count : progress_counters) {
+            total_progress += count;
+        }
+        progress_meter->increment(total_progress);
+    }
 
     if (show_progress) {
         progress_meter->finish();
