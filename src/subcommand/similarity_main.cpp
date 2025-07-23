@@ -283,7 +283,7 @@ int main_similarity(int argc, char** argv) {
     }
 
     // Use limited thread-local storage to balance speed and memory usage
-    const uint64_t max_local_maps = std::min(4UL, num_threads);
+    const uint64_t max_local_maps = std::min(2UL, num_threads);
     std::vector<ska::flat_hash_map<uint64_t, uint64_t>> thread_local_maps(max_local_maps);
     std::vector<std::mutex> map_mutexes(max_local_maps);
 
