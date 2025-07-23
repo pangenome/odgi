@@ -240,11 +240,6 @@ int main_similarity(int argc, char** argv) {
     }
 
     const bool show_progress = args::get(progress);
-    std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress_meter;
-    if (show_progress) {
-        progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
-                graph.get_node_count(), "[odgi::similarity] collecting path intersection lengths");
-    }
 
     ska::flat_hash_map<uint64_t, uint64_t> path_intersection_length;
 
@@ -290,6 +285,12 @@ int main_similarity(int argc, char** argv) {
     // Use thread-local storage to avoid critical section bottleneck
     std::vector<ska::flat_hash_map<uint64_t, uint64_t>> thread_local_maps(num_threads);
     std::vector<uint64_t> progress_counters(num_threads, 0);
+
+    std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress_meter;
+    if (show_progress) {
+        progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+                graph.get_node_count(), "[odgi::similarity] collecting path intersection lengths");
+    }
 
 #pragma omp parallel
     {
