@@ -211,12 +211,8 @@ int main_similarity(int argc, char** argv) {
         bp_count[get_path_id(p)] = 0;
     }
 
-    // Use thread-local storage to avoid critical section
-    std::vector<std::vector<uint64_t>> thread_bp_counts(num_threads, std::vector<uint64_t>(bp_count.size(), 0));
-
 #pragma omp parallel for
     for (uint32_t i = 0; i < path_max; ++i) {
-        int thread_id = omp_get_thread_num();
         path_handle_t p = as_path_handle(i + 1);
         uint64_t path_length = 0;
         graph.for_each_step_in_path(
@@ -229,14 +225,10 @@ int main_similarity(int argc, char** argv) {
                 }
                 path_length += graph.get_length(h);
             });
-        thread_bp_counts[thread_id][get_path_id(p)] += path_length;
-    }
 
-    // Merge results from all threads
-    for (int t = 0; t < num_threads; ++t) {
-        for (size_t i = 0; i < bp_count.size(); ++i) {
-            bp_count[i] += thread_bp_counts[t][i];
-        }
+        uint32_t path_id = get_path_id(p);
+#pragma omp critical (bp_count)
+        bp_count[path_id] += path_length;
     }
 
     const bool show_progress = args::get(progress);
@@ -282,15 +274,14 @@ int main_similarity(int argc, char** argv) {
         }
     }
 
-    // Use thread-local storage to avoid critical section bottleneck
-    std::vector<ska::flat_hash_map<uint64_t, uint64_t>> thread_local_maps(num_threads);
-    std::vector<uint64_t> progress_counters(num_threads, 0);
-
     std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress_meter;
     if (show_progress) {
         progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
                 graph.get_node_count(), "[odgi::similarity] collecting path intersection lengths");
     }
+
+    // Use thread-local storage to avoid critical section bottleneck
+    std::vector<ska::flat_hash_map<uint64_t, uint64_t>> thread_local_maps(num_threads);
 
 #pragma omp parallel
     {
@@ -319,7 +310,6 @@ int main_similarity(int argc, char** argv) {
             }
 
             if (show_progress) {
-                progress_counters[thread_id]++;
                 progress_meter->increment(1);
             }
         }
@@ -332,17 +322,12 @@ int main_similarity(int argc, char** argv) {
         }
     }
 
-    // Update progress meter with total progress
     if (show_progress) {
-        uint64_t total_progress = 0;
-        for (const auto& count : progress_counters) {
-            total_progress += count;
-        }
-        progress_meter->increment(total_progress);
+        progress_meter->finish();
     }
 
     if (show_progress) {
-        progress_meter->finish();
+            std::cerr << "[odgi::similarity] Writing the output..." << std::endl;
     }
 
     /*if (using_delim) {
