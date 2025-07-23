@@ -280,13 +280,17 @@ int main_similarity(int argc, char** argv) {
                 graph.get_node_count(), "[odgi::similarity] collecting path intersection lengths");
     }
 
-    // Use thread-local storage to avoid critical section bottleneck
-    std::vector<ska::flat_hash_map<uint64_t, uint64_t>> thread_local_maps(num_threads);
+    // Use limited thread-local storage to balance speed and memory usage
+    const uint64_t max_local_maps = std::min(4UL, num_threads);
+    std::vector<ska::flat_hash_map<uint64_t, uint64_t>> thread_local_maps(max_local_maps);
+    std::vector<std::mutex> map_mutexes(max_local_maps);
 
 #pragma omp parallel
     {
         int thread_id = omp_get_thread_num();
-        auto& local_map = thread_local_maps[thread_id];
+        int map_id = thread_id % max_local_maps;
+        auto& local_map = thread_local_maps[map_id];
+        auto& map_mutex = map_mutexes[map_id];
         
 #pragma omp for
         for (uint64_t node_id = 1; node_id <= graph.get_node_count(); ++node_id) {
@@ -303,9 +307,13 @@ int main_similarity(int argc, char** argv) {
                     local_path_lengths[get_path_id(graph.get_path_handle_of_step(s))] += l;
                 });
 
-            for (auto& p : local_path_lengths) {
-                for (auto& q : local_path_lengths) {
-                    local_map[encode_pair(p.first, q.first)] += std::min(p.second, q.second);
+            // Update shared local map with mutex protection
+            {
+                std::lock_guard<std::mutex> lock(map_mutex);
+                for (auto& p : local_path_lengths) {
+                    for (auto& q : local_path_lengths) {
+                        local_map[encode_pair(p.first, q.first)] += std::min(p.second, q.second);
+                    }
                 }
             }
 
