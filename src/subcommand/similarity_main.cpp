@@ -4,6 +4,8 @@
 #include "split.hpp"
 #include <omp.h>
 #include "utils.hpp"
+#include <sstream>
+#include <iomanip>
 
 namespace odgi {
 
@@ -371,6 +373,13 @@ int main_similarity(int argc, char** argv) {
     }
 
     std::cout << std::endl;
+    
+    // Use chunked buffering to balance speed and memory usage
+    std::ostringstream output_buffer;
+    output_buffer << std::fixed << std::setprecision(8);
+    const size_t buffer_chunk_size = 100000; // Lines per chunk
+    size_t lines_written = 0;
+    
     for (auto& p : path_intersection_length) {
         uint32_t id_a, id_b;
         decode_pair(p.first, &id_a, &id_b);
@@ -383,27 +392,39 @@ int main_similarity(int argc, char** argv) {
         const double dice = 2.0 * ((double) intersection / (double)(bp_count[id_a] + bp_count[id_b]));
         const double estimated_identity = 2.0 * jaccard / (1.0 + jaccard);
 
-        std::cout << get_path_name(id_a) << "\t"
-                  << get_path_name(id_b) << "\t"
-                  << bp_count[id_a] << "\t"
-                  << bp_count[id_b] << "\t"
-                  << intersection << "\t";
+        output_buffer << get_path_name(id_a) << "\t"
+                      << get_path_name(id_b) << "\t"
+                      << bp_count[id_a] << "\t"
+                      << bp_count[id_b] << "\t"
+                      << intersection << "\t";
 
         if (emit_distances) {
             const double euclidian_distance = std::sqrt((double)((bp_count[id_a] + bp_count[id_b] - intersection) - intersection));
             const uint64_t manhattan_distance = (bp_count[id_a] + bp_count[id_b] - intersection) - intersection;
-            std::cout << (1.0 - jaccard) << "\t"
-                      << (1.0 - cosine) << "\t"
-                      << (1.0 - dice) << "\t"
-                      << (1.0 - estimated_identity) << "\t"
-                      << euclidian_distance << "\t"
-                      << manhattan_distance << std::endl;
+            output_buffer << (1.0 - jaccard) << "\t"
+                         << (1.0 - cosine) << "\t"
+                         << (1.0 - dice) << "\t"
+                         << (1.0 - estimated_identity) << "\t"
+                         << euclidian_distance << "\t"
+                         << manhattan_distance << "\n";
         } else {
-            std::cout << jaccard << "\t"
-                      << cosine << "\t"
-                      << dice << "\t"
-                      << estimated_identity << std::endl;
+            output_buffer << jaccard << "\t"
+                         << cosine << "\t"
+                         << dice << "\t"
+                         << estimated_identity << "\n";
         }
+        
+        // Flush buffer every chunk_size lines
+        if (++lines_written % buffer_chunk_size == 0) {
+            std::cout << output_buffer.str();
+            output_buffer.str("");
+            output_buffer.clear();
+        }
+    }
+    
+    // Write remaining buffer
+    if (!output_buffer.str().empty()) {
+        std::cout << output_buffer.str();
     }
 
     return 0;
