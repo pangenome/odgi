@@ -376,7 +376,7 @@ int main_similarity(int argc, char** argv) {
     
     // Use chunked buffering to balance speed and memory usage
     std::ostringstream output_buffer;
-    output_buffer << std::fixed << std::setprecision(8);
+    output_buffer << std::fixed << std::setprecision(6);
     const size_t buffer_chunk_size = 100000; // Lines per chunk
     size_t lines_written = 0;
     
