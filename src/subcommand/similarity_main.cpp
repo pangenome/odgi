@@ -4,6 +4,8 @@
 #include "split.hpp"
 #include <omp.h>
 #include "utils.hpp"
+#include <sstream>
+#include <iomanip>
 
 namespace odgi {
 
@@ -225,16 +227,13 @@ int main_similarity(int argc, char** argv) {
                 }
                 path_length += graph.get_length(h);
             });
+
+        uint32_t path_id = get_path_id(p);
 #pragma omp critical (bp_count)
-        bp_count[get_path_id(p)] += path_length;
+        bp_count[path_id] += path_length;
     }
 
     const bool show_progress = args::get(progress);
-    std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress_meter;
-    if (show_progress) {
-        progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
-                graph.get_node_count(), "[odgi::similarity] collecting path intersection lengths");
-    }
 
     ska::flat_hash_map<uint64_t, uint64_t> path_intersection_length;
 
@@ -245,9 +244,11 @@ int main_similarity(int argc, char** argv) {
         }
         if (using_delim) {
             const uint32_t num_groups = path_groups.size();
+#pragma omp parallel for collapse(2)
             for (uint32_t i = 0; i < num_groups; ++i) {
                 for (uint32_t j = 0; j < num_groups; ++j) {
                     // Initialize with 0 intersection. Will be updated later if intersection > 0.
+#pragma omp critical
                     path_intersection_length[encode_pair(i, j)] = 0;
                 }
             }
@@ -259,11 +260,14 @@ int main_similarity(int argc, char** argv) {
                 actual_path_ids.push_back((uint32_t)as_integer(p));
             });
 
-            // Iterate through all actual path integer IDs collected earlier
-            for (const uint32_t id_i : actual_path_ids) {
-                for (const uint32_t id_j : actual_path_ids) {
-                     // Initialize with 0 intersection.
-                    path_intersection_length[encode_pair(id_i, id_j)] = 0;
+            // Parallelize the nested loop for path pairs
+            const size_t num_paths = actual_path_ids.size();
+#pragma omp parallel for collapse(2) // / Both loops are flattened into one iteration space, so all i,j combinations distributed across threads
+            for (size_t i = 0; i < num_paths; ++i) {
+                for (size_t j = 0; j < num_paths; ++j) {
+                    // Initialize with 0 intersection.
+#pragma omp critical
+                    path_intersection_length[encode_pair(actual_path_ids[i], actual_path_ids[j])] = 0;
                 }
             }
         }
@@ -272,11 +276,41 @@ int main_similarity(int argc, char** argv) {
         }
     }
 
-    graph.for_each_handle(
-        [&](const handle_t& h) {
+    std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress_meter;
+    if (show_progress) {
+        progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+                graph.get_node_count(), "[odgi::similarity] collecting path intersection lengths");
+    }
+
+    // Use limited thread-local storage to balance speed and memory usage
+    // Use path_intersection_length as the first map to save one copy
+    const uint64_t max_local_maps = std::min(3UL, num_threads);
+    std::vector<ska::flat_hash_map<uint64_t, uint64_t>> thread_local_maps(max_local_maps - 1);
+    std::vector<std::mutex> map_mutexes(max_local_maps);
+
+#pragma omp parallel
+    {
+        int thread_id = omp_get_thread_num();
+        int map_id = thread_id % max_local_maps;
+        
+        // Use path_intersection_length as first map, thread_local_maps for others
+        ska::flat_hash_map<uint64_t, uint64_t>* local_map;
+        std::mutex* map_mutex;
+        
+        if (map_id == 0) {
+            local_map = &path_intersection_length;
+            map_mutex = &map_mutexes[0];
+        } else {
+            local_map = &thread_local_maps[map_id - 1];
+            map_mutex = &map_mutexes[map_id];
+        }
+        
+#pragma omp for
+        for (uint64_t node_id = 1; node_id <= graph.get_node_count(); ++node_id) {
+            handle_t h = graph.get_handle(node_id);
             // Skip masked-out nodes
             if (!node_mask[graph.get_id(h) - 1]) {
-                return;
+                continue;
             }
             ska::flat_hash_map<uint32_t, uint64_t> local_path_lengths;
             size_t l = graph.get_length(h);
@@ -286,20 +320,36 @@ int main_similarity(int argc, char** argv) {
                     local_path_lengths[get_path_id(graph.get_path_handle_of_step(s))] += l;
                 });
 
-#pragma omp critical (path_intersection_length)
-            for (auto& p : local_path_lengths) {
-                for (auto& q : local_path_lengths) {
-                    path_intersection_length[encode_pair(p.first, q.first)] += std::min(p.second, q.second);
+            // Update shared local map with mutex protection
+            {
+                std::lock_guard<std::mutex> lock(*map_mutex);
+                for (auto& p : local_path_lengths) {
+                    for (auto& q : local_path_lengths) {
+                        (*local_map)[encode_pair(p.first, q.first)] += std::min(p.second, q.second);
+                    }
                 }
             }
 
             if (show_progress) {
                 progress_meter->increment(1);
             }
-        }, true);
+        }
+    }
+
+    // Merge thread-local maps into the main map
+    // Skip index 0 since path_intersection_length is already used directly
+    for (const auto& local_map : thread_local_maps) {
+        for (const auto& pair : local_map) {
+            path_intersection_length[pair.first] += pair.second;
+        }
+    }
 
     if (show_progress) {
         progress_meter->finish();
+    }
+
+    if (show_progress) {
+            std::cerr << "[odgi::similarity] Writing the output..." << std::endl;
     }
 
     /*if (using_delim) {
@@ -335,6 +385,13 @@ int main_similarity(int argc, char** argv) {
     }
 
     std::cout << std::endl;
+    
+    // Use chunked buffering to balance speed and memory usage
+    std::ostringstream output_buffer;
+    output_buffer << std::fixed << std::setprecision(6);
+    const size_t buffer_chunk_size = 100000; // Lines per chunk
+    size_t lines_written = 0;
+    
     for (auto& p : path_intersection_length) {
         uint32_t id_a, id_b;
         decode_pair(p.first, &id_a, &id_b);
@@ -347,27 +404,39 @@ int main_similarity(int argc, char** argv) {
         const double dice = 2.0 * ((double) intersection / (double)(bp_count[id_a] + bp_count[id_b]));
         const double estimated_identity = 2.0 * jaccard / (1.0 + jaccard);
 
-        std::cout << get_path_name(id_a) << "\t"
-                  << get_path_name(id_b) << "\t"
-                  << bp_count[id_a] << "\t"
-                  << bp_count[id_b] << "\t"
-                  << intersection << "\t";
+        output_buffer << get_path_name(id_a) << "\t"
+                      << get_path_name(id_b) << "\t"
+                      << bp_count[id_a] << "\t"
+                      << bp_count[id_b] << "\t"
+                      << intersection << "\t";
 
         if (emit_distances) {
             const double euclidian_distance = std::sqrt((double)((bp_count[id_a] + bp_count[id_b] - intersection) - intersection));
             const uint64_t manhattan_distance = (bp_count[id_a] + bp_count[id_b] - intersection) - intersection;
-            std::cout << (1.0 - jaccard) << "\t"
-                      << (1.0 - cosine) << "\t"
-                      << (1.0 - dice) << "\t"
-                      << (1.0 - estimated_identity) << "\t"
-                      << euclidian_distance << "\t"
-                      << manhattan_distance << std::endl;
+            output_buffer << (1.0 - jaccard) << "\t"
+                         << (1.0 - cosine) << "\t"
+                         << (1.0 - dice) << "\t"
+                         << (1.0 - estimated_identity) << "\t"
+                         << euclidian_distance << "\t"
+                         << manhattan_distance << "\n";
         } else {
-            std::cout << jaccard << "\t"
-                      << cosine << "\t"
-                      << dice << "\t"
-                      << estimated_identity << std::endl;
+            output_buffer << jaccard << "\t"
+                         << cosine << "\t"
+                         << dice << "\t"
+                         << estimated_identity << "\n";
         }
+        
+        // Flush buffer every chunk_size lines
+        if (++lines_written % buffer_chunk_size == 0) {
+            std::cout << output_buffer.str();
+            output_buffer.str("");
+            output_buffer.clear();
+        }
+    }
+    
+    // Write remaining buffer
+    if (!output_buffer.str().empty()) {
+        std::cout << output_buffer.str();
     }
 
     return 0;
