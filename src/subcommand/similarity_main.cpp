@@ -283,16 +283,27 @@ int main_similarity(int argc, char** argv) {
     }
 
     // Use limited thread-local storage to balance speed and memory usage
-    const uint64_t max_local_maps = std::min(2UL, num_threads);
-    std::vector<ska::flat_hash_map<uint64_t, uint64_t>> thread_local_maps(max_local_maps);
+    // Use path_intersection_length as the first map to save one copy
+    const uint64_t max_local_maps = std::min(3UL, num_threads);
+    std::vector<ska::flat_hash_map<uint64_t, uint64_t>> thread_local_maps(max_local_maps - 1);
     std::vector<std::mutex> map_mutexes(max_local_maps);
 
 #pragma omp parallel
     {
         int thread_id = omp_get_thread_num();
         int map_id = thread_id % max_local_maps;
-        auto& local_map = thread_local_maps[map_id];
-        auto& map_mutex = map_mutexes[map_id];
+        
+        // Use path_intersection_length as first map, thread_local_maps for others
+        ska::flat_hash_map<uint64_t, uint64_t>* local_map;
+        std::mutex* map_mutex;
+        
+        if (map_id == 0) {
+            local_map = &path_intersection_length;
+            map_mutex = &map_mutexes[0];
+        } else {
+            local_map = &thread_local_maps[map_id - 1];
+            map_mutex = &map_mutexes[map_id];
+        }
         
 #pragma omp for
         for (uint64_t node_id = 1; node_id <= graph.get_node_count(); ++node_id) {
@@ -311,10 +322,10 @@ int main_similarity(int argc, char** argv) {
 
             // Update shared local map with mutex protection
             {
-                std::lock_guard<std::mutex> lock(map_mutex);
+                std::lock_guard<std::mutex> lock(*map_mutex);
                 for (auto& p : local_path_lengths) {
                     for (auto& q : local_path_lengths) {
-                        local_map[encode_pair(p.first, q.first)] += std::min(p.second, q.second);
+                        (*local_map)[encode_pair(p.first, q.first)] += std::min(p.second, q.second);
                     }
                 }
             }
@@ -326,6 +337,7 @@ int main_similarity(int argc, char** argv) {
     }
 
     // Merge thread-local maps into the main map
+    // Skip index 0 since path_intersection_length is already used directly
     for (const auto& local_map : thread_local_maps) {
         for (const auto& pair : local_map) {
             path_intersection_length[pair.first] += pair.second;
