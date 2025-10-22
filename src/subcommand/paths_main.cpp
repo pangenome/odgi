@@ -56,6 +56,7 @@ int main_paths(int argc, char** argv) {
                                                               " based on the graph’s sort order. The output is tab-delimited:"
                                                               " *path.name*, *path.length*, *path.step.count*, *node.1*,"
                                                               " *node.2*, *node.n*. Each path entry is printed in its own line.", {'H', "haplotypes"});
+    args::Flag split_strands(path_investigation_opts, "strand", "With -H/--haplotypes split node coverage by strand when a node is visited in both orientations.", {"strand"});
     args::Flag scale_by_node_length(path_investigation_opts, "haplo", "Scale the haplotype matrix cells by node length.", {'N', "scale-by-node-len"});
    
     args::Group non_ref_opts(parser, "[ Non-ref. Sequence Options ]");
@@ -234,6 +235,26 @@ int main_paths(int argc, char** argv) {
             delim = args::get(path_delim).at(0);
         }
         
+        const bool split_by_strand = args::get(split_strands);
+        std::vector<uint8_t> node_strand_mask; // 0: not visited, 1: + only, 2: - only, 3: both
+        if (split_by_strand) {
+            node_strand_mask.assign(graph.get_node_count(), 0);
+            graph.for_each_path_handle(
+                [&](const path_handle_t& path) {
+                    graph.for_each_step_in_path(
+                        path,
+                        [&](const step_handle_t& step) {
+                            const handle_t& handle = graph.get_handle_of_step(step);
+                            const uint64_t idx = static_cast<uint64_t>(graph.get_id(handle)) - shift;
+                            if (graph.get_is_reverse(handle)) {
+                                node_strand_mask[idx] |= 0x2;
+                            } else {
+                                node_strand_mask[idx] |= 0x1;
+                            }
+                        });
+                });
+        }
+
         { // write the header
             stringstream header;
             if (delim) {
@@ -242,10 +263,29 @@ int main_paths(int argc, char** argv) {
             header << "path.name" << "\t"
                    << "path.length" << "\t"
                    << "path.step.count";
-            graph.for_each_handle(
-                [&](const handle_t& handle) {
-                    header << "\t" << "node." << graph.get_id(handle);
-                });
+            if (split_by_strand) {
+                graph.for_each_handle(
+                    [&](const handle_t& handle) {
+                        const nid_t node_id = graph.get_id(handle);
+                        const uint64_t node_offset = static_cast<uint64_t>(node_id) - shift;
+                        const uint8_t mask = node_strand_mask[node_offset];
+                        if (mask == 0x3) {
+                            header << "\t" << "node." << node_id << "+";
+                            header << "\t" << "node." << node_id << "-";
+                        } else if (mask == 0x2) {
+                            header << "\t" << "node." << node_id << "-";
+                        } else if (mask == 0x1) {
+                            header << "\t" << "node." << node_id << "+";
+                        } else {
+                            header << "\t" << "node." << node_id;
+                        }
+                    });
+            } else {
+                graph.for_each_handle(
+                    [&](const handle_t& handle) {
+                        header << "\t" << "node." << graph.get_id(handle);
+                    });
+            }
             std::cout << header.str() << std::endl;
         }
         bool node_length_scale = args::get(scale_by_node_length);
@@ -264,10 +304,10 @@ int main_paths(int argc, char** argv) {
                 std::string path_name = (delim ? full_path_name.substr(cnt_pos.second+1) : full_path_name);
                 uint64_t path_length = 0;
                 uint64_t path_step_count = 0;
-                std::vector<uint64_t> row(graph.get_node_count());
-                // Initialize first to avoid possible bugs later
-                for (uint32_t i = 0; i < graph.get_node_count(); ++i) {
-                    row[i] = 0;
+                std::vector<uint64_t> row(graph.get_node_count(), 0);
+                std::vector<uint64_t> row_reverse;
+                if (split_by_strand) {
+                    row_reverse.assign(graph.get_node_count(), 0);
                 }
 
                 graph.for_each_step_in_path(
@@ -276,7 +316,12 @@ int main_paths(int argc, char** argv) {
                         const handle_t& h = graph.get_handle_of_step(s);
                         path_length += graph.get_length(h);
                         ++path_step_count;
-                        row[graph.get_id(h)-shift]++;
+                        const uint64_t idx = static_cast<uint64_t>(graph.get_id(h)) - shift;
+                        if (split_by_strand && graph.get_is_reverse(h)) {
+                            row_reverse[idx]++;
+                        } else {
+                            row[idx]++;
+                        }
                     });
                 if (delim) {
                     std::cout << group_name << "\t";
@@ -284,13 +329,40 @@ int main_paths(int argc, char** argv) {
                 std::cout << path_name << "\t"
                           << path_length << "\t"
                           << path_step_count;
-                if (node_length_scale) {
-                    for (uint64_t i = 0; i < row.size(); ++i) {
-                        std::cout << "\t" << row[i] * graph.get_length(graph.get_handle(i+shift));
+                if (split_by_strand) {
+                    for (uint64_t i = 0; i < graph.get_node_count(); ++i) {
+                        const handle_t node_handle = graph.get_handle(i + shift);
+                        const uint64_t node_len = graph.get_length(node_handle);
+                        const uint64_t forward_cov = row[i];
+                        const uint64_t reverse_cov = row_reverse[i];
+                        const uint8_t mask = node_strand_mask[i];
+                        auto emit_value = [&](uint64_t value) {
+                            if (node_length_scale) {
+                                std::cout << "\t" << value * node_len;
+                            } else {
+                                std::cout << "\t" << value;
+                            }
+                        };
+                        if (mask == 0x3) {
+                            emit_value(forward_cov);
+                            emit_value(reverse_cov);
+                        } else if (mask == 0x2) {
+                            emit_value(reverse_cov);
+                        } else if (mask == 0x1) {
+                            emit_value(forward_cov);
+                        } else {
+                            emit_value(forward_cov + reverse_cov);
+                        }
                     }
                 } else {
-                    for (uint64_t i = 0; i < row.size(); ++i) {
-                        std::cout << "\t" << row[i];
+                    if (node_length_scale) {
+                        for (uint64_t i = 0; i < row.size(); ++i) {
+                            std::cout << "\t" << row[i] * graph.get_length(graph.get_handle(i+shift));
+                        }
+                    } else {
+                        for (uint64_t i = 0; i < row.size(); ++i) {
+                            std::cout << "\t" << row[i];
+                        }
                     }
                 }
                 std::cout << std::endl;
