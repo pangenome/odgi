@@ -12,6 +12,8 @@
 #include "utils.hpp"
 #include "colorbrewer.hpp"
 #include "split.hpp"
+#include <fstream>
+#include <unordered_set>
 
 //#define debug_odgi_viz
 
@@ -72,6 +74,7 @@ namespace odgi {
                                                               {'N', "color-by-uncalled-bases"});
         args::ValueFlag<char> color_by_prefix(viz_opts, "CHAR", "Color paths by their names looking at the prefix before the given"
                                                                  " character CHAR.",{'s', "color-by-prefix"});
+        args::ValueFlag<std::string> highlight_node_ids(viz_opts, "FILE", "Color nodes listed in FILE (one id per row) in red and all other nodes in grey.", {'J', "highlight-node-ids"});
         // TODO
         args::ValueFlag<std::string> _name_prefixes(viz_opts, "FILE", "Merge paths beginning with prefixes listed (one per line) in *FILE*.", {'M', "prefix-merges"});
         args::ValueFlag<std::string> _ignore_prefix(viz_opts, "PREFIX", "Ignore paths starting with the given *PREFIX*.", {'I', "ignore-prefix"});
@@ -235,6 +238,33 @@ namespace odgi {
                     << "[odgi::viz] error: please specify the -C/--color-path-names-background and -c/--max-num-of-characters "
                        "options without specifying -H/--hide-path-names." << std::endl;
             return 1;
+        }
+
+        std::unordered_set<int64_t> highlighted_nodes;
+        const bool highlight_nodes_requested = highlight_node_ids;
+        if (highlight_nodes_requested) {
+            std::ifstream ids_in(args::get(highlight_node_ids));
+            if (!ids_in) {
+                std::cerr << "[odgi::viz] error: unable to open file "
+                          << args::get(highlight_node_ids) << " with node identifiers." << std::endl;
+                return 1;
+            }
+            std::string line;
+            while (std::getline(ids_in, line)) {
+                const auto first = line.find_first_not_of(" \t\r\n");
+                if (first == std::string::npos) {
+                    continue;
+                }
+                const auto last = line.find_last_not_of(" \t\r\n");
+                const std::string trimmed = line.substr(first, last - first + 1);
+                try {
+                    highlighted_nodes.insert(std::stoll(trimmed));
+                } catch (const std::exception &) {
+                    std::cerr << "[odgi::viz] error: invalid node id '" << trimmed
+                              << "' in " << args::get(highlight_node_ids) << "." << std::endl;
+                    return 1;
+                }
+            }
         }
 
 		const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
@@ -1259,6 +1289,11 @@ namespace odgi {
 
 						graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
 							h = graph.get_handle_of_step(occ);
+							const int64_t node_id = graph.get_id(h);
+							const bool node_highlighted = highlight_nodes_requested && highlighted_nodes.count(node_id);
+							const uint8_t highlight_r = node_highlighted ? 255 : 180;
+							const uint8_t highlight_g = node_highlighted ? 0 : 180;
+							const uint8_t highlight_b = node_highlighted ? 0 : 180;
 							p = position_map[number_bool_packing::unpack_number(h) - shift];
 							hl = graph.get_length(h);
 
@@ -1306,8 +1341,18 @@ namespace odgi {
 									}
 
 									if (curr_bin - 1 >= pangenomic_start_pos && curr_bin - 1 <= pangenomic_end_pos) {
+										const double draw_scale = highlight_nodes_requested ? 1.0 : x;
+										const uint8_t draw_r = highlight_nodes_requested
+											? highlight_r
+											: static_cast<uint8_t>(std::max(0.0, std::min(255.0, (double) path_r * draw_scale)));
+										const uint8_t draw_g = highlight_nodes_requested
+											? highlight_g
+											: static_cast<uint8_t>(std::max(0.0, std::min(255.0, (double) path_g * draw_scale)));
+										const uint8_t draw_b = highlight_nodes_requested
+											? highlight_b
+											: static_cast<uint8_t>(std::max(0.0, std::min(255.0, (double) path_b * draw_scale)));
 										add_path_step(image, width, curr_bin - 1 - pangenomic_start_pos, path_y,
-													  (float) path_r * x, (float) path_g * x, (float) path_b * x);
+													  draw_r, draw_g, draw_b);
 									}
 
 								}
@@ -1322,6 +1367,11 @@ namespace odgi {
 						/// Loop over all the steps along a path, from first through last and draw them
 						graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
 							handle_t h = graph.get_handle_of_step(occ);
+							const int64_t node_id = graph.get_id(h);
+							const bool node_highlighted = highlight_nodes_requested && highlighted_nodes.count(node_id);
+							const uint8_t highlight_r = node_highlighted ? 255 : 180;
+							const uint8_t highlight_g = node_highlighted ? 0 : 180;
+							const uint8_t highlight_b = node_highlighted ? 0 : 180;
 							uint64_t p = position_map[number_bool_packing::unpack_number(h) - shift];
 							uint64_t hl = graph.get_length(h);
 							// make contects for the bases in the node
@@ -1342,8 +1392,18 @@ namespace odgi {
 								}
 
 								if ((p + i) >= pangenomic_start_pos && (p + i) <= pangenomic_end_pos) {
+									const double draw_scale = highlight_nodes_requested ? 1.0 : x;
+									const uint8_t draw_r = highlight_nodes_requested
+											? highlight_r
+											: static_cast<uint8_t>(std::max(0.0, std::min(255.0, (double) path_r * draw_scale)));
+									const uint8_t draw_g = highlight_nodes_requested
+											? highlight_g
+											: static_cast<uint8_t>(std::max(0.0, std::min(255.0, (double) path_g * draw_scale)));
+									const uint8_t draw_b = highlight_nodes_requested
+											? highlight_b
+											: static_cast<uint8_t>(std::max(0.0, std::min(255.0, (double) path_b * draw_scale)));
 									add_path_step(image, width, p + i - pangenomic_start_pos, path_y,
-												  (float) path_r * x, (float) path_g * x, (float) path_b * x);
+												  draw_r, draw_g, draw_b);
 								}
 							}
 
