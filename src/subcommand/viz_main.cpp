@@ -14,6 +14,7 @@
 #include "split.hpp"
 #include <fstream>
 #include <algorithm>
+#include <cmath>
 #include <unordered_map>
 #include <array>
 #include <unordered_set>
@@ -79,6 +80,7 @@ namespace odgi {
                                                                  " character CHAR.",{'s', "color-by-prefix"});
         args::ValueFlag<std::string> path_colors_file(viz_opts, "FILE", "Read per-path RGB colors from FILE. Each non-empty, non-comment line must be: PATH<TAB>R,G,B or PATH<TAB>#RRGGBB.",
                                                       {'F', "path-colors"});
+        args::Flag cluster_paths(viz_opts, "bool", "Automatically order paths by similarity (bin-level Jaccard) so similar paths are adjacent.", {'k', "cluster-paths"});
         args::ValueFlag<std::string> highlight_node_ids(viz_opts, "FILE", "Color nodes listed in FILE (one id per row) in red and all other nodes in grey.", {'J', "highlight-node-ids"});
         // TODO
         args::ValueFlag<std::string> _name_prefixes(viz_opts, "FILE", "Merge paths beginning with prefixes listed (one per line) in *FILE*.", {'M', "prefix-merges"});
@@ -234,6 +236,27 @@ namespace odgi {
         if (args::get(pack_paths) && !args::get(_path_names_file).empty()){
             std::cerr
                     << "[odgi::viz] error: please specify -R/--pack-paths or -p/--paths-to-display, not both."
+                    << std::endl;
+            return 1;
+        }
+
+        if (args::get(cluster_paths) && !args::get(_path_names_file).empty()){
+            std::cerr
+                    << "[odgi::viz] error: please specify -k/--cluster-paths without -p/--paths-to-display."
+                    << std::endl;
+            return 1;
+        }
+
+        if (args::get(cluster_paths) && args::get(pack_paths)){
+            std::cerr
+                    << "[odgi::viz] error: please specify -k/--cluster-paths or -R/--pack-paths, not both."
+                    << std::endl;
+            return 1;
+        }
+
+        if (args::get(cluster_paths) && args::get(compress)){
+            std::cerr
+                    << "[odgi::viz] error: please specify -k/--cluster-paths without -O/--compressed-mode."
                     << std::endl;
             return 1;
         }
@@ -728,55 +751,175 @@ namespace odgi {
         std::vector<int64_t> path_layout_y;
         path_layout_y.resize(path_count, -1);
         if (!args::get(pack_paths)) {
-            std::string path_names = args::get(_path_names_file);
-            if (!path_names.empty()){
-                std::ifstream path_names_in(path_names);
+            const bool cluster_paths_order = args::get(cluster_paths);
+            if (cluster_paths_order && group_paths) {
+                std::cerr << "[odgi::viz] error: -k/--cluster-paths cannot be used with -M/--prefix-merges." << std::endl;
+                exit(1);
+            }
 
-                uint64_t rank_for_visualization = 0;
-                uint64_t num_of_paths_in_file = 0;
+            if (cluster_paths_order) {
+                std::vector<int64_t> cluster_path_ranks;
+                std::vector<std::vector<uint64_t>> cluster_bins;
+                cluster_path_ranks.reserve(path_count);
+                cluster_bins.reserve(path_count);
 
-                std::string line;
-                while (std::getline(path_names_in, line)) {
-                    if (!line.empty()){
-                        if (graph.has_path(line)){
-                            // todo here we need to do our grouping
-                            int64_t path_rank = get_path_idx(graph.get_path_handle(line));
-                            if (path_rank >= 0 && path_layout_y[path_rank] < 0) {
-                                path_layout_y[path_rank] = rank_for_visualization++;
-                                //rank_for_visualization++;
-                            } else if (!group_paths) {
-                                std::cerr << "[odgi::viz] error: in the path list there are duplicated path names." << std::endl;
-                                exit(1);
-                            }
-                        }
+                const uint64_t min_bin = (uint64_t) std::floor(pangenomic_start_pos) + 1;
+                const uint64_t max_bin = (uint64_t) std::floor(pangenomic_end_pos) + 1;
 
-                        num_of_paths_in_file++;
+                graph.for_each_path_handle([&](const path_handle_t &path) {
+                    int64_t path_rank = get_path_idx(path);
+                    if (path_rank < 0) {
+                        return;
                     }
-                }
 
-                path_names_in.close();
+                    std::vector<uint64_t> bins;
+                    graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
+                        handle_t h = graph.get_handle_of_step(occ);
+                        uint64_t p = position_map[number_bool_packing::unpack_number(h) - shift];
+                        uint64_t hl = graph.get_length(h);
 
-                if (_progress){
-                    std::cerr << "[odgi::viz] Found " << rank_for_visualization << "/" << num_of_paths_in_file << " paths to display." << std::endl;
-                }
+                        const uint64_t first_bin = (uint64_t) std::floor((double) p / _bin_width) + 1;
+                        const uint64_t last_bin = (uint64_t) std::floor((double) (p + hl - 1) / _bin_width) + 1;
+                        uint64_t start_bin = std::max<uint64_t>(first_bin, min_bin);
+                        uint64_t end_bin = std::min<uint64_t>(last_bin, max_bin);
 
-                if (rank_for_visualization == 0){
+                        for (uint64_t b = start_bin; b <= end_bin; ++b) {
+                            bins.push_back(b);
+                        }
+                    });
+
+                    if (!bins.empty()) {
+                        std::sort(bins.begin(), bins.end());
+                        bins.erase(std::unique(bins.begin(), bins.end()), bins.end());
+                    }
+
+                    cluster_path_ranks.push_back(path_rank);
+                    cluster_bins.push_back(std::move(bins));
+                });
+
+                if (cluster_path_ranks.empty()) {
                     std::cerr << "[odgi::viz] error: no path to display." << std::endl;
                     exit(1);
                 }
 
-                path_count = rank_for_visualization;
-            }else{
-                uint64_t rank_for_visualization = 0;
-                for (uint64_t i = 0; i < path_count; ++i) {
-                    // todo here we need to do our grouping
-                    int64_t path_rank = get_path_idx(as_path_handle(i+1));
-                    //std::cerr << path_rank << " - " << path_layout_y[path_rank] << " - " << graph.get_path_name(as_path_handle(i+1)) << " --> " << rank_for_visualization << std::endl;
-                    if (path_rank >= 0 && path_layout_y[path_rank] < 0) {
-                        path_layout_y[path_rank] = rank_for_visualization++;
+                if (cluster_path_ranks.size() > 2000 && _progress) {
+                    std::cerr << "[odgi::viz] warning: clustering " << cluster_path_ranks.size()
+                              << " paths may be slow." << std::endl;
+                }
+
+                const auto jaccard = [&](const size_t a_idx, const size_t b_idx) {
+                    const auto &a = cluster_bins[a_idx];
+                    const auto &b = cluster_bins[b_idx];
+                    size_t i = 0, j = 0, inter = 0;
+                    while (i < a.size() && j < b.size()) {
+                        if (a[i] == b[j]) {
+                            ++inter;
+                            ++i;
+                            ++j;
+                        } else if (a[i] < b[j]) {
+                            ++i;
+                        } else {
+                            ++j;
+                        }
+                    }
+                    const size_t uni = a.size() + b.size() - inter;
+                    return uni ? (double) inter / (double) uni : 1.0;
+                };
+
+                size_t start_idx = 0;
+                size_t max_size = cluster_bins.empty() ? 0 : cluster_bins.front().size();
+                for (size_t i = 1; i < cluster_bins.size(); ++i) {
+                    if (cluster_bins[i].size() > max_size) {
+                        max_size = cluster_bins[i].size();
+                        start_idx = i;
                     }
                 }
+
+                std::vector<bool> placed(cluster_bins.size(), false);
+                std::vector<size_t> ordering;
+                ordering.reserve(cluster_bins.size());
+                size_t current = start_idx;
+                placed[current] = true;
+                ordering.push_back(current);
+
+                while (ordering.size() < cluster_bins.size()) {
+                    size_t best = cluster_bins.size();
+                    double best_score = -1.0;
+                    for (size_t i = 0; i < cluster_bins.size(); ++i) {
+                        if (placed[i]) {
+                            continue;
+                        }
+                        double score = jaccard(current, i);
+                        if (score > best_score || (score == best_score && i < best)) {
+                            best_score = score;
+                            best = i;
+                        }
+                    }
+                    if (best == cluster_bins.size()) {
+                        break;
+                    }
+                    placed[best] = true;
+                    ordering.push_back(best);
+                    current = best;
+                }
+
+                uint64_t rank_for_visualization = 0;
+                for (auto idx : ordering) {
+                    path_layout_y[cluster_path_ranks[idx]] = rank_for_visualization++;
+                }
+
                 path_count = rank_for_visualization;
+            } else {
+                std::string path_names = args::get(_path_names_file);
+                if (!path_names.empty()){
+                    std::ifstream path_names_in(path_names);
+
+                    uint64_t rank_for_visualization = 0;
+                    uint64_t num_of_paths_in_file = 0;
+
+                    std::string line;
+                    while (std::getline(path_names_in, line)) {
+                        if (!line.empty()){
+                            if (graph.has_path(line)){
+                                // todo here we need to do our grouping
+                                int64_t path_rank = get_path_idx(graph.get_path_handle(line));
+                                if (path_rank >= 0 && path_layout_y[path_rank] < 0) {
+                                    path_layout_y[path_rank] = rank_for_visualization++;
+                                    //rank_for_visualization++;
+                                } else if (!group_paths) {
+                                    std::cerr << "[odgi::viz] error: in the path list there are duplicated path names." << std::endl;
+                                    exit(1);
+                                }
+                            }
+
+                            num_of_paths_in_file++;
+                        }
+                    }
+
+                    path_names_in.close();
+
+                    if (_progress){
+                        std::cerr << "[odgi::viz] Found " << rank_for_visualization << "/" << num_of_paths_in_file << " paths to display." << std::endl;
+                    }
+
+                    if (rank_for_visualization == 0){
+                        std::cerr << "[odgi::viz] error: no path to display." << std::endl;
+                        exit(1);
+                    }
+
+                    path_count = rank_for_visualization;
+                }else{
+                    uint64_t rank_for_visualization = 0;
+                    for (uint64_t i = 0; i < path_count; ++i) {
+                        // todo here we need to do our grouping
+                        int64_t path_rank = get_path_idx(as_path_handle(i+1));
+                        //std::cerr << path_rank << " - " << path_layout_y[path_rank] << " - " << graph.get_path_name(as_path_handle(i+1)) << " --> " << rank_for_visualization << std::endl;
+                        if (path_rank >= 0 && path_layout_y[path_rank] < 0) {
+                            path_layout_y[path_rank] = rank_for_visualization++;
+                        }
+                    }
+                    path_count = rank_for_visualization;
+                }
             }
         } else { // pack the paths
             if (group_paths) {

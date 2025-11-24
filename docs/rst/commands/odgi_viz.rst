@@ -89,6 +89,11 @@ Visualization Options
   be ``PATH<TAB>R,G,B`` or ``PATH<TAB>#RRGGBB``. When paths are grouped
   (``-M``), group names can be used as *PATH*.
 
+| **-k, --cluster-paths**
+| Order paths automatically by pairwise similarity (bin-level Jaccard) so
+  similar paths are adjacent. Cannot be used with explicit path ordering,
+  path packing, prefix merges, or compressed mode.
+
 | **-M, --prefix-merges**\ =\ *FILE*
 | Merge paths beginning with prefixes listed (one per line) in *FILE*.
 
