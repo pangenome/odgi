@@ -13,6 +13,9 @@
 #include "colorbrewer.hpp"
 #include "split.hpp"
 #include <fstream>
+#include <algorithm>
+#include <unordered_map>
+#include <array>
 #include <unordered_set>
 
 //#define debug_odgi_viz
@@ -74,6 +77,8 @@ namespace odgi {
                                                               {'N', "color-by-uncalled-bases"});
         args::ValueFlag<char> color_by_prefix(viz_opts, "CHAR", "Color paths by their names looking at the prefix before the given"
                                                                  " character CHAR.",{'s', "color-by-prefix"});
+        args::ValueFlag<std::string> path_colors_file(viz_opts, "FILE", "Read per-path RGB colors from FILE. Each non-empty, non-comment line must be: PATH<TAB>R,G,B or PATH<TAB>#RRGGBB.",
+                                                      {'F', "path-colors"});
         args::ValueFlag<std::string> highlight_node_ids(viz_opts, "FILE", "Color nodes listed in FILE (one id per row) in red and all other nodes in grey.", {'J', "highlight-node-ids"});
         // TODO
         args::ValueFlag<std::string> _name_prefixes(viz_opts, "FILE", "Merge paths beginning with prefixes listed (one per line) in *FILE*.", {'M', "prefix-merges"});
@@ -267,6 +272,8 @@ namespace odgi {
             }
         }
 
+        std::unordered_map<std::string, std::array<uint8_t, 3>> path_color_overrides;
+
 		const uint64_t num_threads = args::get(nthreads) ? args::get(nthreads) : 1;
 
         //NOTE: this sample will overwrite the file or test.png without warning!
@@ -284,6 +291,105 @@ namespace odgi {
                 graph.deserialize(std::cin);
             } else {
                 utils::handle_gfa_odgi_input(infile, "viz", args::get(_progress), num_threads, graph);
+            }
+        }
+
+        if (path_colors_file) {
+            const auto trim_copy = [](const std::string &s) {
+                const auto first = s.find_first_not_of(" \t\r\n");
+                if (first == std::string::npos) {
+                    return std::string();
+                }
+                const auto last = s.find_last_not_of(" \t\r\n");
+                return s.substr(first, last - first + 1);
+            };
+
+            const auto parse_color = [&](const std::string &spec, std::array<uint8_t, 3> &out) -> bool {
+                if (!spec.empty() && spec[0] == '#') {
+                    if (spec.size() != 7) {
+                        return false;
+                    }
+                    try {
+                        const int r = std::stoi(spec.substr(1, 2), nullptr, 16);
+                        const int g = std::stoi(spec.substr(3, 2), nullptr, 16);
+                        const int b = std::stoi(spec.substr(5, 2), nullptr, 16);
+                        if (r < 0 || r > 255 || g < 0 || g > 255 || b < 0 || b > 255) {
+                            return false;
+                        }
+                        out = {static_cast<uint8_t>(r), static_cast<uint8_t>(g), static_cast<uint8_t>(b)};
+                        return true;
+                    } catch (const std::exception &) {
+                        return false;
+                    }
+                }
+
+                auto parts = split(spec, ',');
+                if (parts.size() != 3) {
+                    return false;
+                }
+                std::array<int, 3> rgb{0, 0, 0};
+                for (size_t i = 0; i < 3; ++i) {
+                    parts[i] = trim_copy(parts[i]);
+                    if (parts[i].empty()) {
+                        return false;
+                    }
+                    try {
+                        rgb[i] = std::stoi(parts[i]);
+                    } catch (const std::exception &) {
+                        return false;
+                    }
+                    if (rgb[i] < 0 || rgb[i] > 255) {
+                        return false;
+                    }
+                }
+                out = {static_cast<uint8_t>(rgb[0]), static_cast<uint8_t>(rgb[1]), static_cast<uint8_t>(rgb[2])};
+                return true;
+            };
+
+            std::ifstream color_in(args::get(path_colors_file));
+            if (!color_in) {
+                std::cerr << "[odgi::viz] error: unable to open path colors file "
+                          << args::get(path_colors_file) << "." << std::endl;
+                return 1;
+            }
+
+            std::string line;
+            uint64_t line_no = 0;
+            while (std::getline(color_in, line)) {
+                ++line_no;
+                const std::string trimmed = trim_copy(line);
+                if (trimmed.empty() || trimmed[0] == '#') {
+                    continue;
+                }
+                const auto delim = trimmed.find_first_of(" \t");
+                if (delim == std::string::npos) {
+                    std::cerr << "[odgi::viz] error: expected 'PATH<TAB>COLOR' on line " << line_no
+                              << " of " << args::get(path_colors_file) << "." << std::endl;
+                    return 1;
+                }
+
+                const std::string path_name = trim_copy(trimmed.substr(0, delim));
+                const std::string color_spec = trim_copy(trimmed.substr(delim + 1));
+                if (path_name.empty() || color_spec.empty()) {
+                    std::cerr << "[odgi::viz] error: empty path name or color on line " << line_no
+                              << " of " << args::get(path_colors_file) << "." << std::endl;
+                    return 1;
+                }
+
+                std::array<uint8_t, 3> color;
+                if (!parse_color(color_spec, color)) {
+                    std::cerr << "[odgi::viz] error: invalid color specification '" << color_spec
+                              << "' on line " << line_no << " of " << args::get(path_colors_file)
+                              << ". Use R,G,B or #RRGGBB." << std::endl;
+                    return 1;
+                }
+
+                path_color_overrides[path_name] = color;
+            }
+
+            if (path_color_overrides.empty()) {
+                std::cerr << "[odgi::viz] warning: no valid path colors were read from "
+                          << args::get(path_colors_file) << "." << std::endl;
             }
         }
 
@@ -575,6 +681,47 @@ namespace odgi {
 				}
 			}
             };
+
+        if (!path_color_overrides.empty()) {
+            std::unordered_set<std::string> known_names;
+            graph.for_each_path_handle([&](const path_handle_t &path) {
+                known_names.insert(graph.get_path_name(path));
+            });
+            if (group_paths) {
+                for (const auto &prefix : prefixes) {
+                    known_names.insert(prefix);
+                }
+            }
+            if (compress) {
+                known_names.insert(compressed_path_name);
+            }
+
+            std::vector<std::string> unmatched;
+            unmatched.reserve(path_color_overrides.size());
+            for (const auto &kv : path_color_overrides) {
+                if (!known_names.count(kv.first)) {
+                    unmatched.push_back(kv.first);
+                }
+            }
+
+            if (!unmatched.empty()) {
+                std::cerr << "[odgi::viz] warning: " << unmatched.size() << " path color entr"
+                          << (unmatched.size() == 1 ? "y" : "ies")
+                          << " did not match any path"
+                          << (group_paths ? " or group prefix" : "") << ": ";
+                const size_t max_report = 5;
+                for (size_t i = 0; i < std::min(unmatched.size(), max_report); ++i) {
+                    if (i) {
+                        std::cerr << ", ";
+                    }
+                    std::cerr << unmatched[i];
+                }
+                if (unmatched.size() > max_report) {
+                    std::cerr << ", ...";
+                }
+                std::cerr << std::endl;
+            }
+        }
 
         // map from path id to its starting y position
         //hash_map<uint64_t, uint64_t> path_layout_y;
@@ -1056,13 +1203,14 @@ namespace odgi {
 
 			graph.for_each_path_handle([&](const path_handle_t &path) {
 				int64_t path_rank = get_path_idx(path);
-				//std::cerr << graph.get_path_name(path) << " -> " << path_rank << std::endl;
-				if (path_rank >= 0 && path_layout_y[path_rank] >= 0) {
-					// use a sha256 to get a few bytes that we'll use for a color
-					std::string path_name = get_path_display_name(path);
+					//std::cerr << graph.get_path_name(path) << " -> " << path_rank << std::endl;
+					if (path_rank >= 0 && path_layout_y[path_rank] >= 0) {
+						// use a sha256 to get a few bytes that we'll use for a color
+						std::string path_name = get_path_display_name(path);
+						const std::string real_path_name = graph.get_path_name(path);
 
 #ifdef debug_odgi_viz
-					std::cerr << "path_name: " << path_name << std::endl;
+						std::cerr << "path_name: " << path_name << std::endl;
 #endif
 
 					bool is_aln = true;
@@ -1073,25 +1221,40 @@ namespace odgi {
 						}
 					}
 					// use a sha256 to get a few bytes that we'll use for a color
-					picosha2::byte_t hashed[picosha2::k_digest_size];
-					if (color_by_prefix) {
-						std::string path_name_prefix = prefix(path_name, path_name_prefix_separator);
-						picosha2::hash256(path_name_prefix.begin(), path_name_prefix.end(), hashed,
-										  hashed + picosha2::k_digest_size);
-					} else {
-						picosha2::hash256(path_name.begin(), path_name.end(), hashed, hashed + picosha2::k_digest_size);
-					}
+						picosha2::byte_t hashed[picosha2::k_digest_size];
+						if (color_by_prefix) {
+							std::string path_name_prefix = prefix(path_name, path_name_prefix_separator);
+							picosha2::hash256(path_name_prefix.begin(), path_name_prefix.end(), hashed,
+											  hashed + picosha2::k_digest_size);
+						} else {
+							picosha2::hash256(path_name.begin(), path_name.end(), hashed, hashed + picosha2::k_digest_size);
+						}
 
-					uint8_t path_r = hashed[24];
-					uint8_t path_g = hashed[8];
-					uint8_t path_b = hashed[16];
-					float path_r_f = (float) path_r / (float) (std::numeric_limits<uint8_t>::max());
-					float path_g_f = (float) path_g / (float) (std::numeric_limits<uint8_t>::max());
-					float path_b_f = (float) path_b / (float) (std::numeric_limits<uint8_t>::max());
-					float sum = path_r_f + path_g_f + path_b_f;
-					path_r_f /= sum;
-					path_g_f /= sum;
-					path_b_f /= sum;
+						uint8_t path_r = hashed[24];
+						uint8_t path_g = hashed[8];
+						uint8_t path_b = hashed[16];
+
+						if (!path_color_overrides.empty()) {
+							auto color_it = path_color_overrides.find(real_path_name);
+							if (color_it == path_color_overrides.end()) {
+								color_it = path_color_overrides.find(path_name);
+							}
+							if (color_it != path_color_overrides.end()) {
+								path_r = color_it->second[0];
+								path_g = color_it->second[1];
+								path_b = color_it->second[2];
+							}
+						}
+
+						float path_r_f = (float) path_r / (float) (std::numeric_limits<uint8_t>::max());
+						float path_g_f = (float) path_g / (float) (std::numeric_limits<uint8_t>::max());
+						float path_b_f = (float) path_b / (float) (std::numeric_limits<uint8_t>::max());
+						float sum = path_r_f + path_g_f + path_b_f;
+						if (sum > 0) {
+							path_r_f /= sum;
+							path_g_f /= sum;
+							path_b_f /= sum;
+						}
 
 					// Calculate the number or steps, the reverse steps and the length of the path if any of this information
 					// is needed depending on the input arguments.
@@ -1207,17 +1370,18 @@ namespace odgi {
 						}
 					}
 
-					if (!(
-							is_aln && ((_change_darkness && _white_to_black) || _color_by_mean_inversion_rate ||
-									   (_binned_mode &&
-										(_color_by_mean_depth || _change_darkness || _color_by_uncalled_bases)))
-					)) {
-						// brighten the color
-						float f = std::min(1.5, 1.0 / std::max(std::max(path_r_f, path_g_f), path_b_f));
-						path_r = (uint8_t) std::round(255 * std::min(path_r_f * f, (float) 1.0));
-						path_g = (uint8_t) std::round(255 * std::min(path_g_f * f, (float) 1.0));
-						path_b = (uint8_t) std::round(255 * std::min(path_b_f * f, (float) 1.0));
-					}
+						if (!(
+								is_aln && ((_change_darkness && _white_to_black) || _color_by_mean_inversion_rate ||
+										   (_binned_mode &&
+											(_color_by_mean_depth || _change_darkness || _color_by_uncalled_bases)))
+						)) {
+							// brighten the color
+							const float max_component = std::max(std::max(path_r_f, path_g_f), path_b_f);
+							const float f = max_component > 0 ? std::min(1.5f, 1.0f / max_component) : 1.0f;
+							path_r = (uint8_t) std::round(255 * std::min(path_r_f * f, (float) 1.0));
+							path_g = (uint8_t) std::round(255 * std::min(path_g_f * f, (float) 1.0));
+							path_b = (uint8_t) std::round(255 * std::min(path_b_f * f, (float) 1.0));
+						}
 
 					if (char_size >= 8) {
                         const uint8_t num_of_chars = min(path_name.length(), (size_t) max_num_of_chars);
