@@ -84,6 +84,11 @@ Visualization Options
 | Color paths by their names looking at the prefix before the given
   character *CHAR*.
 
+| **-F, --path-colors**\ =\ *FILE*
+| Read per-path RGB colors from *FILE*. Each non-empty, non-comment line must
+  be ``PATH<TAB>R,G,B`` or ``PATH<TAB>#RRGGBB``. When paths are grouped
+  (``-M``), group names can be used as *PATH*.
+
 | **-M, --prefix-merges**\ =\ *FILE*
 | Merge paths beginning with prefixes listed (one per line) in *FILE*.
 
