@@ -199,15 +199,10 @@ execute:
 
 .. code-block:: bash
 
-    head test/chr6.HLA_genes.bed -n 5
+    head test/chr6.HLA_span.bed
 
 .. code-block:: none
-
-    grch38#chr6     29722775        29738528        HLA-F
-    grch38#chr6     29826967        29831125        HLA-G
-    grch38#chr6     29941260        29945884        HLA-A
-    grch38#chr6     30489509        30494194        HLA-E
-    grch38#chr6     31268749        31272130        HLA-C
+    grch38#chr6	29722775	33089696	SPAN
 
 
 The coordinates are expressed with respect to the GRCh38 reference genome.
@@ -251,7 +246,7 @@ To visualize the sub-graph with ``odgi``, execute:
 .. code-block:: bash
 
     odgi sort -i chr6.pan.MHC.og -o - -O | \
-        odgi viz -i - -o chr6.pan.MHC.png -s '#' -P 20
+        odgi viz -i - -o chr6.pan.MHC.png -s '#' -P 
 
 To obtain the following PNG image:
 
