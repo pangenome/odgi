@@ -29,7 +29,9 @@ void odgi_help(char** argv) {
 
 // We make sure to compile main for the lowest common denominator architecture.
 // This works on GCC and Clang. But we have to declare main and then define it.
+#if __x86_64__
 int main(int argc, char *argv[]) __attribute__((__target__("arch=x86-64")));
+#endif
 
 int main(int argc, char *argv[]) {
     // set a higher value for tcmalloc warnings
