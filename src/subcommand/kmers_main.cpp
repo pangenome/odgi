@@ -26,7 +26,7 @@ int main_kmers(int argc, char** argv) {
     
     args::ArgumentParser parser("Display and characterize the kmer space of a graph.");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::ValueFlag<uint64_t> kmer_length(mandatory_opts, "K", "The kmer length to generate kmers from.", {'k', "kmer-length"});
     args::Group kmer_opts(parser, "[ Kmer Options ]");
     args::ValueFlag<uint64_t> max_furcations(kmer_opts, "N", "Break at edges that would be induce this many furcations in a kmer.", {'e', "max-furcations"});

@@ -22,7 +22,7 @@ int main_heaps(int argc, char **argv) {
 ;
     args::ArgumentParser parser("Extract matrix of path pangenome coverage permutations for power law regression.");
     args::Group mandatory_opts(parser, "[ MANDATORY ARGUMENTS ]");
-    args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
+    args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::Group heaps_opts(parser, "[ Heaps Options ]");
     args::ValueFlag<std::string> _path_groups(heaps_opts, "FILE", "Group paths as described in two-column FILE, with columns path.name and group.name.",
                                               {'p', "path-groups"});

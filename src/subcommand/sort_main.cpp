@@ -31,7 +31,7 @@ int main_sort(int argc, char** argv) {
 
     args::ArgumentParser parser("Apply different kind of sorting algorithms to a graph. The most prominent one is the PG-SGD sorting algorithm.");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::ValueFlag<std::string> dg_out_file(mandatory_opts, "FILE", "Write the sorted dynamic succinct variation graph to this file. A file"
                                                              " ending with *.og* is recommended.", {'o', "out"});
     args::Group files_io_opts(parser, "[ Files IO Options ]");

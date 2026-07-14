@@ -26,11 +26,11 @@ int main_position(int argc, char** argv) {
     
     args::ArgumentParser parser("Find, translate, and liftover graph and path positions between graphs. Results are printed to stdout.");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-    args::ValueFlag<std::string> og_target_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "target"});
+    args::ValueFlag<std::string> og_target_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "target"});
     args::Group position_opts(parser, "[ Position Options ]");
     args::ValueFlag<std::string> og_source_file(position_opts, "FILE", "Translate positions from this *FILE graph into the target graph using common"
                                                                 " *-l, --lift-paths* shared between both graphs (default: use the same"
-                                                                " source/target graph). It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'x', "source"});
+                                                                " source/target graph). It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!", {'x', "source"});
     args::ValueFlag<std::string> ref_path_name(position_opts, "PATH_NAME", "Translate the given positions into positions relative to this reference path.", {'r', "ref-path"});
     args::ValueFlag<std::string> ref_path_file(position_opts, "FILE", "Use the ref-paths in *FILE* for positional translation.", {'R', "ref-paths"});
     args::ValueFlag<std::string> lift_path_name(position_opts, "PATH_NAME", "Lift positions from *-x, --source* to *-i, --target* via coordinates in"

@@ -27,7 +27,7 @@ namespace odgi {
 
         args::ArgumentParser parser("Extract subgraphs or parts of a graph defined by query criteria.");
         args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-        args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
+        args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
         args::Group graph_files_io_opts(parser, "[ Graph Files IO ]");
         args::ValueFlag<std::string> og_out_file(graph_files_io_opts, "FILE", "Store all subgraphs in this FILE. The file name usually ends with *.og*.",
                                                  {'o', "out"});

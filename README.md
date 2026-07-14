@@ -28,7 +28,7 @@ g++ --version
 
 `odgi` pulls in a host of source repositories as dependencies. It may be necessary to install several system-level libraries to build `odgi`. On `Ubuntu 20.04`, these can be installed using `apt`:
 ```
-sudo apt install build-essential cmake python3-distutils python3-dev libjemalloc-dev
+sudo apt install build-essential cmake python3-setuptools python3-dev libjemalloc-dev
 ```
 
 After installing the required dependencies, clone the `odgi` git repository recursively because of the many submodules
@@ -148,6 +148,11 @@ and, lasty, any 1D visualization or 2D layout can be produced also for this grap
 ```
 odgi viz -i <graph>.og -o <graph_viz>.png -s '#' -M <prefixes>.tsv -t <n_of_threads>
 ```
+
+## input formats
+
+`odgi build` accepts text `GFAv1` or `GFAz` (a grammar-compressed GFA) and writes the native `.og`.
+Every other subcommand that loads a graph accepts `.og`, `GFAv1`, or `GFAz`, auto-detected by content (the file extension is not required).
 
 ## documentation
 

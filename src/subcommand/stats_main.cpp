@@ -29,7 +29,7 @@ int main_stats(int argc, char** argv) {
     
     args::ArgumentParser parser("Metrics describing a variation graph and its path relationship.");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::Group summary_opts(parser, "[ Summary Options ]");
     args::Flag _summarize(summary_opts, "summarize", "Summarize the graph properties and dimensions. Print to stdout the #nucleotides, #nodes, #edges, #paths, #steps in a tab-delimited format.", {'S', "summarize"});
 

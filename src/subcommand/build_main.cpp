@@ -1,6 +1,10 @@
 #include "subcommand.hpp"
 #include "odgi.hpp"
 #include "gfa_to_handle.hpp"
+#include "gfa_graph_to_handle.hpp"
+#include "utils.hpp"
+#include "decompression_workflow.hpp"
+#include "serialization.hpp"
 #include "args.hxx"
 #include <cstdio>
 #include <algorithm>
@@ -21,10 +25,10 @@ int main_build(int argc, char** argv) {
     argv[0] = (char*)prog_name.c_str();
     --argc;
     
-    args::ArgumentParser parser("Construct a dynamic succinct variation graph in ODGI format from a GFAv1.");
+    args::ArgumentParser parser("Construct a dynamic succinct variation graph in ODGI format from a GFAv1 or GFAz (compressed GFA).");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-    args::ValueFlag<std::string> gfa_file(mandatory_opts, "FILE", "GFAv1 FILE containing the nodes, edges and "
-                                                          "paths to build a dynamic succinct variation graph from.", {'g', "gfa"});
+    args::ValueFlag<std::string> gfa_file(mandatory_opts, "FILE", "GFAv1 or GFAz (compressed GFA) FILE containing the nodes, edges and "
+                                                          "paths to build a dynamic succinct variation graph from. GFAz input is detected automatically by content.", {'g', "gfa"});
     args::ValueFlag<std::string> dg_out_file(mandatory_opts, "FILE", "Write the dynamic succinct variation graph to this *FILE*. A file ending with *.og* is recommended.", {'o', "out"});
     args::Group graph_sorting(parser, "[ Graph Sorting ]");
     args::Flag optimize(graph_sorting, "optimize", "Compact the graph id space into a dense integer range.", {'O', "optimize"});
@@ -74,7 +78,19 @@ int main_build(int argc, char** argv) {
             return 1;
         }
         if (!gfa_filename.empty()) {
-            gfa_to_handle(gfa_filename, &graph, args::get(optimize), args::get(nthreads), args::get(progress));
+            const uint64_t threads = args::get(nthreads) ? args::get(nthreads) : 1;
+            if (utils::is_gfaz(gfa_filename)) {
+                if (args::get(progress)) {
+                    std::cerr << "[odgi::build] decompressing GFAz input \"" << gfa_filename << "\"." << std::endl;
+                }
+                CompressedData compressed_data = deserialize_compressed_data(gfa_filename);
+                GfaGraph gfa_graph;
+                decompress_gfa(compressed_data, gfa_graph, threads);
+                { CompressedData empty; std::swap(compressed_data, empty); }
+                gfa_graph_to_handle(gfa_graph, &graph, args::get(optimize), threads, args::get(progress));
+            } else {
+                gfa_to_handle(gfa_filename, &graph, args::get(optimize), args::get(nthreads), args::get(progress));
+            }
         }
     }
 
@@ -101,7 +117,7 @@ int main_build(int argc, char** argv) {
     return 0;
 }
 
-static Subcommand odgi_build("build", "Construct a dynamic succinct variation graph in ODGI format from a GFAv1.",
+static Subcommand odgi_build("build", "Construct a dynamic succinct variation graph in ODGI format from a GFAv1 or GFAz (compressed GFA).",
                               PIPELINE, 3, main_build);
 
 

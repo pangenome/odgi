@@ -73,3 +73,7 @@
 [submodule "deps/atomicbitvector"]
 	path = deps/atomicbitvector
 	url = https://github.com/ekg/atomicbitvector.git
+[submodule "deps/GFAz"]
+	path = deps/GFAz
+	url = https://github.com/babyplutokurt/GFAz.git
+	branch = main

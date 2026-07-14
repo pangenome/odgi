@@ -14,6 +14,8 @@ namespace utils {
     void graph_deep_copy(const odgi::graph_t &source,
                          odgi::graph_t* target);
 	bool ends_with(const std::string &fullString, const std::string &ending);
+	/// true if the file begins with the 4-byte GFAz magic ("GFAZ")
+	bool is_gfaz(const std::string &filename);
 	int handle_gfa_odgi_input(const std::string infile, const std::string subcommmand_name, const bool progress,
 							  const uint64_t num_threads, odgi::graph_t &graph);
 	/// this function will return n % d

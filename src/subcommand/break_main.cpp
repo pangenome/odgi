@@ -22,7 +22,7 @@ int main_break(int argc, char** argv) {
     args::ArgumentParser parser("Break cycles in the graph and drop its paths.");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
     args::ValueFlag<std::string> odgi_in_file(mandatory_opts, "FILE", "Load the succinct variation graph "
-                                                                      "in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
+                                                                      "in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::ValueFlag<std::string> odgi_out_file(mandatory_opts, "FILE", "Write the broken graph in ODGI format to FILE. A file ending of *.og* is recommended.", {'o', "out"});
     args::Group cycle_opts(parser, "[ Cycle Options ]");
     args::ValueFlag<uint64_t> max_cycle_size(cycle_opts, "N", "The maximum cycle length at which to break (default: 0).", {'c', "cycle-max-bp"});

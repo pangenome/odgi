@@ -25,7 +25,7 @@ namespace odgi {
 		args::ArgumentParser parser(
 				"Identifying break point positions relative to given query (reference) path(s) of all the tips in the graph or of tips of given path(s). Prints BED records to stdout.");
 		args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-		args::ValueFlag<std::string> og_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "input"});
+		args::ValueFlag<std::string> og_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "input"});
 		args::Group tips_opts(parser, "[ Tips Options ]");
 		args::ValueFlag<std::string> _query_path(tips_opts, "NAME", "Use this query path.",
 												 {'q', "query-path"});

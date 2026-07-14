@@ -20,7 +20,7 @@ int main_matrix(int argc, char** argv) {
     
     args::ArgumentParser parser("Write the graph topology in sparse matrix format.");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::Group matrix_opts(parser, "[ Matrix Options ]");
     args::Flag weight_by_edge_depth(matrix_opts, "edge-depth-weight", "Weigh edges by their path depth.", {'e', "edge-depth-weight"});
     args::Flag weight_by_edge_delta(matrix_opts, "delta-weight", "Weigh edges by the inverse id delta.", {'d', "delta-weight"});

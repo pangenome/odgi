@@ -28,7 +28,7 @@ namespace odgi {
         args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
         args::ValueFlag<std::string> _input_graphs(mandatory_opts, "FILE",
                                                    "Input file containing the list of graphs to squeeze into the same\n"
-                                                   "  file. The file must contain one graph per line. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!",
+                                                   "  file. The file must contain one graph per line. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!",
                                                    {'f', "input-graphs"});
         args::ValueFlag<std::string> dg_out_file(mandatory_opts, "FILE", "Store all the input graphs in this file. The file name usually ends with *.og*.",
                                                  {'o', "out"});
