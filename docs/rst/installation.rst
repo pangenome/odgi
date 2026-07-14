@@ -12,7 +12,7 @@ On ``Ubuntu``, these can be installed using ``apt``:
 
 .. code-block:: bash
 
-   sudo apt install build-essential cmake python3-distutils python3-dev libjemalloc-dev
+   sudo apt install build-essential cmake python3-setuptools python3-dev libjemalloc-dev
 
 Alternatively, after ``sudo apt install guix`` start a GNU Guix build container with
 

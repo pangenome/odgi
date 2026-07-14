@@ -28,7 +28,7 @@ g++ --version
 
 `odgi` pulls in a host of source repositories as dependencies. It may be necessary to install several system-level libraries to build `odgi`. On `Ubuntu 20.04`, these can be installed using `apt`:
 ```
-sudo apt install build-essential cmake python3-distutils python3-dev libjemalloc-dev
+sudo apt install build-essential cmake python3-setuptools python3-dev libjemalloc-dev
 ```
 
 After installing the required dependencies, clone the `odgi` git repository recursively because of the many submodules
