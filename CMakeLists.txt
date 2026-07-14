@@ -523,6 +523,18 @@ ExternalProject_Add(mio
 ExternalProject_Get_property(mio SOURCE_DIR)
 set(mio_INCLUDE "${SOURCE_DIR}/include")
 
+# GFAz (compressed GFA input support). CPU-only: disable the GFAz GPU backend,
+# its Python bindings and its CLI, so odgi only pulls in the core codec library.
+# The pinned GFAz commit builds its own vendored zstd (extern/zstd) into
+# gfa_compression_core, so no system zstd dependency is added to odgi.
+set(ENABLE_CUDA OFF CACHE BOOL "Disable GFAz GPU support" FORCE)
+set(BUILD_PYTHON_BINDINGS OFF CACHE BOOL "Disable GFAz python bindings" FORCE)
+set(BUILD_CLI OFF CACHE BOOL "Disable GFAz CLI" FORCE)
+set(BUILD_BENCHMARKS OFF CACHE BOOL "Disable GFAz benchmarks" FORCE)
+set(BUILD_TESTS OFF CACHE BOOL "Disable GFAz tests" FORCE)
+add_subdirectory(deps/GFAz)
+set(gfa_compression_INCLUDE "${CMAKE_SOURCE_DIR}/deps/GFAz/include")
+
 # set up our target executable and specify its dependencies and includes
 add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/odgi.cpp
@@ -533,6 +545,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/algorithms/subgraph/extract.cpp
   ${CMAKE_SOURCE_DIR}/src/position.cpp
   ${CMAKE_SOURCE_DIR}/src/gfa_to_handle.cpp
+  ${CMAKE_SOURCE_DIR}/src/gfa_graph_to_handle.cpp
   ${CMAKE_SOURCE_DIR}/src/split.cpp
   ${CMAKE_SOURCE_DIR}/src/node.cpp
   ${CMAKE_SOURCE_DIR}/src/subgraph.cpp
@@ -684,6 +697,7 @@ set(odgi_DEPS
     ips4o
     xoshiro
     atomicqueue
+    gfa_compression_core
     mio)
 
 if (NOT SDSLLITE_FOUND)
@@ -726,7 +740,8 @@ set(odgi_INCLUDES
   "${dirtyzipf_INCLUDE}"
   "${xoshiro_INCLUDE}"
   "${atomicbitvector_INCLUDE}"
-  "${mio_INCLUDE}")
+  "${mio_INCLUDE}"
+  "${gfa_compression_INCLUDE}")
 if (USE_GPU)
   list(APPEND odgi_INCLUDES "${CUDA_INCLUDE_DIRS}")
 endif (USE_GPU)
@@ -738,6 +753,7 @@ set(odgi_LIBS
   "-L${CMAKE_SOURCE_DIR}/lib"
   # ${lodepng_lib}
   ${libbf_lib}
+  gfa_compression_core
   "-ldl"
   )
   #"-lefence") # for malloc error checking
