@@ -22,7 +22,7 @@ int main_priv(int argc, char** argv) {
 
     args::ArgumentParser parser("Differentially private sampling of graph subpaths. Apply the exponential mechanism to randomly sample shared sub-haplotypes with a given ε, target coverage, and minimum length.");
     args::Group mandatory_opts(parser, "[ MANDATORY ARGUMENTS ]");
-    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE* (both GFAv1 and .og format accepted).", {'i', "idx"});
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE* (GFAv1, GFAz (compressed GFA), and .og formats accepted).", {'i', "idx"});
     args::ValueFlag<std::string> dg_out_file(mandatory_opts, "FILE", "Write the graph with sub-paths sampled under differential privacy to this FILE (.og recommended).", {'o', "out"});
     args::Group mechanism_opts(parser, "[ Differential Privacy Mechanism ]");
     args::ValueFlag<double> input_epsilon(mechanism_opts, "e", "Epsilon (ε) for exponential mechanism. [default: 0.01]", {'e', "epsilon"});

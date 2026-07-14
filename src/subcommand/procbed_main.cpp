@@ -22,7 +22,7 @@ int main_procbed(int argc, char **argv) {
 ;
     args::ArgumentParser parser("Pprocrustes-BED: Intersect and adjust BED interval into PanSN-defined path subranges. Lift BED files into graphs produced by odgi extract. Uses path range information in the path names.");
     args::Group mandatory_opts(parser, "[ MANDATORY ARGUMENTS ]");
-    args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
+    args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::Group procbed_opts(parser, "[ Procbed Options ]");
     args::ValueFlag<std::string> _bed_targets(procbed_opts, "FILE", "BED file over path space of the full graph from which this subgraph was obtained. Using path range information in the path names, overlapping records will be rewritten to fit into the coordinate space of the subgraph.",
                                               {'b', "bed-targets"});

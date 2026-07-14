@@ -149,6 +149,11 @@ and, lasty, any 1D visualization or 2D layout can be produced also for this grap
 odgi viz -i <graph>.og -o <graph_viz>.png -s '#' -M <prefixes>.tsv -t <n_of_threads>
 ```
 
+## input formats
+
+`odgi build` accepts text `GFAv1` or `GFAz` (a grammar-compressed GFA) and writes the native `.og`.
+Every other subcommand that loads a graph accepts `.og`, `GFAv1`, or `GFAz`, auto-detected by content (the file extension is not required).
+
 ## documentation
 
 `odgi` includes a variety of tools for analyzing and manipulating large pangenome graphs.

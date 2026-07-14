@@ -22,7 +22,7 @@ namespace odgi {
 		args::ArgumentParser parser(
 				"Generate a step index from a given graph. If no output file is provided via *-o, --out*, the index will be directly written to *INPUT_GRAPH.stpidx*.");
 		args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-		args::ValueFlag<std::string> og_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "input"});
+		args::ValueFlag<std::string> og_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "input"});
 		args::Group step_index_opts(parser, "[ Step Index Options ]");
 		args::ValueFlag<uint64_t> _step_index_sample_rate(step_index_opts, "N", "The sample rate when building the step index. We index a node only if mod(node_id, step-index-sample-rate) == 0! Number must be dividable by 2 or 0 to disable sampling. (default: 8).",
 														  {'a', "step-index-sample-rate"});

@@ -22,7 +22,7 @@ namespace odgi {
         args::ArgumentParser parser(
                 "Breaks a graph into connected components storing each component in its own file.");
         args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-        args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
+        args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
         args::Group explode_opts(parser, "[ Explode Options ]");
         args::Flag _to_gfa(explode_opts, "to_gfa", "Write each connected component to a file in GFAv1 format.", {'g', "to-gfa"});
         args::ValueFlag<std::string> _prefix(explode_opts, "STRING",

@@ -51,7 +51,7 @@ namespace odgi {
 
         args::ArgumentParser parser("Visualize a variation graph in 1D.");
         args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-        args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
+        args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
         args::ValueFlag<std::string> png_out_file(mandatory_opts, "FILE", "Write the visualization in PNG format to this *FILE*.", {'o', "out"});
         args::Group viz_opts(parser, "[ Visualization Options ]");
         args::ValueFlag<uint64_t> image_width(viz_opts, "N", "Set the width in pixels of the output image (default: 1500).", {'x', "width"});

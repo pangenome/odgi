@@ -28,7 +28,7 @@ int main_layout(int argc, char **argv) {
     args::ArgumentParser parser(
         "Establish 2D layouts of the graph using path-guided stochastic gradient descent. The graph must be sorted and id-compacted.");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::Group files_io_opts(parser, "[ Files IO ]");
     args::ValueFlag<std::string> layout_out_file(files_io_opts, "FILE", "Write the layout coordinates to this FILE in .lay binary format.", {'o', "out"});
     args::ValueFlag<std::string> tsv_out_file(files_io_opts, "FILE", "Write the layout in TSV format to this FILE.", {'T', "tsv"});

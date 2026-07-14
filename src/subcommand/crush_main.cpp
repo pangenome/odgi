@@ -21,7 +21,7 @@ int main_crush(int argc, char **argv) {
 
     args::ArgumentParser parser("Replaces runs of Ns with single Ns (for example, ANNNT becomes ANT).");
     args::Group mandatory_opts(parser, "[ MANDATORY ARGUMENTS ]");
-    args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
+    args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::ValueFlag<std::string> og_out_file(mandatory_opts, "FILE", "Write the N-crushed succinct variation graph in ODGI format to *FILE*. A file ending of *.og* is recommended.",
                                              {'o', "out"});
     args::Group threading_opts(parser, "[ Threading ]");

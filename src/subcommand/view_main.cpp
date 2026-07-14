@@ -19,7 +19,7 @@ int main_view(int argc, char** argv) {
     
     args::ArgumentParser parser("Project a graph into other formats.");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::Group out_opts(parser, "[ Output Options ]");
     args::Flag to_gfa(out_opts, "to_gfa", "Write the graph in GFAv1 format to standard output.", {'g', "to-gfa"});
     args::Flag emit_node_annotation(out_opts, "node_annotation", "Emit node annotations for the graph in GFAv1 format.", {'a', "node-annotation"});

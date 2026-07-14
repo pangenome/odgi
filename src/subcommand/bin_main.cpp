@@ -23,7 +23,7 @@ int main_bin(int argc, char** argv) {
 
     args::ArgumentParser parser("Binning of pangenome sequence and path information in the graph.");
     args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this FILE. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
+    args::ValueFlag<std::string> dg_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this FILE. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::Group bin_opts(parser, "[ Bin Options ]");
     args::ValueFlag<std::string> path_delim(bin_opts, "path-delim", "Annotate rows by prefix and suffix of this delimiter.", {'D', "path-delim"});
     args::Flag aggregate_delim(bin_opts, "aggregate-delim", "Aggregate on path prefix delimiter. Argument depends on -D,--path-delim=[STRING].", {'a', "aggregate-delim"});

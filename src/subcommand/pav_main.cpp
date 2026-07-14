@@ -28,7 +28,7 @@ int main_pav(int argc, char **argv) {
                                 "of the nodes in 'PR' that are crossed by 'P' divided by the sum of the lengths"
                                 " of all the nodes in 'PR'. Each node is considered only once.");
     args::Group mandatory_opts(parser, "[ MANDATORY ARGUMENTS ]");
-    args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
+    args::ValueFlag<std::string> og_in_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "idx"});
     args::ValueFlag<std::string> _path_bed_file(mandatory_opts, "FILE",
                                                 "Find PAVs in the path range(s) specified in the given BED FILE.",
                                                 {'b', "bed-file"});

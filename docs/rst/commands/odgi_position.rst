@@ -29,7 +29,7 @@ MANDATORY OPTIONS
 --------------
 
 | **-i, --target**\ =\ *FILE*
-| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!
+| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!
 
 Position Options
 ----------------
@@ -37,7 +37,7 @@ Position Options
 | **-x, --source**\ =\ *FILE*
 | Translate positions from this *FILE* graph into the target graph using common
   **-l, --lift-paths** shared between both graphs (default: use the same
-  source/target graph). It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!
+  source/target graph). It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!
 
 | **-r, --ref-path**\ =\ *STRING*
 | Translate the given positions into positions relative to this

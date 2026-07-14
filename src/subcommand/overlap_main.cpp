@@ -23,7 +23,7 @@ namespace odgi {
 
         args::ArgumentParser parser("Find the paths touched by given input paths.");
         args::Group mandatory_opts(parser, "[ MANDATORY OPTIONS ]");
-        args::ValueFlag<std::string> og_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "input"});
+        args::ValueFlag<std::string> og_file(mandatory_opts, "FILE", "Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!", {'i', "input"});
         args::Group overlap_opts(parser, "[ Overlap Options ]");
         args::ValueFlag<std::string> subset_paths(overlap_opts, "FILE",
                                                   "Perform the search considering only the paths specified in the FILE. "

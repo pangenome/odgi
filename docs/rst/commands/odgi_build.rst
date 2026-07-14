@@ -4,7 +4,7 @@
 odgi build
 #########
 
-Construct a dynamic succinct variation graph in ODGI format from a GFAv1
+Construct a dynamic succinct variation graph in ODGI format from a GFAv1 or GFAz (compressed GFA)
 
 SYNOPSIS
 ========
@@ -15,8 +15,9 @@ DESCRIPTION
 ===========
 
 The odgi build command constructs a succinct variation graph from a
-GFA. Currently, only GFAv1 is supported. For details of the format please
-see https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md.
+GFA. GFAv1 text and GFAz (a grammar-compressed GFA) are supported, and the
+input format is detected automatically by content. For details of the GFA
+format please see https://github.com/GFA-spec/GFA-spec/blob/master/GFA1.md.
 
 OPTIONS
 =======
@@ -25,8 +26,9 @@ MANDATORY OPTIONS
 -----------------
 
 | **-g, --gfa**\ =\ *FILE*
-| GFAv1 *FILE* containing the nodes, edges and paths to build a dynamic
-  succinct variation graph from.
+| GFAv1 or GFAz (compressed GFA) *FILE* containing the nodes, edges and paths
+  to build a dynamic succinct variation graph from. GFAz input is detected
+  automatically by content.
 
 | **-o, --out**\ =\ *FILE*
 | Write the dynamic succinct variation graph to this *FILE*. A file ending

@@ -25,7 +25,7 @@ MANDATORY OPTIONS
 --------------
 
 | **-i, --idx**\ =\ *FILE*
-| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1, but the on-the-fly conversion to the ODGI format requires additional time!
+| Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!
 
 Explode Options
 ---------------
