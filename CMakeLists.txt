@@ -523,17 +523,51 @@ ExternalProject_Add(mio
 ExternalProject_Get_property(mio SOURCE_DIR)
 set(mio_INCLUDE "${SOURCE_DIR}/include")
 
-# GFAz (compressed GFA input support). CPU-only: disable the GFAz GPU backend,
-# its Python bindings and its CLI, so odgi only pulls in the core codec library.
-# The pinned GFAz commit builds its own vendored zstd (extern/zstd) into
-# gfa_compression_core, so no system zstd dependency is added to odgi.
-set(ENABLE_CUDA OFF CACHE BOOL "Disable GFAz GPU support" FORCE)
-set(BUILD_PYTHON_BINDINGS OFF CACHE BOOL "Disable GFAz python bindings" FORCE)
-set(BUILD_CLI OFF CACHE BOOL "Disable GFAz CLI" FORCE)
-set(BUILD_BENCHMARKS OFF CACHE BOOL "Disable GFAz benchmarks" FORCE)
-set(BUILD_TESTS OFF CACHE BOOL "Disable GFAz tests" FORCE)
-add_subdirectory(deps/GFAz)
-set(gfa_compression_INCLUDE "${CMAKE_SOURCE_DIR}/deps/GFAz/include")
+# GFAz (compressed GFA input support), CPU-only.
+#
+# We compile GFAz's core sources and its vendored zstd directly here instead of
+# add_subdirectory(deps/GFAz). GFAz's own CMakeLists requires cmake >= 3.30,
+# which is newer than the cmake shipped on several platforms odgi supports
+# (e.g. Debian bullseye 3.18, Ubuntu 24.04 3.28). Building the sources directly
+# keeps odgi buildable with cmake >= 3.16 everywhere. The GFAz sources inherit
+# odgi's global flags (C++17, -fopenmp, -fPIC).
+set(GFAZ_DIR "${CMAKE_SOURCE_DIR}/deps/GFAz")
+set(gfa_compression_INCLUDE "${GFAZ_DIR}/include")
+
+# odgi's project() only enables CXX; the vendored zstd is C, so enable it here.
+enable_language(C)
+
+# GFAz's vendored zstd, built static (matches GFAz: ZSTD_DISABLE_ASM).
+file(GLOB GFAZ_ZSTD_SOURCES
+  "${GFAZ_DIR}/extern/zstd/lib/common/*.c"
+  "${GFAZ_DIR}/extern/zstd/lib/compress/*.c"
+  "${GFAZ_DIR}/extern/zstd/lib/decompress/*.c")
+add_library(gfaz_zstd STATIC ${GFAZ_ZSTD_SOURCES})
+set_target_properties(gfaz_zstd PROPERTIES POSITION_INDEPENDENT_CODE ON)
+target_include_directories(gfaz_zstd PUBLIC "${GFAZ_DIR}/extern/zstd/lib")
+target_compile_definitions(gfaz_zstd PRIVATE ZSTD_DISABLE_ASM)
+
+# GFAz core codec library (CPU only); gpu/gfa_graph_gpu.cpp compiles without CUDA.
+add_library(gfa_compression_core STATIC
+  "${GFAZ_DIR}/src/gfa_parser.cpp"
+  "${GFAZ_DIR}/src/rule_generator.cpp"
+  "${GFAZ_DIR}/src/path_encoder.cpp"
+  "${GFAZ_DIR}/src/rule_processor.cpp"
+  "${GFAZ_DIR}/src/compression_workflow.cpp"
+  "${GFAZ_DIR}/src/decompression_workflow.cpp"
+  "${GFAZ_DIR}/src/codec.cpp"
+  "${GFAZ_DIR}/src/serialization.cpp"
+  "${GFAZ_DIR}/src/gfa_writer.cpp"
+  "${GFAZ_DIR}/src/gpu/gfa_graph_gpu.cpp")
+set_target_properties(gfa_compression_core PROPERTIES
+  POSITION_INDEPENDENT_CODE ON CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
+target_include_directories(gfa_compression_core
+  PUBLIC "${GFAZ_DIR}/include"
+  PRIVATE "${GFAZ_DIR}/extern/zstd/lib"
+          "${GFAZ_DIR}/extern/zstd/lib/common"
+          "${GFAZ_DIR}/extern/robin_hood")
+target_compile_definitions(gfa_compression_core PRIVATE ZSTD_DISABLE_ASM)
+target_link_libraries(gfa_compression_core PRIVATE gfaz_zstd)
 
 # set up our target executable and specify its dependencies and includes
 add_library(odgi_objs OBJECT
