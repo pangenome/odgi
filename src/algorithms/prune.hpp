@@ -20,8 +20,8 @@ using namespace handlegraph;
 
 namespace algorithms {
 
-/// How to treat paths damaged when prune removes nodes and/or edges.
-enum class damaged_path_policy_t {
+/// How to treat paths affected when prune removes nodes and/or edges.
+enum class affected_path_policy_t {
     split,          // break each path into subpaths at every removed node/edge
     drop_affected   // keep only fully-intact paths; drop the rest
 };
@@ -61,7 +61,7 @@ std::vector<recorded_path_t> record_paths(const graph_t& graph);
 /// the name, broken pieces are PATH:START-END); drop_affected keeps a path only if fully intact.
 prune_path_rebuild_stats_t rebuild_pruned_paths(const std::vector<recorded_path_t>& recorded_paths,
                                                 graph_t& subgraph,
-                                                const damaged_path_policy_t policy);
+                                                const affected_path_policy_t policy);
 
 /// Record a <=k-length walk in the context of a graph.
 struct walk_t {

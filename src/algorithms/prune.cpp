@@ -36,7 +36,7 @@ std::vector<recorded_path_t> record_paths(const graph_t& graph) {
 
 prune_path_rebuild_stats_t rebuild_pruned_paths(const std::vector<recorded_path_t>& recorded_paths,
                                                 graph_t& subgraph,
-                                                const damaged_path_policy_t policy) {
+                                                const affected_path_policy_t policy) {
     prune_path_rebuild_stats_t stats;
     // A run is a maximal stretch of steps that is a valid walk in the pruned subgraph: every node
     // present, consecutive nodes joined by a surviving edge.
@@ -78,7 +78,7 @@ prune_path_rebuild_stats_t rebuild_pruned_paths(const std::vector<recorded_path_
         }
         const uint64_t path_len = walked;
 
-        // An empty path (no steps) cannot be damaged; treat it as intact.
+        // An empty path (no steps) cannot be affected; treat it as intact.
         if (rp.steps.empty()) {
             subgraph.create_path_handle(rp.name, rp.is_circular);
             ++stats.paths_intact;
@@ -95,7 +95,7 @@ prune_path_rebuild_stats_t rebuild_pruned_paths(const std::vector<recorded_path_
                 subgraph.append_step(np, h);
             }
             ++stats.paths_intact;
-        } else if (policy == damaged_path_policy_t::drop_affected) {
+        } else if (policy == affected_path_policy_t::drop_affected) {
             ++stats.paths_dropped;
         } else { // split
             if (runs.empty()) {
