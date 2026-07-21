@@ -306,5 +306,49 @@ namespace odgi {
                 // REQUIRE(loaded_path_index.get_pangenome_pos("4", 1) == 0);
             }
         }
+
+        TEST_CASE("XP construction over a graph whose highest-id node has no path steps stays in bounds", "[pathindex]") {
+            // Regression for #548: np_bv is sized to the total number of path steps, but the
+            // fill loop used to write a node-start marker for every node, step-less ones included.
+            // When the highest-id node carries no steps, np_offset has already reached np_bv.size()
+            // and that write is out of bounds (sdsl int_vector<1> assert, the crash reported in #548).
+            graph_t graph;
+            handle_t n1 = graph.create_handle("ACGT");
+            handle_t n2 = graph.create_handle("ACGT");
+            handle_t n3 = graph.create_handle("ACGT"); // highest id, deliberately on no path
+            graph.create_edge(n1, n2);
+            graph.create_edge(n2, n3);
+
+            graph.create_path_handle("x", false);
+            path_handle_t x = graph.get_path_handle("x");
+            graph.append_step(x, n1);
+            graph.append_step(x, n2);
+
+            // contiguous ids 1..3 => passes the "graph is optimized" guard in from_handle_graph
+            REQUIRE(graph.get_node_count() == 3);
+            REQUIRE(graph.min_node_id() == 1);
+            REQUIRE(graph.max_node_id() == 3);
+
+            XP path_index;
+            path_index.from_handle_graph(graph, 1); // must not write past np_bv on the step-less top node
+
+            sdsl::bit_vector np_bv = path_index.get_np_bv();
+            REQUIRE(np_bv.size() == 2); // one bit per path step; node 3 contributes none
+
+            uint64_t np_size = 0;
+            graph.for_each_handle([&](const handle_t &h) {
+                bool first_step_passed = false;
+                graph.for_each_step_on_handle(h, [&](const step_handle_t &step_handle) {
+                    if (!first_step_passed) {
+                        REQUIRE(np_bv[np_size] == 1); // first step of a node with steps
+                        first_step_passed = true;
+                    } else {
+                        REQUIRE(np_bv[np_size] == 0);
+                    }
+                    np_size++;
+                });
+            });
+            REQUIRE(np_size == np_bv.size()); // step-less node 3 added no steps and no marker
+        }
     }
 }
