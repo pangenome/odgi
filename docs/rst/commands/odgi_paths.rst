@@ -45,7 +45,10 @@ Path Investigation Options
 | If **-L,--list-paths** was specified, this additionally prints the start and end positions of each path in additional, tab-delimited coloumns.
 
 | **-f, --fasta**
-| Print paths in FASTA format to stdout. One line for the FASTA header, another line for the whole sequence.
+| Print paths in FASTA format to stdout. One line for the FASTA header, another line for the whole sequence (see **--fasta-line-width** to wrap long sequences).
+
+| **--fasta-line-width**\ =\ *N*
+| Wrap the FASTA sequence lines produced by **-f, --fasta** at *N* characters per line (default: 0, i.e. the whole sequence on one line).
 
 | **-H, --haplotypes**
 | Print to stdout the paths in an approximate binary haplotype matrix
