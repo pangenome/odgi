@@ -168,7 +168,7 @@ int main_prune(int argc, char** argv) {
             graph_t source;
             source.copy(graph);
             do_destroy();
-            algorithms::expand_context_with_paths(&source, &graph, args::get(expand_length), false);
+            algorithms::expand_context_with_paths(&source, &graph, args::get(expand_path_length), false);
         } else {
             do_destroy();
         }
