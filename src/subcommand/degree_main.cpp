@@ -64,6 +64,7 @@ int main_degree(int argc, char** argv) {
 	args::Flag self_degree(degree_opts, "self-degree",
 						   "Compute the degree of the path versus itself on each base in each path. Each line consists of a path name and subsequently the space-separated degree of each base.",
 						   {'a', "self-degree"});
+    args::Flag in_out_degree(degree_opts, "in-out-degree", "For the per-node degree table (-g/--graph-pos, -G/--graph-pos-file, -d/--graph-degree-table), additionally report the in-degree (edges on the left of the node) and out-degree (edges on the right) as extra columns.", {"in-out-degree"});
     args::Flag summarize_degree(degree_opts, "summarize", "Summarize the graph properties and dimensions. Print in tab-delimited format to stdout the node.count, edge.count, avg.degree, min.degree, max.degree.", {'S', "summarize-graph-degree"});
     args::ValueFlag<std::string> _windows_in(degree_opts, "LEN:MIN:MAX",
                                              "Print to stdout a BED file of path intervals where the degree is between MIN and MAX, "
@@ -107,6 +108,10 @@ int main_degree(int argc, char** argv) {
     if (summarize_degree && (_windows_in || _windows_out)) {
         std::cerr << "[odgi::degree] error: please specify -S/--summarize without specifying windows-in or -W/--windows-out." << std::endl;
         return 1;
+    }
+
+    if (in_out_degree && !graph_pos && !graph_pos_file && !graph_degree_table) {
+        std::cerr << "[odgi::degree] warning: --in-out-degree has no effect without a per-node degree query (-g/--graph-pos, -G/--graph-pos-file, or -d/--graph-degree-table); ignoring it." << std::endl;
     }
 
     uint64_t windows_in_len = 0, windows_in_min = 0, windows_in_max = 0;
@@ -471,13 +476,20 @@ int main_degree(int argc, char** argv) {
     }
 
 	if (!graph_positions.empty()) {
-		std::cout << "#node.id\tnode.degree" << std::endl;
+		const bool show_in_out = args::get(in_out_degree);
+		std::cout << "#node.id\tnode.degree" << (show_in_out ? "\tnode.in.degree\tnode.out.degree" : "") << std::endl;
 		for (auto& graph_pos : graph_positions) {
+			const handle_t h = graph.get_handle(id(graph_pos));
+			const uint64_t in_degree = graph.get_degree(h, true);   // edges on the left of the node
+			const uint64_t out_degree = graph.get_degree(h, false); // edges on the right of the node
 #pragma omp critical (cout)
-			std::cout << id(graph_pos) << "\t"
-					  << graph.get_degree(graph.get_handle(id(graph_pos)), false) +
-					  graph.get_degree(graph.get_handle(id(graph_pos)), true)
-					  << std::endl;
+			{
+				std::cout << id(graph_pos) << "\t" << (in_degree + out_degree);
+				if (show_in_out) {
+					std::cout << "\t" << in_degree << "\t" << out_degree;
+				}
+				std::cout << std::endl;
+			}
 		}
 	}
 

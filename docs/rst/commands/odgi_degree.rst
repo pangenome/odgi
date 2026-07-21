@@ -49,6 +49,9 @@ Summary Options
 | **-G, --graph-pos-file**\ =\ *FILE*
 | A file with one graph path position per line.
 
+| **--in-out-degree**
+| For the per-node degree table (**-g, --graph-pos**, **-G, --graph-pos-file**, **-d, --graph-degree-table**), additionally report the in-degree (edges on the left of the node) and out-degree (edges on the right) as extra *node.in.degree* and *node.out.degree* columns.
+
 | **-p, --path-pos**\ =\ *[[path_name][,offset[,(+|-)]\ *\ **]**\ *]*
 | Return degree at the given path position e.g. chrQ or chr3,42 or
   chr8,1337,+ or chrZ,3929,-.
