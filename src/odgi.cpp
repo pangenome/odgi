@@ -1722,13 +1722,15 @@ void graph_t::copy(const graph_t& other) {
     deleted_nodes = other.deleted_nodes;
     // copy the path metadata
     // the paths themselves should have been copied
-    // XXX SLOW
     other.for_each_path_handle(
         [&](const path_handle_t& p) {
-            auto new_path = create_path_handle(other.get_path_name(p),
-                                               other.get_is_circular(p));
-            auto& new_path_meta = get_path_metadata(new_path);
-            new_path_meta.copy(other.path_metadata(p));
+            // Path IDs are stored in each node's step records, so preserve them exactly.
+            // create_path_handle() would allocate after other._path_handle_next and leave the
+            // copied metadata unreachable under its original path ID.
+            auto* new_path_meta = new path_metadata_t;
+            new_path_meta->copy(other.path_metadata(p));
+            path_metadata_h->Insert(as_integer(p), new_path_meta);
+            path_name_h->Insert(new_path_meta->name, new_path_meta);
         });
 }
 
