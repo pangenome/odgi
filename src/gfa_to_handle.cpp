@@ -72,13 +72,26 @@ void gfa_to_handle(const string& gfa_filename,
         gg.for_each_sequence_line_in_file(
             filename,
             [&](const gfak::sequence_elem& s) {
-                try {
-                    uint64_t id = stol(s.name);
-                    graph->create_handle(s.sequence, id - id_increment);
-                } catch (const std::exception& e) {
-                    std::cerr << "[odgi::gfa_to_handle] Error creating node '" << s.name << ": " << e.what() << std::endl;
+                if (s.name.empty() || s.name.find_first_not_of("0123456789") != std::string::npos) {
+                    std::cerr << "[odgi::gfa_to_handle] error: segment name '" << s.name
+                              << "' is not a non-negative integer node id" << std::endl;
                     exit(1);
                 }
+                uint64_t id = 0;
+                try {
+                    id = std::stoull(s.name);
+                } catch (const std::exception& e) {
+                    std::cerr << "[odgi::gfa_to_handle] error: could not parse segment name '" << s.name
+                              << "' as a node id: " << e.what() << std::endl;
+                    exit(1);
+                }
+                const uint64_t node_id = id - id_increment;
+                if (graph->has_node(node_id)) {
+                    std::cerr << "[odgi::gfa_to_handle] error: duplicate node id " << node_id
+                              << " (segment '" << s.name << "'); GFA node ids must be unique" << std::endl;
+                    exit(1);
+                }
+                graph->create_handle(s.sequence, node_id);
                 if (progress) progress_meter->increment(1);
             });
         if (progress) {
