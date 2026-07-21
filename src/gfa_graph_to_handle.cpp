@@ -93,6 +93,13 @@ void gfa_graph_to_handle(GfaGraph& gfa_graph,
                 node_count, "[odgi::gfa_graph_to_handle] building nodes:");
         }
         for (uint64_t id = 1; id <= node_count; ++id) {
+            // GFAz reconstructs dense 1-based ids, so this cannot trigger in practice; it
+            // guards against a malformed .gfaz slipping a duplicate past create_handle's assert.
+            if (graph->has_node(id)) {
+                std::cerr << "[odgi::gfa_graph_to_handle] error: duplicate node id " << id
+                          << " while building nodes from GFAz" << std::endl;
+                exit(1);
+            }
             graph->create_handle(gfa_graph.node_sequences[id], id);
             if (show_progress) progress_meter->increment(1);
         }
