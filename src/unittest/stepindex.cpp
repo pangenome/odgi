@@ -752,5 +752,36 @@ namespace odgi {
 			}
 
 		}
+
+		TEST_CASE("step index over a subset of high-id paths stays in bounds", "[stepindex]") {
+			// Regression for issue #632: step_index_t sized path_len to paths.size() but indexed it
+			// by the global path id, so building over a subset (as untangle does) whose id exceeds
+			// the subset size wrote out of bounds.
+			graph_t graph;
+			handle_t a = graph.create_handle("ACG");
+			handle_t b = graph.create_handle("TT");
+			handle_t c = graph.create_handle("GATTACA");
+			graph.create_edge(a, b);
+			graph.create_edge(b, c);
+			// two decoy paths first, so the path we index gets a high global id
+			for (const std::string& name : {std::string("decoy1"), std::string("decoy2")}) {
+				path_handle_t d = graph.create_path_handle(name);
+				graph.append_step(d, a);
+				graph.append_step(d, b);
+			}
+			path_handle_t target = graph.create_path_handle("target"); // global path id 3
+			graph.append_step(target, a);
+			graph.append_step(target, b);
+			graph.append_step(target, c);
+
+			// index ONLY the high-id path (subset of size 1), mirroring untangle
+			std::vector<path_handle_t> subset = { target };
+			step_index_t step_index(graph, subset, 1, false, 1);
+
+			const uint64_t expected_len =
+				graph.get_length(a) + graph.get_length(b) + graph.get_length(c);
+			REQUIRE(step_index.get_path_len(target) == expected_len);
+			REQUIRE(step_index.get_position(graph.path_end(target), graph) == expected_len);
+		}
 	}
 }
