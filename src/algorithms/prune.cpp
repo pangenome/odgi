@@ -1,8 +1,120 @@
 #include "prune.hpp"
+#include "algorithms/subgraph/extract.hpp" // make_path_name, for consistent subpath naming
 
 namespace odgi {
 
 namespace algorithms {
+
+static_assert(sizeof(recorded_step_t) == 12, "recorded_step_t should pack into 12 bytes");
+
+std::vector<recorded_path_t> record_paths(const graph_t& graph) {
+    // The node id is kept full-width; only the length is packed (31 bits), so guard against overflow.
+    std::vector<recorded_path_t> recorded;
+    recorded.reserve(graph.get_path_count());
+    graph.for_each_path_handle([&](const path_handle_t& p) {
+        recorded_path_t rp;
+        rp.name = graph.get_path_name(p);
+        rp.is_circular = graph.get_is_circular(p);
+        graph.for_each_step_in_path(p, [&](const step_handle_t& step) {
+            const handle_t h = graph.get_handle_of_step(step);
+            const uint64_t len = graph.get_length(h);
+            if (len > 0x7FFFFFFFull) {
+                std::cerr << "[odgi::prune] error: node " << graph.get_id(h) << " length " << len
+                          << " exceeds 2^31; -S/-A path rebuilding is unsupported for this graph." << std::endl;
+                exit(1);
+            }
+            recorded_step_t s;
+            s.set_node_id(graph.get_id(h));
+            s.length = (uint32_t)len;
+            s.is_rev = graph.get_is_reverse(h);
+            rp.steps.push_back(s);
+        });
+        recorded.push_back(std::move(rp));
+    });
+    return recorded;
+}
+
+prune_path_rebuild_stats_t rebuild_pruned_paths(const std::vector<recorded_path_t>& recorded_paths,
+                                                graph_t& subgraph,
+                                                const affected_path_policy_t policy) {
+    prune_path_rebuild_stats_t stats;
+    // A run is a maximal stretch of steps that is a valid walk in the pruned subgraph: every node
+    // present, consecutive nodes joined by a surviving edge.
+    struct run_t {
+        uint64_t start = 0;                 // path offset (bp) at the run's start
+        uint64_t end = 0;                   // path offset (bp) at the run's end
+        std::vector<handle_t> handles;      // subgraph handles in path order
+    };
+
+    // Single-threaded: concurrent append_step to shared nodes races on the in-place graph.
+    for (auto& rp : recorded_paths) {
+        std::vector<run_t> runs;
+        uint64_t walked = 0;      // bp walked along the recorded path
+        bool in_run = false;
+        handle_t prev_dest;
+
+        for (auto& st : rp.steps) {
+            if (subgraph.has_node(st.node_id())) {
+                const handle_t dest_h = subgraph.get_handle(st.node_id(), st.is_rev);
+                if (!in_run) {
+                    runs.push_back({walked, 0, {dest_h}});
+                    in_run = true;
+                } else if (subgraph.has_edge(prev_dest, dest_h)) {
+                    runs.back().handles.push_back(dest_h);
+                } else {
+                    // both nodes survived but the connecting edge was pruned: break here
+                    runs.back().end = walked;
+                    runs.push_back({walked, 0, {dest_h}});
+                }
+                prev_dest = dest_h;
+            } else if (in_run) {
+                runs.back().end = walked;
+                in_run = false;
+            }
+            walked += st.length;
+        }
+        if (in_run) {
+            runs.back().end = walked;
+        }
+        const uint64_t path_len = walked;
+
+        // An empty path (no steps) cannot be affected; treat it as intact.
+        if (rp.steps.empty()) {
+            subgraph.create_path_handle(rp.name, rp.is_circular);
+            ++stats.paths_intact;
+            continue;
+        }
+
+        const bool intact = (runs.size() == 1
+                             && runs.front().start == 0
+                             && runs.front().end == path_len);
+
+        if (intact) {
+            const path_handle_t np = subgraph.create_path_handle(rp.name, rp.is_circular);
+            for (auto& h : runs.front().handles) {
+                subgraph.append_step(np, h);
+            }
+            ++stats.paths_intact;
+        } else if (policy == affected_path_policy_t::drop_affected) {
+            ++stats.paths_dropped;
+        } else { // split
+            if (runs.empty()) {
+                ++stats.paths_dropped;
+            } else {
+                for (auto& run : runs) {
+                    const path_handle_t np = subgraph.create_path_handle(
+                        make_path_name(rp.name, run.start, run.end), false);
+                    for (auto& h : run.handles) {
+                        subgraph.append_step(np, h);
+                    }
+                    ++stats.subpaths_created;
+                }
+                ++stats.paths_split;
+            }
+        }
+    }
+    return stats;
+}
 
 std::vector<edge_t> find_edges_to_prune(const HandleGraph& graph,
                                         size_t k, size_t edge_max,

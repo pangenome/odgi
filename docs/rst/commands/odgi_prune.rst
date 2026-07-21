@@ -91,6 +91,18 @@ Path Options
 | **-y, --drop-empty-paths**
 | Remove empty paths from the graph.
 
+| **-S, --split-paths**
+| When pruning nodes/edges, keep the surviving paths by splitting them into subpaths (named *PATH:START-END*) at every removed node and edge, instead of dropping all paths. Without **-S** or **-A**, pruning removes every path from the output (a warning is printed) because removing a node or an edge breaks the paths that traverse it.
+
+| **-A, --drop-affected-paths**
+| When pruning nodes/edges, drop only the paths that traverse a removed node or edge, keeping the untouched paths intact, instead of dropping all paths. Mutually exclusive with **-S, --split-paths**.
+
+| **-K, --keep-paths-intact**\ =\ *FILE*
+| Keep the paths named in *FILE* (one name per line) intact: the nodes and edges they use are never pruned, so these paths survive whole (e.g. to keep reference paths uncut) while the rest are split or dropped. Requires **-S, --split-paths** or **-A, --drop-affected-paths**.
+
+| **--keep-path-prefix**\ =\ *PREFIX*
+| Keep every path whose name starts with *PREFIX* intact, as with **-K, --keep-paths-intact**. May be given multiple times. Requires **-S, --split-paths** or **-A, --drop-affected-paths**.
+
 | **-m, --cut-tips-min-depth**\ =\ *N*
 | Remove nodes which are graph tips and have less than *N* path depth.
 
