@@ -80,7 +80,7 @@ Files IO Options
   identifier.
 
 | **-C, --temp-dir**\ =\ *PATH*
-| Directory for temporary files.
+| Directory for temporary files. Defaults to the current working directory.
 
 Topological Sort Options
 -----------------
