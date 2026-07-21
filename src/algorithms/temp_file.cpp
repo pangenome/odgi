@@ -93,7 +93,7 @@ void set_dir(const std::string& new_temp_dir) {
 std::string get_dir() {
     std::lock_guard<std::recursive_mutex> lock(monitor);
 
-    // Get the default temp dir from environment variables.
+    // Default to the current working directory when no temp dir was set.
     if (temp_dir.empty()) {
         char cwd[512];
         getcwd(cwd, sizeof(cwd));

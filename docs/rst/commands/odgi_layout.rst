@@ -46,7 +46,7 @@ Files IO
 | not have to be created for the layout calculation.
 
 | **-C, --temp-dir**\ =\ *PATH*
-| Directory for temporary files.
+| Directory for temporary files. Defaults to the current working directory.
 
 | **-f, --path-sgd-use-paths**\ =\ *FILE*
 | Specify a line separated list of paths to sample from for the on the fly term generation process in the path guided 2D SGD (default: sample from all paths).

@@ -33,7 +33,7 @@ int main_layout(int argc, char **argv) {
     args::ValueFlag<std::string> layout_out_file(files_io_opts, "FILE", "Write the layout coordinates to this FILE in .lay binary format.", {'o', "out"});
     args::ValueFlag<std::string> tsv_out_file(files_io_opts, "FILE", "Write the layout in TSV format to this FILE.", {'T', "tsv"});
     args::ValueFlag<std::string> xp_in_file(files_io_opts, "FILE", "Load the path index from this FILE so that it does not have to be created for the layout calculation.", {'X', "path-index"});
-    args::ValueFlag<std::string> tmp_base(files_io_opts, "PATH", "directory for temporary files", {'C', "temp-dir"});
+    args::ValueFlag<std::string> tmp_base(files_io_opts, "PATH", "directory for temporary files (default: current working directory)", {'C', "temp-dir"});
     /// Path-guided-2D-SGD parameters
     args::ValueFlag<std::string> p_sgd_in_file(files_io_opts, "FILE",
                                                "Specify a line separated list of paths to sample from for the on the fly term generation process in the path guided 2D SGD (default: sample from all paths).",
