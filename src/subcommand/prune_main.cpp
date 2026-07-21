@@ -9,6 +9,9 @@
 #include "algorithms/remove_isolated.hpp"
 #include "algorithms/expand_context.hpp"
 #include "utils.hpp"
+#include <unordered_set>
+#include <set>
+#include <algorithm>
 
 namespace odgi {
 
@@ -54,6 +57,8 @@ int main_prune(int argc, char** argv) {
     args::Flag drop_empty_paths(path_opts, "bool", "Remove empty paths from the graph.", {'y', "drop-empty-paths"});
     args::Flag split_paths(path_opts, "bool", "When pruning nodes/edges, keep the surviving paths by splitting them into subpaths (named *PATH:START-END*) at every removed node and edge, instead of dropping all paths.", {'S', "split-paths"});
     args::Flag drop_affected_paths(path_opts, "bool", "When pruning nodes/edges, drop only the paths that traverse a removed node or edge, keeping the untouched paths intact, instead of dropping all paths.", {'A', "drop-affected-paths"});
+    args::ValueFlag<std::string> keep_paths_file(path_opts, "FILE", "Keep the paths named in *FILE* (one per line) intact: never prune the nodes or edges they use, so they survive pruning whole. Requires **-S** or **-A**.", {'K', "keep-paths-intact"});
+    args::ValueFlagList<std::string> keep_path_prefix(path_opts, "PREFIX", "Keep every path whose name starts with *PREFIX* intact (repeatable). Requires **-S** or **-A**.", {"keep-path-prefix"});
     args::ValueFlag<uint64_t> cut_tips_min_depth(path_opts, "N", "Remove nodes which are graph tips and have less than *N* path depth.", {'m', "cut-tips-min-depth"});
     args::Flag remove_isolated(path_opts, "bool", "Remove isolated nodes covered by a single path.", {'I', "remove-isolated"});
     args::Group threading_opts(parser, "[ Threading ]");
@@ -112,6 +117,14 @@ int main_prune(int argc, char** argv) {
         }
     }
 
+    // Paths to keep intact: their nodes/edges are excluded from every removal list below, so they
+    // survive pruning whole while the rest are split (-S) or dropped (-A).
+    const bool keep_intact_requested = keep_paths_file || !args::get(keep_path_prefix).empty();
+    if (keep_intact_requested && !rebuild_paths_requested) {
+        std::cerr << "[odgi::prune] error: --keep-paths-intact / --keep-path-prefix require -S/--split-paths or -A/--drop-affected-paths." << std::endl;
+        return 1;
+    }
+
 	const int n_threads = threads ? args::get(threads) : 1;
 
 	graph_t graph;
@@ -145,12 +158,62 @@ int main_prune(int argc, char** argv) {
         recorded_paths = algorithms::record_paths(graph);
     }
 
+    // Collect the nodes and edges used by the paths we must keep intact (by name or prefix), so we
+    // can drop them from the removal lists. Edges are stored in both orientations because a removal
+    // list may reference the same edge either way (edge_handle does not canonicalize).
+    std::unordered_set<nid_t> protected_nodes;
+    std::set<std::pair<uint64_t, uint64_t>> protected_edges;
+    if (keep_intact_requested) {
+        std::unordered_set<std::string> keep_names;
+        if (keep_paths_file) {
+            std::ifstream in(args::get(keep_paths_file));
+            std::string line;
+            while (std::getline(in, line)) {
+                if (!line.empty()) keep_names.insert(line);
+            }
+        }
+        const std::vector<std::string> prefixes = args::get(keep_path_prefix);
+        uint64_t n_kept_paths = 0;
+        graph.for_each_path_handle([&](const path_handle_t& p) {
+            const std::string name = graph.get_path_name(p);
+            bool keep = keep_names.count(name) > 0;
+            for (auto it = prefixes.begin(); !keep && it != prefixes.end(); ++it) {
+                keep = name.size() >= it->size() && name.compare(0, it->size(), *it) == 0;
+            }
+            if (!keep) return;
+            ++n_kept_paths;
+            handle_t prev;
+            bool first = true;
+            graph.for_each_step_in_path(p, [&](const step_handle_t& s) {
+                const handle_t h = graph.get_handle_of_step(s);
+                protected_nodes.insert(graph.get_id(h));
+                if (!first) {
+                    protected_edges.insert({as_integer(prev), as_integer(h)});
+                    protected_edges.insert({as_integer(graph.flip(h)), as_integer(graph.flip(prev))});
+                }
+                prev = h;
+                first = false;
+            });
+        });
+        std::cerr << "[odgi::prune] keeping " << n_kept_paths << " path(s) intact ("
+                  << protected_nodes.size() << " protected node(s))." << std::endl;
+    }
+    auto node_protected = [&](const handle_t& h) {
+        return protected_nodes.count(graph.get_id(h)) > 0;
+    };
+    auto edge_protected = [&](const edge_t& e) {
+        return protected_edges.count({as_integer(e.first), as_integer(e.second)}) > 0;
+    };
+
     if (args::get(max_degree)) {
         graph.clear_paths();
         algorithms::remove_high_degree_nodes(graph, args::get(max_degree));
     }
     if (args::get(max_furcations)) {
         std::vector<edge_t> to_prune = algorithms::find_edges_to_prune(graph, args::get(kmer_length), args::get(max_furcations), n_threads);
+        if (keep_intact_requested) {
+            to_prune.erase(std::remove_if(to_prune.begin(), to_prune.end(), edge_protected), to_prune.end());
+        }
         for (auto& edge : to_prune) {
             graph.destroy_edge(edge);
         }
@@ -168,6 +231,11 @@ int main_prune(int argc, char** argv) {
         }
         if (args::get(best_edges)) {
             edges_to_drop_best = algorithms::keep_mutual_best_edges(graph, args::get(best_edges));
+        }
+        if (keep_intact_requested) {
+            handles_to_drop.erase(std::remove_if(handles_to_drop.begin(), handles_to_drop.end(), node_protected), handles_to_drop.end());
+            edges_to_drop_depth.erase(std::remove_if(edges_to_drop_depth.begin(), edges_to_drop_depth.end(), edge_protected), edges_to_drop_depth.end());
+            edges_to_drop_best.erase(std::remove_if(edges_to_drop_best.begin(), edges_to_drop_best.end(), edge_protected), edges_to_drop_best.end());
         }
         auto do_destroy =
             [&]() {
