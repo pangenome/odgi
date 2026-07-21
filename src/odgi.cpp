@@ -1285,14 +1285,29 @@ void graph_t::destroy_step(const step_handle_t& step_handle) {
     if (has_prev) {
         // nothing
     } else if (has_next) {
+        // removing the first step: promote the next step to the path's start, dropping its
+        // back-link to this (soon-deleted) step so no dangling reference survives into optimize().
         auto step = get_next_step(step_handle);
         path_meta.first = step;
+        node_t& next_node = get_node_ref(get_handle_of_step(step));
+        next_node.get_lock();
+        const uint64_t next_rank = as_integers(step)[1];
+        next_node.set_step_is_start(next_rank, true);
+        next_node.set_step_prev_id(next_rank, get_id(get_handle_of_step(step))); // self
+        next_node.clear_lock();
     }
     if (has_next) {
         // nothing
     } else if (has_prev) {
+        // removing the last step: promote the previous step to the path's end (symmetric).
         auto step = get_previous_step(step_handle);
         path_meta.last = step;
+        node_t& prev_node = get_node_ref(get_handle_of_step(step));
+        prev_node.get_lock();
+        const uint64_t prev_rank = as_integers(step)[1];
+        prev_node.set_step_is_end(prev_rank, true);
+        prev_node.set_step_next_id(prev_rank, get_id(get_handle_of_step(step))); // self
+        prev_node.clear_lock();
     }
     // reduce the step count in the path
     --path_meta.length;

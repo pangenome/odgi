@@ -217,17 +217,17 @@ void node_t::set_step_is_rev(const uint64_t& rank, const bool& is_rev) {
 
 void node_t::set_step_is_start(const uint64_t& rank, const bool& is_start) {
     uint64_t idx = PATH_RECORD_LENGTH*rank+1;
-    paths[idx] = paths[idx] & ~(1UL << 1) | is_start;
+    paths[idx] = (paths[idx] & ~(1UL << 1)) | ((uint64_t)is_start << 1);
 }
 
 void node_t::set_step_is_end(const uint64_t& rank, const bool& is_end) {
     uint64_t idx = PATH_RECORD_LENGTH*rank+1;
-    paths[idx] = paths[idx] & ~(1UL << 2) | is_end;
+    paths[idx] = (paths[idx] & ~(1UL << 2)) | ((uint64_t)is_end << 2);
 }
 
 void node_t::set_step_is_del(const uint64_t& rank, const bool& is_del) {
     uint64_t idx = PATH_RECORD_LENGTH*rank+1;
-    paths[idx] = paths[idx] & ~(1UL << 3) | is_del;
+    paths[idx] = (paths[idx] & ~(1UL << 3)) | ((uint64_t)is_del << 3);
 }
 
 uint64_t node_t::step_path_id(const uint64_t& rank) const {
