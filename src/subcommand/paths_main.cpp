@@ -51,7 +51,8 @@ int main_paths(int argc, char** argv) {
                                                 " own line.", {'L', "list-paths"});
 	args::Flag list_path_start_end(path_investigation_opts, "list-path-start-end", "If -L,--list-paths was specified, this additionally prints the start and end positions of each path in additional, tab-delimited coloumns."
 						   , {'l', "list-path-start-end"});
-    args::Flag write_fasta(path_investigation_opts, "fasta", "Print paths in FASTA format to stdout. One line for the FASTA header, another line for the whole sequence.", {'f', "fasta"});
+    args::Flag write_fasta(path_investigation_opts, "fasta", "Print paths in FASTA format to stdout. One line for the FASTA header, another line for the whole sequence (see --fasta-line-width to wrap long sequences).", {'f', "fasta"});
+    args::ValueFlag<uint64_t> fasta_line_width(path_investigation_opts, "N", "Wrap the FASTA sequence lines produced by -f/--fasta at N characters per line (default: 0, i.e. the whole sequence on one line).", {"fasta-line-width"});
     args::Flag haplo_matrix(path_investigation_opts, "haplo", "Print to stdout the paths in a path coverage haplotype matrix"
                                                               " based on the graph’s sort order. The output is tab-delimited:"
                                                               " *path.name*, *path.length*, *path.step.count*, *node.1*,"
@@ -198,14 +199,35 @@ int main_paths(int argc, char** argv) {
     }
 
     if (args::get(write_fasta)) {
+        const uint64_t fasta_width = args::get(fasta_line_width);
         graph.for_each_path_handle(
             [&](const path_handle_t& p) {
                 std::cout << ">" << graph.get_path_name(p) << std::endl;
-                graph.for_each_step_in_path(
-                    p, [&](const step_handle_t& s) {
-                           std::cout << graph.get_sequence(graph.get_handle_of_step(s));
-                       });
-                std::cout << std::endl;
+                if (fasta_width == 0) {
+                    graph.for_each_step_in_path(
+                        p, [&](const step_handle_t& s) {
+                               std::cout << graph.get_sequence(graph.get_handle_of_step(s));
+                           });
+                    std::cout << std::endl;
+                } else {
+                    // wrap at fasta_width, tracking the column across steps so node
+                    // boundaries do not force a line break
+                    uint64_t col = 0;
+                    bool any = false;
+                    graph.for_each_step_in_path(
+                        p, [&](const step_handle_t& s) {
+                               const std::string seq = graph.get_sequence(graph.get_handle_of_step(s));
+                               for (size_t i = 0; i < seq.size(); ) {
+                                   const uint64_t take = std::min((uint64_t) (seq.size() - i), fasta_width - col);
+                                   std::cout.write(seq.data() + i, take);
+                                   i += take;
+                                   col += take;
+                                   any = true;
+                                   if (col == fasta_width) { std::cout << "\n"; col = 0; }
+                               }
+                           });
+                    if (col != 0 || !any) std::cout << "\n";
+                }
             });
     }
 
