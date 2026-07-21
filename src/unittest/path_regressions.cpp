@@ -1,6 +1,7 @@
 #include "catch.hpp"
 
 #include "algorithms/cut_tips.hpp"
+#include "algorithms/expand_context.hpp"
 #include "odgi.hpp"
 
 #include <vector>
@@ -65,6 +66,49 @@ TEST_CASE("Cutting boundary tips preserves the remaining path", "[paths][cut_tip
         path_ids.push_back(graph.get_id(graph.get_handle_of_step(step)));
     });
     REQUIRE(path_ids == std::vector<nid_t>{graph.get_id(graph.get_handle(1))});
+}
+
+TEST_CASE("expand_context_with_paths re-embeds paths from a copied graph", "[paths][expand][regression]") {
+    // Mirrors the prune -p code path: copy the graph, then expand a subgraph and re-embed paths.
+    // A broken copy left the source paths unreadable, which segfaulted here.
+    graph_t original;
+    original.destroy_path(original.create_path_handle("removed")); // non-contiguous path IDs
+
+    std::vector<handle_t> handles;
+    for (const auto& sequence : {"A", "C", "G", "T", "N"}) {
+        handles.push_back(original.create_handle(sequence));
+    }
+    for (size_t i = 0; i + 1 < handles.size(); ++i) {
+        original.create_edge(handles[i], handles[i + 1]);
+    }
+    auto path = original.create_path_handle("path");
+    for (const auto& handle : handles) {
+        original.append_step(path, handle);
+    }
+
+    graph_t source;
+    source.copy(original);
+
+    const nid_t seed = original.get_id(handles[2]);
+    graph_t subgraph;
+    subgraph.create_handle(source.get_sequence(source.get_handle(seed)), seed);
+
+    algorithms::expand_context_with_paths(&source, &subgraph, 100, false);
+
+    REQUIRE(subgraph.get_path_count() >= 1);
+    subgraph.for_each_path_handle([&](const path_handle_t& subpath) {
+        handle_t prev;
+        bool first = true;
+        subgraph.for_each_step_in_path(subpath, [&](const step_handle_t& step) {
+            const handle_t current = subgraph.get_handle_of_step(step);
+            REQUIRE(subgraph.has_node(subgraph.get_id(current)));
+            if (!first) {
+                REQUIRE(subgraph.has_edge(prev, current));
+            }
+            prev = current;
+            first = false;
+        });
+    });
 }
 
 }
