@@ -7,8 +7,9 @@ LABEL about.home="https://github.com/pangenome/odgi"
 LABEL about.license="SPDX:MIT"
 
 # dependencies
-RUN apt-get update \
-    && apt-get install -y \
+# retry transient mirror failures (e.g. "Connection reset by peer") instead of failing the build
+RUN apt-get update -o Acquire::Retries=5 \
+    && apt-get install -y -o Acquire::Retries=5 \
                        git \
                        bash \
                        cmake \
