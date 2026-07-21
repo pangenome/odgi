@@ -52,6 +52,8 @@ int main_prune(int argc, char** argv) {
                                                   {'r', "drop-paths"});
     args::Flag drop_all_paths(path_opts, "bool", "Remove all paths from the graph.", {'D', "drop-all-paths"});
     args::Flag drop_empty_paths(path_opts, "bool", "Remove empty paths from the graph.", {'y', "drop-empty-paths"});
+    args::Flag split_paths(path_opts, "bool", "When pruning nodes/edges, keep the surviving paths by splitting them into subpaths (named *PATH:START-END*) at every removed node and edge, instead of dropping all paths.", {'S', "split-paths"});
+    args::Flag drop_affected_paths(path_opts, "bool", "When pruning nodes/edges, drop only the paths that traverse a removed node or edge, keeping the untouched paths intact, instead of dropping all paths.", {'A', "drop-affected-paths"});
     args::ValueFlag<uint64_t> cut_tips_min_depth(path_opts, "N", "Remove nodes which are graph tips and have less than *N* path depth.", {'m', "cut-tips-min-depth"});
     args::Flag remove_isolated(path_opts, "bool", "Remove isolated nodes covered by a single path.", {'I', "remove-isolated"});
     args::Group threading_opts(parser, "[ Threading ]");
@@ -90,6 +92,26 @@ int main_prune(int argc, char** argv) {
         return 1;
     }
 
+    // How to treat paths affected by pruning
+    const bool split_paths_requested = args::get(split_paths);
+    const bool drop_affected_requested = args::get(drop_affected_paths);
+    const bool rebuild_paths_requested = split_paths_requested || drop_affected_requested;
+    if (rebuild_paths_requested) {
+        if (split_paths_requested && drop_affected_requested) {
+            std::cerr << "[odgi::prune] error: -S/--split-paths and -A/--drop-affected-paths are mutually exclusive." << std::endl;
+            return 1;
+        }
+        if (!(args::get(max_degree) || args::get(max_furcations) || args::get(min_depth)
+              || args::get(max_depth) || args::get(best_edges))) {
+            std::cerr << "[odgi::prune] error: -S/--split-paths and -A/--drop-affected-paths require a node/edge pruning filter (-d/--max-degree, -e/--max-furcations, -c/--min-depth, -C/--max-depth, -E/--edge-depth, or -b/--best-edges)." << std::endl;
+            return 1;
+        }
+        if (args::get(expand_path_length)) {
+            std::cerr << "[odgi::prune] error: -S/--split-paths and -A/--drop-affected-paths cannot be combined with -p/--expand-path-length, which already preserves paths as segments." << std::endl;
+            return 1;
+        }
+    }
+
 	const int n_threads = threads ? args::get(threads) : 1;
 
 	graph_t graph;
@@ -106,18 +128,33 @@ int main_prune(int argc, char** argv) {
 
     omp_set_num_threads(n_threads);
 
+    // Removing a node/edge breaks the paths through it. By default we drop all paths and warn;
+    // with -S/-A we snapshot the paths first (before any filter, since -d clears them), run the
+    // filters, then rebuild the survivors edge-aware (algorithms::rebuild_pruned_paths).
+    const uint64_t n_paths_before = graph.get_path_count();
+    // -c1 alone removes only depth-0 (unpathed) nodes, so it can't damage a path; other filters can.
+    const bool only_depth0 = (args::get(min_depth) == 1 && args::get(max_depth) == 0)
+        && !args::get(max_degree) && !args::get(max_furcations) && !args::get(best_edges);
+    const bool damages_paths = n_paths_before > 0 && !only_depth0
+        && (args::get(max_degree) || args::get(max_furcations)
+            || args::get(min_depth) || args::get(max_depth) || args::get(best_edges));
+    const bool rebuild = rebuild_paths_requested && damages_paths;
+
+    std::vector<algorithms::recorded_path_t> recorded_paths;
+    if (rebuild) {
+        recorded_paths = algorithms::record_paths(graph);
+    }
+
     if (args::get(max_degree)) {
         graph.clear_paths();
         algorithms::remove_high_degree_nodes(graph, args::get(max_degree));
     }
     if (args::get(max_furcations)) {
         std::vector<edge_t> to_prune = algorithms::find_edges_to_prune(graph, args::get(kmer_length), args::get(max_furcations), n_threads);
-        //std::cerr << "edges to prune: " << to_prune.size() << std::endl;
         for (auto& edge : to_prune) {
             graph.destroy_edge(edge);
         }
-        // we're just removing edges, so paths shouldn't be damaged
-        //std::cerr << "done prune" << std::endl;
+        // leaves edge-damaged paths in place; the path handling below drops or rebuilds them
     }
     if (args::get(min_depth) || args::get(max_depth) || args::get(best_edges)) {
         std::vector<handle_t> handles_to_drop;
@@ -132,18 +169,11 @@ int main_prune(int argc, char** argv) {
         if (args::get(best_edges)) {
             edges_to_drop_best = algorithms::keep_mutual_best_edges(graph, args::get(best_edges));
         }
-        // TODO this needs fixing
-        // we should split up the paths rather than drop them
-        // remove the paths, because it's likely we have damaged some
-        // and at present, we have no mechanism to reconstruct them
         auto do_destroy =
             [&]() {
-                if (args::get(min_depth) == 1 && args::get(max_depth) == 0) {
-                    // we could not have damaged any paths
-                } else {
+                if (!only_depth0) {
                     graph.clear_paths();
                 }
-                //std::cerr << "got " << to_drop.size() << " handles to drop" << std::endl;
                 for (auto& edge : edges_to_drop_depth) {
                     graph.destroy_edge(edge);
                 }
@@ -154,24 +184,53 @@ int main_prune(int argc, char** argv) {
                     graph.destroy_handle(handle);
                 }
             };
-        if (args::get(expand_steps)) {
-            graph_t source;
+        // A copy of the graph topology is needed to expand the pruned graph against the original.
+        const bool need_source =
+            args::get(expand_steps) || args::get(expand_length) || args::get(expand_path_length);
+        graph_t source;
+        if (need_source) {
             source.copy(graph);
-            do_destroy();
+        }
+        do_destroy();
+        if (args::get(expand_steps)) {
             algorithms::expand_context(&source, &graph, args::get(expand_steps), true);
         } else if (args::get(expand_length)) {
-            graph_t source;
-            source.copy(graph);
-            do_destroy();
             algorithms::expand_context(&source, &graph, args::get(expand_length), false);
         } else if (args::get(expand_path_length)) {
-            graph_t source;
-            source.copy(graph);
-            do_destroy();
             algorithms::expand_context_with_paths(&source, &graph, args::get(expand_length), false);
-        } else {
-            do_destroy();
         }
+    }
+
+    // Rebuild or drop the damaged paths, once, for whichever filters ran above.
+    if (rebuild) {
+        graph.clear_paths(); // drop any partial/invalid paths a filter left behind (e.g. -e)
+        const algorithms::damaged_path_policy_t policy = split_paths_requested
+            ? algorithms::damaged_path_policy_t::split
+            : algorithms::damaged_path_policy_t::drop_affected;
+        const algorithms::prune_path_rebuild_stats_t st =
+            algorithms::rebuild_pruned_paths(recorded_paths, graph, policy);
+        if (split_paths_requested) {
+            std::cerr << "[odgi::prune] split " << st.paths_split << " damaged path(s) into "
+                      << st.subpaths_created << " subpath(s), kept " << st.paths_intact
+                      << " path(s) intact";
+            if (st.paths_dropped) {
+                std::cerr << ", dropped " << st.paths_dropped << " fully removed path(s)";
+            }
+            std::cerr << "." << std::endl;
+        } else {
+            std::cerr << "[odgi::prune] kept " << st.paths_intact << " intact path(s), dropped "
+                      << st.paths_dropped << " affected path(s)." << std::endl;
+        }
+    } else if (damages_paths && !args::get(expand_path_length)) {
+        // Default: ensure the damaged paths are gone (some filters, e.g. -e, keep them) and warn.
+        // -p re-embeds paths itself, so it is excluded here.
+        if (graph.get_path_count() > 0) {
+            graph.clear_paths();
+        }
+        std::cerr << "[odgi::prune] warning: pruning removed nodes/edges used by the paths, so all "
+                  << n_paths_before << " path(s) were dropped from the output. "
+                  << "Re-run with -S/--split-paths (keep them as subpaths) or "
+                  << "-A/--drop-affected-paths (drop only the touched paths)." << std::endl;
     }
     if (args::get(cut_tips)) {
         algorithms::cut_tips(graph, args::get(cut_tips_min_depth));
