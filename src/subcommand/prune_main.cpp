@@ -197,7 +197,11 @@ int main_prune(int argc, char** argv) {
         } else if (args::get(expand_length)) {
             algorithms::expand_context(&source, &graph, args::get(expand_length), false);
         } else if (args::get(expand_path_length)) {
-            algorithms::expand_context_with_paths(&source, &graph, args::get(expand_length), false);
+            // expand_context_with_paths re-embeds the source paths as fresh segments and requires
+            // an empty target; do_destroy() leaves the paths in place for the -c1 case, so clear
+            // them here to avoid a duplicate path-name error.
+            graph.clear_paths();
+            algorithms::expand_context_with_paths(&source, &graph, args::get(expand_path_length), false);
         }
     }
 

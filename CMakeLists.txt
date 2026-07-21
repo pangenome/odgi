@@ -595,6 +595,7 @@ add_library(odgi_objs OBJECT
   ${CMAKE_SOURCE_DIR}/src/unittest/edge.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/extract.cpp
   ${CMAKE_SOURCE_DIR}/src/unittest/stepindex.cpp
+  ${CMAKE_SOURCE_DIR}/src/unittest/path_regressions.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/subcommand.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/build_main.cpp
   ${CMAKE_SOURCE_DIR}/src/subcommand/test_main.cpp
