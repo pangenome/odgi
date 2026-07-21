@@ -24,7 +24,16 @@ step_index_t::step_index_t(const PathHandleGraph& graph,
 		collecting_steps_progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
 				paths.size(), "[odgi::algorithms::stepindex] Collecting Steps Progress:");
 	}
-	path_len.resize(paths.size());
+	// path_len is indexed by the global path id (as_integer(path)-1), so it must be sized to the
+	// largest id among `paths`, not their count: a subset of paths (as untangle passes) can have
+	// ids larger than the count, which otherwise writes out of bounds (issue #632).
+	uint64_t path_len_size = 0;
+	for (auto& path : paths) {
+		if ((uint64_t) as_integer(path) > path_len_size) {
+			path_len_size = as_integer(path);
+		}
+	}
+	path_len.resize(path_len_size);
 #pragma omp parallel for schedule(dynamic,1)
     for (auto& path : paths) {
         std::vector<step_handle_t> my_steps;

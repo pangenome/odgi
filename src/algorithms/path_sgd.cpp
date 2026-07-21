@@ -556,7 +556,7 @@ namespace odgi {
             std::cerr << "components count: " << weak_components.size() << std::endl;
 #endif
             std::vector<std::pair<double, uint64_t>> weak_component_order;
-            for (int i = 0; i < weak_components.size(); i++) {
+            for (size_t i = 0; i < weak_components.size(); i++) {
                 auto &weak_component = weak_components[i];
                 uint64_t id_sum = 0;
                 for (auto node_id : weak_component) {
@@ -575,7 +575,7 @@ namespace odgi {
             std::vector<uint64_t> weak_components_map;
             weak_components_map.resize(graph.get_node_count());
             // reserve the space we need
-            for (int i = 0; i < weak_components.size(); i++) {
+            for (size_t i = 0; i < weak_components.size(); i++) {
                 auto &weak_component = weak_components[i];
                 // store for each node identifier to component start index
                 for (auto node_id : weak_component) {

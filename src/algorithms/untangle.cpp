@@ -378,7 +378,7 @@ segment_map_t::segment_map_t(
         progress->finish();
     }
 
-    auto max_id = graph.get_node_count();
+    auto max_id = graph.max_node_id(); // node ids may be non-contiguous; pad up to the largest id
     while (prev_node < max_id) {
         node_idx.push_back(segments.size());
         ++prev_node;
@@ -720,7 +720,9 @@ void untangle(
 
     // collect all possible cuts
     // we'll use this to drive the subsequent segmentation
-    atomicbitvector::atomic_bv_t cut_nodes(graph.get_node_count()+1);
+    // node-id-indexed structures must be sized to max_node_id()+1, not get_node_count()+1: node ids
+    // are not necessarily contiguous (e.g. after prune), so an id can exceed the count (issue #489).
+    atomicbitvector::atomic_bv_t cut_nodes(graph.max_node_id()+1);
 
     if (cut_points_input.empty()) {
         if (show_progress) {
@@ -733,7 +735,7 @@ void untangle(
         }
 
         // which nodes are traversed by our target paths?
-        atomicbitvector::atomic_bv_t target_nodes(graph.get_node_count() + 1);
+        atomicbitvector::atomic_bv_t target_nodes(graph.max_node_id() + 1);
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
         for (auto& target : targets) {
             graph.for_each_step_in_path(
@@ -814,7 +816,7 @@ void untangle(
             uint64_t pos = 0;
             uint64_t last = 0;
             uint64_t segment = 0;
-            std::vector<uint64_t> node_to_segment(graph.get_node_count()+1);
+            std::vector<uint64_t> node_to_segment(graph.max_node_id()+1);
             graph.for_each_handle(
                 [&](const handle_t& h) {
                     auto l = graph.get_length(h);

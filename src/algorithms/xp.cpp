@@ -123,12 +123,14 @@ namespace xp {
         // fill the node->path vectors
         uint64_t  np_offset = 0;
         for (int64_t i = 0; i < graph.get_node_count(); i++) {
-            np_bv[np_offset] = 1; // mark node start
-            uint64_t has_steps = false;
+            bool node_start = true;
             node_path_ms.for_values_of(i+1, [&](const std::tuple<uint64_t, uint64_t, uint64_t, uint64_t>& v) {
+                if (node_start) {
+                    np_bv[np_offset] = 1; // mark the node's first step; nodes without steps get no mark
+                    node_start = false;
+                }
                 nr_iv[np_offset] = std::get<3>(v); // handle_rank_of_path
                 npi_iv[np_offset] = std::get<2>(v); // path id
-                has_steps = true;
                 np_offset++;
             });
         }
