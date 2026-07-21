@@ -61,6 +61,9 @@ void flip_paths(graph_t& graph,
         }
     }
 
+    // Paths that were actually flipped. For a well-formed graph, their
+    // reverse-complement traversals are already represented by copied edges.
+    std::vector<path_handle_t> flipped_paths;
 #pragma omp parallel for
     for (auto& path : paths) {
         // ref_paths must not be flipped either
@@ -105,6 +108,8 @@ void flip_paths(graph_t& graph,
                 for (auto& q : v) {
                     into.append_step(flipped, q);
                 }
+#pragma omp critical (flipped_paths)
+                flipped_paths.push_back(flipped);
             } else {
                 auto fwd = into.create_path_handle(graph.get_path_name(path));
                 graph.for_each_step_in_path(
@@ -128,22 +133,24 @@ void flip_paths(graph_t& graph,
         }
     }
 
+    // A flipped path's adjacencies are already present in the copied graph when
+    // the input is well formed: reversing a traversal uses the same bidirected
+    // edges in reverse-complement form. We examine only flipped paths so that,
+    // for malformed input, non-flipped paths do not "repair" missing links the
+    // user never had (e.g. a missing L-line implied by a path; issue #496).
     ska::flat_hash_set<std::pair<handle_t, handle_t>> edges_to_create;
 #pragma omp parallel for
-    for (auto& path : paths) {
-        // New edges can be due only when paths are flipped
-        if (!no_flip.count(path)) {
-            handle_t last;
-            const step_handle_t begin_step = into.path_begin(path);
-            into.for_each_step_in_path(path, [&](const step_handle_t &step) {
-                handle_t h = into.get_handle_of_step(step);
-                if (step != begin_step && !into.has_edge(last, h)) {
-    #pragma omp critical (edges_to_create)
-                    edges_to_create.insert({last, h});
-                }
-                last = h;
-            });
-        }
+    for (auto& path : flipped_paths) {
+        handle_t last;
+        const step_handle_t begin_step = into.path_begin(path);
+        into.for_each_step_in_path(path, [&](const step_handle_t &step) {
+            handle_t h = into.get_handle_of_step(step);
+            if (step != begin_step && !into.has_edge(last, h)) {
+#pragma omp critical (edges_to_create)
+                edges_to_create.insert({last, h});
+            }
+            last = h;
+        });
     }
     // add missing edges
     for (auto edge: edges_to_create) {
