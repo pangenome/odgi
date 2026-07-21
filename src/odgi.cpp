@@ -1710,9 +1710,14 @@ void graph_t::copy(const graph_t& other) {
     _id_increment.store(other._id_increment);
     node_v.resize(other.node_v.size());
     for (size_t i = 0; i < other.node_v.size(); ++i) {
-        node_v[i] = new node_t;
-        auto* node = node_v[i];
-        node->copy(other.get_node_cref(as_handle(i)));
+        // get_node_cref(as_handle(i)) resolves to other.node_v[i>>1] (as_handle does not pack the
+        // orientation bit), copying the wrong node; index node_v directly instead.
+        if (other.node_v[i] != nullptr) {
+            node_v[i] = new node_t;
+            node_v[i]->copy(*other.node_v[i]);
+        } else {
+            node_v[i] = nullptr;
+        }
     }
     deleted_nodes = other.deleted_nodes;
     // copy the path metadata
