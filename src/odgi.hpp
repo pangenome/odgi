@@ -11,6 +11,7 @@
 #include <cstdio>
 #include <cstdint>
 #include <vector>
+#include <set>
 #include <utility>
 #include <functional>
 #include <thread>
@@ -435,7 +436,9 @@ public:
     const node_t& get_node_cref(const handle_t& handle) const;
     /// Mark deleted nodes here for translating graph ids into internal ranks
     //dyn::hacked_vector deleted_nodes;
-    hash_set<uint64_t> deleted_nodes;
+    // ordered so recycling a deleted id is O(log n) via begin(), not an O(n)
+    // scan of a flat hash set (unchop on large graphs, issue #584)
+    std::set<uint64_t> deleted_nodes;
     /// efficient id to handle/sequence conversion
     std::atomic<nid_t> _max_node_id = 0;
     std::atomic<nid_t> _min_node_id = 0;
