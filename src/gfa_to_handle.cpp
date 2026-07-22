@@ -152,7 +152,13 @@ void gfa_to_handle(const string& gfa_filename,
                             if (s.empty()) { ++i; continue; } // empty path field: stepless path, don't abort
                             uint64_t id = 0;
                             try {
-                                id = std::stoull(s) - id_increment;
+                                size_t parsed = 0;
+                                id = std::stoull(s, &parsed) - id_increment;
+                                if (parsed != s.size()) { // reject trailing junk, e.g. a space before * instead of a tab
+                                    std::cerr << "[odgi::gfa_to_handle] error: malformed path segment '" << s
+                                              << "' in path '" << graph->get_path_name(p->path) << "'" << std::endl;
+                                    exit(1);
+                                }
                                 if (graph->has_node(id)) {
                                     graph->append_step(p->path,
                                                 graph->get_handle(id,
