@@ -98,7 +98,7 @@ int main_inject(int argc, char **argv) {
                 uint64_t end = std::stoul(vals[2]);
                 const std::string& name = vals[3];
                 if (!graph.has_path(path_name)) {
-                    //std::cerr << "[odgi::inject] warning: no path '" << path_name << "' in graph" << std::endl;
+                    std::cerr << "[odgi::inject] warning: no path '" << path_name << "' in graph" << std::endl;
                 } else {
                     auto path = graph.get_path_handle(path_name);
                     path_intervals[path].push_back(std::make_pair(interval_t(start, end), name));
@@ -122,6 +122,11 @@ int main_inject(int argc, char **argv) {
 
     omp_set_num_threads(num_threads);
     graph.set_number_of_threads(num_threads);
+
+    if (ordered_intervals.empty()) {
+        std::cerr << "[odgi::inject] error: no BED interval matched a path in the graph; nothing to inject" << std::endl;
+        return 1;
+    }
 
     algorithms::inject_ranges(graph, path_intervals, ordered_intervals, args::get(progress));
 
