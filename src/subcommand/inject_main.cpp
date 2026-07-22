@@ -85,6 +85,7 @@ int main_inject(int argc, char **argv) {
         std::ifstream bed(args::get(_bed_targets).c_str());
         std::string line;
         while (std::getline(bed, line)) {
+            if (!line.empty() && line.back() == '\r') line.pop_back(); // tolerate CRLF
             if (!line.empty()) {
                 auto vals = split(line, '\t');
                 if (vals.size() < 3) {
