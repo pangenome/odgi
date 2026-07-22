@@ -26,12 +26,24 @@ namespace xp {
     }
 
     void XP::from_handle_graph(odgi::graph_t &graph, std::string basename, const uint64_t& nthreads) {
-        // create temporary file for path names
-        if (basename.empty()) {
-            basename = temp_file::get_dir() + '/';
+        // Build in a per-invocation temp directory so concurrent index builds in the same
+        // working directory do not clobber each other's fixed-name temp files (issue #493).
+        const bool created_tmp = basename.empty();
+        if (created_tmp) {
+            std::string tmpl = temp_file::get_dir() + "/odgi-xp-XXXXXX";
+            std::vector<char> t(tmpl.begin(), tmpl.end());
+            t.push_back('\0');
+            if (mkdtemp(t.data()) == nullptr) {
+                std::cerr << "error [xp]: could not create a temporary directory in " << temp_file::get_dir() << std::endl;
+                exit(1);
+            }
+            basename = std::string(t.data()) + '/';
         }
         from_handle_graph_impl(graph, basename, nthreads);
         temp_file::cleanup(); // clean up our temporary files
+        if (created_tmp) {
+            rmdir(basename.c_str());
+        }
     }
 
     void XP::from_handle_graph_impl(odgi::graph_t &graph, const std::string& basename, const uint64_t& nthreads) {
