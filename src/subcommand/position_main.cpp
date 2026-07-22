@@ -740,6 +740,11 @@ int main_position(int argc, char** argv) {
         	}
         }
     }
+    auto warn_no_hit = [](const std::string& query) {
+#pragma omp critical (cerr)
+        std::cerr << "[odgi::position] warning: no reference position found for " << query
+                  << " (increase -d/--walking-dist?)" << std::endl;
+    };
     // for each position that we want to look up
 #pragma omp parallel for schedule(dynamic,1)
     for (auto& _pos : graph_positions) {
@@ -807,6 +812,8 @@ int main_position(int argc, char** argv) {
                           << target_graph.get_path_name(p) << "," << result.path_offset << "," << (ref_is_rev ? "-" : "+") << "\t"
                           << result.walked_to_hit_ref << "\t" << (result.is_rev_vs_ref ? "-" : "+") << std::endl;
             }
+        } else {
+            warn_no_hit(std::to_string(id(_pos)) + "," + std::to_string(offset(_pos)));
         }
     }
 
@@ -838,6 +845,7 @@ int main_position(int argc, char** argv) {
         }
         lift_result_t result;
         //std::cerr << "Got graph pos " << id(pos) << std::endl;
+        bool hit = false;
         if (id(pos)) {
             if (give_graph_pos) {
 #pragma omp critical (cout)
@@ -845,6 +853,7 @@ int main_position(int argc, char** argv) {
                           << (lifting ? source_graph.get_path_name(path_pos.path) : target_graph.get_path_name(path_pos.path))
                           << "," << path_pos.offset << "," << (path_pos.is_rev ? "-" : "+")
                           << "\t" << id(pos) << "," << offset(pos) << "," << (is_rev(pos) ? "-" : "+") << std::endl;
+                hit = true;
             } else if (get_position(target_graph, ref_path_set, pos, result, step_handle_graph_pos, true)) {
                 bool ref_is_rev = false;
                 path_handle_t p = target_graph.get_path_handle_of_step(result.ref_hit);
@@ -854,7 +863,11 @@ int main_position(int argc, char** argv) {
                           << path_pos.offset << "," << (path_pos.is_rev ? "-" : "+") << "\t"
                           << target_graph.get_path_name(p) << "," << result.path_offset << "," << (ref_is_rev ? "-" : "+") << "\t"
                           << result.walked_to_hit_ref << "\t" << (result.is_rev_vs_ref ? "-" : "+") << std::endl;
+                hit = true;
             }
+        }
+        if (!hit) {
+            warn_no_hit((lifting ? source_graph.get_path_name(path_pos.path) : target_graph.get_path_name(path_pos.path)) + "," + std::to_string(path_pos.offset));
         }
     }
 
@@ -903,6 +916,7 @@ int main_position(int argc, char** argv) {
 				pos_end = get_graph_pos(target_graph, path_range.end, step_handle_graph_pos_end);
 			}
         }
+        bool hit = false;
         if (id(pos_begin) && id(pos_end) && !gff_input) {
             lift_result_t lift_begin;
             lift_result_t lift_end;
@@ -913,6 +927,7 @@ int main_position(int argc, char** argv) {
                 std::cout << path_range.data << "\t"
                           << id(pos_begin) << "," << offset(pos_begin) << "," << (is_rev(pos_begin)?"-":"+") << "\t"
                           << id(pos_end) << "," << offset(pos_end) << "," << (is_rev(pos_end)?"-":"+") << std::endl;
+                hit = true;
             } else if (get_position(target_graph, ref_path_set, pos_begin, lift_begin, step_handle_graph_pos_begin, true)
                        && get_position(target_graph, ref_path_set, pos_end, lift_end, step_handle_graph_pos_end, true)) {
                 bool ref_is_rev = false;
@@ -929,7 +944,11 @@ int main_position(int argc, char** argv) {
                           << (lift_end.is_rev_vs_ref ? "-" : "+") << "\t"
                           << (lift_begin.is_rev_vs_ref ^ path_range.is_rev ? "-" : "+") << std::endl;
                     //<< walked_to_hit_ref << "\t" << (is_rev_vs_ref ? "-" : "+") << std::endl;
+                hit = true;
             }
+        }
+        if (!gff_input && !hit) {
+            warn_no_hit(path_range.data);
         }
     }
 	if (gff_input) {
