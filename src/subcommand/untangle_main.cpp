@@ -121,6 +121,7 @@ int main_untangle(int argc, char **argv) {
         std::string line;
         std::vector<path_handle_t> paths;
         while (std::getline(path_names_in, line)) {
+            if (!line.empty() && line.back() == '\r') line.pop_back(); // tolerate CRLF
             if (!line.empty()) {
                 if (graph.has_path(line)) {
                     const path_handle_t path = graph.get_path_handle(line);
