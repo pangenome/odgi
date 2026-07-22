@@ -86,6 +86,8 @@ namespace odgi {
                                                       {'R', "lace-paths"});
         args::Flag _optimize(extract_opts, "optimize", "Compact the node ID space in the extracted graph(s).",
                              {'O', "optimize"});
+        args::Flag _keep_full_path_names(extract_opts, "keep-full-path-names", "Keep the original path name (no :start-end suffix) when an extracted subpath spans the whole source path.",
+                             {'K', "keep-full-path-names"});
         args::Group threading_opts(parser, "[ Threading ]");
         args::ValueFlag<uint64_t> nthreads(threading_opts, "N", "Number of threads to use for parallel operations.",
                                            {'t', "threads"});
@@ -416,7 +418,8 @@ namespace odgi {
                              std::vector<odgi::path_range_t> path_ranges, std::vector<std::pair<uint64_t, uint64_t>> pangenomic_ranges,
                              const uint64_t context_steps, const uint64_t context_bases, const bool full_range, const bool inverse,
                              const uint64_t max_dist_subpaths, const uint64_t num_iterations,
-                             const uint64_t num_threads, const bool show_progress, const bool optimize) {
+                             const uint64_t num_threads, const bool show_progress, const bool optimize,
+                             const bool keep_full_path_names) {
             // Check if there are nodes in the subgraph, to avoid extracting the whole graph
             // when nodes with functionality other than pangenomic paths/ranges are not specified
             if (inverse && subgraph.get_node_count() > 0) {
@@ -664,14 +667,30 @@ namespace odgi {
             std::vector<path_handle_t> subpaths_from_path_ranges;
             subpaths_from_path_ranges.reserve(path_ranges.size());
 
+            // when keeping full path names, look up each involved path's length once
+            ska::flat_hash_map<path_handle_t, uint64_t> range_path_len;
+            if (keep_full_path_names) {
+                for (auto &pr : path_ranges) {
+                    if (!range_path_len.count(pr.begin.path)) {
+                        uint64_t len = 0;
+                        source.for_each_step_in_path(pr.begin.path, [&](const step_handle_t& s) {
+                            len += source.get_length(source.get_handle_of_step(s));
+                        });
+                        range_path_len[pr.begin.path] = len;
+                    }
+                }
+            }
+
             for (auto &path_range : path_ranges) {
                 const std::string path_name = source.get_path_name(path_range.begin.path);
+                const bool whole = keep_full_path_names && path_range.begin.offset == 0
+                                   && path_range.end.offset >= range_path_len[path_range.begin.path];
 
                 subpaths_from_path_ranges.push_back(
                         // The function assumes that every path is new and unique
                         odgi::algorithms::create_subpath(
                             subgraph,
-                            odgi::algorithms::make_path_name(path_name, path_range.begin.offset, path_range.end.offset),
+                            whole ? path_name : odgi::algorithms::make_path_name(path_name, path_range.begin.offset, path_range.end.offset),
                             source.get_is_circular(path_range.begin.path)
                     )
                 );
@@ -712,7 +731,8 @@ namespace odgi {
 
             // Add subpaths covering the collected handles
             algorithms::add_subpaths_to_subgraph(source, *source_paths, subgraph, num_threads,
-                                                 show_progress ? "[odgi::extract] adding subpaths" : "");
+                                                 show_progress ? "[odgi::extract] adding subpaths" : "",
+                                                 keep_full_path_names);
 
             std::vector<path_handle_t> subpaths;
             subpaths.reserve(subgraph.get_path_count());
@@ -813,7 +833,7 @@ namespace odgi {
                     {path_range}, *pangenomic_ranges,
                     context_steps, context_bases, _full_range, false,
                     max_dist_subpaths, num_iterations,
-                    num_threads, show_progress, optimize);
+                    num_threads, show_progress, optimize, args::get(_keep_full_path_names));
 
                 const string filename = graph.get_path_name(path_range.begin.path) + ":" + to_string(path_range.begin.offset) + "-" + to_string(path_range.end.offset) + ".og";
 
@@ -846,7 +866,7 @@ namespace odgi {
                 *path_ranges, *pangenomic_ranges,
                 context_steps, context_bases, _full_range, _inverse,
                 max_dist_subpaths, num_iterations,
-                num_threads, show_progress, optimize);
+                num_threads, show_progress, optimize, args::get(_keep_full_path_names));
 
             {
                 const std::string outfile = args::get(og_out_file);
