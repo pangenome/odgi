@@ -149,6 +149,7 @@ void gfa_to_handle(const string& gfa_filename,
                     if (path_queue.try_pop(p)) {
                         uint64_t i = 0;
                         for (auto& s : p->gfak.segment_names) {
+                            if (s.empty()) { ++i; continue; } // empty path field: stepless path, don't abort
                             uint64_t id = 0;
                             try {
                                 id = std::stoull(s) - id_increment;
