@@ -347,33 +347,31 @@ namespace odgi {
         std::vector<odgi::path_range_t>* path_ranges;
         if (_inverse && !input_path_ranges.empty()) {
             auto path_length_table = algorithms::get_path_length(graph);
-
-            // On average, each interval (in the middle) would generate two intervals (on the sides) when inverted
             path_ranges = new std::vector<odgi::path_range_t>();
-            path_ranges->reserve(input_path_ranges.size() * 2);
 
-            for (auto &path_range : input_path_ranges) {
-                const path_handle_t path_handle = path_range.begin.path;
+            // Invert the UNION of all removed intervals per path, so multiple intervals
+            // on one path yield the complementary gaps rather than the whole path.
+            std::sort(input_path_ranges.begin(), input_path_ranges.end(),
+                      [](const odgi::path_range_t& a, const odgi::path_range_t& b) {
+                          return as_integer(a.begin.path) != as_integer(b.begin.path)
+                                 ? as_integer(a.begin.path) < as_integer(b.begin.path)
+                                 : a.begin.offset < b.begin.offset;
+                      });
+            for (size_t k = 0; k < input_path_ranges.size(); ) {
+                const path_handle_t path_handle = input_path_ranges[k].begin.path;
                 const uint64_t path_length = path_length_table[path_handle];
-
-                if (path_range.begin.offset > 0) {
-                    path_ranges->push_back({
-                        { path_handle, 0, false },
-                        { path_handle, path_range.begin.offset, false },
-                        path_range.is_rev,
-                        path_range.name == "." ? "." : path_range.name + "-1",
-                        ""
-                    });
+                uint64_t cursor = 0;
+                for (; k < input_path_ranges.size()
+                       && as_integer(input_path_ranges[k].begin.path) == as_integer(path_handle); ++k) {
+                    const uint64_t s = input_path_ranges[k].begin.offset;
+                    const uint64_t e = input_path_ranges[k].end.offset;
+                    if (s > cursor) {
+                        path_ranges->push_back({ { path_handle, cursor, false }, { path_handle, s, false }, false, ".", "" });
+                    }
+                    cursor = std::max(cursor, e);
                 }
-
-                if (path_range.end.offset < path_length) {
-                    path_ranges->push_back({
-                        { path_handle, path_range.end.offset, false },
-                        { path_handle, path_length, false },
-                        path_range.is_rev,
-                        path_range.name == "." ? "." : path_range.name + "-2",
-                        ""
-                    });
+                if (cursor < path_length) {
+                    path_ranges->push_back({ { path_handle, cursor, false }, { path_handle, path_length, false }, false, ".", "" });
                 }
             }
 
