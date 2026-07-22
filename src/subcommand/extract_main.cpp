@@ -417,18 +417,6 @@ namespace odgi {
                              const uint64_t context_steps, const uint64_t context_bases, const bool full_range, const bool inverse,
                              const uint64_t max_dist_subpaths, const uint64_t num_iterations,
                              const uint64_t num_threads, const bool show_progress, const bool optimize) {
-            if (context_steps > 0 || context_bases > 0) {
-                if (show_progress) {
-                    std::cerr << "[odgi::extract] expansion and adding connecting edges" << std::endl;
-                }
-
-                if (context_steps > 0) {
-                    algorithms::expand_subgraph_by_steps(source, subgraph, context_steps, false);
-                } else {
-                    algorithms::expand_subgraph_by_length(source, subgraph, context_bases, false);
-                }
-            }
-
             // Check if there are nodes in the subgraph, to avoid extracting the whole graph
             // when nodes with functionality other than pangenomic paths/ranges are not specified
             if (inverse && subgraph.get_node_count() > 0) {
@@ -541,6 +529,18 @@ namespace odgi {
                 algorithms::extract_id_range(source, subgraph.min_node_id(), subgraph.max_node_id() , subgraph, show_progress
                                                                                                                 ? "[odgi::extract] collecting all nodes in the path range"
                                                                                                                 : "");
+            }
+
+            // expand by context around the collected seeds
+            if (context_steps > 0 || context_bases > 0) {
+                if (show_progress) {
+                    std::cerr << "[odgi::extract] expansion and adding connecting edges" << std::endl;
+                }
+                if (context_steps > 0) {
+                    algorithms::expand_subgraph_by_steps(source, subgraph, context_steps, false);
+                } else {
+                    algorithms::expand_subgraph_by_length(source, subgraph, context_bases, false);
+                }
             }
 
             // These paths are treated differently: only the specified ranges are included in the extracted graph
