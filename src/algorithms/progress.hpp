@@ -8,6 +8,8 @@
 #include <cmath>
 #include <iomanip>
 #include <sstream>
+#include <mutex>
+#include <condition_variable>
 
 namespace odgi {
 
@@ -22,21 +24,28 @@ namespace progress_meter {
         std::atomic<uint64_t> completed;
         std::chrono::time_point<std::chrono::steady_clock> start_time;
         std::thread logger;
+        std::mutex mtx;
+        std::condition_variable cv;
+        std::atomic<bool> done;
         ProgressMeter(uint64_t _total, const std::string& _banner)
                 : total(_total), banner(_banner) {
             start_time = std::chrono::steady_clock::now();
             completed = 0;
+            done = false;
             logger = std::thread(
                     [&](void) {
                         do_print();
-                        auto last = 0;
-                        while (completed < total) {
-                            auto curr = completed - last;
-                            if (curr > 0) {
+                        uint64_t last = 0;
+                        std::unique_lock<std::mutex> lock(mtx);
+                        while (!done.load()) {
+                            uint64_t curr = completed.load();
+                            if (curr > last) {
                                 do_print();
-                                last = completed;
+                                last = curr;
                             }
-                            std::this_thread::sleep_for(std::chrono::milliseconds(500));
+                            // wake immediately when finish() signals, otherwise
+                            // refresh the display at most every 500ms
+                            cv.wait_for(lock, std::chrono::milliseconds(500));
                         }
                     });
         };
@@ -59,9 +68,28 @@ namespace progress_meter {
         }
         void finish(void) {
             completed.store(total);
-            logger.join();
+            {
+                std::lock_guard<std::mutex> lock(mtx);
+                done.store(true);
+            }
+            cv.notify_all();
+            if (logger.joinable()) {
+                logger.join();
+            }
             do_print();
             std::cerr << std::endl;
+        }
+        ~ProgressMeter() {
+            // safety net: never let a still-joinable logger thread reach
+            // std::thread's destructor (which would call std::terminate)
+            if (logger.joinable()) {
+                {
+                    std::lock_guard<std::mutex> lock(mtx);
+                    done.store(true);
+                }
+                cv.notify_all();
+                logger.join();
+            }
         }
         std::string print_time(const double& _seconds) {
             int days = 0, hours = 0, minutes = 0, seconds = 0;
