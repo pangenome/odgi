@@ -264,8 +264,9 @@ int main_sort(int argc, char** argv) {
 	};
 
 	auto sort_graph_by_target_paths = [&](graph_t& graph, std::vector<path_handle_t> target_paths, std::vector<bool>& is_ref) {
-		// is_ref is indexed by (id - 1) and gaps are filled via get_handle(i+1), so this requires compaction
-		if (graph.max_node_id() - graph.min_node_id() >= graph.get_node_count()) {
+		// is_ref is indexed by (id - 1) and gaps are filled via get_handle(i+1), so this requires
+		// ids to be exactly 1..node_count (min==1 && max==node_count), i.e. an optimized graph
+		if (!graph.is_optimized()) {
 			std::cerr << "[odgi::sort] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
 			exit(1);
 		}
