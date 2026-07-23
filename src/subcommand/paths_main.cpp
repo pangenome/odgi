@@ -165,17 +165,6 @@ int main_paths(int argc, char** argv) {
     }
 
     const uint64_t shift = graph.min_node_id();
-    if (
-        args::get(haplo_matrix) || 
-        (non_reference_nodes && !args::get(non_reference_nodes).empty()) ||
-        (non_reference_ranges && !args::get(non_reference_ranges).empty())
-        ) {
-        // Check if the node IDs are compacted
-        if (graph.max_node_id() - shift >= graph.get_node_count()){
-            std::cerr << "[odgi::paths] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
-            exit(1);
-        }
-    }
 
     if (list_path_start_end && list_names) {
     	std::vector<path_handle_t> paths;
@@ -286,11 +275,8 @@ int main_paths(int argc, char** argv) {
                 std::string path_name = (delim ? full_path_name.substr(cnt_pos.second+1) : full_path_name);
                 uint64_t path_length = 0;
                 uint64_t path_step_count = 0;
-                std::vector<uint64_t> row(graph.get_node_count());
-                // Initialize first to avoid possible bugs later
-                for (uint32_t i = 0; i < graph.get_node_count(); ++i) {
-                    row[i] = 0;
-                }
+                // indexed by node rank (id - shift); size by id span so non-contiguous ids fit
+                std::vector<uint64_t> row(graph.max_node_id() - shift + 1, 0);
 
                 graph.for_each_step_in_path(
                     p,
@@ -306,15 +292,11 @@ int main_paths(int argc, char** argv) {
                 std::cout << path_name << "\t"
                           << path_length << "\t"
                           << path_step_count;
-                if (node_length_scale) {
-                    for (uint64_t i = 0; i < row.size(); ++i) {
-                        std::cout << "\t" << row[i] * graph.get_length(graph.get_handle(i+shift));
-                    }
-                } else {
-                    for (uint64_t i = 0; i < row.size(); ++i) {
-                        std::cout << "\t" << row[i];
-                    }
-                }
+                // emit one column per real node in the same order as the header (for_each_handle)
+                graph.for_each_handle([&](const handle_t& h) {
+                    const uint64_t count = row[graph.get_id(h) - shift];
+                    std::cout << "\t" << (node_length_scale ? count * graph.get_length(h) : count);
+                });
                 std::cout << std::endl;
             });
     }
@@ -470,13 +452,13 @@ int main_paths(int argc, char** argv) {
         if (non_reference_nodes && !args::get(non_reference_nodes).empty()){
             // Emit non-reference nodes
 
-            // Set non-reference nodes
-            atomicbitvector::atomic_bv_t non_reference_nodes(graph.get_node_count());
-            for(uint64_t x = 0; x < non_reference_nodes.size(); ++x) {
-                if (min_size_in_bp == 0 || graph.get_length(graph.get_handle(x + shift)) >= min_size_in_bp) {
-                    non_reference_nodes.set(x);
+            // Set non-reference nodes (indexed by node rank; size by id span for non-contiguous ids)
+            atomicbitvector::atomic_bv_t non_reference_nodes(graph.max_node_id() - shift + 1);
+            graph.for_each_handle([&](const handle_t& h) {
+                if (min_size_in_bp == 0 || graph.get_length(h) >= min_size_in_bp) {
+                    non_reference_nodes.set(graph.get_id(h) - shift);
                 }
-            }
+            });
 #pragma omp parallel for schedule(dynamic,1)
             for (auto &path : reference_paths) {
                 graph.for_each_step_in_path(path, [&](const step_handle_t& step) {
@@ -517,8 +499,8 @@ int main_paths(int argc, char** argv) {
 
             const bool _show_step_ranges = args::get(show_step_ranges);
 
-            // Set the reference nodes
-            atomicbitvector::atomic_bv_t reference_nodes(graph.get_node_count());
+            // Set the reference nodes (indexed by node rank; size by id span for non-contiguous ids)
+            atomicbitvector::atomic_bv_t reference_nodes(graph.max_node_id() - shift + 1);
     #pragma omp parallel for schedule(dynamic,1)
             for (auto &path : reference_paths) {
                 graph.for_each_step_in_path(path, [&](const step_handle_t& step) {

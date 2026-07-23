@@ -166,10 +166,15 @@ int main_stats(int argc, char** argv) {
     }
 
 	const uint64_t shift = number_bool_packing::unpack_number(graph.get_handle(graph.min_node_id()));
+	// node rank span (max_id - min_id); equals node_count-1 only when ids are compacted
+	const uint64_t max_rank = number_bool_packing::unpack_number(graph.get_handle(graph.max_node_id())) - shift;
 
-    if (args::get(mean_links_length) || args::get(sum_of_path_node_distances)) {
-		if (number_bool_packing::unpack_number(graph.get_handle(graph.max_node_id())) - shift >= graph.get_node_count()){
-			std::cerr << "[odgi::stats] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
+    // Only the 2D metrics (-l/--layout) require id-compacted node IDs: X/Y are indexed by node rank
+    // and come from a layout that itself assumes compaction. The 1D metrics work on non-contiguous ids.
+    if ((args::get(mean_links_length) || args::get(sum_of_path_node_distances))
+        && layout_in_file && !args::get(layout_in_file).empty()) {
+		if (max_rank >= graph.get_node_count()){
+			std::cerr << "[odgi::stats] error: the 2D metrics (-l/--layout) require id-compacted node IDs. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
 			exit(1);
 		}
     }
@@ -392,8 +397,13 @@ int main_stats(int argc, char** argv) {
 	}
 
     if (args::get(mean_links_length) || args::get(sum_of_path_node_distances)) {
-        // This vector is needed for computing the metrics in 1D and for detecting gap-links
-        std::vector<uint64_t> position_map(graph.get_node_count() + 1);
+        // This vector is needed for computing the metrics in 1D and for detecting gap-links.
+        // Indexed by node rank (unpack_number - shift), plus one sentinel for the right end of the
+        // last node; sized by the id span so non-contiguous node ids do not overflow it.
+        std::vector<uint64_t> position_map(max_rank + 2);
+        // node-space coordinate per rank boundary: number of real nodes before this rank.
+        // Makes node-space distances independent of id gaps (nspace[k]==k when ids are compacted).
+        std::vector<uint64_t> nspace(max_rank + 2);
 
         // These vectors are needed for computing the metrics in 2D
         std::vector<double> X, Y;
@@ -418,15 +428,24 @@ int main_stats(int argc, char** argv) {
 
         {
             uint64_t len = 0;
+            uint64_t dense = 0; // real nodes seen so far
+            // gap ranks inherit the next real node's start (the previous node's end) so the
+            // position_map[rank+1] right-end lookups used by the 1D metric stay correct on gaps
+            int64_t prev = -1;
             graph.for_each_handle([&](const handle_t &h) {
-                position_map[number_bool_packing::unpack_number(h) - shift] = len;
-                uint64_t hl = graph.get_length(h);
-                len += hl;
-#ifdef debug_odgi_viz
-                std::cerr << "SEGMENT ID: " << graph.get_id(h) << " - " << as_integer(h) << " - index_in_position_map (" << number_bool_packing::unpack_number(h) << ") = " << len << std::endl;
-#endif
+                const uint64_t r = number_bool_packing::unpack_number(h) - shift;
+                for (uint64_t k = (uint64_t)(prev + 1); k <= r; ++k) {
+                    position_map[k] = len;
+                    nspace[k] = dense;
+                }
+                prev = (int64_t)r;
+                ++dense;
+                len += graph.get_length(h);
             });
-            position_map[position_map.size() - 1] = len;
+            for (uint64_t k = (uint64_t)(prev + 1); k < position_map.size(); ++k) {
+                position_map[k] = len;
+                nspace[k] = dense;
+            }
         }
 
         if (args::get(mean_links_length)){
@@ -500,7 +519,7 @@ int main_stats(int argc, char** argv) {
                                 sum_2D_space += sqrt(dx * dx + dy * dy);
                             }else{
                                 // 1D metric (in node space and in nucleotide space)
-                                sum_node_space += _info_b - _info_a;
+                                sum_node_space += nspace[_info_b - shift] - nspace[_info_a - shift];
                                 sum_nt_space += position_map[_info_b - shift] - position_map[_info_a - shift];
 
 #ifdef debug_odgi_stats
@@ -680,7 +699,7 @@ int main_stats(int argc, char** argv) {
                             std::cerr << unpacked_b << " - " << unpacked_a << ": " << position_map[unpacked_b - shift] - position_map[unpacked_a - shift] << " * " << weight << std::endl;
 #endif
 
-                            sum_path_node_dist_node_space += weight * (unpacked_b - unpacked_a);
+                            sum_path_node_dist_node_space += weight * (nspace[unpacked_b - shift] - nspace[unpacked_a - shift]);
                             sum_path_node_dist_nt_space += weight * (position_map[unpacked_b - shift] - position_map[unpacked_a - shift]);
                         }
 
@@ -688,7 +707,7 @@ int main_stats(int argc, char** argv) {
                             if (layout_in_file) {
                                 sum_path_node_dist_2D_space += 2 * euclidean_distance_2D;
                             }else{
-                                sum_path_node_dist_node_space += 2 * (unpacked_b - unpacked_a);
+                                sum_path_node_dist_node_space += 2 * (nspace[unpacked_b - shift] - nspace[unpacked_a - shift]);
                                 sum_path_node_dist_nt_space += 2 * (position_map[unpacked_b - shift] - position_map[unpacked_a - shift]);
                             }
 
@@ -895,7 +914,8 @@ int main_stats(int argc, char** argv) {
 			std::cout << "path\tlinks_length_per_nuc" << std::endl;
 		}
 		// TODO maybe combine this with other position_maps?
-		std::vector<uint64_t> pan_pos(graph.get_node_count());
+		// indexed by node rank (unpack_number - shift); size by id span for non-contiguous ids
+		std::vector<uint64_t> pan_pos(max_rank + 1);
 		uint64_t pos = 0;
 		graph.for_each_handle([&](const handle_t &h) {
 			pan_pos[number_bool_packing::unpack_number(h) - shift] = pos;

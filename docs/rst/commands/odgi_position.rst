@@ -22,6 +22,48 @@ and annotations from a source graph ``-x, --source`` into the
 ``target``. When completing this “graph lift”, the intersecting set of
 paths in the two graphs are used to complete the coordinate projection.
 
+OUTPUT
+======
+
+Graph positions given with **-g, --graph-pos** or **-G, --graph-pos-file**
+are *node identifiers*, not linear coordinates: ``-g 42`` means node 42,
+offset 0, not base 42 of a path.
+
+The output is a tab-separated table. With a reference path
+(**-r, --ref-path** or **-R, --ref-paths**) the columns are:
+
+| **target.graph.pos**
+| The queried graph position as ``node_id,offset,strand``.
+
+| **target.path.pos**
+| The nearest position on the reference path, as ``path_name,offset,strand``.
+
+| **dist.to.ref**
+| Distance in base pairs from the queried node to that reference position.
+  ``0`` means the node lies on the reference path; a non-zero value means the
+  node is off the reference (for example inside a bubble) and
+  ``target.path.pos`` is the nearest reference anchor.
+
+| **strand.vs.ref**
+| Orientation of the node relative to the reference (``+`` or ``-``).
+
+Without a reference path the third column is **dist.to.path** (distance to the
+nearest embedded path) instead of **dist.to.ref**. With **-v, --give-graph-pos**
+only ``target.graph.pos`` is emitted. When lifting from a source graph
+(**-x, --source**) a leading ``source.graph.pos`` column is added.
+
+Example (reference path ``chm13__LPA__tig00000001``)::
+
+    # node 3 lies on the reference: dist.to.ref is 0
+    $ odgi position -i lpa.og -r chm13__LPA__tig00000001 -g 3
+    #target.graph.pos  target.path.pos              dist.to.ref  strand.vs.ref
+    3,0,+              chm13__LPA__tig00000001,0,+  0            +
+
+    # node 1 is off the reference: nearest anchor is base 5, 38 bp away
+    $ odgi position -i lpa.og -r chm13__LPA__tig00000001 -g 1
+    #target.graph.pos  target.path.pos              dist.to.ref  strand.vs.ref
+    1,0,+              chm13__LPA__tig00000001,5,+  38           +
+
 OPTIONS
 =======
 
