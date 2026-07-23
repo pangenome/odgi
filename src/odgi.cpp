@@ -198,8 +198,12 @@ graph_t::path_metadata_t& graph_t::get_path_metadata(const path_handle_t& path) 
     if (path_metadata_h->Find(as_integer(path), p)) {
         return *p;
     } else {
-        assert(false);
-        return *p; // won't reach unless assert is disabled
+        // A miss here means a stale or cross-graph path handle was used. Fail with a clear
+        // message rather than assert(false) (which is compiled out in release builds, leaving
+        // an uninitialized pointer dereference).
+        std::cerr << "[odgi] error: path handle " << as_integer(path)
+                  << " is not present in this graph (stale or cross-graph path handle)." << std::endl;
+        exit(1);
     }
 }
 
@@ -208,8 +212,12 @@ const graph_t::path_metadata_t& graph_t::path_metadata(const path_handle_t& path
     if (path_metadata_h->Find(as_integer(path), p)) {
         return *p;
     } else {
-        assert(false);
-        return *p; // won't reach unless assert is disabled
+        // A miss here means a stale or cross-graph path handle was used. Fail with a clear
+        // message rather than assert(false) (which is compiled out in release builds, leaving
+        // an uninitialized pointer dereference).
+        std::cerr << "[odgi] error: path handle " << as_integer(path)
+                  << " is not present in this graph (stale or cross-graph path handle)." << std::endl;
+        exit(1);
     }
 }
 
@@ -226,8 +234,10 @@ path_handle_t graph_t::get_path_handle(const std::string& path_name) const {
     if (path_name_h->Find(path_name, p)) {
         return p->handle;
     } else {
-        assert(false);
-        return as_path_handle(0); // won't reach unless assert is disabled
+        // Fail clearly with the missing name rather than assert(false) (compiled out in release,
+        // then returning path handle 0 whose later use aborts opaquely in get_path_metadata).
+        std::cerr << "[odgi] error: path '" << path_name << "' is not present in this graph." << std::endl;
+        exit(1);
     }
 }
 
