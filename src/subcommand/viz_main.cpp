@@ -1245,7 +1245,7 @@ namespace odgi {
 
 		// Compressed-Mode part starts here :)
 		if (compress) {
-			std::map <uint64_t, algorithms::path_info_t> bins;
+			std::unordered_map<uint64_t, algorithms::path_info_t> bins;
 			graph.for_each_path_handle([&](const path_handle_t &path) {
 				graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
 					handle_t h = graph.get_handle_of_step(occ);
@@ -1411,7 +1411,7 @@ namespace odgi {
 					uint64_t steps = 0;
 					uint64_t rev = 0;
 					uint64_t path_len_to_use = 0;
-					std::map <uint64_t, algorithms::path_info_t> bins;
+					std::unordered_map<uint64_t, algorithms::path_info_t> bins;
 					if (is_aln) {
 						if (
 								_show_strands ||
@@ -1454,9 +1454,10 @@ namespace odgi {
 									for (uint64_t k = 0; k < hl; ++k) {
 										int64_t curr_bin = (p + k) / _bin_width + 1;
 
-										++bins[curr_bin].mean_depth;
+										auto& b = bins[curr_bin];
+										++b.mean_depth;
 										if (is_rev) {
-											++bins[curr_bin].mean_inv;
+											++b.mean_inv;
 										}
 									}
 								} else if (_binned_mode && _color_by_uncalled_bases) {

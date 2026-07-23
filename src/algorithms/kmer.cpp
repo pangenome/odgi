@@ -51,9 +51,6 @@ void for_each_kmer(const HandleGraph& graph, size_t k, size_t edge_max,
                         // did we reach our target length?
                         if (kmer.seq.size() == k) {
                             // TODO here check if we are at the beginning of the reverse head or the beginning of the forward tail and would need special handling
-                            // establish the context
-                            handle_t end_handle = graph.get_handle(id(kmer.end), is_rev(kmer.end));
-                            size_t end_length = graph.get_length(end_handle);
                             // now pass the kmer to our callback
                             lambda(kmer);
                             q = kmers.erase(q);
@@ -65,7 +62,7 @@ void for_each_kmer(const HandleGraph& graph, size_t k, size_t edge_max,
                             std::string curr_seq = graph.get_sequence(kmer.curr);
                             size_t take = std::min(curr_length, k-kmer.seq.size());
                             kmer.end = make_pos_t(curr_id, curr_is_rev, take);
-                            kmer.seq.append(curr_seq.substr(0,take));
+                            kmer.seq.append(curr_seq, 0, take);
                             if (kmer.seq.size() < k) {
                                 size_t next_count = 0;
                                 if (edge_max) graph.follow_edges(kmer.curr, false, [&](const handle_t& next) { ++next_count; return next_count <= 1; });

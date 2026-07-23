@@ -311,6 +311,17 @@ int main_pav(int argc, char **argv) {
 		operation_progress = std::make_unique<odgi::algorithms::progress_meter::ProgressMeter>(path_ranges.size(), banner);
     }
 
+    // Precompute path -> group rank once, so the parallel per-step loop does a single
+    // read-only hash lookup (avoids a double path_2_group probe + a std::map<string> lookup
+    // per step, and the non-const operator[] races those maps would incur under omp).
+    ska::flat_hash_map<path_handle_t, uint64_t> path_2_group_rank;
+    if (group_paths) {
+        path_2_group_rank.reserve(path_2_group.size());
+        for (auto& kv : path_2_group) {
+            path_2_group_rank[kv.first] = group_2_index[kv.second];
+        }
+    }
+
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
     for (uint64_t i = 0; i < path_ranges.size(); ++i) {
         auto &path_range = path_ranges[i];
@@ -338,11 +349,13 @@ int main_pav(int argc, char **argv) {
             graph.for_each_step_on_handle(handle, [&](const step_handle_t &source_step) {
                 const auto& path_handle = graph.get_path_handle_of_step(source_step);
                 // Check if the paths are grouped and there are paths that do not belong to any group
-                if (!group_paths || path_2_group.find(path_handle) != path_2_group.end()) {
-                    const uint64_t group_rank = group_paths ?
-                            group_2_index[path_2_group[path_handle]] :
-                            as_integer(path_handle) - 1;
-                    group_ranks_on_node_handle.insert(group_rank);
+                if (!group_paths) {
+                    group_ranks_on_node_handle.insert(as_integer(path_handle) - 1);
+                } else {
+                    auto it = path_2_group_rank.find(path_handle);
+                    if (it != path_2_group_rank.end()) {
+                        group_ranks_on_node_handle.insert(it->second);
+                    }
                 }
             });
 

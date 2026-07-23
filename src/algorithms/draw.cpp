@@ -267,7 +267,7 @@ void draw_svg(std::ostream &out,
                     << "\" stroke=\"" << to_hexrgb(color)
                     << "\" stroke-width=\"" << line_width
                     << "\"/>"
-                    << std::endl;
+                    << '\n';
             } else {
                 highlights.push_back(handle);
             }
@@ -293,7 +293,7 @@ void draw_svg(std::ostream &out,
                 << "\" stroke=\"" << to_hexrgb(color) //to_rgba(color) // with rgba, nodes are invisible with InkScape
                 << "\" stroke-width=\"" << line_width
                 << "\"/>"
-                << std::endl;
+                << '\n';
         }
 
         // Render labels at the end, to have them on top of everything
@@ -315,7 +315,7 @@ void draw_svg(std::ostream &out,
                     placed_labels.emplace_back(newEndpoints.x2, newEndpoints.y2, text); // Record the label's placement
                 }
                 out << "</text>"
-                    << std::endl;
+                    << '\n';
             }
         }
     }

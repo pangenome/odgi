@@ -55,7 +55,8 @@ namespace odgi {
             );
 
             std::vector<handle_t> new_handles;
-            for (auto x_y_z : originalRank_inChoppedNodeRank_handle) {
+            new_handles.reserve(originalRank_inChoppedNodeRank_handle.size());
+            for (const auto &x_y_z : originalRank_inChoppedNodeRank_handle) {
                 new_handles.push_back(std::get<2>(x_y_z));
             }
 

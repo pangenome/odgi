@@ -352,6 +352,7 @@ std::vector<handle_t> two_way_topological_order(const HandleGraph* g) {
         avg_order[handle] = max(avg_order[handle], (++i));
     }
     std::vector<std::pair<handle_t, uint64_t>> order;
+    order.reserve(avg_order.size());
     for (auto& p : avg_order) {
         order.push_back(p);
     }
@@ -360,6 +361,7 @@ std::vector<handle_t> two_way_topological_order(const HandleGraph* g) {
                   return a.second < b.second;
               });
     std::vector<handle_t> result;
+    result.reserve(avg_order.size());
     for (auto& p : order) {
         result.push_back(p.first);
     }
@@ -501,6 +503,7 @@ std::vector<handle_t> breadth_first_topological_order(const HandleGraph& g, cons
     uint64_t prev_max_length = 0;
     
     std::vector<bfs_state_t> order_raw;
+    order_raw.reserve(g.get_node_count());
     while (unvisited.rank1(unvisited.size())!=0) {
         /*
         std::cerr << "unvisited size " << unvisited.rank1(unvisited.size()) << std::endl;
@@ -551,6 +554,7 @@ std::vector<handle_t> breadth_first_topological_order(const HandleGraph& g, cons
               });
 
     std::vector<handle_t> order;
+    order.reserve(order_raw.size());
     for (auto& o : order_raw) order.push_back(o.handle);
 
     return order;
@@ -593,6 +597,7 @@ std::vector<handle_t> depth_first_topological_order(const HandleGraph& g, const 
                       });
     */
     std::vector<handle_t> order;
+    order.reserve(g.get_node_count());
     while (unvisited.rank1(unvisited.size())!=0) {
         /*
         std::cerr << "unvisited size " << unvisited.rank1(unvisited.size()) << std::endl;

@@ -6,6 +6,7 @@ namespace algorithms {
 
 std::vector<handle_t> random_order(const HandleGraph& graph) {
     std::vector<handle_t> order;
+    order.reserve(graph.get_node_count());
     graph.for_each_handle([&order](const handle_t& handle) {
             order.push_back(handle);
         });

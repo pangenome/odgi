@@ -40,9 +40,10 @@ step_index_t::step_index_t(const PathHandleGraph& graph,
 		uint64_t path_length = 0;
         graph.for_each_step_in_path(
             path, [&](const step_handle_t& step) {
-				path_length += graph.get_length(graph.get_handle_of_step(step));
+				const handle_t h = graph.get_handle_of_step(step);
+				path_length += graph.get_length(h);
 				// sampling
-				if (sample_rate == 0 || 0 == utils::modulo(graph.get_id(graph.get_handle_of_step(step)), sample_rate)) {
+				if (sample_rate == 0 || 0 == utils::modulo(graph.get_id(h), sample_rate)) {
 					my_steps.push_back(step);
 				}
 			});
@@ -78,11 +79,12 @@ step_index_t::step_index_t(const PathHandleGraph& graph,
         uint64_t offset = 0;
         graph.for_each_step_in_path(
             path, [&](const step_handle_t& step) {
+				const handle_t h = graph.get_handle_of_step(step);
 				// sampling
-				if (sample_rate == 0 || 0 == utils::modulo(graph.get_id(graph.get_handle_of_step(step)), sample_rate)) {
+				if (sample_rate == 0 || 0 == utils::modulo(graph.get_id(h), sample_rate)) {
 					pos[step_mphf->lookup(step)] = offset;
 				}
-				offset += graph.get_length(graph.get_handle_of_step(step));
+				offset += graph.get_length(h);
 				});
 		// sampling
 		if (sample_rate == 0 || 0 == utils::modulo(graph.get_id(graph.get_handle_of_step(graph.path_end(path))), sample_rate)) {

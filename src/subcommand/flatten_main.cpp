@@ -84,9 +84,9 @@ int main_flatten(int argc, char** argv) {
             const uint8_t fasta_line_width = 80;
 
             auto write_fasta = [&](ostream& out) {
-                out << ">" << fasta_name << std::endl;
+                out << ">" << fasta_name << '\n';
                 for (uint64_t i = 0; i < linear.graph_seq.size(); i+=fasta_line_width) {
-                    out << linear.graph_seq.substr(i, fasta_line_width) << std::endl;
+                    out << linear.graph_seq.substr(i, fasta_line_width) << '\n';
                 }
             };
 
@@ -103,7 +103,7 @@ int main_flatten(int argc, char** argv) {
         auto write_bed_line = [&](ostream& out, const std::string& path_name, const uint64_t& start,
                 const uint64_t& end, bool is_rev, const uint64_t& rank) {
             out << fasta_name << "\t" << start << "\t" << end << "\t"
-            << path_name << "\t" << (is_rev ? "-" : "+") << "\t" << rank << std::endl;
+            << path_name << "\t" << (is_rev ? "-" : "+") << "\t" << rank << '\n';
         };
 
         const std::string bed_out = args::get(bed_out_file);

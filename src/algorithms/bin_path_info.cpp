@@ -75,6 +75,12 @@ namespace odgi {
                 uint64_t last_pos_in_bin = 0;
                 uint64_t nucleotide_count = 0;
                 bool last_is_rev = false;
+                // cache the map entry for the current bin: bins[curr_bin] is looked up
+                // 6-8 times per base but curr_bin is invariant within a base and changes
+                // only on a bin boundary. std::map references stay valid across inserts of
+                // other keys, so caching the pointer is safe and byte-identical.
+                int64_t cur_bin_key = -1; // sentinel; real bins are always >= 1
+                path_info_t* bin_ptr = nullptr;
                 graph.for_each_step_in_path(path, [&](const step_handle_t &occ) {
                     handle_t h = graph.get_handle_of_step(occ);
                     bool is_rev = graph.get_is_reverse(h);
@@ -89,15 +95,17 @@ namespace odgi {
                             // bin cross!
                             links.push_back(std::make_pair(last_bin, curr_bin));
                         }
-                        ++bins[curr_bin].mean_depth;
+                        if (curr_bin != cur_bin_key) { bin_ptr = &bins[curr_bin]; cur_bin_key = curr_bin; }
+                        path_info_t& b = *bin_ptr;
+                        ++b.mean_depth;
                         if (is_rev) {
-                            ++bins[curr_bin].mean_inv;
+                            ++b.mean_inv;
                         }
-                        bins[curr_bin].mean_pos += path_pos++;
+                        b.mean_pos += path_pos++;
                         nucleotide_count += 1;
-                        if ((bins[curr_bin].ranges.size() == 0) ||
-                            ((nucleotide_count - bins[curr_bin].ranges.back().second) > 1 &&
-                             (nucleotide_count - bins[curr_bin].ranges.back().first) > 1) ||
+                        if ((b.ranges.size() == 0) ||
+                            ((nucleotide_count - b.ranges.back().second) > 1 &&
+                             (nucleotide_count - b.ranges.back().first) > 1) ||
                             (is_rev != last_is_rev)) {
                             std::pair<uint64_t, uint64_t> p = std::make_pair(0, 0);
                             if (is_rev) {
@@ -105,13 +113,13 @@ namespace odgi {
                             } else {
                                 std::get<1>(p) = nucleotide_count;
                             }
-                            bins[curr_bin].ranges.push_back(p);
+                            b.ranges.push_back(p);
 #ifdef debug_bin_path_info
                             std::cerr << "PUSHED PAIR: " << "<" << std::get<0>(p) << "," << std::get<1>(p) << ">"
                                       << std::endl;
 #endif
                         } else {
-                            std::pair<uint64_t, uint64_t> &p = bins[curr_bin].ranges.back();
+                            std::pair<uint64_t, uint64_t> &p = b.ranges.back();
                             if (is_rev) {
                                 updatePair<0, 1>(p, nucleotide_count);
                             }

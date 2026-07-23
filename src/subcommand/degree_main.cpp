@@ -4,6 +4,7 @@
 #include "split.hpp"
 #include "subgraph/region.hpp"
 #include <omp.h>
+#include <charconv>
 #include "algorithms/degree.hpp"
 
 #include "src/algorithms/subgraph/extract.hpp"
@@ -228,6 +229,7 @@ int main_degree(int argc, char** argv) {
 		});
 	} else if (graph_degree_vec) {
 		std::cout << (og_file ? args::get(og_file) : "graph") << "_vec";
+		std::string out_buf; // reused across nodes to avoid per-field ostream overhead
 		graph.for_each_handle(
 				[&](const handle_t &h) {
 					uint64_t degree = 0;
@@ -247,9 +249,16 @@ int main_degree(int argc, char** argv) {
 						degree += graph.get_degree(h, false) + graph.get_degree(h, true);
 					}
 					auto length = graph.get_length(h);
+					char numbuf[24];
+					auto res = std::to_chars(numbuf, numbuf + sizeof(numbuf), degree);
+					const size_t nlen = res.ptr - numbuf;
+					out_buf.clear();
+					out_buf.reserve(length * (nlen + 1));
 					for (uint64_t i = 0; i < length; ++i) {
-						std::cout << " " << degree;
+						out_buf.push_back(' ');
+						out_buf.append(numbuf, nlen);
 					}
+					std::cout << out_buf;
 				});
 		std::cout << std::endl;
 	} else if (path_degree) {

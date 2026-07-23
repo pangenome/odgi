@@ -22,8 +22,9 @@ namespace odgi {
             });
             std::cout << std::endl;
             // the graph must be compacted for this to work
+            std::vector<uint64_t> p_i(path_count); // reused across nodes (loop is sequential)
             graph.for_each_handle([&](const handle_t &h) {
-                vector<uint64_t> p_i = vector<uint64_t>(path_count);
+                std::fill(p_i.begin(), p_i.end(), 0);
                 graph.for_each_step_on_handle(h, [&](const step_handle_t &occ) {
                     const path_handle_t p_h = graph.get_path_handle_of_step(occ);
                     p_i[as_integer(p_h) - 1] += 1;

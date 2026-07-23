@@ -145,20 +145,21 @@ namespace odgi {
                 if (!subpath_ranges[path_rank].empty()) {
                     const auto &source_path_handle = source_paths[path_rank];
                     const std::string path_name = source.get_path_name(source_path_handle);
+                    const auto &ranges = subpath_ranges[path_rank]; // invariant within this path
 
                     // The path ranges are sorted by coordinates by design
                     uint64_t range_rank = 0;
                     path_handle_t subpath_handle = subgraph.get_path_handle(
-                            subpath_name(path_rank, path_name, subpath_ranges[path_rank][0])
+                            subpath_name(path_rank, path_name, ranges[0])
                     );
 
                     uint64_t walked = 0;
                     source.for_each_step_in_path(source_path_handle, [&](const step_handle_t &step) {
-                        if (range_rank < subpath_ranges[path_rank].size()) {
+                        if (range_rank < ranges.size()) {
                             const handle_t source_handle = source.get_handle_of_step(step);
 
-                            if (walked >= subpath_ranges[path_rank][range_rank].first &&
-                                walked <= subpath_ranges[path_rank][range_rank].second) {
+                            if (walked >= ranges[range_rank].first &&
+                                walked <= ranges[range_rank].second) {
                                 subgraph.append_step(
                                         subpath_handle,
                                         subgraph.get_handle(source.get_id(source_handle),
@@ -167,11 +168,11 @@ namespace odgi {
                             }
 
                             walked += source.get_length(source_handle);
-                            if (walked >= subpath_ranges[path_rank][range_rank].second) {
+                            if (walked >= ranges[range_rank].second) {
                                 ++range_rank;
-                                if (range_rank < subpath_ranges[path_rank].size()) {
+                                if (range_rank < ranges.size()) {
                                     subpath_handle = subgraph.get_path_handle(
-                                            subpath_name(path_rank, path_name, subpath_ranges[path_rank][range_rank])
+                                            subpath_name(path_rank, path_name, ranges[range_rank])
                                     );
                                 }//else not other subpath ranges for this path
                             }

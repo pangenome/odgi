@@ -317,7 +317,9 @@ int main_similarity(int argc, char** argv) {
             local_map = &thread_local_maps[map_id - 1];
             map_mutex = &map_mutexes[map_id];
         }
-        
+
+        // thread-private, reused across nodes (clear keeps bucket capacity)
+        ska::flat_hash_map<uint32_t, uint64_t> local_path_lengths;
 #pragma omp for
         for (uint64_t node_id = min_id; node_id <= max_id; ++node_id) {
             if (!graph.has_node(node_id)) {
@@ -328,7 +330,7 @@ int main_similarity(int argc, char** argv) {
             if (!node_mask[node_id - shift]) {
                 continue;
             }
-            ska::flat_hash_map<uint32_t, uint64_t> local_path_lengths;
+            local_path_lengths.clear();
             size_t l = graph.get_length(h);
             graph.for_each_step_on_handle(
                 h,

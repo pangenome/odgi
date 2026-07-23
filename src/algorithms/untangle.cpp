@@ -422,6 +422,7 @@ segment_map_t::get_matches(
     //path_handle_t query_path = graph.get_path_handle_of_step(start);
     ska::flat_hash_map<uint64_t, isec_t> target_isec;
     ska::flat_hash_map<uint64_t, uint64_t> query_seen;
+    ska::flat_hash_map<uint64_t, uint64_t> target_seen; // reused across steps; cleared each iteration
     for (step_handle_t step = start;
          step != end;
          step = graph.get_next_step(step)) {
@@ -430,7 +431,7 @@ segment_map_t::get_matches(
         uint64_t node_length = graph.get_length(h);
         bool is_rev = graph.get_is_reverse(h);
         uint64_t query_idx = query_seen[node_id]++;
-        ska::flat_hash_map<uint64_t, uint64_t> target_seen;
+        target_seen.clear();
         for_segment_on_node(
             node_id,
             [&](const uint64_t& segment_id, const bool& segment_rev) {
@@ -563,6 +564,8 @@ void map_segments(
     ska::flat_hash_map<path_handle_t, uint64_t>& path_to_len) {
     // query name is the first field in our outputs
     std::string query_name = graph.get_path_name(path);
+    // cache target path names: only ~n_paths distinct targets recur across many output lines
+    ska::flat_hash_map<path_handle_t, std::string> target_name_cache;
     // helper for building up gene order lists and gggenes plot data
     struct path_range_t {
         path_handle_t target_path;
@@ -600,7 +603,11 @@ void map_segments(
                     auto target_begin_pos = step_index.get_position(target_begin, graph);
                     auto target_end_pos = target_begin_pos + target_segments.get_segment_length(idx);
                     path_handle_t target_path = graph.get_path_handle_of_step(target_begin);
-                    std::string target_name = graph.get_path_name(target_path);
+                    auto tn_it = target_name_cache.find(target_path);
+                    if (tn_it == target_name_cache.end()) {
+                        tn_it = target_name_cache.emplace(target_path, graph.get_path_name(target_path)).first;
+                    }
+                    const std::string& target_name = tn_it->second;
                     if (output_type == untangle_output_t::PAF){
                         // PAF format
 #pragma omp critical (cout)
@@ -620,7 +627,7 @@ void map_segments(
                         << "jc:f:" << jaccard << "\t"
                         << "sc:f:" << self_coverage << "\t"
                         << "nb:i:" << nth_best << "\t"
-                        << std::endl;
+                        << '\n';
                     } else if (output_type == untangle_output_t::ORDER
                                || output_type == untangle_output_t::GGGENES
                                || output_type == untangle_output_t::SCHEMATIC) {
@@ -648,7 +655,7 @@ void map_segments(
                         << jaccard << "\t"
                         << (mapping.is_inv ? "-" : "+") << "\t"
                         << self_coverage << "\t"
-                        << nth_best << std::endl;
+                        << nth_best << '\n';
                     }
 
                 }
@@ -665,7 +672,7 @@ void map_segments(
         std::string s = ss.str();
         if (s.size() && s.at(s.size()-1) == ',') { s.pop_back(); }
 #pragma omp critical (cout)
-        std::cout << s << std::endl;
+        std::cout << s << '\n';
     }
     if (output_type == untangle_output_t::GGGENES
         || output_type == untangle_output_t::SCHEMATIC) {

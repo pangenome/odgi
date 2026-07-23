@@ -151,7 +151,9 @@ void node_t::for_each_path_step(
                              bool is_rev)>& func) const {
     uint64_t n_paths = path_count();
     for (uint64_t i = 0; i < n_paths; ++i) {
-        if (!step_is_del(i) && !func(i, paths.at(PATH_RECORD_LENGTH*i), step_is_rev(i))) {
+        const uint8_t t = paths.at(PATH_RECORD_LENGTH*i+1); // step-type byte: read once, unpack twice
+        if (!step_type_helper::unpack_is_del(t)
+            && !func(i, paths.at(PATH_RECORD_LENGTH*i), step_type_helper::unpack_is_rev(t))) {
             break;
         }
     }
