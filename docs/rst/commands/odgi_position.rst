@@ -88,6 +88,11 @@ Position Options
 | **-R, --ref-paths**\ =\ *FILE*
 | Use the ref-paths in *FILE* for positional translation.
 
+| **--all-ref-positions**
+| When multiple reference paths are given (*-R, --ref-paths*), lift each input
+  range into every reference path, emitting one output line per reference
+  instead of only the nearest one.
+
 | **-l, --lift-path**\ =\ *STRING*
 | Lift positions from *-x, --source* to *-i, --target* via coordinates in
   this path common to both graphs (default: all common paths between

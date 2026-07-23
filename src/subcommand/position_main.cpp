@@ -53,6 +53,7 @@ int main_position(int argc, char** argv) {
 	args::ValueFlag<uint64_t> _walking_dist(position_opts, "N", "Maximum walking distance in nucleotides for one orientation when finding the best target (reference) range for each query path (default: 10000). Note: If we walked 9999 base pairs and **w, --jaccard-context** is **10000**, we will also include the next node, even if we overflow the actual limit.",
 											{'w', "jaccard-context"});
     args::Flag all_positions_of_ref_path(position_opts, "all-positions", "Emit all positions for all nodes in the specified ref-paths.", {"all-positions"});
+    args::Flag all_ref_positions(position_opts, "all-ref-positions", "When multiple reference paths are given (*-R, --ref-paths*), lift each input range into every reference path, emitting one output line per reference (instead of only the nearest one).", {"all-ref-positions"});
     args::Group threading_opts(parser, "[ Threading ]");
     args::ValueFlag<uint64_t> threads(threading_opts, "N", "Number of threads to use for parallel operations.", {'t', "threads"});
 	args::Group processing_info_opts(parser, "[ Processing Information ]");
@@ -928,6 +929,28 @@ int main_position(int argc, char** argv) {
                           << id(pos_begin) << "," << offset(pos_begin) << "," << (is_rev(pos_begin)?"-":"+") << "\t"
                           << id(pos_end) << "," << offset(pos_end) << "," << (is_rev(pos_end)?"-":"+") << std::endl;
                 hit = true;
+            } else if (args::get(all_ref_positions)) {
+                // lift the range into every reference path separately, one output line per reference
+                for (auto& rp : ref_paths) {
+                    hash_set<uint64_t> single_ref;
+                    single_ref.insert(as_integer(rp));
+                    lift_result_t lb, le;
+                    if (get_position(target_graph, single_ref, pos_begin, lb, step_handle_graph_pos_begin, true)
+                        && get_position(target_graph, single_ref, pos_end, le, step_handle_graph_pos_end, true)) {
+                        path_handle_t p_begin = target_graph.get_path_handle_of_step(lb.ref_hit);
+                        path_handle_t p_end = target_graph.get_path_handle_of_step(le.ref_hit);
+#pragma omp critical (cout)
+                        std::cout << path_range.data << "\t"
+                                  << target_graph.get_path_name(p_begin) << ","
+                                  << lb.path_offset << ","
+                                  << (lb.is_rev_vs_ref ? "-" : "+") << "\t"
+                                  << target_graph.get_path_name(p_end) << ","
+                                  << le.path_offset << ","
+                                  << (le.is_rev_vs_ref ? "-" : "+") << "\t"
+                                  << (lb.is_rev_vs_ref ^ path_range.is_rev ? "-" : "+") << std::endl;
+                        hit = true;
+                    }
+                }
             } else if (get_position(target_graph, ref_path_set, pos_begin, lift_begin, step_handle_graph_pos_begin, true)
                        && get_position(target_graph, ref_path_set, pos_end, lift_end, step_handle_graph_pos_end, true)) {
                 bool ref_is_rev = false;
