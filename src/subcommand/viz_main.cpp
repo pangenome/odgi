@@ -416,23 +416,30 @@ namespace odgi {
             }
         }
 
-        std::vector<uint64_t> position_map(graph.get_node_count() + 1);
         const uint64_t shift = number_bool_packing::unpack_number(graph.get_handle(graph.min_node_id()));
+        // position_map is indexed by node rank (unpack_number - shift); size by the id span
+        // (dense span + 1 sentinel) so non-contiguous node ids do not overflow it
+        const uint64_t max_rank = number_bool_packing::unpack_number(graph.get_handle(graph.max_node_id())) - shift;
+        std::vector<uint64_t> position_map(max_rank + 2);
         uint64_t len = 0;
         {
-            if (number_bool_packing::unpack_number(graph.get_handle(graph.max_node_id())) - shift >= graph.get_node_count()){
-                std::cerr << "[odgi::viz] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
-                exit(1);
-            }
+            // fill pangenome start positions; gap ranks inherit the next real node's start
+            // (the previous node's end) so edge endpoints read via position_map[rank+1] stay correct
+            int64_t prev = -1;
             graph.for_each_handle([&](const handle_t &h) {
-                position_map[number_bool_packing::unpack_number(h) - shift] = len;
-                uint64_t hl = graph.get_length(h);
-                len += hl;
+                const uint64_t r = number_bool_packing::unpack_number(h) - shift;
+                for (uint64_t k = (uint64_t)(prev + 1); k <= r; ++k) {
+                    position_map[k] = len;
+                }
+                prev = (int64_t)r;
+                len += graph.get_length(h);
 #ifdef debug_odgi_viz
-                std::cerr << "SEGMENT ID: " << graph.get_id(h) << " - " << as_integer(h) << " - index_in_position_map (" << (number_bool_packing::unpack_number(h) - shift) << ") = " << len << std::endl;
+                std::cerr << "SEGMENT ID: " << graph.get_id(h) << " - " << as_integer(h) << " - index_in_position_map (" << r << ") = " << len << std::endl;
 #endif
             });
-            position_map[position_map.size() - 1] = len;
+            for (uint64_t k = (uint64_t)(prev + 1); k < position_map.size(); ++k) {
+                position_map[k] = len;
+            }
         }
 
         double pangenomic_start_pos = 0.0;
