@@ -33,8 +33,9 @@ namespace odgi {
                            uint64_t bin_width,
                            bool drop_gap_links,
                            bool progress) {
-            // the graph must be compacted for this to work
-            std::vector<uint64_t> position_map(graph.get_node_count() + 1);
+            // position_map is indexed by node rank (unpack_number); size by the rank span
+            // (+1 sentinel) so non-contiguous node ids do not overflow it
+            std::vector<uint64_t> position_map(number_bool_packing::unpack_number(graph.get_handle(graph.max_node_id())) + 2);
             uint64_t len = 0;
             std::string graph_seq;
             graph.for_each_handle([&](const handle_t &h) {

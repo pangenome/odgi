@@ -146,6 +146,11 @@ int main_similarity(int argc, char** argv) {
 
     // ska::flat_hash_map<std::pair<uint64_t, uint64_t>, uint64_t> leads to huge memory usage with deep graphs
     // Load mask if specified
+    // this command indexes node-id arrays by rank and iterates ids 1..node_count, so it requires compaction
+    if (graph.max_node_id() - graph.min_node_id() >= graph.get_node_count()) {
+        std::cerr << "[odgi::similarity] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
+        exit(1);
+    }
     std::vector<bool> node_mask(graph.get_node_count(), true);  // Default all nodes included
     if (mask_file) {
         std::ifstream mask_in(args::get(mask_file));

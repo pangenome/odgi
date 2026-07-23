@@ -315,9 +315,12 @@ void gpu_layout(layout_config_t config, const odgi::graph_t &graph, std::vector<
     // create node data structure
     // consisting of sequence length and coords
     uint32_t node_count = graph.get_node_count();
-    assert(graph.min_node_id() == 1);
-    assert(graph.max_node_id() == node_count);
-    assert(graph.max_node_id() - graph.min_node_id() + 1 == node_count);
+    // node ids are used directly as dense indices below (get_handle(node_idx+1)); require compaction.
+    // a runtime check (asserts are compiled out under NDEBUG in release builds)
+    if (graph.min_node_id() != 1 || (uint64_t) graph.max_node_id() != (uint64_t) node_count) {
+        fprintf(stderr, "[odgi::layout] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph.\n");
+        exit(1);
+    }
 
     cuda::node_data_t node_data;
     node_data.node_count = node_count;
