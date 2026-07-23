@@ -88,6 +88,8 @@ namespace odgi {
                              {'O', "optimize"});
         args::Flag _keep_full_path_names(extract_opts, "keep-full-path-names", "Keep the original path name (no :start-end suffix) when an extracted subpath spans the whole source path.",
                              {'K', "keep-full-path-names"});
+        args::Flag _drop_pathless(extract_opts, "drop-pathless", "Remove nodes (and their edges) not covered by any path from the extracted graph. Useful with -E, --full-range, which otherwise laces in nodes untouched by any path.",
+                             {"drop-pathless"});
         args::Group threading_opts(parser, "[ Threading ]");
         args::ValueFlag<uint64_t> nthreads(threading_opts, "N", "Number of threads to use for parallel operations.",
                                            {'t', "threads"});
@@ -413,7 +415,7 @@ namespace odgi {
                              const uint64_t context_steps, const uint64_t context_bases, const bool full_range, const bool inverse,
                              const uint64_t max_dist_subpaths, const uint64_t num_iterations,
                              const uint64_t num_threads, const bool show_progress, const bool optimize,
-                             const bool keep_full_path_names) {
+                             const bool keep_full_path_names, const bool drop_pathless) {
             // Check if there are nodes in the subgraph, to avoid extracting the whole graph
             // when nodes with functionality other than pangenomic paths/ranges are not specified
             if (inverse && subgraph.get_node_count() > 0) {
@@ -792,6 +794,22 @@ namespace odgi {
             // This should not be necessary, if the extraction works correctly
             // subgraph.remove_orphan_edges();
 
+            // drop nodes not covered by any path (and their edges)
+            if (drop_pathless) {
+                std::vector<handle_t> pathless;
+                subgraph.for_each_handle([&](const handle_t& h) {
+                    if (subgraph.get_step_count(h) == 0) {
+                        pathless.push_back(h);
+                    }
+                });
+                for (auto& h : pathless) {
+                    subgraph.destroy_handle(h);
+                }
+                if (show_progress && !pathless.empty()) {
+                    std::cerr << "[odgi::extract] dropped " << pathless.size() << " node(s) not covered by any path." << std::endl;
+                }
+            }
+
             if (optimize) {
                 subgraph.optimize();
             }
@@ -828,7 +846,7 @@ namespace odgi {
                     {path_range}, *pangenomic_ranges,
                     context_steps, context_bases, _full_range, false,
                     max_dist_subpaths, num_iterations,
-                    num_threads, show_progress, optimize, args::get(_keep_full_path_names));
+                    num_threads, show_progress, optimize, args::get(_keep_full_path_names), args::get(_drop_pathless));
 
                 const string filename = graph.get_path_name(path_range.begin.path) + ":" + to_string(path_range.begin.offset) + "-" + to_string(path_range.end.offset) + ".og";
 
@@ -861,7 +879,7 @@ namespace odgi {
                 *path_ranges, *pangenomic_ranges,
                 context_steps, context_bases, _full_range, _inverse,
                 max_dist_subpaths, num_iterations,
-                num_threads, show_progress, optimize, args::get(_keep_full_path_names));
+                num_threads, show_progress, optimize, args::get(_keep_full_path_names), args::get(_drop_pathless));
 
             {
                 const std::string outfile = args::get(og_out_file);
