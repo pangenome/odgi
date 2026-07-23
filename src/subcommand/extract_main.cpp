@@ -191,10 +191,6 @@ namespace odgi {
         }
 
         const uint64_t shift = graph.min_node_id();
-        if (graph.max_node_id() - shift >= graph.get_node_count()){
-            std::cerr << "[odgi::extract] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
-            exit(1);
-        }
 
         // Prepare all paths for parallelize the next step (actually, not all paths are always present in the subgraph)
         std::vector<path_handle_t> paths;
@@ -457,7 +453,8 @@ namespace odgi {
                             path_ranges.size(), "[odgi::extract] extracting path ranges");
                 }
 
-                atomicbitvector::atomic_bv_t keep_bv(source.get_node_count()+1);
+                // size by node-id span (not node count) so non-compacted graphs work
+                atomicbitvector::atomic_bv_t keep_bv(source.max_node_id() - shift + 1);
 
 #pragma omp parallel for schedule(dynamic,1)
                 for (auto &path_range : path_ranges) {
