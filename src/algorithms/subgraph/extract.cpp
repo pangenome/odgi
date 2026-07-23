@@ -62,7 +62,7 @@ namespace odgi {
 
         void add_subpaths_to_subgraph(const graph_t &source, const std::vector<path_handle_t> source_paths,
                                       graph_t &subgraph, const uint64_t num_threads,
-                                      const std::string &progress_message) {
+                                      const std::string &progress_message, bool keep_full_path_names) {
             const bool show_progress = !progress_message.empty();
 
             std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress;
@@ -73,6 +73,15 @@ namespace odgi {
 
             std::vector<std::vector<std::pair<uint64_t, uint64_t>>> subpath_ranges;
             subpath_ranges.resize(source_paths.size());
+            std::vector<uint64_t> path_total_len(source_paths.size(), 0);
+            // keep the original path name when a single subpath spans the whole source path
+            auto subpath_name = [&](uint64_t rank, const std::string& pname, const std::pair<uint64_t, uint64_t>& r) {
+                if (keep_full_path_names && subpath_ranges[rank].size() == 1
+                    && r.first == 0 && r.second == path_total_len[rank]) {
+                    return pname;
+                }
+                return make_path_name(pname, r.first, r.second);
+            };
 
             // Search subpaths in parallel
 #pragma omp parallel for schedule(dynamic, 1) num_threads(num_threads)
@@ -108,6 +117,7 @@ namespace odgi {
                 if (!first_node) {
                     subpath_ranges[path_rank].push_back({start, end});
                 }
+                path_total_len[path_rank] = walked;
 
                 if (show_progress) {
                     progress->increment(1);
@@ -120,7 +130,7 @@ namespace odgi {
                 const std::string path_name = source.get_path_name(source_path_handle);
 
                 for (auto subpath_range : subpath_ranges[path_rank]) {
-                    create_subpath(subgraph, make_path_name(path_name, subpath_range.first, subpath_range.second),
+                    create_subpath(subgraph, subpath_name(path_rank, path_name, subpath_range),
                                    source.get_is_circular(source_path_handle));
                 }
 
@@ -139,8 +149,7 @@ namespace odgi {
                     // The path ranges are sorted by coordinates by design
                     uint64_t range_rank = 0;
                     path_handle_t subpath_handle = subgraph.get_path_handle(
-                            make_path_name(path_name, subpath_ranges[path_rank][0].first,
-                                           subpath_ranges[path_rank][0].second)
+                            subpath_name(path_rank, path_name, subpath_ranges[path_rank][0])
                     );
 
                     uint64_t walked = 0;
@@ -162,8 +171,7 @@ namespace odgi {
                                 ++range_rank;
                                 if (range_rank < subpath_ranges[path_rank].size()) {
                                     subpath_handle = subgraph.get_path_handle(
-                                            make_path_name(path_name, subpath_ranges[path_rank][range_rank].first,
-                                                           subpath_ranges[path_rank][range_rank].second)
+                                            subpath_name(path_rank, path_name, subpath_ranges[path_rank][range_rank])
                                     );
                                 }//else not other subpath ranges for this path
                             }

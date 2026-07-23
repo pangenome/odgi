@@ -26,7 +26,8 @@ namespace odgi {
         /// add subpaths to the subgraph, providing a concatenation of subpaths that are discontiguous over the subgraph
         void add_subpaths_to_subgraph(const graph_t &source, const std::vector<path_handle_t> source_paths,
                                       graph_t &subgraph, uint64_t num_threads,
-                                      const std::string &progress_message = "");
+                                      const std::string &progress_message = "",
+                                      bool keep_full_path_names = false);
 
         void extract_path_range(const graph_t &source, path_handle_t path_handle, int64_t start, int64_t end,
                                 graph_t &subgraph);
