@@ -41,12 +41,12 @@ namespace odgi {
             // Make the new node
             handle_t new_node;
             {
-                std::stringstream ss;
+                std::string seq;
                 for (auto &n : nodes) {
-                    ss << graph.get_sequence(n);
+                    seq.append(graph.get_sequence(n));
                 }
 
-                new_node = graph.create_handle(ss.str());
+                new_node = graph.create_handle(seq);
             }
 
 #ifdef debug
@@ -347,6 +347,7 @@ namespace odgi {
             ips4o::parallel::sort(ordered_handles.begin(), ordered_handles.end(), std::less<>(), nthreads);
 
             std::vector<handle_t> handle_order;
+            handle_order.reserve(ordered_handles.size());
             for (auto &h : ordered_handles) {
                 handle_order.push_back(h.second);
             }

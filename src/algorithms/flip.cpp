@@ -97,6 +97,7 @@ void flip_paths(graph_t& graph,
                 auto name = graph.get_path_name(path) + "_inv";
                 auto flipped = into.create_path_handle(name);
                 std::vector<handle_t> v;
+                v.reserve(graph.get_step_count(path));
                 graph.for_each_step_in_path(
                     path,
                     [&into,&v,&graph](const step_handle_t& s) {

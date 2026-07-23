@@ -153,9 +153,9 @@ int main_position(int argc, char** argv) {
                  cur_step != path_end;
                  cur_step = target_graph.get_next_step(cur_step)) {
                 const handle_t cur_handle = target_graph.get_handle_of_step(cur_step);
-                std::cout << path_name << "\t" 
-                          << target_graph.get_id(cur_handle) << "\t" 
-                          << walked << std::endl;
+                std::cout << path_name << "\t"
+                          << target_graph.get_id(cur_handle) << "\t"
+                          << walked << '\n';
                 walked += target_graph.get_length(cur_handle);
             }
         }
@@ -1023,7 +1023,7 @@ int main_position(int argc, char** argv) {
 			uint8_t path_b = hashed[16];
 
 			cout << ",#" << std::setfill('0') << std::setw(6) << std::hex << (path_r << 16 | path_g << 8 | path_b );
-			std::cout << std::endl;
+			std::cout << '\n';
 		}
 	}
 

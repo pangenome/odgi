@@ -3,6 +3,7 @@
 //
 
 #include "odgi.hpp"
+#include <charconv>
 
 namespace odgi {
 
@@ -1571,13 +1572,14 @@ void graph_t::to_gfa(std::ostream& out, const bool& emit_node_annotation) const 
     out << "H\tVN:Z:1.0" << std::endl;
     // for each node
     for_each_handle([&out,&emit_node_annotation, this](const handle_t& h) {
-            out << "S\t" << get_id(h) << "\t" << get_sequence(h);
+            out << "S\t" << get_id(h) << "\t" << get_node_cref(h).get_sequence();
             if (emit_node_annotation) {
+                const size_t sc = get_step_count(h);
                 out << "\t"
-                << "DP:i:" << get_step_count(h) << "\t"
-                << "RC:i:" << get_step_count(h) * get_length(h);
+                << "DP:i:" << sc << "\t"
+                << "RC:i:" << sc * get_length(h);
             }
-            out << std::endl;
+            out << '\n';
 
             {
                 // use this direct iteration to avoid double counting edges
@@ -1595,29 +1597,35 @@ void graph_t::to_gfa(std::ostream& out, const bool& emit_node_annotation) const 
                                 << (on_rev?"-":"+") << "\t"
                                 << other_id << "\t"
                                 << (other_rev?"-":"+") << "\t"
-                                << "0M" << std::endl;
+                                << "0M" << '\n';
                         }
                         return true;
                     });
             }
         });
-    for_each_path_handle([&out,this](const path_handle_t& p) {
+    std::string line; // reused across paths to batch per-step output (avoids per-field ostream overhead)
+    for_each_path_handle([&out,&line,this](const path_handle_t& p) {
             out << "P\t" << get_path_name(p) << "\t";
             auto& path_meta = path_metadata(p);
             uint64_t i = 0;
-            for_each_step_in_path(p, [this,&i,&out](const step_handle_t& step) {
+            line.clear();
+            for_each_step_in_path(p, [this,&i,&line](const step_handle_t& step) {
                     handle_t h = get_handle_of_step(step);
-                    out << get_id(h) << (get_is_reverse(h)?"-":"+");
-                    if (has_next_step(step)) out << ",";
+                    char buf[24];
+                    auto r = std::to_chars(buf, buf + sizeof(buf), get_id(h));
+                    line.append(buf, r.ptr);
+                    line.push_back(get_is_reverse(h) ? '-' : '+');
+                    if (has_next_step(step)) line.push_back(',');
                     ++i;
                 });
+            out << line;
             out << "\t" << "*"; // always put at least a "*" in the overlaps field
             if (get_is_circular(p)) {
                 out << "\t" << "TP:Z:circular";
             }
             assert(i == path_meta.length);
             //out << "\t" << "steps:i:" << path_meta.length;
-            out << std::endl;
+            out << '\n';
         });
 }
 

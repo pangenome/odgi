@@ -15,6 +15,7 @@ std::vector<recorded_path_t> record_paths(const graph_t& graph) {
         recorded_path_t rp;
         rp.name = graph.get_path_name(p);
         rp.is_circular = graph.get_is_circular(p);
+        rp.steps.reserve(graph.get_step_count(p));
         graph.for_each_step_in_path(p, [&](const step_handle_t& step) {
             const handle_t h = graph.get_handle_of_step(step);
             const uint64_t len = graph.get_length(h);
@@ -134,7 +135,6 @@ std::vector<edge_t> find_edges_to_prune(const HandleGraph& graph,
                 // determine next positions
                 nid_t handle_id = graph.get_id(handle);
                 size_t handle_length = graph.get_length(handle);
-                std::string handle_seq = graph.get_sequence(handle);
                 for (size_t i = 0; i < handle_length;  ++i) {
                     pos_t begin = make_pos_t(handle_id, handle_is_rev, handle_length);
                     pos_t end = make_pos_t(handle_id, handle_is_rev, std::min(handle_length, i+k));

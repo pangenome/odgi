@@ -96,7 +96,6 @@ void for_each_heap_permutation(const PathHandleGraph& graph,
         for (auto& j : permutation) {
             auto& paths = path_groups[j];
             for (auto& path : paths) {
-                uint64_t pos = 0;
                 graph.for_each_step_in_path(
                     path,
                     [&](const step_handle_t& step) {
@@ -106,7 +105,6 @@ void for_each_heap_permutation(const PathHandleGraph& graph,
                             seen_nodes[rank] = 1;
                             seen_bp += graph.get_length(h);
                         }
-                        pos += graph.get_length(h);
                     });
             }
             vals.push_back(seen_bp);

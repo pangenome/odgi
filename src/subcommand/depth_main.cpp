@@ -7,6 +7,8 @@
 #include "algorithms/depth.hpp"
 #include "algorithms/path_length.hpp"
 #include <omp.h>
+#include <unordered_set>
+#include <charconv>
 
 #include "src/algorithms/subgraph/extract.hpp"
 
@@ -242,6 +244,8 @@ namespace odgi {
             });
         } else if (graph_depth_vec) {
             std::cout << (og_file ? args::get(og_file) : "graph") << "_vec";
+            std::string line_buf; // reused across nodes to avoid per-field ostream overhead
+            char num_buf[24];
             graph.for_each_handle(
                 [&](const handle_t &h) {
                     uint64_t depth = 0;
@@ -254,9 +258,15 @@ namespace odgi {
                                 ];
                         });
                     auto length = graph.get_length(h);
+                    auto res = std::to_chars(num_buf, num_buf + sizeof(num_buf), depth);
+                    const size_t nlen = res.ptr - num_buf;
+                    line_buf.clear();
+                    line_buf.reserve(length * (nlen + 1));
                     for (uint64_t i = 0; i < length; ++i) {
-                        std::cout << " " << depth;
+                        line_buf.push_back(' ');
+                        line_buf.append(num_buf, nlen);
                     }
+                    std::cout << line_buf;
                 });
             std::cout << std::endl;
         } else if (path_depth) {
@@ -397,7 +407,7 @@ namespace odgi {
                                        const std::vector<bool>& paths_to_consider) {
 
             uint64_t node_depth = 0;
-            std::set<uint64_t> unique_paths;
+            std::unordered_set<uint64_t> unique_paths;
 
             const handle_t h = graph.get_handle(node_id);
 
@@ -501,7 +511,7 @@ namespace odgi {
 #pragma omp critical (cout)
                 std::cout << node_id << "\t"
                           << depth.first << "\t"
-                          << depth.second << std::endl;
+                          << depth.second << '\n';
             }
         }
 

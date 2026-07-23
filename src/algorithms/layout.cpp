@@ -27,8 +27,8 @@ void to_tsv(std::ostream &out, const std::vector<double> &X, const std::vector<d
         for (auto& handle :  weak_components[num_component]) {
             uint64_t pos = 2 * number_bool_packing::unpack_number(handle);
 
-            out << as_integer(handle) << "\t" << X[pos] << "\t" << Y[pos] << "\t" << num_component <<std::endl;
-            out << as_integer(handle)+1 << "\t" << X[pos + 1] << "\t" << Y[pos + 1] << "\t" << num_component<< std::endl;
+            out << as_integer(handle) << "\t" << X[pos] << "\t" << Y[pos] << "\t" << num_component <<'\n';
+            out << as_integer(handle)+1 << "\t" << X[pos + 1] << "\t" << Y[pos + 1] << "\t" << num_component<< '\n';
         }
     }
 
@@ -69,7 +69,7 @@ void Layout::to_tsv(std::ostream &out) {
     out << std::setprecision(std::numeric_limits<double>::digits10 + 1);
     out << "idx" << "\t" << "X" << "\t" << "Y" << std::endl;
     for (uint64_t i = 0; i < size(); ++i) {
-        out << i << "\t" << get_x(i) << "\t" << get_y(i) << std::endl;
+        out << i << "\t" << get_x(i) << "\t" << get_y(i) << '\n';
     }
 }
 

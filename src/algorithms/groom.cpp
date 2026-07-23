@@ -180,6 +180,7 @@ namespace odgi {
             }
 
             std::vector<handle_t> order;
+            order.reserve(graph.get_node_count());
             uint64_t num_flipped_handles = 0;
 
             graph.for_each_handle(

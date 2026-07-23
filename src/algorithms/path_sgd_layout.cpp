@@ -232,7 +232,7 @@ namespace odgi {
                                         }
                                     } else {
                                         // sample randomly across the path
-                                        std::uniform_int_distribution<uint64_t> rando(0, graph.get_step_count(path)-1);
+                                        std::uniform_int_distribution<uint64_t> rando(0, path_step_count-1);
                                         as_integers(step_b)[0] = as_integer(path);
                                         as_integers(step_b)[1] = rando(gen);
                                     }

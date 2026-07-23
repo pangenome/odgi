@@ -1,6 +1,7 @@
 #include "subcommand.hpp"
 #include "odgi.hpp"
 #include "args.hxx"
+#include <charconv>
 #include "split.hpp"
 #include "position.hpp"
 #include <omp.h>
@@ -260,6 +261,8 @@ int main_paths(int argc, char** argv) {
             std::cout << header.str() << std::endl;
         }
         bool node_length_scale = args::get(scale_by_node_length);
+        std::string row_str; // reused across paths (matrix rows)
+        row_str.reserve(1<<20);
         graph.for_each_path_handle(
             [&](const path_handle_t& p) {
                 std::string full_path_name = graph.get_path_name(p);
@@ -293,10 +296,16 @@ int main_paths(int argc, char** argv) {
                           << path_length << "\t"
                           << path_step_count;
                 // emit one column per real node in the same order as the header (for_each_handle)
+                row_str.clear();
+                char numbuf[24];
                 graph.for_each_handle([&](const handle_t& h) {
                     const uint64_t count = row[graph.get_id(h) - shift];
-                    std::cout << "\t" << (node_length_scale ? count * graph.get_length(h) : count);
+                    const uint64_t val = node_length_scale ? count * graph.get_length(h) : count;
+                    row_str.push_back('\t');
+                    auto res = std::to_chars(numbuf, numbuf + sizeof(numbuf), val);
+                    row_str.append(numbuf, res.ptr - numbuf);
                 });
+                std::cout << row_str;
                 std::cout << std::endl;
             });
     }

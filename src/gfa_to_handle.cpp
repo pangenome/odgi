@@ -113,8 +113,8 @@ void gfa_to_handle(const string& gfa_filename,
                     uint64_t source_id = stol(e.source_name) - id_increment;
                     uint64_t sink_id = stol(e.sink_name) - id_increment;
                     if (graph->has_node(source_id) && graph->has_node(sink_id)) {
-                        handlegraph::handle_t a = graph->get_handle(stol(e.source_name) - id_increment, !e.source_orientation_forward);
-                        handlegraph::handle_t b = graph->get_handle(stol(e.sink_name) - id_increment, !e.sink_orientation_forward);
+                        handlegraph::handle_t a = graph->get_handle(source_id, !e.source_orientation_forward);
+                        handlegraph::handle_t b = graph->get_handle(sink_id, !e.sink_orientation_forward);
                         graph->create_edge(a, b);
                     } else {
                         std::cerr << "[odgi::gfa_to_handle] Error creating edge '" << e.source_name << " <--> " << e.sink_name << "' due to missing node(s)" << std::endl;
