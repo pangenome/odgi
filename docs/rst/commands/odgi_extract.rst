@@ -74,6 +74,11 @@ Extract Options
   position touched by the given path ranges. This ensures that all the paths of the subgraph are not split by node, but that the nodes are laced together again. Comparable to **-R, --lace-paths=FILE**, but specifically for all paths in the resulting subgraph. Be careful to use it with
   very complex graphs.
 
+| **--drop-pathless**
+| Remove nodes (and their edges) not covered by any path from the extracted
+  graph. Useful with **-E, --full-range**, which otherwise laces in nodes
+  untouched by any path.
+
 | **-p, --paths-to-extract**\ =\ *FILE*
 | List of paths to keep in the extracted graph. The *FILE* must contain one
   path name per line and a subset of all paths can be specified.
