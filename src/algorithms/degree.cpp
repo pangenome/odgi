@@ -8,10 +8,6 @@ namespace odgi {
 									   const std::vector<bool>& paths_to_consider,
 									   const std::function<void(const path_range_t&, const double&)>& func) {
 			const uint64_t shift = graph.min_node_id();
-			if (graph.max_node_id() - shift >= graph.get_node_count()){
-				std::cerr << "[degree::for_each_path_range_degree] error: the node IDs are not compacted. Please run 'odgi sort' using -O, --optimize to optimize the graph." << std::endl;
-				exit(1);
-			}
 			// are we subsetting?
 			const bool subset_paths = !paths_to_consider.empty();
 			// sort path ranges
@@ -40,7 +36,7 @@ namespace odgi {
 				p = n;
 			}
 			// precompute degrees for all handles in parallel
-			std::vector<uint64_t> degree(graph.get_node_count() + 1);
+			std::vector<uint64_t> degree(graph.max_node_id() - shift + 1);
 			graph.for_each_handle(
 					[&](const handle_t& h) {
 						auto id = graph.get_id(h);
