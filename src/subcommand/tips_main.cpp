@@ -205,7 +205,8 @@ namespace odgi {
 				// make bit vector across nodes to tell us if we have a hit
 				// this is a speed up compared to iterating through all steps of a potential node for each walked step
 				std::vector<bool> target_handles;
-				target_handles.resize(graph.get_node_count(), false);
+				// indexed by node rank (unpack_number); size by rank span so non-contiguous ids fit
+				target_handles.resize(number_bool_packing::unpack_number(graph.get_handle(graph.max_node_id())) + 1, false);
 				graph.for_each_step_in_path(target_path_t, [&](const step_handle_t &step) {
 					handle_t h = graph.get_handle_of_step(step);
 					target_handles[number_bool_packing::unpack_number(h)] = true;
@@ -249,7 +250,8 @@ namespace odgi {
 				// make bit vector across nodes to tell us if we have a hit
 				// this is a speed up compared to iterating through all steps of a potential node for each walked step
 				std::vector<bool> target_handles;
-				target_handles.resize(graph.get_node_count(), false);
+				// indexed by node rank (unpack_number); size by rank span so non-contiguous ids fit
+				target_handles.resize(number_bool_packing::unpack_number(graph.get_handle(graph.max_node_id())) + 1, false);
 				graph.for_each_step_in_path(target_path_t, [&](const step_handle_t &step) {
 					handle_t h = graph.get_handle_of_step(step);
 					target_handles[number_bool_packing::unpack_number(h)] = true;

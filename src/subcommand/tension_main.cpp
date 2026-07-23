@@ -245,7 +245,8 @@ int main_tension(int argc, char **argv) {
 		// tension = (lay/nuc);
 		// if (tension < 1) { tension = 1/tension };
 	} else {
-		std::vector<double> node_tensions(graph.get_node_count() + 1, 0.0);
+		// indexed by raw node id; size by max id so non-contiguous ids fit
+		std::vector<double> node_tensions(graph.max_node_id() + 1, 0.0);
 		std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress_meter;
 		if (progress) {
 			progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(

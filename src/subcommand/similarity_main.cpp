@@ -146,32 +146,41 @@ int main_similarity(int argc, char** argv) {
 
     // ska::flat_hash_map<std::pair<uint64_t, uint64_t>, uint64_t> leads to huge memory usage with deep graphs
     // Load mask if specified
-    std::vector<bool> node_mask(graph.get_node_count(), true);  // Default all nodes included
+    // node_mask is indexed by node rank (id - shift); size by the id span so it works on
+    // non-contiguous / non-1-based node ids. Mask lines are positional: the i-th line refers
+    // to the i-th node in id order (unchanged from before).
+    const uint64_t shift = graph.min_node_id();
+    std::vector<bool> node_mask(graph.max_node_id() - shift + 1, true);  // Default all nodes included
     if (mask_file) {
         std::ifstream mask_in(args::get(mask_file));
         std::string line;
-        uint64_t line_count = 0;
+        std::vector<bool> mask_lines;
+        mask_lines.reserve(graph.get_node_count());
         while (std::getline(mask_in, line)) {
-            if (line_count >= graph.get_node_count()) {
-                std::cerr << "[odgi::similarity] error: mask file has more lines than graph nodes (" 
+            if (mask_lines.size() >= graph.get_node_count()) {
+                std::cerr << "[odgi::similarity] error: mask file has more lines than graph nodes ("
                          << graph.get_node_count() << ")" << std::endl;
                 return 1;
             }
             if (line == "0") {
-                node_mask[line_count] = false;
+                mask_lines.push_back(false);
             } else if (line == "1") {
-                node_mask[line_count] = true;
+                mask_lines.push_back(true);
             } else {
                 std::cerr << "[odgi::similarity] error: mask file should contain only 0 or 1 values, found: " << line << std::endl;
                 return 1;
             }
-            line_count++;
         }
-        if (line_count != graph.get_node_count()) {
-            std::cerr << "[odgi::similarity] error: mask file should have exactly " << graph.get_node_count() 
-                     << " lines, found: " << line_count << std::endl;
+        if (mask_lines.size() != graph.get_node_count()) {
+            std::cerr << "[odgi::similarity] error: mask file should have exactly " << graph.get_node_count()
+                     << " lines, found: " << mask_lines.size() << std::endl;
             return 1;
         }
+        // map the i-th positional line to the i-th node in id order
+        uint64_t d = 0;
+        graph.for_each_handle([&](const handle_t& h) {
+            node_mask[graph.get_id(h) - shift] = mask_lines[d++];
+        });
     }
 
     auto get_path_name
@@ -222,7 +231,7 @@ int main_similarity(int argc, char** argv) {
             [&](const step_handle_t& s) {
                 auto h = graph.get_handle_of_step(s);
                 // Skip masked-out nodes
-                if (!node_mask[graph.get_id(h) - 1]) {
+                if (!node_mask[graph.get_id(h) - shift]) {
                     return;
                 }
                 path_length += graph.get_length(h);
@@ -288,6 +297,10 @@ int main_similarity(int argc, char** argv) {
     std::vector<ska::flat_hash_map<uint64_t, uint64_t>> thread_local_maps(max_local_maps - 1);
     std::vector<std::mutex> map_mutexes(max_local_maps);
 
+    // loop-invariant id bounds; we iterate the id range and skip gaps so non-contiguous ids work
+    const uint64_t min_id = graph.min_node_id();
+    const uint64_t max_id = graph.max_node_id();
+
 #pragma omp parallel
     {
         int thread_id = omp_get_thread_num();
@@ -306,10 +319,13 @@ int main_similarity(int argc, char** argv) {
         }
         
 #pragma omp for
-        for (uint64_t node_id = 1; node_id <= graph.get_node_count(); ++node_id) {
+        for (uint64_t node_id = min_id; node_id <= max_id; ++node_id) {
+            if (!graph.has_node(node_id)) {
+                continue;
+            }
             handle_t h = graph.get_handle(node_id);
             // Skip masked-out nodes
-            if (!node_mask[graph.get_id(h) - 1]) {
+            if (!node_mask[node_id - shift]) {
                 continue;
             }
             ska::flat_hash_map<uint32_t, uint64_t> local_path_lengths;
