@@ -636,7 +636,6 @@ void graph_t::create_edge(const handle_t& left_h, const handle_t& right_h) {
                            get_is_reverse(right_h),
                            false,
                            get_is_reverse(left_h));
-        left_node.clear_lock();
         // only insert the second side if it's on a different node
         if (left_rank != right_rank) {
             right_node.add_edge(get_id(left_h),
