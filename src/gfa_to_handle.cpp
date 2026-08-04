@@ -99,52 +99,61 @@ void gfa_to_handle(const string& gfa_filename,
         }
     }
 
+    // building edges and paths: a single parallel pass over the file finds
+    // both 'L'/'E' and 'P' lines (gfak::for_each_edge_and_path_line_in_file_parallel),
+    // instead of two separate full-file scans, feeding two independent
+    // queue+worker-pool pipelines (edges don't depend on paths or vice versa,
+    // only on nodes, which are already built above).
     {
-        std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress_meter;
+        std::unique_ptr<algorithms::progress_meter::ProgressMeter> edge_progress_meter;
         if (progress) {
-            progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+            edge_progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
                 edge_count, "[odgi::gfa_to_handle] building edges:");
         }
-        gg.for_each_edge_line_in_file(
-            filename,
-            [&](const gfak::edge_elem& e) {
-                if (e.source_name.empty()) return;
-                try {
-                    uint64_t source_id = stol(e.source_name) - id_increment;
-                    uint64_t sink_id = stol(e.sink_name) - id_increment;
-                    if (graph->has_node(source_id) && graph->has_node(sink_id)) {
-                        handlegraph::handle_t a = graph->get_handle(source_id, !e.source_orientation_forward);
-                        handlegraph::handle_t b = graph->get_handle(sink_id, !e.sink_orientation_forward);
-                        graph->create_edge(a, b);
-                    } else {
-                        std::cerr << "[odgi::gfa_to_handle] Error creating edge '" << e.source_name << " <--> " << e.sink_name << "' due to missing node(s)" << std::endl;
-                        exit(1);
-                    }
-                } catch (const std::exception& exc) {
-                    std::cerr << "[odgi::gfa_to_handle] Error creating edge '" << e.source_name << " <--> " << e.sink_name << "': " << exc.what() << std::endl;
-                    exit(1);
-                }
-
-                if (progress) progress_meter->increment(1);
-            });
-        if (progress) {
-            progress_meter->finish();
-        }
-    }
-
-    if (path_count > 0) {
-        std::unique_ptr<algorithms::progress_meter::ProgressMeter> progress_meter;
-        if (progress) {
-            progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
+        std::unique_ptr<algorithms::progress_meter::ProgressMeter> path_progress_meter;
+        if (progress && path_count > 0) {
+            path_progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
                 path_count, "[odgi::gfa_to_handle] building paths:");
         }
+
+        gfa_edge_queue_t edge_queue;
         gfa_path_queue_t path_queue;
-        std::mutex logging_mutex;
-        std::atomic<bool> work_todo{};
-        uint64_t idx = 0;
-        auto worker =
+        std::atomic<bool> edge_work_todo{};
+        std::atomic<bool> path_work_todo{};
+
+        auto edge_worker =
             [&](uint64_t tid) {
-                while (work_todo.load()) {
+                while (edge_work_todo.load()) {
+                    edge_record_t e;
+                    if (edge_queue.try_pop(e)) {
+                        if (e.source_name.empty()) {
+                            continue;
+                        }
+                        try {
+                            uint64_t source_id = stol(e.source_name) - id_increment;
+                            uint64_t sink_id = stol(e.sink_name) - id_increment;
+                            if (graph->has_node(source_id) && graph->has_node(sink_id)) {
+                                handlegraph::handle_t a = graph->get_handle(source_id, !e.source_orientation_forward);
+                                handlegraph::handle_t b = graph->get_handle(sink_id, !e.sink_orientation_forward);
+                                graph->create_edge(a, b);
+                            } else {
+                                std::cerr << "[odgi::gfa_to_handle] Error creating edge '" << e.source_name << " <--> " << e.sink_name << "' due to missing node(s)" << std::endl;
+                                exit(1);
+                            }
+                        } catch (const std::exception& exc) {
+                            std::cerr << "[odgi::gfa_to_handle] Error creating edge '" << e.source_name << " <--> " << e.sink_name << "': " << exc.what() << std::endl;
+                            exit(1);
+                        }
+                        if (progress) edge_progress_meter->increment(1);
+                    } else {
+                        std::this_thread::sleep_for(std::chrono::nanoseconds(1));
+                    }
+                }
+            };
+
+        auto path_worker =
+            [&](uint64_t tid) {
+                while (path_work_todo.load()) {
                     path_elem_t * p;
                     if (path_queue.try_pop(p)) {
                         uint64_t i = 0;
@@ -176,37 +185,63 @@ void gfa_to_handle(const string& gfa_filename,
                             }
                         }
                         delete p;
-                        if (progress) progress_meter->increment(1);
+                        if (progress) path_progress_meter->increment(1);
                     } else {
                         std::this_thread::sleep_for(std::chrono::nanoseconds(1));
                     }
                 }
             };
 
-        std::vector<std::thread> workers;
-        workers.reserve(n_threads);
-        work_todo.store(true);
+        std::vector<std::thread> edge_workers;
+        edge_workers.reserve(n_threads);
+        edge_work_todo.store(true);
         for (uint64_t t = 0; t < n_threads; ++t) {
-            workers.emplace_back(worker, t);
+            edge_workers.emplace_back(edge_worker, t);
         }
 
-        gg.for_each_path_line_in_file(
-            filename,
-            [&](const gfak::path_elem& path) {
-                handlegraph::path_handle_t p_h = graph->create_path_handle(path.name);
-                path_elem_t* p = new path_elem_t({p_h, path});
-                path_queue.push(p);
+        std::vector<std::thread> path_workers;
+        if (path_count > 0) {
+            path_workers.reserve(n_threads);
+            path_work_todo.store(true);
+            for (uint64_t t = 0; t < n_threads; ++t) {
+                path_workers.emplace_back(path_worker, t);
+            }
+        }
+
+        gg.for_each_edge_and_path_line_in_file_parallel(
+            filename, n_threads,
+            [&](const gfak::edge_endpoints_t& e) {
+                edge_queue.push(edge_record_t{std::string(e.source_name), std::string(e.sink_name),
+                                              e.source_orientation_forward, e.sink_orientation_forward});
+            },
+            [&](const gfak::path_line_t& p) {
+                handlegraph::path_handle_t p_h = graph->create_path_handle(p.name);
+                path_elem_t* pe = new path_elem_t({p_h, p});
+                path_queue.push(pe);
             });
 
-        while (!path_queue.was_empty()) {
+        while (!edge_queue.was_empty()) {
             std::this_thread::sleep_for(std::chrono::nanoseconds(1));
         }
-        work_todo.store(false);
+        edge_work_todo.store(false);
         for (uint64_t t = 0; t < n_threads; ++t) {
-            workers[t].join();
+            edge_workers[t].join();
         }
         if (progress) {
-            progress_meter->finish();
+            edge_progress_meter->finish();
+        }
+
+        if (path_count > 0) {
+            while (!path_queue.was_empty()) {
+                std::this_thread::sleep_for(std::chrono::nanoseconds(1));
+            }
+            path_work_todo.store(false);
+            for (uint64_t t = 0; t < n_threads; ++t) {
+                path_workers[t].join();
+            }
+            if (progress) {
+                path_progress_meter->finish();
+            }
         }
     }
 

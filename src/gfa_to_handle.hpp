@@ -22,10 +22,23 @@ namespace odgi {
 
 struct path_elem_t {
     handlegraph::path_handle_t path;
-    gfak::path_elem gfak;
+    gfak::path_line_t gfak;
 };
 
 typedef atomic_queue::AtomicQueue<path_elem_t*, 2 << 10> gfa_path_queue_t;
+
+/// Only the fields gfa_to_handle actually needs from gfak::edge_elem, kept as a
+/// plain value type so it can be pushed into gfa_edge_queue_t without a
+/// per-edge heap allocation (unlike gfak::edge_elem, which also carries an
+/// unused CIGAR alignment string and tags map).
+struct edge_record_t {
+    std::string source_name;
+    std::string sink_name;
+    bool source_orientation_forward = false;
+    bool sink_orientation_forward = false;
+};
+
+typedef atomic_queue::AtomicQueue2<edge_record_t, 2 << 10> gfa_edge_queue_t;
 
 std::map<char, uint64_t> gfa_line_counts(const char* filename);
 
