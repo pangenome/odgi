@@ -10,6 +10,7 @@
 #include <cstring>
 #include <cassert>
 #include <atomic>
+#include <thread>
 // #include "bmap.hpp"
 #include "dynamic.hpp"
 #include "varint.hpp"
@@ -25,7 +26,10 @@ const uint8_t PATH_RECORD_LENGTH = 6;
 /// A node object with the sequence, its edge lists, and paths
 class node_t {
     uint64_t id = 0;
-    std::atomic_flag lock = ATOMIC_FLAG_INIT;
+    // std::atomic<bool> rather than std::atomic_flag: C++17's atomic_flag
+    // only supports test_and_set/clear, no plain load, which rules out
+    // the test-and-test-and-set pattern get_lock() below needs.
+    std::atomic<bool> lock{false};
     std::string sequence;
     dyn::hacked_vector edges;
     dyn::hacked_vector decoding;
@@ -86,12 +90,40 @@ class node_t {
 public:
     node_t(void); // constructor
     // locking methods
+    //
+    // Fast/uncommon-contention path: a single exchange, exactly as cheap
+    // as the old test_and_set-based version. Falls into a
+    // test-and-test-and-set (TTAS) backoff loop only once contention is
+    // actually detected -- needed because a handful of very high-degree
+    // "hub" nodes (common at variant-dense loci in real pangenome graphs,
+    // never reproduced by uniformly-random synthetic test data) under
+    // heavy concurrent access turned a bare test_and_set spin into
+    // hundreds of threads all issuing an atomic RMW every iteration,
+    // saturating inter-core cache-coherency traffic and making close to
+    // zero forward progress despite ~100% CPU use. Spinning on a plain
+    // load first avoids that: a load can be satisfied from a cached copy
+    // without invalidating other cores' caches the way a repeated
+    // exchange does, so only the (much rarer) moment the lock actually
+    // looks free pays for another exchange attempt.
     inline void get_lock(void) {
-        while (lock.test_and_set(std::memory_order_acquire))  // acquire lock
-            ; // spin
+        if (!lock.exchange(true, std::memory_order_acquire)) {
+            return;
+        }
+        int spins = 0;
+        while (true) {
+            while (lock.load(std::memory_order_relaxed)) {
+                if (++spins > 64) {
+                    std::this_thread::yield();
+                    spins = 0;
+                }
+            }
+            if (!lock.exchange(true, std::memory_order_acquire)) {
+                return;
+            }
+        }
     }
     inline void clear_lock(void) {
-        lock.clear(std::memory_order_release);
+        lock.store(false, std::memory_order_release);
     }
     inline const uint64_t edge_count(void) const { return edges.size()/EDGE_RECORD_LENGTH; }
     inline const uint64_t path_count(void) const { return paths.size()/PATH_RECORD_LENGTH; }
