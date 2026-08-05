@@ -4,6 +4,7 @@
 
 #include "odgi.hpp"
 #include <charconv>
+#include <sstream>
 
 namespace odgi {
 
@@ -1653,14 +1654,40 @@ void graph_t::serialize_members(std::ostream& out) const {
     //assert(node_count == node_v.size());
     // hack
     // todo big mess, middle of removal of deleted node bv
+    //
+    // Serialize nodes in parallel: each node_t::serialize() call only reads
+    // that node's own data (and empty_node, shared read-only across threads),
+    // so threads can independently serialize disjoint, contiguous node
+    // ranges into their own in-memory buffer with no shared mutable state.
+    // The buffers are then written out in order to preserve the on-disk
+    // node layout that deserialize_members expects.
     node_t empty_node;
-    for (auto& node : node_v) {
-        // check if node is null
-        if (node == nullptr) {
-            written += empty_node.serialize(out);
-        } else {
-            written += node->serialize(out);
+    uint64_t n_threads = _num_threads > 0 ? _num_threads : 1;
+    if (node_v.size() > 0 && n_threads > node_v.size()) {
+        n_threads = node_v.size();
+    }
+    if (node_v.empty()) {
+        n_threads = 1;
+    }
+    std::vector<std::ostringstream> node_chunk_bufs(n_threads);
+#pragma omp parallel for schedule(static, 1) num_threads(n_threads)
+    for (uint64_t t = 0; t < n_threads; ++t) {
+        uint64_t chunk_size = (node_v.size() + n_threads - 1) / n_threads;
+        uint64_t begin = t * chunk_size;
+        uint64_t end = std::min(begin + chunk_size, node_v.size());
+        for (uint64_t i = begin; i < end; ++i) {
+            auto& node = node_v[i];
+            if (node == nullptr) {
+                empty_node.serialize(node_chunk_bufs[t]);
+            } else {
+                node->serialize(node_chunk_bufs[t]);
+            }
         }
+    }
+    for (uint64_t t = 0; t < n_threads; ++t) {
+        const std::string& chunk = node_chunk_bufs[t].str();
+        out.write(chunk.data(), chunk.size());
+        written += chunk.size();
     }
     // there are _path_count of these to write
     uint64_t j = 0;
