@@ -259,6 +259,25 @@ public:
     /// Create a new node with the given id and sequence, then return the handle.
     handle_t create_handle(const std::string& sequence, const nid_t& id);
 
+    /// Bulk-parallel node construction, for callers (e.g. gfa_to_handle)
+    /// that already know the full id range up front and want to fill many
+    /// distinct ids concurrently from multiple threads. Must be used on an
+    /// empty graph, in this order:
+    ///   1. reserve_node_space(max_node_rank) -- once, single-threaded.
+    ///   2. create_handle_prereserved(seq, id) -- any number of times, from
+    ///      any number of threads, each call using a distinct id in
+    ///      [1, max_node_rank]. Concurrent calls with the SAME id are a
+    ///      data race (this path does not check for duplicates -- callers
+    ///      needing that guarantee must check has_node() themselves before
+    ///      calling, same as the normal create_handle usage pattern, and
+    ///      accept that under concurrent duplicate ids the check is racy).
+    ///   3. finalize_prereserved_node_space(min_id, max_id) -- once,
+    ///      single-threaded, after all create_handle_prereserved calls
+    ///      have completed (i.e. after joining the threads that made them).
+    void reserve_node_space(nid_t max_node_rank);
+    handle_t create_handle_prereserved(const std::string& sequence, const nid_t& id);
+    void finalize_prereserved_node_space(nid_t min_id, nid_t max_id);
+
     /// Remove the node belonging to the given handle and all of its edges.
     /// Does not update any stored paths.
     /// Invalidates the destroyed handle.

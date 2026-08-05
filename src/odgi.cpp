@@ -553,6 +553,52 @@ handle_t graph_t::create_handle(const std::string& sequence, const nid_t& id) {
     return number_bool_packing::pack(handle_rank, 0);
 }
 
+/// See the declaration in odgi.hpp for the required call sequence. Sizes
+/// node_v once so no reallocation can happen during the parallel phase
+/// that follows -- concurrent writes to distinct node_v[i] slots are then
+/// safe without locking, since the vector's own size/capacity never
+/// changes and each thread only ever writes to indices no other thread
+/// touches.
+void graph_t::reserve_node_space(nid_t max_node_rank) {
+    assert(node_v.empty());
+    assert(deleted_nodes.empty());
+    node_v.resize((uint64_t)max_node_rank, nullptr);
+}
+
+/// Safe to call concurrently as long as every call uses a distinct id
+/// (see reserve_node_space). Does not touch deleted_nodes or the
+/// min/max node id bookkeeping -- finalize_prereserved_node_space()
+/// rebuilds both once, after all inserts complete.
+handle_t graph_t::create_handle_prereserved(const std::string& sequence, const nid_t& id) {
+    assert(sequence.size());
+    assert(id > 0);
+    uint64_t handle_rank = (uint64_t)id - 1;
+    assert(handle_rank < node_v.size());
+    auto& n = node_v[handle_rank];
+    n = new node_t();
+    n->set_id(id);
+    n->set_sequence(sequence);
+    return number_bool_packing::pack(handle_rank, 0);
+}
+
+/// Single-threaded: must run after all create_handle_prereserved calls
+/// (i.e. after joining the threads that made them) and before any other
+/// graph_t use. Rebuilds deleted_nodes by scanning for slots that were
+/// reserved but never filled (e.g. gaps in a non-dense GFA id space), and
+/// sets min/max node id directly from values the caller already knows
+/// (gfa_to_handle's pre-scan already computes these) rather than via the
+/// racy read-then-conditionally-write pattern create_handle uses.
+void graph_t::finalize_prereserved_node_space(nid_t min_id, nid_t max_id) {
+    deleted_nodes.clear();
+    for (uint64_t i = 0; i < node_v.size(); ++i) {
+        if (node_v[i] == nullptr) {
+            deleted_nodes.insert(i + 1);
+        }
+    }
+    _min_node_id = min_id;
+    _max_node_id = max_id;
+}
+
 /// Remove the node belonging to the given handle and all of its edges.
 /// Does not update any stored paths.
 /// Invalidates the destroyed handle.

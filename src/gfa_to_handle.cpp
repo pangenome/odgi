@@ -1,4 +1,8 @@
 #include "gfa_to_handle.hpp"
+#ifdef ODGI_PARALLEL_NODE_BUILD
+#include "odgi.hpp"
+#include <memory>
+#endif
 
 namespace odgi {
 
@@ -81,31 +85,83 @@ void gfa_to_handle(const string& gfa_filename,
             progress_meter = std::make_unique<algorithms::progress_meter::ProgressMeter>(
                 node_count, "[odgi::gfa_to_handle] building nodes:");
         }
-        gg.for_each_sequence_line_in_file(
-            filename,
-            [&](const gfak::sequence_elem& s) {
-                if (s.name.empty() || s.name.find_first_not_of("0123456789") != std::string::npos) {
-                    std::cerr << "[odgi::gfa_to_handle] error: segment name '" << s.name
-                              << "' is not a non-negative integer node id" << std::endl;
-                    exit(1);
-                }
-                uint64_t id = 0;
-                try {
-                    id = std::stoull(s.name);
-                } catch (const std::exception& e) {
-                    std::cerr << "[odgi::gfa_to_handle] error: could not parse segment name '" << s.name
-                              << "' as a node id: " << e.what() << std::endl;
-                    exit(1);
-                }
-                const uint64_t node_id = id - id_increment;
-                if (graph->has_node(node_id)) {
-                    std::cerr << "[odgi::gfa_to_handle] error: duplicate node id " << node_id
-                              << " (segment '" << s.name << "'); GFA node ids must be unique" << std::endl;
-                    exit(1);
-                }
-                graph->create_handle(s.sequence, node_id);
-                if (progress) progress_meter->increment(1);
-            });
+        auto build_nodes_serial = [&]() {
+            gg.for_each_sequence_line_in_file(
+                filename,
+                [&](const gfak::sequence_elem& s) {
+                    if (s.name.empty() || s.name.find_first_not_of("0123456789") != std::string::npos) {
+                        std::cerr << "[odgi::gfa_to_handle] error: segment name '" << s.name
+                                  << "' is not a non-negative integer node id" << std::endl;
+                        exit(1);
+                    }
+                    uint64_t id = 0;
+                    try {
+                        id = std::stoull(s.name);
+                    } catch (const std::exception& e) {
+                        std::cerr << "[odgi::gfa_to_handle] error: could not parse segment name '" << s.name
+                                  << "' as a node id: " << e.what() << std::endl;
+                        exit(1);
+                    }
+                    const uint64_t node_id = id - id_increment;
+                    if (graph->has_node(node_id)) {
+                        std::cerr << "[odgi::gfa_to_handle] error: duplicate node id " << node_id
+                                  << " (segment '" << s.name << "'); GFA node ids must be unique" << std::endl;
+                        exit(1);
+                    }
+                    graph->create_handle(s.sequence, node_id);
+                    if (progress) progress_meter->increment(1);
+                });
+        };
+#ifdef ODGI_PARALLEL_NODE_BUILD
+        // Experimental (enable via -DODGI_PARALLEL_NODE_BUILD): only takes
+        // effect for odgi's own graph_t and n_threads > 1; other handle
+        // graph implementations, or n_threads == 1, fall back to
+        // build_nodes_serial() above (identical to the always-serial
+        // behavior when this flag is off). Requires knowing the id range
+        // up front (already available from the pre-scan above) to pre-size
+        // storage, so threads can fill distinct, disjoint node_v slots
+        // with no shared mutable state -- see graph_t::reserve_node_space
+        // and friends in odgi.hpp for the safety argument. Duplicate ids
+        // (a hard GFA error) are still detected deterministically via a
+        // separate atomic claim array, since reading/writing the same
+        // node_v slot from two threads without one would itself be a race.
+        odgi::graph_t* fast_graph = node_count > 0 ? dynamic_cast<odgi::graph_t*>(graph) : nullptr;
+        if (fast_graph && n_threads > 1) {
+            uint64_t max_node_rank = max_id - id_increment;
+            fast_graph->reserve_node_space(max_node_rank);
+            auto claimed = std::make_unique<std::atomic<bool>[]>(max_node_rank);
+            gg.for_each_sequence_endpoints_in_file_parallel(
+                filename, n_threads,
+                [&](const gfak::sequence_record_t& s) {
+                    if (s.name.empty() || s.name.find_first_not_of("0123456789") != std::string::npos) {
+                        std::cerr << "[odgi::gfa_to_handle] error: segment name '" << s.name
+                                  << "' is not a non-negative integer node id" << std::endl;
+                        exit(1);
+                    }
+                    uint64_t id = 0;
+                    try {
+                        id = std::stoull(std::string(s.name));
+                    } catch (const std::exception& e) {
+                        std::cerr << "[odgi::gfa_to_handle] error: could not parse segment name '" << s.name
+                                  << "' as a node id: " << e.what() << std::endl;
+                        exit(1);
+                    }
+                    const uint64_t node_id = id - id_increment;
+                    if (claimed[node_id - 1].exchange(true, std::memory_order_acq_rel)) {
+                        std::cerr << "[odgi::gfa_to_handle] error: duplicate node id " << node_id
+                                  << " (segment '" << s.name << "'); GFA node ids must be unique" << std::endl;
+                        exit(1);
+                    }
+                    fast_graph->create_handle_prereserved(std::string(s.sequence), node_id);
+                    if (progress) progress_meter->increment(1);
+                });
+            fast_graph->finalize_prereserved_node_space(min_id - id_increment, max_node_rank);
+        } else {
+            build_nodes_serial();
+        }
+#else
+        build_nodes_serial();
+#endif
         if (progress) {
             progress_meter->finish();
         }

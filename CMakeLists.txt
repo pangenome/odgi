@@ -32,6 +32,13 @@ option(ASAN "Use address sanitiser" OFF)
 option(INLINE_HANDLEGRAPH_SOURCES "Compile handlegraph sources inline" OFF)
 # Add the GPU option (default is OFF)
 option(USE_GPU "Enable GPU support if available" OFF)
+# Experimental: parallelize gfa_to_handle's node-construction phase across
+# n_threads (in addition to the always-on edge/path parallelization). Off
+# by default since it's newer/less battle-tested than the edge/path path.
+option(PARALLEL_NODE_BUILD "Enable experimental parallel node construction in gfa_to_handle" OFF)
+if (PARALLEL_NODE_BUILD)
+  add_compile_definitions(ODGI_PARALLEL_NODE_BUILD)
+endif ()
 
 include(ExternalProject)
 include(FeatureSummary)
