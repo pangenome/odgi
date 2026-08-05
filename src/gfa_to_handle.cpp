@@ -1,5 +1,5 @@
 #include "gfa_to_handle.hpp"
-#ifdef ODGI_PARALLEL_NODE_BUILD
+#if defined(ODGI_PARALLEL_NODE_BUILD) || defined(ODGI_PARALLEL_EDGE_BUILD)
 #include "odgi.hpp"
 #include <memory>
 #endif
@@ -76,7 +76,7 @@ void gfa_to_handle(const string& gfa_filename,
     log_phase("pre-scan (min/max id + line counts)");
     uint64_t id_increment = (compact_ids ? min_id - 1 : 0);
     uint64_t node_count = line_counts['S'];
-    uint64_t edge_count = line_counts['L'];
+    uint64_t edge_count = line_counts['L'] + line_counts['E']; // GFA1 'L' and GFA2 'E' edge lines
     uint64_t path_count = line_counts['P'];
     // build the nodes
     {
@@ -170,9 +170,18 @@ void gfa_to_handle(const string& gfa_filename,
 
     // building edges and paths: a single parallel pass over the file finds
     // both 'L'/'E' and 'P' lines (gfak::for_each_edge_and_path_line_in_file_parallel),
-    // instead of two separate full-file scans, feeding two independent
-    // queue+worker-pool pipelines (edges don't depend on paths or vice versa,
-    // only on nodes, which are already built above).
+    // instead of two separate full-file scans. Paths always go through a
+    // queue+worker-pool pipeline (append_step needs real graph-structure
+    // synchronization). Edges normally do too (edge_queue/edge_worker
+    // below) -- except when ODGI_PARALLEL_EDGE_BUILD is enabled and graph
+    // is odgi's own graph_t, in which case edges instead go through a
+    // lock-free CSR bulk build (see graph_t::bulk_build_edges_from_candidates
+    // in odgi.hpp/odgi.cpp for why: the per-edge path here calls
+    // create_edge(), which serializes every insertion behind a per-node
+    // lock AND does an O(current degree) duplicate-edge scan under that
+    // lock -- O(k^2) for a node with k edges, catastrophic for the
+    // extreme-degree "hub" nodes real pangenome graphs have at variant-dense
+    // loci).
     {
         std::unique_ptr<algorithms::progress_meter::ProgressMeter> edge_progress_meter;
         if (progress) {
@@ -220,6 +229,47 @@ void gfa_to_handle(const string& gfa_filename,
                 }
             };
 
+#ifdef ODGI_PARALLEL_EDGE_BUILD
+        // CSR candidate buffer for the fast path. Sized to the worst case
+        // (every line touches two distinct node-sides); n_used tracks how
+        // many slots were actually claimed (same-rank edges use only one).
+        odgi::graph_t* fast_graph_edges = edge_count > 0 ? dynamic_cast<odgi::graph_t*>(graph) : nullptr;
+        std::vector<odgi::edge_candidate_t> edge_candidates;
+        std::atomic<uint64_t> edge_candidate_next{0};
+        if (fast_graph_edges) {
+            edge_candidates.resize(edge_count * 2);
+        }
+        auto collect_edge_candidate =
+            [&](const gfak::edge_endpoints_t& e) {
+                if (e.source_name.empty()) {
+                    return;
+                }
+                uint64_t source_id, sink_id;
+                try {
+                    source_id = stol(std::string(e.source_name)) - id_increment;
+                    sink_id = stol(std::string(e.sink_name)) - id_increment;
+                } catch (const std::exception& exc) {
+                    std::cerr << "[odgi::gfa_to_handle] Error creating edge '" << e.source_name << " <--> " << e.sink_name << "': " << exc.what() << std::endl;
+                    exit(1);
+                }
+                if (!(graph->has_node(source_id) && graph->has_node(sink_id))) {
+                    std::cerr << "[odgi::gfa_to_handle] Error creating edge '" << e.source_name << " <--> " << e.sink_name << "' due to missing node(s)" << std::endl;
+                    exit(1);
+                }
+                bool source_rev = !e.source_orientation_forward;
+                bool sink_rev = !e.sink_orientation_forward;
+                // matches graph_t::create_edge's own left/right add_edge calls exactly
+                // (see bulk_build_edges_from_candidates doc comment in odgi.hpp)
+                uint64_t slot1 = edge_candidate_next.fetch_add(1, std::memory_order_relaxed);
+                edge_candidates[slot1] = odgi::edge_candidate_t{source_id - 1, sink_id, sink_rev, false, source_rev};
+                if (source_id != sink_id) {
+                    uint64_t slot2 = edge_candidate_next.fetch_add(1, std::memory_order_relaxed);
+                    edge_candidates[slot2] = odgi::edge_candidate_t{sink_id - 1, source_id, source_rev, true, sink_rev};
+                }
+                if (progress) edge_progress_meter->increment(1);
+            };
+#endif
+
         auto path_worker =
             [&](uint64_t tid) {
                 while (path_work_todo.load()) {
@@ -261,11 +311,19 @@ void gfa_to_handle(const string& gfa_filename,
                 }
             };
 
+#ifdef ODGI_PARALLEL_EDGE_BUILD
+        bool use_csr_edges = (fast_graph_edges != nullptr);
+#else
+        bool use_csr_edges = false;
+#endif
+
         std::vector<std::thread> edge_workers;
-        edge_workers.reserve(n_threads);
-        edge_work_todo.store(true);
-        for (uint64_t t = 0; t < n_threads; ++t) {
-            edge_workers.emplace_back(edge_worker, t);
+        if (!use_csr_edges) {
+            edge_workers.reserve(n_threads);
+            edge_work_todo.store(true);
+            for (uint64_t t = 0; t < n_threads; ++t) {
+                edge_workers.emplace_back(edge_worker, t);
+            }
         }
 
         std::vector<std::thread> path_workers;
@@ -277,30 +335,48 @@ void gfa_to_handle(const string& gfa_filename,
             }
         }
 
-        gg.for_each_edge_and_path_line_in_file_parallel(
-            filename, n_threads,
-            [&](const gfak::edge_endpoints_t& e) {
-                edge_queue.push(edge_record_t{std::string(e.source_name), std::string(e.sink_name),
-                                              e.source_orientation_forward, e.sink_orientation_forward});
-            },
+        auto path_line_cb =
             [&](const gfak::path_line_t& p) {
                 handlegraph::path_handle_t p_h = graph->create_path_handle(p.name);
                 path_elem_t* pe = new path_elem_t({p_h, p});
                 path_queue.push(pe);
-            });
-        log_phase("edge+path scan (file read/parse/enqueue, concurrent with worker drain)");
+            };
 
-        while (!edge_queue.was_empty()) {
-            std::this_thread::sleep_for(std::chrono::nanoseconds(1));
+#ifdef ODGI_PARALLEL_EDGE_BUILD
+        if (use_csr_edges) {
+            gg.for_each_edge_and_path_line_in_file_parallel(
+                filename, n_threads, collect_edge_candidate, path_line_cb);
+            log_phase("edge+path scan (file read/parse, CSR edge candidates collected inline)");
+            if (progress) {
+                edge_progress_meter->finish();
+            }
+            uint64_t n_used = edge_candidate_next.load(std::memory_order_relaxed);
+            fast_graph_edges->bulk_build_edges_from_candidates(edge_candidates, n_used, n_threads);
+            log_phase("bulk edge build (CSR count/prefix-sum/scatter/finalize)");
+        } else
+#endif
+        {
+            gg.for_each_edge_and_path_line_in_file_parallel(
+                filename, n_threads,
+                [&](const gfak::edge_endpoints_t& e) {
+                    edge_queue.push(edge_record_t{std::string(e.source_name), std::string(e.sink_name),
+                                                  e.source_orientation_forward, e.sink_orientation_forward});
+                },
+                path_line_cb);
+            log_phase("edge+path scan (file read/parse/enqueue, concurrent with worker drain)");
+
+            while (!edge_queue.was_empty()) {
+                std::this_thread::sleep_for(std::chrono::nanoseconds(1));
+            }
+            edge_work_todo.store(false);
+            for (uint64_t t = 0; t < n_threads; ++t) {
+                edge_workers[t].join();
+            }
+            if (progress) {
+                edge_progress_meter->finish();
+            }
+            log_phase("edge worker drain (after scan finished)");
         }
-        edge_work_todo.store(false);
-        for (uint64_t t = 0; t < n_threads; ++t) {
-            edge_workers[t].join();
-        }
-        if (progress) {
-            edge_progress_meter->finish();
-        }
-        log_phase("edge worker drain (after scan finished)");
 
         if (path_count > 0) {
             while (!path_queue.was_empty()) {

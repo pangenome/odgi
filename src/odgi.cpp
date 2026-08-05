@@ -599,6 +599,96 @@ void graph_t::finalize_prereserved_node_space(nid_t min_id, nid_t max_id) {
     _max_node_id = max_id;
 }
 
+/// See the declaration in odgi.hpp for the full algorithm rationale
+/// (counting-sort/CSR bulk build vs. per-edge lock+O(k) dedup scan).
+void graph_t::bulk_build_edges_from_candidates(std::vector<edge_candidate_t>& candidates,
+                                               uint64_t n_used,
+                                               uint64_t n_threads) {
+    n_threads = (n_threads == 0 ? 1 : n_threads);
+    uint64_t n_nodes = node_v.size();
+    if (n_nodes == 0 || n_used == 0) {
+        return;
+    }
+
+    // 1) count pass: how many candidates target each node rank.
+    std::vector<std::atomic<uint64_t>> degree(n_nodes);
+    for (uint64_t i = 0; i < n_nodes; ++i) {
+        degree[i].store(0, std::memory_order_relaxed);
+    }
+#pragma omp parallel for num_threads(n_threads) schedule(static)
+    for (uint64_t i = 0; i < n_used; ++i) {
+        degree[candidates[i].node_rank].fetch_add(1, std::memory_order_relaxed);
+    }
+
+    // 2) prefix sum -> per-node offsets into the flat scatter buffer.
+    std::vector<uint64_t> offset(n_nodes + 1);
+    uint64_t acc = 0;
+    for (uint64_t i = 0; i < n_nodes; ++i) {
+        offset[i] = acc;
+        acc += degree[i].load(std::memory_order_relaxed);
+    }
+    offset[n_nodes] = acc;
+
+    // 3) scatter: claim a slot per candidate via a per-node write cursor
+    // (initialized to that node's offset) and write it into place. Two
+    // logically-distinct fields (other_id + a packed flags byte) so the
+    // finalize pass below can sort+dedup cheaply.
+    struct edge_slot_t {
+        uint64_t other_id;
+        uint8_t flags; // bit0 = other_rev, bit1 = to_curr, bit2 = on_rev
+        inline bool operator<(const edge_slot_t& o) const {
+            return other_id != o.other_id ? other_id < o.other_id : flags < o.flags;
+        }
+        inline bool operator==(const edge_slot_t& o) const {
+            return other_id == o.other_id && flags == o.flags;
+        }
+    };
+    std::vector<std::atomic<uint64_t>> cursor(n_nodes);
+    for (uint64_t i = 0; i < n_nodes; ++i) {
+        cursor[i].store(offset[i], std::memory_order_relaxed);
+    }
+    std::vector<edge_slot_t> sorted(acc);
+#pragma omp parallel for num_threads(n_threads) schedule(static)
+    for (uint64_t i = 0; i < n_used; ++i) {
+        const edge_candidate_t& c = candidates[i];
+        uint64_t slot = cursor[c.node_rank].fetch_add(1, std::memory_order_relaxed);
+        sorted[slot] = edge_slot_t{
+            c.other_id,
+            (uint8_t)((c.other_rev ? 1 : 0) | (c.to_curr ? 2 : 0) | (c.on_rev ? 4 : 0))
+        };
+    }
+
+    // 4) finalize: per node rank (fully parallel, no cross-node
+    // synchronization -- each node's [begin,end) slice is disjoint), sort +
+    // unique to drop exact-duplicate edge lines, then bulk-append into that
+    // node's edge list with no locking (this thread exclusively owns the
+    // node for the duration). Every accepted logical edge contributes
+    // exactly one record with to_curr==false (see create_edge: the "left"
+    // side of every edge, same-rank or not, is always inserted with
+    // to_curr=false) -- so counting surviving to_curr==false records here
+    // reproduces the same _edge_count create_edge would have produced.
+    std::atomic<uint64_t> edge_count{0};
+#pragma omp parallel for num_threads(n_threads) schedule(dynamic, 4096)
+    for (uint64_t rank = 0; rank < n_nodes; ++rank) {
+        uint64_t begin = offset[rank];
+        uint64_t end = offset[rank + 1];
+        if (begin == end) continue;
+        std::sort(sorted.begin() + begin, sorted.begin() + end);
+        auto uniq_end = std::unique(sorted.begin() + begin, sorted.begin() + end);
+        node_t* node = node_v[rank];
+        uint64_t local_edge_count = 0;
+        for (auto it = sorted.begin() + begin; it != uniq_end; ++it) {
+            bool other_rev = it->flags & 1;
+            bool to_curr = it->flags & 2;
+            bool on_rev = it->flags & 4;
+            node->add_edge(it->other_id, other_rev, to_curr, on_rev);
+            if (!to_curr) ++local_edge_count;
+        }
+        edge_count.fetch_add(local_edge_count, std::memory_order_relaxed);
+    }
+    _edge_count = edge_count.load(std::memory_order_relaxed);
+}
+
 /// Remove the node belonging to the given handle and all of its edges.
 /// Does not update any stored paths.
 /// Invalidates the destroyed handle.

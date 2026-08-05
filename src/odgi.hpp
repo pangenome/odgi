@@ -36,6 +36,8 @@
 #include <omp.h>
 #include "atomic_bitvector.hpp"
 #include <mutex>
+#include <atomic>
+#include <algorithm>
 
 namespace odgi {
 
@@ -43,6 +45,21 @@ using namespace handlegraph;
 
 // Resolve ambiguous nid_t typedef by putting it in our namespace.
 using nid_t = handlegraph::nid_t;
+
+/// One node-side of an accepted GFA edge line (L/E), produced by the
+/// parallel text scan in gfa_to_handle.cpp and consumed in bulk by
+/// graph_t::bulk_build_edges_from_candidates(). A same-rank edge (e.g.
+/// A+ -> A-) produces exactly one of these; a different-rank edge produces
+/// two, one per endpoint. See bulk_build_edges_from_candidates() in
+/// odgi.cpp for the full count/prefix-sum/scatter/finalize algorithm this
+/// feeds into.
+struct edge_candidate_t {
+    uint64_t node_rank; // node_v index this record belongs to
+    uint64_t other_id;  // internal id (post id_increment) of the other endpoint
+    bool other_rev;
+    bool to_curr;
+    bool on_rev;
+};
 
 class graph_t : public MutablePathDeletableHandleGraph, public SerializableHandleGraph, public RankedHandleGraph {
 
@@ -277,6 +294,43 @@ public:
     void reserve_node_space(nid_t max_node_rank);
     handle_t create_handle_prereserved(const std::string& sequence, const nid_t& id);
     void finalize_prereserved_node_space(nid_t min_id, nid_t max_id);
+
+    /// Bulk/CSR-style edge construction (experimental). An alternative to
+    /// calling create_edge() once per GFA L/E line: that path serializes
+    /// every insertion on a per-node lock AND does an O(current degree)
+    /// linear duplicate-edge scan (has_edge) under that lock on every
+    /// single insertion, which is O(k^2) for a node with k edges -- fine
+    /// for typical degrees, but catastrophic for the handful of extreme-
+    /// degree "hub" nodes real pangenome graphs have at variant-dense loci
+    /// (a 100k-edge hub means ~10 billion comparisons, held one node-lock
+    /// critical section at a time).
+    ///
+    /// This replaces that with a counting-sort/CSR bulk build:
+    ///   1. Caller collects one edge_candidate_t per node-side touched by
+    ///      each accepted line (1 for a same-rank edge, 2 otherwise) into a
+    ///      flat array, from any number of threads, in any order -- no
+    ///      per-node synchronization needed for this step.
+    ///   2. This function counts candidates per node (parallel, one atomic
+    ///      increment each -- cheap even under hub-node contention, unlike
+    ///      a lock+succinct-insert critical section).
+    ///   3. Prefix-sums the counts into per-node offsets (single-threaded,
+    ///      O(n_nodes)).
+    ///   4. Scatters candidates into per-node-contiguous order (parallel,
+    ///      one atomic fetch_add per candidate to claim a slot).
+    ///   5. Finalizes each node's slice in parallel across nodes: sorts +
+    ///      dedups (O(k log k) instead of O(k^2)) then bulk-appends into
+    ///      that node's edge list with NO locking, since by this point
+    ///      each node's slice is owned exclusively by one thread.
+    ///
+    /// Must run after all nodes exist (reserve_node_space /
+    /// create_handle_prereserved / finalize_prereserved_node_space, or
+    /// plain create_handle) and before anything else reads/writes node
+    /// edges. Sets _edge_count. n_used is the number of valid entries
+    /// actually written into candidates (<= candidates.size(), since
+    /// same-rank edges use one slot instead of two).
+    void bulk_build_edges_from_candidates(std::vector<edge_candidate_t>& candidates,
+                                           uint64_t n_used,
+                                           uint64_t n_threads);
 
     /// Remove the node belonging to the given handle and all of its edges.
     /// Does not update any stored paths.
