@@ -38,6 +38,17 @@ void gfa_to_handle(const string& gfa_filename,
     uint64_t min_id = std::numeric_limits<uint64_t>::max();
     uint64_t max_id = std::numeric_limits<uint64_t>::min();
     std::map<char, uint64_t> line_counts;
+
+    auto phase_start = std::chrono::steady_clock::now();
+    auto log_phase = [&](const char* name) {
+        if (progress) {
+            auto now = std::chrono::steady_clock::now();
+            double secs = std::chrono::duration<double>(now - phase_start).count();
+            std::cerr << "[odgi::gfa_to_handle] [timing] " << name << ": " << secs << "s" << std::endl;
+            phase_start = now;
+        }
+    };
+
     // in parallel scan over the file to count edges and sequences
     {
         std::thread x(
@@ -58,6 +69,7 @@ void gfa_to_handle(const string& gfa_filename,
         line_counts = gfa_line_counts(filename);
         x.join();
     }
+    log_phase("pre-scan (min/max id + line counts)");
     uint64_t id_increment = (compact_ids ? min_id - 1 : 0);
     uint64_t node_count = line_counts['S'];
     uint64_t edge_count = line_counts['L'];
@@ -98,6 +110,7 @@ void gfa_to_handle(const string& gfa_filename,
             progress_meter->finish();
         }
     }
+    log_phase("building nodes");
 
     // building edges and paths: a single parallel pass over the file finds
     // both 'L'/'E' and 'P' lines (gfak::for_each_edge_and_path_line_in_file_parallel),
@@ -219,6 +232,7 @@ void gfa_to_handle(const string& gfa_filename,
                 path_elem_t* pe = new path_elem_t({p_h, p});
                 path_queue.push(pe);
             });
+        log_phase("edge+path scan (file read/parse/enqueue, concurrent with worker drain)");
 
         while (!edge_queue.was_empty()) {
             std::this_thread::sleep_for(std::chrono::nanoseconds(1));
@@ -230,6 +244,7 @@ void gfa_to_handle(const string& gfa_filename,
         if (progress) {
             edge_progress_meter->finish();
         }
+        log_phase("edge worker drain (after scan finished)");
 
         if (path_count > 0) {
             while (!path_queue.was_empty()) {
@@ -242,11 +257,13 @@ void gfa_to_handle(const string& gfa_filename,
             if (progress) {
                 path_progress_meter->finish();
             }
+            log_phase("path worker drain (after scan finished)");
         }
     }
 
     if (compact_ids) {
         graph->optimize();
+        log_phase("optimize (compact_ids)");
     }
 
 }

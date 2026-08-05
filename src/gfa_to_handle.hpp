@@ -14,6 +14,7 @@
 #include <atomic>
 #include <thread>
 #include <mutex>
+#include <chrono>
 #include <functional>
 #include "atomic_queue.h"
 #include "progress.hpp"
