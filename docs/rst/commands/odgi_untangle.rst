@@ -1,8 +1,8 @@
 .. _odgi untangle:
 
-#########
+#############
 odgi untangle
-#########
+#############
 
 Project paths into reference-relative BEDPE, to decompose paralogy relationships.
 
@@ -22,13 +22,13 @@ OPTIONS
 =======
 
 MANDATORY OPTIONS
---------------
+-----------------
 
 | **-i, --input**\ =\ *FILE*
 | Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!
 
 Untangling Options
-----------------
+------------------
 
 | **-q, --query-path**\ =\ *NAME*
 | Use this query path.
@@ -58,9 +58,11 @@ Untangling Options
 | Emit the output in PAF format.
 
 | **-c, --cut-points-input**\ =\ *FILE*
+
 A text file of node identifiers (one identifier per row) where to start the segment boundaries. When specified, no further starting points will be added.
 
 | **-d, --cut-points-output**\ =\ *FILE*
+
 Emit node identifiers where segment boundaries started (one identifier per row).
 
 Debugging Options

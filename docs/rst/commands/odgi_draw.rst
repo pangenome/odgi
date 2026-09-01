@@ -71,6 +71,7 @@ Visualization Options
   0.0).
 
 | **-b, --bed-file**\ =\ *FILE*
+
 Color the nodes based on the input annotation in the given BED FILE.
 Colors are derived from the 4th column, if present, else from the path name.
 If the 4th column value is in the format 'string#RRGGBB', the RRGGBB color (in hex notation) will be used.

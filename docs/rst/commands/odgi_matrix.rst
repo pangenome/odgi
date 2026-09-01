@@ -1,8 +1,8 @@
 .. _odgi matrix:
 
-#########
+###########
 odgi matrix
-#########
+###########
 
 Write the graph topology in sparse matrix format.
 
@@ -21,7 +21,7 @@ OPTIONS
 =======
 
 MANDATORY OPTIONS
---------------
+-----------------
 
 | **-i, --idx**\ =\ *FILE*
 | Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!

@@ -1,8 +1,8 @@
 .. _odgi stepindex:
 
-#########
+##############
 odgi stepindex
-#########
+##############
 
 Generate a step index from a given graph. If no output file is provided via **-o, --out**, the index will be directly written to **INPUT_GRAPH.stpidx**.
 
@@ -37,7 +37,7 @@ MANDATORY OPTIONS
 | Write the created step index to the specified file. A file ending with *.stpidx* is recommended. (default: *INPUT_GRAPH.stpidx*).
 
 Step Index Options
--------------
+------------------
 
 | **-a, --step-index-sample-rate**\ =\ *N*
 | The sample rate when building the step index. We index a node only if **mod(node_id, step-index-sample-rate) == 0**! Number must be dividable by 2 or 0 to disable sampling. (default: 8).

@@ -1,8 +1,8 @@
 .. _odgi paths:
 
-#########
+##########
 odgi paths
-#########
+##########
 
 Interrogate the embedded paths of a graph. Does not print anything to stdout by default!
 
@@ -22,13 +22,13 @@ OPTIONS
 =======
 
 MANDATORY OPTIONS
---------------
+-----------------
 
 | **-i, --idx**\ =\ *FILE*
 | Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!
 
 Path Investigation Options
----------------------
+--------------------------
 
 | **-O, --overlaps**\ =\ *FILE*
 | Read in the path grouping *FILE* to generate the overlap statistics
@@ -68,7 +68,7 @@ Path Investigation Options
   group identifier. Specify 1 for the 1st occurrence (default)."
 
 Path Modification Options
----------------------
+-------------------------
 | **-K, --keep-paths**\ =\ *[FILE]*
 | Keep paths listed (by line) in *FILE*.
 

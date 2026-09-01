@@ -1,8 +1,8 @@
 .. _odgi server:
 
-#########
+###########
 odgi server
-#########
+###########
 
 Start a basic HTTP server with a given path index file to go from *path:position* to *pangenome:position* very efficiently.
 
@@ -31,7 +31,7 @@ OPTIONS
 =======
 
 MANDATORY OPTIONS
---------------
+-----------------
 
 | **-i, --idx**\ =\ *FILE*
 | Load the succinct variation graph index from this *FILE*. The file name usually ends with *.xp*.

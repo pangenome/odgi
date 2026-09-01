@@ -1,8 +1,8 @@
 .. _odgi explode:
 
-#########
+############
 odgi explode
-#########
+############
 
 Breaks a graph into connected components storing each component in its own file.
 
@@ -22,7 +22,7 @@ OPTIONS
 =======
 
 MANDATORY OPTIONS
---------------
+-----------------
 
 | **-i, --idx**\ =\ *FILE*
 | Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!
@@ -36,7 +36,7 @@ Explode Options
 | **-p, --prefix**\ =\ *STRING*
 | Write each connected component in a file with the given *STRING* prefix. The
   file for the component number ``i`` will be named ``STRING.i.EXTENSION``
-(default: ``component.i.og`` or ``component.i.gfa``).
+  (default: ``component.i.og`` or ``component.i.gfa``).
 
 | **-b, --biggest**\ =\ *N*
 | Specify the number of the biggest connected components to write,

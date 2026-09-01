@@ -1,8 +1,8 @@
 .. _odgi break:
 
-#########
+##########
 odgi break
-#########
+##########
 
 Break cycles in the graph and drop its paths.
 

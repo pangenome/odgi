@@ -1,8 +1,8 @@
 .. _odgi bin:
 
-#########
+########
 odgi bin
-#########
+########
 
 Binning of pangenome sequence and path information in the graph.
 

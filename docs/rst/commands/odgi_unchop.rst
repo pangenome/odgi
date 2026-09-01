@@ -1,8 +1,8 @@
 .. _odgi unchop:
 
-#########
+###########
 odgi unchop
-#########
+###########
 
 Merge unitigs into a single node preserving the node order.
 

@@ -1,8 +1,8 @@
 .. _odgi procbed:
 
-#########
+############
 odgi procbed
-#########
+############
 
 ProcBED, or "procrustes-BED", cuts and adjusts BED intervals to fit inside a subgraph.
 Coordinates of subgraph paths are taken from their names using `PanSN sequence naming format <https://github.com/pangenome/PanSN-spec>`_.
@@ -25,7 +25,7 @@ OPTIONS
 =======
 
 MANDATORY OPTIONS
---------------
+-----------------
 
 | **-i, --input**\ =\ *FILE*
 | Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!
@@ -34,7 +34,7 @@ MANDATORY OPTIONS
 | Write the graph with procbeded paths to *.og*.
 
 Procbedion Options
-----------------
+------------------
 
 | **-b, --bed-targets**\ =\ *FILE*
 | BED file over path space of the full graph from the input subgraph was generated. Where they fully overlap, records will be adjusted to fit in the subgraph coordinate space.

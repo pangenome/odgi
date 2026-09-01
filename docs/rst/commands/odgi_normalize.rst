@@ -1,8 +1,8 @@
 .. _odgi normalize:
 
-#########
+##############
 odgi normalize
-#########
+##############
 
 Compact unitigs and simplify redundant furcations.
 
@@ -23,7 +23,7 @@ OPTIONS
 =======
 
 MANDATORY OPTIONS
---------------
+-----------------
 
 | **-i, --idx**\ =\ *FILE*
 | Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.
@@ -45,7 +45,7 @@ Threading
 | Number of threads to use for parallel operations.
 
 Processing Information
------------------
+----------------------
 
 | **-d, --debug**
 | Print information about the normalization process to stdout.

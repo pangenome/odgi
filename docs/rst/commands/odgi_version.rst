@@ -1,8 +1,8 @@
 .. _odgi version:
 
-#########
+############
 odgi version
-#########
+############
 
 Print the version of ODGI to stdout.
 

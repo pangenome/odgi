@@ -1,8 +1,8 @@
 .. _odgi viz:
 
-#########
+########
 odgi viz
-#########
+########
 
 Visualize a variation graph in 1D.
 
@@ -26,7 +26,7 @@ OPTIONS
 =======
 
 MANDATORY OPTIONS
---------------
+-----------------
 
 | **-i, --idx**\ =\ *FILE*
 | Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!
@@ -101,7 +101,7 @@ Visualization Options
 | Ignore paths starting with the given *PREFIX*.
 
 Intervals Selection Options
--------------------
+---------------------------
 
 | **-r, --path-range**
 | Nucleotide range to visualize: ``STRING=[PATH:]start-end``. ``*-end``
@@ -111,14 +111,14 @@ Intervals Selection Options
   from left to right).
 
 Path Selection Options
----------------
+----------------------
 
 | **-p, --paths-to-display**
 | List of paths to display in the specified order; the file must contain
   one path name per line and a subset of all paths can be specified.
 
 Path Names Viz Options
---------------------------------
+----------------------
 
 | **-H, --hide-path-names**
 | Hide the path names on the left of the generated image.

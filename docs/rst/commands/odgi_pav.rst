@@ -1,8 +1,8 @@
 .. _odgi pav:
 
-#########
+########
 odgi pav
-#########
+########
 
 Presence/absence variants (PAVs).
 It prints to stdout a TSV table with the `PAV ratios`.
@@ -24,7 +24,7 @@ OPTIONS
 =======
 
 MANDATORY OPTIONS
---------------
+-----------------
 
 | **-i, --idx**\ =\ *FILE*
 | Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!
@@ -33,7 +33,7 @@ MANDATORY OPTIONS
 | Find PAVs in the path range(s) specified in the given BED FILE
 
 Pav Options
----------------
+-----------
 
 | **-p, --path-groups**\ =\ *FILE*
 | Group paths as described in two-column *FILE*, with columns `path.name` and `group.name`.

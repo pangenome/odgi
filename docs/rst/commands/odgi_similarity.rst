@@ -1,8 +1,8 @@
 .. _odgi similarity:
 
-#########
+###############
 odgi similarity
-#########
+###############
 
 Provides a sparse similarity matrix for paths or groups of paths.
 Each line prints in a tab-delimited format to stdout.
@@ -21,13 +21,13 @@ OPTIONS
 =======
 
 MANDATORY OPTIONS
---------------
+-----------------
 
 | **-i, --idx**\ =\ *FILE*
 | Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!
 
 Path Investigation Options
----------------------
+--------------------------
 
 | **-D, --delim**\ =\ *CHAR*
 | The part of each path name before this delimiter is a group identifier.

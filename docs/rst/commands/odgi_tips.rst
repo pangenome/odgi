@@ -37,7 +37,7 @@ MANDATORY OPTIONS
 
 
 Tips Options
--------------
+------------
 
 | **-q, --query-path**\ =\ *NAME*
 | Use this query path.
@@ -55,7 +55,7 @@ Tips Options
 | Write query path(s) that do not visit the target path(s) to this *FILE*.
 
 | **-n, --n-best**\ =\ *N*
-| Report up to **N**th best target (reference) matches for each query path (default: 1).
+| Report up to the **N**\ th best target (reference) matches for each query path (default: 1).
 
 | **-w, --jaccard-context**\ =\ *N*
 | Maximum walking distance in nucleotides for one orientation when finding the best target (reference) range for each query path (default: 10000). Note: If we walked 9999 base pairs and **w, --jaccard-context** is **10000**, we will also include the next node, even if we overflow the actual limit.

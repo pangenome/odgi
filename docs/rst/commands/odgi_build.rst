@@ -1,8 +1,8 @@
 .. _odgi build:
 
-#########
+##########
 odgi build
-#########
+##########
 
 Construct a dynamic succinct variation graph in ODGI format from a GFAv1 or GFAz (compressed GFA)
 

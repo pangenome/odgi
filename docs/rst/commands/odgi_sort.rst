@@ -60,7 +60,7 @@ OPTIONS
 =======
 
 MANDATORY OPTIONS
---------------
+-----------------
 
 | **-i, --idx**\ =\ *FILE*
 | Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!
@@ -70,7 +70,7 @@ MANDATORY OPTIONS
   ending with *.og* is recommended.
 
 Files IO Options
----------------
+----------------
 
 | **-X, --path-index**\ =\ *FILE*
 | Load the succinct variation graph index from this *FILE*. The file name usually ends with *.xp*.
@@ -83,7 +83,7 @@ Files IO Options
 | Directory for temporary files. Defaults to the current working directory.
 
 Topological Sort Options
------------------
+------------------------
 
 | **-b, --breadth-first**
 | Use a (chunked) breadth first topological sort.
@@ -110,13 +110,13 @@ Topological Sort Options
 | Don’t use heads or tails to seed topological sort.
 
 Random Sort Options
------------
+-------------------
 
 | **-r, --random**
 | Randomly sort the graph.
 
 DAGify Sort Options
------------
+-------------------
 
 | **-d, --dagify-sort**
 | Sort on the basis of a DAGified graph.
@@ -193,7 +193,7 @@ Path Guided 1D Linear SGD Sort
 
 
 Pipeline Sorting Options
-----------------
+------------------------
 
 | **-p, --pipeline**\ =\ *STRING*
 | Apply a series of sorts, based on single character command line
@@ -218,7 +218,7 @@ Path Sorting Options
 | Sort paths in bins by their prefix up to this delimiter.
 
 Optimize Options
----------------------
+----------------
 
 | **-O, --optimize**
 | Use the MutableHandleGraph::optimize method to compact the node

@@ -1,8 +1,8 @@
 .. _odgi squeeze:
 
-#########
+############
 odgi squeeze
-#########
+############
 
 Squeezes multiple graphs in ODGI format into the same file in ODGI format.
 
@@ -21,7 +21,7 @@ OPTIONS
 =======
 
 MANDATORY OPTIONS
---------------
+-----------------
 
 | **-f, --input-graphs**\ =\ *FILE*
 | Input file containing the list of graphs to squeeze into the same

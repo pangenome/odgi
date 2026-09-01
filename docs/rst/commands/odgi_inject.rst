@@ -1,8 +1,8 @@
 .. _odgi inject:
 
-#########
+###########
 odgi inject
-#########
+###########
 
 Inject BED interval ranges as paths in the graph.
 
@@ -21,7 +21,7 @@ OPTIONS
 =======
 
 MANDATORY OPTIONS
---------------
+-----------------
 
 | **-i, --input**\ =\ *FILE*
 | Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!
@@ -30,7 +30,7 @@ MANDATORY OPTIONS
 | Write the graph with injected paths to *.og*.
 
 Injection Options
-----------------
+-----------------
 
 | **-b, --bed-targets**\ =\ *FILE*
 | BED file over path space of the graph. Records will be converted into new paths in the output graph.

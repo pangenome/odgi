@@ -1,8 +1,8 @@
 .. _odgi groom:
 
-#########
+##########
 odgi groom
-#########
+##########
 
 Resolve spurious inverting links.
 
@@ -21,7 +21,7 @@ OPTIONS
 =======
 
 MANDATORY OPTIONS
---------------
+-----------------
 
 | **-i, --idx**\ =\ *FILE*
 | Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*.

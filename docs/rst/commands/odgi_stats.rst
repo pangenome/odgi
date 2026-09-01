@@ -1,8 +1,8 @@
 .. _odgi stats:
 
-#########
+##########
 odgi stats
-#########
+##########
 
 Metrics describing a variation graph.
 
@@ -23,7 +23,7 @@ OPTIONS
 =======
 
 MANDATORY OPTIONS
---------------
+-----------------
 
 | **-i, --idx**\ =\ *FILE*
 | Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!
@@ -58,7 +58,7 @@ Summary Options
 | Show counted pangenome sequence class counts of all samples. Classes are Private (only one sample visiting the node), Core (all samples visiting the node), and Shell (not Core or Private). The given *OPTION* determines how to find the sample name in the path names: *DELIM,POS*. Split the whole path name by *DELIM* and access the actual sample name at *POS* of the split result. If the full path name is the sample name, select a *DELIM* that is not in the path names and set *POS* to 0. If *-m,--multiqc* was set, this *OPTION* has to be set implicitly.
 
 Sorting Goodness Eval Options
----------------------------
+-----------------------------
 
 | **-c, --coords-in**\ =\ *FILE*
 | Load the 2D layout coordinates in binary layout format from this *FILE*. The file name usually ends with *.lay*. The sorting goodness evaluation will then be performed for this *FILE*. When the layout coordinates are provided, the mean links length and the sum path nodes distances statistics are evaluated in 2D, else in 1D. Such a file can be generated with *odgi layout*.

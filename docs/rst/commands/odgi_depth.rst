@@ -1,8 +1,8 @@
 .. _odgi depth:
 
-#########
+##########
 odgi depth
-#########
+##########
 
 Find the depth of a graph as defined by query criteria. Depth can be node-depth computed by counting all defined paths that run through a node. By default it prints in a tab-delimited format path, start, end, and mean.depth to stdout.
 
@@ -22,7 +22,7 @@ OPTIONS
 =======
 
 MANDATORY OPTIONS
---------------
+-----------------
 
 | **-i, --input**\ =\ *FILE*
 | Load the succinct variation graph in ODGI format from this *FILE*. The file name usually ends with *.og*. It also accepts GFAv1 or GFAz (compressed GFA), but the on-the-fly conversion to the ODGI format requires additional time!
@@ -60,6 +60,7 @@ Depth Options
 
 | **-d, --graph-depth-table**
 | Compute the depth and unique depth on each node in the graph, writing a table by node:
+
 *node.id*, *depth*, and *depth.uniq*.
 
 | **-v, --graph-depth-vec**

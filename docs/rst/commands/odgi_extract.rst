@@ -1,8 +1,8 @@
 .. _odgi extract:
 
-#########
+############
 odgi extract
-#########
+############
 
 Extract subgraphs or parts of a graph defined by query criteria.
 

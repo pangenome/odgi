@@ -1,8 +1,8 @@
 .. _odgi panpos:
 
-#########
+###########
 odgi panpos
-#########
+###########
 
 Get the pangenome position of a given path and nucleotide position (1-based).
 
@@ -27,7 +27,7 @@ OPTIONS
 =======
 
 MANDATORY OPTIONS
---------------
+-----------------
 
 | **-i, --idx**\ =\ *FILE*
 | Load the succinct variation graph index in xp format from this *FILE*. The file name usually ends with *.xp*.
