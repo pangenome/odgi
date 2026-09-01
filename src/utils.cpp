@@ -24,6 +24,15 @@ namespace utils {
         return magic == GFAZ_MAGIC;
     }
 
+    bool is_gzip(const std::string &filename) {
+        std::ifstream in(filename, std::ios::binary);
+        if (!in) return false;
+        unsigned char magic[2] = {0, 0};
+        in.read((char *) magic, sizeof(magic));
+        if (in.gcount() != static_cast<std::streamsize>(sizeof(magic))) return false;
+        return magic[0] == 0x1f && magic[1] == 0x8b;
+    }
+
     std::string to_string_custom(double value) {
         std::ostringstream out;
         
@@ -104,6 +113,12 @@ namespace utils {
 							const uint64_t num_threads, odgi::graph_t &graph) {
 		if (!std::filesystem::exists(infile)) {
 			std::cerr << "[odgi::" << subcommmand_name << "] error: the given file \"" << infile << "\" does not exist. Please specify an existing input file in ODGI format via -i=[FILE], --idx=[FILE]." << std::endl;
+			exit(1);
+		}
+		if (utils::is_gzip(infile)) {
+			std::cerr << "[odgi::" << subcommmand_name << "] error: the given file \"" << infile << "\" is gzip-compressed. "
+					  << "odgi reads uncompressed GFA, GFAz (compressed GFA) or ODGI. Decompress it first "
+					  << "(for example: zcat in.gfa.gz > in.gfa)." << std::endl;
 			exit(1);
 		}
 		const uint64_t threads = num_threads ? num_threads : 1;
