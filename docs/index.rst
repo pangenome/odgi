@@ -56,6 +56,7 @@ For a light dive into ``odgi``, just visit the :ref:`quick_start` section.
     rst/multiqc
     rst/tools_using_odgi
     rst/binding
+    rst/privacy
     rst/faqs
 
 Citation
