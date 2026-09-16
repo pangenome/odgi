@@ -173,7 +173,11 @@ work with output from `odgi stats`! For more details take a look at the document
 ## funding sources
 
 `odgi` has been funded through a variety of mechanisms, including a Wellcome Sanger PhD fellowship and diverse NIH and NSF grants (listed in our paper), as well as funding from the State of Tennessee.
-Of particular note is the [contribution of NLnet to the development of a differential privacy model](https://nlnet.nl/project/VariationGraph/), ["privvg"](https://privvg.github.io/), which supported significant maintenance and development effort in the `odgi` toolkit.
+
+Our differential privacy work — the ["privvg" project](https://privvg.github.io/), documented in a series of blog posts, which began in `vg` and landed in `odgi` as [`odgi priv`](https://odgi.readthedocs.io/en/latest/rst/commands/odgi_priv.html) — received funding through [NGI0 Discovery](https://nlnet.nl/discovery), a fund established by [NLnet](https://nlnet.nl) with financial support from the European Commission's [Next Generation Internet](https://ngi.eu) program. Learn more at the [NLnet project page](https://nlnet.nl/project/VariationGraph).
+
+[<img src="https://nlnet.nl/logo/banner.png" alt="NLnet foundation logo" width="20%" />](https://nlnet.nl)
+[<img src="https://nlnet.nl/image/logos/NGI0_tag.svg" alt="NGI Zero Logo" width="20%" />](https://nlnet.nl/discovery)
 
 ## tests
 
