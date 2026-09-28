@@ -10,6 +10,7 @@
 #include <algorithm>
 #include <filesystem>
 #include "algorithms/topological_sort.hpp"
+#include <chrono>
 
 namespace odgi {
 
@@ -106,12 +107,17 @@ int main_build(int argc, char** argv) {
     }
     const std::string outfile = args::get(dg_out_file);
     if (!outfile.empty()) {
+        auto serialize_start = std::chrono::steady_clock::now();
         if (outfile == "-") {
             graph.serialize(std::cout);
         } else {
             ofstream f(outfile.c_str());
             graph.serialize(f);
             f.close();
+        }
+        if (args::get(progress)) {
+            double secs = std::chrono::duration<double>(std::chrono::steady_clock::now() - serialize_start).count();
+            std::cerr << "[odgi::build] [timing] serialize output: " << secs << "s" << std::endl;
         }
     }
     return 0;

@@ -12,7 +12,7 @@
 	url = https://github.com/Tessil/hopscotch-map.git
 [submodule "deps/gfakluge"]
 	path = deps/gfakluge
-	url = https://github.com/vgteam/gfakluge.git
+	url = https://github.com/FlyinTeller/gfakluge.git
 [submodule "deps/libhandlegraph"]
 	path = deps/libhandlegraph
 	url = https://github.com/vgteam/libhandlegraph.git

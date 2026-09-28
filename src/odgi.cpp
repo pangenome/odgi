@@ -4,6 +4,7 @@
 
 #include "odgi.hpp"
 #include <charconv>
+#include <sstream>
 
 namespace odgi {
 
@@ -552,6 +553,142 @@ handle_t graph_t::create_handle(const std::string& sequence, const nid_t& id) {
     return number_bool_packing::pack(handle_rank, 0);
 }
 
+/// See the declaration in odgi.hpp for the required call sequence. Sizes
+/// node_v once so no reallocation can happen during the parallel phase
+/// that follows -- concurrent writes to distinct node_v[i] slots are then
+/// safe without locking, since the vector's own size/capacity never
+/// changes and each thread only ever writes to indices no other thread
+/// touches.
+void graph_t::reserve_node_space(nid_t max_node_rank) {
+    assert(node_v.empty());
+    assert(deleted_nodes.empty());
+    node_v.resize((uint64_t)max_node_rank, nullptr);
+}
+
+/// Safe to call concurrently as long as every call uses a distinct id
+/// (see reserve_node_space). Does not touch deleted_nodes or the
+/// min/max node id bookkeeping -- finalize_prereserved_node_space()
+/// rebuilds both once, after all inserts complete.
+handle_t graph_t::create_handle_prereserved(const std::string& sequence, const nid_t& id) {
+    assert(sequence.size());
+    assert(id > 0);
+    uint64_t handle_rank = (uint64_t)id - 1;
+    assert(handle_rank < node_v.size());
+    auto& n = node_v[handle_rank];
+    n = new node_t();
+    n->set_id(id);
+    n->set_sequence(sequence);
+    return number_bool_packing::pack(handle_rank, 0);
+}
+
+/// Single-threaded: must run after all create_handle_prereserved calls
+/// (i.e. after joining the threads that made them) and before any other
+/// graph_t use. Rebuilds deleted_nodes by scanning for slots that were
+/// reserved but never filled (e.g. gaps in a non-dense GFA id space), and
+/// sets min/max node id directly from values the caller already knows
+/// (gfa_to_handle's pre-scan already computes these) rather than via the
+/// racy read-then-conditionally-write pattern create_handle uses.
+void graph_t::finalize_prereserved_node_space(nid_t min_id, nid_t max_id) {
+    deleted_nodes.clear();
+    for (uint64_t i = 0; i < node_v.size(); ++i) {
+        if (node_v[i] == nullptr) {
+            deleted_nodes.insert(i + 1);
+        }
+    }
+    _min_node_id = min_id;
+    _max_node_id = max_id;
+}
+
+/// See the declaration in odgi.hpp for the full algorithm rationale
+/// (counting-sort/CSR bulk build vs. per-edge lock+O(k) dedup scan).
+void graph_t::bulk_build_edges_from_candidates(std::vector<edge_candidate_t>& candidates,
+                                               uint64_t n_used,
+                                               uint64_t n_threads) {
+    n_threads = (n_threads == 0 ? 1 : n_threads);
+    uint64_t n_nodes = node_v.size();
+    if (n_nodes == 0 || n_used == 0) {
+        return;
+    }
+
+    // 1) count pass: how many candidates target each node rank.
+    std::vector<std::atomic<uint64_t>> degree(n_nodes);
+    for (uint64_t i = 0; i < n_nodes; ++i) {
+        degree[i].store(0, std::memory_order_relaxed);
+    }
+#pragma omp parallel for num_threads(n_threads) schedule(static)
+    for (uint64_t i = 0; i < n_used; ++i) {
+        degree[candidates[i].node_rank].fetch_add(1, std::memory_order_relaxed);
+    }
+
+    // 2) prefix sum -> per-node offsets into the flat scatter buffer.
+    std::vector<uint64_t> offset(n_nodes + 1);
+    uint64_t acc = 0;
+    for (uint64_t i = 0; i < n_nodes; ++i) {
+        offset[i] = acc;
+        acc += degree[i].load(std::memory_order_relaxed);
+    }
+    offset[n_nodes] = acc;
+
+    // 3) scatter: claim a slot per candidate via a per-node write cursor
+    // (initialized to that node's offset) and write it into place. Two
+    // logically-distinct fields (other_id + a packed flags byte) so the
+    // finalize pass below can sort+dedup cheaply.
+    struct edge_slot_t {
+        uint64_t other_id;
+        uint8_t flags; // bit0 = other_rev, bit1 = to_curr, bit2 = on_rev
+        inline bool operator<(const edge_slot_t& o) const {
+            return other_id != o.other_id ? other_id < o.other_id : flags < o.flags;
+        }
+        inline bool operator==(const edge_slot_t& o) const {
+            return other_id == o.other_id && flags == o.flags;
+        }
+    };
+    std::vector<std::atomic<uint64_t>> cursor(n_nodes);
+    for (uint64_t i = 0; i < n_nodes; ++i) {
+        cursor[i].store(offset[i], std::memory_order_relaxed);
+    }
+    std::vector<edge_slot_t> sorted(acc);
+#pragma omp parallel for num_threads(n_threads) schedule(static)
+    for (uint64_t i = 0; i < n_used; ++i) {
+        const edge_candidate_t& c = candidates[i];
+        uint64_t slot = cursor[c.node_rank].fetch_add(1, std::memory_order_relaxed);
+        sorted[slot] = edge_slot_t{
+            c.other_id,
+            (uint8_t)((c.other_rev ? 1 : 0) | (c.to_curr ? 2 : 0) | (c.on_rev ? 4 : 0))
+        };
+    }
+
+    // 4) finalize: per node rank (fully parallel, no cross-node
+    // synchronization -- each node's [begin,end) slice is disjoint), sort +
+    // unique to drop exact-duplicate edge lines, then bulk-append into that
+    // node's edge list with no locking (this thread exclusively owns the
+    // node for the duration). Every accepted logical edge contributes
+    // exactly one record with to_curr==false (see create_edge: the "left"
+    // side of every edge, same-rank or not, is always inserted with
+    // to_curr=false) -- so counting surviving to_curr==false records here
+    // reproduces the same _edge_count create_edge would have produced.
+    std::atomic<uint64_t> edge_count{0};
+#pragma omp parallel for num_threads(n_threads) schedule(dynamic, 4096)
+    for (uint64_t rank = 0; rank < n_nodes; ++rank) {
+        uint64_t begin = offset[rank];
+        uint64_t end = offset[rank + 1];
+        if (begin == end) continue;
+        std::sort(sorted.begin() + begin, sorted.begin() + end);
+        auto uniq_end = std::unique(sorted.begin() + begin, sorted.begin() + end);
+        node_t* node = node_v[rank];
+        uint64_t local_edge_count = 0;
+        for (auto it = sorted.begin() + begin; it != uniq_end; ++it) {
+            bool other_rev = it->flags & 1;
+            bool to_curr = it->flags & 2;
+            bool on_rev = it->flags & 4;
+            node->add_edge(it->other_id, other_rev, to_curr, on_rev);
+            if (!to_curr) ++local_edge_count;
+        }
+        edge_count.fetch_add(local_edge_count, std::memory_order_relaxed);
+    }
+    _edge_count = edge_count.load(std::memory_order_relaxed);
+}
+
 /// Remove the node belonging to the given handle and all of its edges.
 /// Does not update any stored paths.
 /// Invalidates the destroyed handle.
@@ -636,7 +773,6 @@ void graph_t::create_edge(const handle_t& left_h, const handle_t& right_h) {
                            get_is_reverse(right_h),
                            false,
                            get_is_reverse(left_h));
-        left_node.clear_lock();
         // only insert the second side if it's on a different node
         if (left_rank != right_rank) {
             right_node.add_edge(get_id(left_h),
@@ -1654,14 +1790,40 @@ void graph_t::serialize_members(std::ostream& out) const {
     //assert(node_count == node_v.size());
     // hack
     // todo big mess, middle of removal of deleted node bv
+    //
+    // Serialize nodes in parallel: each node_t::serialize() call only reads
+    // that node's own data (and empty_node, shared read-only across threads),
+    // so threads can independently serialize disjoint, contiguous node
+    // ranges into their own in-memory buffer with no shared mutable state.
+    // The buffers are then written out in order to preserve the on-disk
+    // node layout that deserialize_members expects.
     node_t empty_node;
-    for (auto& node : node_v) {
-        // check if node is null
-        if (node == nullptr) {
-            written += empty_node.serialize(out);
-        } else {
-            written += node->serialize(out);
+    uint64_t n_threads = _num_threads > 0 ? _num_threads : 1;
+    if (node_v.size() > 0 && n_threads > node_v.size()) {
+        n_threads = node_v.size();
+    }
+    if (node_v.empty()) {
+        n_threads = 1;
+    }
+    std::vector<std::ostringstream> node_chunk_bufs(n_threads);
+#pragma omp parallel for schedule(static, 1) num_threads(n_threads)
+    for (uint64_t t = 0; t < n_threads; ++t) {
+        uint64_t chunk_size = (node_v.size() + n_threads - 1) / n_threads;
+        uint64_t begin = t * chunk_size;
+        uint64_t end = std::min(begin + chunk_size, node_v.size());
+        for (uint64_t i = begin; i < end; ++i) {
+            auto& node = node_v[i];
+            if (node == nullptr) {
+                empty_node.serialize(node_chunk_bufs[t]);
+            } else {
+                node->serialize(node_chunk_bufs[t]);
+            }
         }
+    }
+    for (uint64_t t = 0; t < n_threads; ++t) {
+        const std::string& chunk = node_chunk_bufs[t].str();
+        out.write(chunk.data(), chunk.size());
+        written += chunk.size();
     }
     // there are _path_count of these to write
     uint64_t j = 0;
